@@ -1,11 +1,11 @@
 import Link from 'next/link'
-import fetch from '../../libs/fetch'
+import axios from '../../libs/axios'
 
 import useSWR from '@zeit/swr'
 
 export default () => {
   const id = typeof window !== 'undefined' ? window.location.pathname.slice(1) : ''
-  const { data } = useSWR('/api/data?id=' + id, fetch)
+  const { data } = useSWR('/api/data?id=' + id, axios)
 
   return <div style={{ textAlign: 'center' }}>
     <h1>{id}</h1>

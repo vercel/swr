@@ -1,10 +1,9 @@
 import Link from 'next/link'
-import fetch from '../libs/fetch'
-
+import axios from '../libs/axios'
 import useSWR from '@zeit/swr'
 
 export default () => {
-  const { data } = useSWR('/api/data', fetch)
+  const { data } = useSWR('/api/data', axios)
 
   return <div style={{ textAlign: 'center' }}>
     <h1>Trending Projects</h1>
