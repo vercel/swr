@@ -165,7 +165,7 @@ You can enable the `suspense` option to use `useSWR` with React Suspense.
 
 ```js
 import { Suspense } from 'react'
-import useSWR, { mutate } from '@zeit/swr'
+import useSWR from '@zeit/swr'
 
 function Profile () {
   const { data } = useSWR('/api/user', fetch, { suspense: true })
