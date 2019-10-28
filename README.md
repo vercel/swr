@@ -20,7 +20,7 @@
 
 SWR is a React Hooks library for remote data fetching.
 
-The name “**SWR**” is derived from `stale-while-revalidate`, a HTTP cache invalidation strategy popularized by RFC 5861.
+The name “**SWR**” is derived from `stale-while-revalidate`, a HTTP cache invalidation strategy popularized by [RFC 5861](https://tools.ietf.org/html/rfc5861).
 **SWR** first returns the data from cache (stale), then sends the fetch request (revalidate), and finally comes with the up-to-date data again.
 
 It features:
