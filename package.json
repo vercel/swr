@@ -1,7 +1,7 @@
 {
   "name": "@zeit/swr",
   "version": "0.0.1",
-  "description": "Use SWR",
+  "description": "React Hooks library for remote data fetching",
   "main": "./dist/src/index.js",
   "types": "./dist/src/index.d.ts",
   "files": [
