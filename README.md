@@ -11,7 +11,7 @@
   <a aria-label="NPM version" href="https://www.npmjs.com/package/@zeit/swr">
     <img alt="" src="https://img.shields.io/npm/v/@zeit/swr?style=for-the-badge&labelColor=000000">
   </a>
-  <a aria-label="License" href="https://github.com/zeit/swr/blob/master/license.md">
+  <a aria-label="License" href="https://github.com/zeit/swr/blob/master/LICENSE">
     <img alt="" src="https://img.shields.io/npm/l/@zeit/swr?style=for-the-badge&labelColor=000000">
   </a>
 </p>
