@@ -1,2 +1,2 @@
-export * from './@zeit/swr'
-export { default } from './@zeit/swr'
+export * from './use-swr'
+export { default } from './use-swr'

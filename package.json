@@ -1,6 +1,6 @@
 {
   "name": "@zeit/swr",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "React Hooks library for remote data fetching",
   "main": "./dist/src/index.js",
   "types": "./dist/src/index.d.ts",
@@ -25,19 +25,20 @@
     "@types/react-dom": "16.9.3",
     "@typescript-eslint/eslint-plugin": "2.5.0",
     "@typescript-eslint/parser": "2.5.0",
-    "deep-equal": "1.1.0",
     "eslint": "6.6.0",
     "eslint-config-prettier": "6.5.0",
     "jest": "24.9.0",
-    "lodash.throttle": "4.1.1",
-    "ms": "2.1.2",
     "prettier": "1.18.2",
     "react": "16.11.0",
     "react-dom": "16.11.0",
     "ts-jest": "24.1.0",
     "typescript": "3.6.4"
   },
-  "dependencies": {},
+  "dependencies": {
+    "deep-equal": "1.1.0",
+    "lodash.throttle": "4.1.1",
+    "ms": "2.1.2"
+  },
   "peerDependencies": {
     "react": "16.11.0",
     "react-dom": "16.11.0"
