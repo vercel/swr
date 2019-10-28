@@ -1,4 +1,4 @@
-[![SWR](banner.png)](https://swr.now.sh)
+[![SWR](https://assets.zeit.co/image/upload/v1572289618/swr/banner.png)](https://swr.now.sh)
 
 <p align="center">
   <a aria-label="SWR website" href="https://swr.now.sh">swr.now.sh<a>
@@ -20,8 +20,8 @@
 
 SWR is a React Hooks library for remote data fetching.
 
-The name “**SWR**” is derived from `stale-while-revalidate`, a HTTP cache invalidation strategy popularized by RFC 5861.  
-**SWR** first returns the data from cache (stale), then sends the fetch request (revalidate), and finally comes with the up-to-date data again.  
+The name “**SWR**” is derived from `stale-while-revalidate`, a HTTP cache invalidation strategy popularized by RFC 5861.
+**SWR** first returns the data from cache (stale), then sends the fetch request (revalidate), and finally comes with the up-to-date data again.
 
 It features:
 - Transport and protocol agnostic data fetching
@@ -34,7 +34,7 @@ It features:
 - Suspense mode
 - Minimal API
 
-With SWR, components will get a stream of data updates constantly and automatically, Thus, the UI will be always fast and reactive. 
+With SWR, components will get a stream of data updates constantly and automatically, Thus, the UI will be always fast and reactive.
 
 ## Quick Start
 
@@ -50,7 +50,7 @@ function Profile () {
 }
 ```
 
-In this example, the React Hook `useSWR` accepts a `key` and a `fetch` function.  
+In this example, the React Hook `useSWR` accepts a `key` and a `fetch` function.
 `key` is a unique identifier of the data, normally a URL of the API. And the `fetch` accepts
 `key` as its parameter and returns the data asynchronously.
 
@@ -81,7 +81,7 @@ const {
     focusThrottleInterval: 5000,           // keep focus revalidate requests in a time window
     dedupingInterval: 2000,                // deduping requests
     loadingTimeout: 3000,                  // timeout for triggering the onLoadingSlow event
-    
+
     onLoadingSlow,                         // event handlers
     onSuccess,
     onError,
@@ -115,7 +115,7 @@ function Profile () {
 ### `mutate`
 
 With `mutate`, you can update your local data programmatically, while
-revalidating and finally replace it. 
+revalidating and finally replace it.
 
 ```js
 import useSWR, { mutate } from '@zeit/swr'
