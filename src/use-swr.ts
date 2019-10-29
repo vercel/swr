@@ -170,7 +170,7 @@ function useSWR<Data = any, Error = any>(
           config.onSuccess(newData, key, config)
         }
 
-        // if the revalidation happened eariler than local mutations,
+        // if the revalidation happened earlier than local mutations,
         // we should ignore the result because it could override.
         if (MUTATION_TS[key] && ts <= MUTATION_TS[key]) {
           setIsValidating(false)
