@@ -9,15 +9,15 @@ export default () => {
 
   async function handleSubmit(event) {
     event.preventDefault()
+    // mutate current data to optimistically update the UI
+    // the fetch below could fail, in that case the UI will
+    // return to the previous state after SWR revalidate it
+    mutate('/api/data', [...data, text])
     // send text to the API
     await fetch('/api/data', {
       method: 'POST',
       body: JSON.stringify({ text })
     })
-    // mutate current data to optimistically update the UI
-    // the above fetch could fail, in that case the UI will
-    // return to the previous state after SWR revalidate it
-    mutate('/api/data', [...data, text])
     setText('')
   }
 
