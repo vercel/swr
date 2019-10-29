@@ -12,10 +12,10 @@ import useSWR, { trigger, mutate, SWRConfig } from '../src'
 describe('useSWR', () => {
   afterEach(cleanup)
 
-  it('should return null on hydration', () => {
+  it('should return `undefined` on hydration', () => {
     function Page() {
       const { data } = useSWR('constant-1', () => 'SWR')
-      return <div>hello, {data}</div>
+      return <div>hello, {typeof data === 'undefined' ? '' : 'ERROR'}</div>
     }
     const { container } = render(<Page />)
 

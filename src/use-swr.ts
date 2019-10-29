@@ -180,7 +180,7 @@ function useSWR<Data = any, Error = any>(
 
         unstable_batchedUpdates(() => {
           setIsValidating(false)
-          setError()
+          setError(undefined)
           if (dataRef.current && deepEqual(dataRef.current, newData)) {
             // deep compare to avoid re-render / db write
             // do nothing
@@ -283,7 +283,7 @@ function useSWR<Data = any, Error = any>(
       const newData = cacheGet(key)
       if (!deepEqual(data, newData)) {
         unstable_batchedUpdates(() => {
-          setError()
+          setError(undefined)
           setData(newData)
         })
         dataRef.current = newData
