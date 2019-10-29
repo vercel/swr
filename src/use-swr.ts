@@ -15,7 +15,8 @@ import {
   RevalidateOptionInterface,
   updaterInterface,
   triggerInterface,
-  mutateInterface, responseInterface
+  mutateInterface,
+  responseInterface
 } from './types'
 
 import defaultConfig, {
