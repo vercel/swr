@@ -1,5 +1,3 @@
-declare let document: any
-
 export default function isDocumentVisible(): boolean {
   if (typeof document.visibilityState !== 'undefined') {
     return (

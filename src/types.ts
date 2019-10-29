@@ -1,4 +1,4 @@
-export interface ConfigInterface<Data, Error> {
+export interface ConfigInterface<Data = any, Error = any> {
   errorRetryInterval?: number
   loadingTimeout?: number
   focusThrottleInterval?: number
@@ -40,11 +40,31 @@ export type mutateInterface = (
   shouldRevalidate?: boolean
 ) => void
 export type responseInterface<Data, Error> = {
-  data?: Data;
-  error?: Error;
-  revalidate: () => Promise<boolean>;
-  isValidating: boolean;
+  data?: Data
+  error?: Error
+  revalidate: () => Promise<boolean>
+  isValidating: boolean
 }
 export type revalidateType = (
   revalidateOpts: RevalidateOptionInterface
 ) => Promise<boolean>
+
+export type pagesWithSWRType = () => void
+export type pagesPropsInterface<Offset> = {
+  // offset can be any type
+  offset: Offset
+  withSWR: pagesWithSWRType
+}
+
+export type pageComponentType = (props: pagesPropsInterface<any>) => any
+export type pageOffsetMapperType<Offset> = (data: any) => Offset
+
+export type pagesResponseInterface = {
+  pages: any
+  pageCount: number
+  pageSWRs: responseInterface<any, any>[]
+  isLoadingMore: boolean
+  isReachingEnd: boolean
+  isEmpty: boolean
+  loadMore: () => void
+}
