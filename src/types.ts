@@ -39,6 +39,12 @@ export type mutateInterface = (
   data: any,
   shouldRevalidate?: boolean
 ) => void
+export type responseInterface<T> = {
+  data?: T;
+  error?: any;
+  revalidate: () => Promise<boolean>;
+  isValidating: boolean;
+}
 export type revalidateType = (
   revalidateOpts: RevalidateOptionInterface
 ) => Promise<boolean>
