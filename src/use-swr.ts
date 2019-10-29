@@ -42,13 +42,13 @@ const trigger: triggerInterface = function(key, shouldRevalidate = true) {
 }
 
 const mutate: mutateInterface = function(key, data, shouldRevalidate = true) {
-  // Update TS
+  // update timestamp
   MUTATION_TS[key] = Date.now() - 1
 
-  // Update cached data
+  // update cached data
   cacheSet(key, data)
 
-  // Update existing SWR Hooks
+  // update existing SWR Hooks' state
   const updaters = CACHE_REVALIDATORS[key]
   if (updaters) {
     for (let i = 0; i < updaters.length; ++i) {
@@ -87,8 +87,8 @@ function useSWR<Data = any, Error = any>(
     config = args[2]
   }
 
-  // We assume `key` as the identifier of the request
-  // `key` can change but `fn` can never change
+  // we assume `key` as the identifier of the request
+  // `key` can change but `fn` shouldn't
   // (because `revalidate` only depends on `key`)
 
   let key: string
@@ -165,11 +165,12 @@ function useSWR<Data = any, Error = any>(
           }, config.dedupingInterval)
           newData = await CONCURRENT_PROMISES[key]
 
-          // recover error toasts (only for the original request)
+          // trigger the success event
+          // (only do it for the original request)
           config.onSuccess(newData, key, config)
         }
 
-        // If the revalidation happened eariler than local mutations,
+        // if the revalidation happened earlier than local mutations,
         // we should ignore the result because it could override.
         if (MUTATION_TS[key] && ts <= MUTATION_TS[key]) {
           setIsValidating(false)
@@ -182,7 +183,7 @@ function useSWR<Data = any, Error = any>(
           setIsValidating(false)
           setError(null)
           if (dataRef.current && deepEqual(dataRef.current, newData)) {
-            // deep compare to avoid re-render / db write
+            // deep compare to avoid extra re-render
             // do nothing
           } else {
             // data changed
@@ -203,19 +204,7 @@ function useSWR<Data = any, Error = any>(
           setError(err)
         })
 
-        // gets an error
-        const errorCode = err.statusCode || err.status
-        const shouldShowError =
-          // the staled data is currently missing
-          // and we get an error (other than 404)
-          (dataRef.current === null && errorCode !== 404) ||
-          (err.code !== 'network_error' &&
-            errorCode !== 404 &&
-            errorCode !== 403)
-        if (shouldShowError) {
-          // don't show toast if (is stale) and (network_error | not_found | not_authorized)
-          config.onError(err, key, config)
-        }
+        config.onError(err, key, config)
         errorRef.current = true
 
         if (config.shouldRetryOnError) {
@@ -243,12 +232,12 @@ function useSWR<Data = any, Error = any>(
   useLayoutEffect(() => {
     if (!key) return undefined
 
-    // After `key` updates, we need to mark it as mounted
+    // after `key` updates, we need to mark it as mounted
     unmountedRef.current = false
 
     const _newData = cacheGet(key)
 
-    // Update the state if the cache changed OR the key changed
+    // update the state if the cache changed OR the key changed
     if ((_newData && !deepEqual(data, _newData)) || keyRef.current !== key) {
       setData(_newData)
       dataRef.current = _newData
@@ -327,7 +316,7 @@ function useSWR<Data = any, Error = any>(
       setIsValidating = () => null
       setError = () => null
 
-      // Mark it as unmounted
+      // mark it as unmounted
       unmountedRef.current = true
 
       if (FOCUS_REVALIDATORS[key]) {
@@ -360,8 +349,8 @@ function useSWR<Data = any, Error = any>(
   return {
     error,
     // `key` might be changed in the upcoming hook re-render,
-    // but the state will stay the same. So we need to match
-    // the latest key and data.
+    // but the previous state will stay
+    // so we need to match the latest key and data
     data: keyRef.current === key ? data : null,
     revalidate: forceRevalidate, // handler
     isValidating
