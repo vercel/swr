@@ -57,9 +57,9 @@ const mutate: mutateInterface = function(key, data, shouldRevalidate = true) {
   }
 }
 
-function useSWR<T = any>(key: keyInterface);
-function useSWR<T = any>(key: keyInterface, config?: ConfigInterface);
-function useSWR<T = any>(key: keyInterface, fn?: Function, config?: ConfigInterface);
+function useSWR<T = any>(key: keyInterface): responseInterface<T>;
+function useSWR<T = any>(key: keyInterface, config?: ConfigInterface): responseInterface<T>;
+function useSWR<T = any>(key: keyInterface, fn?: Function, config?: ConfigInterface): responseInterface<T>;
 function useSWR<T = any>(...args): responseInterface<T> {
   let _key: keyInterface,
     fn: Function | undefined,
