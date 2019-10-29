@@ -4,5 +4,7 @@ export { useSWRPages } from './use-swr-pages'
 export {
   ConfigInterface,
   revalidateType,
-  RevalidateOptionInterface
+  RevalidateOptionInterface,
+  keyInterface,
+  responseInterface
 } from './types'
