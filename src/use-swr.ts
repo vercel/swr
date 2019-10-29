@@ -116,8 +116,8 @@ function useSWR<Data = any, Error = any>(
   }
 
   // stale: get from cache
-  let [data, setData] = useState(useHydration() ? null : cacheGet(key))
-  let [error, setError] = useState(null)
+  let [data, setData] = useState(useHydration() ? undefined : cacheGet(key))
+  let [error, setError] = useState()
   let [isValidating, setIsValidating] = useState(false)
 
   // error ref inside revalidate (is last request errored?)
@@ -180,7 +180,7 @@ function useSWR<Data = any, Error = any>(
 
         unstable_batchedUpdates(() => {
           setIsValidating(false)
-          setError(null)
+          setError()
           if (dataRef.current && deepEqual(dataRef.current, newData)) {
             // deep compare to avoid re-render / db write
             // do nothing
@@ -208,7 +208,7 @@ function useSWR<Data = any, Error = any>(
         const shouldShowError =
           // the staled data is currently missing
           // and we get an error (other than 404)
-          (dataRef.current === null && errorCode !== 404) ||
+          (typeof dataRef.current === 'undefined' && errorCode !== 404) ||
           (err.code !== 'network_error' &&
             errorCode !== 404 &&
             errorCode !== 403)
@@ -283,7 +283,7 @@ function useSWR<Data = any, Error = any>(
       const newData = cacheGet(key)
       if (!deepEqual(data, newData)) {
         unstable_batchedUpdates(() => {
-          setError(null)
+          setError()
           setData(newData)
         })
         dataRef.current = newData
@@ -362,7 +362,7 @@ function useSWR<Data = any, Error = any>(
     // `key` might be changed in the upcoming hook re-render,
     // but the state will stay the same. So we need to match
     // the latest key and data.
-    data: keyRef.current === key ? data : null,
+    data: keyRef.current === key ? data : undefined,
     revalidate: forceRevalidate, // handler
     isValidating
   }
