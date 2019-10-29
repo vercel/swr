@@ -84,6 +84,7 @@ const {
     focusThrottleInterval: 5000,           // keep focus revalidate requests in a time window
     dedupingInterval: 2000,                // deduping requests
     loadingTimeout: 3000,                  // timeout for triggering the onLoadingSlow event
+    args: undefined,                       // Advanced usage: Array of args to pass to the `fn`
 
     onLoadingSlow,                         // event handlers
     onSuccess,

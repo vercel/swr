@@ -16,7 +16,8 @@ import {
   updaterInterface,
   triggerInterface,
   mutateInterface,
-  responseInterface
+  responseInterface,
+  fetcherFn
 } from './types'
 
 import defaultConfig, {
@@ -57,24 +58,32 @@ const mutate: mutateInterface = function(key, data, shouldRevalidate = true) {
   }
 }
 
-function useSWR<Data = any, Error = any>(
-  key: keyInterface
-): responseInterface<Data, Error>
-function useSWR<Data = any, Error = any>(
+function useSWR<
+  Data = any,
+  Error = any,
+  Fn extends fetcherFn<Data> = fetcherFn<Data>
+>(
   key: keyInterface,
-  config?: ConfigInterface<Data, Error>
+  config?: ConfigInterface<Data, Error, Fn>
 ): responseInterface<Data, Error>
-function useSWR<Data = any, Error = any>(
+function useSWR<
+  Data = any,
+  Error = any,
+  Fn extends fetcherFn<Data> = fetcherFn<Data>
+>(
   key: keyInterface,
-  fn?: Function,
-  config?: ConfigInterface<Data, Error>
+  fn?: Fn,
+  config?: ConfigInterface<Data, Error, Fn>
 ): responseInterface<Data, Error>
-function useSWR<Data = any, Error = any>(
-  ...args
-): responseInterface<Data, Error> {
+function useSWR<
+  Data = any,
+  Error = any,
+  Fn extends fetcherFn<Data> = fetcherFn<Data>
+>(...args): responseInterface<Data, Error> {
   let _key: keyInterface,
-    fn: Function | undefined,
-    config: ConfigInterface<Data, Error> = {}
+    fn: Fn | undefined,
+    config: ConfigInterface<Data, Error, Fn> = {},
+    fetcherArgs: any[]
   if (args.length >= 1) {
     _key = args[0]
   }
@@ -95,7 +104,7 @@ function useSWR<Data = any, Error = any>(
   if (typeof _key === 'function') {
     try {
       key = _key()
-    } catch (err) {
+    } catch {
       // dependencies not ready
       key = ''
     }
@@ -103,6 +112,19 @@ function useSWR<Data = any, Error = any>(
     key = _key
   }
 
+  if (typeof config.args === 'undefined') {
+    fetcherArgs = [key]
+  } else {
+    try {
+      fetcherArgs =
+        typeof config['args'] === 'function'
+          ? (config['args'] as Function)()
+          : config.args
+    } catch {
+      key = ''
+    }
+  }
+  
   config = Object.assign(
     {},
     defaultConfig,
@@ -157,7 +179,7 @@ function useSWR<Data = any, Error = any>(
               if (loading) config.onLoadingSlow(key, config)
             }, config.loadingTimeout)
           }
-          CONCURRENT_PROMISES[key] = fn(key)
+          CONCURRENT_PROMISES[key] = fn(...fetcherArgs)
           CONCURRENT_PROMISES_TS[key] = ts = Date.now()
           setTimeout(() => {
             delete CONCURRENT_PROMISES[key]

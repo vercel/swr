@@ -109,6 +109,23 @@ describe('useSWR', () => {
     )
     expect(SWRData).toEqual('SWR')
   })
+
+  it('should allow args in config', async () => {
+    function Page() {
+      const { data } = useSWR('constant-6', (input: string) => input, {
+        args: ['SWR']
+      })
+      return <div>hello, {data}</div>
+    }
+
+    const { container } = render(<Page />)
+  
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
+    await waitForDomChange({ container })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"hello, SWR"`
+    )
+  })
 })
 
 describe('useSWR - refresh', () => {

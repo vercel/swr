@@ -1,8 +1,14 @@
-export interface ConfigInterface<Data = any, Error = any> {
+export type fetcherFn<Data> = (...args: any) => Data
+export interface ConfigInterface<
+  Data = any,
+  Error = any,
+  Fn extends fetcherFn<Data> = fetcherFn<Data>
+> {
   errorRetryInterval?: number
   loadingTimeout?: number
   focusThrottleInterval?: number
   dedupingInterval?: number
+  args?: Parameters<Fn> | (() => Parameters<Fn>)
 
   refreshInterval?: number
   refreshWhenHidden?: boolean
