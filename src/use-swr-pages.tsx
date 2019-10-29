@@ -8,6 +8,86 @@ import {
   pageOffsetMapperType
 } from './types'
 
+/*
+The idea
+
+A "Page" component renders the content of 1 API request, it accepts an offset (in this example it's from),
+uses a SWR hook (useSWR(API + '?limit=' + limit + '&from=' + from)) and returns items (Projects).
+
+The UI:
+      +------------------------------------------+
+      |   Projects                               |
++------------------------------------------------------+
+|     |   +----------------+                     |     |
+|     |                                          |     |
+|     |   +------------+                         |     |
+|     |                                          |     +--> 1 Page
+|     |   +-----------------+                    |     |
+|     |                                          |     |  /projects/list?limit=4
+|     |   +---------+                            |     |
++------------------------------------------------------+
+      |                                          |
+      |   +------------+                         |     +  /projects/list?limit=4&from=123
+      |                                          |     |
+      |   +----------------+                     |     |
+      |                                          |     |
+      |   +---------+                            |     |
+      |                                          |     |
+      |   +--------------+                       |     +
+      |                                          |
+      |   +-------------------+                  |     +  /projects/list?limit=4&from=456
+      |                                          |     |
+      |   +------------+                         |     |
+      |                                          |     |
+      |   +----------------+                     |     |
+      |                                          |     |
+      |                                          |     +
+
+The API
+// (inside `render`)
+
+function App () {
+  const {
+    pages,    // an array of each page component
+    pageSWRs, // an array of SWRs of each page
+    isLoadingMore,
+    isReachingEnd,
+    isEmpty,
+    loadMore
+  } = useSWRPages(
+    'project-page', // key of this page
+
+    // ======== the actual Page component!
+    ({ offset, withSWR }) => {
+      // required: use `withSWR` to wrap your main SWR (source of your pagination API)
+      const { data } = withSWR(
+        useSWR(API + '?limit=10&from=' + offset) // request projects with offset
+      )
+      if (!data) return <Placeholder>
+      return data.projects.map(project => <Card project={project} team={team}>)
+    },
+    // ========
+
+    // a function accepts a SWR's `data`, and returns the offset of the next page (or null)
+    data => data && data.length >= 10 ? data[data.length - 1].createdAt : null,
+
+    // (optional) outside deps of your Page component. in this case it's empty
+    []
+  )
+
+  // ...
+
+  if (isEmpty) return <EmptyProjectsPage/>
+
+  return <div>
+    {pages}
+    {isReachingEnd
+      ? null
+      : <button loading={isLoadingMore} onClick={loadMore}>Load More</button>}
+  </div>
+}
+*/
+
 export function useSWRPages<OffsetType>(
   pageKey: string,
   pageFn: pageComponentType,

@@ -25,10 +25,6 @@ export default () => {
         return <p>loading</p>
       }
 
-      if (!projects.length) {
-        return <p>hit the end</p>
-      }
-
       return projects.map(project => 
         <p key={project.id}>{project.name}</p>
       )
