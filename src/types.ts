@@ -12,8 +12,16 @@ export interface ConfigInterface<Data = any, Error = any> {
   suspense?: boolean
 
   onLoadingSlow?: (key: string, config: ConfigInterface<Data, Error>) => void
-  onSuccess?: (data: Data, key: string, config: ConfigInterface<Data, Error>) => void
-  onError?: (err: Error, key: string, config: ConfigInterface<Data, Error>) => void
+  onSuccess?: (
+    data: Data,
+    key: string,
+    config: ConfigInterface<Data, Error>
+  ) => void
+  onError?: (
+    err: Error,
+    key: string,
+    config: ConfigInterface<Data, Error>
+  ) => void
   onErrorRetry?: (
     err: Error,
     key: string,
