@@ -58,7 +58,7 @@ In this example, the React Hook `useSWR` accepts a `key` and a `fetch` function.
 `data` will be `undefined`. And when we get a response, it sets `data` and `error` based on the result
 of `fetch` and rerenders the component.
 
-Note that `fetch` can be any asynchronous function, so you can use your faviourite data-fetching
+Note that `fetch` can be any asynchronous function, so you can use your favourite data-fetching
 library to handle that part.
 
 ## API
