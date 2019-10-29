@@ -57,10 +57,10 @@ const mutate: mutateInterface = function(key, data, shouldRevalidate = true) {
   }
 }
 
-function useSWR<T = any>(key: keyInterface): responseInterface<T>;
-function useSWR<T = any>(key: keyInterface, config?: ConfigInterface): responseInterface<T>;
-function useSWR<T = any>(key: keyInterface, fn?: Function, config?: ConfigInterface): responseInterface<T>;
-function useSWR<T = any>(...args): responseInterface<T> {
+function useSWR<D = any, E = any>(key: keyInterface): responseInterface<D, E>;
+function useSWR<D = any, E = any>(key: keyInterface, config?: ConfigInterface): responseInterface<D, E>;
+function useSWR<D = any, E = any>(key: keyInterface, fn?: Function, config?: ConfigInterface): responseInterface<D, E>;
+function useSWR<D = any, E = any>(...args): responseInterface<D, E> {
   let _key: keyInterface,
     fn: Function | undefined,
     config: ConfigInterface = {}
