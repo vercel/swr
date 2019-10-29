@@ -42,13 +42,13 @@ const trigger: triggerInterface = function(key, shouldRevalidate = true) {
 }
 
 const mutate: mutateInterface = function(key, data, shouldRevalidate = true) {
-  // Update TS
+  // update timestamp
   MUTATION_TS[key] = Date.now() - 1
 
-  // Update cached data
+  // update cached data
   cacheSet(key, data)
 
-  // Update existing SWR Hooks
+  // update existing SWR Hooks' state
   const updaters = CACHE_REVALIDATORS[key]
   if (updaters) {
     for (let i = 0; i < updaters.length; ++i) {
@@ -87,8 +87,8 @@ function useSWR<Data = any, Error = any>(
     config = args[2]
   }
 
-  // We assume `key` as the identifier of the request
-  // `key` can change but `fn` can never change
+  // we assume `key` as the identifier of the request
+  // `key` can change but `fn` shouldn't
   // (because `revalidate` only depends on `key`)
 
   let key: string
