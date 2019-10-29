@@ -12,7 +12,7 @@ import {
 const __cache = new Map()
 
 function cacheGet(key: string): any {
-  return __cache.get(key) || null
+  return __cache.get(key) || undefined
 }
 
 function cacheSet(key: string, value: any) {

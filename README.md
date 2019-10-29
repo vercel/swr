@@ -55,8 +55,11 @@ In this example, the React Hook `useSWR` accepts a `key` and a `fetch` function.
 `key` as its parameter and returns the data asynchronously.
 
 `useSWR` also returns 2 values: `data` and `error`. When the request (fetch) is not yet finished,
-`data` will be `null`. And when we get a response, it sets `data` and `error` based on the result
+`data` will be `undefined`. And when we get a response, it sets `data` and `error` based on the result
 of `fetch` and rerenders the component.
+
+Note that `fetch` can be any asynchronous function, so you can use your faviourite data-fetching
+library to handle that part.
 
 ## API
 
@@ -64,9 +67,9 @@ of `fetch` and rerenders the component.
 
 ```js
 const {
-  data,                                    // data for the given key (or null)
-  error,                                   // error (or null)
-  isValidating,                            // is validating
+  data,                                    // data for the given key (or undefined)
+  error,                                   // error (or undefined)
+  isValidating,                            // if the request is loading
   revalidate                               // function to trigger a validate manually
 } = useSWR(
   key,                                     // a unique key for the data
@@ -85,19 +88,22 @@ const {
     onLoadingSlow,                         // event handlers
     onSuccess,
     onError,
-    onErrorRetry
+    onErrorRetry,
+
+    fetcher                                // default fetcher function (same as `fn`)
   }
 )
 ```
 
 ### `SWRConfig`
 
-A context to provide global configurations for SWR.
+A context to provide global configurations (`swrOptions`) for SWR.
 
 ```js
 import useSWR, { SWRConfig } from '@zeit/swr'
 
 function App () {
+  // all the SWRs inside will use `refreshInterval: 1000`
   return <SWRConfig value={{ refreshInterval: 1000 }}>
     <Profile/>
   </SWRConfig>
@@ -105,9 +111,6 @@ function App () {
 
 function Profile () {
   const { data, error } = useSWR('/api/user', fetch)
-  // ...all the SWRs inside will use `refreshInterval: 1000`
-  // automatically.
-
   // ...
 }
 ```
@@ -159,7 +162,7 @@ function App () {
 }
 ```
 
-### `Suspense`
+### Suspense Mode
 
 You can enable the `suspense` option to use `useSWR` with React Suspense.
 
