@@ -119,7 +119,7 @@ describe('useSWR', () => {
     }
 
     const { container } = render(<Page />)
-  
+
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
     await waitForDomChange({ container })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(

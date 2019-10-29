@@ -124,7 +124,7 @@ function useSWR<
       key = ''
     }
   }
-  
+
   config = Object.assign(
     {},
     defaultConfig,
