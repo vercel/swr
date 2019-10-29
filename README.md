@@ -69,8 +69,8 @@ const {
   isValidating,                            // is validating
   revalidate                               // function to trigger a validate manually
 } = useSWR(
-  key,                                     // a unique key for the data
-  fn,                                      // function to fetch your data
+  key,                                     // a unique key for the data (required)
+  fn?,                                     // function to fetch your data
   swrOptions? = {
     suspense: false,                       // enabled React Suspense mode
     revalidateOnFocus: true,               // auto revalidate when window gets focused
