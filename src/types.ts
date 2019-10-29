@@ -48,3 +48,23 @@ export type responseInterface<Data, Error> = {
 export type revalidateType = (
   revalidateOpts: RevalidateOptionInterface
 ) => Promise<boolean>
+
+export type pagesWithSWRType = () => void
+export type pagesPropsInterface<Offset> = {
+  // offset can be any type
+  offset: Offset
+  withSWR: pagesWithSWRType
+}
+
+export type pageComponentType = (props: pagesPropsInterface<any>) => any
+export type pageOffsetMapperType<Offset> = (data: any) => Offset
+
+export type pagesResponseInterface = {
+  pages: any
+  pageCount: number
+  pageSWRs: responseInterface<any, any>[]
+  isLoadingMore: boolean
+  isReachingEnd: boolean
+  isEmpty: boolean
+  loadMore: () => void
+}
