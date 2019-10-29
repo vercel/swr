@@ -1,7 +1,7 @@
 import React from 'react'
 import fetch from '../libs/fetch'
 
-import useSWR, { mutate } from '@zeit/swr'
+import useSWR, { mutate, trigger } from '@zeit/swr'
 
 export default () => {
   const [text, setText] = React.useState('');
@@ -11,13 +11,16 @@ export default () => {
     event.preventDefault()
     // mutate current data to optimistically update the UI
     // the fetch below could fail, in that case the UI will
-    // return to the previous state after SWR revalidate it
-    mutate('/api/data', [...data, text])
+    // be in an incorrect state
+    mutate('/api/data', [...data, text], false)
     // send text to the API
     await fetch('/api/data', {
       method: 'POST',
       body: JSON.stringify({ text })
     })
+    // to revalidate the data and ensure is not incorrect
+    // we trigger a revalidation of the data
+    trigger('/api/data')
     setText('')
   }
 
