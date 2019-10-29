@@ -15,7 +15,8 @@ import {
   RevalidateOptionInterface,
   updaterInterface,
   triggerInterface,
-  mutateInterface
+  mutateInterface,
+  responseInterface
 } from './types'
 
 import defaultConfig, {
@@ -56,7 +57,10 @@ const mutate: mutateInterface = function(key, data, shouldRevalidate = true) {
   }
 }
 
-function useSWR(...args) {
+function useSWR<Data = any, Error = any>(key: keyInterface): responseInterface<Data, Error>;
+function useSWR<Data = any, Error = any>(key: keyInterface, config?: ConfigInterface): responseInterface<Data, Error>;
+function useSWR<Data = any, Error = any>(key: keyInterface, fn?: Function, config?: ConfigInterface): responseInterface<Data, Error>;
+function useSWR<Data = any, Error = any>(...args): responseInterface<Data, Error> {
   let _key: keyInterface,
     fn: Function | undefined,
     config: ConfigInterface = {}
