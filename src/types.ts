@@ -1,4 +1,4 @@
-export interface ConfigInterface {
+export interface ConfigInterface<Data = any, Error = any> {
   errorRetryInterval?: number
   loadingTimeout?: number
   focusThrottleInterval?: number
@@ -11,13 +11,21 @@ export interface ConfigInterface {
   fetcher?: any
   suspense?: boolean
 
-  onLoadingSlow?: (key: string, config: ConfigInterface) => void
-  onSuccess?: (data: any, key: string, config: ConfigInterface) => void
-  onError?: (err: Error, key: string, config: ConfigInterface) => void
+  onLoadingSlow?: (key: string, config: ConfigInterface<Data, Error>) => void
+  onSuccess?: (
+    data: Data,
+    key: string,
+    config: ConfigInterface<Data, Error>
+  ) => void
+  onError?: (
+    err: Error,
+    key: string,
+    config: ConfigInterface<Data, Error>
+  ) => void
   onErrorRetry?: (
     err: Error,
     key: string,
-    config: ConfigInterface,
+    config: ConfigInterface<Data, Error>,
     revalidate: revalidateType,
     revalidateOpts: RevalidateOptionInterface
   ) => void

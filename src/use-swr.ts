@@ -62,19 +62,19 @@ function useSWR<Data = any, Error = any>(
 ): responseInterface<Data, Error>
 function useSWR<Data = any, Error = any>(
   key: keyInterface,
-  config?: ConfigInterface
+  config?: ConfigInterface<Data, Error>
 ): responseInterface<Data, Error>
 function useSWR<Data = any, Error = any>(
   key: keyInterface,
   fn?: Function,
-  config?: ConfigInterface
+  config?: ConfigInterface<Data, Error>
 ): responseInterface<Data, Error>
 function useSWR<Data = any, Error = any>(
   ...args
 ): responseInterface<Data, Error> {
   let _key: keyInterface,
     fn: Function | undefined,
-    config: ConfigInterface = {}
+    config: ConfigInterface<Data, Error> = {}
   if (args.length >= 1) {
     _key = args[0]
   }
