@@ -1,4 +1,4 @@
-export type fetcherFn<Data> = (...args: any) => Data
+export type fetcherFn<Data> = (...args: any) => Data | Promise<Data>
 export interface ConfigInterface<Data = any, Error = any> {
   errorRetryInterval?: number
   loadingTimeout?: number
