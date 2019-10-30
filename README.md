@@ -73,7 +73,7 @@ const {
   revalidate                               // function to trigger a validate manually
 } = useSWR(
   key,                                     // a unique key for the data
-  fn,                                      // Promise returning function to fetch your data
+  fn?,                                     // Promise returning function to fetch your data
   deps? = [],                              // Array of deps to be passed to `fn`
   swrOptions? = {
     suspense: false,                       // enabled React Suspense mode
