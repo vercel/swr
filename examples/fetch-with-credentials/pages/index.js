@@ -4,7 +4,7 @@ import fetch from '../libs/fetch'
 import useSWR from '@zeit/swr'
 
 export default () => {
-  const { data } = useSWR('/api/data', fetch, {args: ['/api/data', {credentials: 'include'}]})
+  const { data } = useSWR('/api/data', fetch, ['/api/data', {credentials: 'include'}])
 
   return <div style={{ textAlign: 'center' }}>
     <h1>Trending Projects</h1>

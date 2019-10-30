@@ -74,6 +74,7 @@ const {
 } = useSWR(
   key,                                     // a unique key for the data
   fn,                                      // Promise returning function to fetch your data
+  deps? = [],                              // Array of deps to be passed to `fn`
   swrOptions? = {
     suspense: false,                       // enabled React Suspense mode
     revalidateOnFocus: true,               // auto revalidate when window gets focused
@@ -84,7 +85,6 @@ const {
     focusThrottleInterval: 5000,           // keep focus revalidate requests in a time window
     dedupingInterval: 2000,                // deduping requests
     loadingTimeout: 3000,                  // timeout for triggering the onLoadingSlow event
-    args: undefined,                       // Advanced usage: Array of args to pass to the `fn`
 
     onLoadingSlow,                         // event handlers
     onSuccess,

@@ -110,7 +110,7 @@ describe('useSWR', () => {
     expect(SWRData).toEqual('SWR')
   })
 
-  it('should allow args in config', async () => {
+  it('should allow deps', async () => {
     function Page() {
       const { data } = useSWR('constant-6', (input: string) => input, ['SWR'])
       return <div>hello, {data}</div>
