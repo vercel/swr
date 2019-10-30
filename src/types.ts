@@ -1,5 +1,9 @@
 export type fetcherFn<Data> = (...args: any) => Data | Promise<Data>
-export interface ConfigInterface<Data = any, Error = any, Fn extends fetcherFn<Data> = fetcherFn<Data>> {
+export interface ConfigInterface<
+  Data = any,
+  Error = any,
+  Fn extends fetcherFn<Data> = fetcherFn<Data>
+> {
   errorRetryInterval?: number
   loadingTimeout?: number
   focusThrottleInterval?: number
@@ -9,7 +13,7 @@ export interface ConfigInterface<Data = any, Error = any, Fn extends fetcherFn<D
   refreshWhenHidden?: boolean
   revalidateOnFocus?: boolean
   shouldRetryOnError?: boolean
-  fetcher?: Fn,
+  fetcher?: Fn
   suspense?: boolean
 
   onLoadingSlow?: (key: string, config: ConfigInterface<Data, Error>) => void
