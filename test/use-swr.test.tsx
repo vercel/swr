@@ -14,7 +14,7 @@ describe('useSWR', () => {
 
   it('should return `undefined` on hydration', () => {
     function Page() {
-      const { data } = useSWR('constant-1', () => 'SWR')
+      const { data } = useSWR('constant-1', async () => 'SWR')
       return <div>hello, {typeof data === 'undefined' ? '' : 'ERROR'}</div>
     }
     const { container } = render(<Page />)
@@ -24,7 +24,7 @@ describe('useSWR', () => {
 
   it('should return data after hydration', async () => {
     function Page() {
-      const { data } = useSWR('constant-2', () => 'SWR')
+      const { data } = useSWR('constant-2', async () => 'SWR')
       return <div>hello, {data}</div>
     }
     const { container } = render(<Page />)
@@ -38,7 +38,7 @@ describe('useSWR', () => {
 
   it('should allow functions as key and reuse the cache', async () => {
     function Page() {
-      const { data } = useSWR(() => 'constant-2', () => 'SWR')
+      const { data } = useSWR(() => 'constant-2', async () => 'SWR')
       return <div>hello, {data}</div>
     }
     const { container } = render(<Page />)
@@ -118,7 +118,7 @@ describe('useSWR - refresh', () => {
     let count = 0
 
     function Page() {
-      const { data } = useSWR('dynamic-1', () => count++, {
+      const { data } = useSWR('dynamic-1', async () => count++, {
         refreshInterval: 200,
         dedupingInterval: 100
       })
@@ -142,7 +142,7 @@ describe('useSWR - refresh', () => {
     let count = 0
 
     function Page() {
-      const { data } = useSWR('dynamic-2', () => count++, {
+      const { data } = useSWR('dynamic-2', async () => count++, {
         refreshInterval: 200,
         dedupingInterval: 300
       })
@@ -172,7 +172,7 @@ describe('useSWR - revalidate', () => {
     let value = 0
 
     function Page() {
-      const { data, revalidate } = useSWR('dynamic-3', () => value++)
+      const { data, revalidate } = useSWR('dynamic-3', async () => value++)
       return <button onClick={revalidate}>data: {data}</button>
     }
     const { container } = render(<Page />)
@@ -193,8 +193,8 @@ describe('useSWR - revalidate', () => {
     let value = 0
 
     function Page() {
-      const { data: v1, revalidate } = useSWR('dynamic-4', () => value++)
-      const { data: v2 } = useSWR('dynamic-4', () => value++)
+      const { data: v1, revalidate } = useSWR('dynamic-4', async () => value++)
+      const { data: v2 } = useSWR('dynamic-4', async () => value++)
       return (
         <button onClick={revalidate}>
           {v1}, {v2}
@@ -328,7 +328,7 @@ describe('useSWR - focus', () => {
     let value = 0
 
     function Page() {
-      const { data } = useSWR('dynamic-5', () => value++, {
+      const { data } = useSWR('dynamic-5', async () => value++, {
         dedupingInterval: 0
       })
       return <div>data: {data}</div>
@@ -351,7 +351,7 @@ describe('useSWR - focus', () => {
     let value = 0
 
     function Page() {
-      const { data } = useSWR('dynamic-6', () => value++, {
+      const { data } = useSWR('dynamic-6', async () => value++, {
         dedupingInterval: 0,
         revalidateOnFocus: false
       })
@@ -379,7 +379,7 @@ describe('useSWR - local mutation', () => {
     let value = 0
 
     function Page() {
-      const { data } = useSWR('dynamic-7', () => value++, {
+      const { data } = useSWR('dynamic-7', async () => value++, {
         dedupingInterval: 0
       })
       return <div>data: {data}</div>
@@ -402,7 +402,7 @@ describe('useSWR - local mutation', () => {
     let value = 0
 
     function Page() {
-      const { data } = useSWR('dynamic-8', () => value++, {
+      const { data } = useSWR('dynamic-8', async () => value++, {
         dedupingInterval: 0
       })
       return <div>data: {data}</div>
@@ -458,7 +458,7 @@ describe('useSWR - context configs', () => {
 
   it('should read the config fallback from the context', async () => {
     let value = 0
-    const fetcher = () => value++
+    const fetcher = async () => value++
 
     function Section() {
       const { data } = useSWR('dynamic-10')

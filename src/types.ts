@@ -1,3 +1,4 @@
+export type fetcherType = (key: string) => Promise<any>
 export interface ConfigInterface<Data = any, Error = any> {
   errorRetryInterval?: number
   loadingTimeout?: number
@@ -8,7 +9,7 @@ export interface ConfigInterface<Data = any, Error = any> {
   refreshWhenHidden?: boolean
   revalidateOnFocus?: boolean
   shouldRetryOnError?: boolean
-  fetcher?: any
+  fetcher?: fetcherType
   suspense?: boolean
 
   onLoadingSlow?: (key: string, config: ConfigInterface<Data, Error>) => void

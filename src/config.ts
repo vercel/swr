@@ -24,7 +24,7 @@ function cacheClear() {
 }
 
 // state managers
-const CONCURRENT_PROMISES = {}
+const CONCURRENT_PROMISES: Partial<Record<string, Promise<unknown>>> = {}
 const CONCURRENT_PROMISES_TS = {}
 const FOCUS_REVALIDATORS = {}
 const CACHE_REVALIDATORS = {}
