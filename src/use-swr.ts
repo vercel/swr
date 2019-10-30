@@ -146,6 +146,8 @@ function useSWR<
   const errorRef = useRef(false)
   const unmountedRef = useRef(false)
   const keyRef = useRef(key)
+  const fnRef = useRef(fn)
+  const fetcherArgsRef = useRef(fetcherArgs)
   const dataRef = useRef(data)
 
   const revalidate = useCallback(
@@ -216,6 +218,8 @@ function useSWR<
               trigger(key, false)
             }
             keyRef.current = key
+            fnRef.current = fn
+            fetcherArgsRef.current = fetcherArgs
             dataRef.current = newData
           }
         })
@@ -244,7 +248,7 @@ function useSWR<
       loading = false
       return true
     },
-    [key]
+    [key, fetcherArgs, fn]
   )
   const forceRevalidate = useCallback(() => revalidate({ noDedupe: true }), [
     revalidate
@@ -259,11 +263,18 @@ function useSWR<
 
     const _newData = cacheGet(key)
 
-    // update the state if the cache changed OR the key changed
-    if ((_newData && !deepEqual(data, _newData)) || keyRef.current !== key) {
+    // update the state if the cache changed OR the key changed OR the args changed OR the fetcherFn has changed
+    if (
+      (_newData && !deepEqual(data, _newData)) ||
+      fnRef.current !== fn ||
+      keyRef.current !== key ||
+      fetcherArgsRef.current !== fetcherArgs
+    ) {
       setData(_newData)
       dataRef.current = _newData
       keyRef.current = key
+      fnRef.current = fn
+      fetcherArgsRef.current = fetcherArgs
     }
 
     // revalidate after mounted
@@ -299,6 +310,8 @@ function useSWR<
         })
         dataRef.current = newData
         keyRef.current = key
+        fnRef.current = fn
+        fetcherArgsRef.current = fetcherArgs
       }
 
       if (shouldRevalidate) {
@@ -354,7 +367,7 @@ function useSWR<
         clearTimeout(id)
       }
     }
-  }, [key, config.refreshInterval, revalidate])
+  }, [key, fn, fetcherArgs, config.refreshInterval, revalidate])
 
   // suspense (client side only)
   if (config.suspense && !data) {
@@ -373,7 +386,12 @@ function useSWR<
     // `key` might be changed in the upcoming hook re-render,
     // but the previous state will stay
     // so we need to match the latest key and data
-    data: keyRef.current === key ? data : undefined,
+    data:
+      keyRef.current === key &&
+      fnRef.current === fn &&
+      fetcherArgsRef.current === fetcherArgs
+        ? data
+        : undefined,
     revalidate: forceRevalidate, // handler
     isValidating
   }
