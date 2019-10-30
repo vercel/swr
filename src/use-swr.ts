@@ -64,7 +64,8 @@ function useSWR<
   Fn extends fetcherFn<Data> = fetcherFn<Data>
 >(
   key: keyInterface,
-  config?: ConfigInterface<Data, Error, Fn>
+  fn?: Fn,
+  config?: ConfigInterface<Data, Error>
 ): responseInterface<Data, Error>
 function useSWR<
   Data = any,
@@ -73,27 +74,24 @@ function useSWR<
 >(
   key: keyInterface,
   fn?: Fn,
-  config?: ConfigInterface<Data, Error, Fn>
+  deps?: Parameters<Fn>,
+  config?: ConfigInterface<Data, Error>
 ): responseInterface<Data, Error>
 function useSWR<
   Data = any,
   Error = any,
   Fn extends fetcherFn<Data> = fetcherFn<Data>
->(...args): responseInterface<Data, Error> {
-  let _key: keyInterface,
-    fn: Fn | undefined,
-    config: ConfigInterface<Data, Error, Fn> = {},
-    fetcherArgs: any[]
-  if (args.length >= 1) {
-    _key = args[0]
-  }
-  if (typeof args[1] === 'function') {
-    fn = args[1]
-  } else if (typeof args[1] === 'object') {
+>(_key: keyInterface, fn?: Fn, ...args): responseInterface<Data, Error> {
+  let config: ConfigInterface<Data, Error> = {},
+    fetcherArgs: any[] = []
+
+  if (args.length === 2) {
+    fetcherArgs = Array.from(args[0])
     config = args[1]
-  }
-  if (typeof args[2] === 'object') {
-    config = args[2]
+  } else if (args.length === 1 && Array.isArray(args[0])) {
+    fetcherArgs = args[0]
+  } else if (args.length === 1 && typeof args[0] === 'object') {
+    config = args[0]
   }
 
   // we assume `key` as the identifier of the request
@@ -110,19 +108,6 @@ function useSWR<
     }
   } else {
     key = _key
-  }
-
-  if (typeof config.args === 'undefined') {
-    fetcherArgs = [key]
-  } else {
-    try {
-      fetcherArgs =
-        typeof config['args'] === 'function'
-          ? (config['args'] as Function)()
-          : config.args
-    } catch {
-      key = ''
-    }
   }
 
   config = Object.assign(
@@ -248,7 +233,7 @@ function useSWR<
       loading = false
       return true
     },
-    [key, fetcherArgs, fn]
+    [key, fn, ...fetcherArgs]
   )
   const forceRevalidate = useCallback(() => revalidate({ noDedupe: true }), [
     revalidate
@@ -266,8 +251,8 @@ function useSWR<
     // update the state if the cache changed OR the key changed OR the args changed OR the fetcherFn has changed
     if (
       (_newData && !deepEqual(data, _newData)) ||
-      fnRef.current !== fn ||
       keyRef.current !== key ||
+      fnRef.current !== fn ||
       fetcherArgsRef.current !== fetcherArgs
     ) {
       setData(_newData)
@@ -367,7 +352,7 @@ function useSWR<
         clearTimeout(id)
       }
     }
-  }, [key, fn, fetcherArgs, config.refreshInterval, revalidate])
+  }, [key, config.refreshInterval, revalidate, fn, ...fetcherArgs])
 
   // suspense (client side only)
   if (config.suspense && !data) {
