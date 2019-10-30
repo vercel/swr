@@ -14,8 +14,8 @@
     "dev": "now dev",
     "build": "tsc",
     "watch": "tsc --watch",
-    "lint": "tsc && eslint 'src/**/*.{ts,tsx}' && prettier --check 'src/**/*.{ts,tsx}'",
-    "lint:fix": "eslint '{src,test}/**/*.{ts,tsx}' --fix && prettier --write '{src,test}/**/*.{ts,tsx}'",
+    "lint": "tsc && eslint 'src/**/*.{ts,tsx}' && prettier --check '{src,test,examples}/**/*.{ts,tsx}'",
+    "lint:fix": "eslint '{src,test}/**/*.{ts,tsx}' --fix && prettier --write '{src,test,examples}/**/*.{ts,tsx}'",
     "test": "jest"
   },
   "devDependencies": {
