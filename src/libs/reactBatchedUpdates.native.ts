@@ -1,4 +1,4 @@
-/* eslint-disable import/no-unresolved */
+// eslint-disable-next-line
 // @ts-ignore
 import { unstable_batchedUpdates } from 'react-native'
 
