@@ -65,7 +65,7 @@ function useSWR<
 >(
   key: keyInterface,
   fn?: Fn,
-  config?: ConfigInterface<Data, Error>
+  config?: ConfigInterface<Data, Error, Fn>
 ): responseInterface<Data, Error>
 function useSWR<
   Data = any,
@@ -75,7 +75,7 @@ function useSWR<
   key: keyInterface,
   fn?: Fn,
   deps?: Parameters<Fn>,
-  config?: ConfigInterface<Data, Error>
+  config?: ConfigInterface<Data, Error, Fn>
 ): responseInterface<Data, Error>
 function useSWR<
   Data = any,
