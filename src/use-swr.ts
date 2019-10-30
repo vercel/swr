@@ -116,7 +116,9 @@ function useSWR<Data = any, Error = any>(
   }
 
   // stale: get from cache
-  let [data, setData] = useState(useHydration() ? undefined : cacheGet(key))
+  let [data, setData] = useState(
+    config.suspense ? cacheGet(key) : useHydration() ? undefined : cacheGet(key)
+  )
   let [error, setError] = useState()
   let [isValidating, setIsValidating] = useState(false)
 
@@ -335,7 +337,7 @@ function useSWR<Data = any, Error = any>(
   }, [key, config.refreshInterval, revalidate])
 
   // suspense (client side only)
-  if (config.suspense && !data) {
+  if (config.suspense && typeof data === 'undefined') {
     if (typeof window !== 'undefined') {
       if (!CONCURRENT_PROMISES[key]) {
         // need to trigger revalidate immediately
