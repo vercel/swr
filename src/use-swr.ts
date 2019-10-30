@@ -119,6 +119,8 @@ function useSWR<Data = any, Error = any>(
   let [data, setData] = useState(
     config.suspense ? cacheGet(key) : useHydration() ? undefined : cacheGet(key)
   )
+  // it is fine to call `useHydration` conditionally here
+  // because `config.suspense` should never change
   let [error, setError] = useState()
   let [isValidating, setIsValidating] = useState(false)
 
