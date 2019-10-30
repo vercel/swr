@@ -82,7 +82,7 @@ function useSWR<
   Error = any,
   Fn extends fetcherFn<Data> = fetcherFn<Data>
 >(_key: keyInterface, fn?: Fn, ...args): responseInterface<Data, Error> {
-  let config: ConfigInterface<Data, Error> = {},
+  let config: ConfigInterface<Data, Error, Fn> = {},
     fetcherArgs: any[] = []
 
   if (args.length === 2) {
