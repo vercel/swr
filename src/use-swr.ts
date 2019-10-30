@@ -57,6 +57,13 @@ const mutate: mutateInterface = function(key, data, shouldRevalidate = true) {
     }
   }
 }
+function depsCompare (arr1, arr2) {
+  if (arr1.length !== arr2.length) return false
+  for (let i = 0; i < arr1.length; ++i) {
+    if (arr1[i] !== arr2[i]) return false
+  }
+  return true
+}
 
 function useSWR<
   Data = any,
@@ -131,9 +138,9 @@ function useSWR<
   const errorRef = useRef(false)
   const unmountedRef = useRef(false)
   const keyRef = useRef(key)
-  const fnRef = useRef(fn)
   const fetcherArgsRef = useRef(fetcherArgs)
   const dataRef = useRef(data)
+const _fn = useCallback(fn, [key, ...fetcherArgs])
 
   const revalidate = useCallback(
     async (
@@ -166,7 +173,7 @@ function useSWR<
               if (loading) config.onLoadingSlow(key, config)
             }, config.loadingTimeout)
           }
-          CONCURRENT_PROMISES[key] = fn(...fetcherArgs)
+          CONCURRENT_PROMISES[key] = _fn(...fetcherArgs)
           CONCURRENT_PROMISES_TS[key] = ts = Date.now()
           setTimeout(() => {
             delete CONCURRENT_PROMISES[key]
@@ -203,7 +210,6 @@ function useSWR<
               trigger(key, false)
             }
             keyRef.current = key
-            fnRef.current = fn
             fetcherArgsRef.current = fetcherArgs
             dataRef.current = newData
           }
@@ -233,7 +239,7 @@ function useSWR<
       loading = false
       return true
     },
-    [key, fn, ...fetcherArgs]
+    [key, _fn]
   )
   const forceRevalidate = useCallback(() => revalidate({ noDedupe: true }), [
     revalidate
@@ -252,13 +258,11 @@ function useSWR<
     if (
       (_newData && !deepEqual(data, _newData)) ||
       keyRef.current !== key ||
-      fnRef.current !== fn ||
-      fetcherArgsRef.current !== fetcherArgs
+      !depsCompare(fetcherArgsRef.current, fetcherArgs)
     ) {
       setData(_newData)
       dataRef.current = _newData
       keyRef.current = key
-      fnRef.current = fn
       fetcherArgsRef.current = fetcherArgs
     }
 
@@ -295,7 +299,6 @@ function useSWR<
         })
         dataRef.current = newData
         keyRef.current = key
-        fnRef.current = fn
         fetcherArgsRef.current = fetcherArgs
       }
 
@@ -352,7 +355,7 @@ function useSWR<
         clearTimeout(id)
       }
     }
-  }, [key, config.refreshInterval, revalidate, fn, ...fetcherArgs])
+  }, [key, config.refreshInterval, _fn])
 
   // suspense (client side only)
   if (config.suspense && !data) {
@@ -373,8 +376,7 @@ function useSWR<
     // so we need to match the latest key and data
     data:
       keyRef.current === key &&
-      fnRef.current === fn &&
-      fetcherArgsRef.current === fetcherArgs
+      depsCompare(fetcherArgsRef.current, fetcherArgs)
         ? data
         : undefined,
     revalidate: forceRevalidate, // handler
