@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react'
+import React, { Suspense, useEffect, useState } from 'react'
 import {
   cleanup,
   render,
@@ -21,14 +21,15 @@ describe('useSWR', () => {
 
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
   })
-
+  
   it('should return data after hydration', async () => {
     function Page() {
       const { data } = useSWR('constant-2', () => 'SWR')
       return <div>hello, {data}</div>
     }
-    const { container } = render(<Page />)
-
+    
+    const { container } = render(<Page/>)
+    
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
     await waitForDomChange({ container }) // mount
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
@@ -109,20 +110,49 @@ describe('useSWR', () => {
     )
     expect(SWRData).toEqual('SWR')
   })
-
+  
   it('should allow deps', async () => {
     function Page() {
       const { data } = useSWR('constant-6', (input: string) => input, ['SWR'])
       return <div>hello, {data}</div>
     }
-
-    const { container } = render(<Page />)
-
+    
+    const { container } = render(<Page/>)
+    
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
     await waitForDomChange({ container })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"hello, SWR"`
     )
+  })
+  
+  it.skip('should allow deps to change', async () => {
+    function Page() {
+      const [dep, setDep] = useState('SWR');
+      const { data } = useSWR('constant-6', (input: string) => input, [dep])
+  
+      useEffect(
+        () => {
+           setDep('New SWR')
+        },
+        []
+      )
+      
+      return <div>hello, {data}</div>
+    }
+    
+    const { container, rerender } = render(<Page/>)
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
+    await waitForDomChange({ container })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+       `"hello, SWR"`
+    )
+    await act(async () => {
+      rerender(<Page/>)
+      expect(container.firstChild.textContent).toMatchInlineSnapshot(
+        `"hello, New SWR"`
+      )
+    });
   })
 })
 

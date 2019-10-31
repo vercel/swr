@@ -89,22 +89,10 @@ function useSWR<
   Error = any,
   Fn extends fetcherFn<Data> = fetcherFn<Data>
 >(_key: keyInterface, fn?: Fn, ...args): responseInterface<Data, Error> {
-  let config: ConfigInterface<Data, Error, Fn> = {},
-    fetcherArgs: any[] = []
-
-  if (args.length === 2) {
-    fetcherArgs = Array.from(args[0])
-    config = args[1]
-  } else if (args.length === 1 && Array.isArray(args[0])) {
-    fetcherArgs = args[0]
-  } else if (args.length === 1 && typeof args[0] === 'object') {
-    config = args[0]
-  }
-
   // we assume `key` as the identifier of the request
   // `key` can change but `fn` shouldn't
   // (because `revalidate` only depends on `key`)
-
+  
   let key: string
   if (typeof _key === 'function') {
     try {
@@ -115,6 +103,18 @@ function useSWR<
     }
   } else {
     key = _key
+  }
+  
+  let config: ConfigInterface<Data, Error, Fn> = {},
+    fetcherArgs: any[] = [key]
+  
+  if (args.length === 2) {
+    fetcherArgs = Array.from(args[0])
+    config = args[1]
+  } else if (args.length === 1 && Array.isArray(args[0])) {
+    fetcherArgs = args[0]
+  } else if (args.length === 1 && typeof args[0] === 'object') {
+    config = args[0]
   }
 
   config = Object.assign(
@@ -140,7 +140,7 @@ function useSWR<
   const keyRef = useRef(key)
   const fetcherArgsRef = useRef(fetcherArgs)
   const dataRef = useRef(data)
-const _fn = useCallback(fn, [key, ...fetcherArgs])
+  const _fn = useCallback(fn, [...fetcherArgs])
 
   const revalidate = useCallback(
     async (
@@ -173,6 +173,7 @@ const _fn = useCallback(fn, [key, ...fetcherArgs])
               if (loading) config.onLoadingSlow(key, config)
             }, config.loadingTimeout)
           }
+
           CONCURRENT_PROMISES[key] = _fn(...fetcherArgs)
           CONCURRENT_PROMISES_TS[key] = ts = Date.now()
           setTimeout(() => {
