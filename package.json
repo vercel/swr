@@ -1,11 +1,11 @@
 {
   "name": "swr",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "React Hooks library for remote data fetching",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist/src/**"
+    "dist/**"
   ],
   "repository": "zeit/swr",
   "homepage": "https://swr.now.sh",
