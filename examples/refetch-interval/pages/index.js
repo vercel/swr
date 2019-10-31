@@ -2,7 +2,7 @@ import { useState } from 'react'
 import Button from '../components/button'
 import fetch from '../libs/fetch'
 
-import useSWR from '@zeit/swr'
+import useSWR from 'swr'
 
 export default () => {
   const { data, revalidate } = useSWR('/api/data', fetch, {

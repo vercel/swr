@@ -1,7 +1,7 @@
 import React from 'react'
 import fetch from '../libs/fetch'
 
-import useSWR, { mutate, trigger } from '@zeit/swr'
+import useSWR, { mutate, trigger } from 'swr'
 
 export default () => {
   const [text, setText] = React.useState('');

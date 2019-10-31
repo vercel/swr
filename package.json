@@ -1,5 +1,5 @@
 {
-  "name": "@zeit/swr",
+  "name": "swr",
   "version": "0.1.2",
   "description": "React Hooks library for remote data fetching",
   "main": "./dist/src/index.js",
