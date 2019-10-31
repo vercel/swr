@@ -188,5 +188,7 @@ function App () {
 - Joe Haddad ([@timer150](https://twitter.com/timer150)) - [ZEIT](https://zeit.co)
 - Paco Coursey ([@pacocoursey](https://twitter.com/pacocoursey)) - [ZEIT](https://zeit.co)
 
+Thanks to Ryan Chen for providing the awesome `swr` npm package name!
+
 ## License
 The MIT License.
