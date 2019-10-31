@@ -1,6 +1,6 @@
 import React from 'react'
 import App from 'next/app'
-import { SWRConfig } from '@zeit/swr'
+import { SWRConfig } from 'swr'
 import fetch from '../libs/fetch.js';
 
 class MyApp extends App {

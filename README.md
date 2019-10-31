@@ -8,11 +8,11 @@
   <a aria-label="ZEIT logo" href="https://github.com/zeit">
     <img src="https://img.shields.io/badge/MADE%20BY%20ZEIT-000000.svg?style=for-the-badge&logo=ZEIT&labelColor=000000&logoWidth=20">
   </a>
-  <a aria-label="NPM version" href="https://www.npmjs.com/package/@zeit/swr">
-    <img alt="" src="https://img.shields.io/npm/v/@zeit/swr?style=for-the-badge&labelColor=000000">
+  <a aria-label="NPM version" href="https://www.npmjs.com/package/swr">
+    <img alt="" src="https://img.shields.io/npm/v/swr?style=for-the-badge&labelColor=000000">
   </a>
   <a aria-label="License" href="https://github.com/zeit/swr/blob/master/LICENSE">
-    <img alt="" src="https://img.shields.io/npm/l/@zeit/swr?style=for-the-badge&labelColor=000000">
+    <img alt="" src="https://img.shields.io/npm/l/swr?style=for-the-badge&labelColor=000000">
   </a>
 </p>
 
@@ -39,7 +39,7 @@ With SWR, components will get a stream of data updates constantly and automatica
 ## Quick Start
 
 ```js
-import useSWR from '@zeit/swr'
+import useSWR from 'swr'
 
 function Profile () {
   const { data, error } = useSWR('/api/user', fetch)
@@ -100,7 +100,7 @@ const {
 A context to provide global configurations (`swrOptions`) for SWR.
 
 ```js
-import useSWR, { SWRConfig } from '@zeit/swr'
+import useSWR, { SWRConfig } from 'swr'
 
 function App () {
   // all the SWRs inside will use `refreshInterval: 1000`
@@ -121,7 +121,7 @@ With `mutate`, you can update your local data programmatically, while
 revalidating and finally replace it.
 
 ```js
-import useSWR, { mutate } from '@zeit/swr'
+import useSWR, { mutate } from 'swr'
 
 function Profile () {
   const { data } = useSWR('/api/user', fetch)
@@ -145,7 +145,7 @@ You can broadcast a revalidation message to all SWR data inside any component by
 `trigger(key)`.
 
 ```js
-import useSWR, { trigger } from '@zeit/swr'
+import useSWR, { trigger } from 'swr'
 
 function App () {
   return <div>
@@ -168,7 +168,7 @@ You can enable the `suspense` option to use `useSWR` with React Suspense.
 
 ```js
 import { Suspense } from 'react'
-import useSWR from '@zeit/swr'
+import useSWR from 'swr'
 
 function Profile () {
   const { data } = useSWR('/api/user', fetch, { suspense: true })
@@ -187,6 +187,8 @@ function App () {
 - Guillermo Rauch ([@rauchg](https://twitter.com/rauchg)) – [ZEIT](https://zeit.co)
 - Joe Haddad ([@timer150](https://twitter.com/timer150)) - [ZEIT](https://zeit.co)
 - Paco Coursey ([@pacocoursey](https://twitter.com/pacocoursey)) - [ZEIT](https://zeit.co)
+
+Thanks to Ryan Chen for providing the awesome `swr` npm package name!
 
 ## License
 The MIT License.
