@@ -14,9 +14,24 @@
     "dev": "now dev",
     "build": "tsc",
     "watch": "tsc --watch",
-    "lint": "tsc && eslint 'src/**/*.{ts,tsx}' && prettier --check '{src,test,examples}/**/*.{ts,tsx}'",
-    "lint:fix": "eslint '{src,test}/**/*.{ts,tsx}' --fix && prettier --write '{src,test,examples}/**/*.{ts,tsx}'",
+    "types:check": "tsc --noEmit",
+    "format": "prettier --write '{src,test,examples}/**/*.{ts,tsx}'",
+    "lint": "eslint '{src,test,examples}/**/*.{ts,tsx}'",
+    "lint:fix": "eslint '{src,test,examples}/**/*.{ts,tsx}' --fix",
     "test": "jest"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "npm run types:check",
+      "npm run lint:fix",
+      "npm run format",
+      "git add"
+    ]
   },
   "devDependencies": {
     "@testing-library/react": "9.3.0",
@@ -28,7 +43,9 @@
     "@typescript-eslint/parser": "2.5.0",
     "eslint": "6.6.0",
     "eslint-config-prettier": "6.5.0",
+    "husky": "2.4.1",
     "jest": "24.9.0",
+    "lint-staged": "8.2.1",
     "prettier": "1.18.2",
     "react": "16.11.0",
     "react-dom": "16.11.0",
