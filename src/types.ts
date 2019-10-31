@@ -65,7 +65,10 @@ export type pagesPropsInterface<Offset> = {
 }
 
 export type pageComponentType = (props: pagesPropsInterface<any>) => any
-export type pageOffsetMapperType<Offset> = (data: any) => Offset
+export type pageOffsetMapperType<Offset, Data, Error> = (
+  data: any,
+  pageSWRs: responseInterface<Data, Error>[]
+) => Offset
 
 export type pagesResponseInterface = {
   pages: any
