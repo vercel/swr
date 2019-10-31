@@ -5,3 +5,4 @@ dist
 .env
 .next
 .DS_Store
+.idea
