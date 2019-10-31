@@ -7,7 +7,7 @@ import {
 } from 'react'
 import { unstable_batchedUpdates } from 'react-dom'
 import throttle from 'lodash.throttle'
-import deepEqual from 'deep-equal'
+import deepEqual from 'fast-deep-equal'
 
 import {
   keyInterface,
