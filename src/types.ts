@@ -57,14 +57,18 @@ export type revalidateType = (
   revalidateOpts: RevalidateOptionInterface
 ) => Promise<boolean>
 
-export type pagesWithSWRType = () => void
-export type pagesPropsInterface<Offset> = {
+export type pagesWithSWRType<Data, Error> = (
+  swr: responseInterface<Data, Error>
+) => responseInterface<Data, Error>
+export type pagesPropsInterface<Offset, Data, Error> = {
   // offset can be any type
   offset: Offset
-  withSWR: pagesWithSWRType
+  withSWR: pagesWithSWRType<Data, Error>
 }
 
-export type pageComponentType = (props: pagesPropsInterface<any>) => any
+export type pageComponentType<Offset, Data, Error> = (
+  props: pagesPropsInterface<Offset, Data, Error>
+) => any
 export type pageOffsetMapperType<Offset, Data, Error> = (
   data: any,
   pageSWRs: responseInterface<Data, Error>[]

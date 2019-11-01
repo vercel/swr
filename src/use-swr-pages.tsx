@@ -90,7 +90,7 @@ function App () {
 
 export function useSWRPages<OffsetType, Data, Error>(
   pageKey: string,
-  pageFn: pageComponentType,
+  pageFn: pageComponentType<OffsetType, Data, Error>,
   swrDataToOffset: pageOffsetMapperType<OffsetType, Data, Error>,
   deps: any[] = []
 ): pagesResponseInterface {
@@ -150,7 +150,7 @@ export function useSWRPages<OffsetType, Data, Error>(
           const _swrs = [...swrs]
           _swrs[id] = swr
 
-          if (swr.data) {
+          if (typeof swr.data !== 'undefined') {
             // set next page's offset
             const newPageOffset = swrDataToOffset(swr.data, _swrs)
             if (pageOffsets[id + 1] !== newPageOffset) {

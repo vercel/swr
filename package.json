@@ -2,10 +2,10 @@
   "name": "swr",
   "version": "0.1.5",
   "description": "React Hooks library for remote data fetching",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
   "files": [
-    "dist/**"
+    "dist/src/**"
   ],
   "repository": "zeit/swr",
   "homepage": "https://swr.now.sh",
@@ -22,12 +22,11 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged"
+      "pre-commit": "npm run types:check && lint-staged"
     }
   },
   "lint-staged": {
     "*.{ts,tsx}": [
-      "npm run types:check",
       "npm run lint:fix",
       "npm run format",
       "git add"
