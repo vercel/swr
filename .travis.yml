@@ -1,5 +1,5 @@
 {
   "language": "node_js",
   "node_js": "node",
-  "script": "npm run lint && npm test"
+  "script": "npm run types:check && npm run lint && npm test"
 }

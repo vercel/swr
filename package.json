@@ -1,11 +1,11 @@
 {
   "name": "swr",
-  "version": "0.1.2",
+  "version": "0.1.5",
   "description": "React Hooks library for remote data fetching",
-  "main": "./dist/src/index.js",
-  "types": "./dist/src/index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "files": [
-    "dist/src/**"
+    "dist/**"
   ],
   "repository": "zeit/swr",
   "homepage": "https://swr.now.sh",
@@ -14,9 +14,24 @@
     "dev": "now dev",
     "build": "tsc",
     "watch": "tsc --watch",
-    "lint": "tsc && eslint 'src/**/*.{ts,tsx}' && prettier --check '{src,test,examples}/**/*.{ts,tsx}'",
-    "lint:fix": "eslint '{src,test}/**/*.{ts,tsx}' --fix && prettier --write '{src,test,examples}/**/*.{ts,tsx}'",
+    "types:check": "tsc --noEmit",
+    "format": "prettier --write '{src,test,examples}/**/*.{ts,tsx}'",
+    "lint": "eslint '{src,test,examples}/**/*.{ts,tsx}'",
+    "lint:fix": "eslint '{src,test,examples}/**/*.{ts,tsx}' --fix",
     "test": "jest"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "npm run types:check",
+      "npm run lint:fix",
+      "npm run format",
+      "git add"
+    ]
   },
   "devDependencies": {
     "@testing-library/react": "9.3.0",
@@ -28,7 +43,9 @@
     "@typescript-eslint/parser": "2.5.0",
     "eslint": "6.6.0",
     "eslint-config-prettier": "6.5.0",
+    "husky": "2.4.1",
     "jest": "24.9.0",
+    "lint-staged": "8.2.1",
     "prettier": "1.18.2",
     "react": "16.11.0",
     "react-dom": "16.11.0",
@@ -36,7 +53,7 @@
     "typescript": "3.6.4"
   },
   "dependencies": {
-    "deep-equal": "1.1.0",
+    "fast-deep-equal": "2.0.1",
     "lodash.throttle": "4.1.1",
     "ms": "2.1.2"
   },
