@@ -1,5 +1,5 @@
 export * from './use-swr'
-export { default as useSWR } from './use-swr'
+import { default as useSWR } from './use-swr'
 export { useSWRPages } from './use-swr-pages'
 export {
   ConfigInterface,
