@@ -139,7 +139,7 @@ export function useSWRPages<OffsetType>(
   }, [isLoadingMore || isReachingEnd])
 
   const pages = useMemo(() => {
-    const getWithSWR = id => swr => {
+    const getWithSWR = (id: number) => (swr:responseInterface<any, any>) => {
       if (
         !pageSWRs[id] ||
         pageSWRs[id].data !== swr.data ||
