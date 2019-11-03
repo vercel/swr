@@ -16,6 +16,7 @@ import {
   updaterInterface,
   triggerInterface,
   mutateInterface,
+  broadcastStateInterface,
   responseInterface
 } from './types'
 
@@ -32,16 +33,26 @@ import SWRConfigContext from './swr-config-context'
 import isDocumentVisible from './libs/is-document-visible'
 import useHydration from './libs/use-hydration'
 
-const trigger: triggerInterface = function(key, shouldRevalidate = true) {
+const trigger: triggerInterface = (key, shouldRevalidate = true) => {
   const updaters = CACHE_REVALIDATORS[key]
   if (updaters) {
+    const currentData = cacheGet(key)
     for (let i = 0; i < updaters.length; ++i) {
-      updaters[i](shouldRevalidate)
+      updaters[i](shouldRevalidate, currentData)
     }
   }
 }
 
-const mutate: mutateInterface = function(key, data, shouldRevalidate = true) {
+const broadcastState: broadcastStateInterface = (key, data, error) => {
+  const updaters = CACHE_REVALIDATORS[key]
+  if (updaters) {
+    for (let i = 0; i < updaters.length; ++i) {
+      updaters[i](false, data, error)
+    }
+  }
+}
+
+const mutate: mutateInterface = (key, data, shouldRevalidate = true) => {
   // update timestamp
   MUTATION_TS[key] = Date.now() - 1
 
@@ -52,7 +63,7 @@ const mutate: mutateInterface = function(key, data, shouldRevalidate = true) {
   const updaters = CACHE_REVALIDATORS[key]
   if (updaters) {
     for (let i = 0; i < updaters.length; ++i) {
-      updaters[i](shouldRevalidate)
+      updaters[i](shouldRevalidate, data)
     }
   }
 }
@@ -125,7 +136,7 @@ function useSWR<Data = any, Error = any>(
   let [isValidating, setIsValidating] = useState(false)
 
   // error ref inside revalidate (is last request errored?)
-  const errorRef = useRef(false)
+  const errorRef = useRef(null)
   const unmountedRef = useRef(false)
   const keyRef = useRef(key)
   const dataRef = useRef(data)
@@ -138,17 +149,18 @@ function useSWR<Data = any, Error = any>(
       if (unmountedRef.current) return false
 
       let loading = true
+      let isOriginalRequest = !!(
+        typeof CONCURRENT_PROMISES[key] === 'undefined' ||
+        revalidateOpts.noDedupe
+      )
 
       try {
         setIsValidating(true)
 
         let newData
-        let originalRequest = !!(
-          CONCURRENT_PROMISES[key] === undefined || revalidateOpts.noDedupe
-        )
         let ts
 
-        if (!originalRequest) {
+        if (!isOriginalRequest) {
           // different component, dedupe requests
           // need the new data for the state
           ts = CONCURRENT_PROMISES_TS[key]
@@ -181,21 +193,21 @@ function useSWR<Data = any, Error = any>(
           return false
         }
 
-        errorRef.current = false
+        errorRef.current = null
 
         unstable_batchedUpdates(() => {
           setIsValidating(false)
           setError(undefined)
-          if (dataRef.current && deepEqual(dataRef.current, newData)) {
+          if (deepEqual(dataRef.current, newData)) {
             // deep compare to avoid extra re-render
             // do nothing
           } else {
             // data changed
             setData(newData)
             cacheSet(key, newData)
-            if (originalRequest) {
+            if (isOriginalRequest) {
               // also update other SWRs from cache
-              trigger(key, false)
+              broadcastState(key, newData, null)
             }
             keyRef.current = key
             dataRef.current = newData
@@ -207,9 +219,12 @@ function useSWR<Data = any, Error = any>(
           setIsValidating(false)
           setError(err)
         })
+        if (isOriginalRequest) {
+          broadcastState(key, undefined, err)
+        }
 
         config.onError(err, key, config)
-        errorRef.current = true
+        errorRef.current = err
 
         if (config.shouldRetryOnError) {
           const retryCount = (revalidateOpts.retryCount || 0) + 1
@@ -271,23 +286,37 @@ function useSWR<Data = any, Error = any>(
     }
 
     // updater
-    const onUpdate: updaterInterface = (shouldRevalidate = true) => {
+    const onUpdate: updaterInterface<Data, Error> = (
+      shouldRevalidate = true,
+      updatedData,
+      updatedError
+    ) => {
       // update data from the cache
-      const newData = cacheGet(key)
-      if (!deepEqual(data, newData)) {
-        unstable_batchedUpdates(() => {
-          setError(undefined)
-          setData(newData)
-        })
-        dataRef.current = newData
+      unstable_batchedUpdates(() => {
+        if (
+          typeof updatedData !== 'undefined' &&
+          !deepEqual(dataRef.current, updatedData)
+        ) {
+          setData(updatedData)
+          dataRef.current = updatedData
+        }
+        if (
+          typeof updatedError !== 'undefined' &&
+          !deepEqual(errorRef.current, updatedError)
+        ) {
+          setError(updatedError)
+          errorRef.current = updatedError
+        }
         keyRef.current = key
-      }
+      })
 
       if (shouldRevalidate) {
         return revalidate()
       }
       return false
     }
+
+    // add updater to listeners
     if (!CACHE_REVALIDATORS[key]) {
       CACHE_REVALIDATORS[key] = [onUpdate]
     } else {

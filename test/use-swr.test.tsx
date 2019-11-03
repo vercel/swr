@@ -109,6 +109,70 @@ describe('useSWR', () => {
     )
     expect(SWRData).toEqual('SWR')
   })
+
+  it('should broadcast data', async () => {
+    let cnt = 0
+
+    function Block() {
+      const { data } = useSWR('broadcast-1', () => cnt++, {
+        refreshInterval: 100,
+        // need to turn of deduping otherwise
+        // refreshing will be ignored
+        dedupingInterval: 10
+      })
+      return <>{data}</>
+    }
+    function Page() {
+      return (
+        <>
+          <Block /> <Block /> <Block />
+        </>
+      )
+    }
+    const { container } = render(<Page />)
+    await act(() => new Promise(res => setTimeout(res, 10)))
+    expect(container.textContent).toMatchInlineSnapshot(`"0 0 0"`)
+    await act(() => new Promise(res => setTimeout(res, 100)))
+    expect(container.textContent).toMatchInlineSnapshot(`"1 1 1"`)
+    await act(() => new Promise(res => setTimeout(res, 100)))
+    expect(container.textContent).toMatchInlineSnapshot(`"2 2 2"`)
+  })
+
+  it('should broadcast error', async () => {
+    let cnt = 0
+
+    function Block() {
+      const { data, error } = useSWR(
+        'broadcast-2',
+        () => {
+          if (cnt === 2) throw new Error('err')
+          return cnt++
+        },
+        {
+          refreshInterval: 100,
+          // need to turn of deduping otherwise
+          // refreshing will be ignored
+          dedupingInterval: 10
+        }
+      )
+      if (error) return error.message
+      return <>{data}</>
+    }
+    function Page() {
+      return (
+        <>
+          <Block /> <Block /> <Block />
+        </>
+      )
+    }
+    const { container } = render(<Page />)
+    await act(() => new Promise(res => setTimeout(res, 10)))
+    expect(container.textContent).toMatchInlineSnapshot(`"0 0 0"`)
+    await act(() => new Promise(res => setTimeout(res, 100)))
+    expect(container.textContent).toMatchInlineSnapshot(`"1 1 1"`)
+    await act(() => new Promise(res => setTimeout(res, 100)))
+    expect(container.textContent).toMatchInlineSnapshot(`"err err err"`)
+  })
 })
 
 describe('useSWR - refresh', () => {
