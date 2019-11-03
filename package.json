@@ -58,7 +58,14 @@
     "ms": "2.1.2"
   },
   "peerDependencies": {
-    "react": "16.11.0",
-    "react-dom": "16.11.0"
+    "react": "16.11.0"
+  },
+  "peerDependenciesMeta": {
+    "react-dom": {
+      "optional": true
+    },
+    "react-native": {
+      "optional": true
+    }
   }
 }

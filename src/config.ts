@@ -88,7 +88,7 @@ if (typeof window !== 'undefined') {
 
 // Focus revalidate
 let eventsBinded = false
-if (typeof window !== 'undefined' && !eventsBinded) {
+if (typeof window !== 'undefined' && window.addEventListener && !eventsBinded) {
   const revalidate = () => {
     if (!isDocumentVisible() || !isOnline()) return
 

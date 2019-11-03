@@ -5,7 +5,7 @@ import {
   useContext,
   useCallback
 } from 'react'
-import { unstable_batchedUpdates } from 'react-dom'
+import { unstable_batchedUpdates } from './libs/reactBatchedUpdates'
 import throttle from 'lodash.throttle'
 import deepEqual from 'fast-deep-equal'
 
