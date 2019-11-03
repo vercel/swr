@@ -542,4 +542,49 @@ describe('useSWR - suspense', () => {
     await act(() => new Promise(res => setTimeout(res, 100))) // should recover
     expect(container.textContent).toMatchInlineSnapshot(`"3"`)
   })
+
+  it.only('should throw errors', async () => {
+    function Section() {
+      const { data, error } = useSWR(
+        'suspense-4',
+        () => new Promise((_, reject) => reject('error')),
+        {
+          suspense: true
+        }
+      )
+      return (
+        <div>
+          {data}
+          {error}
+        </div>
+      )
+    }
+    const { container } = render(
+      <Suspense fallback={<div>fallback</div>}>
+        <Section />
+      </Suspense>
+    )
+
+    // hydration
+    expect(container.textContent).toMatchInlineSnapshot(`"fallback"`)
+    await act(() => new Promise(res => setTimeout(res, 100))) // should recover
+    expect(container.textContent).toMatchInlineSnapshot(`"error"`)
+  })
+
+  it('should only throw promises', async () => {
+    function Section() {
+      const { data } = useSWR('suspense-5', () => 'SWR', {
+        suspense: true
+      })
+      return <div>{data}</div>
+    }
+    const { container } = render(
+      <Suspense fallback={<div>fallback</div>}>
+        <Section />
+      </Suspense>
+    )
+
+    // no fallback state
+    expect(container.textContent).toMatchInlineSnapshot(`"SWR"`)
+  })
 })

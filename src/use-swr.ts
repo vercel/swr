@@ -339,14 +339,28 @@ function useSWR<Data = any, Error = any>(
   }, [key, config.refreshInterval, revalidate])
 
   // suspense (client side only)
-  if (config.suspense && typeof data === 'undefined') {
+  if (
+    config.suspense &&
+    typeof data === 'undefined' &&
+    typeof error === 'undefined'
+  ) {
     if (typeof window !== 'undefined') {
-      if (!CONCURRENT_PROMISES[key]) {
+      if (typeof CONCURRENT_PROMISES[key] === 'undefined') {
         // need to trigger revalidate immediately
         // to throw the promise
         revalidate()
       }
-      throw CONCURRENT_PROMISES[key]
+      if (
+        CONCURRENT_PROMISES[key] &&
+        typeof CONCURRENT_PROMISES[key].then === 'function'
+      ) {
+        throw CONCURRENT_PROMISES[key]
+      } else {
+        // set state directly to avoid re-render
+        data = CONCURRENT_PROMISES[key]
+        error = errorRef.current
+        isValidating = false
+      }
     }
   }
 
