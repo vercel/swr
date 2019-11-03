@@ -53,6 +53,7 @@
     "typescript": "3.6.4"
   },
   "dependencies": {
+    "@types/lodash.throttle": "4.1.1",
     "fast-deep-equal": "2.0.1",
     "lodash.throttle": "4.1.1",
     "ms": "2.1.2"
