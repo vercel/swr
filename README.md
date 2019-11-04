@@ -89,7 +89,7 @@ const {
   isValidating,                            // if the request is loading
   revalidate                               // function to trigger a validate manually
 } = useSWR(
-  key,                                     // a unique key for the data
+  key,                                     // a unique key for the data (or a function, see below)
   fetcher,                                 // Promise returning function to load your data
   swrOptions? = {
     suspense: false,                       // enabled React Suspense mode
@@ -110,6 +110,18 @@ const {
     fetcher                                // default fetcher function
   }
 )
+```
+
+#### `key` as a function
+
+Pass a function as the `key` to `useSWR` to conditionally fetch data. If the functions throws an error or returns a falsy value, SWR will cancel the request.
+
+```js
+// key returns a falsy value
+const { data } = useSWR(() => shouldFetch ? '/api/data' : null, fetcher)
+
+// key throws an error when user.id is not defined
+const { data } = useSWR(() => '/api/data?uid=' + user.id, fetcher)
 ```
 
 ### `SWRConfig`
