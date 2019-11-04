@@ -63,6 +63,18 @@ of `fetcher` and rerenders the component.
 Note that `fetcher` can be any asynchronous function, so you can use your favourite data-fetching
 library to handle that part.
 
+---
+
+- API
+  - [`useSWR`](#useswr)
+  - [`SWRConfig`](#swrconfig)
+  - [`mutate`](#mutate)
+  - [`trigger`](#trigger)
+- Examples
+  - [Suspense Mode](#suspense-mode)
+  - [Subscription (e.g.: socket.io)](#subscription-eg-socketio)
+  - [Dependent Fetching](#dependent-fetching)
+
 ## API
 
 ### `useSWR`
@@ -168,6 +180,8 @@ function App () {
 }
 ```
 
+## Examples
+
 ### Suspense Mode
 
 You can enable the `suspense` option to use `useSWR` with React Suspense.
@@ -185,6 +199,60 @@ function App () {
   return <Suspense fallback={<div>loading...</div>}>
     <Profile/>
   </Suspense>
+}
+```
+
+### Subscription (e.g.: socket.io)
+
+You can use SWR with socket.io (generally any subscription pattern) like this:
+
+```js
+// fetch-data.js
+
+import { mutate } from 'swr'
+
+let latestData = null
+
+// setup ws and broadcast to all SWRs
+...
+socket.on('data', data => {
+  latestData = data
+  mutate('/api/data', data, false)
+})
+
+export default () => latestData
+```
+
+and your component:
+
+```js
+import useSWR from 'swr'
+import fetchData from './fetch-data'
+
+function App () {
+  const { data } = useSWR('/api/data', fetchData)
+  // ...
+}
+```
+
+### Dependent Fetching
+SWR allows you to fetch data that depends on other data. It ensures the maximum possible parallelism (avoiding waterfalls), as well as serial fetching when a piece of dynamic data is required for the next data fetch to happen.
+
+```js
+import useSWR from 'swr'
+
+function MyProjects () {
+  const { data: user } = useSWR('/api/user')
+  const { data: projects } = useSWR(
+    () => '/api/projects?uid=' + user.id
+  )
+  // When passing a function, SWR will use the
+  // return value as `key`. If the function throws,
+  // SWR will know that some dependencies are not
+  // ready. In this case it is `user`.
+
+  if (!projects) return 'loading...'
+  return 'You have ' + projects.length + ' projects'
 }
 ```
 
