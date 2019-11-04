@@ -38,6 +38,14 @@ With SWR, components will get a stream of data updates constantly and automatica
 
 ## Quick Start
 
+Install it in your project:
+
+```bash
+yarn add swr
+```
+
+Import and use it like this:
+
 ```js
 import useSWR from 'swr'
 
