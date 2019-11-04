@@ -1,0 +1,15 @@
+{
+  "name": "storage-tab-sync",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "next": "9.1.1",
+    "swr": "link:../.."
+  },
+  "scripts": {
+    "dev": "next",
+    "start": "next start",
+    "build": "next build"
+  }
+}
