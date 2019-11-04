@@ -22,12 +22,11 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged"
+      "pre-commit": "npm run types:check && lint-staged"
     }
   },
   "lint-staged": {
     "*.{ts,tsx}": [
-      "npm run types:check",
       "npm run lint:fix",
       "npm run format",
       "git add"
