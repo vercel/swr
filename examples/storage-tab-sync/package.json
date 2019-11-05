@@ -5,7 +5,9 @@
   "license": "MIT",
   "dependencies": {
     "next": "9.1.1",
-    "swr": "link:../.."
+    "react": "16.11.0",
+    "react-dom": "16.11.0",
+    "swr": "latest"
   },
   "scripts": {
     "dev": "next",
