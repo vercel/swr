@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import fetch from '../../libs/fetch'
 
-import useSWR from '@zeit/swr'
+import useSWR from 'swr'
 
 export default () => {
   const id = typeof window !== 'undefined' ? window.location.pathname.slice(1) : ''

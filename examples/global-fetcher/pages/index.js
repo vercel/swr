@@ -1,6 +1,6 @@
 import Link from 'next/link'
 
-import useSWR from '@zeit/swr'
+import useSWR from 'swr'
 
 export default () => {
   const { data } = useSWR('/api/data')

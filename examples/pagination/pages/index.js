@@ -1,7 +1,7 @@
 import fetch from '../libs/fetch'
 import Link from 'next/link'
 
-import useSWR, { useSWRPages } from '@zeit/swr'
+import useSWR, { useSWRPages } from 'swr'
 
 export default () => {
   const {

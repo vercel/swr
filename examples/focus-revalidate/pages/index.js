@@ -2,7 +2,7 @@ import Button from '../components/button'
 import fetch from '../libs/fetch'
 import { login, logout } from '../libs/auth'
 
-import useSWR from '@zeit/swr'
+import useSWR from 'swr'
 
 export default () => {
   const { data, revalidate } = useSWR('/api/user', fetch)
