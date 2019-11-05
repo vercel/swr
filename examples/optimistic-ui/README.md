@@ -1,5 +1,11 @@
 # Optimistic UI
 
+## One-Click Deploy
+
+Deploy your own SWR project with ZEIT Now.
+
+[![Deploy with ZEIT Now](https://zeit.co/button)](https://zeit.co/new/project?template=https://github.com/zeit/swr/tree/master/examples/optimistic-ui)
+
 ## How to Use
 
 Download the example:
