@@ -6,7 +6,7 @@ Download the example:
 
 ```bash
 curl https://codeload.github.com/zeit/swr/tar.gz/master | tar -xz --strip=2 swr-master/examples/optimistic-ui
-cd optimistic-ui && yarn add react react-dom swr
+cd optimistic-ui
 ```
 
 Install it and run:

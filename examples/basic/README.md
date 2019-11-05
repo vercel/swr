@@ -6,7 +6,7 @@ Download the example:
 
 ```bash
 curl https://codeload.github.com/zeit/swr/tar.gz/master | tar -xz --strip=2 swr-master/examples/basic
-cd basic && yarn add react react-dom swr
+cd basic
 ```
 
 Install it and run:

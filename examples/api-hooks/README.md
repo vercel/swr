@@ -6,7 +6,7 @@ Download the example:
 
 ```bash
 curl https://codeload.github.com/zeit/swr/tar.gz/master | tar -xz --strip=2 swr-master/examples/api-hooks
-cd api-hooks && yarn add react react-dom swr
+cd api-hooks
 ```
 
 Install it and run:

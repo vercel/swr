@@ -6,7 +6,7 @@ Download the example:
 
 ```bash
 curl https://codeload.github.com/zeit/swr/tar.gz/master | tar -xz --strip=2 swr-master/examples/storage-tab-sync
-cd storage-tab-sync && yarn add react react-dom swr
+cd storage-tab-sync
 ```
 
 Install it and run:

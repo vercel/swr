@@ -6,7 +6,7 @@ Download the example:
 
 ```bash
 curl https://codeload.github.com/zeit/swr/tar.gz/master | tar -xz --strip=2 swr-master/examples/refetch-interval
-cd refetch-interval && yarn add react react-dom swr
+cd refetch-interval
 ```
 
 Install it and run:
