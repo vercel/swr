@@ -549,7 +549,7 @@ describe('useSWR - context configs', () => {
   })
 })
 
-describe('useSWR - suspense', () => {
+describe.skip('useSWR - suspense', () => {
   afterEach(cleanup)
 
   it('should render fallback', async () => {

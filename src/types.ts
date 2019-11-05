@@ -33,7 +33,7 @@ export interface ConfigInterface<Data = any, Error = any> {
 
 export interface RevalidateOptionInterface {
   retryCount?: number
-  noDedupe?: boolean
+  dedupe?: boolean
 }
 
 type keyFunction = () => string
