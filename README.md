@@ -39,8 +39,6 @@ With SWR, components will get **a stream of data updates constantly and automati
 
 ## Quick Start
 
-To install, run `yarn add swr` or `npm install swr` in your React project.
-
 ```js
 import useSWR from 'swr'
 
@@ -66,7 +64,23 @@ library to handle that part.
 
 We also have many other [demos and use cases](https://swr.now.sh) showing the power of SWR on the website.
 
+<a aria-label="ZEIT logo" href="https://github.com/zeit">
+  <img src="https://img.shields.io/badge/MADE%20BY%20ZEIT-000000.svg?logo=ZEIT&labelColor=000000&logoWidth=12">
+</a>
+
 ## Usage
+
+Inside your React project directory, run the following:
+
+```
+yarn add swr
+```
+
+Or with npm:
+
+```
+npm install swr
+```
 
 ### API
 
@@ -284,3 +298,5 @@ Thanks to Ryan Chen for providing the awesome `swr` npm package name!
 
 ## License
 The MIT License.
+
+[![SWR](.github/assets/logo.svg)](https://swr.now.sh)
