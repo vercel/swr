@@ -15,7 +15,7 @@
   </a>
 </p>
 
-## Intro
+## Introduction
 
 [swr.now.sh](https://swr.now.sh)
 
@@ -35,7 +35,7 @@ It features:
 - Suspense mode
 - Minimal API
 
-With SWR, components will get a stream of data updates constantly and automatically, Thus, the UI will be always fast and reactive.
+With SWR, components will get **a stream of data updates constantly and automatically**. Thus, the UI will be always **fast** and **reactive**.
 
 ## Quick Start
 
@@ -64,21 +64,11 @@ of `fetcher` and rerenders the component.
 Note that `fetcher` can be any asynchronous function, so you can use your favourite data-fetching
 library to handle that part.
 
----
+We also have many other [demos and use cases](https://swr.now.sh) showing the power of SWR on the website.
 
-- API
-  - [`useSWR`](#useswr)
-  - [`SWRConfig`](#swrconfig)
-  - [`mutate`](#mutate)
-  - [`trigger`](#trigger)
-- Examples
-  - [Suspense Mode](#suspense-mode)
-  - [Subscription (e.g.: socket.io)](#subscription-eg-socketio)
-  - [Dependent Fetching](#dependent-fetching)
+## Usage
 
-## API
-
-### `useSWR`
+### API
 
 ```js
 const {
@@ -122,34 +112,68 @@ const { data } = useSWR(() => shouldFetch ? '/api/data' : null, fetcher)
 const { data } = useSWR(() => '/api/data?uid=' + user.id, fetcher)
 ```
 
-### `SWRConfig`
+### Global Configuration
 
-A context to provide global configurations (`swrOptions`) for SWR.
+A context to provide global configurations (`swrOptions`) for SWR.  
+In this example, all the SWRs will use the native `fetch` to load data as JSON, and refresh every 3 seconds.
 
 ```js
 import useSWR, { SWRConfig } from 'swr'
 
-function App () {
-  // all the SWRs inside will use `refreshInterval: 1000`
-  // and the native `fetch` implementation
-  return <SWRConfig value={{
-    refreshInterval: 1000,
-    fetcher: (...args) => fetch(...args).then(res => res.json())
-  }}>
-    <Profile/>
-  </SWRConfig>
+function Profile () {
+  const { data, error, isValidating } = useSWR('/api/user')
+  // ...
 }
 
-function Profile () {
-  const { data, error } = useSWR('/api/user')
-  // ...
+function App () {
+  return (
+    <SWRConfig value={{
+      refreshInterval: 1000,
+      fetcher: (...args) => fetch(...args).then(res => res.json())
+    }}>
+      <Profile/>
+      ...
+    </SWRConfig>
+  )
 }
 ```
 
-### `mutate`
+### Manually Revalidate
+
+You can broadcast a revalidation message to all SWR data inside any component by calling
+`trigger(key)`.
+
+This example shows how to automatically refetch the login info (e.g.: inside `<Profile/>`) 
+when the user clicks the “Logout” button.
+
+```js
+import useSWR, { trigger } from 'swr'
+
+function App () {
+  return (
+    <div>
+      <Profile />
+      <button onClick={() => {
+        // set the cookie as expired
+        document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+
+        // tell all SWRs with this key to revalidate
+        trigger('/api/user')
+      }}>
+        Logout
+      </button>
+    </div>
+  )
+}
+```
+
+### Local Mutation
+
+In many cases, applying local mutations to data is a good way to make changes
+feel faster — no need to wait for the remote source of data.
 
 With `mutate`, you can update your local data programmatically, while
-revalidating and finally replace it.
+revalidating and finally replace it with the latest data.
 
 ```js
 import useSWR, { mutate } from 'swr'
@@ -157,39 +181,18 @@ import useSWR, { mutate } from 'swr'
 function Profile () {
   const { data } = useSWR('/api/user', fetcher)
 
-  return <div>
-    <h1>My name is {data.name}.</h1>
-    <button onClick={async () => {
-      const newName = data.name.toUpperCase()
-      // send a request to the API to update the data
-      await requestUpdateUsername(newName)
-      // update the local data immediately and revalidate (refetch)
-      mutate('/api/user', { ...data, name: newName })
-    }}>Uppercase my name!</button>
-  </div>
-}
-```
-
-### `trigger`
-
-You can broadcast a revalidation message to all SWR data inside any component by calling
-`trigger(key)`.
-
-```js
-import useSWR, { trigger } from 'swr'
-
-function App () {
-  return <div>
-    <Profile />
-    <button onClick={() => {
-      // set the cookie as expired
-      document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
-      // tell all SWRs with this key to revalidate
-      trigger('/api/user')
-    }}>
-      Logout
-    </button>
-  </div>
+  return (
+    <div>
+      <h1>My name is {data.name}.</h1>
+      <button onClick={async () => {
+        const newName = data.name.toUpperCase()
+        // send a request to the API to update the data
+        await requestUpdateUsername(newName)
+        // update the local data immediately and revalidate (refetch)
+        mutate('/api/user', { ...data, name: newName })
+      }}>Uppercase my name!</button>
+    </div>
+  )
 }
 ```
 
@@ -209,9 +212,11 @@ function Profile () {
 }
 
 function App () {
-  return <Suspense fallback={<div>loading...</div>}>
-    <Profile/>
-  </Suspense>
+  return (
+    <Suspense fallback={<div>loading...</div>}>
+      <Profile/>
+    </Suspense>
+  )
 }
 ```
 
