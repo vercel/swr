@@ -639,7 +639,7 @@ describe('useSWR - suspense', () => {
     expect(container.textContent).toMatchInlineSnapshot(`"hello"`)
   })
 
-  it('should throw errors', async () => {
+  it.only('should throw errors', async () => {
     function Section() {
       const { data } = useSWR(
         'suspense-5',
