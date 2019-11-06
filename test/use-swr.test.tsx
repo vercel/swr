@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react'
+import React, { Suspense, ReactNode } from 'react'
 import {
   cleanup,
   render,
@@ -8,6 +8,21 @@ import {
 } from '@testing-library/react'
 
 import useSWR, { trigger, mutate, SWRConfig } from '../src'
+
+class ErrorBoundary extends React.Component<{ fallback: ReactNode }> {
+  state = { hasError: false }
+  static getDerivedStateFromError() {
+    return {
+      hasError: true
+    }
+  }
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback
+    }
+    return this.props.children
+  }
+}
 
 describe('useSWR', () => {
   afterEach(cleanup)
@@ -549,7 +564,7 @@ describe('useSWR - context configs', () => {
   })
 })
 
-describe.skip('useSWR - suspense', () => {
+describe('useSWR - suspense', () => {
   afterEach(cleanup)
 
   it('should render fallback', async () => {
@@ -605,5 +620,82 @@ describe.skip('useSWR - suspense', () => {
     expect(container.textContent).toMatchInlineSnapshot(`"fallback"`)
     await act(() => new Promise(res => setTimeout(res, 100))) // should recover
     expect(container.textContent).toMatchInlineSnapshot(`"3"`)
+  })
+
+  it('should work for non-promises', async () => {
+    function Section() {
+      const { data } = useSWR('suspense-4', () => 'hello', {
+        suspense: true
+      })
+      return <div>{data}</div>
+    }
+    const { container } = render(
+      <Suspense fallback={<div>fallback</div>}>
+        <Section />
+      </Suspense>
+    )
+
+    // hydration
+    expect(container.textContent).toMatchInlineSnapshot(`"hello"`)
+  })
+
+  it('should throw errors', async () => {
+    function Section() {
+      const { data } = useSWR(
+        'suspense-5',
+        () =>
+          new Promise((_, reject) => setTimeout(() => reject('error'), 100)),
+        {
+          suspense: true
+        }
+      )
+      return <div>{data}</div>
+    }
+    // https://reactjs.org/docs/concurrent-mode-suspense.html#handling-errors
+    const { container } = render(
+      <ErrorBoundary fallback={<div>error boundary</div>}>
+        <Suspense fallback={<div>fallback</div>}>
+          <Section />
+        </Suspense>
+      </ErrorBoundary>
+    )
+
+    // hydration
+    expect(container.textContent).toMatchInlineSnapshot(`"fallback"`)
+    await act(() => new Promise(res => setTimeout(res, 150))) // still suspending
+    expect(container.textContent).toMatchInlineSnapshot(`"error boundary"`)
+
+    console.info('*The warning above can be ignored (caught by ErrorBoundary).')
+  })
+
+  it('should render cached data with error', async () => {
+    mutate('suspense-6', 'hello')
+
+    function Section() {
+      const { data, error } = useSWR(
+        // this value is cached
+        'suspense-6',
+        () =>
+          new Promise((_, reject) => setTimeout(() => reject('error'), 100)),
+        {
+          suspense: true
+        }
+      )
+      return (
+        <div>
+          {data}, {error}
+        </div>
+      )
+    }
+
+    const { container } = render(
+      <Suspense fallback={<div>fallback</div>}>
+        <Section />
+      </Suspense>
+    )
+
+    expect(container.textContent).toMatchInlineSnapshot(`"hello, "`) // directly from cache
+    await act(() => new Promise(res => setTimeout(res, 150))) // still suspending
+    expect(container.textContent).toMatchInlineSnapshot(`"hello, error"`) // get error with cache
   })
 })

@@ -424,13 +424,48 @@ function useSWR<Data = any, Error = any>(
     if (IS_SERVRE)
       throw new Error('Suspense on server side is not yet supported!')
 
-    if (typeof data === 'undefined') {
+    // in suspense mode, we can't return empty state
+    // (it should be suspended)
+
+    // try to get data and error from cache
+    let latestData = cacheGet(key)
+    let latestError = cacheGet(keyErr)
+
+    if (
+      typeof latestData === 'undefined' &&
+      typeof latestError === 'undefined'
+    ) {
+      // need to start the request if it hasn't
       if (!CONCURRENT_PROMISES[key]) {
-        // need to trigger revalidate immediately
-        // to throw the promise
+        // trigger revalidate immediately
+        // to get the promise
         revalidate()
       }
-      throw CONCURRENT_PROMISES[key]
+
+      if (
+        CONCURRENT_PROMISES[key] &&
+        typeof CONCURRENT_PROMISES[key].then === 'function'
+      ) {
+        // if it is a promise
+        throw CONCURRENT_PROMISES[key]
+      }
+
+      // it's a value, return it directly (override)
+      latestData = CONCURRENT_PROMISES[key]
+    }
+
+    if (typeof latestData === 'undefined' && latestError) {
+      // in suspense mode, throw error if there's no content
+      throw latestError
+    }
+
+    // return the latest data / error from cache
+    // in case `key` has changed
+    return {
+      error: latestError,
+      data: latestData,
+      revalidate,
+      isValidating
     }
   }
 
