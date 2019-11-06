@@ -33,7 +33,7 @@ import SWRConfigContext from './swr-config-context'
 import isDocumentVisible from './libs/is-document-visible'
 import useHydration from './libs/use-hydration'
 
-const IS_SERVRE = typeof window === 'undefined'
+const IS_SERVER = typeof window === 'undefined'
 
 // TODO: introduce namepsace for the cache
 const getErrorKey = key => (key ? 'err@' + key : '')
@@ -421,7 +421,7 @@ function useSWR<Data = any, Error = any>(
 
   // suspense
   if (config.suspense) {
-    if (IS_SERVRE)
+    if (IS_SERVER)
       throw new Error('Suspense on server side is not yet supported!')
 
     // in suspense mode, we can't return empty state
