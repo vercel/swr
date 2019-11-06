@@ -1,5 +1,6 @@
 import {
   useState,
+  useEffect,
   useLayoutEffect,
   useRef,
   useContext,
@@ -286,8 +287,13 @@ function useSWR<Data = any, Error = any>(
     [key]
   )
 
-  // mounted
-  useLayoutEffect(() => {
+  // React currently throws a warning when using useLayoutEffect on the server.
+  // To get around it, we can conditionally useEffect on the server (no-op) and
+  // useLayoutEffect in the browser.
+  const useIsomorphicLayoutEffect = IS_SERVER ? useEffect : useLayoutEffect
+
+  // mounted (client side rendering)
+  useIsomorphicLayoutEffect(() => {
     if (!key) return undefined
 
     // after `key` updates, we need to mark it as mounted
