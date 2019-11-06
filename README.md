@@ -1,10 +1,6 @@
 [![SWR](https://assets.zeit.co/image/upload/v1572289618/swr/banner.png)](https://swr.now.sh)
 
 <p align="center">
-  <a aria-label="SWR website" href="https://swr.now.sh">swr.now.sh<a>
-</p>
-
-<p align="center">
   <a aria-label="ZEIT logo" href="https://github.com/zeit">
     <img src="https://img.shields.io/badge/MADE%20BY%20ZEIT-000000.svg?logo=ZEIT&labelColor=000000&logoWidth=12">
   </a>
@@ -21,9 +17,11 @@
 
 ## Intro
 
+[swr.now.sh](https://swr.now.sh)
+
 SWR is a React Hooks library for remote data fetching.
 
-The name “**SWR**” is derived from `stale-while-revalidate`, a HTTP cache invalidation strategy popularized by [RFC 5861](https://tools.ietf.org/html/rfc5861).
+The name “**SWR**” is derived from `stale-while-revalidate`, a HTTP cache invalidation strategy popularized by [RFC 5861](https://tools.ietf.org/html/rfc5861).  
 **SWR** first returns the data from cache (stale), then sends the fetch request (revalidate), and finally comes with the up-to-date data again.
 
 It features:
