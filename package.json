@@ -12,7 +12,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "now dev",
-    "build": "tsc",
+    "build": "ncc build src/index.ts -o dist -m -e react -e react-dom",
     "watch": "tsc --watch",
     "types:check": "tsc --noEmit",
     "format": "prettier --write '{src,test,examples}/**/*.{ts,tsx}'",
@@ -46,6 +46,7 @@
     "husky": "2.4.1",
     "jest": "24.9.0",
     "lint-staged": "8.2.1",
+    "ncc": "0.3.6",
     "prettier": "1.18.2",
     "react": "16.11.0",
     "react-dom": "16.11.0",
