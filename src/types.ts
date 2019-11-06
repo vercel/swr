@@ -38,14 +38,21 @@ export interface RevalidateOptionInterface {
 
 type keyFunction = () => string
 export type keyInterface = string | keyFunction
-export type updaterInterface = (
-  shouldRevalidate?: boolean
+export type updaterInterface<Data = any, Error = any> = (
+  shouldRevalidate?: boolean,
+  data?: Data,
+  error?: Error
 ) => boolean | Promise<boolean>
 export type triggerInterface = (key: string, shouldRevalidate?: boolean) => void
-export type mutateInterface = (
+export type mutateInterface<Data = any> = (
   key: string,
-  data: any,
+  data: Data,
   shouldRevalidate?: boolean
+) => void
+export type broadcastStateInterface<Data = any, Error = any> = (
+  key: string,
+  data: Data,
+  error?: Error
 ) => void
 export type responseInterface<Data, Error> = {
   data?: Data
