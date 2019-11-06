@@ -137,6 +137,8 @@ export function useSWRPages<OffsetType, Data, Error>(
       return c + 1
     })
   }, [isLoadingMore || isReachingEnd])
+  const _pageFn = useCallback(pageFn, deps)
+  pageFnRef.current = _pageFn
 
   const pages = useMemo(() => {
     const getWithSWR = id => swr => {
@@ -176,26 +178,26 @@ export function useSWRPages<OffsetType, Data, Error>(
       if (
         !pageCache[i] ||
         pageCache[i].offset !== pageOffsets[i] ||
-        pageCache[i].pageFn !== pageFn
+        pageCache[i].pageFn !== _pageFn
       ) {
         // when props change or at init
         // render the page and cache it
         pageCache[i] = {
           component: (
             <Page
-              key={`page-${pageOffsets[i]}`}
+              key={`page-${pageOffsets[i]}-${i}`}
               offset={pageOffsets[i]}
               withSWR={getWithSWR(i)}
             />
           ),
-          pageFn,
+          pageFn: _pageFn,
           offset: pageOffsets[i]
         }
       }
       p.push(pageCache[i].component)
     }
     return p
-  }, [pageFn, pageCount, pageSWRs, pageOffsets, ...deps])
+  }, [_pageFn, pageCount, pageSWRs, pageOffsets, pageKey])
 
   return {
     pages,
