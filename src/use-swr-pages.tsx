@@ -88,10 +88,10 @@ function App () {
 }
 */
 
-export function useSWRPages<OffsetType>(
+export function useSWRPages<OffsetType, Data, Error>(
   pageKey: string,
-  pageFn: pageComponentType,
-  swrDataToOffset: pageOffsetMapperType<OffsetType>,
+  pageFn: pageComponentType<OffsetType, Data, Error>,
+  swrDataToOffset: pageOffsetMapperType<OffsetType, Data, Error>,
   deps: any[] = []
 ): pagesResponseInterface {
   const pageCountKey = `_swr_page_count_` + pageKey
@@ -103,7 +103,7 @@ export function useSWRPages<OffsetType>(
   const [pageOffsets, setPageOffsets] = useState<OffsetType[]>(
     cacheGet(pageOffsetKey) || [null]
   )
-  const [pageSWRs, setPageSWRs] = useState<responseInterface<any, any>[]>([])
+  const [pageSWRs, setPageSWRs] = useState<responseInterface<Data, Error>[]>([])
 
   const pageCacheRef = useRef([])
   const pageFnRef = useRef(pageFn)
@@ -137,6 +137,8 @@ export function useSWRPages<OffsetType>(
       return c + 1
     })
   }, [isLoadingMore || isReachingEnd])
+  const _pageFn = useCallback(pageFn, deps)
+  pageFnRef.current = _pageFn
 
   const pages = useMemo(() => {
     const getWithSWR = id => swr => {
@@ -149,20 +151,22 @@ export function useSWRPages<OffsetType>(
         setPageSWRs(swrs => {
           const _swrs = [...swrs]
           _swrs[id] = swr
+
+          if (typeof swr.data !== 'undefined') {
+            // set next page's offset
+            const newPageOffset = swrDataToOffset(swr.data, _swrs)
+            if (pageOffsets[id + 1] !== newPageOffset) {
+              setPageOffsets(arr => {
+                const _arr = [...arr]
+                _arr[id + 1] = newPageOffset
+                cacheSet(pageOffsetKey, _arr)
+                return _arr
+              })
+            }
+          }
+
           return _swrs
         })
-        if (swr.data) {
-          // set next page's offset
-          const newPageOffset = swrDataToOffset(swr.data)
-          if (pageOffsets[id + 1] !== newPageOffset) {
-            setPageOffsets(arr => {
-              const _arr = [...arr]
-              _arr[id + 1] = newPageOffset
-              cacheSet(pageOffsetKey, _arr)
-              return _arr
-            })
-          }
-        }
       }
       return swr
     }
@@ -174,26 +178,26 @@ export function useSWRPages<OffsetType>(
       if (
         !pageCache[i] ||
         pageCache[i].offset !== pageOffsets[i] ||
-        pageCache[i].pageFn !== pageFn
+        pageCache[i].pageFn !== _pageFn
       ) {
         // when props change or at init
         // render the page and cache it
         pageCache[i] = {
           component: (
             <Page
-              key={`page-${pageOffsets[i]}`}
+              key={`page-${pageOffsets[i]}-${i}`}
               offset={pageOffsets[i]}
               withSWR={getWithSWR(i)}
             />
           ),
-          pageFn,
+          pageFn: _pageFn,
           offset: pageOffsets[i]
         }
       }
       p.push(pageCache[i].component)
     }
     return p
-  }, [pageFn, pageCount, pageSWRs, pageOffsets, ...deps])
+  }, [_pageFn, pageCount, pageSWRs, pageOffsets, pageKey])
 
   return {
     pages,
