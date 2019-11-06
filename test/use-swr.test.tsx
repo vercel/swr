@@ -1,4 +1,4 @@
-import React, { Suspense, ReactNode } from 'react'
+import React, { Suspense, ReactNode, useState, useEffect } from 'react'
 import {
   cleanup,
   render,
@@ -697,5 +697,44 @@ describe('useSWR - suspense', () => {
     expect(container.textContent).toMatchInlineSnapshot(`"hello, "`) // directly from cache
     await act(() => new Promise(res => setTimeout(res, 150))) // still suspending
     expect(container.textContent).toMatchInlineSnapshot(`"hello, error"`) // get error with cache
+  })
+
+  it('should pause when key changes', async () => {
+    const renderedResults = []
+
+    function Section() {
+      const [key, setKey] = useState('suspense-7')
+      const { data } = useSWR(
+        key,
+        k => new Promise(res => setTimeout(() => res(k), 50)),
+        {
+          suspense: true
+        }
+      )
+
+      useEffect(() => {
+        if (data === 'suspense-7') {
+          setKey('suspense-8')
+        }
+      }, [data])
+
+      if (data !== renderedResults[renderedResults.length - 1]) {
+        renderedResults.push(data)
+      }
+
+      return <>{data}</>
+    }
+
+    render(
+      <Suspense fallback={<div>fallback</div>}>
+        <Section />
+      </Suspense>
+    )
+
+    await act(() => new Promise(res => setTimeout(res, 110)))
+
+    // fixes https://github.com/zeit/swr/issues/57
+    // 'suspense-7' -> undefined -> 'suspense-8'
+    expect(renderedResults).toEqual(['suspense-7', 'suspense-8'])
   })
 })

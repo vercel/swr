@@ -446,6 +446,7 @@ function useSWR<Data = any, Error = any>(
         CONCURRENT_PROMISES[key] &&
         typeof CONCURRENT_PROMISES[key].then === 'function'
       ) {
+        console.log(CONCURRENT_PROMISES[key], key)
         // if it is a promise
         throw CONCURRENT_PROMISES[key]
       }
