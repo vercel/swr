@@ -22,7 +22,7 @@ export default () => {
 
   return (
     <div style={{ textAlign: 'center' }}>
-      <h1>Trending Projects</h1>
+      <h1>Country Search</h1>
       <Combobox>
         <ComboboxInput
           className="country-search-input"
