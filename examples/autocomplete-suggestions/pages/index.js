@@ -29,7 +29,7 @@ export default () => {
           onChange={handleSearchTermChange}
           aria-label="Countries"
         />
-        {!isValidating && countries.length > 0 && (
+        {countries && countries.length > 0 && (
           <ComboboxPopover className="shadow-popup">
             <ComboboxList>
               {countries.map(country => (
