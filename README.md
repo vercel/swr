@@ -96,7 +96,7 @@ which fetches data with `fetcher('/api/user')` every 3 seconds.
 
 - `key`: a unique key string for the request (or a function / null) [(advanced usage)](#conditional-fetching)  
 - `fetcher`: (_optional_) a Promise returning function to fetch your data [(details)](#data-fetching) 
-- `options`: (_optional_) options for this SWR hook
+- `options`: (_optional_) an object of options for this SWR hook
 
 #### Return Values
 - `data`: data for the given key resolved by `fetcher` (or undefined if not loaded)  
@@ -106,13 +106,13 @@ which fetches data with `fetcher('/api/user')` every 3 seconds.
 
 #### Options
 
-- `suspense = false`: enabled React Suspense mode [(details)](#suspense-mode)
+- `suspense = false`: enable React Suspense mode [(details)](#suspense-mode)
 - `fetcher = undefined`: the default fetcher function
 - `revalidateOnFocus = true`: auto revalidate when window gets focused
 - `refreshInterval = 0`: polling interval (disabled by default)
 - `refreshWhenHidden = false`: polling when the window is invisible (if `refreshInterval` is enabled)
 - `shouldRetryOnError = true`: retry when fetcher has an error [(details)](#error-retries)
-- `dedupingInterval = 2000`: deduping requests with the same key
+- `dedupingInterval = 2000`: dedupe requests with the same key in this time span
 - `focusThrottleInterval = 5000`: only revalidate once during a time span
 - `loadingTimeout = 3000`: timeout to trigger the onLoadingSlow event
 - `errorRetryInterval = 5000`: error retry interval [(details)](#error-retries)
