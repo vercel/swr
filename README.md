@@ -86,14 +86,15 @@ npm install swr
 const { data, error, isValidating, revalidate } = useSWR(key, fetcher, options)
 ```
 
-Example usage (call `fetcher('/api/user')` every 3 seconds):
+Example usage:
 ```js
 const { data, error } = useSWR('/api/user', fetcher, { refreshInterval: 3000 })
 ```
+which fetches data with `fetcher('/api/user')` every 3 seconds.
 
 #### Parameters
 
-- `key`: a unique key string for the request (or a function / null) [(advanced usage)](#conditionally-fetch)  
+- `key`: a unique key string for the request (or a function / null) [(advanced usage)](#conditional-fetching)  
 - `fetcher`: (_optional_) a Promise returning function to fetch your data [(details)](#data-fetching) 
 - `options`: (_optional_) options for this SWR hook
 
