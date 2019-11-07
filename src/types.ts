@@ -37,7 +37,7 @@ export interface RevalidateOptionInterface {
 }
 
 type keyFunction = () => string
-export type keyInterface = string | keyFunction
+export type keyInterface = string | keyFunction | null
 export type updaterInterface<Data = any, Error = any> = (
   shouldRevalidate?: boolean,
   data?: Data,
