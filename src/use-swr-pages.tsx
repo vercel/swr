@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useState, useRef } from 'react'
 
-import { cacheGet, cacheSet } from './config'
+import { cacheGet, cacheSet } from './cache'
 import {
   pagesResponseInterface,
   responseInterface,

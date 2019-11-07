@@ -8,21 +8,6 @@ import {
   RevalidateOptionInterface
 } from './types'
 
-// Cache
-const __cache = new Map()
-
-function cacheGet(key: string): any {
-  return __cache.get(key) || undefined
-}
-
-function cacheSet(key: string, value: any) {
-  return __cache.set(key, value)
-}
-
-function cacheClear() {
-  __cache.clear()
-}
-
 // state managers
 const CONCURRENT_PROMISES = {}
 const CONCURRENT_PROMISES_TS = {}
@@ -107,9 +92,6 @@ export {
   CONCURRENT_PROMISES_TS,
   FOCUS_REVALIDATORS,
   CACHE_REVALIDATORS,
-  MUTATION_TS,
-  cacheGet,
-  cacheSet,
-  cacheClear
+  MUTATION_TS
 }
 export default defaultConfig
