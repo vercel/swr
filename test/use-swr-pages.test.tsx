@@ -34,7 +34,7 @@ describe('useSWRPages', () => {
           const { data } = withSWR(useSWR(String(offset || 0), v => v))
           return 'page ' + data + ', '
         },
-        (_, pageSWRs) => pageSWRs.length
+        (_, index) => index + 1
       )
 
       useEffect(() => {

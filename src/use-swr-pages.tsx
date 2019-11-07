@@ -91,7 +91,7 @@ function App () {
 export function useSWRPages<OffsetType, Data, Error>(
   pageKey: string,
   pageFn: pageComponentType<OffsetType, Data, Error>,
-  swrDataToOffset: pageOffsetMapperType<OffsetType, Data, Error>,
+  SWRToOffset: pageOffsetMapperType<OffsetType, Data, Error>,
   deps: any[] = []
 ): pagesResponseInterface {
   const pageCountKey = `_swr_page_count_` + pageKey
@@ -151,22 +151,20 @@ export function useSWRPages<OffsetType, Data, Error>(
         setPageSWRs(swrs => {
           const _swrs = [...swrs]
           _swrs[id] = swr
-
-          if (typeof swr.data !== 'undefined') {
-            // set next page's offset
-            const newPageOffset = swrDataToOffset(swr.data, _swrs)
-            if (pageOffsets[id + 1] !== newPageOffset) {
-              setPageOffsets(arr => {
-                const _arr = [...arr]
-                _arr[id + 1] = newPageOffset
-                cacheSet(pageOffsetKey, _arr)
-                return _arr
-              })
-            }
-          }
-
           return _swrs
         })
+        if (typeof swr.data !== 'undefined') {
+          // set next page's offset
+          const newPageOffset = SWRToOffset(swr, id)
+          if (pageOffsets[id + 1] !== newPageOffset) {
+            setPageOffsets(arr => {
+              const _arr = [...arr]
+              _arr[id + 1] = newPageOffset
+              cacheSet(pageOffsetKey, _arr)
+              return _arr
+            })
+          }
+        }
       }
       return swr
     }
