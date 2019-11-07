@@ -129,9 +129,9 @@ When under a slow network (2G, <= 70Kbps), `errorRetryInterval` will be 10s, and
 
 You can also use [global configuration](#global-configuration) to provide default options.
 
-### Examples
+## Examples
 
-#### Global Configuration
+### Global Configuration
 
 You can use `SWRConfig` to provide global configurations (`options`) for all SWR hooks. 
 
@@ -161,7 +161,7 @@ function App () {
 }
 ```
 
-#### Data Fetching
+### Data Fetching
 
 `fetcher` is a function **accepts the `key`** of SWR, and returns a value or a Promise.  
 You can use any library you to handle data fetching, for example:
@@ -202,7 +202,7 @@ function App () {
 
 Note that `fetcher` can be skipped from the parameters if it's provided gloablly.
 
-#### Conditional Fetching
+### Conditional Fetching
 
 Use `null` or pass a function as the `key` to `useSWR` to conditionally fetch data. If the functions throws an error or returns a falsy value, SWR will cancel the request.
 
@@ -217,7 +217,7 @@ const { data } = useSWR(() => shouldFetch ? '/api/data' : null, fetcher)
 const { data } = useSWR(() => '/api/data?uid=' + user.id, fetcher)
 ```
 
-#### Dependent Fetching
+### Dependent Fetching
 
 SWR also allows you to fetch data that depends on other data. It ensures the maximum possible parallelism (avoiding waterfalls), as well as serial fetching when a piece of dynamic data is required for the next data fetch to happen.
 
@@ -235,7 +235,7 @@ function MyProjects () {
 }
 ```
 
-#### Manually Revalidate
+### Manually Revalidate
 
 You can broadcast a revalidation message to all SWR data inside any component by calling
 `trigger(key)`.
@@ -264,7 +264,7 @@ function App () {
 }
 ```
 
-#### Local Mutation
+### Local Mutation
 
 In many cases, applying local mutations to data is a good way to make changes
 feel faster — no need to wait for the remote source of data.
@@ -293,7 +293,7 @@ function Profile () {
 }
 ```
 
-#### Suspense Mode
+### Suspense Mode
 
 You can enable the `suspense` option to use SWR with React Suspense:
 
@@ -317,7 +317,7 @@ function App () {
 
 Note in Suspense mode, `data` is always the fetch response (so you don't need to check if it's `undefined`). But if there's an error occurred, you need to use an [error boundary](https://reactjs.org/docs/concurrent-mode-suspense.html#handling-errors) to catch it.
 
-#### Error Retries
+### Error Retries
 
 By default, SWR uses the [exponential backoff algorithm](https://en.wikipedia.org/wiki/Exponential_backoff) to handle error retries.
 You can read more from the source code.
