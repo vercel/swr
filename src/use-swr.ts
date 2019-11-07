@@ -29,7 +29,7 @@ import defaultConfig, {
   MUTATION_TS
 } from './config'
 
-import { cacheGet, cacheSet } from './cache'
+import { cacheGet, cacheSet, hookActive, hookInactive } from './cache'
 
 import SWRConfigContext from './swr-config-context'
 import isDocumentVisible from './libs/is-document-visible'
@@ -425,6 +425,11 @@ function useSWR<Data = any, Error = any>(
       }
     }
   }, [key, config.refreshInterval, revalidate])
+
+  useEffect(() => {
+    hookActive(key, keyErr)
+    return () => hookInactive(key, keyErr)
+  }, [key])
 
   // suspense
   if (config.suspense) {
