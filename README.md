@@ -35,6 +35,8 @@ It features:
 - Suspense mode
 - Minimal API
 
+...and a lot more.
+
 With SWR, components will get **a stream of data updates constantly and automatically**. Thus, the UI will be always **fast** and **reactive**.
 
 ## Quick Start
@@ -52,7 +54,7 @@ function Profile () {
 ```
 
 In this example, the React Hook `useSWR` accepts a `key` and a `fetcher` function.
-`key` is a unique identifier of the data, normally a URL of the API. And the `fetcher` accepts
+`key` is a unique identifier of the request, normally the URL of the API. And the `fetcher` accepts
 `key` as its parameter and returns the data asynchronously.
 
 `useSWR` also returns 2 values: `data` and `error`. When the request (fetcher) is not yet finished,
@@ -62,7 +64,7 @@ of `fetcher` and rerenders the component.
 Note that `fetcher` can be any asynchronous function, so you can use your favourite data-fetching
 library to handle that part.
 
-We also have many other [demos and use cases](https://swr.now.sh) showing the power of SWR on the website.
+Check out [swr.now.sh](https://swr.now.sh) for more demos of SWR.
 
 ## Usage
 
@@ -81,74 +83,159 @@ npm install swr
 ### API
 
 ```js
-const {
-  data,                                    // data for the given key (or undefined)
-  error,                                   // error (or undefined)
-  isValidating,                            // if the request is loading
-  revalidate                               // function to trigger a validate manually
-} = useSWR(
-  key,                                     // a unique key for the data (or a function, see below)
-  fetcher,                                 // Promise returning function to load your data
-  swrOptions? = {
-    suspense: false,                       // enabled React Suspense mode
-    revalidateOnFocus: true,               // auto revalidate when window gets focused
-    refreshWhenHidden: false,              // refresh while the window is invisible
-    shouldRetryOnError: true,              // retry when fetcher has an error
-    refreshInterval: 0,                    // polling interval (disabled by default)
-    errorRetryInterval: 5000,              // error retry interval (10s on slow network)
-    focusThrottleInterval: 5000,           // keep focus revalidate requests in a time window
-    dedupingInterval: 2000,                // deduping requests
-    loadingTimeout: 3000,                  // timeout for triggering the onLoadingSlow event
-
-    onLoadingSlow,                         // event handlers
-    onSuccess,
-    onError,
-    onErrorRetry,
-
-    fetcher                                // default fetcher function
-  }
-)
+const { data, error, isValidating, revalidate } = useSWR(key, fetcher, options)
 ```
 
-#### `key` as a function
-
-Pass a function as the `key` to `useSWR` to conditionally fetch data. If the functions throws an error or returns a falsy value, SWR will cancel the request.
-
+Example usage (call `fetcher('/api/user')` every 3 seconds):
 ```js
-// key returns a falsy value
-const { data } = useSWR(() => shouldFetch ? '/api/data' : null, fetcher)
-
-// key throws an error when user.id is not defined
-const { data } = useSWR(() => '/api/data?uid=' + user.id, fetcher)
+const { data, error } = useSWR('/api/user', fetcher, { refreshInterval: 3000 })
 ```
 
-### Global Configuration
+#### Parameters
 
-A context to provide global configurations (`swrOptions`) for SWR.  
-In this example, all the SWRs will use the native `fetch` to load data as JSON, and refresh every 3 seconds.
+- `key`: a unique key string for the request (or a function / null) [(advanced usage)](#conditionally-fetch)  
+- `fetcher`: (_optional_) a Promise returning function to fetch your data [(details)](#data-fetching) 
+- `options`: (_optional_) options for this SWR hook
+
+#### Return Values
+- `data`: data for the given key resolved by `fetcher` (or undefined if not loaded)  
+- `error`: error thrown by `fetcher` (or undefined)  
+- `isValidating`: if there's a request or revalidation loading  
+- `revalidate`: function to trigger the validation manually
+
+#### Options
+
+- `suspense = false`: enabled React Suspense mode [(details)](#suspense-mode)
+- `fetcher = undefined`: the default fetcher function
+- `revalidateOnFocus = true`: auto revalidate when window gets focused
+- `refreshInterval = 0`: polling interval (disabled by default)
+- `refreshWhenHidden = false`: polling when the window is invisible (if `refreshInterval` is enabled)
+- `shouldRetryOnError = true`: retry when fetcher has an error [(details)](#error-retries)
+
+
+- `dedupingInterval = 2000`: deduping requests with the same key
+- `focusThrottleInterval = 5000`: only revalidate once during a time span
+- `loadingTimeout = 3000`: timeout to trigger the onLoadingSlow event
+- `errorRetryInterval = 5000`: error retry interval [(details)](#error-retries)
+
+
+- `onLoadingSlow`: callback function when a request takes too long to load (`loadingTimeout`)
+- `onSuccess`: callback function when a request finishs successfully
+- `onError`: callback function when a request returns an error
+- `onErrorRetry`: handler for [error retry](#error-retries)
+
+When under a slow network (2G, <= 70Kbps), `errorRetryInterval` will be 10s, and
+`loadingTimeout` will be 5s by default.
+
+You can also use [global configuration](#global-configuration) to provide default options.
+
+### Examples
+
+#### Global Configuration
+
+You can use `SWRConfig` to provide global configurations (`options`) for all SWR hooks. 
+
+In this example, all `useSWR` hooks will use the same fetcher provided to load JSON data, and refresh every 3 seconds (except the user API):
 
 ```js
 import useSWR, { SWRConfig } from 'swr'
 
-function Profile () {
-  const { data, error, isValidating } = useSWR('/api/user')
+function Dashboard () {
+  const { data: events } = useSWR('/api/events')
+  const { data: projects } = useSWR('/api/projects')
+  const { data: user } = useSWR('/api/user', { refreshInterval: 0 })
   // ...
 }
 
 function App () {
   return (
-    <SWRConfig value={{
-      refreshInterval: 1000,
-      fetcher: (...args) => fetch(...args).then(res => res.json())
-    }}>
-      <Profile/>
-      ...
+    <SWRConfig 
+      value={{
+        refreshInterval: 3000,
+        fetcher: (...args) => fetch(...args).then(res => res.json())
+      }}
+    >
+      <Dashboard />
     </SWRConfig>
   )
 }
 ```
 
-### Manually Revalidate
+#### Data Fetching
+
+`fetcher` is a function **accepts the `key`** of SWR, and returns a value or a Promise.  
+You can use any library you to handle data fetching, for example:
+
+```js
+import fetch from 'unfetch'
+
+const fetcher = url => fetch(url).then(r => r.json())
+
+function App () {
+  const { data } = useSWR('/api/data', fetcher)
+  // ...
+}
+```
+
+Or using GraphQL:
+```js
+import { request } from 'graphql-request'
+
+const API = 'https://api.graph.cool/simple/v1/movies'
+const fetcher = query => request(API, query)
+
+function App () {
+  const { data, error } = useSWR(
+    `{
+      Movie(title: "Inception") {
+        releaseDate
+        actors {
+          name
+        }
+      }
+    }`,
+    fetcher
+  )
+  // ...
+}
+```
+
+Note that `fetcher` can be skipped from the parameters if it's provided gloablly.
+
+#### Conditional Fetching
+
+Use `null` or pass a function as the `key` to `useSWR` to conditionally fetch data. If the functions throws an error or returns a falsy value, SWR will cancel the request.
+
+```js
+// conditionally fetch
+const { data } = useSWR(shouldFetch ? '/api/data' : null, fetcher)
+
+// ...or return a falsy value
+const { data } = useSWR(() => shouldFetch ? '/api/data' : null, fetcher)
+
+// ... or throw an error when user.id is not defined
+const { data } = useSWR(() => '/api/data?uid=' + user.id, fetcher)
+```
+
+#### Dependent Fetching
+
+SWR also allows you to fetch data that depends on other data. It ensures the maximum possible parallelism (avoiding waterfalls), as well as serial fetching when a piece of dynamic data is required for the next data fetch to happen.
+
+```js
+function MyProjects () {
+  const { data: user } = useSWR('/api/user')
+  const { data: projects } = useSWR(() => '/api/projects?uid=' + user.id)
+  // When passing a function, SWR will use the
+  // return value as `key`. If the function throws,
+  // SWR will know that some dependencies are not
+  // ready. In this case it is `user`.
+
+  if (!projects) return 'loading...'
+  return 'You have ' + projects.length + ' projects'
+}
+```
+
+#### Manually Revalidate
 
 You can broadcast a revalidation message to all SWR data inside any component by calling
 `trigger(key)`.
@@ -177,7 +264,7 @@ function App () {
 }
 ```
 
-### Local Mutation
+#### Local Mutation
 
 In many cases, applying local mutations to data is a good way to make changes
 feel faster — no need to wait for the remote source of data.
@@ -206,11 +293,9 @@ function Profile () {
 }
 ```
 
-## Examples
+#### Suspense Mode
 
-### Suspense Mode
-
-You can enable the `suspense` option to use `useSWR` with React Suspense.
+You can enable the `suspense` option to use SWR with React Suspense:
 
 ```js
 import { Suspense } from 'react'
@@ -230,58 +315,25 @@ function App () {
 }
 ```
 
-### Subscription (e.g.: socket.io)
+Note in Suspense mode, `data` is always the fetch response (so you don't need to check if it's `undefined`). But if there's an error occurred, you need to use an [error boundary](https://reactjs.org/docs/concurrent-mode-suspense.html#handling-errors) to catch it.
 
-You can use SWR with socket.io (generally any subscription pattern) like this:
+#### Error Retries
+
+By default, SWR uses the [exponential backoff algorithm](https://en.wikipedia.org/wiki/Exponential_backoff) to handle error retries.
+You can read more from the source code.
+
+It's also possible to override the behavior:
 
 ```js
-// fetch-data.js
+useSWR(key, fetcher, {
+  onErrorRetry: (error, key, option, revalidate, { retryCount }) => {
+    if (retryCount >= 10) return
+    if (error.status === 404) return
 
-import { mutate } from 'swr'
-
-let latestData = null
-
-// setup ws and broadcast to all SWRs
-...
-socket.on('data', data => {
-  latestData = data
-  mutate('/api/data', data, false)
+    // retry after 5 seconds
+    setTimeout(() => revalidate({ retryCount: retryCount + 1 }), 5000)
+  }
 })
-
-export default () => latestData
-```
-
-and your component:
-
-```js
-import useSWR from 'swr'
-import fetchData from './fetch-data'
-
-function App () {
-  const { data } = useSWR('/api/data', fetchData)
-  // ...
-}
-```
-
-### Dependent Fetching
-SWR allows you to fetch data that depends on other data. It ensures the maximum possible parallelism (avoiding waterfalls), as well as serial fetching when a piece of dynamic data is required for the next data fetch to happen.
-
-```js
-import useSWR from 'swr'
-
-function MyProjects () {
-  const { data: user } = useSWR('/api/user')
-  const { data: projects } = useSWR(
-    () => '/api/projects?uid=' + user.id
-  )
-  // When passing a function, SWR will use the
-  // return value as `key`. If the function throws,
-  // SWR will know that some dependencies are not
-  // ready. In this case it is `user`.
-
-  if (!projects) return 'loading...'
-  return 'You have ' + projects.length + ' projects'
-}
 ```
 
 ## Authors
