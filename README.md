@@ -127,6 +127,15 @@ You can also use [global configuration](#global-configuration) to provide defaul
 
 ## Examples
 
+- [Global Configuration](#global-configuration)
+- [Data Fetching](#data-fetching)
+- [Conditional Fetching](#conditional-fetching)
+- [Dependent Fetching](#dependent-fetching)
+- [Manually Revalidate](#manually-revalidate)
+- [Local Mutation](#local-mutation)
+- [Suspense Mode](#suspense-mode)
+- [Error Retries](#error-retries)
+
 ### Global Configuration
 
 You can use `SWRConfig` to provide global configurations (`options`) for all SWR hooks. 
