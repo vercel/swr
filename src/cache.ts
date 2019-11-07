@@ -1,6 +1,7 @@
 const cache = new Map()
 const requestIdleCallback =
-  window['requestIdleCallback'] || ((fn, ...args) => setTimeout(fn, 1, ...args))
+  (typeof window !== 'undefined' ? window['requestIdleCallback'] : null) ||
+  ((fn, ...args) => setTimeout(fn, 1, ...args))
 
 function cacheGet(key: string): any {
   return cache.get(key)
