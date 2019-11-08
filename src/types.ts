@@ -77,8 +77,8 @@ export type pageComponentType<Offset, Data, Error> = (
   props: pagesPropsInterface<Offset, Data, Error>
 ) => any
 export type pageOffsetMapperType<Offset, Data, Error> = (
-  data: any,
-  pageSWRs: responseInterface<Data, Error>[]
+  SWR: responseInterface<Data, Error>,
+  index: number
 ) => Offset
 
 export type pagesResponseInterface = {

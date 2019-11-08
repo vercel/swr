@@ -11,7 +11,7 @@ export default () => {
     loadMore
   } = useSWRPages(
     // page key
-    'demo-page',
+    'demo-page-2',
 
     // page component
     ({ offset, withSWR }) => {
@@ -25,16 +25,18 @@ export default () => {
         return <p>loading</p>
       }
 
-      return projects.map(project => 
+      return projects.map(project =>
         <p key={project.id}>{project.name}</p>
       )
     },
 
-    // one page's SWR => offset of next page
-    ({ data: projects }) => {
-      return projects && projects.length
-        ? projects[projects.length - 1].id + 1
-        : null
+    // get next page's offset from the index of current page
+    (SWR, index) => {
+      // there's no next page
+      if (SWR.data && SWR.data.length === 0) return null
+
+      // offset = pageCount × pageSize
+      return (index + 1) * 3
     },
 
     // deps of the page component
@@ -42,13 +44,13 @@ export default () => {
   )
 
   return <div>
-    <h1>Pagination (offset from data)</h1>
+    <h1>Pagination (index as offset)</h1>
     {pages}
     <button onClick={loadMore} disabled={isReachingEnd || isLoadingMore}>
       {isLoadingMore ? '. . .' : isReachingEnd ? 'no more data' : 'load more'}
     </button>
     <hr />
-    <Link href="/page-index"><a>page index based pagination →</a></Link><br/>
+    <Link href="/"><a>data offset based pagination →</a></Link><br />
     <Link href="/about"><a>go to another page →</a></Link>
   </div>
 }
