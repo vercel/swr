@@ -189,7 +189,7 @@ describe('useSWR', () => {
     expect(container.textContent).toMatchInlineSnapshot(`"err err err"`)
   })
 
-  it.only('should accept object args', async () => {
+  it('should accept object args', async () => {
     const obj = { v: 'hello' }
     const arr = ['world']
 

@@ -1,5 +1,5 @@
 // use WeakMap to store the object->key mapping
-// so the objects can be garbadge collected.
+// so the objects can be garbage collected.
 // WeakMap uses a hashtable under the hood, so the lookup
 // complexity is almost O(1).
 const table = new WeakMap()
