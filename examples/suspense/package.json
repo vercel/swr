@@ -1,0 +1,18 @@
+{
+    "name": "suspense",
+    "version": "1.0.0",
+    "main": "index.js",
+    "license": "MIT",
+    "dependencies": {
+      "react": "^16.11.0",
+      "react-dom": "^16.11.0",
+      "isomorphic-unfetch": "3.0.0",
+      "next": "9.1.1",
+      "swr": "latest"
+    },
+    "scripts": {
+      "dev": "next",
+      "start": "next start",
+      "build": "next build"
+    }
+  }
