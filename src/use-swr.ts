@@ -158,7 +158,7 @@ function useSWR<Data = any, Error = any>(
   const shouldReadCache = config.suspense || !useHydration()
 
   // stale: get from cache
-  let [data, setData] = useState(config.initialData || (shouldReadCache ? cacheGet(key) : undefined))
+  let [data, setData] = useState((shouldReadCache ? cacheGet(key) : undefined) || config.initialData)
   let [error, setError] = useState(
     shouldReadCache ? cacheGet(keyErr) : undefined
   )
