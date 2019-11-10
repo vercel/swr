@@ -141,9 +141,9 @@ You can also use [global configuration](#global-configuration) to provide defaul
 
 ### Global Configuration
 
-You can use `SWRConfig` to provide global configurations (`options`) for all SWR hooks. 
+The context `SWRConfig` can provide global configurations (`options`) for all SWR hooks. 
 
-In this example, all `useSWR` hooks will use the same fetcher provided to load JSON data, and refresh every 3 seconds (except the user API):
+In this example, all SWRs will use the same fetcher provided to load JSON data, and refresh every 3 seconds by default:
 
 ```js
 import useSWR, { SWRConfig } from 'swr'
@@ -151,7 +151,7 @@ import useSWR, { SWRConfig } from 'swr'
 function Dashboard () {
   const { data: events } = useSWR('/api/events')
   const { data: projects } = useSWR('/api/projects')
-  const { data: user } = useSWR('/api/user', { refreshInterval: 0 })
+  const { data: user } = useSWR('/api/user', { refreshInterval: 0 }) // don't refresh
   // ...
 }
 
@@ -269,7 +269,7 @@ the arguments on every render, and triggers the validation if any of them has ch
 
 ### Manually Revalidate
 
-You can broadcast a revalidation message to all SWR data inside any component by calling
+You can broadcast a revalidation message globally to all SWRs with the same key by calling
 `trigger(key)`.
 
 This example shows how to automatically refetch the login info (e.g.: inside `<Profile/>`) 
