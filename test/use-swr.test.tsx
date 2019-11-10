@@ -219,7 +219,7 @@ describe('useSWR', () => {
   
   it('should accept initial data', async () => {
     function Page() {
-      const { data } = useSWR('constant-2', () => 'SWR', { initialData: 'Initial' })
+      const { data } = useSWR('initial-data-1', () => 'SWR', { initialData: 'Initial' })
       return <div>hello, {data}</div>
     }
   

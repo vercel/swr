@@ -158,7 +158,7 @@ function useSWR<Data = any, Error = any>(
   const shouldReadCache = config.suspense || !useHydration()
 
   // stale: get from cache
-  let [data = config.initialData, setData] = useState((shouldReadCache ? cacheGet(key) : undefined) || config.initialData)
+  let [data, setData] = useState((shouldReadCache ? cacheGet(key) : undefined) || config.initialData)
   let [error, setError] = useState(
     shouldReadCache ? cacheGet(keyErr) : undefined
   )
@@ -323,7 +323,7 @@ function useSWR<Data = any, Error = any>(
     // and trigger a revalidation
 
     const currentHookData = dataRef.current
-    const latestKeyedData = cacheGet(key)
+    const latestKeyedData = cacheGet(key) || config.initialData
 
     // update the state if the key changed or cache updated
     if (
