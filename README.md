@@ -114,6 +114,7 @@ const { data, error, isValidating, revalidate } = useSWR(key, fetcher, options)
 - `onSuccess`: callback function when a request finishs successfully
 - `onError`: callback function when a request returns an error
 - `onErrorRetry`: handler for [error retry](#error-retries)
+- `initialData`: initial data to be returned (note: This is per-hook)
 
 When under a slow network (2G, <= 70Kbps), `errorRetryInterval` will be 10s, and
 `loadingTimeout` will be 5s by default.

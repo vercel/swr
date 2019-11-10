@@ -18,7 +18,8 @@ import {
   triggerInterface,
   mutateInterface,
   broadcastStateInterface,
-  responseInterface
+  responseInterface,
+  fetcherFn
 } from './types'
 
 import defaultConfig, {
@@ -111,14 +112,14 @@ function useSWR<Data = any, Error = any>(
 ): responseInterface<Data, Error>
 function useSWR<Data = any, Error = any>(
   key: keyInterface,
-  fn?: Function,
+  fn?: fetcherFn<Data>,
   config?: ConfigInterface<Data, Error>
 ): responseInterface<Data, Error>
 function useSWR<Data = any, Error = any>(
   ...args
 ): responseInterface<Data, Error> {
   let _key: keyInterface,
-    fn: Function | undefined,
+    fn: fetcherFn<Data> | undefined,
     config: ConfigInterface<Data, Error> = {}
   if (args.length >= 1) {
     _key = args[0]
@@ -157,7 +158,7 @@ function useSWR<Data = any, Error = any>(
   const shouldReadCache = config.suspense || !useHydration()
 
   // stale: get from cache
-  let [data, setData] = useState(shouldReadCache ? cacheGet(key) : undefined)
+  let [data, setData] = useState((shouldReadCache ? cacheGet(key) : undefined) || config.initialData)
   let [error, setError] = useState(
     shouldReadCache ? cacheGet(keyErr) : undefined
   )
@@ -322,7 +323,7 @@ function useSWR<Data = any, Error = any>(
     // and trigger a revalidation
 
     const currentHookData = dataRef.current
-    const latestKeyedData = cacheGet(key)
+    const latestKeyedData = cacheGet(key) || config.initialData
 
     // update the state if the key changed or cache updated
     if (
