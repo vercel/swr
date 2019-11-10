@@ -247,7 +247,7 @@ function MyProjects () {
 
 ### Multiple Arguments
 
-In some scenarios, we need to pass multiple arguments to the `fetcher` function. For example:
+In some scenarios, we need to pass multiple arguments (can be any value or object) to the `fetcher` function. For example:
 
 ```js
 const token = props.token
@@ -258,7 +258,7 @@ useSWR('/api/data', url => fetchWithToken(url, token))
 **This is incorrect**. Because the identifier of the data is `'/api/data'`, which is also the index of the cache. 
 When `token` changes, SWR will still treat it as the same key and request. 
 
-Instead, you can use an array as the `key` parameter, which contains multiple arguments (can be any object or value) of `fetcher`:
+Instead, you can use an array as the `key` parameter, which contains multiple arguments of `fetcher`:
 
 ```js
 useSWR(['/api/data', token], fetchWithToken)
