@@ -88,7 +88,8 @@ const { data, error, isValidating, revalidate } = useSWR(key, fetcher, options)
 
 #### Parameters
 
-- `key`: a unique key string for the request (or a function / null) [(advanced usage)](#conditional-fetching)  
+- `key`: a unique key string for the request (or a function / null) [(advanced usage)](#conditional-fetching)
+   NOTE: `key` cannot be an object.  Suggest wrapping key in `JSON.stringify(key)` to accomodate.
 - `fetcher`: (_optional_) a Promise returning function to fetch your data [(details)](#data-fetching) 
 - `options`: (_optional_) an object of options for this SWR hook
 
