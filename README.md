@@ -172,7 +172,7 @@ function App () {
 ### Data Fetching
 
 `fetcher` is a function **accepts the `key`** of SWR, and returns a value or a Promise.  
-You can use any library you to handle data fetching, for example:
+You can use any library to handle data fetching, for example:
 
 ```js
 import fetch from 'unfetch'
