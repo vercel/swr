@@ -33,11 +33,14 @@ It features:
 - Pagination
 - TypeScript ready
 - Suspense mode
+- React Native support
 - Minimal API
 
 ...and a lot more.
 
 With SWR, components will get **a stream of data updates constantly and automatically**. Thus, the UI will be always **fast** and **reactive**.
+
+<br/>
 
 ## Quick Start
 
@@ -66,6 +69,8 @@ library to handle that part.
 
 Check out [swr.now.sh](https://swr.now.sh) for more demos of SWR.
 
+<br/>
+
 ## Usage
 
 Inside your React project directory, run the following:
@@ -88,7 +93,7 @@ const { data, error, isValidating, revalidate } = useSWR(key, fetcher, options)
 
 #### Parameters
 
-- `key`: a unique key string for the request (or a function / null) [(advanced usage)](#conditional-fetching)  
+- `key`: a unique key string for the request (or a function / array / null) [(advanced usage)](#conditional-fetching)  
 - `fetcher`: (_optional_) a Promise returning function to fetch your data [(details)](#data-fetching) 
 - `options`: (_optional_) an object of options for this SWR hook
 
@@ -121,12 +126,15 @@ When under a slow network (2G, <= 70Kbps), `errorRetryInterval` will be 10s, and
 
 You can also use [global configuration](#global-configuration) to provide default options.
 
+<br/>
+
 ## Examples
 
 - [Global Configuration](#global-configuration)
 - [Data Fetching](#data-fetching)
 - [Conditional Fetching](#conditional-fetching)
 - [Dependent Fetching](#dependent-fetching)
+- [Multiple Arguments](#multiple-arguments)
 - [Manually Revalidate](#manually-revalidate)
 - [Local Mutation](#local-mutation)
 - [Suspense Mode](#suspense-mode)
@@ -134,9 +142,9 @@ You can also use [global configuration](#global-configuration) to provide defaul
 
 ### Global Configuration
 
-You can use `SWRConfig` to provide global configurations (`options`) for all SWR hooks. 
+The context `SWRConfig` can provide global configurations (`options`) for all SWR hooks. 
 
-In this example, all `useSWR` hooks will use the same fetcher provided to load JSON data, and refresh every 3 seconds (except the user API):
+In this example, all SWRs will use the same fetcher provided to load JSON data, and refresh every 3 seconds by default:
 
 ```js
 import useSWR, { SWRConfig } from 'swr'
@@ -144,7 +152,7 @@ import useSWR, { SWRConfig } from 'swr'
 function Dashboard () {
   const { data: events } = useSWR('/api/events')
   const { data: projects } = useSWR('/api/projects')
-  const { data: user } = useSWR('/api/user', { refreshInterval: 0 })
+  const { data: user } = useSWR('/api/user', { refreshInterval: 0 }) // don't refresh
   // ...
 }
 
@@ -165,7 +173,7 @@ function App () {
 ### Data Fetching
 
 `fetcher` is a function **accepts the `key`** of SWR, and returns a value or a Promise.  
-You can use any library you to handle data fetching, for example:
+You can use any library to handle data fetching, for example:
 
 ```js
 import fetch from 'unfetch'
@@ -200,6 +208,8 @@ function App () {
   // ...
 }
 ```
+
+_If you want to pass variables to a GraphQL query, check out [Multiple Arguments](#multiple-arguments)._
 
 Note that `fetcher` can be skipped from the parameters if it's provided gloablly.
 
@@ -236,9 +246,31 @@ function MyProjects () {
 }
 ```
 
+### Multiple Arguments
+
+In some scenarios, it's useful pass multiple arguments (can be any value or object) to the `fetcher` function. For example:
+
+```js
+const token = props.token
+
+useSWR('/api/data', url => fetchWithToken(url, token))
+```
+
+**This is incorrect**. Because the identifier of the data is `'/api/data'`, which is also the index of the cache. 
+When `token` changes, SWR will still treat it as the same key and request. 
+
+Instead, you can use an array as the `key` parameter, which contains multiple arguments of `fetcher`:
+
+```js
+useSWR(['/api/data', token], fetchWithToken)
+```
+
+This solves the problem. The identifier of the request is now the combination of both values. SWR **shallowly** compares
+the arguments on every render, and triggers the validation if any of them has changed.
+
 ### Manually Revalidate
 
-You can broadcast a revalidation message to all SWR data inside any component by calling
+You can broadcast a revalidation message globally to all SWRs with the same key by calling
 `trigger(key)`.
 
 This example shows how to automatically refetch the login info (e.g.: inside `<Profile/>`) 
@@ -337,6 +369,8 @@ useSWR(key, fetcher, {
 })
 ```
 
+<br/>
+
 ## Authors
 - Shu Ding ([@shuding_](https://twitter.com/shuding_)) – [ZEIT](https://zeit.co)
 - Guillermo Rauch ([@rauchg](https://twitter.com/rauchg)) – [ZEIT](https://zeit.co)
@@ -344,6 +378,8 @@ useSWR(key, fetcher, {
 - Paco Coursey ([@pacocoursey](https://twitter.com/pacocoursey)) - [ZEIT](https://zeit.co)
 
 Thanks to Ryan Chen for providing the awesome `swr` npm package name!
+
+<br/>
 
 ## License
 The MIT License.
