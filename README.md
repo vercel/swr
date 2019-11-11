@@ -247,7 +247,7 @@ function MyProjects () {
 
 ### Multiple Arguments
 
-In some scenarios, we need to pass multiple arguments (can be any value or object) to the `fetcher` function. For example:
+In some scenarios, it's useful pass multiple arguments (can be any value or object) to the `fetcher` function. For example:
 
 ```js
 const token = props.token
@@ -264,7 +264,7 @@ Instead, you can use an array as the `key` parameter, which contains multiple ar
 useSWR(['/api/data', token], fetchWithToken)
 ```
 
-It solves the problem. The identifier of this request is now the combination of both values. SWR **shallowly** compares
+This solves the problem. The identifier of the request is now the combination of both values. SWR **shallowly** compares
 the arguments on every render, and triggers the validation if any of them has changed.
 
 ### Manually Revalidate
