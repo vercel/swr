@@ -208,7 +208,7 @@ function App () {
 }
 ```
 
-_If you want to pass varibales to a GraphQL query, check out [Multiple Arguments](#multiple-arguments)._
+_If you want to pass variables to a GraphQL query, check out [Multiple Arguments](#multiple-arguments)._
 
 Note that `fetcher` can be skipped from the parameters if it's provided gloablly.
 
