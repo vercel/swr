@@ -38,7 +38,6 @@
     "@types/lodash": "4.14.145",
     "@types/node": "11.12.0",
     "@types/react": "16.9.11",
-    "@types/react-dom": "16.9.3",
     "@typescript-eslint/eslint-plugin": "2.5.0",
     "@typescript-eslint/parser": "2.5.0",
     "eslint": "6.6.0",
@@ -59,13 +58,5 @@
   },
   "peerDependencies": {
     "react": "16.11.0"
-  },
-  "peerDependenciesMeta": {
-    "react-dom": {
-      "optional": true
-    },
-    "react-native": {
-      "optional": true
-    }
   }
 }
