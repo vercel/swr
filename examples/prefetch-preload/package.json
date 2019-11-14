@@ -1,5 +1,5 @@
 {
-  "name": "prefetch",
+  "name": "prefetch-preload",
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
