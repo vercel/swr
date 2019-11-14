@@ -3,10 +3,7 @@ export default function isDocumentVisible(): boolean {
     typeof document !== 'undefined' &&
     typeof document.visibilityState !== 'undefined'
   ) {
-    return (
-      document.visibilityState === 'visible' ||
-      document.visibilityState === 'prerender'
-    )
+    return document.visibilityState !== 'hidden'
   }
   // always assume it's visible
   return true

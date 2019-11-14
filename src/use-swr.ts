@@ -7,7 +7,7 @@ import {
   useCallback
 } from 'react'
 import { unstable_batchedUpdates } from './libs/reactBatchedUpdates'
-import throttle from 'lodash.throttle'
+import throttle from './libs/throttle'
 import deepEqual from 'fast-deep-equal'
 
 import {
@@ -18,7 +18,8 @@ import {
   triggerInterface,
   mutateInterface,
   broadcastStateInterface,
-  responseInterface
+  responseInterface,
+  fetcherFn
 } from './types'
 
 import defaultConfig, {
@@ -33,13 +34,37 @@ import defaultConfig, {
 import SWRConfigContext from './swr-config-context'
 import isDocumentVisible from './libs/is-document-visible'
 import useHydration from './libs/use-hydration'
+import hash from './libs/hash'
 
 const IS_SERVER = typeof window === 'undefined'
 
 // TODO: introduce namepsace for the cache
 const getErrorKey = key => (key ? 'err@' + key : '')
+const getKeyArgs = _key => {
+  let key: string
+  let args = null
+  if (typeof _key === 'function') {
+    try {
+      key = _key()
+    } catch (err) {
+      // dependencies not ready
+      key = ''
+    }
+  } else if (Array.isArray(_key)) {
+    // args array
+    key = hash(_key)
+    args = _key
+  } else {
+    // convert null to ''
+    key = String(_key || '')
+  }
+  return [key, args]
+}
 
-const trigger: triggerInterface = (key, shouldRevalidate = true) => {
+const trigger: triggerInterface = (_key, shouldRevalidate = true) => {
+  const [key] = getKeyArgs(_key)
+  if (!key) return
+
   const updaters = CACHE_REVALIDATORS[key]
   if (key && updaters) {
     const currentData = cacheGet(key)
@@ -59,7 +84,8 @@ const broadcastState: broadcastStateInterface = (key, data, error) => {
   }
 }
 
-const mutate: mutateInterface = (key, data, shouldRevalidate = true) => {
+const mutate: mutateInterface = (_key, data, shouldRevalidate = true) => {
+  const [key] = getKeyArgs(_key)
   if (!key) return
 
   // update timestamp
@@ -86,14 +112,14 @@ function useSWR<Data = any, Error = any>(
 ): responseInterface<Data, Error>
 function useSWR<Data = any, Error = any>(
   key: keyInterface,
-  fn?: Function,
+  fn?: fetcherFn<Data>,
   config?: ConfigInterface<Data, Error>
 ): responseInterface<Data, Error>
 function useSWR<Data = any, Error = any>(
   ...args
 ): responseInterface<Data, Error> {
   let _key: keyInterface,
-    fn: Function | undefined,
+    fn: fetcherFn<Data> | undefined,
     config: ConfigInterface<Data, Error> = {}
   if (args.length >= 1) {
     _key = args[0]
@@ -110,19 +136,7 @@ function useSWR<Data = any, Error = any>(
   // we assume `key` as the identifier of the request
   // `key` can change but `fn` shouldn't
   // (because `revalidate` only depends on `key`)
-
-  let key: string
-  if (typeof _key === 'function') {
-    try {
-      key = _key()
-    } catch (err) {
-      // dependencies not ready
-      key = ''
-    }
-  } else {
-    // convert null to ''
-    key = String(_key || '')
-  }
+  const [key, fnArgs] = getKeyArgs(_key)
 
   // `keyErr` is the cache key for error objects
   const keyErr = getErrorKey(key)
@@ -144,7 +158,9 @@ function useSWR<Data = any, Error = any>(
   const shouldReadCache = config.suspense || !useHydration()
 
   // stale: get from cache
-  let [data, setData] = useState(shouldReadCache ? cacheGet(key) : undefined)
+  let [data, setData] = useState(
+    (shouldReadCache ? cacheGet(key) : undefined) || config.initialData
+  )
   let [error, setError] = useState(
     shouldReadCache ? cacheGet(keyErr) : undefined
   )
@@ -192,7 +208,12 @@ function useSWR<Data = any, Error = any>(
             }, config.loadingTimeout)
           }
 
-          CONCURRENT_PROMISES[key] = fn(key)
+          if (fnArgs !== null) {
+            CONCURRENT_PROMISES[key] = fn(...fnArgs)
+          } else {
+            CONCURRENT_PROMISES[key] = fn(key)
+          }
+
           CONCURRENT_PROMISES_TS[key] = startAt = Date.now()
 
           setTimeout(() => {
@@ -304,7 +325,7 @@ function useSWR<Data = any, Error = any>(
     // and trigger a revalidation
 
     const currentHookData = dataRef.current
-    const latestKeyedData = cacheGet(key)
+    const latestKeyedData = cacheGet(key) || config.initialData
 
     // update the state if the key changed or cache updated
     if (

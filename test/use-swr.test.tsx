@@ -1,13 +1,13 @@
-import React, { Suspense, ReactNode, useState, useEffect } from 'react'
 import {
-  cleanup,
-  render,
-  waitForDomChange,
   act,
-  fireEvent
+  cleanup,
+  fireEvent,
+  render,
+  waitForDomChange
 } from '@testing-library/react'
+import React, { ReactNode, Suspense, useEffect, useState } from 'react'
 
-import useSWR, { trigger, mutate, SWRConfig } from '../src'
+import useSWR, { mutate, SWRConfig, trigger } from '../src'
 
 class ErrorBoundary extends React.Component<{ fallback: ReactNode }> {
   state = { hasError: false }
@@ -187,6 +187,59 @@ describe('useSWR', () => {
     expect(container.textContent).toMatchInlineSnapshot(`"1 1 1"`)
     await act(() => new Promise(res => setTimeout(res, 100)))
     expect(container.textContent).toMatchInlineSnapshot(`"err err err"`)
+  })
+
+  it('should accept object args', async () => {
+    const obj = { v: 'hello' }
+    const arr = ['world']
+
+    function Page() {
+      const { data: v1 } = useSWR(
+        ['args-1', obj, arr],
+        (a, b, c) => a + b.v + c[0]
+      )
+
+      // reuse the cache
+      const { data: v2 } = useSWR(['args-1', obj, arr], () => 'not called!')
+
+      // different object
+      const { data: v3 } = useSWR(
+        ['args-2', obj, 'world'],
+        (a, b, c) => a + b.v + c
+      )
+
+      return (
+        <div>
+          {v1}, {v2}, {v3}
+        </div>
+      )
+    }
+
+    const { container } = render(<Page />)
+
+    await waitForDomChange({ container })
+    expect(container.textContent).toMatchInlineSnapshot(
+      `"args-1helloworld, args-1helloworld, args-2helloworld"`
+    )
+  })
+
+  it('should accept initial data', async () => {
+    function Page() {
+      const { data } = useSWR('initial-data-1', () => 'SWR', {
+        initialData: 'Initial'
+      })
+      return <div>hello, {data}</div>
+    }
+
+    const { container } = render(<Page />)
+
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"hello, Initial"`
+    )
+    await waitForDomChange({ container }) // mount
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"hello, SWR"`
+    )
   })
 })
 
@@ -592,14 +645,14 @@ describe('useSWR - suspense', () => {
 
   it('should render multiple SWR fallbacks', async () => {
     function Section() {
-      const { data: v1 } = useSWR(
+      const { data: v1 } = useSWR<number>(
         'suspense-2',
         () => new Promise(res => setTimeout(() => res(1), 100)),
         {
           suspense: true
         }
       )
-      const { data: v2 } = useSWR(
+      const { data: v2 } = useSWR<number>(
         'suspense-3',
         () => new Promise(res => setTimeout(() => res(2), 100)),
         {
@@ -639,7 +692,7 @@ describe('useSWR - suspense', () => {
     expect(container.textContent).toMatchInlineSnapshot(`"hello"`)
   })
 
-  it.only('should throw errors', async () => {
+  it('should throw errors', async () => {
     function Section() {
       const { data } = useSWR(
         'suspense-5',

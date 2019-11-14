@@ -1,6 +1,6 @@
 {
   "name": "swr",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "React Hooks library for remote data fetching",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -12,7 +12,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "now dev",
-    "build": "ncc build src/index.ts -o dist -m -e react -e react-dom",
+    "build": "ncc build src/index.ts -o dist -m -e react",
     "watch": "tsc --watch",
     "types:check": "tsc --noEmit",
     "format": "prettier --write '{src,test,examples}/**/*.{ts,tsx}'",
@@ -35,7 +35,6 @@
   "devDependencies": {
     "@testing-library/react": "9.3.0",
     "@types/jest": "24.0.20",
-    "@types/lodash.throttle": "4.1.6",
     "@types/node": "11.12.0",
     "@types/react": "16.9.11",
     "@types/react-dom": "16.9.3",
@@ -54,19 +53,9 @@
     "typescript": "3.6.4"
   },
   "dependencies": {
-    "fast-deep-equal": "2.0.1",
-    "lodash.throttle": "4.1.1",
-    "ms": "2.1.2"
+    "fast-deep-equal": "2.0.1"
   },
   "peerDependencies": {
     "react": "16.11.0"
-  },
-  "peerDependenciesMeta": {
-    "react-dom": {
-      "optional": true
-    },
-    "react-native": {
-      "optional": true
-    }
   }
 }

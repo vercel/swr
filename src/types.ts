@@ -1,4 +1,9 @@
-export interface ConfigInterface<Data = any, Error = any> {
+export type fetcherFn<Data> = (...args: any) => Data | Promise<Data>
+export interface ConfigInterface<
+  Data = any,
+  Error = any,
+  Fn extends fetcherFn<Data> = fetcherFn<Data>
+> {
   errorRetryInterval?: number
   loadingTimeout?: number
   focusThrottleInterval?: number
@@ -8,8 +13,9 @@ export interface ConfigInterface<Data = any, Error = any> {
   refreshWhenHidden?: boolean
   revalidateOnFocus?: boolean
   shouldRetryOnError?: boolean
-  fetcher?: any
+  fetcher?: Fn
   suspense?: boolean
+  initialData?: Data
 
   onLoadingSlow?: (key: string, config: ConfigInterface<Data, Error>) => void
   onSuccess?: (
@@ -37,15 +43,18 @@ export interface RevalidateOptionInterface {
 }
 
 type keyFunction = () => string
-export type keyInterface = string | keyFunction
+export type keyInterface = string | keyFunction | any[] | null
 export type updaterInterface<Data = any, Error = any> = (
   shouldRevalidate?: boolean,
   data?: Data,
   error?: Error
 ) => boolean | Promise<boolean>
-export type triggerInterface = (key: string, shouldRevalidate?: boolean) => void
+export type triggerInterface = (
+  key: keyInterface,
+  shouldRevalidate?: boolean
+) => void
 export type mutateInterface<Data = any> = (
-  key: string,
+  key: keyInterface,
   data: Data,
   shouldRevalidate?: boolean
 ) => void
@@ -77,8 +86,8 @@ export type pageComponentType<Offset, Data, Error> = (
   props: pagesPropsInterface<Offset, Data, Error>
 ) => any
 export type pageOffsetMapperType<Offset, Data, Error> = (
-  data: any,
-  pageSWRs: responseInterface<Data, Error>[]
+  SWR: responseInterface<Data, Error>,
+  index: number
 ) => Offset
 
 export type pagesResponseInterface = {

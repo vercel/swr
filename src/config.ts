@@ -1,4 +1,3 @@
-import ms from 'ms'
 import isDocumentVisible from './libs/is-document-visible'
 import isOnline from './libs/is-online'
 
@@ -59,10 +58,10 @@ const defaultConfig: ConfigInterface = {
   onError: () => {},
   onErrorRetry,
 
-  errorRetryInterval: ms('5s'),
-  focusThrottleInterval: ms('5s'),
-  dedupingInterval: ms('2s'),
-  loadingTimeout: ms('3s'),
+  errorRetryInterval: 5 * 1000,
+  focusThrottleInterval: 5 * 1000,
+  dedupingInterval: 2 * 1000,
+  loadingTimeout: 3 * 1000,
 
   refreshInterval: 0,
   revalidateOnFocus: true,
@@ -80,8 +79,8 @@ if (typeof window !== 'undefined') {
     if (
       ['slow-2g', '2g'].indexOf(navigator['connection'].effectiveType) !== -1
     ) {
-      defaultConfig.errorRetryInterval = ms('10s')
-      defaultConfig.loadingTimeout = ms('5s')
+      defaultConfig.errorRetryInterval = 10 * 1000
+      defaultConfig.loadingTimeout = 5 * 1000
     }
   }
 }
