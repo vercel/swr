@@ -6,7 +6,6 @@ import {
   useCallback,
   useReducer
 } from 'react'
-import throttle from 'lodash/throttle'
 import deepEqual from 'fast-deep-equal'
 
 import {
@@ -35,6 +34,7 @@ import defaultConfig, {
 import SWRConfigContext from './swr-config-context'
 import isDocumentVisible from './libs/is-document-visible'
 import useHydration from './libs/use-hydration'
+import throttle from './libs/throttle'
 import hash from './libs/hash'
 
 const IS_SERVER = typeof window === 'undefined'
