@@ -6,3 +6,4 @@ dist
 .next
 .DS_Store
 .idea
+examples/**/yarn.lock
