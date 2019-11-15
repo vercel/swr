@@ -1,3 +1,5 @@
+import { Reducer } from 'react'
+
 export type fetcherFn<Data> = (...args: any) => Data | Promise<Data>
 export interface ConfigInterface<
   Data = any,
@@ -99,3 +101,18 @@ export type pagesResponseInterface = {
   isEmpty: boolean
   loadMore: () => void
 }
+
+export type actionType<Data, Error> = {
+  data?: Data
+  error?: Error
+  isValidating?: boolean
+}
+
+export type reducerType<Data, Error> = Reducer<
+  {
+    data: Data
+    error: Error
+    isValidating: boolean
+  },
+  actionType<Data, Error>
+>

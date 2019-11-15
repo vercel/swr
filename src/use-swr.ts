@@ -1,13 +1,11 @@
 import {
-  useState,
   useEffect,
   useLayoutEffect,
   useRef,
   useContext,
-  useCallback
+  useCallback,
+  useReducer
 } from 'react'
-import { unstable_batchedUpdates } from './libs/reactBatchedUpdates'
-import throttle from './libs/throttle'
 import deepEqual from 'fast-deep-equal'
 
 import {
@@ -19,7 +17,9 @@ import {
   mutateInterface,
   broadcastStateInterface,
   responseInterface,
-  fetcherFn
+  fetcherFn,
+  reducerType,
+  actionType
 } from './types'
 
 import defaultConfig, {
@@ -34,9 +34,15 @@ import defaultConfig, {
 import SWRConfigContext from './swr-config-context'
 import isDocumentVisible from './libs/is-document-visible'
 import useHydration from './libs/use-hydration'
+import throttle from './libs/throttle'
 import hash from './libs/hash'
 
 const IS_SERVER = typeof window === 'undefined'
+
+// React currently throws a warning when using useLayoutEffect on the server.
+// To get around it, we can conditionally useEffect on the server (no-op) and
+// useLayoutEffect in the browser.
+const useIsomorphicLayoutEffect = IS_SERVER ? useEffect : useLayoutEffect
 
 // TODO: introduce namepsace for the cache
 const getErrorKey = key => (key ? 'err@' + key : '')
@@ -103,6 +109,10 @@ const mutate: mutateInterface = (_key, data, shouldRevalidate = true) => {
   }
 }
 
+function mergeState(state, payload) {
+  return { ...state, ...payload }
+}
+
 function useSWR<Data = any, Error = any>(
   key: keyInterface
 ): responseInterface<Data, Error>
@@ -156,23 +166,21 @@ function useSWR<Data = any, Error = any>(
   // it is fine to call `useHydration` conditionally here
   // because `config.suspense` should never change
   const shouldReadCache = config.suspense || !useHydration()
-
-  // stale: get from cache
-  let [data, setData] = useState(
+  const initialData =
     (shouldReadCache ? cacheGet(key) : undefined) || config.initialData
-  )
-  let [error, setError] = useState(
-    shouldReadCache ? cacheGet(keyErr) : undefined
-  )
+  const initialError = shouldReadCache ? cacheGet(keyErr) : undefined
 
-  // if there's any ongoing request
-  let [isValidating, setIsValidating] = useState(false)
+  let [state, dispatch] = useReducer<reducerType<Data, Error>>(mergeState, {
+    data: initialData,
+    error: initialError,
+    isValidating: false
+  })
 
   // error ref inside revalidate (is last request errored?)
   const unmountedRef = useRef(false)
   const keyRef = useRef(key)
-  const errorRef = useRef(error)
-  const dataRef = useRef(data)
+  const dataRef = useRef(initialData)
+  const errorRef = useRef(initialError)
 
   // start a revalidation
   const revalidate = useCallback(
@@ -189,7 +197,9 @@ function useSWR<Data = any, Error = any>(
 
       // start fetching
       try {
-        setIsValidating(true)
+        dispatch({
+          isValidating: true
+        })
 
         let newData
         let startAt
@@ -232,7 +242,7 @@ function useSWR<Data = any, Error = any>(
         // we have to ignore the result because it could override.
         // meanwhile, a new revalidation should be triggered by the mutation.
         if (MUTATION_TS[key] && startAt <= MUTATION_TS[key]) {
-          setIsValidating(false)
+          dispatch({ isValidating: false })
           return false
         }
 
@@ -240,29 +250,32 @@ function useSWR<Data = any, Error = any>(
         cacheSet(keyErr, undefined)
         keyRef.current = key
 
-        // batch state updates
-        unstable_batchedUpdates(() => {
-          setIsValidating(false)
+        // new state for the reducer
+        const newState: actionType<Data, Error> = {
+          isValidating: false
+        }
 
-          if (typeof errorRef.current !== 'undefined') {
-            // we don't have an error
-            setError(undefined)
-            errorRef.current = undefined
-          }
-          if (deepEqual(dataRef.current, newData)) {
-            // deep compare to avoid extra re-render
-            // do nothing
-          } else {
-            // data changed
-            setData(newData)
-            dataRef.current = newData
-          }
+        if (typeof errorRef.current !== 'undefined') {
+          // we don't have an error
+          newState.error = undefined
+          errorRef.current = undefined
+        }
+        if (deepEqual(dataRef.current, newData)) {
+          // deep compare to avoid extra re-render
+          // do nothing
+        } else {
+          // data changed
+          newState.data = newData
+          dataRef.current = newData
+        }
 
-          if (!shouldDeduping) {
-            // also update other hooks
-            broadcastState(key, newData, undefined)
-          }
-        })
+        // merge the new state
+        dispatch(newState)
+
+        if (!shouldDeduping) {
+          // also update other hooks
+          broadcastState(key, newData, undefined)
+        }
       } catch (err) {
         delete CONCURRENT_PROMISES[key]
         delete CONCURRENT_PROMISES_TS[key]
@@ -275,10 +288,10 @@ function useSWR<Data = any, Error = any>(
         if (errorRef.current !== err) {
           errorRef.current = err
 
-          unstable_batchedUpdates(() => {
-            // we keep the stale data
-            setIsValidating(false)
-            setError(err)
+          // we keep the stale data
+          dispatch({
+            isValidating: false,
+            error: err
           })
 
           if (!shouldDeduping) {
@@ -308,11 +321,6 @@ function useSWR<Data = any, Error = any>(
     [key]
   )
 
-  // React currently throws a warning when using useLayoutEffect on the server.
-  // To get around it, we can conditionally useEffect on the server (no-op) and
-  // useLayoutEffect in the browser.
-  const useIsomorphicLayoutEffect = IS_SERVER ? useEffect : useLayoutEffect
-
   // mounted (client side rendering)
   useIsomorphicLayoutEffect(() => {
     if (!key) return undefined
@@ -332,7 +340,7 @@ function useSWR<Data = any, Error = any>(
       keyRef.current !== key ||
       !deepEqual(currentHookData, latestKeyedData)
     ) {
-      setData(latestKeyedData)
+      dispatch({ data: latestKeyedData })
       dataRef.current = latestKeyedData
       keyRef.current = key
     }
@@ -372,23 +380,26 @@ function useSWR<Data = any, Error = any>(
       updatedError
     ) => {
       // update hook state
-      unstable_batchedUpdates(() => {
-        if (
-          typeof updatedData !== 'undefined' &&
-          !deepEqual(dataRef.current, updatedData)
-        ) {
-          setData(updatedData)
-          dataRef.current = updatedData
-        }
-        // always update error
-        // because it can be `undefined`
-        if (errorRef.current !== updatedError) {
-          setError(updatedError)
-          errorRef.current = updatedError
-        }
-        keyRef.current = key
-      })
+      const newState: actionType<Data, Error> = {}
 
+      if (
+        typeof updatedData !== 'undefined' &&
+        !deepEqual(dataRef.current, updatedData)
+      ) {
+        newState.data = updatedData
+        dataRef.current = updatedData
+      }
+
+      // always update error
+      // because it can be `undefined`
+      if (errorRef.current !== updatedError) {
+        newState.error = updatedError
+        errorRef.current = updatedError
+      }
+
+      dispatch(newState)
+
+      keyRef.current = key
       if (shouldRevalidate) {
         return softRevalidate()
       }
@@ -424,9 +435,7 @@ function useSWR<Data = any, Error = any>(
 
     return () => {
       // cleanup
-      setData = () => null
-      setError = () => null
-      setIsValidating = () => null
+      dispatch = () => null
 
       // mark it as unmounted
       unmountedRef.current = true
@@ -492,18 +501,18 @@ function useSWR<Data = any, Error = any>(
       error: latestError,
       data: latestData,
       revalidate,
-      isValidating
+      isValidating: state.isValidating
     }
   }
 
   return {
-    error,
+    error: state.error,
     // `key` might be changed in the upcoming hook re-render,
     // but the previous state will stay
     // so we need to match the latest key and data
-    data: keyRef.current === key ? data : undefined,
+    data: keyRef.current === key ? state.data : undefined,
     revalidate, // handler
-    isValidating
+    isValidating: state.isValidating
   }
 }
 
