@@ -12,7 +12,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "now dev",
-    "build": "tsc",
+    "build": "ncc build src/index.ts -o dist -m -e react",
     "watch": "tsc --watch",
     "types:check": "tsc --noEmit",
     "format": "prettier --write '{src,test,examples}/**/*.{ts,tsx}'",
@@ -39,6 +39,7 @@
     "@types/react": "16.9.11",
     "@typescript-eslint/eslint-plugin": "2.5.0",
     "@typescript-eslint/parser": "2.5.0",
+    "@zeit/ncc": "0.20.5",
     "eslint": "6.6.0",
     "eslint-config-prettier": "6.5.0",
     "husky": "2.4.1",
