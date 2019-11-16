@@ -443,12 +443,22 @@ function useSWR<Data = any, Error = any>(
       unmountedRef.current = true
 
       if (onFocus && FOCUS_REVALIDATORS[key]) {
-        const index = FOCUS_REVALIDATORS[key].indexOf(onFocus)
-        if (index >= 0) FOCUS_REVALIDATORS[key].splice(index, 1)
+        const revalidators = FOCUS_REVALIDATORS[key]
+        const index = revalidators.indexOf(onFocus)
+        if (index >= 0) {
+          // 10x faster than splice
+          // https://jsperf.com/array-remove-by-index
+          revalidators[index] = revalidators[revalidators.length - 1]
+          revalidators.pop()
+        }
       }
       if (CACHE_REVALIDATORS[key]) {
-        const index = CACHE_REVALIDATORS[key].indexOf(onUpdate)
-        if (index >= 0) CACHE_REVALIDATORS[key].splice(index, 1)
+        const revalidators = CACHE_REVALIDATORS[key]
+        const index = revalidators.indexOf(onUpdate)
+        if (index >= 0) {
+          revalidators[index] = revalidators[revalidators.length - 1]
+          revalidators.pop()
+        }
       }
 
       if (timeout !== null) {
