@@ -2,16 +2,16 @@
 
 <p align="center">
   <a aria-label="ZEIT logo" href="https://github.com/zeit">
-    <img src="https://img.shields.io/badge/MADE%20BY%20ZEIT-000000.svg?logo=ZEIT&labelColor=000000&logoWidth=12">
+    <img src="https://badgen.net/badge/icon/MADE%20BY%20ZEIT?icon=zeit&label&color=black&labelColor=black">
   </a>
   <a aria-label="NPM version" href="https://www.npmjs.com/package/swr">
-    <img alt="" src="https://img.shields.io/npm/v/swr">
+    <img alt="" src="https://badgen.net/npm/v/swr">
   </a>
   <a aria-label="Package size" href="https://bundlephobia.com/result?p=swr">
-    <img alt="" src="https://img.shields.io/bundlephobia/minzip/swr">
+    <img alt="" src="https://badgen.net/bundlephobia/minzip/swr">
   </a>
   <a aria-label="License" href="https://github.com/zeit/swr/blob/master/LICENSE">
-    <img alt="" src="https://img.shields.io/npm/l/swr">
+    <img alt="" src="https://badgen.net/npm/license/swr">
   </a>
 </p>
 
@@ -107,6 +107,7 @@ const { data, error, isValidating, revalidate } = useSWR(key, fetcher, options)
 
 - `suspense = false`: enable React Suspense mode [(details)](#suspense-mode)
 - `fetcher = undefined`: the default fetcher function
+- `initialData`: initial data to be returned (note: This is per-hook)
 - `revalidateOnFocus = true`: auto revalidate when window gets focused
 - `refreshInterval = 0`: polling interval (disabled by default)
 - `refreshWhenHidden = false`: polling when the window is invisible (if `refreshInterval` is enabled)
@@ -119,7 +120,6 @@ const { data, error, isValidating, revalidate } = useSWR(key, fetcher, options)
 - `onSuccess`: callback function when a request finishs successfully
 - `onError`: callback function when a request returns an error
 - `onErrorRetry`: handler for [error retry](#error-retries)
-- `initialData`: initial data to be returned (note: This is per-hook)
 
 When under a slow network (2G, <= 70Kbps), `errorRetryInterval` will be 10s, and
 `loadingTimeout` will be 5s by default.
