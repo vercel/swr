@@ -46,24 +46,26 @@ const useIsomorphicLayoutEffect = IS_SERVER ? useEffect : useLayoutEffect
 
 // TODO: introduce namepsace for the cache
 const getErrorKey = key => (key ? 'err@' + key : '')
-const getKeyArgs = _key => {
-  let key: string
+const getKeyArgs = key => {
   let args = null
-  if (typeof _key === 'function') {
+  if (typeof key === 'function') {
     try {
-      key = _key()
+      key = key()
     } catch (err) {
       // dependencies not ready
       key = ''
     }
-  } else if (Array.isArray(_key)) {
+  }
+
+  if (Array.isArray(key)) {
     // args array
-    key = hash(_key)
-    args = _key
+    args = key
+    key = hash(key)
   } else {
     // convert null to ''
-    key = String(_key || '')
+    key = String(key || '')
   }
+
   return [key, args]
 }
 
