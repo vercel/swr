@@ -44,8 +44,8 @@ export interface RevalidateOptionInterface {
   dedupe?: boolean
 }
 
-type keyFunction = () => string
-export type keyInterface = string | keyFunction | any[] | null
+type keyFunction = () => string | any[] | null
+export type keyInterface = keyFunction | string | any[] | null
 export type updaterInterface<Data = any, Error = any> = (
   shouldRevalidate?: boolean,
   data?: Data,

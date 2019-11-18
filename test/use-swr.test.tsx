@@ -223,6 +223,25 @@ describe('useSWR', () => {
     )
   })
 
+  it('should accept function returning args', async () => {
+    const obj = { v: 'hello' }
+    const arr = ['world']
+
+    function Page() {
+      const { data } = useSWR(
+        () => ['args-3', obj, arr],
+        (a, b, c) => a + b.v + c[0]
+      )
+
+      return <div>{data}</div>
+    }
+
+    const { container } = render(<Page />)
+
+    await waitForDomChange({ container })
+    expect(container.textContent).toMatchInlineSnapshot(`"args-3helloworld"`)
+  })
+
   it('should accept initial data', async () => {
     function Page() {
       const { data } = useSWR('initial-data-1', () => 'SWR', {

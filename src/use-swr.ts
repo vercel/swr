@@ -46,24 +46,26 @@ const useIsomorphicLayoutEffect = IS_SERVER ? useEffect : useLayoutEffect
 
 // TODO: introduce namepsace for the cache
 const getErrorKey = key => (key ? 'err@' + key : '')
-const getKeyArgs = _key => {
-  let key: string
+const getKeyArgs = key => {
   let args = null
-  if (typeof _key === 'function') {
+  if (typeof key === 'function') {
     try {
-      key = _key()
+      key = key()
     } catch (err) {
       // dependencies not ready
       key = ''
     }
-  } else if (Array.isArray(_key)) {
+  }
+
+  if (Array.isArray(key)) {
     // args array
-    key = hash(_key)
-    args = _key
+    args = key
+    key = hash(key)
   } else {
     // convert null to ''
-    key = String(_key || '')
+    key = String(key || '')
   }
+
   return [key, args]
 }
 
@@ -187,7 +189,7 @@ function useSWR<Data = any, Error = any>(
     async (
       revalidateOpts: RevalidateOptionInterface = {}
     ): Promise<boolean> => {
-      if (!key) return false
+      if (!key || !fn) return false
       if (unmountedRef.current) return false
       revalidateOpts = Object.assign({ dedupe: false }, revalidateOpts)
 
@@ -441,12 +443,22 @@ function useSWR<Data = any, Error = any>(
       unmountedRef.current = true
 
       if (onFocus && FOCUS_REVALIDATORS[key]) {
-        const index = FOCUS_REVALIDATORS[key].indexOf(onFocus)
-        if (index >= 0) FOCUS_REVALIDATORS[key].splice(index, 1)
+        const revalidators = FOCUS_REVALIDATORS[key]
+        const index = revalidators.indexOf(onFocus)
+        if (index >= 0) {
+          // 10x faster than splice
+          // https://jsperf.com/array-remove-by-index
+          revalidators[index] = revalidators[revalidators.length - 1]
+          revalidators.pop()
+        }
       }
       if (CACHE_REVALIDATORS[key]) {
-        const index = CACHE_REVALIDATORS[key].indexOf(onUpdate)
-        if (index >= 0) CACHE_REVALIDATORS[key].splice(index, 1)
+        const revalidators = CACHE_REVALIDATORS[key]
+        const index = revalidators.indexOf(onUpdate)
+        if (index >= 0) {
+          revalidators[index] = revalidators[revalidators.length - 1]
+          revalidators.pop()
+        }
       }
 
       if (timeout !== null) {
