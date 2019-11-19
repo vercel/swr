@@ -326,6 +326,18 @@ function Profile () {
 }
 ```
 
+In the example above, when clicking the button, it will send the request, **then** update the client data and 
+try to fetch the latest one (revalidate).
+
+But many POST APIs will just return the updated data directly, so we don’t need to revalidate again.  
+Here’s an example showing the “local mutate - request - update” usage:
+
+```js
+mutate('/api/user', newUser, false)      // use `false` to mutate without revalidation
+mutate('/api/user', updateUser(newUser)) // `updateUser` is a Promise of the request,
+                                         // which returns the updated document
+```
+
 ### Suspense Mode
 
 You can enable the `suspense` option to use SWR with React Suspense:
@@ -348,7 +360,8 @@ function App () {
 }
 ```
 
-Note in Suspense mode, `data` is always the fetch response (so you don't need to check if it's `undefined`). But if there's an error occurred, you need to use an [error boundary](https://reactjs.org/docs/concurrent-mode-suspense.html#handling-errors) to catch it.
+Note in Suspense mode, `data` is always the fetch response (so you don't need to check if it's `undefined`). 
+But if there's an error occurred, you need to use an [error boundary](https://reactjs.org/docs/concurrent-mode-suspense.html#handling-errors) to catch it.
 
 ### Error Retries
 
