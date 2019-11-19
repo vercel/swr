@@ -137,6 +137,7 @@ You can also use [global configuration](#global-configuration) to provide defaul
 - [Multiple Arguments](#multiple-arguments)
 - [Manually Revalidate](#manually-revalidate)
 - [Local Mutation](#local-mutation)
+- [SSR with Next.js](#ssr-with-nextjs)
 - [Suspense Mode](#suspense-mode)
 - [Error Retries](#error-retries)
 
