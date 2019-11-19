@@ -32,6 +32,7 @@ It features:
 - Local mutation
 - Pagination
 - TypeScript ready
+- SSR support
 - Suspense mode
 - React Native support
 - Minimal API
@@ -252,22 +253,32 @@ function MyProjects () {
 In some scenarios, it's useful pass multiple arguments (can be any value or object) to the `fetcher` function. For example:
 
 ```js
-const token = props.token
-
 useSWR('/api/data', url => fetchWithToken(url, token))
 ```
 
-**This is incorrect**. Because the identifier of the data is `'/api/data'`, which is also the index of the cache. 
-When `token` changes, SWR will still treat it as the same key and request. 
+This is **incorrect**. Because the identifier (also the index of the cache) of the data is `'/api/data'`, 
+so even if `token` changes, SWR will still get the same key and return the wrong data. 
 
-Instead, you can use an array as the `key` parameter, which contains multiple arguments of `fetcher`:
+Instead, you can use an **array** as the `key` parameter, which contains multiple arguments of `fetcher`:
 
 ```js
 useSWR(['/api/data', token], fetchWithToken)
 ```
 
-This solves the problem. The identifier of the request is now the combination of both values. SWR **shallowly** compares
-the arguments on every render, and triggers the validation if any of them has changed.
+It solves the problem. The key of the request is now the combination of both values. SWR **shallowly** compares
+the arguments on every render, and triggers the validation if any of them has changed.  
+So keep in mind to not recreate objects when rendering:
+
+```js
+// Don’t do this! Deps will be changed on every render.
+useSWR(['/api/user', { id }], query)
+
+// Make sure objects are stable
+const params = useMemo(() => ({ id }), [id])
+useSWR(['/api/user', params], query)
+```
+
+Dan Abramov explained deps very well in [his blog post](https://overreacted.io/a-complete-guide-to-useeffect/#but-i-cant-put-this-function-inside-an-effect).
 
 ### Manually Revalidate
 
