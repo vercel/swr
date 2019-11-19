@@ -57,7 +57,7 @@ export type triggerInterface = (
 ) => void
 export type mutateInterface<Data = any> = (
   key: keyInterface,
-  data: Data,
+  data: Data | Promise<Data>,
   shouldRevalidate?: boolean
 ) => void
 export type broadcastStateInterface<Data = any, Error = any> = (

@@ -602,6 +602,30 @@ describe('useSWR - local mutation', () => {
       `"data: truth"`
     )
   })
+
+  it('should support async mutation', async () => {
+    function Page() {
+      const { data } = useSWR('mutate-1', () => 0, {
+        dedupingInterval: 0
+      })
+      return <div>data: {data}</div>
+    }
+    const { container } = render(<Page />)
+
+    // hydration
+    expect(container.textContent).toMatchInlineSnapshot(`"data: "`)
+    await waitForDomChange({ container }) // mount
+    expect(container.textContent).toMatchInlineSnapshot(`"data: 0"`)
+    await act(() => {
+      // mutate and revalidate
+      return mutate(
+        'mutate-1',
+        new Promise(res => setTimeout(() => res(999), 100))
+      )
+    })
+    await act(() => new Promise(res => setTimeout(res, 110)))
+    expect(container.textContent).toMatchInlineSnapshot(`"data: 999"`)
+  })
 })
 
 describe('useSWR - context configs', () => {
