@@ -326,6 +326,28 @@ function Profile () {
 }
 ```
 
+### SSR with Next.js
+
+With the the `initialData` option, you pass an initial value to the hook. It works perfectly with many SSR solutions
+such as `getInitialProps` in [Next.js](https://github.com/zeit/next.js):
+
+```js
+App.getInitialProps = async getInitialProps () {
+  const data = await fetcher('/api/data')
+  return { data }
+}
+
+function App (props) {
+  const initialData = props.data
+  const { data } = useSWR('/api/data', fetcher, { initialData })
+
+  return <div>{data}</div>
+}
+```
+
+It is still a server-side rendered site, but it’s also fully powered by SWR in the client side. 
+Which means the data can be dynamic and update itself over time and user interactions.
+
 ### Suspense Mode
 
 You can enable the `suspense` option to use SWR with React Suspense:
@@ -348,7 +370,10 @@ function App () {
 }
 ```
 
-Note in Suspense mode, `data` is always the fetch response (so you don't need to check if it's `undefined`). But if there's an error occurred, you need to use an [error boundary](https://reactjs.org/docs/concurrent-mode-suspense.html#handling-errors) to catch it.
+In Suspense mode, `data` is always the fetch response (so you don't need to check if it's `undefined`). 
+But if there's an error occurred, you need to use an [error boundary](https://reactjs.org/docs/concurrent-mode-suspense.html#handling-errors) to catch it.
+
+_Note that currently Suspense doesn’t work in SSR mode._
 
 ### Error Retries
 
