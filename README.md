@@ -257,7 +257,7 @@ useSWR('/api/data', url => fetchWithToken(url, token))
 ```
 
 This is **incorrect**. Because the identifier (also the index of the cache) of the data is `'/api/data'`, 
-so even if `token` changes, SWR will still get the same key and return the wrong data. 
+so even if `token` changes, SWR will still have the same key and return the wrong data. 
 
 Instead, you can use an **array** as the `key` parameter, which contains multiple arguments of `fetcher`:
 
@@ -265,9 +265,9 @@ Instead, you can use an **array** as the `key` parameter, which contains multipl
 useSWR(['/api/data', token], fetchWithToken)
 ```
 
-It solves the problem. The key of the request is now the combination of both values. SWR **shallowly** compares
-the arguments on every render, and triggers the validation if any of them has changed.  
-So keep in mind to not recreate objects when rendering:
+This solves the problem. The key of the request is now the combination of both values. SWR **shallowly** compares
+the arguments on every render, and triggers revalidation if any of them has changed.  
+Keep in mind that you should not recreate objects when rendering, as they will be treated as different objects on every render:
 
 ```js
 // Don’t do this! Deps will be changed on every render.
@@ -278,7 +278,7 @@ const params = useMemo(() => ({ id }), [id])
 useSWR(['/api/user', params], query)
 ```
 
-Dan Abramov explained deps very well in [his blog post](https://overreacted.io/a-complete-guide-to-useeffect/#but-i-cant-put-this-function-inside-an-effect).
+Dan Abramov explains dependencies very well in [this blog post](https://overreacted.io/a-complete-guide-to-useeffect/#but-i-cant-put-this-function-inside-an-effect).
 
 ### Manually Revalidate
 
@@ -340,7 +340,7 @@ function Profile () {
 
 ### SSR with Next.js
 
-With the the `initialData` option, you pass an initial value to the hook. It works perfectly with many SSR solutions
+With the `initialData` option, you pass an initial value to the hook. It works perfectly with many SSR solutions
 such as `getInitialProps` in [Next.js](https://github.com/zeit/next.js):
 
 ```js
@@ -383,9 +383,9 @@ function App () {
 ```
 
 In Suspense mode, `data` is always the fetch response (so you don't need to check if it's `undefined`). 
-But if there's an error occurred, you need to use an [error boundary](https://reactjs.org/docs/concurrent-mode-suspense.html#handling-errors) to catch it.
+But if an error occurred, you need to use an [error boundary](https://reactjs.org/docs/concurrent-mode-suspense.html#handling-errors) to catch it.
 
-_Note that currently Suspense doesn’t work in SSR mode._
+_Note that Suspense is not supported in SSR mode._
 
 ### Error Retries
 
