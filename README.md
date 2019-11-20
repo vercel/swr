@@ -32,6 +32,7 @@ It features:
 - Local mutation
 - Pagination
 - TypeScript ready
+- SSR support
 - Suspense mode
 - React Native support
 - Minimal API
@@ -137,6 +138,7 @@ You can also use [global configuration](#global-configuration) to provide defaul
 - [Multiple Arguments](#multiple-arguments)
 - [Manually Revalidate](#manually-revalidate)
 - [Local Mutation](#local-mutation)
+- [SSR with Next.js](#ssr-with-nextjs)
 - [Suspense Mode](#suspense-mode)
 - [Error Retries](#error-retries)
 
@@ -251,22 +253,32 @@ function MyProjects () {
 In some scenarios, it's useful pass multiple arguments (can be any value or object) to the `fetcher` function. For example:
 
 ```js
-const token = props.token
-
 useSWR('/api/data', url => fetchWithToken(url, token))
 ```
 
-**This is incorrect**. Because the identifier of the data is `'/api/data'`, which is also the index of the cache. 
-When `token` changes, SWR will still treat it as the same key and request. 
+This is **incorrect**. Because the identifier (also the index of the cache) of the data is `'/api/data'`, 
+so even if `token` changes, SWR will still have the same key and return the wrong data. 
 
-Instead, you can use an array as the `key` parameter, which contains multiple arguments of `fetcher`:
+Instead, you can use an **array** as the `key` parameter, which contains multiple arguments of `fetcher`:
 
 ```js
 useSWR(['/api/data', token], fetchWithToken)
 ```
 
-This solves the problem. The identifier of the request is now the combination of both values. SWR **shallowly** compares
-the arguments on every render, and triggers the validation if any of them has changed.
+This solves the problem. The key of the request is now the combination of both values. SWR **shallowly** compares
+the arguments on every render, and triggers revalidation if any of them has changed.  
+Keep in mind that you should not recreate objects when rendering, as they will be treated as different objects on every render:
+
+```js
+// Don’t do this! Deps will be changed on every render.
+useSWR(['/api/user', { id }], query)
+
+// Make sure objects are stable
+const params = useMemo(() => ({ id }), [id])
+useSWR(['/api/user', params], query)
+```
+
+Dan Abramov explains dependencies very well in [this blog post](https://overreacted.io/a-complete-guide-to-useeffect/#but-i-cant-put-this-function-inside-an-effect).
 
 ### Manually Revalidate
 
@@ -326,6 +338,28 @@ function Profile () {
 }
 ```
 
+### SSR with Next.js
+
+With the `initialData` option, you pass an initial value to the hook. It works perfectly with many SSR solutions
+such as `getInitialProps` in [Next.js](https://github.com/zeit/next.js):
+
+```js
+App.getInitialProps = async getInitialProps () {
+  const data = await fetcher('/api/data')
+  return { data }
+}
+
+function App (props) {
+  const initialData = props.data
+  const { data } = useSWR('/api/data', fetcher, { initialData })
+
+  return <div>{data}</div>
+}
+```
+
+It is still a server-side rendered site, but it’s also fully powered by SWR in the client side. 
+Which means the data can be dynamic and update itself over time and user interactions.
+
 ### Suspense Mode
 
 You can enable the `suspense` option to use SWR with React Suspense:
@@ -348,7 +382,10 @@ function App () {
 }
 ```
 
-Note in Suspense mode, `data` is always the fetch response (so you don't need to check if it's `undefined`). But if there's an error occurred, you need to use an [error boundary](https://reactjs.org/docs/concurrent-mode-suspense.html#handling-errors) to catch it.
+In Suspense mode, `data` is always the fetch response (so you don't need to check if it's `undefined`). 
+But if an error occurred, you need to use an [error boundary](https://reactjs.org/docs/concurrent-mode-suspense.html#handling-errors) to catch it.
+
+_Note that Suspense is not supported in SSR mode._
 
 ### Error Retries
 
