@@ -338,6 +338,18 @@ function Profile () {
 }
 ```
 
+Clicking the button in the example above will send a POST request to modify the remote data, locally update the client data and
+try to fetch the latest one (revalidate).
+
+But many POST APIs will just return the updated data directly, so we don’t need to revalidate again.  
+Here’s an example showing the “local mutate - request - update” usage:
+
+```js
+mutate('/api/user', newUser, false)      // use `false` to mutate without revalidation
+mutate('/api/user', updateUser(newUser)) // `updateUser` is a Promise of the request,
+                                         // which returns the updated document
+```
+
 ### SSR with Next.js
 
 With the `initialData` option, you pass an initial value to the hook. It works perfectly with many SSR solutions

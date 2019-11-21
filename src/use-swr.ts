@@ -92,21 +92,42 @@ const broadcastState: broadcastStateInterface = (key, data, error) => {
   }
 }
 
-const mutate: mutateInterface = (_key, data, shouldRevalidate = true) => {
+const mutate: mutateInterface = async (_key, _data, shouldRevalidate) => {
   const [key] = getKeyArgs(_key)
   if (!key) return
 
   // update timestamp
   MUTATION_TS[key] = Date.now() - 1
 
-  // update cached data
-  cacheSet(key, data)
+  let data, error
+
+  if (_data && typeof _data.then === 'function') {
+    // `_data` is a promise
+    try {
+      data = await _data
+    } catch (err) {
+      error = err
+    }
+  } else {
+    data = _data
+
+    if (typeof shouldRevalidate === 'undefined') {
+      // if it's a sync mutation, we trigger the revalidation by default
+      // because in most cases it's a local mutation
+      shouldRevalidate = true
+    }
+  }
+
+  if (typeof data !== 'undefined') {
+    // update cached data
+    cacheSet(key, data)
+  }
 
   // update existing SWR Hooks' state
   const updaters = CACHE_REVALIDATORS[key]
   if (updaters) {
     for (let i = 0; i < updaters.length; ++i) {
-      updaters[i](shouldRevalidate, data)
+      updaters[i](!!shouldRevalidate, data, error)
     }
   }
 }
