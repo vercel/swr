@@ -338,7 +338,7 @@ function Profile () {
 }
 ```
 
-In the example above, when clicking the button, it will send the request, **then** update the client data and 
+Clicking the button in the example above will send a POST request to modify the remote data, locally update the client data and
 try to fetch the latest one (revalidate).
 
 But many POST APIs will just return the updated data directly, so we don’t need to revalidate again.  
