@@ -17,14 +17,11 @@ export default function useRequest(request, { initialData, ...config } = {}) {
     }
   )
 
-  return useMemo(
-    () => ({
-      data: response && response.data,
-      response,
-      error,
-      isValidating,
-      revalidate
-    }),
-    [response, error, isValidating, revalidate]
-  )
+  return {
+    data: response && response.data,
+    response,
+    error,
+    isValidating,
+    revalidate
+  }
 }
