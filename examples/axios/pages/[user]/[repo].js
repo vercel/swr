@@ -13,8 +13,7 @@ export default () => {
             id
           }
         }
-      : null,
-    fetch
+      : null
   )
 
   return (
