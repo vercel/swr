@@ -14,7 +14,18 @@ export default function hash(args: any[]): string {
   for (let i = 0; i < args.length; ++i) {
     let _hash
     if (typeof args[i] !== 'object') {
-      _hash = String(args[i])
+      // need to consider the case that args[i] is a string:
+      // args[i]        _hash
+      // "undefined" -> '"undefined"'
+      // undefined   -> 'undefined'
+      // 123         -> '123'
+      // null        -> 'null'
+      // "null"      -> '"null"'
+      if (typeof args[i] === 'string') {
+        _hash = '"' + args[i] + '"'
+      } else {
+        _hash = String(args[i])
+      }
     } else {
       if (!table.has(args[i])) {
         _hash = counter
