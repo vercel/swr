@@ -543,8 +543,8 @@ function useSWR<Data = any, Error = any>(
     error: state.error,
     // `key` might be changed in the upcoming hook re-render,
     // but the previous state will stay
-    // so we need to match the latest key and data
-    data: keyRef.current === key ? state.data : undefined,
+    // so we need to match the latest key and data (fallback to `initialData`)
+    data: keyRef.current === key ? state.data : initialData,
     revalidate, // handler
     isValidating: state.isValidating
   }
