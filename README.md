@@ -440,7 +440,7 @@ function prefetch () {
 ```
 
 And use it when you need to preload the **resources** (for example when [hovering](https://github.com/GoogleChromeLabs/quicklink) [a](https://github.com/guess-js/guess) [link](https://instant.page)).  
-Together with techniques like [page prefetching](https://nextjs.org/docs#prefetching-pages) in Next.js, you can load both the next page and data almost instantly.
+Together with techniques like [page prefetching](https://nextjs.org/docs#prefetching-pages) in Next.js, you will be able to load both next page and data instantly.
 
 <br/>
 
