@@ -356,7 +356,7 @@ With the `initialData` option, you pass an initial value to the hook. It works p
 such as `getInitialProps` in [Next.js](https://github.com/zeit/next.js):
 
 ```js
-App.getInitialProps = async getInitialProps () {
+App.getInitialProps = async () => {
   const data = await fetcher('/api/data')
   return { data }
 }
