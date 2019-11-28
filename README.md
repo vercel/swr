@@ -21,7 +21,7 @@
 
 SWR is a React Hooks library for remote data fetching.
 
-The name “**SWR**” is derived from `stale-while-revalidate`, a cache invalidation strategy popularized by [HTTP RFC 5861](https://tools.ietf.org/html/rfc5861).  
+The name “**SWR**” is derived from `stale-while-revalidate`, a cache invalidation strategy popularized by [HTTP RFC 5861](https://tools.ietf.org/html/rfc5861).
 **SWR** first returns the data from cache (stale), then sends the fetch request (revalidate), and finally comes with the up-to-date data again.
 
 It features:
@@ -94,14 +94,14 @@ const { data, error, isValidating, revalidate } = useSWR(key, fetcher, options)
 
 #### Parameters
 
-- `key`: a unique key string for the request (or a function / array / null) [(advanced usage)](#conditional-fetching)  
-- `fetcher`: (_optional_) a Promise returning function to fetch your data [(details)](#data-fetching) 
+- `key`: a unique key string for the request (or a function / array / null) [(advanced usage)](#conditional-fetching)
+- `fetcher`: (_optional_) a Promise returning function to fetch your data [(details)](#data-fetching)
 - `options`: (_optional_) an object of options for this SWR hook
 
 #### Return Values
-- `data`: data for the given key resolved by `fetcher` (or undefined if not loaded)  
-- `error`: error thrown by `fetcher` (or undefined)  
-- `isValidating`: if there's a request or revalidation loading  
+- `data`: data for the given key resolved by `fetcher` (or undefined if not loaded)
+- `error`: error thrown by `fetcher` (or undefined)
+- `isValidating`: if there's a request or revalidation loading
 - `revalidate`: function to trigger the validation manually
 
 #### Options
@@ -117,8 +117,8 @@ const { data, error, isValidating, revalidate } = useSWR(key, fetcher, options)
 - `focusThrottleInterval = 5000`: only revalidate once during a time span
 - `loadingTimeout = 3000`: timeout to trigger the onLoadingSlow event
 - `errorRetryInterval = 5000`: error retry interval [(details)](#error-retries)
-- `onLoadingSlow`: callback function when a request takes too long to load (`loadingTimeout`)
-- `onSuccess`: callback function when a request finishs successfully
+- `onLoadingSlow`: callback function when a request takes too long to load (see `loadingTimeout`)
+- `onSuccess`: callback function when a request finishes successfully
 - `onError`: callback function when a request returns an error
 - `onErrorRetry`: handler for [error retry](#error-retries)
 
@@ -144,7 +144,7 @@ You can also use [global configuration](#global-configuration) to provide defaul
 
 ### Global Configuration
 
-The context `SWRConfig` can provide global configurations (`options`) for all SWR hooks. 
+The context `SWRConfig` can provide global configurations (`options`) for all SWR hooks.
 
 In this example, all SWRs will use the same fetcher provided to load JSON data, and refresh every 3 seconds by default:
 
@@ -160,7 +160,7 @@ function Dashboard () {
 
 function App () {
   return (
-    <SWRConfig 
+    <SWRConfig
       value={{
         refreshInterval: 3000,
         fetcher: (...args) => fetch(...args).then(res => res.json())
@@ -174,7 +174,7 @@ function App () {
 
 ### Data Fetching
 
-`fetcher` is a function **accepts the `key`** of SWR, and returns a value or a Promise.  
+`fetcher` is a function that **accepts the `key`** of SWR, and returns a value or a `Promise`.
 You can use any library to handle data fetching, for example:
 
 ```js
@@ -213,7 +213,7 @@ function App () {
 
 _If you want to pass variables to a GraphQL query, check out [Multiple Arguments](#multiple-arguments)._
 
-Note that `fetcher` can be skipped from the parameters if it's provided gloablly.
+Note that `fetcher` can be omitted from the parameters if it's provided gloablly.
 
 ### Conditional Fetching
 
@@ -256,8 +256,8 @@ In some scenarios, it's useful pass multiple arguments (can be any value or obje
 useSWR('/api/data', url => fetchWithToken(url, token))
 ```
 
-This is **incorrect**. Because the identifier (also the index of the cache) of the data is `'/api/data'`, 
-so even if `token` changes, SWR will still have the same key and return the wrong data. 
+This is **incorrect**. Because the identifier (also the index of the cache) of the data is `'/api/data'`,
+so even if `token` changes, SWR will still have the same key and return the wrong data.
 
 Instead, you can use an **array** as the `key` parameter, which contains multiple arguments of `fetcher`:
 
@@ -266,7 +266,7 @@ useSWR(['/api/data', token], fetchWithToken)
 ```
 
 This solves the problem. The key of the request is now the combination of both values. SWR **shallowly** compares
-the arguments on every render, and triggers revalidation if any of them has changed.  
+the arguments on every render, and triggers revalidation if any of them has changed.
 Keep in mind that you should not recreate objects when rendering, as they will be treated as different objects on every render:
 
 ```js
@@ -285,7 +285,7 @@ Dan Abramov explains dependencies very well in [this blog post](https://overreac
 You can broadcast a revalidation message globally to all SWRs with the same key by calling
 `trigger(key)`.
 
-This example shows how to automatically refetch the login info (e.g.: inside `<Profile/>`) 
+This example shows how to automatically refetch the login info (e.g.: inside `<Profile/>`)
 when the user clicks the “Logout” button.
 
 ```js
@@ -341,7 +341,7 @@ function Profile () {
 Clicking the button in the example above will send a POST request to modify the remote data, locally update the client data and
 try to fetch the latest one (revalidate).
 
-But many POST APIs will just return the updated data directly, so we don’t need to revalidate again.  
+But many POST APIs will just return the updated data directly, so we don’t need to revalidate again.
 Here’s an example showing the “local mutate - request - update” usage:
 
 ```js
@@ -369,7 +369,7 @@ function App (props) {
 }
 ```
 
-It is still a server-side rendered site, but it’s also fully powered by SWR in the client side. 
+It is still a server-side rendered site, but it’s also fully powered by SWR in the client side.
 Which means the data can be dynamic and update itself over time and user interactions.
 
 ### Suspense Mode
@@ -394,7 +394,7 @@ function App () {
 }
 ```
 
-In Suspense mode, `data` is always the fetch response (so you don't need to check if it's `undefined`). 
+In Suspense mode, `data` is always the fetch response (so you don't need to check if it's `undefined`).
 But if an error occurred, you need to use an [error boundary](https://reactjs.org/docs/concurrent-mode-suspense.html#handling-errors) to catch it.
 
 _Note that Suspense is not supported in SSR mode._
