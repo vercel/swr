@@ -1,6 +1,6 @@
-import React, { useCallback, useMemo, useState, useRef } from 'react'
+import React, { useCallback, useMemo, useState, useRef, useEffect } from 'react'
 
-import { cacheGet, cacheSet } from './config'
+import { cacheGet, cacheSet, hookActive, hookInactive } from './cache'
 import {
   pagesResponseInterface,
   responseInterface,
@@ -196,6 +196,11 @@ export function useSWRPages<OffsetType = any, Data = any, Error = any>(
     }
     return p
   }, [_pageFn, pageCount, pageSWRs, pageOffsets, pageKey])
+
+  useEffect(() => {
+    hookActive(pageCountKey, pageOffsetKey)
+    return () => hookInactive(pageCountKey, pageOffsetKey)
+  }, [pageKey])
 
   return {
     pages,
