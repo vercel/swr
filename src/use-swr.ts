@@ -31,6 +31,7 @@ import defaultConfig, {
   cacheGet,
   cacheSet
 } from './config'
+import { suspenseGroup } from './use-swr-suspense'
 import SWRConfigContext from './swr-config-context'
 import isDocumentVisible from './libs/is-document-visible'
 import useHydration from './libs/use-hydration'
@@ -186,9 +187,12 @@ function useSWR<Data = any, Error = any>(
     fn = config.fetcher
   }
 
+  const inSuspenseGroup = suspenseGroup.started
+  const inSuspense = config.suspense || inSuspenseGroup
+
   // it is fine to call `useHydration` conditionally here
-  // because `config.suspense` should never change
-  const shouldReadCache = config.suspense || !useHydration()
+  // because suspense mode should never be toggled
+  const shouldReadCache = inSuspense || !useHydration()
   const initialData =
     (shouldReadCache ? cacheGet(key) : undefined) || config.initialData
   const initialError = shouldReadCache ? cacheGet(keyErr) : undefined
@@ -490,7 +494,7 @@ function useSWR<Data = any, Error = any>(
   }, [key, config.refreshInterval, revalidate])
 
   // suspense
-  if (config.suspense) {
+  if (inSuspense) {
     if (IS_SERVER)
       throw new Error('Suspense on server side is not yet supported!')
 
@@ -517,11 +521,17 @@ function useSWR<Data = any, Error = any>(
         typeof CONCURRENT_PROMISES[key].then === 'function'
       ) {
         // if it is a promise
-        throw CONCURRENT_PROMISES[key]
+        if (inSuspenseGroup) {
+          // we don't throw here if it's in suspense group
+          suspenseGroup.promises.push(CONCURRENT_PROMISES[key])
+        } else {
+          // single suspense swr
+          throw CONCURRENT_PROMISES[key]
+        }
+      } else {
+        // it's a value, return it directly (override)
+        latestData = CONCURRENT_PROMISES[key]
       }
-
-      // it's a value, return it directly (override)
-      latestData = CONCURRENT_PROMISES[key]
     }
 
     if (typeof latestData === 'undefined' && latestError) {

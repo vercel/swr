@@ -7,7 +7,13 @@ import {
 } from '@testing-library/react'
 import React, { ReactNode, Suspense, useEffect, useState } from 'react'
 
-import useSWR, { mutate, SWRConfig, trigger } from '../src'
+import useSWR, {
+  mutate,
+  SWRConfig,
+  trigger,
+  useSWRSuspenseStart,
+  useSWRSuspenseEnd
+} from '../src'
 
 class ErrorBoundary extends React.Component<{ fallback: ReactNode }> {
   state = { hasError: false }
@@ -832,5 +838,36 @@ describe('useSWR - suspense', () => {
     // fixes https://github.com/zeit/swr/issues/57
     // 'suspense-7' -> undefined -> 'suspense-8'
     expect(renderedResults).toEqual(['suspense-7', 'suspense-8'])
+  })
+
+  it('should work with suspense guards', async () => {
+    const fetcher = () => new Promise(res => setTimeout(() => res('data'), 100))
+
+    function Section() {
+      useSWRSuspenseStart()
+      const { data: a } = useSWR('suspense-guards-1', fetcher)
+      const { data: b } = useSWR('suspense-guards-2', fetcher)
+      const { data: c } = useSWR('suspense-guards-3', fetcher)
+      useSWRSuspenseEnd()
+
+      expect(a).toBe('data')
+      expect(b).toBe('data')
+      expect(c).toBe('data')
+
+      return (
+        <div>
+          {a}, {b}, {c}
+        </div>
+      )
+    }
+    const { container } = render(
+      <Suspense fallback={<div>fallback</div>}>
+        <Section />
+      </Suspense>
+    )
+
+    expect(container.textContent).toMatchInlineSnapshot(`"fallback"`)
+    await act(() => new Promise(res => setTimeout(res, 110))) // it only takes 100ms
+    expect(container.textContent).toMatchInlineSnapshot(`"data, data, data"`)
   })
 })
