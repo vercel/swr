@@ -1,11 +1,13 @@
 // TODO: add documentation
 
+import useSWR from './use-swr'
+
 const suspenseGroup = {
   promises: [],
   started: false
 }
 
-function useSWRSuspenseStart() {
+function _internal_useSWRSuspenseStart() {
   if (suspenseGroup.started) {
     suspenseGroup.started = false
     throw new Error('Wrong order of SWR suspense guards.')
@@ -14,7 +16,7 @@ function useSWRSuspenseStart() {
   suspenseGroup.promises = []
 }
 
-function useSWRSuspenseEnd() {
+function _internal_useSWRSuspenseEnd() {
   if (!suspenseGroup.started) {
     throw new Error('Wrong order of SWR suspense guards.')
   }
@@ -29,4 +31,16 @@ function useSWRSuspenseEnd() {
   })
 }
 
-export { suspenseGroup, useSWRSuspenseStart, useSWRSuspenseEnd }
+function useSWRSuspense(callback) {
+  _internal_useSWRSuspenseStart()
+  const data = callback(useSWR)
+  _internal_useSWRSuspenseEnd()
+  return data
+}
+
+export {
+  suspenseGroup,
+  useSWRSuspense,
+  _internal_useSWRSuspenseStart,
+  _internal_useSWRSuspenseEnd
+}

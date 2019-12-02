@@ -8,5 +8,5 @@ export {
   keyInterface,
   responseInterface
 } from './types'
-export { useSWRSuspenseStart, useSWRSuspenseEnd } from './use-swr-suspense'
+export { useSWRSuspense } from './use-swr-suspense'
 export default useSWR
