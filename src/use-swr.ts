@@ -156,13 +156,15 @@ function useSWR<Data = any, Error = any>(
   if (args.length >= 1) {
     _key = args[0]
   }
-  if (typeof args[1] === 'function') {
+  if (args.length >= 2) {
     fn = args[1]
-  } else if (typeof args[1] === 'object') {
-    config = args[1]
-  }
-  if (typeof args[2] === 'object') {
     config = args[2]
+  } else {
+    if (typeof args[1] === 'function') {
+      fn = args[1]
+    } else if (typeof args[1] === 'object') {
+      config = args[1]
+    }
   }
 
   // we assume `key` as the identifier of the request
