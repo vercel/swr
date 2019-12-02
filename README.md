@@ -213,7 +213,7 @@ function App () {
 
 _If you want to pass variables to a GraphQL query, check out [Multiple Arguments](#multiple-arguments)._
 
-Note that `fetcher` can be ommited from the parameters if it's provided globally.
+Note that `fetcher` can be omitted from the parameters if it's provided globally.
 
 ### Conditional Fetching
 
