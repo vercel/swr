@@ -117,8 +117,8 @@ const { data, error, isValidating, revalidate } = useSWR(key, fetcher, options)
 - `focusThrottleInterval = 5000`: only revalidate once during a time span
 - `loadingTimeout = 3000`: timeout to trigger the onLoadingSlow event
 - `errorRetryInterval = 5000`: error retry interval [(details)](#error-retries)
-- `onLoadingSlow`: callback function when a request takes too long to load (`loadingTimeout`)
-- `onSuccess`: callback function when a request finishs successfully
+- `onLoadingSlow`: callback function when a request takes too long to load (see `loadingTimeout`)
+- `onSuccess`: callback function when a request finishes successfully
 - `onError`: callback function when a request returns an error
 - `onErrorRetry`: handler for [error retry](#error-retries)
 
@@ -174,7 +174,7 @@ function App () {
 
 ### Data Fetching
 
-`fetcher` is a function **accepts the `key`** of SWR, and returns a value or a Promise.  
+`fetcher` is a function that **accepts the `key`** of SWR, and returns a value or a Promise.  
 You can use any library to handle data fetching, for example:
 
 ```js
@@ -213,7 +213,7 @@ function App () {
 
 _If you want to pass variables to a GraphQL query, check out [Multiple Arguments](#multiple-arguments)._
 
-Note that `fetcher` can be skipped from the parameters if it's provided gloablly.
+Note that `fetcher` can be omitted from the parameters if it's provided globally.
 
 ### Conditional Fetching
 
