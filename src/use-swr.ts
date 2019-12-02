@@ -33,7 +33,6 @@ import defaultConfig, {
 } from './config'
 import SWRConfigContext from './swr-config-context'
 import isDocumentVisible from './libs/is-document-visible'
-import useHydration from './libs/use-hydration'
 import throttle from './libs/throttle'
 import hash from './libs/hash'
 
@@ -186,12 +185,8 @@ function useSWR<Data = any, Error = any>(
     fn = config.fetcher
   }
 
-  // it is fine to call `useHydration` conditionally here
-  // because `config.suspense` should never change
-  const shouldReadCache = config.suspense || !useHydration()
-  const initialData =
-    (shouldReadCache ? cacheGet(key) : undefined) || config.initialData
-  const initialError = shouldReadCache ? cacheGet(keyErr) : undefined
+  const initialData = cacheGet(key) || config.initialData
+  const initialError = cacheGet(keyErr)
 
   let [state, dispatch] = useReducer<reducerType<Data, Error>>(mergeState, {
     data: initialData,
@@ -540,11 +535,11 @@ function useSWR<Data = any, Error = any>(
   }
 
   return {
-    error: state.error,
     // `key` might be changed in the upcoming hook re-render,
     // but the previous state will stay
-    // so we need to match the latest key and data
-    data: keyRef.current === key ? state.data : undefined,
+    // so we need to match the latest key and data (fallback to `initialData`)
+    error: keyRef.current === key ? state.error : initialError,
+    data: keyRef.current === key ? state.data : initialData,
     revalidate, // handler
     isValidating: state.isValidating
   }

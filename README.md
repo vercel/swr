@@ -68,7 +68,7 @@ of `fetcher` and rerenders the component.
 Note that `fetcher` can be any asynchronous function, so you can use your favourite data-fetching
 library to handle that part.
 
-Check out [swr.now.sh](https://swr.now.sh) for more demos of SWR.
+Check out [swr.now.sh](https://swr.now.sh) for more demos of SWR, and [Examples](#examples) for the best practices.
 
 <br/>
 
@@ -137,10 +137,11 @@ You can also use [global configuration](#global-configuration) to provide defaul
 - [Dependent Fetching](#dependent-fetching)
 - [Multiple Arguments](#multiple-arguments)
 - [Manually Revalidate](#manually-revalidate)
-- [Local Mutation](#local-mutation)
+- [Mutation and Post Request](#mutation-and-post-request)
 - [SSR with Next.js](#ssr-with-nextjs)
 - [Suspense Mode](#suspense-mode)
 - [Error Retries](#error-retries)
+- [Prefetching Data](#prefetching-data)
 
 ### Global Configuration
 
@@ -309,7 +310,7 @@ function App () {
 }
 ```
 
-### Local Mutation
+### Mutation and Post Request
 
 In many cases, applying local mutations to data is a good way to make changes
 feel faster — no need to wait for the remote source of data.
@@ -417,6 +418,29 @@ useSWR(key, fetcher, {
   }
 })
 ```
+
+### Prefetching Data
+
+There’re many ways to prefetch the data for SWR. For top level requests, [`rel="preload"`](https://developer.mozilla.org/en-US/docs/Web/HTML/Preloading_content) is highly recommended:
+
+```html
+<link rel="preload" href="/api/data" as="fetch" crossorigin="anonymous">
+```
+
+This will prefetch the data before the JavaScript starts downloading. And your incoming fetch requests will reuse the result (including SWR, of course).
+
+Another choice is to prefetch the data conditionally. You can have a function to refetch and set the cache:
+
+```js
+function prefetch () {
+  mutate('/api/data', fetch('/api/data').then(res => res.json()))
+  // the second parameter is a Promise
+  // SWR will use the result when it resolves
+}
+```
+
+And use it when you need to preload the **resources** (for example when [hovering](https://github.com/GoogleChromeLabs/quicklink) [a](https://github.com/guess-js/guess) [link](https://instant.page)).  
+Together with techniques like [page prefetching](https://nextjs.org/docs#prefetching-pages) in Next.js, you will be able to load both next page and data instantly.
 
 <br/>
 
