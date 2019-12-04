@@ -230,6 +230,20 @@ function useSWR<Data = any, Error = any>(
           startAt = CONCURRENT_PROMISES_TS[key]
           newData = await CONCURRENT_PROMISES[key]
         } else {
+          // if not deduping the request (hard revalidate) but
+          // there're other ongoing request(s) at the same time,
+          // we need to ignore the other result(s) to avoid
+          // possible race conditions:
+          // req1------------------>res1
+          //      req2-------->res2
+          // in that case, the second response should not be overridden
+          // by the first one.
+          if (CONCURRENT_PROMISES[key]) {
+            // we can mark it as a mutation to ignore
+            // all requests which are fired before this one
+            MUTATION_TS[key] = Date.now() - 1
+          }
+
           // if no cache being rendered currently (it shows a blank page),
           // we trigger the loading slow event.
           if (config.loadingTimeout && !cacheGet(key)) {
