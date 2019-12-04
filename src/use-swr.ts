@@ -77,7 +77,7 @@ const trigger: triggerInterface = (_key, shouldRevalidate = true) => {
     const currentData = cacheGet(key)
     const currentError = cacheGet(getErrorKey(key))
     for (let i = 0; i < updaters.length; ++i) {
-      updaters[i](shouldRevalidate, currentData, currentError)
+      updaters[i](shouldRevalidate, currentData, currentError, true)
     }
   }
 }
@@ -126,7 +126,7 @@ const mutate: mutateInterface = async (_key, _data, shouldRevalidate) => {
   const updaters = CACHE_REVALIDATORS[key]
   if (updaters) {
     for (let i = 0; i < updaters.length; ++i) {
-      updaters[i](!!shouldRevalidate, data, error)
+      updaters[i](!!shouldRevalidate, data, error, true)
     }
   }
 }
@@ -412,7 +412,8 @@ function useSWR<Data = any, Error = any>(
     const onUpdate: updaterInterface<Data, Error> = (
       shouldRevalidate = true,
       updatedData,
-      updatedError
+      updatedError,
+      dedupe = true
     ) => {
       // update hook state
       const newState: actionType<Data, Error> = {}
@@ -436,7 +437,11 @@ function useSWR<Data = any, Error = any>(
 
       keyRef.current = key
       if (shouldRevalidate) {
-        return softRevalidate()
+        if (dedupe) {
+          return softRevalidate()
+        } else {
+          return revalidate()
+        }
       }
       return false
     }
