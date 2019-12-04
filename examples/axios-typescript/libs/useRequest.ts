@@ -1,6 +1,5 @@
 import useSWR, { ConfigInterface, responseInterface } from 'swr'
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios'
-import { useMemo } from 'react'
 
 export type GetRequest = AxiosRequestConfig | null
 
