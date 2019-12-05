@@ -1,6 +1,6 @@
 {
   "name": "swr",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "description": "React Hooks library for remote data fetching",
   "main": "./dist/index.js",
   "module": "./esm/index.js",
