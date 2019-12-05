@@ -49,7 +49,8 @@ export type keyInterface = keyFunction | string | any[] | null
 export type updaterInterface<Data = any, Error = any> = (
   shouldRevalidate?: boolean,
   data?: Data,
-  error?: Error
+  error?: Error,
+  shouldDedupe?: boolean
 ) => boolean | Promise<boolean>
 export type triggerInterface = (
   key: keyInterface,
