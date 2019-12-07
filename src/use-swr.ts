@@ -132,7 +132,8 @@ const mutate: mutateInterface = async (_key, _data, shouldRevalidate) => {
 }
 
 function mergeState(state, payload) {
-  return { ...state, ...payload }
+  const newState = { ...state, ...payload }
+  return deepEqual(newState, state) ? state : newState
 }
 
 function useSWR<Data = any, Error = any>(
