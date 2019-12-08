@@ -327,7 +327,6 @@ function useSWR<Data = any, Error = any>(
         delete CONCURRENT_PROMISES[key]
         delete CONCURRENT_PROMISES_TS[key]
 
-        console.log(keyErr, err)
         cacheSet(keyErr, err)
         keyRef.current = key
 
