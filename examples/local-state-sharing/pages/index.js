@@ -3,7 +3,7 @@ import initialStore from "../libs/store"
 import useSWR, { mutate } from "swr"
 
 function Profile() {
-  const { data } = useSWR("globalState", () => Promise.resolve(initialStore))
+  const { data } = useSWR("globalState", { initialData: initialStore })
   const [value, updateValue] = useState((data || {}).name)
   if (!data) {
     return null
@@ -29,7 +29,7 @@ function Profile() {
 }
 
 function Other() {
-  const { data } = useSWR("globalState", () => Promise.resolve(initialStore))
+  const { data } = useSWR("globalState", { initialData: initialStore })
   if (!data) {
     return null
   }
