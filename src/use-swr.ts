@@ -156,7 +156,7 @@ function useSWR<Data = any, Error = any>(
   if (args.length >= 1) {
     _key = args[0]
   }
-  if (args.length >= 2) {
+  if (args.length > 2) {
     fn = args[1]
     config = args[2]
   } else {
