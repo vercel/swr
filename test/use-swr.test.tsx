@@ -262,7 +262,7 @@ describe('useSWR', () => {
   })
 
   it('should set config as second parameter', async () => {
-    const fetcher = jest.fn()
+    const fetcher = jest.fn(() => 'SWR')
 
     function Page() {
       const { data } = useSWR('config-as-second-param', {
@@ -275,8 +275,11 @@ describe('useSWR', () => {
     const { container } = render(<Page />)
 
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
-
     expect(fetcher).toBeCalled()
+    await waitForDomChange({ container }) // mount
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"hello, SWR"`
+    )
   })
 })
 
