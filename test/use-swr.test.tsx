@@ -260,6 +260,27 @@ describe('useSWR', () => {
       `"hello, SWR"`
     )
   })
+
+  it('should set config as second parameter', async () => {
+    const fetcher = jest.fn(() => 'SWR')
+
+    function Page() {
+      const { data } = useSWR('config-as-second-param', {
+        fetcher
+      })
+
+      return <div>hello, {data}</div>
+    }
+
+    const { container } = render(<Page />)
+
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
+    expect(fetcher).toBeCalled()
+    await waitForDomChange({ container }) // mount
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"hello, SWR"`
+    )
+  })
 })
 
 describe('useSWR - refresh', () => {
