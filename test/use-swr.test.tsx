@@ -386,6 +386,41 @@ describe('useSWR - revalidate', () => {
     })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"1, 1"`)
   })
+
+  it('should respect sequences of revalidation calls (cope with race condition)', async () => {
+    let faster = false
+
+    function Page() {
+      const { data, revalidate } = useSWR(
+        'race',
+        () =>
+          new Promise(res => {
+            const value = faster ? 1 : 0
+            setTimeout(() => res(value), faster ? 100 : 200)
+          })
+      )
+
+      return <button onClick={revalidate}>{data}</button>
+    }
+
+    const { container } = render(<Page />)
+
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`""`)
+    await waitForDomChange({ container })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"0"`)
+
+    await act(async () => {
+      // trigger the slower revalidation
+      faster = false
+      fireEvent.click(container.firstElementChild)
+      await new Promise(res => setTimeout(res, 10))
+      // trigger the faster revalidation
+      faster = true
+      fireEvent.click(container.firstElementChild)
+      return new Promise(res => setTimeout(res, 210))
+    })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"1"`)
+  })
 })
 
 describe('useSWR - error', () => {
