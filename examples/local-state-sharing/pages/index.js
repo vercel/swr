@@ -19,7 +19,7 @@ function Profile() {
       <button
         type="button"
         onClick={() => {
-          mutate("globalState", { ...data, name: value })
+          mutate("globalState", { ...data, name: value }, false)
         }}
       >
         Uppercase my name!
