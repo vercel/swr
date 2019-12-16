@@ -265,7 +265,7 @@ Instead, you can use an **array** as the `key` parameter, which contains multipl
 ```js
 const { data: user } = useSWR(['/api/user', token], fetchWithToken)
 
-// ...and pass it as an argument of another query
+// ...and pass it as an argument to another query
 const { data: orders } = useSWR(user ? ['/api/orders', user] : null, fetchWithUser)
 ```
 
