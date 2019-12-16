@@ -254,7 +254,7 @@ function MyProjects () {
 In some scenarios, it's useful pass multiple arguments (can be any value or object) to the `fetcher` function. For example:
 
 ```js
-useSWR('/api/data', url => fetchWithToken(url, token))
+useSWR('/api/user', url => fetchWithToken(url, token))
 ```
 
 This is **incorrect**. Because the identifier (also the index of the cache) of the data is `'/api/data'`, 
@@ -263,10 +263,13 @@ so even if `token` changes, SWR will still have the same key and return the wron
 Instead, you can use an **array** as the `key` parameter, which contains multiple arguments of `fetcher`:
 
 ```js
-useSWR(['/api/data', token], fetchWithToken)
+const { data: user } = useSWR(['/api/user', token], fetchWithToken)
+
+// ...and pass it as an argument to another query
+const { data: orders } = useSWR(user ? ['/api/orders', user] : null, fetchWithUser)
 ```
 
-This solves the problem. The key of the request is now the combination of both values. SWR **shallowly** compares
+The key of the request is now the combination of both values. SWR **shallowly** compares
 the arguments on every render, and triggers revalidation if any of them has changed.  
 Keep in mind that you should not recreate objects when rendering, as they will be treated as different objects on every render:
 
@@ -274,9 +277,8 @@ Keep in mind that you should not recreate objects when rendering, as they will b
 // Don’t do this! Deps will be changed on every render.
 useSWR(['/api/user', { id }], query)
 
-// Make sure objects are stable
-const params = useMemo(() => ({ id }), [id])
-useSWR(['/api/user', params], query)
+// Instead, you should only pass “stable” values.
+useSWR(['/api/user', id], (url, id) => query(url, { id }))
 ```
 
 Dan Abramov explains dependencies very well in [this blog post](https://overreacted.io/a-complete-guide-to-useeffect/#but-i-cant-put-this-function-inside-an-effect).
