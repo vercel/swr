@@ -476,7 +476,6 @@ function useSWR<Data = any, Error = any>(
     let reconnect = null
     if (config.revalidateOnReconnect) {
       const reconnectEvent = async () => {
-        console.log('reconnecting...')
         await softRevalidate()
       }
 
