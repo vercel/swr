@@ -473,6 +473,7 @@ function useSWR<Data = any, Error = any>(
       timeout = setTimeout(tick, config.refreshInterval)
     }
 
+    // set up reconnecting when the browser regains network connection
     let reconnect = null
     if (config.revalidateOnReconnect) {
       const reconnectEvent = async () => {
