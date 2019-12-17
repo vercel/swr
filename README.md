@@ -25,6 +25,7 @@ The name “**SWR**” is derived from `stale-while-revalidate`, a cache invalid
 **SWR** first returns the data from cache (stale), then sends the fetch request (revalidate), and finally comes with the up-to-date data again.
 
 It features:
+
 - Transport and protocol agnostic data fetching
 - Fast page navigation
 - Revalidation on focus
@@ -48,7 +49,7 @@ With SWR, components will get **a stream of data updates constantly and automati
 ```js
 import useSWR from 'swr'
 
-function Profile () {
+function Profile() {
   const { data, error } = useSWR('/api/user', fetcher)
 
   if (error) return <div>failed to load</div>
@@ -94,14 +95,15 @@ const { data, error, isValidating, revalidate } = useSWR(key, fetcher, options)
 
 #### Parameters
 
-- `key`: a unique key string for the request (or a function / array / null) [(advanced usage)](#conditional-fetching)  
-- `fetcher`: (_optional_) a Promise returning function to fetch your data [(details)](#data-fetching) 
+- `key`: a unique key string for the request (or a function / array / null) [(advanced usage)](#conditional-fetching)
+- `fetcher`: (_optional_) a Promise returning function to fetch your data [(details)](#data-fetching)
 - `options`: (_optional_) an object of options for this SWR hook
 
 #### Return Values
-- `data`: data for the given key resolved by `fetcher` (or undefined if not loaded)  
-- `error`: error thrown by `fetcher` (or undefined)  
-- `isValidating`: if there's a request or revalidation loading  
+
+- `data`: data for the given key resolved by `fetcher` (or undefined if not loaded)
+- `error`: error thrown by `fetcher` (or undefined)
+- `isValidating`: if there's a request or revalidation loading
 - `revalidate`: function to trigger the validation manually
 
 #### Options
@@ -110,8 +112,10 @@ const { data, error, isValidating, revalidate } = useSWR(key, fetcher, options)
 - `fetcher = undefined`: the default fetcher function
 - `initialData`: initial data to be returned (note: This is per-hook)
 - `revalidateOnFocus = true`: auto revalidate when window gets focused
+- `revalidateOnReconnect = true`: automatically revalidate when the browser regains a network connection (via `navigator.onLine`)
 - `refreshInterval = 0`: polling interval (disabled by default)
 - `refreshWhenHidden = false`: polling when the window is invisible (if `refreshInterval` is enabled)
+- `refreshWhenOffline = false`: polling when the browser is offline (determined by `navigator.onLine`)
 - `shouldRetryOnError = true`: retry when fetcher has an error [(details)](#error-retries)
 - `dedupingInterval = 2000`: dedupe requests with the same key in this time span
 - `focusThrottleInterval = 5000`: only revalidate once during a time span
@@ -145,23 +149,23 @@ You can also use [global configuration](#global-configuration) to provide defaul
 
 ### Global Configuration
 
-The context `SWRConfig` can provide global configurations (`options`) for all SWR hooks. 
+The context `SWRConfig` can provide global configurations (`options`) for all SWR hooks.
 
 In this example, all SWRs will use the same fetcher provided to load JSON data, and refresh every 3 seconds by default:
 
 ```js
 import useSWR, { SWRConfig } from 'swr'
 
-function Dashboard () {
+function Dashboard() {
   const { data: events } = useSWR('/api/events')
   const { data: projects } = useSWR('/api/projects')
   const { data: user } = useSWR('/api/user', { refreshInterval: 0 }) // don't refresh
   // ...
 }
 
-function App () {
+function App() {
   return (
-    <SWRConfig 
+    <SWRConfig
       value={{
         refreshInterval: 3000,
         fetcher: (...args) => fetch(...args).then(res => res.json())
@@ -183,20 +187,21 @@ import fetch from 'unfetch'
 
 const fetcher = url => fetch(url).then(r => r.json())
 
-function App () {
+function App() {
   const { data } = useSWR('/api/data', fetcher)
   // ...
 }
 ```
 
 Or using GraphQL:
+
 ```js
 import { request } from 'graphql-request'
 
 const API = 'https://api.graph.cool/simple/v1/movies'
 const fetcher = query => request(API, query)
 
-function App () {
+function App() {
   const { data, error } = useSWR(
     `{
       Movie(title: "Inception") {
@@ -225,7 +230,7 @@ Use `null` or pass a function as the `key` to `useSWR` to conditionally fetch da
 const { data } = useSWR(shouldFetch ? '/api/data' : null, fetcher)
 
 // ...or return a falsy value
-const { data } = useSWR(() => shouldFetch ? '/api/data' : null, fetcher)
+const { data } = useSWR(() => (shouldFetch ? '/api/data' : null), fetcher)
 
 // ... or throw an error when user.id is not defined
 const { data } = useSWR(() => '/api/data?uid=' + user.id, fetcher)
@@ -236,7 +241,7 @@ const { data } = useSWR(() => '/api/data?uid=' + user.id, fetcher)
 SWR also allows you to fetch data that depends on other data. It ensures the maximum possible parallelism (avoiding waterfalls), as well as serial fetching when a piece of dynamic data is required for the next data fetch to happen.
 
 ```js
-function MyProjects () {
+function MyProjects() {
   const { data: user } = useSWR('/api/user')
   const { data: projects } = useSWR(() => '/api/projects?uid=' + user.id)
   // When passing a function, SWR will use the
@@ -257,8 +262,8 @@ In some scenarios, it's useful pass multiple arguments (can be any value or obje
 useSWR('/api/data', url => fetchWithToken(url, token))
 ```
 
-This is **incorrect**. Because the identifier (also the index of the cache) of the data is `'/api/data'`, 
-so even if `token` changes, SWR will still have the same key and return the wrong data. 
+This is **incorrect**. Because the identifier (also the index of the cache) of the data is `'/api/data'`,
+so even if `token` changes, SWR will still have the same key and return the wrong data.
 
 Instead, you can use an **array** as the `key` parameter, which contains multiple arguments of `fetcher`:
 
@@ -286,23 +291,26 @@ Dan Abramov explains dependencies very well in [this blog post](https://overreac
 You can broadcast a revalidation message globally to all SWRs with the same key by calling
 `trigger(key)`.
 
-This example shows how to automatically refetch the login info (e.g.: inside `<Profile/>`) 
+This example shows how to automatically refetch the login info (e.g.: inside `<Profile/>`)
 when the user clicks the “Logout” button.
 
 ```js
 import useSWR, { trigger } from 'swr'
 
-function App () {
+function App() {
   return (
     <div>
       <Profile />
-      <button onClick={() => {
-        // set the cookie as expired
-        document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+      <button
+        onClick={() => {
+          // set the cookie as expired
+          document.cookie =
+            'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
 
-        // tell all SWRs with this key to revalidate
-        trigger('/api/user')
-      }}>
+          // tell all SWRs with this key to revalidate
+          trigger('/api/user')
+        }}
+      >
         Logout
       </button>
     </div>
@@ -321,19 +329,23 @@ revalidating and finally replace it with the latest data.
 ```js
 import useSWR, { mutate } from 'swr'
 
-function Profile () {
+function Profile() {
   const { data } = useSWR('/api/user', fetcher)
 
   return (
     <div>
       <h1>My name is {data.name}.</h1>
-      <button onClick={async () => {
-        const newName = data.name.toUpperCase()
-        // send a request to the API to update the data
-        await requestUpdateUsername(newName)
-        // update the local data immediately and revalidate (refetch)
-        mutate('/api/user', { ...data, name: newName })
-      }}>Uppercase my name!</button>
+      <button
+        onClick={async () => {
+          const newName = data.name.toUpperCase()
+          // send a request to the API to update the data
+          await requestUpdateUsername(newName)
+          // update the local data immediately and revalidate (refetch)
+          mutate('/api/user', { ...data, name: newName })
+        }}
+      >
+        Uppercase my name!
+      </button>
     </div>
   )
 }
@@ -346,9 +358,9 @@ But many POST APIs will just return the updated data directly, so we don’t nee
 Here’s an example showing the “local mutate - request - update” usage:
 
 ```js
-mutate('/api/user', newUser, false)      // use `false` to mutate without revalidation
+mutate('/api/user', newUser, false) // use `false` to mutate without revalidation
 mutate('/api/user', updateUser(newUser)) // `updateUser` is a Promise of the request,
-                                         // which returns the updated document
+// which returns the updated document
 ```
 
 ### SSR with Next.js
@@ -362,7 +374,7 @@ App.getInitialProps = async () => {
   return { data }
 }
 
-function App (props) {
+function App(props) {
   const initialData = props.data
   const { data } = useSWR('/api/data', fetcher, { initialData })
 
@@ -370,7 +382,7 @@ function App (props) {
 }
 ```
 
-It is still a server-side rendered site, but it’s also fully powered by SWR in the client side. 
+It is still a server-side rendered site, but it’s also fully powered by SWR in the client side.
 Which means the data can be dynamic and update itself over time and user interactions.
 
 ### Suspense Mode
@@ -381,21 +393,21 @@ You can enable the `suspense` option to use SWR with React Suspense:
 import { Suspense } from 'react'
 import useSWR from 'swr'
 
-function Profile () {
+function Profile() {
   const { data } = useSWR('/api/user', fetcher, { suspense: true })
   return <div>hello, {data.name}</div>
 }
 
-function App () {
+function App() {
   return (
     <Suspense fallback={<div>loading...</div>}>
-      <Profile/>
+      <Profile />
     </Suspense>
   )
 }
 ```
 
-In Suspense mode, `data` is always the fetch response (so you don't need to check if it's `undefined`). 
+In Suspense mode, `data` is always the fetch response (so you don't need to check if it's `undefined`).
 But if an error occurred, you need to use an [error boundary](https://reactjs.org/docs/concurrent-mode-suspense.html#handling-errors) to catch it.
 
 _Note that Suspense is not supported in SSR mode._
@@ -424,7 +436,7 @@ useSWR(key, fetcher, {
 There’re many ways to prefetch the data for SWR. For top level requests, [`rel="preload"`](https://developer.mozilla.org/en-US/docs/Web/HTML/Preloading_content) is highly recommended:
 
 ```html
-<link rel="preload" href="/api/data" as="fetch" crossorigin="anonymous">
+<link rel="preload" href="/api/data" as="fetch" crossorigin="anonymous" />
 ```
 
 This will prefetch the data before the JavaScript starts downloading. And your incoming fetch requests will reuse the result (including SWR, of course).
@@ -432,7 +444,7 @@ This will prefetch the data before the JavaScript starts downloading. And your i
 Another choice is to prefetch the data conditionally. You can have a function to refetch and set the cache:
 
 ```js
-function prefetch () {
+function prefetch() {
   mutate('/api/data', fetch('/api/data').then(res => res.json()))
   // the second parameter is a Promise
   // SWR will use the result when it resolves
@@ -445,7 +457,8 @@ Together with techniques like [page prefetching](https://nextjs.org/docs#prefetc
 <br/>
 
 ## Authors
-- Shu Ding ([@shuding_](https://twitter.com/shuding_)) – [ZEIT](https://zeit.co)
+
+- Shu Ding ([@shuding\_](https://twitter.com/shuding_)) – [ZEIT](https://zeit.co)
 - Guillermo Rauch ([@rauchg](https://twitter.com/rauchg)) – [ZEIT](https://zeit.co)
 - Joe Haddad ([@timer150](https://twitter.com/timer150)) - [ZEIT](https://zeit.co)
 - Paco Coursey ([@pacocoursey](https://twitter.com/pacocoursey)) - [ZEIT](https://zeit.co)
@@ -455,4 +468,5 @@ Thanks to Ryan Chen for providing the awesome `swr` npm package name!
 <br/>
 
 ## License
+
 The MIT License.

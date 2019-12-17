@@ -459,7 +459,7 @@ function useSWR<Data = any, Error = any>(
         if (
           !errorRef.current &&
           (config.refreshWhenHidden || isDocumentVisible()) &&
-          isOnline()
+          (!config.refreshWhenOffline && isOnline())
         ) {
           // only revalidate when the page is visible
           // if API request errored, we stop polling in this round
@@ -471,6 +471,16 @@ function useSWR<Data = any, Error = any>(
         timeout = setTimeout(tick, interval)
       }
       timeout = setTimeout(tick, config.refreshInterval)
+    }
+
+    let reconnect = null
+    if (config.revalidateOnReconnect) {
+      const reconnectEvent = async () => {
+        console.log('reconnecting...')
+        await softRevalidate()
+      }
+
+      reconnect = addEventListener('online', reconnectEvent)
     }
 
     return () => {
@@ -501,6 +511,10 @@ function useSWR<Data = any, Error = any>(
 
       if (timeout !== null) {
         clearTimeout(timeout)
+      }
+
+      if (reconnect !== null) {
+        removeEventListener('online', reconnect)
       }
     }
   }, [key, config.refreshInterval, revalidate])

@@ -1,10 +1,9 @@
 import isDocumentVisible from './libs/is-document-visible'
 import isOnline from './libs/is-online'
-
 import {
   ConfigInterface,
-  revalidateType,
-  RevalidateOptionInterface
+  RevalidateOptionInterface,
+  revalidateType
 } from './types'
 
 // Cache
@@ -65,7 +64,9 @@ const defaultConfig: ConfigInterface = {
 
   refreshInterval: 0,
   revalidateOnFocus: true,
+  revalidateOnReconnect: true,
   refreshWhenHidden: false,
+  refreshWhenOffline: false,
   shouldRetryOnError: true,
   suspense: false
 }
