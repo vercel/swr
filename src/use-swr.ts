@@ -476,11 +476,7 @@ function useSWR<Data = any, Error = any>(
     // set up reconnecting when the browser regains network connection
     let reconnect = null
     if (config.revalidateOnReconnect) {
-      const reconnectEvent = async () => {
-        await softRevalidate()
-      }
-
-      reconnect = addEventListener('online', reconnectEvent)
+      reconnect = addEventListener('online', softRevalidate)
     }
 
     return () => {
