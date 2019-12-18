@@ -110,8 +110,10 @@ const { data, error, isValidating, revalidate } = useSWR(key, fetcher, options)
 - `fetcher = undefined`: the default fetcher function
 - `initialData`: initial data to be returned (note: This is per-hook)
 - `revalidateOnFocus = true`: auto revalidate when window gets focused
+- `revalidateOnReconnect = true`: automatically revalidate when the browser regains a network connection (via `navigator.onLine`)
 - `refreshInterval = 0`: polling interval (disabled by default)
 - `refreshWhenHidden = false`: polling when the window is invisible (if `refreshInterval` is enabled)
+- `refreshWhenOffline = false`: polling when the browser is offline (determined by `navigator.onLine`)
 - `shouldRetryOnError = true`: retry when fetcher has an error [(details)](#error-retries)
 - `dedupingInterval = 2000`: dedupe requests with the same key in this time span
 - `focusThrottleInterval = 5000`: only revalidate once during a time span

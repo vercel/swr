@@ -13,7 +13,9 @@ export interface ConfigInterface<
 
   refreshInterval?: number
   refreshWhenHidden?: boolean
+  refreshWhenOffline?: boolean
   revalidateOnFocus?: boolean
+  revalidateOnReconnect?: boolean
   shouldRetryOnError?: boolean
   fetcher?: Fn
   suspense?: boolean

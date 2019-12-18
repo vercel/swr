@@ -1,40 +1,39 @@
+import deepEqual from 'fast-deep-equal'
 import {
+  useCallback,
+  useContext,
   useEffect,
   useLayoutEffect,
-  useRef,
-  useContext,
-  useCallback,
-  useReducer
+  useReducer,
+  useRef
 } from 'react'
-import deepEqual from 'fast-deep-equal'
-
-import {
-  keyInterface,
-  ConfigInterface,
-  RevalidateOptionInterface,
-  updaterInterface,
-  triggerInterface,
-  mutateInterface,
-  broadcastStateInterface,
-  responseInterface,
-  fetcherFn,
-  reducerType,
-  actionType
-} from './types'
-
 import defaultConfig, {
+  cacheGet,
+  cacheSet,
+  CACHE_REVALIDATORS,
   CONCURRENT_PROMISES,
   CONCURRENT_PROMISES_TS,
   FOCUS_REVALIDATORS,
-  CACHE_REVALIDATORS,
-  MUTATION_TS,
-  cacheGet,
-  cacheSet
+  MUTATION_TS
 } from './config'
-import SWRConfigContext from './swr-config-context'
-import isDocumentVisible from './libs/is-document-visible'
-import throttle from './libs/throttle'
 import hash from './libs/hash'
+import isDocumentVisible from './libs/is-document-visible'
+import isOnline from './libs/is-online'
+import throttle from './libs/throttle'
+import SWRConfigContext from './swr-config-context'
+import {
+  actionType,
+  broadcastStateInterface,
+  ConfigInterface,
+  fetcherFn,
+  keyInterface,
+  mutateInterface,
+  reducerType,
+  responseInterface,
+  RevalidateOptionInterface,
+  triggerInterface,
+  updaterInterface
+} from './types'
 
 const IS_SERVER = typeof window === 'undefined'
 
@@ -459,7 +458,8 @@ function useSWR<Data = any, Error = any>(
       const tick = async () => {
         if (
           !errorRef.current &&
-          (config.refreshWhenHidden || isDocumentVisible())
+          (config.refreshWhenHidden || isDocumentVisible()) &&
+          (!config.refreshWhenOffline && isOnline())
         ) {
           // only revalidate when the page is visible
           // if API request errored, we stop polling in this round
@@ -471,6 +471,12 @@ function useSWR<Data = any, Error = any>(
         timeout = setTimeout(tick, interval)
       }
       timeout = setTimeout(tick, config.refreshInterval)
+    }
+
+    // set up reconnecting when the browser regains network connection
+    let reconnect = null
+    if (config.revalidateOnReconnect) {
+      reconnect = addEventListener('online', softRevalidate)
     }
 
     return () => {
@@ -501,6 +507,10 @@ function useSWR<Data = any, Error = any>(
 
       if (timeout !== null) {
         clearTimeout(timeout)
+      }
+
+      if (reconnect !== null) {
+        removeEventListener('online', reconnect)
       }
     }
   }, [key, config.refreshInterval, revalidate])
