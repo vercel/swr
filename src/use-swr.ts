@@ -134,6 +134,28 @@ function mergeState(state, payload) {
   return { ...state, ...payload }
 }
 
+function usePolling(callback: () => void, refreshInterval?: number | null) {
+  const callbackRef = useRef(callback)
+
+  useIsomorphicLayoutEffect(() => {
+    callbackRef.current = callback
+  }, [callback])
+
+  useIsomorphicLayoutEffect(() => {
+    let timer = null
+    function tick() {
+      callbackRef.current()
+      timer = setTimeout(tick, refreshInterval)
+    }
+    if (refreshInterval) {
+      timer = setTimeout(tick, refreshInterval)
+    }
+    return () => {
+      if (timer) clearTimeout(timer)
+    }
+  }, [refreshInterval])
+}
+
 function useSWR<Data = any, Error = any>(
   key: keyInterface
 ): responseInterface<Data, Error>
@@ -452,27 +474,6 @@ function useSWR<Data = any, Error = any>(
       CACHE_REVALIDATORS[key].push(onUpdate)
     }
 
-    // set up polling
-    let timeout = null
-    if (config.refreshInterval) {
-      const tick = async () => {
-        if (
-          !errorRef.current &&
-          (config.refreshWhenHidden || isDocumentVisible()) &&
-          (!config.refreshWhenOffline && isOnline())
-        ) {
-          // only revalidate when the page is visible
-          // if API request errored, we stop polling in this round
-          // and let the error retry function handle it
-          await softRevalidate()
-        }
-
-        const interval = config.refreshInterval
-        timeout = setTimeout(tick, interval)
-      }
-      timeout = setTimeout(tick, config.refreshInterval)
-    }
-
     // set up reconnecting when the browser regains network connection
     let reconnect = null
     if (config.revalidateOnReconnect) {
@@ -505,15 +506,27 @@ function useSWR<Data = any, Error = any>(
         }
       }
 
-      if (timeout !== null) {
-        clearTimeout(timeout)
-      }
-
       if (reconnect !== null) {
         removeEventListener('online', reconnect)
       }
     }
-  }, [key, config.refreshInterval, revalidate])
+  }, [key, revalidate])
+
+  // set up polling
+  const refresh = async () => {
+    if (
+      !errorRef.current &&
+      (config.refreshWhenHidden || isDocumentVisible()) &&
+      (!config.refreshWhenOffline && isOnline())
+    ) {
+      // only revalidate when the page is visible
+      // if API request errored, we stop polling in this round
+      // and let the error retry function handle it
+      await revalidate({ dedupe: true })
+    }
+  }
+
+  usePolling(refresh, config.refreshInterval)
 
   // suspense
   if (config.suspense) {
