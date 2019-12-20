@@ -134,28 +134,6 @@ function mergeState(state, payload) {
   return { ...state, ...payload }
 }
 
-function usePolling(callback: () => void, refreshInterval?: number | null) {
-  const callbackRef = useRef(callback)
-
-  useIsomorphicLayoutEffect(() => {
-    callbackRef.current = callback
-  }, [callback])
-
-  useIsomorphicLayoutEffect(() => {
-    let timer = null
-    function tick() {
-      callbackRef.current()
-      timer = setTimeout(tick, refreshInterval)
-    }
-    if (refreshInterval) {
-      timer = setTimeout(tick, refreshInterval)
-    }
-    return () => {
-      if (timer) clearTimeout(timer)
-    }
-  }, [refreshInterval])
-}
-
 function useSWR<Data = any, Error = any>(
   key: keyInterface
 ): responseInterface<Data, Error>
@@ -513,20 +491,35 @@ function useSWR<Data = any, Error = any>(
   }, [key, revalidate])
 
   // set up polling
-  const refresh = async () => {
-    if (
-      !errorRef.current &&
-      (config.refreshWhenHidden || isDocumentVisible()) &&
-      (!config.refreshWhenOffline && isOnline())
-    ) {
-      // only revalidate when the page is visible
-      // if API request errored, we stop polling in this round
-      // and let the error retry function handle it
-      await revalidate({ dedupe: true })
+  useIsomorphicLayoutEffect(() => {
+    let timer = null
+    const tick = async () => {
+      if (
+        !errorRef.current &&
+        (config.refreshWhenHidden || isDocumentVisible()) &&
+        (!config.refreshWhenOffline && isOnline())
+      ) {
+        // only revalidate when the page is visible
+        // if API request errored, we stop polling in this round
+        // and let the error retry function handle it
+        await revalidate({ dedupe: true })
+      }
+      if (config.refreshInterval) {
+        timer = setTimeout(tick, config.refreshInterval)
+      }
     }
-  }
-
-  usePolling(refresh, config.refreshInterval)
+    if (config.refreshInterval) {
+      timer = setTimeout(tick, config.refreshInterval)
+    }
+    return () => {
+      if (timer) clearTimeout(timer)
+    }
+  }, [
+    config.refreshInterval,
+    config.refreshWhenHidden,
+    config.refreshWhenOffline,
+    revalidate
+  ])
 
   // suspense
   if (config.suspense) {
