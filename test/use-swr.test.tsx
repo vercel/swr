@@ -243,8 +243,10 @@ describe('useSWR', () => {
   })
 
   it('should accept initial data', async () => {
+    const fetcher = jest.fn(() => 'SWR')
+
     function Page() {
-      const { data } = useSWR('initial-data-1', () => 'SWR', {
+      const { data } = useSWR('initial-data-1', fetcher, {
         initialData: 'Initial'
       })
       return <div>hello, {data}</div>
@@ -252,12 +254,9 @@ describe('useSWR', () => {
 
     const { container } = render(<Page />)
 
+    expect(fetcher).not.toBeCalled()
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"hello, Initial"`
-    )
-    await waitForDomChange({ container }) // mount
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"hello, SWR"`
     )
   })
 

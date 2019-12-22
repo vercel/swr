@@ -382,16 +382,18 @@ function useSWR<Data = any, Error = any>(
     const softRevalidate = () => revalidate({ dedupe: true })
 
     // trigger a revalidation
-    if (
-      typeof latestKeyedData !== 'undefined' &&
-      !IS_SERVER &&
-      window['requestIdleCallback']
-    ) {
-      // delay revalidate if there's cache
-      // to not block the rendering
-      window['requestIdleCallback'](softRevalidate)
-    } else {
-      softRevalidate()
+    if (!config.initialData) {
+      if (
+        typeof latestKeyedData !== 'undefined' &&
+        !IS_SERVER &&
+        window['requestIdleCallback']
+      ) {
+        // delay revalidate if there's cache
+        // to not block the rendering
+        window['requestIdleCallback'](softRevalidate)
+      } else {
+        softRevalidate()
+      }
     }
 
     // whenever the window gets focused, revalidate
