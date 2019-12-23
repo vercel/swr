@@ -454,27 +454,6 @@ function useSWR<Data = any, Error = any>(
       CACHE_REVALIDATORS[key].push(onUpdate)
     }
 
-    // set up polling
-    let timeout = null
-    if (config.refreshInterval) {
-      const tick = async () => {
-        if (
-          !errorRef.current &&
-          (config.refreshWhenHidden || isDocumentVisible()) &&
-          (!config.refreshWhenOffline && isOnline())
-        ) {
-          // only revalidate when the page is visible
-          // if API request errored, we stop polling in this round
-          // and let the error retry function handle it
-          await softRevalidate()
-        }
-
-        const interval = config.refreshInterval
-        timeout = setTimeout(tick, interval)
-      }
-      timeout = setTimeout(tick, config.refreshInterval)
-    }
-
     // set up reconnecting when the browser regains network connection
     let reconnect = null
     if (config.revalidateOnReconnect) {
@@ -507,15 +486,42 @@ function useSWR<Data = any, Error = any>(
         }
       }
 
-      if (timeout !== null) {
-        clearTimeout(timeout)
-      }
-
       if (reconnect !== null) {
         removeEventListener('online', reconnect)
       }
     }
-  }, [key, config.refreshInterval, revalidate])
+  }, [key, revalidate])
+
+  // set up polling
+  useIsomorphicLayoutEffect(() => {
+    let timer = null
+    const tick = async () => {
+      if (
+        !errorRef.current &&
+        (config.refreshWhenHidden || isDocumentVisible()) &&
+        (!config.refreshWhenOffline && isOnline())
+      ) {
+        // only revalidate when the page is visible
+        // if API request errored, we stop polling in this round
+        // and let the error retry function handle it
+        await revalidate({ dedupe: true })
+      }
+      if (config.refreshInterval) {
+        timer = setTimeout(tick, config.refreshInterval)
+      }
+    }
+    if (config.refreshInterval) {
+      timer = setTimeout(tick, config.refreshInterval)
+    }
+    return () => {
+      if (timer) clearTimeout(timer)
+    }
+  }, [
+    config.refreshInterval,
+    config.refreshWhenHidden,
+    config.refreshWhenOffline,
+    revalidate
+  ])
 
   // suspense
   if (config.suspense) {

@@ -334,6 +334,60 @@ describe('useSWR - refresh', () => {
     await act(() => new Promise(res => setTimeout(res, 200))) // update
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 2"`)
   })
+
+  it('should update data upon interval changes', async () => {
+    let count = 0
+    function Page() {
+      const [int, setInt] = React.useState(200)
+      const { data } = useSWR('/api', () => count++, {
+        refreshInterval: int,
+        dedupingInterval: 100
+      })
+      return <div onClick={() => setInt(int + 100)}>count: {data}</div>
+    }
+    const { container } = render(<Page />)
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: "`)
+
+    await waitForDomChange({ container }) // mount
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 0"`)
+    await act(() => {
+      return new Promise(res => setTimeout(res, 210))
+    })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 1"`)
+    await act(() => {
+      return new Promise(res => setTimeout(res, 50))
+    })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 1"`)
+    await act(() => {
+      return new Promise(res => setTimeout(res, 150))
+    })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 2"`)
+    await act(() => {
+      fireEvent.click(container.firstElementChild)
+      // it will clear 200ms timer and setup a new 300ms timer
+      return new Promise(res => setTimeout(res, 200))
+    })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 2"`)
+    await act(() => {
+      return new Promise(res => setTimeout(res, 110))
+    })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 3"`)
+    await act(() => {
+      // wait for new 300ms timer
+      return new Promise(res => setTimeout(res, 310))
+    })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 4"`)
+    await act(() => {
+      fireEvent.click(container.firstElementChild)
+      // it will clear 300ms timer and setup a new 400ms timer
+      return new Promise(res => setTimeout(res, 300))
+    })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 4"`)
+    await act(() => {
+      return new Promise(res => setTimeout(res, 110))
+    })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 5"`)
+  })
 })
 
 describe('useSWR - revalidate', () => {
