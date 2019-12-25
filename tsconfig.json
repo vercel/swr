@@ -17,7 +17,7 @@
     "types": [
       "node", "jest"
     ],
-    "target": "esnext",
+    "target": "es5",
     "typeRoots": [
       "./types",
       "./node_modules/@types"

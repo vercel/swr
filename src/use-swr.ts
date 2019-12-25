@@ -1,39 +1,39 @@
+import deepEqual from 'fast-deep-equal'
 import {
+  useCallback,
+  useContext,
   useEffect,
   useLayoutEffect,
-  useRef,
   useState,
-  useContext,
-  useCallback
+  useRef
 } from 'react'
-import deepEqual from 'fast-deep-equal'
-
-import {
-  keyInterface,
-  ConfigInterface,
-  RevalidateOptionInterface,
-  updaterInterface,
-  triggerInterface,
-  mutateInterface,
-  broadcastStateInterface,
-  responseInterface,
-  fetcherFn,
-  actionType
-} from './types'
 
 import defaultConfig, {
+  cacheGet,
+  cacheSet,
+  CACHE_REVALIDATORS,
   CONCURRENT_PROMISES,
   CONCURRENT_PROMISES_TS,
   FOCUS_REVALIDATORS,
-  CACHE_REVALIDATORS,
-  MUTATION_TS,
-  cacheGet,
-  cacheSet
+  MUTATION_TS
 } from './config'
-import SWRConfigContext from './swr-config-context'
-import isDocumentVisible from './libs/is-document-visible'
-import throttle from './libs/throttle'
 import hash from './libs/hash'
+import isDocumentVisible from './libs/is-document-visible'
+import isOnline from './libs/is-online'
+import throttle from './libs/throttle'
+import SWRConfigContext from './swr-config-context'
+import {
+  actionType,
+  broadcastStateInterface,
+  ConfigInterface,
+  fetcherFn,
+  keyInterface,
+  mutateInterface,
+  responseInterface,
+  RevalidateOptionInterface,
+  triggerInterface,
+  updaterInterface
+} from './types'
 
 const IS_SERVER = typeof window === 'undefined'
 
@@ -151,7 +151,7 @@ function useSWR<Data = any, Error = any>(
   if (args.length >= 1) {
     _key = args[0]
   }
-  if (args.length >= 2) {
+  if (args.length > 2) {
     fn = args[1]
     config = args[2]
   } else {
@@ -393,16 +393,18 @@ function useSWR<Data = any, Error = any>(
     const softRevalidate = () => revalidate({ dedupe: true })
 
     // trigger a revalidation
-    if (
-      typeof latestKeyedData !== 'undefined' &&
-      !IS_SERVER &&
-      window['requestIdleCallback']
-    ) {
-      // delay revalidate if there's cache
-      // to not block the rendering
-      window['requestIdleCallback'](softRevalidate)
-    } else {
-      softRevalidate()
+    if (!config.initialData) {
+      if (
+        typeof latestKeyedData !== 'undefined' &&
+        !IS_SERVER &&
+        window['requestIdleCallback']
+      ) {
+        // delay revalidate if there's cache
+        // to not block the rendering
+        window['requestIdleCallback'](softRevalidate)
+      } else {
+        softRevalidate()
+      }
     }
 
     // whenever the window gets focused, revalidate
@@ -466,24 +468,10 @@ function useSWR<Data = any, Error = any>(
       CACHE_REVALIDATORS[key].push(onUpdate)
     }
 
-    // set up polling
-    let timeout = null
-    if (config.refreshInterval) {
-      const tick = async () => {
-        if (
-          !stateRef.current.error &&
-          (config.refreshWhenHidden || isDocumentVisible())
-        ) {
-          // only revalidate when the page is visible
-          // if API request errored, we stop polling in this round
-          // and let the error retry function handle it
-          await softRevalidate()
-        }
-
-        const interval = config.refreshInterval
-        timeout = setTimeout(tick, interval)
-      }
-      timeout = setTimeout(tick, config.refreshInterval)
+    // set up reconnecting when the browser regains network connection
+    let reconnect = null
+    if (config.revalidateOnReconnect) {
+      reconnect = addEventListener('online', softRevalidate)
     }
 
     return () => {
@@ -512,11 +500,42 @@ function useSWR<Data = any, Error = any>(
         }
       }
 
-      if (timeout !== null) {
-        clearTimeout(timeout)
+      if (reconnect !== null) {
+        removeEventListener('online', reconnect)
       }
     }
-  }, [key, config.refreshInterval, revalidate])
+  }, [key, revalidate])
+
+  // set up polling
+  useIsomorphicLayoutEffect(() => {
+    let timer = null
+    const tick = async () => {
+      if (
+        !stateRef.current.error &&
+        (config.refreshWhenHidden || isDocumentVisible()) &&
+        (!config.refreshWhenOffline && isOnline())
+      ) {
+        // only revalidate when the page is visible
+        // if API request errored, we stop polling in this round
+        // and let the error retry function handle it
+        await revalidate({ dedupe: true })
+      }
+      if (config.refreshInterval) {
+        timer = setTimeout(tick, config.refreshInterval)
+      }
+    }
+    if (config.refreshInterval) {
+      timer = setTimeout(tick, config.refreshInterval)
+    }
+    return () => {
+      if (timer) clearTimeout(timer)
+    }
+  }, [
+    config.refreshInterval,
+    config.refreshWhenHidden,
+    config.refreshWhenOffline,
+    revalidate
+  ])
 
   // suspense
   if (config.suspense) {
