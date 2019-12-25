@@ -5,7 +5,8 @@ import {
   useEffect,
   useLayoutEffect,
   useState,
-  useRef
+  useRef,
+  useMemo
 } from 'react'
 
 import defaultConfig, {
@@ -588,32 +589,35 @@ function useSWR<Data = any, Error = any>(
   }
 
   // define returned state
-  const state = { revalidate } as responseInterface<Data, Error>
-  Object.defineProperties(state, {
-    error: {
-      // `key` might be changed in the upcoming hook re-render,
-      // but the previous state will stay
-      // so we need to match the latest key and data (fallback to `initialData`)
-      get: function() {
-        stateDependencies.current.error = true
-        return keyRef.current === key ? stateRef.current.error : initialError
+  // can be memorized since the state is a ref
+  return useMemo(() => {
+    const state = { revalidate } as responseInterface<Data, Error>
+    Object.defineProperties(state, {
+      error: {
+        // `key` might be changed in the upcoming hook re-render,
+        // but the previous state will stay
+        // so we need to match the latest key and data (fallback to `initialData`)
+        get: function() {
+          stateDependencies.current.error = true
+          return keyRef.current === key ? stateRef.current.error : initialError
+        }
+      },
+      data: {
+        get: function() {
+          stateDependencies.current.data = true
+          return keyRef.current === key ? stateRef.current.data : initialData
+        }
+      },
+      isValidating: {
+        get: function() {
+          stateDependencies.current.isValidating = true
+          return stateRef.current.isValidating
+        }
       }
-    },
-    data: {
-      get: function() {
-        stateDependencies.current.data = true
-        return keyRef.current === key ? stateRef.current.data : initialData
-      }
-    },
-    isValidating: {
-      get: function() {
-        stateDependencies.current.isValidating = true
-        return stateRef.current.isValidating
-      }
-    }
-  })
+    })
 
-  return state
+    return state
+  }, [revalidate])
 }
 
 const SWRConfig = SWRConfigContext.Provider
