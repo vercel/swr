@@ -201,7 +201,7 @@ function useSWR<Data = any, Error = any>(
   })
 
   const rerender = useState(null)[1]
-  let dispatch = payload => {
+  let dispatch = useCallback(payload => {
     let shouldUpdateState = false
     for (let k in payload) {
       stateRef.current[k] = payload[k]
@@ -212,7 +212,7 @@ function useSWR<Data = any, Error = any>(
     if (shouldUpdateState || config.suspense) {
       rerender({})
     }
-  }
+  }, [])
 
   // error ref inside revalidate (is last request errored?)
   const unmountedRef = useRef(false)
