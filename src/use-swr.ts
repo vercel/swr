@@ -187,7 +187,7 @@ function useSWR<Data = any, Error = any>(
   }
 
   const initialData = cacheGet(key) || config.initialData
-  const initialError = cacheGet(keyErr)
+  const initialError = config.initialData ? undefined : cacheGet(keyErr)
 
   let [state, dispatch] = useReducer<reducerType<Data, Error>>(mergeState, {
     data: initialData,

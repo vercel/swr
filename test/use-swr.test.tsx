@@ -260,6 +260,27 @@ describe('useSWR', () => {
     )
   })
 
+  it('should ignore error cache when intial data provided', async () => {
+    function Page({ initialData = '' }) {
+      const { data, error } = useSWR(
+        'initial-data-2',
+        () => {
+          throw new Error('err')
+        },
+        {
+          initialData
+        }
+      )
+      if (error) return error.message
+      return <>{data}</>
+    }
+    const { container: containerErr, unmount } = render(<Page />)
+    expect(containerErr.textContent).toMatchInlineSnapshot(`"err"`)
+    unmount()
+    const { container } = render(<Page initialData="hello, Initial" />)
+    expect(container.textContent).toMatchInlineSnapshot(`"hello, Initial"`)
+  })
+
   it('should set config as second parameter', async () => {
     const fetcher = jest.fn(() => 'SWR')
 
