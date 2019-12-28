@@ -4,9 +4,11 @@ import {
   useContext,
   useEffect,
   useLayoutEffect,
-  useReducer,
-  useRef
+  useState,
+  useRef,
+  useMemo
 } from 'react'
+
 import defaultConfig, {
   cacheGet,
   cacheSet,
@@ -28,7 +30,6 @@ import {
   fetcherFn,
   keyInterface,
   mutateInterface,
-  reducerType,
   responseInterface,
   RevalidateOptionInterface,
   triggerInterface,
@@ -130,10 +131,6 @@ const mutate: mutateInterface = async (_key, _data, shouldRevalidate) => {
   }
 }
 
-function mergeState(state, payload) {
-  return { ...state, ...payload }
-}
-
 function useSWR<Data = any, Error = any>(
   key: keyInterface
 ): responseInterface<Data, Error>
@@ -189,17 +186,37 @@ function useSWR<Data = any, Error = any>(
   const initialData = cacheGet(key) || config.initialData
   const initialError = cacheGet(keyErr)
 
-  let [state, dispatch] = useReducer<reducerType<Data, Error>>(mergeState, {
+  // if a state is accessed (data, error or isValidating),
+  // we add the state to dependencies so if the state is
+  // updated in the future, we can trigger a rerender
+  const stateDependencies = useRef({
+    data: false,
+    error: false,
+    isValidating: false
+  })
+  const stateRef = useRef({
     data: initialData,
     error: initialError,
     isValidating: false
   })
 
+  const rerender = useState(null)[1]
+  let dispatch = useCallback(payload => {
+    let shouldUpdateState = false
+    for (let k in payload) {
+      stateRef.current[k] = payload[k]
+      if (stateDependencies.current[k]) {
+        shouldUpdateState = true
+      }
+    }
+    if (shouldUpdateState || config.suspense) {
+      rerender({})
+    }
+  }, [])
+
   // error ref inside revalidate (is last request errored?)
   const unmountedRef = useRef(false)
   const keyRef = useRef(key)
-  const dataRef = useRef(initialData)
-  const errorRef = useRef(initialError)
 
   // start a revalidation
   const revalidate = useCallback(
@@ -288,18 +305,16 @@ function useSWR<Data = any, Error = any>(
           isValidating: false
         }
 
-        if (typeof errorRef.current !== 'undefined') {
+        if (typeof stateRef.current.error !== 'undefined') {
           // we don't have an error
           newState.error = undefined
-          errorRef.current = undefined
         }
-        if (deepEqual(dataRef.current, newData)) {
+        if (deepEqual(stateRef.current.data, newData)) {
           // deep compare to avoid extra re-render
           // do nothing
         } else {
           // data changed
           newState.data = newData
-          dataRef.current = newData
         }
 
         // merge the new state
@@ -318,9 +333,7 @@ function useSWR<Data = any, Error = any>(
 
         // get a new error
         // don't use deep equal for errors
-        if (errorRef.current !== err) {
-          errorRef.current = err
-
+        if (stateRef.current.error !== err) {
           // we keep the stale data
           dispatch({
             isValidating: false,
@@ -365,7 +378,7 @@ function useSWR<Data = any, Error = any>(
     // we need to update the data from the cache
     // and trigger a revalidation
 
-    const currentHookData = dataRef.current
+    const currentHookData = stateRef.current.data
     const latestKeyedData = cacheGet(key) || config.initialData
 
     // update the state if the key changed or cache updated
@@ -374,7 +387,6 @@ function useSWR<Data = any, Error = any>(
       !deepEqual(currentHookData, latestKeyedData)
     ) {
       dispatch({ data: latestKeyedData })
-      dataRef.current = latestKeyedData
       keyRef.current = key
     }
 
@@ -418,23 +430,26 @@ function useSWR<Data = any, Error = any>(
     ) => {
       // update hook state
       const newState: actionType<Data, Error> = {}
+      let needUpdate = false
 
       if (
         typeof updatedData !== 'undefined' &&
-        !deepEqual(dataRef.current, updatedData)
+        !deepEqual(stateRef.current.data, updatedData)
       ) {
         newState.data = updatedData
-        dataRef.current = updatedData
+        needUpdate = true
       }
 
       // always update error
       // because it can be `undefined`
-      if (errorRef.current !== updatedError) {
+      if (stateRef.current.error !== updatedError) {
         newState.error = updatedError
-        errorRef.current = updatedError
+        needUpdate = true
       }
 
-      dispatch(newState)
+      if (needUpdate) {
+        dispatch(newState)
+      }
 
       keyRef.current = key
       if (shouldRevalidate) {
@@ -497,7 +512,7 @@ function useSWR<Data = any, Error = any>(
     let timer = null
     const tick = async () => {
       if (
-        !errorRef.current &&
+        !stateRef.current.error &&
         (config.refreshWhenHidden || isDocumentVisible()) &&
         (!config.refreshWhenOffline && isOnline())
       ) {
@@ -569,19 +584,40 @@ function useSWR<Data = any, Error = any>(
       error: latestError,
       data: latestData,
       revalidate,
-      isValidating: state.isValidating
+      isValidating: stateRef.current.isValidating
     }
   }
 
-  return {
-    // `key` might be changed in the upcoming hook re-render,
-    // but the previous state will stay
-    // so we need to match the latest key and data (fallback to `initialData`)
-    error: keyRef.current === key ? state.error : initialError,
-    data: keyRef.current === key ? state.data : initialData,
-    revalidate, // handler
-    isValidating: state.isValidating
-  }
+  // define returned state
+  // can be memorized since the state is a ref
+  return useMemo(() => {
+    const state = { revalidate } as responseInterface<Data, Error>
+    Object.defineProperties(state, {
+      error: {
+        // `key` might be changed in the upcoming hook re-render,
+        // but the previous state will stay
+        // so we need to match the latest key and data (fallback to `initialData`)
+        get: function() {
+          stateDependencies.current.error = true
+          return keyRef.current === key ? stateRef.current.error : initialError
+        }
+      },
+      data: {
+        get: function() {
+          stateDependencies.current.data = true
+          return keyRef.current === key ? stateRef.current.data : initialData
+        }
+      },
+      isValidating: {
+        get: function() {
+          stateDependencies.current.isValidating = true
+          return stateRef.current.isValidating
+        }
+      }
+    })
+
+    return state
+  }, [revalidate])
 }
 
 const SWRConfig = SWRConfigContext.Provider

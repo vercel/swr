@@ -150,7 +150,12 @@ export function useSWRPages<OffsetType = any, Data = any, Error = any>(
       ) {
         setPageSWRs(swrs => {
           const _swrs = [...swrs]
-          _swrs[id] = swr
+          _swrs[id] = {
+            data: swr.data,
+            error: swr.error,
+            revalidate: swr.revalidate,
+            isValidating: swr.isValidating
+          }
           return _swrs
         })
         if (typeof swr.data !== 'undefined') {
