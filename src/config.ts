@@ -1,3 +1,4 @@
+import deepEqual from 'fast-deep-equal'
 import isDocumentVisible from './libs/is-document-visible'
 import isOnline from './libs/is-online'
 import {
@@ -68,7 +69,9 @@ const defaultConfig: ConfigInterface = {
   refreshWhenHidden: false,
   refreshWhenOffline: false,
   shouldRetryOnError: true,
-  suspense: false
+  suspense: false,
+
+  isEqualMethod: deepEqual
 }
 
 if (typeof window !== 'undefined') {

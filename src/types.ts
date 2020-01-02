@@ -37,6 +37,8 @@ export interface ConfigInterface<
     revalidate: revalidateType,
     revalidateOpts: RevalidateOptionInterface
   ) => void
+
+  isEqualMethod?: (a: any, b: any) => boolean
 }
 
 export interface RevalidateOptionInterface {
