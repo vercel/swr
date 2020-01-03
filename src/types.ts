@@ -38,7 +38,7 @@ export interface ConfigInterface<
     revalidateOpts: RevalidateOptionInterface
   ) => void
 
-  isEqualMethod?: (a: any, b: any) => boolean
+  compare?: (a: Data | undefined, b: Data | undefined) => boolean
 }
 
 export interface RevalidateOptionInterface {
