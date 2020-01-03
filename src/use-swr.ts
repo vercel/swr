@@ -433,7 +433,7 @@ function useSWR<Data = any, Error = any>(
 
       if (
         typeof updatedData !== 'undefined' &&
-        !config.isEqualMethod(stateRef.current.data, updatedData)
+        !config.compare(stateRef.current.data, updatedData)
       ) {
         newState.data = updatedData
         needUpdate = true
