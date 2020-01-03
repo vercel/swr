@@ -308,7 +308,7 @@ function useSWR<Data = any, Error = any>(
           // we don't have an error
           newState.error = undefined
         }
-        if (config.isEqualMethod(stateRef.current.data, newData)) {
+        if (config.compare(stateRef.current.data, newData)) {
           // deep compare to avoid extra re-render
           // do nothing
         } else {
