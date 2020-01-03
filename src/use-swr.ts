@@ -383,7 +383,7 @@ function useSWR<Data = any, Error = any>(
     // update the state if the key changed or cache updated
     if (
       keyRef.current !== key ||
-      !config.isEqualMethod(currentHookData, latestKeyedData)
+      !config.compare(currentHookData, latestKeyedData)
     ) {
       dispatch({ data: latestKeyedData })
       keyRef.current = key
