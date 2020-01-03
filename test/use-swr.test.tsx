@@ -474,7 +474,7 @@ describe('useSWR - refresh', () => {
           version: '1.0'
         }),
         {
-          isEqualMethod: function isEqual(a, b) {
+          compare: function isEqual(a, b) {
             if (a === b) {
               return true
             }
