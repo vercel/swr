@@ -70,7 +70,7 @@ const defaultConfig: ConfigInterface = {
   refreshWhenOffline: false,
   shouldRetryOnError: true,
   suspense: false,
-  isEqualMethod: deepEqual
+  compare: deepEqual
 }
 
 if (typeof window !== 'undefined') {
