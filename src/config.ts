@@ -49,6 +49,14 @@ function onErrorRetry(
   setTimeout(revalidate, timeout, opts)
 }
 
+// client side: need to adjust the config
+// based on the browser status
+// slow connection (<= 70Kbps)
+const slowConnection =
+  typeof window !== 'undefined' &&
+  navigator['connection'] &&
+  ['slow-2g', '2g'].indexOf(navigator['connection'].effectiveType) !== -1
+
 // config
 const defaultConfig: ConfigInterface = {
   // events
@@ -57,10 +65,10 @@ const defaultConfig: ConfigInterface = {
   onError: () => {},
   onErrorRetry,
 
-  errorRetryInterval: 5 * 1000,
+  errorRetryInterval: (slowConnection ? 10 : 5) * 1000,
   focusThrottleInterval: 5 * 1000,
   dedupingInterval: 2 * 1000,
-  loadingTimeout: 3 * 1000,
+  loadingTimeout: (slowConnection ? 5 : 3) * 1000,
 
   refreshInterval: 0,
   revalidateOnFocus: true,
@@ -69,21 +77,6 @@ const defaultConfig: ConfigInterface = {
   refreshWhenOffline: false,
   shouldRetryOnError: true,
   suspense: false
-}
-
-if (typeof window !== 'undefined') {
-  // client side: need to adjust the config
-  // based on the browser status
-
-  // slow connection (<= 70Kbps)
-  if (navigator['connection']) {
-    if (
-      ['slow-2g', '2g'].indexOf(navigator['connection'].effectiveType) !== -1
-    ) {
-      defaultConfig.errorRetryInterval = 10 * 1000
-      defaultConfig.loadingTimeout = 5 * 1000
-    }
-  }
 }
 
 // Focus revalidate
