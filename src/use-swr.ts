@@ -501,7 +501,7 @@ function useSWR<Data = any, Error = any>(
         }
       }
 
-      if (removeEventListener && reconnect !== null) {
+      if (typeof removeEventListener !== 'undefined' && reconnect !== null) {
         removeEventListener('online', reconnect)
       }
     }
