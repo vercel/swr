@@ -356,7 +356,7 @@ function useSWR<Data = any, Error = any>(
 
   // mounted (client side rendering)
   useIsomorphicLayoutEffect(() => {
-    if (!key || !config.autoLoad) return undefined
+    if (!key) return undefined
 
     // after `key` updates, we need to mark it as mounted
     unmountedRef.current = false
@@ -381,7 +381,7 @@ function useSWR<Data = any, Error = any>(
     const softRevalidate = () => revalidate({ dedupe: true })
 
     // trigger a revalidation
-    if (!config.initialData) {
+    if (!config.initialData || !config.autoLoad) {
       if (
         typeof latestKeyedData !== 'undefined' &&
         !IS_SERVER &&
