@@ -81,6 +81,18 @@ describe('useSWR', () => {
     )
   })
 
+  it('should not call fetch function when autoLoad is false', async () => {
+    const fetch = jest.fn(() => 'SWR')
+
+    function Page() {
+      const { data } = useSWR('constant-3', fetch)
+      return <div>hello, {data}</div>
+    }
+
+    render(<Page />)
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
   it('should dedupe requests by default', async () => {
     let count = 0
     const fetch = () => {
