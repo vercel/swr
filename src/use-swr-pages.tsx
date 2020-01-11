@@ -177,7 +177,10 @@ export function useSWRPages<OffsetType = any, Data = any, Error = any>(
 
     // render each page
     const p = []
-    const pageCache = pageCacheMap.get(pageKey) || []
+    if (!pageCacheMap.has(pageKey)) {
+      pageCacheMap.set(pageKey, [])
+    }
+    const pageCache = pageCacheMap.get(pageKey)
     for (let i = 0; i < pageCount; ++i) {
       if (
         !pageCache[i] ||
@@ -197,7 +200,6 @@ export function useSWRPages<OffsetType = any, Data = any, Error = any>(
           pageFn: _pageFn,
           offset: pageOffsets[i]
         }
-        pageCacheMap.set(pageKey, pageCache)
       }
       p.push(pageCache[i].component)
     }
