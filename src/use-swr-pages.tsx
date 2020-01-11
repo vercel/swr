@@ -88,6 +88,8 @@ function App () {
 }
 */
 
+const pageCacheMap = new Map()
+
 export function useSWRPages<OffsetType = any, Data = any, Error = any>(
   pageKey: string,
   pageFn: pageComponentType<OffsetType, Data, Error>,
@@ -105,7 +107,6 @@ export function useSWRPages<OffsetType = any, Data = any, Error = any>(
   )
   const [pageSWRs, setPageSWRs] = useState<responseInterface<Data, Error>[]>([])
 
-  const pageCacheRef = useRef([])
   const pageFnRef = useRef(pageFn)
   const emptyPageRef = useRef(false)
 
@@ -176,7 +177,10 @@ export function useSWRPages<OffsetType = any, Data = any, Error = any>(
 
     // render each page
     const p = []
-    const pageCache = pageCacheRef.current
+    if (!pageCacheMap.has(pageKey)) {
+      pageCacheMap.set(pageKey, [])
+    }
+    const pageCache = pageCacheMap.get(pageKey)
     for (let i = 0; i < pageCount; ++i) {
       if (
         !pageCache[i] ||
