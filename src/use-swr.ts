@@ -1,4 +1,3 @@
-import deepEqual from 'fast-deep-equal'
 import {
   useCallback,
   useContext,
@@ -309,7 +308,7 @@ function useSWR<Data = any, Error = any>(
           // we don't have an error
           newState.error = undefined
         }
-        if (deepEqual(stateRef.current.data, newData)) {
+        if (config.compare(stateRef.current.data, newData)) {
           // deep compare to avoid extra re-render
           // do nothing
         } else {
@@ -384,7 +383,7 @@ function useSWR<Data = any, Error = any>(
     // update the state if the key changed or cache updated
     if (
       keyRef.current !== key ||
-      !deepEqual(currentHookData, latestKeyedData)
+      !config.compare(currentHookData, latestKeyedData)
     ) {
       dispatch({ data: latestKeyedData })
       keyRef.current = key
@@ -434,7 +433,7 @@ function useSWR<Data = any, Error = any>(
 
       if (
         typeof updatedData !== 'undefined' &&
-        !deepEqual(stateRef.current.data, updatedData)
+        !config.compare(stateRef.current.data, updatedData)
       ) {
         newState.data = updatedData
         needUpdate = true

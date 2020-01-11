@@ -464,6 +464,47 @@ describe('useSWR - refresh', () => {
     })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 5"`)
   })
+
+  it('should allow use custom isEqual method', async () => {
+    function Page() {
+      const { data, revalidate } = useSWR(
+        'dynamic-11',
+        () => ({
+          timestamp: +new Date(),
+          version: '1.0'
+        }),
+        {
+          compare: function isEqual(a, b) {
+            if (a === b) {
+              return true
+            }
+            if (!a || !b) {
+              return false
+            }
+            return a.version === b.version
+          }
+        }
+      )
+
+      if (!data) {
+        return <div>loading</div>
+      }
+      return <button onClick={revalidate}>{data.timestamp}</button>
+    }
+
+    const { container } = render(<Page />)
+
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"loading"`)
+    await waitForDomChange({ container })
+    const firstContent = container.firstChild.textContent
+    await act(() => {
+      // trigger revalidation
+      fireEvent.click(container.firstElementChild)
+      return new Promise(res => setTimeout(res, 1))
+    })
+    const secondContent = container.firstChild.textContent
+    expect(firstContent).toEqual(secondContent)
+  })
 })
 
 describe('useSWR - revalidate', () => {

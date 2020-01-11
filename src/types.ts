@@ -37,6 +37,8 @@ export interface ConfigInterface<
     revalidate: revalidateType,
     revalidateOpts: RevalidateOptionInterface
   ) => void
+
+  compare?: (a: Data | undefined, b: Data | undefined) => boolean
 }
 
 export interface RevalidateOptionInterface {
