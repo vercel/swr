@@ -9,4 +9,5 @@ export {
   responseInterface,
   CacheInterface
 } from './types'
+export { default as Cache } from './cache'
 export default useSWR
