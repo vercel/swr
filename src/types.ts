@@ -39,6 +39,8 @@ export interface ConfigInterface<
   ) => void
 
   compare?: (a: Data | undefined, b: Data | undefined) => boolean
+
+  cache?: CacheInterface
 }
 
 export interface RevalidateOptionInterface {
@@ -109,4 +111,12 @@ export type actionType<Data, Error> = {
   data?: Data
   error?: Error
   isValidating?: boolean
+}
+
+export interface CacheInterface {
+  set(key: string, value: any): any
+  get(key: string): any
+  delete(key: string): void
+  has(key: string): boolean
+  clear(): void
 }

@@ -6,6 +6,7 @@ export {
   revalidateType,
   RevalidateOptionInterface,
   keyInterface,
-  responseInterface
+  responseInterface,
+  CacheInterface
 } from './types'
 export default useSWR
