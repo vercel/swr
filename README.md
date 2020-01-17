@@ -29,6 +29,7 @@ It features:
 - Fast page navigation
 - Revalidation on focus
 - Interval polling
+- Request deduplication
 - Local mutation
 - Pagination
 - TypeScript ready
