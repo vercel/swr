@@ -7,7 +7,7 @@ import {
 } from '@testing-library/react'
 import React, { ReactNode, Suspense, useEffect, useState } from 'react'
 
-import useSWR, { mutate, SWRConfig, trigger, Cache } from '../src'
+import useSWR, { mutate, SWRConfig, trigger, cache } from '../src'
 
 class ErrorBoundary extends React.Component<{ fallback: ReactNode }> {
   state = { hasError: false }
@@ -280,6 +280,56 @@ describe('useSWR', () => {
       `"hello, SWR"`
     )
   })
+
+  it('should react to direct cache updates', async () => {
+    cache.set('custom-cache-key', 'custom cache message')
+
+    function Page() {
+      const { data } = useSWR('custom-cache-key', () => 'random message', {
+        suspense: true
+      })
+      return <div>{data}</div>
+    }
+
+    // render using custom cache
+    const { queryByText, findByText } = render(
+      <React.Suspense fallback={null}>
+        <Page />
+      </React.Suspense>
+    )
+
+    // content should come from custom cache
+    expect(queryByText('custom cache message')).toMatchInlineSnapshot(`
+      <div>
+        custom cache message
+      </div>
+    `)
+
+    // content should come from fetcher due lack of cached data
+    expect(await findByText('random message')).toMatchInlineSnapshot(`
+      <div>
+        random message
+      </div>
+    `)
+
+    act(() => cache.set('custom-cache-key', 'a different message'))
+
+    // content should be updated from new cache value
+    expect(await findByText('a different message')).toMatchInlineSnapshot(`
+      <div>
+        a different message
+      </div>
+    `)
+
+    act(() => cache.delete('custom-cache-key'))
+
+    // content should go back to be the fetched value
+    expect(await findByText('random message')).toMatchInlineSnapshot(`
+      <div>
+        random message
+      </div>
+    `)
+  })
 })
 
 describe('useSWR - loading', () => {
@@ -355,47 +405,6 @@ describe('useSWR - loading', () => {
     // it doesn't re-render, but fetch was triggered
     expect(renderCount).toEqual(1)
     expect(dataLoaded).toEqual(true)
-  })
-
-  it('should use custom cache', async () => {
-    const cache = new Cache({
-      'custom-cache-1': 'custom cache message'
-    })
-
-    function Page() {
-      const { data } = useSWR('custom-cache-1', () => 'random message', {
-        suspense: true
-      })
-      return <div>{data}</div>
-    }
-
-    // render using custom cache
-    const { queryByText, findByText, rerender } = render(
-      <SWRConfig value={{ cache }}>
-        <Page />
-      </SWRConfig>
-    )
-
-    // content should come from custom cache
-    expect(queryByText('custom cache message')).toMatchInlineSnapshot(`
-      <div>
-        custom cache message
-      </div>
-    `)
-
-    // render againt with default cache
-    rerender(
-      <React.Suspense fallback={null}>
-        <Page />
-      </React.Suspense>
-    )
-
-    // content should come from fetcher due lack of cached data
-    expect(await findByText('random message')).toMatchInlineSnapshot(`
-      <div>
-        random message
-      </div>
-    `)
   })
 })
 

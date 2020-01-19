@@ -67,8 +67,7 @@ const defaultConfig: ConfigInterface = {
   refreshWhenOffline: false,
   shouldRetryOnError: true,
   suspense: false,
-  compare: deepEqual,
-  cache
+  compare: deepEqual
 }
 
 // Focus revalidate

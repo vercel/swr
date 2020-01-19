@@ -116,8 +116,8 @@ const mutate: mutateInterface = async (_key, _data, shouldRevalidate) => {
   }
 
   if (typeof data !== 'undefined') {
-    // update cached data
-    cache.set(key, data)
+    // update cached data, avoid notifying from the cache
+    cache.set(key, data, false)
   }
 
   // update existing SWR Hooks' state
@@ -181,8 +181,8 @@ function useSWR<Data = any, Error = any>(
     fn = config.fetcher
   }
 
-  const initialData = config.cache.get(key) || config.initialData
-  const initialError = config.cache.get(keyErr)
+  const initialData = cache.get(key) || config.initialData
+  const initialError = cache.get(keyErr)
 
   // if a state is accessed (data, error or isValidating),
   // we add the state to dependencies so if the state is
@@ -260,7 +260,7 @@ function useSWR<Data = any, Error = any>(
 
           // if no cache being rendered currently (it shows a blank page),
           // we trigger the loading slow event.
-          if (config.loadingTimeout && !config.cache.get(key)) {
+          if (config.loadingTimeout && !cache.get(key)) {
             setTimeout(() => {
               if (loading) config.onLoadingSlow(key, config)
             }, config.loadingTimeout)
@@ -294,8 +294,8 @@ function useSWR<Data = any, Error = any>(
           return false
         }
 
-        config.cache.set(key, newData)
-        config.cache.set(keyErr, undefined)
+        cache.set(key, newData, false)
+        cache.set(keyErr, undefined, false)
         keyRef.current = key
 
         // new state for the reducer
@@ -326,7 +326,7 @@ function useSWR<Data = any, Error = any>(
         delete CONCURRENT_PROMISES[key]
         delete CONCURRENT_PROMISES_TS[key]
 
-        config.cache.set(keyErr, err)
+        cache.set(keyErr, err, false)
         keyRef.current = key
 
         // get a new error
@@ -377,7 +377,7 @@ function useSWR<Data = any, Error = any>(
     // and trigger a revalidation
 
     const currentHookData = stateRef.current.data
-    const latestKeyedData = config.cache.get(key) || config.initialData
+    const latestKeyedData = cache.get(key) || config.initialData
 
     // update the state if the key changed or cache updated
     if (
@@ -548,8 +548,8 @@ function useSWR<Data = any, Error = any>(
     // (it should be suspended)
 
     // try to get data and error from cache
-    let latestData = config.cache.get(key)
-    let latestError = config.cache.get(keyErr)
+    let latestData = cache.get(key)
+    let latestError = cache.get(keyErr)
 
     if (
       typeof latestData === 'undefined' &&
