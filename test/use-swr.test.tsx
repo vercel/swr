@@ -85,7 +85,7 @@ describe('useSWR', () => {
     const fetch = jest.fn(() => 'SWR')
 
     function Page() {
-      const { data } = useSWR('constant-3', fetch)
+      const { data } = useSWR('auto-load', fetch, { autoLoad: false })
       return <div>hello, {data}</div>
     }
 
