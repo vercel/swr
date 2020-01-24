@@ -103,6 +103,7 @@ export type pagesResponseInterface = {
   isReachingEnd: boolean
   isEmpty: boolean
   loadMore: () => void
+  resetPages: () => void
 }
 
 export type actionType<Data, Error> = {

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState, useRef } from 'react'
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 
 import { cacheGet, cacheSet } from './config'
 import {
@@ -118,14 +118,28 @@ export function useSWRPages<OffsetType = any, Data = any, Error = any>(
 
     // if dataList is [], we can assume this page is empty
     // TODO: this API is not stable
-    if (dataList && !dataList.length) {
-      emptyPageRef.current = true
-    } else {
-      emptyPageRef.current = false
-    }
+    emptyPageRef.current = dataList && !dataList.length
 
     return dataList
   }, [])
+
+  const resetPages = useCallback(() => {
+    setPageSWRs([])
+
+    setPageCount(() => {
+      cacheSet(pageCountKey, 1)
+      return 1
+    })
+
+    setPageOffsets(() => {
+      cacheSet(pageOffsetKey, [null])
+      return [null]
+    })
+  }, [])
+
+  useEffect(() => {
+    resetPages()
+  }, deps)
 
   // Doesn't have a next page
   const isReachingEnd = pageOffsets[pageCount] === null
@@ -213,6 +227,7 @@ export function useSWRPages<OffsetType = any, Data = any, Error = any>(
     isLoadingMore,
     isReachingEnd,
     isEmpty,
-    loadMore
+    loadMore,
+    resetPages
   }
 }
