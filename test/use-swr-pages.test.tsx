@@ -6,7 +6,7 @@ import useSWR, { useSWRPages } from '../src'
 describe('useSWRPages', () => {
   afterEach(cleanup)
 
-  it('should render the first page componet', async () => {
+  it('should render the first page component', async () => {
     function Page() {
       const { pages } = useSWRPages<number, string, any>(
         'page-1',
