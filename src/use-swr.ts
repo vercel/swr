@@ -231,6 +231,13 @@ function useSWR<Data = any, Error = any>(
   const unmountedRef = useRef(false)
   const keyRef = useRef(key)
 
+  const boundMutate: responseInterface<Data, Error>['mutate'] = useCallback(
+    (data, shouldRevalidate) => {
+      return mutate(key, data, shouldRevalidate)
+    },
+    [key]
+  )
+
   // start a revalidation
   const revalidate = useCallback(
     async (
@@ -600,6 +607,7 @@ function useSWR<Data = any, Error = any>(
       error: latestError,
       data: latestData,
       revalidate,
+      mutate: boundMutate,
       isValidating: stateRef.current.isValidating
     }
   }
@@ -607,7 +615,10 @@ function useSWR<Data = any, Error = any>(
   // define returned state
   // can be memorized since the state is a ref
   return useMemo(() => {
-    const state = { revalidate } as responseInterface<Data, Error>
+    const state = { revalidate, mutate: boundMutate } as responseInterface<
+      Data,
+      Error
+    >
     Object.defineProperties(state, {
       error: {
         // `key` might be changed in the upcoming hook re-render,

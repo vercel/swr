@@ -894,6 +894,33 @@ describe('useSWR - local mutation', () => {
       mutate('dynamic-14', Promise.reject(new Error('error')))
     ).rejects.toBeInstanceOf(Error)
   })
+
+  it('should get bound mutate from useSWR', async () => {
+    function Page() {
+      // eslint-disable-next-line no-shadow
+      const { data, mutate: boundMutate } = useSWR(
+        'dynamic-15',
+        () => 'fetched'
+      )
+      return (
+        <div onClick={() => boundMutate('mutated', false)}>data: {data}</div>
+      )
+    }
+    const { container } = render(<Page />)
+
+    // hydration
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
+    await waitForDomChange({ container }) // mount
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"data: fetched"`
+    )
+    // call bound mutate
+    fireEvent.click(container.firstElementChild)
+    // expect new updated value
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"data: mutated"`
+    )
+  })
 })
 
 describe('useSWR - context configs', () => {
