@@ -94,12 +94,22 @@ const mutate: mutateInterface = async (_key, _data, shouldRevalidate) => {
   const [key] = getKeyArgs(_key)
   if (!key) return
 
+  // if there is no new data data, call revalidate against the key
+  if (!_data) return trigger(_key)
+
   // update timestamp
   MUTATION_TS[key] = Date.now() - 1
 
   let data, error
 
-  if (_data && typeof _data.then === 'function') {
+  if (_data && typeof _data === 'function') {
+    // `_data` is a function, call it passing current cache value
+    try {
+      data = await _data(cacheGet(key))
+    } catch (err) {
+      error = err
+    }
+  } else if (_data && typeof _data.then === 'function') {
     // `_data` is a promise
     try {
       data = await _data
@@ -128,6 +138,10 @@ const mutate: mutateInterface = async (_key, _data, shouldRevalidate) => {
       updaters[i](!!shouldRevalidate, data, error, true)
     }
   }
+
+  // throw error or return data to be used by caller of mutate
+  if (error) throw error
+  return data
 }
 
 function useSWR<Data = any, Error = any>(
@@ -470,7 +484,10 @@ function useSWR<Data = any, Error = any>(
 
     // set up reconnecting when the browser regains network connection
     let reconnect = null
-    if (typeof addEventListener !== 'undefined' && config.revalidateOnReconnect) {
+    if (
+      typeof addEventListener !== 'undefined' &&
+      config.revalidateOnReconnect
+    ) {
       reconnect = addEventListener('online', softRevalidate)
     }
 

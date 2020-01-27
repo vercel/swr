@@ -8,6 +8,7 @@ import {
 import React, { ReactNode, Suspense, useEffect, useState } from 'react'
 
 import useSWR, { mutate, SWRConfig, trigger } from '../src'
+import { cacheSet } from '../src/config'
 
 class ErrorBoundary extends React.Component<{ fallback: ReactNode }> {
   state = { hasError: false }
@@ -851,6 +852,47 @@ describe('useSWR - local mutation', () => {
     })
     await act(() => new Promise(res => setTimeout(res, 110)))
     expect(container.textContent).toMatchInlineSnapshot(`"data: 999"`)
+  })
+
+  it('should trigger on mutation without data', async () => {
+    let value = 0
+
+    function Page() {
+      const { data } = useSWR('dynamic-12', () => value++, {
+        dedupingInterval: 0
+      })
+      return <div>data: {data}</div>
+    }
+    const { container } = render(<Page />)
+
+    // hydration
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
+    await waitForDomChange({ container }) // mount
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
+    await act(() => {
+      // trigger revalidation
+      mutate('dynamic-12')
+      return new Promise(res => setTimeout(res, 1))
+    })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
+  })
+
+  it('should call function as data passing current cached value', async () => {
+    // prefill cache with data
+    cacheSet('dynamic-13', 'cached data')
+    const callback = jest.fn()
+    await mutate('dynamic-13', callback)
+    expect(callback).toHaveBeenCalledWith('cached data')
+  })
+
+  it('should return results of the mutation', async () => {
+    // returns the data if promise resolved
+    expect(mutate('dynamic-14', Promise.resolve('data'))).resolves.toBe('data')
+
+    // throw the error if promise rejected
+    expect(
+      mutate('dynamic-14', Promise.reject(new Error('error')))
+    ).rejects.toBeInstanceOf(Error)
   })
 })
 

@@ -58,11 +58,12 @@ export type triggerInterface = (
   key: keyInterface,
   shouldRevalidate?: boolean
 ) => void
+type mutateCallback<Data = any> = (currentValue: Data) => Data
 export type mutateInterface<Data = any> = (
   key: keyInterface,
-  data: Data | Promise<Data>,
+  data?: Data | Promise<Data> | mutateCallback,
   shouldRevalidate?: boolean
-) => void
+) => Promise<Data | undefined>
 export type broadcastStateInterface<Data = any, Error = any> = (
   key: string,
   data: Data,
