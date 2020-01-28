@@ -64,7 +64,7 @@ const defaultConfig: ConfigInterface = {
   dedupingInterval: 2 * 1000,
   loadingTimeout: (slowConnection ? 5 : 3) * 1000,
 
-  autoLoad: true,
+  revalidateInitialData: true,
   refreshInterval: 0,
   revalidateOnFocus: true,
   revalidateOnReconnect: true,

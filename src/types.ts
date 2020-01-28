@@ -4,7 +4,7 @@ export interface ConfigInterface<
   Error = any,
   Fn extends fetcherFn<Data> = fetcherFn<Data>
 > {
-  autoLoad?: boolean;
+  revalidateInitialData?: boolean
   errorRetryInterval?: number
   errorRetryCount?: number
   loadingTimeout?: number
