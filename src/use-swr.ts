@@ -470,7 +470,10 @@ function useSWR<Data = any, Error = any>(
 
     // set up reconnecting when the browser regains network connection
     let reconnect = null
-    if (typeof addEventListener !== 'undefined' && config.revalidateOnReconnect) {
+    if (
+      typeof addEventListener !== 'undefined' &&
+      config.revalidateOnReconnect
+    ) {
       reconnect = addEventListener('online', softRevalidate)
     }
 
@@ -537,59 +540,9 @@ function useSWR<Data = any, Error = any>(
     revalidate
   ])
 
-  // suspense
-  if (config.suspense) {
-    if (IS_SERVER)
-      throw new Error('Suspense on server side is not yet supported!')
-
-    // in suspense mode, we can't return empty state
-    // (it should be suspended)
-
-    // try to get data and error from cache
-    let latestData = cacheGet(key)
-    let latestError = cacheGet(keyErr)
-
-    if (
-      typeof latestData === 'undefined' &&
-      typeof latestError === 'undefined'
-    ) {
-      // need to start the request if it hasn't
-      if (!CONCURRENT_PROMISES[key]) {
-        // trigger revalidate immediately
-        // to get the promise
-        revalidate()
-      }
-
-      if (
-        CONCURRENT_PROMISES[key] &&
-        typeof CONCURRENT_PROMISES[key].then === 'function'
-      ) {
-        // if it is a promise
-        throw CONCURRENT_PROMISES[key]
-      }
-
-      // it's a value, return it directly (override)
-      latestData = CONCURRENT_PROMISES[key]
-    }
-
-    if (typeof latestData === 'undefined' && latestError) {
-      // in suspense mode, throw error if there's no content
-      throw latestError
-    }
-
-    // return the latest data / error from cache
-    // in case `key` has changed
-    return {
-      error: latestError,
-      data: latestData,
-      revalidate,
-      isValidating: stateRef.current.isValidating
-    }
-  }
-
   // define returned state
   // can be memorized since the state is a ref
-  return useMemo(() => {
+  const returnedState = useMemo(() => {
     const state = { revalidate } as responseInterface<Data, Error>
     Object.defineProperties(state, {
       error: {
@@ -616,7 +569,55 @@ function useSWR<Data = any, Error = any>(
     })
 
     return state
-  }, [revalidate])
+  }, [revalidate, config.suspense])
+
+  // non-suspense
+  if (!config.suspense) return returnedState
+
+  // suspense
+  if (IS_SERVER)
+    throw new Error('Suspense on server side is not yet supported!')
+
+  // in suspense mode, we can't return empty state
+  // (it should be suspended)
+
+  // try to get data and error from cache
+  let latestData = cacheGet(key)
+  let latestError = cacheGet(keyErr)
+
+  if (typeof latestData === 'undefined' && typeof latestError === 'undefined') {
+    // need to start the request if it hasn't
+    if (!CONCURRENT_PROMISES[key]) {
+      // trigger revalidate immediately
+      // to get the promise
+      revalidate()
+    }
+
+    if (
+      CONCURRENT_PROMISES[key] &&
+      typeof CONCURRENT_PROMISES[key].then === 'function'
+    ) {
+      // if it is a promise
+      throw CONCURRENT_PROMISES[key]
+    }
+
+    // it's a value, return it directly (override)
+    latestData = CONCURRENT_PROMISES[key]
+  }
+
+  if (typeof latestData === 'undefined' && latestError) {
+    // in suspense mode, throw error if there's no content
+    throw latestError
+  }
+
+  // return the latest data / error from cache
+  // in case `key` has changed
+  return {
+    error: latestError,
+    data: latestData,
+    revalidate,
+    isValidating: stateRef.current.isValidating
+  }
 }
 
 const SWRConfig = SWRConfigContext.Provider
