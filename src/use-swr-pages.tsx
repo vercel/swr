@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react'
+import React, { useCallback, useMemo, useState, useRef } from 'react'
 
 import { cacheGet, cacheSet } from './config'
 import {
