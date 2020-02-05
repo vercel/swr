@@ -137,10 +137,6 @@ export function useSWRPages<OffsetType = any, Data = any, Error = any>(
     })
   }, [])
 
-  useEffect(() => {
-    resetPages()
-  }, deps)
-
   // Doesn't have a next page
   const isReachingEnd = pageOffsets[pageCount] === null
   const isLoadingMore = pageCount === pageOffsets.length
