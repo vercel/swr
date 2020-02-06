@@ -109,7 +109,10 @@ export function useSWRPages(pageKey, pageFn, SWRToOffset, deps = []) {
       cacheSet(pageOffsetKey, [null]);
       return [null];
     });
-  }, []);
+  }, [pageOffsetKey, pageCountKey]);
+
+  // Reset page if the key changes
+  useEffect(() => resetPages(), [pageOffsetKey])
   // Doesn't have a next page
   const isReachingEnd = pageOffsets[pageCount] === null;
   const isLoadingMore = pageCount > pageOffsets.length;
