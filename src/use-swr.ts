@@ -275,12 +275,12 @@ function useSWR<Data = any, Error = any>(
 
           CONCURRENT_PROMISES_TS[key] = startAt = Date.now()
 
+          newData = await CONCURRENT_PROMISES[key]
+
           setTimeout(() => {
             delete CONCURRENT_PROMISES[key]
             delete CONCURRENT_PROMISES_TS[key]
           }, config.dedupingInterval)
-
-          newData = await CONCURRENT_PROMISES[key]
 
           // trigger the success event,
           // only do this for the original request.
@@ -470,7 +470,10 @@ function useSWR<Data = any, Error = any>(
 
     // set up reconnecting when the browser regains network connection
     let reconnect = null
-    if (typeof addEventListener !== 'undefined' && config.revalidateOnReconnect) {
+    if (
+      typeof addEventListener !== 'undefined' &&
+      config.revalidateOnReconnect
+    ) {
       reconnect = addEventListener('online', softRevalidate)
     }
 
