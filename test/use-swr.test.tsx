@@ -852,6 +852,28 @@ describe('useSWR - local mutation', () => {
     await act(() => new Promise(res => setTimeout(res, 110)))
     expect(container.textContent).toMatchInlineSnapshot(`"data: 999"`)
   })
+
+  it('should ignore in flight requests when mutating', async () => {
+    // set it to 1
+    mutate('mutate-2', 1)
+
+    function Section() {
+      const { data } = useSWR(
+        'mutate-2',
+        () => new Promise(res => setTimeout(() => res(2), 200))
+      )
+      return <div>{data}</div>
+    }
+
+    const { container } = render(<Section />)
+
+    expect(container.textContent).toMatchInlineSnapshot(`"1"`) // directly from cache
+    await act(() => new Promise(res => setTimeout(res, 150))) // still suspending
+    mutate('mutate-2', 3) // set it to 3. this will drop the ongoing request
+    expect(container.textContent).toMatchInlineSnapshot(`"3"`)
+    await act(() => new Promise(res => setTimeout(res, 100)))
+    expect(container.textContent).toMatchInlineSnapshot(`"3"`)
+  })
 })
 
 describe('useSWR - context configs', () => {
