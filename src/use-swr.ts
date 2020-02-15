@@ -9,6 +9,7 @@ import {
 } from 'react'
 
 import defaultConfig, {
+  cache,
   cacheGet,
   cacheSet,
   CACHE_REVALIDATORS,
@@ -29,6 +30,7 @@ import {
   fetcherFn,
   keyInterface,
   mutateInterface,
+  mutateManyInterface,
   responseInterface,
   RevalidateOptionInterface,
   triggerInterface,
@@ -43,7 +45,6 @@ const IS_SERVER = typeof window === 'undefined'
 const useIsomorphicLayoutEffect = IS_SERVER ? useEffect : useLayoutEffect
 
 // TODO: introduce namepsace for the cache
-const getErrorKey = key => (key ? 'err@' + key : '')
 const getKeyArgs = key => {
   let args = null
   if (typeof key === 'function') {
@@ -73,10 +74,9 @@ const trigger: triggerInterface = (_key, shouldRevalidate = true) => {
 
   const updaters = CACHE_REVALIDATORS[key]
   if (key && updaters) {
-    const currentData = cacheGet(key)
-    const currentError = cacheGet(getErrorKey(key))
+    const current = cacheGet(key) // TODO maybe add ?? {}
     for (let i = 0; i < updaters.length; ++i) {
-      updaters[i](shouldRevalidate, currentData, currentError, true)
+      updaters[i](shouldRevalidate, current.data, current.err, true)
     }
   }
 }
@@ -90,8 +90,18 @@ const broadcastState: broadcastStateInterface = (key, data, error) => {
   }
 }
 
+const mutateMany: mutateManyInterface = async selectiveMutator => {
+  for (const [internalKey, { key, data }] of cache()) {
+    const r = selectiveMutator(key)
+    if (r) {
+      const { update, shouldRevalidate } = r
+      mutate(internalKey, update(data), shouldRevalidate)
+    }
+  }
+}
+
 const mutate: mutateInterface = async (_key, _data, shouldRevalidate) => {
-  const [key] = getKeyArgs(_key)
+  const [key, fnArgs] = getKeyArgs(_key)
   if (!key) return
 
   // update timestamp
@@ -118,7 +128,12 @@ const mutate: mutateInterface = async (_key, _data, shouldRevalidate) => {
 
   if (typeof data !== 'undefined') {
     // update cached data
-    cacheSet(key, data)
+    const item = cacheGet(key) ?? {
+      key: fnArgs || key,
+      data: undefined,
+      err: undefined
+    }
+    cacheSet(key, { ...item, data })
   }
 
   // update existing SWR Hooks' state
@@ -167,9 +182,6 @@ function useSWR<Data = any, Error = any>(
   // (because `revalidate` only depends on `key`)
   const [key, fnArgs] = getKeyArgs(_key)
 
-  // `keyErr` is the cache key for error objects
-  const keyErr = getErrorKey(key)
-
   config = Object.assign(
     {},
     defaultConfig,
@@ -182,8 +194,12 @@ function useSWR<Data = any, Error = any>(
     fn = config.fetcher
   }
 
-  const initialData = cacheGet(key) || config.initialData
-  const initialError = cacheGet(keyErr)
+  const initial = cacheGet(key) ?? {
+    key: fnArgs || key,
+    data: config.initialData,
+    err: undefined
+  }
+  cacheSet(key, initial)
 
   // if a state is accessed (data, error or isValidating),
   // we add the state to dependencies so if the state is
@@ -194,8 +210,8 @@ function useSWR<Data = any, Error = any>(
     isValidating: false
   })
   const stateRef = useRef({
-    data: initialData,
-    error: initialError,
+    data: initial.data,
+    error: initial.err,
     isValidating: false
   })
 
@@ -261,7 +277,7 @@ function useSWR<Data = any, Error = any>(
 
           // if no cache being rendered currently (it shows a blank page),
           // we trigger the loading slow event.
-          if (config.loadingTimeout && !cacheGet(key)) {
+          if (config.loadingTimeout && !cacheGet(key)?.data) {
             setTimeout(() => {
               if (loading) config.onLoadingSlow(key, config)
             }, config.loadingTimeout)
@@ -295,8 +311,7 @@ function useSWR<Data = any, Error = any>(
           return false
         }
 
-        cacheSet(key, newData)
-        cacheSet(keyErr, undefined)
+        cacheSet(key, { key: fnArgs || key, data: newData, err: undefined })
         keyRef.current = key
 
         // new state for the reducer
@@ -327,7 +342,7 @@ function useSWR<Data = any, Error = any>(
         delete CONCURRENT_PROMISES[key]
         delete CONCURRENT_PROMISES_TS[key]
 
-        cacheSet(keyErr, err)
+        cacheGet(key).err = err
         keyRef.current = key
 
         // get a new error
@@ -378,7 +393,7 @@ function useSWR<Data = any, Error = any>(
     // and trigger a revalidation
 
     const currentHookData = stateRef.current.data
-    const latestKeyedData = cacheGet(key) || config.initialData
+    const latestKeyedData = cacheGet(key)?.data || config.initialData
 
     // update the state if the key changed or cache updated
     if (
@@ -516,7 +531,8 @@ function useSWR<Data = any, Error = any>(
       if (
         !stateRef.current.error &&
         (config.refreshWhenHidden || isDocumentVisible()) &&
-        (!config.refreshWhenOffline && isOnline())
+        !config.refreshWhenOffline &&
+        isOnline()
       ) {
         // only revalidate when the page is visible
         // if API request errored, we stop polling in this round
@@ -549,12 +565,11 @@ function useSWR<Data = any, Error = any>(
     // (it should be suspended)
 
     // try to get data and error from cache
-    let latestData = cacheGet(key)
-    let latestError = cacheGet(keyErr)
+    let latest = cacheGet(key)
 
     if (
-      typeof latestData === 'undefined' &&
-      typeof latestError === 'undefined'
+      typeof latest.data === 'undefined' &&
+      typeof latest.err === 'undefined'
     ) {
       // need to start the request if it hasn't
       if (!CONCURRENT_PROMISES[key]) {
@@ -572,19 +587,19 @@ function useSWR<Data = any, Error = any>(
       }
 
       // it's a value, return it directly (override)
-      latestData = CONCURRENT_PROMISES[key]
+      latest.data = CONCURRENT_PROMISES[key]
     }
 
-    if (typeof latestData === 'undefined' && latestError) {
+    if (typeof latest.data === 'undefined' && latest.err) {
       // in suspense mode, throw error if there's no content
-      throw latestError
+      throw latest.err
     }
 
     // return the latest data / error from cache
     // in case `key` has changed
     return {
-      error: latestError,
-      data: latestData,
+      error: latest.err,
+      data: latest.data,
       revalidate,
       isValidating: stateRef.current.isValidating
     }
@@ -601,13 +616,13 @@ function useSWR<Data = any, Error = any>(
         // so we need to match the latest key and data (fallback to `initialData`)
         get: function() {
           stateDependencies.current.error = true
-          return keyRef.current === key ? stateRef.current.error : initialError
+          return keyRef.current === key ? stateRef.current.error : initial.err
         }
       },
       data: {
         get: function() {
           stateDependencies.current.data = true
-          return keyRef.current === key ? stateRef.current.data : initialData
+          return keyRef.current === key ? stateRef.current.data : initial.data
         }
       },
       isValidating: {
@@ -624,5 +639,5 @@ function useSWR<Data = any, Error = any>(
 
 const SWRConfig = SWRConfigContext.Provider
 
-export { trigger, mutate, SWRConfig }
+export { trigger, mutateMany, mutate, SWRConfig }
 export default useSWR

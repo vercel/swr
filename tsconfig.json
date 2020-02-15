@@ -13,6 +13,7 @@
     "noImplicitReturns": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+    "downlevelIteration": true,
     "outDir": "./dist",
     "types": [
       "node", "jest"

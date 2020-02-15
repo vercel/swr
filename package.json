@@ -50,11 +50,11 @@
     "husky": "2.4.1",
     "jest": "24.9.0",
     "lint-staged": "8.2.1",
-    "prettier": "1.18.2",
+    "prettier": "1.19",
     "react": "16.11.0",
     "react-dom": "16.11.0",
     "ts-jest": "24.1.0",
-    "typescript": "3.6.4"
+    "typescript": "3.7"
   },
   "dependencies": {
     "fast-deep-equal": "2.0.1"

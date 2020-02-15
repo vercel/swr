@@ -58,6 +58,14 @@ export type triggerInterface = (
   key: keyInterface,
   shouldRevalidate?: boolean
 ) => void
+export type mutateManyInterface = (
+  selectiveMutator: (
+    key: string | any[]
+  ) => void | {
+    update(data: any): any
+    shouldRevalidate?: boolean
+  }
+) => void
 export type mutateInterface<Data = any> = (
   key: keyInterface,
   data: Data | Promise<Data>,

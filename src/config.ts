@@ -8,14 +8,24 @@ import {
 } from './types'
 
 // Cache
-const __cache = new Map()
+type CacheItem = {
+  key: string | any[]
+  data: any
+  err: any
+}
 
-function cacheGet(key: string): any {
+const __cache = new Map<string, CacheItem>()
+
+function cache() {
+  return __cache
+}
+
+function cacheGet(key: string): undefined | CacheItem {
   return __cache.get(key)
 }
 
-function cacheSet(key: string, value: any) {
-  return __cache.set(key, value)
+function cacheSet(key: string, item: CacheItem) {
+  __cache.set(key, item)
 }
 
 function cacheClear() {
@@ -103,6 +113,7 @@ export {
   FOCUS_REVALIDATORS,
   CACHE_REVALIDATORS,
   MUTATION_TS,
+  cache,
   cacheGet,
   cacheSet,
   cacheClear
