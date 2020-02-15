@@ -142,6 +142,7 @@ You can also use [global configuration](#global-configuration) to provide defaul
 - [Manually Revalidate](#manually-revalidate)
 - [Mutation and Post Request](#mutation-and-post-request)
 - [Mutate Based on Current Data](#mutate-based-on-current-data)
+- [Returned Data from Mutate](#returned-data-from-mutate)
 - [SSR with Next.js](#ssr-with-nextjs)
 - [Suspense Mode](#suspense-mode)
 - [Error Retries](#error-retries)
@@ -368,6 +369,18 @@ mutate('/api/users', async users => {
 })
 ```
 
+### Returned Data from Mutate
+
+Most probably, you need to data mutate used to update the cache when you passed a promise or async function.
+
+The function will returns the updated document, or throw an error, everytime you call it.
+
+```js
+try {
+  const user = await mutate('/api/user', updateUser(newUser))
+} catch (error) {
+  // Handle an error while updating the user here
+}
 ```
 
 ### SSR with Next.js
