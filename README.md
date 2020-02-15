@@ -289,13 +289,13 @@ Dan Abramov explains dependencies very well in [this blog post](https://overreac
 ### Manually Revalidate
 
 You can broadcast a revalidation message globally to all SWRs with the same key by calling
-`trigger(key)`.
+`mutate(key)`.
 
 This example shows how to automatically refetch the login info (e.g.: inside `<Profile/>`) 
 when the user clicks the “Logout” button.
 
 ```js
-import useSWR, { trigger } from 'swr'
+import useSWR, { mutate } from 'swr'
 
 function App () {
   return (
@@ -306,7 +306,7 @@ function App () {
         document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
 
         // tell all SWRs with this key to revalidate
-        trigger('/api/user')
+        mutate('/api/user')
       }}>
         Logout
       </button>
