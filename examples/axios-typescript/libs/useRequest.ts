@@ -27,16 +27,25 @@ export default function useRequest<Data = unknown, Error = unknown>(
   const { data: response, error, isValidating, revalidate } = useSWR<
     AxiosResponse<Data>,
     AxiosError<Error>
-  >(request && JSON.stringify(request), () => axios(request || {}), {
-    ...config,
-    initialData: initialData && {
-      status: 200,
-      statusText: 'InitialData',
-      config: request,
-      headers: {},
-      data: initialData
+  >(
+    request && JSON.stringify(request),
+    /**
+     * NOTE: Typescript thinks `request` can be `null` here, but the fetcher
+     * function is actually only called by `useSWR` when it isn't.
+     */
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    () => axios(request!),
+    {
+      ...config,
+      initialData: initialData && {
+        status: 200,
+        statusText: 'InitialData',
+        config: request,
+        headers: {},
+        data: initialData
+      }
     }
-  })
+  )
 
   return {
     data: response && response.data,
