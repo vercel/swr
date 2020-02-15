@@ -847,7 +847,8 @@ describe('useSWR - local mutation', () => {
       // mutate and revalidate
       return mutate(
         'mutate-1',
-        new Promise(res => setTimeout(() => res(999), 100))
+        new Promise(res => setTimeout(() => res(999), 100)),
+        false
       )
     })
     await act(() => new Promise(res => setTimeout(res, 110)))

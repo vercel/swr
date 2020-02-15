@@ -90,7 +90,11 @@ const broadcastState: broadcastStateInterface = (key, data, error) => {
   }
 }
 
-const mutate: mutateInterface = async (_key, _data, shouldRevalidate) => {
+const mutate: mutateInterface = async (
+  _key,
+  _data,
+  shouldRevalidate = true
+) => {
   const [key] = getKeyArgs(_key)
   if (!key) return
 
@@ -118,12 +122,6 @@ const mutate: mutateInterface = async (_key, _data, shouldRevalidate) => {
     }
   } else {
     data = _data
-
-    if (typeof shouldRevalidate === 'undefined') {
-      // if it's a sync mutation, we trigger the revalidation by default
-      // because in most cases it's a local mutation
-      shouldRevalidate = true
-    }
   }
 
   if (typeof data !== 'undefined') {
