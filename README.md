@@ -141,6 +141,7 @@ You can also use [global configuration](#global-configuration) to provide defaul
 - [Multiple Arguments](#multiple-arguments)
 - [Manually Revalidate](#manually-revalidate)
 - [Mutation and Post Request](#mutation-and-post-request)
+- [Mutate Based on Current Data](#mutate-based-on-current-data)
 - [SSR with Next.js](#ssr-with-nextjs)
 - [Suspense Mode](#suspense-mode)
 - [Error Retries](#error-retries)
@@ -354,6 +355,19 @@ Here’s an example showing the “local mutate - request - update” usage:
 mutate('/api/user', newUser, false)      // use `false` to mutate without revalidation
 mutate('/api/user', updateUser(newUser)) // `updateUser` is a Promise of the request,
                                          // which returns the updated document
+### Mutate Based on Current Data
+
+In many cases, you are receiving a single value back from your API and want to update a list of them.
+
+With `mutate`, you can pass an async function which will receive the current cached value, if any, and let you return an updated document.
+
+```js
+mutate('/api/users', async users => {
+  const user = await fetcher('/api/users/1')
+  return [user, ...users.slice(1)]
+})
+```
+
 ```
 
 ### SSR with Next.js
