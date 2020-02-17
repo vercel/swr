@@ -1086,7 +1086,7 @@ describe('useSWR - suspense', () => {
 describe('useSWR - cacheClear', () => {
   afterEach(cleanup)
 
-  it('uses cached date when cacheClear() is not called', async () => {
+  it('uses cached data when cacheClear() is not called', async () => {
     function Page() {
       const { data } = useSWR('constant-6', () => 'SWR', {
         dedupingInterval: 0
@@ -1108,7 +1108,7 @@ describe('useSWR - cacheClear', () => {
     )
   })
 
-  it('re-fetches when cacheClear() is called', async () => {
+  it('does not use the cache when cacheClear() is called', async () => {
     function Page() {
       const { data } = useSWR('constant-7', () => 'SWR', {
         dedupingInterval: 0
