@@ -9,3 +9,5 @@ export {
   responseInterface
 } from './types'
 export default useSWR
+
+export { cacheClear } from './config'

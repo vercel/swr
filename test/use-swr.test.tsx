@@ -7,7 +7,7 @@ import {
 } from '@testing-library/react'
 import React, { ReactNode, Suspense, useEffect, useState } from 'react'
 
-import useSWR, { mutate, SWRConfig, trigger } from '../src'
+import useSWR, { mutate, SWRConfig, trigger, cacheClear } from '../src'
 
 class ErrorBoundary extends React.Component<{ fallback: ReactNode }> {
   state = { hasError: false }
@@ -1080,5 +1080,57 @@ describe('useSWR - suspense', () => {
     // fixes https://github.com/zeit/swr/issues/57
     // 'suspense-7' -> undefined -> 'suspense-8'
     expect(renderedResults).toEqual(['suspense-7', 'suspense-8'])
+  })
+})
+
+describe('useSWR - cacheClear', () => {
+  afterEach(cleanup)
+
+  it('uses cached date when cacheClear() is not called', async () => {
+    function Page() {
+      const { data } = useSWR('constant-6', () => 'SWR', {
+        dedupingInterval: 0
+      })
+      return <div>hello, {data}</div>
+    }
+    const { container: containerA } = render(<Page key="1" />)
+
+    expect(containerA.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
+    await waitForDomChange({ container: containerA })
+    expect(containerA.firstChild.textContent).toMatchInlineSnapshot(
+      `"hello, SWR"`
+    )
+
+    const { container: containerB } = render(<Page key="2" />)
+
+    expect(containerB.firstChild.textContent).toMatchInlineSnapshot(
+      `"hello, SWR"`
+    )
+  })
+
+  it('re-fetches when cacheClear() is called', async () => {
+    function Page() {
+      const { data } = useSWR('constant-7', () => 'SWR', {
+        dedupingInterval: 0
+      })
+      return <div>hello, {data}</div>
+    }
+    const { container } = render(<Page key="1" />)
+
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
+    await waitForDomChange({ container })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"hello, SWR"`
+    )
+
+    cacheClear()
+
+    const { container: container2 } = render(<Page key="2" />)
+
+    expect(container2.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
+    await waitForDomChange({ container: container2 })
+    expect(container2.firstChild.textContent).toMatchInlineSnapshot(
+      `"hello, SWR"`
+    )
   })
 })
