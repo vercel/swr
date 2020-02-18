@@ -1,4 +1,11 @@
 import React, { useEffect, useCallback, useMemo, useState, useRef } from 'react';
+import {
+  pagesResponseInterface,
+  responseInterface,
+  pageComponentType,
+  pageOffsetMapperType
+} from './types'
+
 import { cacheGet, cacheSet } from './config';
 /*
 The idea
@@ -81,12 +88,17 @@ function App () {
 }
 */
 const pageCacheMap = new Map();
-export function useSWRPages(pageKey, pageFn, SWRToOffset, deps = []) {
+export function useSWRPages<OffsetType = any, Data = any, Error = any>(
+  pageKey: string,
+  pageFn: pageComponentType<OffsetType, Data, Error>,
+  SWRToOffset: pageOffsetMapperType<OffsetType, Data, Error>,
+  deps: any[] = []
+): pagesResponseInterface {
   const pageCountKey = useMemo(() => `_swr_page_count_` + pageKey, [pageKey]);
   const pageOffsetKey = useMemo(() => `_swr_page_offset_` + pageKey, [pageKey]);
   const [pageCount, setPageCount] = useState(cacheGet(pageCountKey) || 1);
   const [pageOffsets, setPageOffsets] = useState(cacheGet(pageOffsetKey) || [null]);
-  const [pageSWRs, setPageSWRs] = useState([]);
+  const [pageSWRs, setPageSWRs] = useState<responseInterface<Data, Error>[]>([])
   const pageFnRef = useRef(pageFn);
   const emptyPageRef = useRef(false);
   // Page component (wraps `pageFn`)
