@@ -381,7 +381,7 @@ function useSWR<Data = any, Error = any>(
     const softRevalidate = () => revalidate({ dedupe: true })
 
     // trigger a revalidation
-    if (!config.initialData || config.revalidateInitialData) {
+    if (!config.initialData && config.revalidateOnMount) {
       if (
         typeof latestKeyedData !== 'undefined' &&
         !IS_SERVER &&

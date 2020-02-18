@@ -81,12 +81,12 @@ describe('useSWR', () => {
     )
   })
 
-  it('should not call fetch function when revalidateInitialData is false', async () => {
+  it('should not call fetch function when revalidateOnMount is false', async () => {
     const fetch = jest.fn(() => 'SWR')
 
     function Page() {
-      const { data } = useSWR('revalidateInitialData', fetch, {
-        revalidateInitialData: false
+      const { data } = useSWR('revalidateOnMount', fetch, {
+        revalidateOnMount: false
       })
       return <div>hello, {data}</div>
     }

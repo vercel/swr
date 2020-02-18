@@ -110,7 +110,7 @@ const { data, error, isValidating, mutate } = useSWR(key, fetcher, options)
 - `suspense = false`: enable React Suspense mode [(details)](#suspense-mode)
 - `fetcher = undefined`: the default fetcher function
 - `initialData`: initial data to be returned (note: This is per-hook)
-- `revalidateInitialData = true`: automatically revalidate when component is mounted
+- `revalidateOnMount = true`: automatically revalidate when component is mounted
 - `revalidateOnFocus = true`: auto revalidate when window gets focused
 - `revalidateOnReconnect = true`: automatically revalidate when the browser regains a network connection (via `navigator.onLine`)
 - `refreshInterval = 0`: polling interval (disabled by default)
@@ -239,12 +239,12 @@ const { data } = useSWR(() => shouldFetch ? '/api/data' : null, fetcher)
 const { data } = useSWR(() => '/api/data?uid=' + user.id, fetcher)
 ```
 
-If you want to use a constant `key` and prevent initial revalidation you can simply set `revalidateInitialData` option to false.
+If you want to use a constant `key` and prevent initial revalidation you can simply set `revalidateOnMount` option to false.
 
 ```js
 // disable automatic revalidation on mount
 const { data } = useSWR('/api/data', fetcher, {
-  revalidateInitialData: false
+  revalidateOnMount: false
 })
 
 // ...later you can trigger revalidation in a callback or after another event
