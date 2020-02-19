@@ -305,7 +305,7 @@ describe('useSWR', () => {
       </div>
     `)
 
-    // content should come from fetcher due lack of cached data
+    // content should be updated with fetcher results
     expect(await findByText('random message')).toMatchInlineSnapshot(`
       <div>
         random message
