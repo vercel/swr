@@ -16,7 +16,6 @@ import defaultConfig, {
   MUTATION_TS,
   cache
 } from './config'
-import hash from './libs/hash'
 import isDocumentVisible from './libs/is-document-visible'
 import isOnline from './libs/is-online'
 import throttle from './libs/throttle'
@@ -41,39 +40,16 @@ const IS_SERVER = typeof window === 'undefined'
 // useLayoutEffect in the browser.
 const useIsomorphicLayoutEffect = IS_SERVER ? useEffect : useLayoutEffect
 
-// TODO: introduce namespace for the cache
-const getErrorKey = key => (key ? 'err@' + key : '')
-const getKeyArgs = key => {
-  let args = null
-  if (typeof key === 'function') {
-    try {
-      key = key()
-    } catch (err) {
-      // dependencies not ready
-      key = ''
-    }
-  }
-
-  if (Array.isArray(key)) {
-    // args array
-    args = key
-    key = hash(key)
-  } else {
-    // convert null to ''
-    key = String(key || '')
-  }
-
-  return [key, args]
-}
-
 const trigger: triggerInterface = (_key, shouldRevalidate = true) => {
-  const [key] = getKeyArgs(_key)
+  // we are ignoring the second argument which correspond to the arguments
+  // the fetcher will receive when key is an array
+  const [key, , keyErr] = cache.serializeKey(_key)
   if (!key) return
 
   const updaters = CACHE_REVALIDATORS[key]
   if (key && updaters) {
     const currentData = cache.get(key)
-    const currentError = cache.get(getErrorKey(key))
+    const currentError = cache.get(keyErr)
     for (let i = 0; i < updaters.length; ++i) {
       updaters[i](shouldRevalidate, currentData, currentError, true)
     }
@@ -90,7 +66,7 @@ const broadcastState: broadcastStateInterface = (key, data, error) => {
 }
 
 const mutate: mutateInterface = async (_key, _data, shouldRevalidate) => {
-  const [key] = getKeyArgs(_key)
+  const [key] = cache.serializeKey(_key)
   if (!key) return
 
   // update timestamp
@@ -164,10 +140,8 @@ function useSWR<Data = any, Error = any>(
   // we assume `key` as the identifier of the request
   // `key` can change but `fn` shouldn't
   // (because `revalidate` only depends on `key`)
-  const [key, fnArgs] = getKeyArgs(_key)
-
   // `keyErr` is the cache key for error objects
-  const keyErr = getErrorKey(key)
+  const [key, fnArgs, keyErr] = cache.serializeKey(_key)
 
   config = Object.assign(
     {},

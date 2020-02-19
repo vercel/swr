@@ -117,4 +117,5 @@ export interface CacheInterface {
   has(key: string): boolean
   delete(key: string, shouldNotify?: boolean): void
   clear(shouldNotify?: boolean): void
+  serializeKey(key: keyInterface): [string, any, string]
 }
