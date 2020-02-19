@@ -3,7 +3,7 @@ import { mutate } from './use-swr'
 import hash from './libs/hash'
 
 export default class Cache implements CacheInterface {
-  __cache: Map<string, any>
+  private __cache: Map<string, any>
 
   constructor(initialData: any = {}) {
     this.__cache = new Map(Object.entries(initialData))
