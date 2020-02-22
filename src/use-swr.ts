@@ -67,6 +67,9 @@ const getKeyArgs = key => {
   return [key, args]
 }
 
+const DEDUPE = true
+const NO_DEDUPE = false
+
 const trigger: triggerInterface = (_key, shouldRevalidate = true) => {
   const [key] = getKeyArgs(_key)
   if (!key) return
@@ -76,7 +79,7 @@ const trigger: triggerInterface = (_key, shouldRevalidate = true) => {
     const currentData = cacheGet(key)
     const currentError = cacheGet(getErrorKey(key))
     for (let i = 0; i < updaters.length; ++i) {
-      updaters[i](shouldRevalidate, currentData, currentError, true)
+      updaters[i](shouldRevalidate, currentData, currentError, NO_DEDUPE)
     }
   }
 }
@@ -125,7 +128,7 @@ const mutate: mutateInterface = async (_key, _data, shouldRevalidate) => {
   const updaters = CACHE_REVALIDATORS[key]
   if (updaters) {
     for (let i = 0; i < updaters.length; ++i) {
-      updaters[i](!!shouldRevalidate, data, error, true)
+      updaters[i](!!shouldRevalidate, data, error, NO_DEDUPE)
     }
   }
 }
