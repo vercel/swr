@@ -67,7 +67,6 @@ const getKeyArgs = key => {
   return [key, args]
 }
 
-const DEDUPE = true
 const NO_DEDUPE = false
 
 const trigger: triggerInterface = (_key, shouldRevalidate = true) => {
