@@ -90,7 +90,7 @@ npm install swr
 ### API
 
 ```js
-const { data, error, isValidating, revalidate } = useSWR(key, fetcher, options)
+const { data, error, isValidating, mutate } = useSWR(key, fetcher, options)
 ```
 
 #### Parameters
@@ -103,7 +103,6 @@ const { data, error, isValidating, revalidate } = useSWR(key, fetcher, options)
 - `data`: data for the given key resolved by `fetcher` (or undefined if not loaded)  
 - `error`: error thrown by `fetcher` (or undefined)  
 - `isValidating`: if there's a request or revalidation loading  
-- `revalidate`: function to trigger the validation manually
 - `mutate`: function to mutate the cached data
 
 #### Options
@@ -357,6 +356,8 @@ Here’s an example showing the “local mutate - request - update” usage:
 mutate('/api/user', newUser, false)      // use `false` to mutate without revalidation
 mutate('/api/user', updateUser(newUser)) // `updateUser` is a Promise of the request,
                                          // which returns the updated document
+```
+
 ### Mutate Based on Current Data
 
 In many cases, you are receiving a single value back from your API and want to update a list of them.
