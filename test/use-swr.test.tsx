@@ -775,6 +775,29 @@ describe('useSWR - local mutation', () => {
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
   })
 
+  it('should trigger revalidation programmatically with a dedupingInterval', async () => {
+    let value = 0
+
+    function Page() {
+      const { data } = useSWR('dynamic-12', () => value++, {
+        dedupingInterval: 2000
+      })
+      return <div>data: {data}</div>
+    }
+    const { container } = render(<Page />)
+
+    // hydration
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
+    await waitForDomChange({ container }) // mount
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
+    await act(() => {
+      // trigger revalidation
+      trigger('dynamic-12')
+      return new Promise(res => setTimeout(res, 1))
+    })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
+  })
+
   it('should mutate the cache and revalidate', async () => {
     let value = 0
 
@@ -793,6 +816,29 @@ describe('useSWR - local mutation', () => {
     await act(() => {
       // mutate and revalidate
       mutate('dynamic-8', 'mutate')
+      return new Promise(res => setTimeout(res, 1))
+    })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
+  })
+
+  it('should mutate the cache and revalidate with a dedupingInterval', async () => {
+    let value = 0
+
+    function Page() {
+      const { data } = useSWR('dynamic-13', () => value++, {
+        dedupingInterval: 2000
+      })
+      return <div>data: {data}</div>
+    }
+    const { container } = render(<Page />)
+
+    // hydration
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
+    await waitForDomChange({ container }) // mount
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
+    await act(() => {
+      // mutate and revalidate
+      mutate('dynamic-13', 'mutate')
       return new Promise(res => setTimeout(res, 1))
     })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
