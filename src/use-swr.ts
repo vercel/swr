@@ -9,15 +9,13 @@ import {
 } from 'react'
 
 import defaultConfig, {
-  cacheGet,
-  cacheSet,
   CACHE_REVALIDATORS,
   CONCURRENT_PROMISES,
   CONCURRENT_PROMISES_TS,
   FOCUS_REVALIDATORS,
-  MUTATION_TS
+  MUTATION_TS,
+  cache
 } from './config'
-import hash from './libs/hash'
 import isDocumentVisible from './libs/is-document-visible'
 import isOnline from './libs/is-online'
 import throttle from './libs/throttle'
@@ -42,41 +40,18 @@ const IS_SERVER = typeof window === 'undefined'
 // useLayoutEffect in the browser.
 const useIsomorphicLayoutEffect = IS_SERVER ? useEffect : useLayoutEffect
 
-// TODO: introduce namepsace for the cache
-const getErrorKey = key => (key ? 'err@' + key : '')
-const getKeyArgs = key => {
-  let args = null
-  if (typeof key === 'function') {
-    try {
-      key = key()
-    } catch (err) {
-      // dependencies not ready
-      key = ''
-    }
-  }
-
-  if (Array.isArray(key)) {
-    // args array
-    args = key
-    key = hash(key)
-  } else {
-    // convert null to ''
-    key = String(key || '')
-  }
-
-  return [key, args]
-}
-
 const NO_DEDUPE = false
 
 const trigger: triggerInterface = (_key, shouldRevalidate = true) => {
-  const [key] = getKeyArgs(_key)
+  // we are ignoring the second argument which correspond to the arguments
+  // the fetcher will receive when key is an array
+  const [key, , keyErr] = cache.serializeKey(_key)
   if (!key) return
 
   const updaters = CACHE_REVALIDATORS[key]
   if (key && updaters) {
-    const currentData = cacheGet(key)
-    const currentError = cacheGet(getErrorKey(key))
+    const currentData = cache.get(key)
+    const currentError = cache.get(keyErr)
     for (let i = 0; i < updaters.length; ++i) {
       updaters[i](shouldRevalidate, currentData, currentError, NO_DEDUPE)
     }
@@ -97,7 +72,7 @@ const mutate: mutateInterface = async (
   _data,
   shouldRevalidate = true
 ) => {
-  const [key] = getKeyArgs(_key)
+  const [key] = cache.serializeKey(_key)
   if (!key) return
 
   // if there is no new data, call revalidate against the key
@@ -111,7 +86,7 @@ const mutate: mutateInterface = async (
   if (_data && typeof _data === 'function') {
     // `_data` is a function, call it passing current cache value
     try {
-      data = await _data(cacheGet(key))
+      data = await _data(cache.get(key))
     } catch (err) {
       error = err
     }
@@ -127,8 +102,8 @@ const mutate: mutateInterface = async (
   }
 
   if (typeof data !== 'undefined') {
-    // update cached data
-    cacheSet(key, data)
+    // update cached data, avoid notifying from the cache
+    cache.set(key, data, false)
   }
 
   // update existing SWR Hooks' state
@@ -179,10 +154,8 @@ function useSWR<Data = any, Error = any>(
   // we assume `key` as the identifier of the request
   // `key` can change but `fn` shouldn't
   // (because `revalidate` only depends on `key`)
-  const [key, fnArgs] = getKeyArgs(_key)
-
   // `keyErr` is the cache key for error objects
-  const keyErr = getErrorKey(key)
+  const [key, fnArgs, keyErr] = cache.serializeKey(_key)
 
   config = Object.assign(
     {},
@@ -196,8 +169,8 @@ function useSWR<Data = any, Error = any>(
     fn = config.fetcher
   }
 
-  const initialData = cacheGet(key) || config.initialData
-  const initialError = cacheGet(keyErr)
+  const initialData = cache.get(key) || config.initialData
+  const initialError = cache.get(keyErr)
 
   // if a state is accessed (data, error or isValidating),
   // we add the state to dependencies so if the state is
@@ -282,7 +255,7 @@ function useSWR<Data = any, Error = any>(
 
           // if no cache being rendered currently (it shows a blank page),
           // we trigger the loading slow event.
-          if (config.loadingTimeout && !cacheGet(key)) {
+          if (config.loadingTimeout && !cache.get(key)) {
             setTimeout(() => {
               if (loading) config.onLoadingSlow(key, config)
             }, config.loadingTimeout)
@@ -316,8 +289,8 @@ function useSWR<Data = any, Error = any>(
           return false
         }
 
-        cacheSet(key, newData)
-        cacheSet(keyErr, undefined)
+        cache.set(key, newData, false)
+        cache.set(keyErr, undefined, false)
         keyRef.current = key
 
         // new state for the reducer
@@ -348,7 +321,7 @@ function useSWR<Data = any, Error = any>(
         delete CONCURRENT_PROMISES[key]
         delete CONCURRENT_PROMISES_TS[key]
 
-        cacheSet(keyErr, err)
+        cache.set(keyErr, err, false)
         keyRef.current = key
 
         // get a new error
@@ -399,7 +372,7 @@ function useSWR<Data = any, Error = any>(
     // and trigger a revalidation
 
     const currentHookData = stateRef.current.data
-    const latestKeyedData = cacheGet(key) || config.initialData
+    const latestKeyedData = cache.get(key) || config.initialData
 
     // update the state if the key changed or cache updated
     if (
@@ -570,8 +543,8 @@ function useSWR<Data = any, Error = any>(
     // (it should be suspended)
 
     // try to get data and error from cache
-    let latestData = cacheGet(key)
-    let latestError = cacheGet(keyErr)
+    let latestData = cache.get(key)
+    let latestError = cache.get(keyErr)
 
     if (
       typeof latestData === 'undefined' &&

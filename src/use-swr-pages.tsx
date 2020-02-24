@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useState, useRef } from 'react'
 
-import { cacheGet, cacheSet } from './config'
+import { cache } from './config'
 import {
   pagesResponseInterface,
   responseInterface,
@@ -100,10 +100,10 @@ export function useSWRPages<OffsetType = any, Data = any, Error = any>(
   const pageOffsetKey = `_swr_page_offset_` + pageKey
 
   const [pageCount, setPageCount] = useState<number>(
-    cacheGet(pageCountKey) || 1
+    cache.get(pageCountKey) || 1
   )
   const [pageOffsets, setPageOffsets] = useState<OffsetType[]>(
-    cacheGet(pageOffsetKey) || [null]
+    cache.get(pageOffsetKey) || [null]
   )
   const [pageSWRs, setPageSWRs] = useState<responseInterface<Data, Error>[]>([])
 
@@ -134,7 +134,7 @@ export function useSWRPages<OffsetType = any, Data = any, Error = any>(
   const loadMore = useCallback(() => {
     if (isLoadingMore || isReachingEnd) return
     setPageCount(c => {
-      cacheSet(pageCountKey, c + 1)
+      cache.set(pageCountKey, c + 1)
       return c + 1
     })
   }, [isLoadingMore || isReachingEnd])
@@ -167,7 +167,7 @@ export function useSWRPages<OffsetType = any, Data = any, Error = any>(
             setPageOffsets(arr => {
               const _arr = [...arr]
               _arr[id + 1] = newPageOffset
-              cacheSet(pageOffsetKey, _arr)
+              cache.set(pageOffsetKey, _arr)
               return _arr
             })
           }

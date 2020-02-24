@@ -7,8 +7,8 @@ import {
 } from '@testing-library/react'
 import React, { ReactNode, Suspense, useEffect, useState } from 'react'
 
-import useSWR, { mutate, SWRConfig, trigger } from '../src'
-import { cacheSet } from '../src/config'
+import useSWR, { mutate, SWRConfig, trigger, cache } from '../src'
+import Cache from '../src/cache'
 
 class ErrorBoundary extends React.Component<{ fallback: ReactNode }> {
   state = { hasError: false }
@@ -956,7 +956,7 @@ describe('useSWR - local mutation', () => {
 
   it('should call function as data passing current cached value', async () => {
     // prefill cache with data
-    cacheSet('dynamic-15', 'cached data')
+    cache.set('dynamic-15', 'cached data')
     const callback = jest.fn()
     await mutate('dynamic-15', callback)
     expect(callback).toHaveBeenCalledWith('cached data')
@@ -1249,5 +1249,74 @@ describe('useSWR - suspense', () => {
     // fixes https://github.com/zeit/swr/issues/57
     // 'suspense-7' -> undefined -> 'suspense-8'
     expect(renderedResults).toEqual(['suspense-7', 'suspense-8'])
+  })
+})
+
+describe('useSWR - cache', () => {
+  it('should react to direct cache updates', async () => {
+    cache.set('cache-1', 'custom cache message')
+
+    function Page() {
+      const { data } = useSWR('cache-1', () => 'random message', {
+        suspense: true
+      })
+      return <div>{data}</div>
+    }
+
+    // render using custom cache
+    const { queryByText, findByText } = render(
+      <React.Suspense fallback={null}>
+        <Page />
+      </React.Suspense>
+    )
+
+    // content should come from custom cache
+    expect(queryByText('custom cache message')).toMatchInlineSnapshot(`
+      <div>
+        custom cache message
+      </div>
+    `)
+
+    // content should be updated with fetcher results
+    expect(await findByText('random message')).toMatchInlineSnapshot(`
+      <div>
+        random message
+      </div>
+    `)
+
+    act(() => cache.set('cache-1', 'a different message'))
+
+    // content should be updated from new cache value
+    expect(await findByText('a different message')).toMatchInlineSnapshot(`
+      <div>
+        a different message
+      </div>
+    `)
+
+    act(() => cache.delete('cache-1'))
+
+    // content should go back to be the fetched value
+    expect(await findByText('random message')).toMatchInlineSnapshot(`
+      <div>
+        random message
+      </div>
+    `)
+  })
+
+  it('should notify subscribers when a cache item changed', async () => {
+    // create new cache instance to don't get affected by other tests
+    // updating the normal cache instance
+    const tmpCache = new Cache()
+
+    const listener = jest.fn()
+    const unsubscribe = tmpCache.subscribe(listener)
+    tmpCache.set('cache-2', 'random message')
+
+    expect(listener).toHaveBeenCalled()
+
+    unsubscribe()
+    tmpCache.set('cache-2', 'a different message')
+
+    expect(listener).toHaveBeenCalledTimes(1)
   })
 })
