@@ -537,7 +537,7 @@ function useSWR<Data = any, Error = any>(
       if (
         !stateRef.current.error &&
         (config.refreshWhenHidden || isDocumentVisible()) &&
-        (!config.refreshWhenOffline && isOnline())
+        (config.refreshWhenOffline || isOnline())
       ) {
         // only revalidate when the page is visible
         // if API request errored, we stop polling in this round
