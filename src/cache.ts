@@ -79,7 +79,10 @@ export default class Cache implements CacheInterface {
       if (!isSubscribed) return;
       isSubscribed = false;
       const index = this.__listeners.indexOf(listener)
-      this.__listeners.splice(index, 1)
+      if (index > -1) {
+        this.__listeners[index] = this.__listeners[this.__listeners.length - 1]
+        this.__listeners.length--
+      }
     }
   }
 

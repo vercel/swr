@@ -1316,6 +1316,6 @@ describe.only('useSWR - cache', () => {
     unsubscribe();
     tmpCache.set("cache-2", "a different message");
 
-    expect(listener).toHaveBeenCalled()
+    expect(listener).toHaveBeenCalledTimes(1)
   });
 })
