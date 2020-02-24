@@ -120,6 +120,7 @@ const { data, error, isValidating, mutate } = useSWR(key, fetcher, options)
 - `focusThrottleInterval = 5000`: only revalidate once during a time span
 - `loadingTimeout = 3000`: timeout to trigger the onLoadingSlow event
 - `errorRetryInterval = 5000`: error retry interval [(details)](#error-retries)
+- `errorRetryCount`: max error retry count [(details)](#error-retries)
 - `onLoadingSlow`: callback function when a request takes too long to load (see `loadingTimeout`)
 - `onSuccess`: callback function when a request finishes successfully
 - `onError`: callback function when a request returns an error

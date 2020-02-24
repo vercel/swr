@@ -5,10 +5,10 @@ export interface ConfigInterface<
   Fn extends fetcherFn<Data> = fetcherFn<Data>
 > {
   errorRetryInterval?: number
+  errorRetryCount?: number
   loadingTimeout?: number
   focusThrottleInterval?: number
   dedupingInterval?: number
-
   refreshInterval?: number
   refreshWhenHidden?: boolean
   refreshWhenOffline?: boolean

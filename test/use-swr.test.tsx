@@ -699,6 +699,36 @@ describe('useSWR - error', () => {
   })
 })
 
+it('should trigger limited error retries if errorRetryCount exists', async () => {
+  let count = 0
+  function Page() {
+    const { data, error } = useSWR(
+      'error-5',
+      () => {
+        return new Promise((_, rej) =>
+          setTimeout(() => rej(new Error('error: ' + count++)), 100)
+        )
+      },
+      {
+        errorRetryCount: 1,
+        errorRetryInterval: 50,
+        dedupingInterval: 0
+      }
+    )
+    if (error) return <div>{error.message}</div>
+    return <div>hello, {data}</div>
+  }
+  const { container } = render(<Page />)
+
+  expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
+  await waitForDomChange({ container })
+  expect(container.firstChild.textContent).toMatchInlineSnapshot(`"error: 0"`)
+  await act(() => new Promise(res => setTimeout(res, 210))) // retry
+  expect(container.firstChild.textContent).toMatchInlineSnapshot(`"error: 1"`)
+  await act(() => new Promise(res => setTimeout(res, 210))) // retry
+  expect(container.firstChild.textContent).toMatchInlineSnapshot(`"error: 1"`)
+})
+
 describe('useSWR - focus', () => {
   afterEach(cleanup)
 
