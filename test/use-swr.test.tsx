@@ -1251,7 +1251,7 @@ describe('useSWR - suspense', () => {
   })
 })
 
-describe.only('useSWR - cache', () => {
+describe('useSWR - cache', () => {
   it('should react to direct cache updates', async () => {
     cache.set('cache-1', 'custom cache message')
 
@@ -1308,14 +1308,14 @@ describe.only('useSWR - cache', () => {
     const tmpCache = new Cache()
 
     const listener = jest.fn()
-    const unsubscribe = tmpCache.subscribe(listener);
-    tmpCache.set("cache-2", "random message");
+    const unsubscribe = tmpCache.subscribe(listener)
+    tmpCache.set('cache-2', 'random message')
 
     expect(listener).toHaveBeenCalled()
 
-    unsubscribe();
-    tmpCache.set("cache-2", "a different message");
+    unsubscribe()
+    tmpCache.set('cache-2', 'a different message')
 
     expect(listener).toHaveBeenCalledTimes(1)
-  });
+  })
 })
