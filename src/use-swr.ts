@@ -67,7 +67,11 @@ const broadcastState: broadcastStateInterface = (key, data, error) => {
   }
 }
 
-const mutate: mutateInterface = async (_key, _data, shouldRevalidate = true) => {
+const mutate: mutateInterface = async (
+  _key,
+  _data,
+  shouldRevalidate = true
+) => {
   const [key] = cache.serializeKey(_key)
   if (!key) return
 

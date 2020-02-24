@@ -8,15 +8,17 @@ export default class Cache implements CacheInterface {
 
   constructor(initialData: any = {}) {
     this.__cache = new Map(Object.entries(initialData))
-    this.__listeners = [];
+    this.__listeners = []
   }
 
-  get(key: string): any {
-    return this.__cache.get(key)
+  get(key: keyInterface): any {
+    const [_key] = this.serializeKey(key)
+    return this.__cache.get(_key)
   }
 
-  set(key: string, value: any, shouldNotify = true): any {
-    this.__cache.set(key, value)
+  set(key: keyInterface, value: any, shouldNotify = true): any {
+    const [_key] = this.serializeKey(key)
+    this.__cache.set(_key, value)
     if (shouldNotify) mutate(key, value, false)
     this.notify()
   }
@@ -25,8 +27,9 @@ export default class Cache implements CacheInterface {
     return Array.from(this.__cache.keys())
   }
 
-  has(key: string) {
-    return this.__cache.has(key)
+  has(key: keyInterface) {
+    const [_key] = this.serializeKey(key)
+    return this.__cache.has(_key)
   }
 
   clear(shouldNotify = true) {
@@ -35,9 +38,10 @@ export default class Cache implements CacheInterface {
     this.notify()
   }
 
-  delete(key: string, shouldNotify = true) {
+  delete(key: keyInterface, shouldNotify = true) {
+    const [_key] = this.serializeKey(key)
     if (shouldNotify) mutate(key, null, false)
-    this.__cache.delete(key)
+    this.__cache.delete(_key)
     this.notify()
   }
 
@@ -72,12 +76,12 @@ export default class Cache implements CacheInterface {
       throw new Error('Expected the listener to be a function.')
     }
 
-    let isSubscribed = true;
+    let isSubscribed = true
     this.__listeners.push(listener)
 
     return () => {
-      if (!isSubscribed) return;
-      isSubscribed = false;
+      if (!isSubscribed) return
+      isSubscribed = false
       const index = this.__listeners.indexOf(listener)
       if (index > -1) {
         this.__listeners[index] = this.__listeners[this.__listeners.length - 1]
