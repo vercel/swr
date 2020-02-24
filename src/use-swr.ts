@@ -99,7 +99,7 @@ const mutate: mutateInterface = async (
   if (!key) return
 
   // if there is no new data, call revalidate against the key
-  if (!_data) return trigger(_key)
+  if (typeof _data === 'undefined') return trigger(_key, shouldRevalidate)
 
   // update timestamp
   MUTATION_TS[key] = Date.now() - 1
