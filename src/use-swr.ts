@@ -98,7 +98,7 @@ const mutate: mutateInterface = async (
   const [key] = getKeyArgs(_key)
   if (!key) return
 
-  // if there is no new data data, call revalidate against the key
+  // if there is no new data, call revalidate against the key
   if (!_data) return trigger(_key)
 
   // update timestamp
