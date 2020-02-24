@@ -155,7 +155,8 @@ export function useSWRPages<OffsetType = any, Data = any, Error = any>(
             data: swr.data,
             error: swr.error,
             revalidate: swr.revalidate,
-            isValidating: swr.isValidating
+            isValidating: swr.isValidating,
+            mutate: swr.mutate
           }
           return _swrs
         })

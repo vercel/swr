@@ -32,6 +32,10 @@ function onErrorRetry(
     return
   }
 
+  if (config.errorRetryCount && opts.retryCount > config.errorRetryCount) {
+    return
+  }
+
   // exponential backoff
   const count = Math.min(opts.retryCount || 0, 8)
   const timeout =

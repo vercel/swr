@@ -40,6 +40,8 @@ const IS_SERVER = typeof window === 'undefined'
 // useLayoutEffect in the browser.
 const useIsomorphicLayoutEffect = IS_SERVER ? useEffect : useLayoutEffect
 
+const NO_DEDUPE = false
+
 const trigger: triggerInterface = (_key, shouldRevalidate = true) => {
   // we are ignoring the second argument which correspond to the arguments
   // the fetcher will receive when key is an array
@@ -51,7 +53,7 @@ const trigger: triggerInterface = (_key, shouldRevalidate = true) => {
     const currentData = cache.get(key)
     const currentError = cache.get(keyErr)
     for (let i = 0; i < updaters.length; ++i) {
-      updaters[i](shouldRevalidate, currentData, currentError, true)
+      updaters[i](shouldRevalidate, currentData, currentError, NO_DEDUPE)
     }
   }
 }
@@ -69,12 +71,22 @@ const mutate: mutateInterface = async (_key, _data, shouldRevalidate) => {
   const [key] = cache.serializeKey(_key)
   if (!key) return
 
+  // if there is no new data, call revalidate against the key
+  if (typeof _data === 'undefined') return trigger(_key, shouldRevalidate)
+
   // update timestamp
   MUTATION_TS[key] = Date.now() - 1
 
   let data, error
 
-  if (_data && typeof _data.then === 'function') {
+  if (_data && typeof _data === 'function') {
+    // `_data` is a function, call it passing current cache value
+    try {
+      data = await _data(cache.get(key))
+    } catch (err) {
+      error = err
+    }
+  } else if (_data && typeof _data.then === 'function') {
     // `_data` is a promise
     try {
       data = await _data
@@ -83,12 +95,6 @@ const mutate: mutateInterface = async (_key, _data, shouldRevalidate) => {
     }
   } else {
     data = _data
-
-    if (typeof shouldRevalidate === 'undefined') {
-      // if it's a sync mutation, we trigger the revalidation by default
-      // because in most cases it's a local mutation
-      shouldRevalidate = true
-    }
   }
 
   if (typeof data !== 'undefined') {
@@ -100,9 +106,13 @@ const mutate: mutateInterface = async (_key, _data, shouldRevalidate) => {
   const updaters = CACHE_REVALIDATORS[key]
   if (updaters) {
     for (let i = 0; i < updaters.length; ++i) {
-      updaters[i](!!shouldRevalidate, data, error, true)
+      updaters[i](!!shouldRevalidate, data, error, NO_DEDUPE)
     }
   }
+
+  // throw error or return data to be used by caller of mutate
+  if (error) throw error
+  return data
 }
 
 function useSWR<Data = any, Error = any>(
@@ -189,6 +199,13 @@ function useSWR<Data = any, Error = any>(
   // error ref inside revalidate (is last request errored?)
   const unmountedRef = useRef(false)
   const keyRef = useRef(key)
+
+  const boundMutate: responseInterface<Data, Error>['mutate'] = useCallback(
+    (data, shouldRevalidate) => {
+      return mutate(key, data, shouldRevalidate)
+    },
+    [key]
+  )
 
   // start a revalidation
   const revalidate = useCallback(
@@ -559,6 +576,7 @@ function useSWR<Data = any, Error = any>(
       error: latestError,
       data: latestData,
       revalidate,
+      mutate: boundMutate,
       isValidating: stateRef.current.isValidating
     }
   }
@@ -566,7 +584,10 @@ function useSWR<Data = any, Error = any>(
   // define returned state
   // can be memorized since the state is a ref
   return useMemo(() => {
-    const state = { revalidate } as responseInterface<Data, Error>
+    const state = { revalidate, mutate: boundMutate } as responseInterface<
+      Data,
+      Error
+    >
     Object.defineProperties(state, {
       error: {
         // `key` might be changed in the upcoming hook re-render,

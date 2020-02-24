@@ -748,6 +748,36 @@ describe('useSWR - error', () => {
   })
 })
 
+it('should trigger limited error retries if errorRetryCount exists', async () => {
+  let count = 0
+  function Page() {
+    const { data, error } = useSWR(
+      'error-5',
+      () => {
+        return new Promise((_, rej) =>
+          setTimeout(() => rej(new Error('error: ' + count++)), 100)
+        )
+      },
+      {
+        errorRetryCount: 1,
+        errorRetryInterval: 50,
+        dedupingInterval: 0
+      }
+    )
+    if (error) return <div>{error.message}</div>
+    return <div>hello, {data}</div>
+  }
+  const { container } = render(<Page />)
+
+  expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
+  await waitForDomChange({ container })
+  expect(container.firstChild.textContent).toMatchInlineSnapshot(`"error: 0"`)
+  await act(() => new Promise(res => setTimeout(res, 210))) // retry
+  expect(container.firstChild.textContent).toMatchInlineSnapshot(`"error: 1"`)
+  await act(() => new Promise(res => setTimeout(res, 210))) // retry
+  expect(container.firstChild.textContent).toMatchInlineSnapshot(`"error: 1"`)
+})
+
 describe('useSWR - focus', () => {
   afterEach(cleanup)
 
@@ -825,6 +855,29 @@ describe('useSWR - local mutation', () => {
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
   })
 
+  it('should trigger revalidation programmatically with a dedupingInterval', async () => {
+    let value = 0
+
+    function Page() {
+      const { data } = useSWR('dynamic-12', () => value++, {
+        dedupingInterval: 2000
+      })
+      return <div>data: {data}</div>
+    }
+    const { container } = render(<Page />)
+
+    // hydration
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
+    await waitForDomChange({ container }) // mount
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
+    await act(() => {
+      // trigger revalidation
+      trigger('dynamic-12')
+      return new Promise(res => setTimeout(res, 1))
+    })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
+  })
+
   it('should mutate the cache and revalidate', async () => {
     let value = 0
 
@@ -843,6 +896,29 @@ describe('useSWR - local mutation', () => {
     await act(() => {
       // mutate and revalidate
       mutate('dynamic-8', 'mutate')
+      return new Promise(res => setTimeout(res, 1))
+    })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
+  })
+
+  it('should mutate the cache and revalidate with a dedupingInterval', async () => {
+    let value = 0
+
+    function Page() {
+      const { data } = useSWR('dynamic-13', () => value++, {
+        dedupingInterval: 2000
+      })
+      return <div>data: {data}</div>
+    }
+    const { container } = render(<Page />)
+
+    // hydration
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
+    await waitForDomChange({ container }) // mount
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
+    await act(() => {
+      // mutate and revalidate
+      mutate('dynamic-13', 'mutate')
       return new Promise(res => setTimeout(res, 1))
     })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
@@ -896,11 +972,80 @@ describe('useSWR - local mutation', () => {
       // mutate and revalidate
       return mutate(
         'mutate-1',
-        new Promise(res => setTimeout(() => res(999), 100))
+        new Promise(res => setTimeout(() => res(999), 100)),
+        false
       )
     })
     await act(() => new Promise(res => setTimeout(res, 110)))
     expect(container.textContent).toMatchInlineSnapshot(`"data: 999"`)
+  })
+
+  it('should trigger on mutation without data', async () => {
+    let value = 0
+
+    function Page() {
+      const { data } = useSWR('dynamic-14', () => value++, {
+        dedupingInterval: 0
+      })
+      return <div>data: {data}</div>
+    }
+    const { container } = render(<Page />)
+
+    // hydration
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
+    await waitForDomChange({ container }) // mount
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
+    await act(() => {
+      // trigger revalidation
+      mutate('dynamic-14')
+      return new Promise(res => setTimeout(res, 1))
+    })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
+  })
+
+  it('should call function as data passing current cached value', async () => {
+    // prefill cache with data
+    cache.set('dynamic-15', 'cached data')
+    const callback = jest.fn()
+    await mutate('dynamic-15', callback)
+    expect(callback).toHaveBeenCalledWith('cached data')
+  })
+
+  it('should return results of the mutation', async () => {
+    // returns the data if promise resolved
+    expect(mutate('dynamic-16', Promise.resolve('data'))).resolves.toBe('data')
+
+    // throw the error if promise rejected
+    expect(
+      mutate('dynamic-16', Promise.reject(new Error('error')))
+    ).rejects.toBeInstanceOf(Error)
+  })
+
+  it('should get bound mutate from useSWR', async () => {
+    function Page() {
+      // eslint-disable-next-line no-shadow
+      const { data, mutate: boundMutate } = useSWR(
+        'dynamic-17',
+        () => 'fetched'
+      )
+      return (
+        <div onClick={() => boundMutate('mutated', false)}>data: {data}</div>
+      )
+    }
+    const { container } = render(<Page />)
+
+    // hydration
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
+    await waitForDomChange({ container }) // mount
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"data: fetched"`
+    )
+    // call bound mutate
+    fireEvent.click(container.firstElementChild)
+    // expect new updated value
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"data: mutated"`
+    )
   })
 
   it('should ignore in flight requests when mutating', async () => {
