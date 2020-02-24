@@ -859,7 +859,7 @@ describe('useSWR - local mutation', () => {
     let value = 0
 
     function Page() {
-      const { data } = useSWR('dynamic-12', () => value++, {
+      const { data } = useSWR('dynamic-14', () => value++, {
         dedupingInterval: 0
       })
       return <div>data: {data}</div>
@@ -872,7 +872,7 @@ describe('useSWR - local mutation', () => {
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
     await act(() => {
       // trigger revalidation
-      mutate('dynamic-12')
+      mutate('dynamic-14')
       return new Promise(res => setTimeout(res, 1))
     })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
@@ -880,19 +880,19 @@ describe('useSWR - local mutation', () => {
 
   it('should call function as data passing current cached value', async () => {
     // prefill cache with data
-    cacheSet('dynamic-13', 'cached data')
+    cacheSet('dynamic-15', 'cached data')
     const callback = jest.fn()
-    await mutate('dynamic-13', callback)
+    await mutate('dynamic-15', callback)
     expect(callback).toHaveBeenCalledWith('cached data')
   })
 
   it('should return results of the mutation', async () => {
     // returns the data if promise resolved
-    expect(mutate('dynamic-14', Promise.resolve('data'))).resolves.toBe('data')
+    expect(mutate('dynamic-16', Promise.resolve('data'))).resolves.toBe('data')
 
     // throw the error if promise rejected
     expect(
-      mutate('dynamic-14', Promise.reject(new Error('error')))
+      mutate('dynamic-16', Promise.reject(new Error('error')))
     ).rejects.toBeInstanceOf(Error)
   })
 
@@ -900,7 +900,7 @@ describe('useSWR - local mutation', () => {
     function Page() {
       // eslint-disable-next-line no-shadow
       const { data, mutate: boundMutate } = useSWR(
-        'dynamic-15',
+        'dynamic-17',
         () => 'fetched'
       )
       return (
