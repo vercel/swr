@@ -8,6 +8,7 @@ import {
 import React, { ReactNode, Suspense, useEffect, useState } from 'react'
 
 import useSWR, { mutate, SWRConfig, trigger } from '../src'
+import { cacheSet } from '../src/config'
 
 class ErrorBoundary extends React.Component<{ fallback: ReactNode }> {
   state = { hasError: false }
@@ -892,11 +893,80 @@ describe('useSWR - local mutation', () => {
       // mutate and revalidate
       return mutate(
         'mutate-1',
-        new Promise(res => setTimeout(() => res(999), 100))
+        new Promise(res => setTimeout(() => res(999), 100)),
+        false
       )
     })
     await act(() => new Promise(res => setTimeout(res, 110)))
     expect(container.textContent).toMatchInlineSnapshot(`"data: 999"`)
+  })
+
+  it('should trigger on mutation without data', async () => {
+    let value = 0
+
+    function Page() {
+      const { data } = useSWR('dynamic-14', () => value++, {
+        dedupingInterval: 0
+      })
+      return <div>data: {data}</div>
+    }
+    const { container } = render(<Page />)
+
+    // hydration
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
+    await waitForDomChange({ container }) // mount
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
+    await act(() => {
+      // trigger revalidation
+      mutate('dynamic-14')
+      return new Promise(res => setTimeout(res, 1))
+    })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
+  })
+
+  it('should call function as data passing current cached value', async () => {
+    // prefill cache with data
+    cacheSet('dynamic-15', 'cached data')
+    const callback = jest.fn()
+    await mutate('dynamic-15', callback)
+    expect(callback).toHaveBeenCalledWith('cached data')
+  })
+
+  it('should return results of the mutation', async () => {
+    // returns the data if promise resolved
+    expect(mutate('dynamic-16', Promise.resolve('data'))).resolves.toBe('data')
+
+    // throw the error if promise rejected
+    expect(
+      mutate('dynamic-16', Promise.reject(new Error('error')))
+    ).rejects.toBeInstanceOf(Error)
+  })
+
+  it('should get bound mutate from useSWR', async () => {
+    function Page() {
+      // eslint-disable-next-line no-shadow
+      const { data, mutate: boundMutate } = useSWR(
+        'dynamic-17',
+        () => 'fetched'
+      )
+      return (
+        <div onClick={() => boundMutate('mutated', false)}>data: {data}</div>
+      )
+    }
+    const { container } = render(<Page />)
+
+    // hydration
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
+    await waitForDomChange({ container }) // mount
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"data: fetched"`
+    )
+    // call bound mutate
+    fireEvent.click(container.firstElementChild)
+    // expect new updated value
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"data: mutated"`
+    )
   })
 
   it('should ignore in flight requests when mutating', async () => {

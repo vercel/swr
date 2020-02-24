@@ -90,7 +90,7 @@ npm install swr
 ### API
 
 ```js
-const { data, error, isValidating, revalidate } = useSWR(key, fetcher, options)
+const { data, error, isValidating, mutate } = useSWR(key, fetcher, options)
 ```
 
 #### Parameters
@@ -103,7 +103,7 @@ const { data, error, isValidating, revalidate } = useSWR(key, fetcher, options)
 - `data`: data for the given key resolved by `fetcher` (or undefined if not loaded)  
 - `error`: error thrown by `fetcher` (or undefined)  
 - `isValidating`: if there's a request or revalidation loading  
-- `revalidate`: function to trigger the validation manually
+- `mutate`: function to mutate the cached data
 
 #### Options
 
@@ -141,6 +141,8 @@ You can also use [global configuration](#global-configuration) to provide defaul
 - [Multiple Arguments](#multiple-arguments)
 - [Manually Revalidate](#manually-revalidate)
 - [Mutation and Post Request](#mutation-and-post-request)
+- [Mutate Based on Current Data](#mutate-based-on-current-data)
+- [Returned Data from Mutate](#returned-data-from-mutate)
 - [SSR with Next.js](#ssr-with-nextjs)
 - [Suspense Mode](#suspense-mode)
 - [Error Retries](#error-retries)
@@ -289,13 +291,13 @@ Dan Abramov explains dependencies very well in [this blog post](https://overreac
 ### Manually Revalidate
 
 You can broadcast a revalidation message globally to all SWRs with the same key by calling
-`trigger(key)`.
+`mutate(key)`.
 
 This example shows how to automatically refetch the login info (e.g.: inside `<Profile/>`) 
 when the user clicks the “Logout” button.
 
 ```js
-import useSWR, { trigger } from 'swr'
+import useSWR, { mutate } from 'swr'
 
 function App () {
   return (
@@ -306,7 +308,7 @@ function App () {
         document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
 
         // tell all SWRs with this key to revalidate
-        trigger('/api/user')
+        mutate('/api/user')
       }}>
         Logout
       </button>
@@ -354,6 +356,33 @@ Here’s an example showing the “local mutate - request - update” usage:
 mutate('/api/user', newUser, false)      // use `false` to mutate without revalidation
 mutate('/api/user', updateUser(newUser)) // `updateUser` is a Promise of the request,
                                          // which returns the updated document
+```
+
+### Mutate Based on Current Data
+
+In many cases, you are receiving a single value back from your API and want to update a list of them.
+
+With `mutate`, you can pass an async function which will receive the current cached value, if any, and let you return an updated document.
+
+```js
+mutate('/api/users', async users => {
+  const user = await fetcher('/api/users/1')
+  return [user, ...users.slice(1)]
+})
+```
+
+### Returned Data from Mutate
+
+Most probably, you need to data mutate used to update the cache when you passed a promise or async function.
+
+The function will returns the updated document, or throw an error, everytime you call it.
+
+```js
+try {
+  const user = await mutate('/api/user', updateUser(newUser))
+} catch (error) {
+  // Handle an error while updating the user here
+}
 ```
 
 ### SSR with Next.js

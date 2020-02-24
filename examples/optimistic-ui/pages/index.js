@@ -1,7 +1,7 @@
 import React from 'react'
 import fetch from '../libs/fetch'
 
-import useSWR, { mutate, trigger } from 'swr'
+import useSWR, { mutate } from 'swr'
 
 export default () => {
   const [text, setText] = React.useState('');
@@ -13,14 +13,12 @@ export default () => {
     // the fetch below could fail, in that case the UI will
     // be in an incorrect state
     mutate('/api/data', [...data, text], false)
-    // send text to the API
-    await fetch('/api/data', {
+    // then we send the request to the API and let mutate
+    // update the data with the API response
+    mutate('/api/data', await fetch('/api/data', {
       method: 'POST',
       body: JSON.stringify({ text })
-    })
-    // to revalidate the data and ensure is not incorrect
-    // we trigger a revalidation of the data
-    trigger('/api/data')
+    }))
     setText('')
   }
 
