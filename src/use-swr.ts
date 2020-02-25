@@ -30,7 +30,8 @@ import {
   responseInterface,
   RevalidateOptionInterface,
   triggerInterface,
-  updaterInterface
+  updaterInterface,
+  mutateManyInterface
 } from './types'
 
 const IS_SERVER = typeof window === 'undefined'
@@ -117,6 +118,29 @@ const mutate: mutateInterface = async (
   // throw error or return data to be used by caller of mutate
   if (error) throw error
   return data
+}
+
+const mutateMany: mutateManyInterface = async (
+  select,
+  data,
+  _shouldRevalidate = true
+) => {
+  // get all cache keys
+  const keys = cache.keys()
+  const mutations = []
+  for (let key of keys) {
+    // ignore keys which doesn't pass the condition
+    if (!select(key)) continue
+    // get shouldRevalidate value
+    const shouldRevalidate =
+      typeof _shouldRevalidate === 'function'
+        ? _shouldRevalidate(key, cache.get(key))
+        : _shouldRevalidate
+    // call mutate and add the resulting promise to the mutations array
+    mutations.push(mutate(key, data, shouldRevalidate))
+  }
+  // returns the mutations array so we could wait for every mutation
+  return Promise.all(mutations)
 }
 
 function useSWR<Data = any, Error = any>(
@@ -510,7 +534,8 @@ function useSWR<Data = any, Error = any>(
       if (
         !stateRef.current.error &&
         (config.refreshWhenHidden || isDocumentVisible()) &&
-        (!config.refreshWhenOffline && isOnline())
+        !config.refreshWhenOffline &&
+        isOnline()
       ) {
         // only revalidate when the page is visible
         // if API request errored, we stop polling in this round
@@ -622,5 +647,5 @@ function useSWR<Data = any, Error = any>(
 
 const SWRConfig = SWRConfigContext.Provider
 
-export { trigger, mutate, SWRConfig }
+export { trigger, mutate, mutateMany, SWRConfig }
 export default useSWR

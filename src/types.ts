@@ -64,6 +64,13 @@ export type mutateInterface<Data = any> = (
   data?: Data | Promise<Data> | mutateCallback<Data>,
   shouldRevalidate?: boolean
 ) => Promise<Data | undefined>
+export type mutateManyInterface<Data = any> = (
+  select: (key: keyInterface) => boolean,
+  data?: Data | Promise<Data> | mutateCallback<Data>,
+  shouldRevalidate?:
+    | boolean
+    | ((key: keyInterface, currentValue: Data) => boolean)
+) => Promise<Data[]>
 export type broadcastStateInterface<Data = any, Error = any> = (
   key: string,
   data: Data,
