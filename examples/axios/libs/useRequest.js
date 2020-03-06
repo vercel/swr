@@ -3,7 +3,7 @@ import axios from 'axios'
 import { useMemo } from 'react'
 
 export default function useRequest(request, { initialData, ...config } = {}) {
-  const { data: response, error, isValidating, revalidate } = useSWR(
+  const { data: response, error, isValidating, mutate } = useSWR(
     request && JSON.stringify(request),
     () => axios(request || {}),
     {
@@ -22,6 +22,6 @@ export default function useRequest(request, { initialData, ...config } = {}) {
     response,
     error,
     isValidating,
-    revalidate
+    mutate
   }
 }
