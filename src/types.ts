@@ -100,10 +100,10 @@ export type pageOffsetMapperType<Offset, Data, Error> = (
   index: number
 ) => Offset
 
-export type pagesResponseInterface = {
+export type pagesResponseInterface<Data, Error> = {
   pages: any
   pageCount: number
-  pageSWRs: responseInterface<any, any>[]
+  pageSWRs: responseInterface<Data, Error>[]
   isLoadingMore: boolean
   isReachingEnd: boolean
   isEmpty: boolean
