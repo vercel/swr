@@ -40,8 +40,6 @@ const IS_SERVER = typeof window === 'undefined'
 // useLayoutEffect in the browser.
 const useIsomorphicLayoutEffect = IS_SERVER ? useEffect : useLayoutEffect
 
-const NO_DEDUPE = false
-
 const trigger: triggerInterface = (_key, shouldRevalidate = true) => {
   // we are ignoring the second argument which correspond to the arguments
   // the fetcher will receive when key is an array
@@ -53,7 +51,7 @@ const trigger: triggerInterface = (_key, shouldRevalidate = true) => {
     const currentData = cache.get(key)
     const currentError = cache.get(keyErr)
     for (let i = 0; i < updaters.length; ++i) {
-      updaters[i](shouldRevalidate, currentData, currentError, NO_DEDUPE)
+      updaters[i](shouldRevalidate, currentData, currentError, i > 0)
     }
   }
 }
@@ -110,7 +108,7 @@ const mutate: mutateInterface = async (
   const updaters = CACHE_REVALIDATORS[key]
   if (updaters) {
     for (let i = 0; i < updaters.length; ++i) {
-      updaters[i](!!shouldRevalidate, data, error, NO_DEDUPE)
+      updaters[i](!!shouldRevalidate, data, error, i > 0)
     }
   }
 
