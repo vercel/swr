@@ -468,7 +468,7 @@ function useSWR<Data = any, Error = any>(
       typeof addEventListener !== 'undefined' &&
       config.revalidateOnReconnect
     ) {
-      reconnect = addEventListener('online', softRevalidate)
+      addEventListener('online', (reconnect = softRevalidate))
     }
 
     return () => {
