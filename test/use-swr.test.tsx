@@ -806,7 +806,7 @@ describe('useSWR - local mutation', () => {
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
   })
 
-  it('should trigger revalidation programmatically with a dedupingInterval', async () => {
+  it('should trigger revalidation programmatically within a dedupingInterval', async () => {
     let value = 0
 
     function Page() {
@@ -852,11 +852,14 @@ describe('useSWR - local mutation', () => {
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
   })
 
-  it('should mutate the cache and revalidate with a dedupingInterval', async () => {
+  it('should dedupe extra requests after mutation', async () => {
     let value = 0
 
     function Page() {
       const { data } = useSWR('dynamic-13', () => value++, {
+        dedupingInterval: 2000
+      })
+      useSWR('dynamic-13', () => value++, {
         dedupingInterval: 2000
       })
       return <div>data: {data}</div>
@@ -869,7 +872,7 @@ describe('useSWR - local mutation', () => {
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
     await act(() => {
       // mutate and revalidate
-      mutate('dynamic-13', 'mutate')
+      mutate('dynamic-13')
       return new Promise(res => setTimeout(res, 1))
     })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
