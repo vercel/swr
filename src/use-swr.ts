@@ -462,11 +462,8 @@ function useSWR<Data = any, Error = any>(
 
     // set up reconnecting when the browser regains network connection
     let reconnect = null
-    if (
-      typeof addEventListener !== 'undefined' &&
-      config.revalidateOnReconnect
-    ) {
-      addEventListener('online', (reconnect = softRevalidate))
+    if (!IS_SERVER && window.addEventListener && config.revalidateOnReconnect) {
+      window.addEventListener('online', (reconnect = softRevalidate))
     }
 
     return () => {
@@ -495,8 +492,8 @@ function useSWR<Data = any, Error = any>(
         }
       }
 
-      if (typeof removeEventListener !== 'undefined' && reconnect !== null) {
-        removeEventListener('online', reconnect)
+      if (!IS_SERVER && window.removeEventListener && reconnect !== null) {
+        window.removeEventListener('online', reconnect)
       }
     }
   }, [key, revalidate])
