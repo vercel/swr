@@ -36,7 +36,7 @@ export default function Pokemon({ pokemon, initialData }) {
   )
 }
 
-Pokemon.getInitialProps = async ({ query }) => {
+export async function getServerSideProps({ query }) {
   const data = await fetcher(getURL(query.pokemon))
-  return { initialData: data, pokemon: query.pokemon }
+  return { props: { initialData: data, pokemon: query.pokemon } }
 }

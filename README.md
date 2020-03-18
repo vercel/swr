@@ -389,12 +389,12 @@ try {
 ### SSR with Next.js
 
 With the `initialData` option, you pass an initial value to the hook. It works perfectly with many SSR solutions
-such as `getInitialProps` in [Next.js](https://github.com/zeit/next.js):
+such as `getServerSideProps` in [Next.js](https://github.com/zeit/next.js):
 
 ```js
-App.getInitialProps = async () => {
+export async function getServerSideProps() {
   const data = await fetcher('/api/data')
-  return { data }
+  return { props: { data } }
 }
 
 function App (props) {
