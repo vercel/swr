@@ -4,7 +4,7 @@ import isOnline from './libs/is-online'
 import {
   ConfigInterface,
   RevalidateOptionInterface,
-  revalidateType
+  revalidateType,
 } from './types'
 import Cache from './cache'
 
@@ -54,9 +54,15 @@ const slowConnection =
 // config
 const defaultConfig: ConfigInterface = {
   // events
-  onLoadingSlow: () => {},
-  onSuccess: () => {},
-  onError: () => {},
+  onLoadingSlow: () => {
+    /* do nothing */
+  },
+  onSuccess: () => {
+    /* do nothing */
+  },
+  onError: () => {
+    /* do nothing */
+  },
   onErrorRetry,
 
   errorRetryInterval: (slowConnection ? 10 : 5) * 1000,
@@ -71,7 +77,7 @@ const defaultConfig: ConfigInterface = {
   refreshWhenOffline: false,
   shouldRetryOnError: true,
   suspense: false,
-  compare: deepEqual
+  compare: deepEqual,
 }
 
 // Focus revalidate
@@ -96,6 +102,6 @@ export {
   FOCUS_REVALIDATORS,
   CACHE_REVALIDATORS,
   MUTATION_TS,
-  cache
+  cache,
 }
 export default defaultConfig
