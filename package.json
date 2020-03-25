@@ -1,6 +1,6 @@
 {
   "name": "@neolefty/swr",
-  "version": "0.2.0-fork.1",
+  "version": "0.2.0-fork.2",
   "private": false,
   "description": "React Hooks library for remote data fetching",
   "main": "./dist/index.js",
