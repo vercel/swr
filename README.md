@@ -15,6 +15,13 @@
   </a>
 </p>
 
+## Neolefty's Fork
+
+Probably temporary. The branch [`publish`](https://github.com/neolefty/swr/tree/publish) is published to [@neolefty/swr](https://www.npmjs.com/package/@neolefty/swr).
+
+* Published branch uses latest React, to see all warnings — in particular the [new warnings for React 16.13](https://reactjs.org/blog/2020/02/26/react-v16.13.0.html#warnings-for-some-updates-during-render).
+* Changes are cherry-picked to PR branches, which are submitted back to [Zeit's SWR](https://github.com/zeit/swr).
+
 ## Introduction
 
 [swr.now.sh](https://swr.now.sh)
