@@ -149,29 +149,32 @@ export function useSWRPages<OffsetType = any, Data = any, Error = any>(
         pageSWRs[id].error !== swr.error ||
         pageSWRs[id].revalidate !== swr.revalidate
       ) {
-        setPageSWRs(swrs => {
-          const _swrs = [...swrs]
-          _swrs[id] = {
-            data: swr.data,
-            error: swr.error,
-            revalidate: swr.revalidate,
-            isValidating: swr.isValidating,
-            mutate: swr.mutate
+        // hoist side effects: setPageSWRs and setPageOffsets -- https://reactjs.org/blog/2020/02/26/react-v16.13.0.html#warnings-for-some-updates-during-render
+        setTimeout(() => {
+          setPageSWRs(swrs => {
+            const _swrs = [...swrs]
+            _swrs[id] = {
+              data: swr.data,
+              error: swr.error,
+              revalidate: swr.revalidate,
+              isValidating: swr.isValidating,
+              mutate: swr.mutate
+            }
+            return _swrs
+          })
+          if (typeof swr.data !== 'undefined') {
+            // set next page's offset
+            const newPageOffset = SWRToOffset(swr, id)
+            if (pageOffsets[id + 1] !== newPageOffset) {
+              setPageOffsets(arr => {
+                const _arr = [...arr]
+                _arr[id + 1] = newPageOffset
+                cache.set(pageOffsetKey, _arr)
+                return _arr
+              })
+            }
           }
-          return _swrs
         })
-        if (typeof swr.data !== 'undefined') {
-          // set next page's offset
-          const newPageOffset = SWRToOffset(swr, id)
-          if (pageOffsets[id + 1] !== newPageOffset) {
-            setPageOffsets(arr => {
-              const _arr = [...arr]
-              _arr[id + 1] = newPageOffset
-              cache.set(pageOffsetKey, _arr)
-              return _arr
-            })
-          }
-        }
       }
       return swr
     }
