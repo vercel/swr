@@ -1,5 +1,5 @@
 {
-  "name": "swr",
+  "name": "@neolefty/swr",
   "version": "0.2.0-beta.0",
   "description": "React Hooks library for remote data fetching",
   "main": "./dist/index.js",
