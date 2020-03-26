@@ -201,6 +201,9 @@ function useSWR<Data = any, Error = any>(
   // error ref inside revalidate (is last request errored?)
   const unmountedRef = useRef(false)
   const keyRef = useRef(key)
+  
+  const currentKeyRef = useRef(key)
+  currentKeyRef.current = key
 
   const boundMutate: responseInterface<Data, Error>['mutate'] = useCallback(
     (data, shouldRevalidate) => {
@@ -289,6 +292,18 @@ function useSWR<Data = any, Error = any>(
 
         cache.set(key, newData, false)
         cache.set(keyErr, undefined, false)
+
+        // key has changed while requesting
+        // we don't want to dispatch the current hook's state
+        if (key !== currentKeyRef.current) {
+          // just broadcast and exit
+          if (!shouldDeduping) {
+            // also update other hooks
+            broadcastState(key, newData, undefined)
+          }
+          return false
+        }
+        
         keyRef.current = key
 
         // new state for the reducer
