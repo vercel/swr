@@ -125,6 +125,7 @@ const { data, error, isValidating, mutate } = useSWR(key, fetcher, options)
 - `onSuccess`: callback function when a request finishes successfully
 - `onError`: callback function when a request returns an error
 - `onErrorRetry`: handler for [error retry](#error-retries)
+- `compare`: comparison function used to detect when returned data has changed, to avoid spurious rerenders. By default, [fast-deep-equal](https://github.com/epoberezkin/fast-deep-equal) is used.
 
 When under a slow network (2G, <= 70Kbps), `errorRetryInterval` will be 10s, and
 `loadingTimeout` will be 5s by default.
