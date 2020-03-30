@@ -103,7 +103,7 @@ const { data, error, isValidating, mutate } = useSWR(key, fetcher, options)
 - `data`: data for the given key resolved by `fetcher` (or undefined if not loaded)  
 - `error`: error thrown by `fetcher` (or undefined)  
 - `isValidating`: if there's a request or revalidation loading  
-- `mutate`: function to mutate the cached data
+- `mutate(data?, shouldRevalidate?)`: function to mutate the cached data
 
 #### Options
 
@@ -121,10 +121,10 @@ const { data, error, isValidating, mutate } = useSWR(key, fetcher, options)
 - `loadingTimeout = 3000`: timeout to trigger the onLoadingSlow event
 - `errorRetryInterval = 5000`: error retry interval [(details)](#error-retries)
 - `errorRetryCount`: max error retry count [(details)](#error-retries)
-- `onLoadingSlow`: callback function when a request takes too long to load (see `loadingTimeout`)
-- `onSuccess`: callback function when a request finishes successfully
-- `onError`: callback function when a request returns an error
-- `onErrorRetry`: handler for [error retry](#error-retries)
+- `onLoadingSlow(key, config)`: callback function when a request takes too long to load (see `loadingTimeout`)
+- `onSuccess(data, key, config)`: callback function when a request finishes successfully
+- `onError(err, key, config)`: callback function when a request returns an error
+- `onErrorRetry(err, key, config, revalidate, revalidateOps)`: handler for [error retry](#error-retries)
 - `compare`: comparison function used to detect when returned data has changed, to avoid spurious rerenders. By default, [fast-deep-equal](https://github.com/epoberezkin/fast-deep-equal) is used.
 
 When under a slow network (2G, <= 70Kbps), `errorRetryInterval` will be 10s, and
@@ -341,7 +341,8 @@ function Profile () {
         // send a request to the API to update the data
         await requestUpdateUsername(newName)
         // update the local data immediately and revalidate (refetch)
-        mutate('/api/user', { ...data, name: newName })
+        // NOTE: key is pre-bound to mutate when using the useSWR hook
+        mutate({ ...data, name: newName })
       }}>Uppercase my name!</button>
     </div>
   )
@@ -386,6 +387,12 @@ try {
   // Handle an error while updating the user here
 }
 ```
+
+### Bound `mutate()`
+
+The SWR object returned by `useSWR` also contains a `mutate()` function that is pre-bound to the SWR's key.
+
+It is functionally equivalent to the global `mutate` function but does not require the `key` parameter.
 
 ### SSR with Next.js
 
