@@ -291,7 +291,6 @@ function useSWR<Data = any, Error = any>(
 
         cache.set(key, newData, false)
         cache.set(keyErr, undefined, false)
-        keyRef.current = key
 
         // new state for the reducer
         const newState: actionType<Data, Error> = {
@@ -322,7 +321,6 @@ function useSWR<Data = any, Error = any>(
         delete CONCURRENT_PROMISES_TS[key]
 
         cache.set(keyErr, err, false)
-        keyRef.current = key
 
         // get a new error
         // don't use deep equal for errors
@@ -374,7 +372,7 @@ function useSWR<Data = any, Error = any>(
     const currentHookData = stateRef.current.data
     const latestKeyedData = cache.get(key) || config.initialData
 
-    // update the state if the key changed or cache updated
+    // update the state if the key changed (not the inital render) or cache updated
     if (
       keyRef.current !== key ||
       !config.compare(currentHookData, latestKeyedData)
@@ -444,7 +442,6 @@ function useSWR<Data = any, Error = any>(
         dispatch(newState)
       }
 
-      keyRef.current = key
       if (shouldRevalidate) {
         if (dedupe) {
           return softRevalidate()
@@ -599,13 +596,13 @@ function useSWR<Data = any, Error = any>(
         // so we need to match the latest key and data (fallback to `initialData`)
         get: function() {
           stateDependencies.current.error = true
-          return keyRef.current === key ? stateRef.current.error : initialError
+          return stateRef.current.error
         }
       },
       data: {
         get: function() {
           stateDependencies.current.data = true
-          return keyRef.current === key ? stateRef.current.data : initialData
+          return stateRef.current.data
         }
       },
       isValidating: {
