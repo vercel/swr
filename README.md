@@ -341,7 +341,6 @@ function Profile () {
         // send a request to the API to update the data
         await requestUpdateUsername(newName)
         // update the local data immediately and revalidate (refetch)
-        // NOTE: key is pre-bound to mutate when using the useSWR hook
         mutate({ ...data, name: newName })
       }}>Uppercase my name!</button>
     </div>
@@ -394,7 +393,28 @@ The SWR object returned by `useSWR` also contains a `mutate()` function that is 
 
 It is functionally equivalent to the global `mutate` function but does not require the `key` parameter.
 
-const { mutate } = useSWR('/api/user')
+```js
+import useSWR from 'swr'
+
+function Profile () {
+  const { data, mutate } = useSWR('/api/user', fetcher)
+
+  return (
+    <div>
+      <h1>My name is {data.name}.</h1>
+      <button onClick={async () => {
+        const newName = data.name.toUpperCase()
+        // send a request to the API to update the data
+        await requestUpdateUsername(newName)
+        // update the local data immediately and revalidate (refetch)
+        // NOTE: key is not required when using useSWR's mutate as it's pre-bound
+        mutate({ ...data, name: newName })
+      }}>Uppercase my name!</button>
+    </div>
+  )
+}
+```
+
 ### SSR with Next.js
 
 With the `initialData` option, you pass an initial value to the hook. It works perfectly with many SSR solutions
