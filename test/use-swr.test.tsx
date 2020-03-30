@@ -1323,3 +1323,76 @@ describe('useSWR - cache', () => {
     expect(listener).toHaveBeenCalledTimes(1)
   })
 })
+
+describe('useSWR - key', () => {
+  afterEach(cleanup)
+
+  it('should respect requests after key has changed', async () => {
+    let rerender
+
+    function Page() {
+      const [mounted, setMounted] = useState(0)
+      const key = `key-1-${mounted ? 'short' : 'long'}`
+      const { data } = useSWR(key, async () => {
+        if (mounted) {
+          await new Promise(res => setTimeout(res, 100))
+          return 'short request'
+        }
+        await new Promise(res => setTimeout(res, 200))
+        return 'long request'
+      })
+      useEffect(() => setMounted(1), [])
+      rerender = setMounted
+
+      return <div>{data}</div>
+    }
+
+    const { container } = render(<Page />)
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`""`)
+    await waitForDomChange({ container })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"short request"`
+    )
+    await act(() => new Promise(res => setTimeout(res, 110))) // wait 100ms until "long request" finishes
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"short request"`
+    ) // should be "short request" still
+
+    // manually trigger a re-render from outside
+    // this triggers a re-render, and a read access to `swr.data`
+    // but the result should still be "short request"
+    await act(() => rerender(x => x + 1))
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"short request"`
+    )
+  })
+
+  it('should render undefined after key has changed', async () => {
+    function Page() {
+      const [mounted, setMounted] = useState(false)
+      const key = `key-${mounted ? '1' : '0'}`
+      const { data } = useSWR(key, async k => {
+        await new Promise(res => setTimeout(res, 200))
+        return k
+      })
+      useEffect(() => {
+        setTimeout(() => setMounted(true), 320)
+      }, [])
+      return <div>{data}</div>
+    }
+
+    //    time     data       key
+    // -> 0        undefined, '0'
+    // -> 200      0,         '0'
+    // -> 320      undefined, '1' <- this state is required; we can't show 0 here
+    // -> 520      1,         '1'
+    const { container } = render(<Page />)
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`""`) // undefined, time=0
+    await act(() => new Promise(res => setTimeout(res, 210)))
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"key-0"`) // 0, time=210
+    await act(() => new Promise(res => setTimeout(res, 200)))
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`""`) // undefined, time=410
+    await act(() => new Promise(res => setTimeout(res, 140)))
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"key-1"`) // 1, time=550
+  })
+})
