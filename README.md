@@ -387,6 +387,12 @@ try {
 }
 ```
 
+### Bound `mutate()`
+
+The SWR object returned by `useSWR` also contains a `mutate()` function that is pre-bound to the SWR's key.
+
+It is functionally equivalent to the global `mutate` function but does not require the `key` parameter.
+
 ### SSR with Next.js
 
 With the `initialData` option, you pass an initial value to the hook. It works perfectly with many SSR solutions
