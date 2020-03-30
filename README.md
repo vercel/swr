@@ -394,6 +394,7 @@ The SWR object returned by `useSWR` also contains a `mutate()` function that is 
 
 It is functionally equivalent to the global `mutate` function but does not require the `key` parameter.
 
+const { mutate } = useSWR('/api/user')
 ### SSR with Next.js
 
 With the `initialData` option, you pass an initial value to the hook. It works perfectly with many SSR solutions
