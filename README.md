@@ -341,7 +341,8 @@ function Profile () {
         // send a request to the API to update the data
         await requestUpdateUsername(newName)
         // update the local data immediately and revalidate (refetch)
-        mutate({ ...data, name: newName })
+        // NOTE: key has to be passed to mutate as it's not bound
+        mutate('/api/user', { ...data, name: newName })
       }}>Uppercase my name!</button>
     </div>
   )
