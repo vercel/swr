@@ -103,7 +103,7 @@ const { data, error, isValidating, mutate } = useSWR(key, fetcher, options)
 - `data`: data for the given key resolved by `fetcher` (or undefined if not loaded)  
 - `error`: error thrown by `fetcher` (or undefined)  
 - `isValidating`: if there's a request or revalidation loading  
-- `mutate`: function to mutate the cached data
+- `mutate(data?, shouldRevalidate?)`: function to mutate the cached data
 
 #### Options
 
@@ -121,11 +121,11 @@ const { data, error, isValidating, mutate } = useSWR(key, fetcher, options)
 - `loadingTimeout = 3000`: timeout to trigger the onLoadingSlow event
 - `errorRetryInterval = 5000`: error retry interval [(details)](#error-retries)
 - `errorRetryCount`: max error retry count [(details)](#error-retries)
-- `onLoadingSlow`: callback function when a request takes too long to load (see `loadingTimeout`)
-- `onSuccess`: callback function when a request finishes successfully
-- `onError`: callback function when a request returns an error
-- `onErrorRetry`: handler for [error retry](#error-retries)
-- `compare`: comparison function used to detect when returned data has changed, to avoid spurious rerenders. By default, [fast-deep-equal](https://github.com/epoberezkin/fast-deep-equal) is used.
+- `onLoadingSlow(key, config)`: callback function when a request takes too long to load (see `loadingTimeout`)
+- `onSuccess(data, key, config)`: callback function when a request finishes successfully
+- `onError(err, key, config)`: callback function when a request returns an error
+- `onErrorRetry(err, key, config, revalidate, revalidateOps)`: handler for [error retry](#error-retries)
+- `compare(a, b)`: comparison function used to detect when returned data has changed, to avoid spurious rerenders. By default, [fast-deep-equal](https://github.com/epoberezkin/fast-deep-equal) is used.
 
 When under a slow network (2G, <= 70Kbps), `errorRetryInterval` will be 10s, and
 `loadingTimeout` will be 5s by default.
@@ -341,6 +341,7 @@ function Profile () {
         // send a request to the API to update the data
         await requestUpdateUsername(newName)
         // update the local data immediately and revalidate (refetch)
+        // NOTE: key has to be passed to mutate as it's not bound
         mutate('/api/user', { ...data, name: newName })
       }}>Uppercase my name!</button>
     </div>
@@ -384,6 +385,34 @@ try {
   const user = await mutate('/api/user', updateUser(newUser))
 } catch (error) {
   // Handle an error while updating the user here
+}
+```
+
+### Bound `mutate()`
+
+The SWR object returned by `useSWR` also contains a `mutate()` function that is pre-bound to the SWR's key.
+
+It is functionally equivalent to the global `mutate` function but does not require the `key` parameter.
+
+```js
+import useSWR from 'swr'
+
+function Profile () {
+  const { data, mutate } = useSWR('/api/user', fetcher)
+
+  return (
+    <div>
+      <h1>My name is {data.name}.</h1>
+      <button onClick={async () => {
+        const newName = data.name.toUpperCase()
+        // send a request to the API to update the data
+        await requestUpdateUsername(newName)
+        // update the local data immediately and revalidate (refetch)
+        // NOTE: key is not required when using useSWR's mutate as it's pre-bound
+        mutate({ ...data, name: newName })
+      }}>Uppercase my name!</button>
+    </div>
+  )
 }
 ```
 
