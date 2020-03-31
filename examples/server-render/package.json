@@ -5,7 +5,7 @@
   "license": "MIT",
   "dependencies": {
     "isomorphic-unfetch": "3.0.0",
-    "next": "9.3.1",
+    "next": "9.3.3",
     "react": "16.13.0",
     "react-dom": "16.13.0",
     "swr": "latest"
