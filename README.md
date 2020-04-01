@@ -29,6 +29,7 @@ It features:
 - Fast page navigation
 - Revalidation on focus
 - Interval polling
+- Request deduplication
 - Local mutation
 - Pagination
 - TypeScript ready
@@ -68,7 +69,7 @@ of `fetcher` and rerenders the component.
 Note that `fetcher` can be any asynchronous function, so you can use your favourite data-fetching
 library to handle that part.
 
-Check out [swr.now.sh](https://swr.now.sh) for more demos of SWR.
+Check out [swr.now.sh](https://swr.now.sh) for more demos of SWR, and [Examples](#examples) for the best practices.
 
 <br/>
 
@@ -89,7 +90,7 @@ npm install swr
 ### API
 
 ```js
-const { data, error, isValidating, revalidate } = useSWR(key, fetcher, options)
+const { data, error, isValidating, mutate } = useSWR(key, fetcher, options)
 ```
 
 #### Parameters
@@ -102,7 +103,7 @@ const { data, error, isValidating, revalidate } = useSWR(key, fetcher, options)
 - `data`: data for the given key resolved by `fetcher` (or undefined if not loaded)  
 - `error`: error thrown by `fetcher` (or undefined)  
 - `isValidating`: if there's a request or revalidation loading  
-- `revalidate`: function to trigger the validation manually
+- `mutate`: function to mutate the cached data
 
 #### Options
 
@@ -110,17 +111,21 @@ const { data, error, isValidating, revalidate } = useSWR(key, fetcher, options)
 - `fetcher = undefined`: the default fetcher function
 - `initialData`: initial data to be returned (note: This is per-hook)
 - `revalidateOnFocus = true`: auto revalidate when window gets focused
+- `revalidateOnReconnect = true`: automatically revalidate when the browser regains a network connection (via `navigator.onLine`)
 - `refreshInterval = 0`: polling interval (disabled by default)
 - `refreshWhenHidden = false`: polling when the window is invisible (if `refreshInterval` is enabled)
+- `refreshWhenOffline = false`: polling when the browser is offline (determined by `navigator.onLine`)
 - `shouldRetryOnError = true`: retry when fetcher has an error [(details)](#error-retries)
 - `dedupingInterval = 2000`: dedupe requests with the same key in this time span
 - `focusThrottleInterval = 5000`: only revalidate once during a time span
 - `loadingTimeout = 3000`: timeout to trigger the onLoadingSlow event
 - `errorRetryInterval = 5000`: error retry interval [(details)](#error-retries)
-- `onLoadingSlow`: callback function when a request takes too long to load (`loadingTimeout`)
-- `onSuccess`: callback function when a request finishs successfully
+- `errorRetryCount`: max error retry count [(details)](#error-retries)
+- `onLoadingSlow`: callback function when a request takes too long to load (see `loadingTimeout`)
+- `onSuccess`: callback function when a request finishes successfully
 - `onError`: callback function when a request returns an error
 - `onErrorRetry`: handler for [error retry](#error-retries)
+- `compare`: comparison function used to detect when returned data has changed, to avoid spurious rerenders. By default, [fast-deep-equal](https://github.com/epoberezkin/fast-deep-equal) is used.
 
 When under a slow network (2G, <= 70Kbps), `errorRetryInterval` will be 10s, and
 `loadingTimeout` will be 5s by default.
@@ -137,10 +142,13 @@ You can also use [global configuration](#global-configuration) to provide defaul
 - [Dependent Fetching](#dependent-fetching)
 - [Multiple Arguments](#multiple-arguments)
 - [Manually Revalidate](#manually-revalidate)
-- [Local Mutation](#local-mutation)
+- [Mutation and Post Request](#mutation-and-post-request)
+- [Mutate Based on Current Data](#mutate-based-on-current-data)
+- [Returned Data from Mutate](#returned-data-from-mutate)
 - [SSR with Next.js](#ssr-with-nextjs)
 - [Suspense Mode](#suspense-mode)
 - [Error Retries](#error-retries)
+- [Prefetching Data](#prefetching-data)
 
 ### Global Configuration
 
@@ -174,7 +182,7 @@ function App () {
 
 ### Data Fetching
 
-`fetcher` is a function **accepts the `key`** of SWR, and returns a value or a Promise.  
+`fetcher` is a function that **accepts the `key`** of SWR, and returns a value or a Promise.  
 You can use any library to handle data fetching, for example:
 
 ```js
@@ -213,7 +221,7 @@ function App () {
 
 _If you want to pass variables to a GraphQL query, check out [Multiple Arguments](#multiple-arguments)._
 
-Note that `fetcher` can be skipped from the parameters if it's provided gloablly.
+Note that `fetcher` can be omitted from the parameters if it's provided globally.
 
 ### Conditional Fetching
 
@@ -253,7 +261,7 @@ function MyProjects () {
 In some scenarios, it's useful pass multiple arguments (can be any value or object) to the `fetcher` function. For example:
 
 ```js
-useSWR('/api/data', url => fetchWithToken(url, token))
+useSWR('/api/user', url => fetchWithToken(url, token))
 ```
 
 This is **incorrect**. Because the identifier (also the index of the cache) of the data is `'/api/data'`, 
@@ -262,10 +270,13 @@ so even if `token` changes, SWR will still have the same key and return the wron
 Instead, you can use an **array** as the `key` parameter, which contains multiple arguments of `fetcher`:
 
 ```js
-useSWR(['/api/data', token], fetchWithToken)
+const { data: user } = useSWR(['/api/user', token], fetchWithToken)
+
+// ...and pass it as an argument to another query
+const { data: orders } = useSWR(user ? ['/api/orders', user] : null, fetchWithUser)
 ```
 
-This solves the problem. The key of the request is now the combination of both values. SWR **shallowly** compares
+The key of the request is now the combination of both values. SWR **shallowly** compares
 the arguments on every render, and triggers revalidation if any of them has changed.  
 Keep in mind that you should not recreate objects when rendering, as they will be treated as different objects on every render:
 
@@ -273,9 +284,8 @@ Keep in mind that you should not recreate objects when rendering, as they will b
 // Don’t do this! Deps will be changed on every render.
 useSWR(['/api/user', { id }], query)
 
-// Make sure objects are stable
-const params = useMemo(() => ({ id }), [id])
-useSWR(['/api/user', params], query)
+// Instead, you should only pass “stable” values.
+useSWR(['/api/user', id], (url, id) => query(url, { id }))
 ```
 
 Dan Abramov explains dependencies very well in [this blog post](https://overreacted.io/a-complete-guide-to-useeffect/#but-i-cant-put-this-function-inside-an-effect).
@@ -283,13 +293,13 @@ Dan Abramov explains dependencies very well in [this blog post](https://overreac
 ### Manually Revalidate
 
 You can broadcast a revalidation message globally to all SWRs with the same key by calling
-`trigger(key)`.
+`mutate(key)`.
 
 This example shows how to automatically refetch the login info (e.g.: inside `<Profile/>`) 
 when the user clicks the “Logout” button.
 
 ```js
-import useSWR, { trigger } from 'swr'
+import useSWR, { mutate } from 'swr'
 
 function App () {
   return (
@@ -300,7 +310,7 @@ function App () {
         document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
 
         // tell all SWRs with this key to revalidate
-        trigger('/api/user')
+        mutate('/api/user')
       }}>
         Logout
       </button>
@@ -309,7 +319,7 @@ function App () {
 }
 ```
 
-### Local Mutation
+### Mutation and Post Request
 
 In many cases, applying local mutations to data is a good way to make changes
 feel faster — no need to wait for the remote source of data.
@@ -350,15 +360,42 @@ mutate('/api/user', updateUser(newUser)) // `updateUser` is a Promise of the req
                                          // which returns the updated document
 ```
 
+### Mutate Based on Current Data
+
+In many cases, you are receiving a single value back from your API and want to update a list of them.
+
+With `mutate`, you can pass an async function which will receive the current cached value, if any, and let you return an updated document.
+
+```js
+mutate('/api/users', async users => {
+  const user = await fetcher('/api/users/1')
+  return [user, ...users.slice(1)]
+})
+```
+
+### Returned Data from Mutate
+
+Most probably, you need to data mutate used to update the cache when you passed a promise or async function.
+
+The function will returns the updated document, or throw an error, everytime you call it.
+
+```js
+try {
+  const user = await mutate('/api/user', updateUser(newUser))
+} catch (error) {
+  // Handle an error while updating the user here
+}
+```
+
 ### SSR with Next.js
 
 With the `initialData` option, you pass an initial value to the hook. It works perfectly with many SSR solutions
-such as `getInitialProps` in [Next.js](https://github.com/zeit/next.js):
+such as `getServerSideProps` in [Next.js](https://github.com/zeit/next.js):
 
 ```js
-App.getInitialProps = async () => {
+export async function getServerSideProps() {
   const data = await fetcher('/api/data')
-  return { data }
+  return { props: { data } }
 }
 
 function App (props) {
@@ -417,6 +454,29 @@ useSWR(key, fetcher, {
   }
 })
 ```
+
+### Prefetching Data
+
+There’re many ways to prefetch the data for SWR. For top level requests, [`rel="preload"`](https://developer.mozilla.org/en-US/docs/Web/HTML/Preloading_content) is highly recommended:
+
+```html
+<link rel="preload" href="/api/data" as="fetch" crossorigin="anonymous">
+```
+
+This will prefetch the data before the JavaScript starts downloading. And your incoming fetch requests will reuse the result (including SWR, of course).
+
+Another choice is to prefetch the data conditionally. You can have a function to refetch and set the cache:
+
+```js
+function prefetch () {
+  mutate('/api/data', fetch('/api/data').then(res => res.json()))
+  // the second parameter is a Promise
+  // SWR will use the result when it resolves
+}
+```
+
+And use it when you need to preload the **resources** (for example when [hovering](https://github.com/GoogleChromeLabs/quicklink) [a](https://github.com/guess-js/guess) [link](https://instant.page)).  
+Together with techniques like [page prefetching](https://nextjs.org/docs#prefetching-pages) in Next.js, you will be able to load both next page and data instantly.
 
 <br/>
 

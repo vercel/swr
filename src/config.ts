@@ -1,26 +1,15 @@
+import deepEqual from 'fast-deep-equal'
 import isDocumentVisible from './libs/is-document-visible'
 import isOnline from './libs/is-online'
-
 import {
   ConfigInterface,
-  revalidateType,
-  RevalidateOptionInterface
+  RevalidateOptionInterface,
+  revalidateType
 } from './types'
+import Cache from './cache'
 
-// Cache
-const __cache = new Map()
-
-function cacheGet(key: string): any {
-  return __cache.get(key) || undefined
-}
-
-function cacheSet(key: string, value: any) {
-  return __cache.set(key, value)
-}
-
-function cacheClear() {
-  __cache.clear()
-}
+// cache
+const cache = new Cache()
 
 // state managers
 const CONCURRENT_PROMISES = {}
@@ -43,12 +32,24 @@ function onErrorRetry(
     return
   }
 
+  if (config.errorRetryCount && opts.retryCount > config.errorRetryCount) {
+    return
+  }
+
   // exponential backoff
   const count = Math.min(opts.retryCount || 0, 8)
   const timeout =
     ~~((Math.random() + 0.5) * (1 << count)) * config.errorRetryInterval
   setTimeout(revalidate, timeout, opts)
 }
+
+// client side: need to adjust the config
+// based on the browser status
+// slow connection (<= 70Kbps)
+const slowConnection =
+  typeof window !== 'undefined' &&
+  navigator['connection'] &&
+  ['slow-2g', '2g'].indexOf(navigator['connection'].effectiveType) !== -1
 
 // config
 const defaultConfig: ConfigInterface = {
@@ -58,31 +59,19 @@ const defaultConfig: ConfigInterface = {
   onError: () => {},
   onErrorRetry,
 
-  errorRetryInterval: 5 * 1000,
+  errorRetryInterval: (slowConnection ? 10 : 5) * 1000,
   focusThrottleInterval: 5 * 1000,
   dedupingInterval: 2 * 1000,
-  loadingTimeout: 3 * 1000,
+  loadingTimeout: (slowConnection ? 5 : 3) * 1000,
 
   refreshInterval: 0,
   revalidateOnFocus: true,
+  revalidateOnReconnect: true,
   refreshWhenHidden: false,
+  refreshWhenOffline: false,
   shouldRetryOnError: true,
-  suspense: false
-}
-
-if (typeof window !== 'undefined') {
-  // client side: need to adjust the config
-  // based on the browser status
-
-  // slow connection (<= 70Kbps)
-  if (navigator['connection']) {
-    if (
-      ['slow-2g', '2g'].indexOf(navigator['connection'].effectiveType) !== -1
-    ) {
-      defaultConfig.errorRetryInterval = 10 * 1000
-      defaultConfig.loadingTimeout = 5 * 1000
-    }
-  }
+  suspense: false,
+  compare: deepEqual
 }
 
 // Focus revalidate
@@ -107,8 +96,6 @@ export {
   FOCUS_REVALIDATORS,
   CACHE_REVALIDATORS,
   MUTATION_TS,
-  cacheGet,
-  cacheSet,
-  cacheClear
+  cache
 }
 export default defaultConfig

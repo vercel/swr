@@ -26,7 +26,7 @@ export default function Home({ initialData }) {
   )
 }
 
-Home.getInitialProps = async () => {
+export async function getServerSideProps() {
   const data = await fetcher(URL)
-  return { initialData: data }
+  return { props: { initialData: data } }
 }

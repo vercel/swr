@@ -4,7 +4,7 @@
     "esModuleInterop": true,
     "jsx": "react",
     "lib": [
-      "esnext", "DOM"
+      "esnext", "dom"
     ],
     "module": "commonjs",
     "moduleResolution": "node",
@@ -17,7 +17,7 @@
     "types": [
       "node", "jest"
     ],
-    "target": "esnext",
+    "target": "es5",
     "typeRoots": [
       "./types",
       "./node_modules/@types"

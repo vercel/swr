@@ -5,5 +5,5 @@ export default async function<JSON = any>(
   init?: RequestInit
 ): Promise<JSON> {
   const res = await fetch(input, init)
-  return await res.json()
+  return res.json()
 }
