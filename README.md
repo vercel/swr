@@ -509,6 +509,22 @@ Together with techniques like [page prefetching](https://nextjs.org/docs#prefetc
 
 <br/>
 
+## Testing
+
+Because SWR uses a global cache, you will need to reset it in between your tests. Otherwise, cached data could leak across tests.
+
+To reset the cache use the `cache` named import and call `cache.clear()` after each test:
+
+```js
+import { cache } from "swr";
+
+afterEach(() => {
+  cache.clear();
+});
+```
+
+See [PR #231](https://github.com/zeit/swr/pull/231) for more info on the cache API.
+
 ## Authors
 - Shu Ding ([@shuding_](https://twitter.com/shuding_)) – [ZEIT](https://zeit.co)
 - Guillermo Rauch ([@rauchg](https://twitter.com/rauchg)) – [ZEIT](https://zeit.co)
