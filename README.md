@@ -331,19 +331,27 @@ revalidating and finally replace it with the latest data.
 import useSWR, { mutate } from 'swr'
 
 function Profile () {
-  const { data } = useSWR('/api/user', fetcher)
+  const { data: items } = useSWR('/api/todos', fetcher)
+
+  if (!items) return 'Loading...'
 
   return (
     <div>
-      <h1>My name is {data.name}.</h1>
+      {items.map(item => <div key={item.id}>{item.text}</div>}
+      
       <button onClick={async () => {
-        const newName = data.name.toUpperCase()
+        const newItem = { id: '...', text: '...' }
+        
+        // 
+        mutate('/api/user', [...items, newItem], false)
+
         // send a request to the API to update the data
-        await requestUpdateUsername(newName)
+        await addNewTodoItem(newItem)
+
         // update the local data immediately and revalidate (refetch)
-        // NOTE: key has to be passed to mutate as it's not bound
-        mutate('/api/user', { ...data, name: newName })
-      }}>Uppercase my name!</button>
+        mutate('/api/user', [...items, newItem])
+
+      }}>Add Item</button>
     </div>
   )
 }
@@ -353,12 +361,18 @@ Clicking the button in the example above will send a POST request to modify the 
 try to fetch the latest one (revalidate).
 
 But many POST APIs will just return the updated data directly, so we don’t need to revalidate again.  
-Here’s an example showing the “local mutate - request - update” usage:
+Here’s an example showing the “local mutate - request - update” usage (optimistic UI):
 
 ```js
-mutate('/api/user', newUser, false)      // use `false` to mutate without revalidation
-mutate('/api/user', updateUser(newUser)) // `updateUser` is a Promise of the request,
-                                         // which returns the updated document
+mutate('/api/user', newUser)             // mutate local state and trigger a revalidation
+mutate('/api/user', newUser, false)      // disable revalidation
+
+/**
+ * Passing a Promise which returns the updated data
+ * disable revalidation since the request returns
+ * the latest data already
+ */
+mutate('/api/api', axios.post('/api/data', newData).then(res => res.data), false)
 ```
 
 ### Mutate Based on Current Data
