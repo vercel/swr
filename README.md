@@ -524,9 +524,7 @@ Your test setup will end up looking something like this. Assume we're testing ou
 import React from "react";
 import {
   render,
-  waitForElement,
-  waitForElementToBeRemoved,
-  fireEvent
+  waitForElementToBeRemoved
 } from "@testing-library/react";
 import AppComponent from "../App";
 import { cache, SWRConfig } from "swr";
