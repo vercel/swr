@@ -142,7 +142,7 @@ You can also use [global configuration](#global-configuration) to provide defaul
 - [Dependent Fetching](#dependent-fetching)
 - [Multiple Arguments](#multiple-arguments)
 - [Manually Revalidate](#manually-revalidate)
-- [Mutation and Post Request](#mutation-and-post-request)
+- [Mutation and Optimistic Updates](#mutation-and-optimistic-updates)
 - [Mutate Based on Current Data](#mutate-based-on-current-data)
 - [Returned Data from Mutate](#returned-data-from-mutate)
 - [SSR with Next.js](#ssr-with-nextjs)
@@ -319,7 +319,7 @@ function App () {
 }
 ```
 
-### Mutation and Post Request
+### Mutation and Optimistic Updates
 
 In many cases, applying local mutations to data is a good way to make changes
 feel faster — no need to wait for the remote source of data.
@@ -330,49 +330,74 @@ revalidating and finally replace it with the latest data.
 ```js
 import useSWR, { mutate } from 'swr'
 
-function Profile () {
-  const { data: items } = useSWR('/api/todos', fetcher)
+// APIs:
+// GET    /api/todos       return a list of todo items
+// DELETE /api/todo/:id    delete an item from id
 
-  if (!items) return 'Loading...'
+function TodoList () {
+  const { data: todos } = useSWR('/api/todos', fetcher)
+  if (!todos) return 'Loading...'
+  return (
+    <div>{
+      todos.map(todo =>
+        <Todo key={todo.id} id={todo.id} text={todo.text} />
+      )
+     }</div>
+  )
+}
 
+function Todo ({ id, text }) {
   return (
     <div>
-      {items.map(item => <div key={item.id}>{item.text}</div>}
-      
+      {text}
       <button onClick={async () => {
-        const newItem = { id: '...', text: '...' }
+        // mutate(key, data => newData, revalidate?)
+        // 1. remove this item from the list immediately
+        mutate('/api/todos', todos => todos.filter(t => t.id === id), false)
         
-        // 
-        mutate('/api/user', [...items, newItem], false)
-
-        // send a request to the API to update the data
-        await addNewTodoItem(newItem)
-
-        // update the local data immediately and revalidate (refetch)
-        mutate('/api/user', [...items, newItem])
-
-      }}>Add Item</button>
+        // 2. send a request to the API
+        await fetcher(`/api/todo/${id}`, { method: 'DELETE' })
+        
+        // 3. trigger a revalidation
+        mutate('/api/todos')
+      }}>remove</button>
     </div>
   )
 }
 ```
 
-Clicking the button in the example above will send a POST request to modify the remote data, locally update the client data and
-try to fetch the latest one (revalidate).
+When clicking the button in the example above, the item will be removed from the list **immediately via local mutation** (1). At the same time a DELETE request will be sent to modify the actual server-side data (2). After the request ends, we need to refetch the list (3) to make sure the local mutation is correct and sync up with the server.
 
-But many POST APIs will just return the updated data directly, so we don’t need to revalidate again.  
-Here’s an example showing the “local mutate - request - update” usage (optimistic UI):
+But many POST APIs return the updated data directly, so we don’t need to revalidate again.  
+Here’s an example showing the “local mutate - request - update” usage:
 
 ```js
-mutate('/api/user', newUser)             // mutate local state and trigger a revalidation
-mutate('/api/user', newUser, false)      // disable revalidation
+// POST /api/todos/complete   complete all items and return the new list
 
-/**
- * Passing a Promise which returns the updated data
- * disable revalidation since the request returns
- * the latest data already
- */
-mutate('/api/api', axios.post('/api/data', newData).then(res => res.data), false)
+function completeAll() {
+  mutate('/api/todos', async () => {
+    const updatedTodos = await fetcher(`/api/todos/complete`, { method: 'POST' })
+    return updatedTodos
+  })
+  
+  // or simplier, just pass a promise:
+  // mutate('/api/todos', fetcher(`/api/todos/complete`, { method: 'POST' }))
+}
+```
+
+Note that this time, we didn't pass a `false` option to `mutate` since we do want to revalidate after the request finishes. And there're many ways to :
+
+```js
+mutate('/api/data', newData)             // mutate local state and trigger a revalidation
+mutate('/api/data', newData, false)      // disable revalidation
+
+// similar to React's `setState(oldVal => newVal)`, you can use a function to manipulate the data
+mutate('/api/api', data => newData)
+// or use an async function
+mutate('/api/api', async data => newData)
+
+// a promise can be accepted too
+mutate('/api/api', promiseReturnsTheData)
 ```
 
 ### Mutate Based on Current Data
@@ -528,6 +553,7 @@ Together with techniques like [page prefetching](https://nextjs.org/docs#prefetc
 - Guillermo Rauch ([@rauchg](https://twitter.com/rauchg)) – [ZEIT](https://zeit.co)
 - Joe Haddad ([@timer150](https://twitter.com/timer150)) - [ZEIT](https://zeit.co)
 - Paco Coursey ([@pacocoursey](https://twitter.com/pacocoursey)) - [ZEIT](https://zeit.co)
+- Sergio Xalambrí ([@sergiodxa](https://twitter.com/sergiodxa))
 
 Thanks to Ryan Chen for providing the awesome `swr` npm package name!
 
