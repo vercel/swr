@@ -1322,6 +1322,79 @@ describe('useSWR - cache', () => {
 
     expect(listener).toHaveBeenCalledTimes(1)
   })
+
+  it('should clear cache when clear is called', async () => {
+    const mockedFetcher = jest.fn(() => Promise.resolve('SWR'))
+    function Section() {
+      const { data } = useSWR('suspense-9', mockedFetcher, {
+        suspense: true
+      })
+      return <div>{data}</div>
+    }
+    // https://reactjs.org/docs/concurrent-mode-suspense.html#handling-errors
+    const first = render(
+      <ErrorBoundary fallback={<div>error boundary</div>}>
+        <Suspense fallback={<div>fallback</div>}>
+          <Section />
+        </Suspense>
+      </ErrorBoundary>
+    )
+
+    // hydration
+    expect(first.container.textContent).toMatchInlineSnapshot(`"fallback"`)
+    console.log(first.container.textContent)
+    await waitForDomChange({ container: first.container })
+    console.log(first.container.textContent)
+    expect(first.container.textContent).toMatchInlineSnapshot(`"SWR"`)
+    expect(mockedFetcher).toHaveBeenCalledTimes(1)
+    console.info('*The warning above can be ignored (caught by ErrorBoundary).')
+
+    first.unmount()
+
+    cache.clear()
+
+    const second = render(
+      <ErrorBoundary fallback={<div>error boundary</div>}>
+        <Suspense fallback={<div>fallback</div>}>
+          <Section />
+        </Suspense>
+      </ErrorBoundary>
+    )
+
+    // hydration, again
+    expect(second.container.textContent).toMatchInlineSnapshot(`"fallback"`)
+    console.log(second.container.textContent)
+    await waitForDomChange({ container: second.container })
+    console.log(second.container.textContent)
+    expect(second.container.textContent).toMatchInlineSnapshot(`"SWR"`)
+    expect(mockedFetcher).toHaveBeenCalledTimes(2)
+    console.info('*The warning above can be ignored (caught by ErrorBoundary).')
+
+    second.unmount()
+
+    cache.clear()
+
+    mockedFetcher.mockImplementationOnce(() => Promise.reject('error'))
+
+    const third = render(
+      <ErrorBoundary fallback={<div>error boundary</div>}>
+        <Suspense fallback={<div>fallback</div>}>
+          <Section />
+        </Suspense>
+      </ErrorBoundary>
+    )
+
+    // hydration, again with errors this time
+    expect(third.container.textContent).toMatchInlineSnapshot(`"fallback"`)
+    console.log(third.container.textContent)
+    await waitForDomChange({ container: third.container })
+    console.log(third.container.textContent)
+    expect(third.container.textContent).toMatchInlineSnapshot(
+      `"error boundary"`
+    )
+    expect(mockedFetcher).toHaveBeenCalledTimes(3)
+    console.info('*The warning above can be ignored (caught by ErrorBoundary).')
+  })
 })
 
 describe('useSWR - key', () => {
