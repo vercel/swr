@@ -1342,15 +1342,12 @@ describe('useSWR - cache', () => {
 
     // hydration
     expect(first.container.textContent).toMatchInlineSnapshot(`"fallback"`)
-    console.log(first.container.textContent)
     await waitForDomChange({ container: first.container })
-    console.log(first.container.textContent)
     expect(first.container.textContent).toMatchInlineSnapshot(`"SWR"`)
     expect(mockedFetcher).toHaveBeenCalledTimes(1)
     console.info('*The warning above can be ignored (caught by ErrorBoundary).')
 
     first.unmount()
-
     cache.clear()
 
     const second = render(
@@ -1363,15 +1360,12 @@ describe('useSWR - cache', () => {
 
     // hydration, again
     expect(second.container.textContent).toMatchInlineSnapshot(`"fallback"`)
-    console.log(second.container.textContent)
     await waitForDomChange({ container: second.container })
-    console.log(second.container.textContent)
     expect(second.container.textContent).toMatchInlineSnapshot(`"SWR"`)
     expect(mockedFetcher).toHaveBeenCalledTimes(2)
     console.info('*The warning above can be ignored (caught by ErrorBoundary).')
 
     second.unmount()
-
     cache.clear()
 
     mockedFetcher.mockImplementationOnce(() => Promise.reject('error'))
@@ -1386,9 +1380,7 @@ describe('useSWR - cache', () => {
 
     // hydration, again with errors this time
     expect(third.container.textContent).toMatchInlineSnapshot(`"fallback"`)
-    console.log(third.container.textContent)
     await waitForDomChange({ container: third.container })
-    console.log(third.container.textContent)
     expect(third.container.textContent).toMatchInlineSnapshot(
       `"error boundary"`
     )
