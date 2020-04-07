@@ -1,6 +1,7 @@
 import { CacheInterface, keyInterface, cacheListener } from './types'
 import { mutate } from './use-swr'
 import hash from './libs/hash'
+import { CONCURRENT_PROMISES } from './config'
 
 export default class Cache implements CacheInterface {
   private __cache: Map<string, any>
@@ -35,6 +36,9 @@ export default class Cache implements CacheInterface {
   clear(shouldNotify = true) {
     if (shouldNotify) this.__cache.forEach(key => mutate(key, null, false))
     this.__cache.clear()
+    Object.keys(CONCURRENT_PROMISES).forEach(k => {
+      delete CONCURRENT_PROMISES[k]
+    })
     this.notify()
   }
 
