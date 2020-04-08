@@ -1340,11 +1340,11 @@ describe('useSWR - cache', () => {
       </ErrorBoundary>
     )
 
-    // hydration
+    // check hydration
+    expect(mockedFetcher).toHaveBeenCalledTimes(1)
     expect(first.container.textContent).toMatchInlineSnapshot(`"fallback"`)
     await waitForDomChange({ container: first.container })
     expect(first.container.textContent).toMatchInlineSnapshot(`"SWR"`)
-    expect(mockedFetcher).toHaveBeenCalledTimes(1)
     console.info('*The warning above can be ignored (caught by ErrorBoundary).')
 
     first.unmount()
@@ -1358,11 +1358,11 @@ describe('useSWR - cache', () => {
       </ErrorBoundary>
     )
 
-    // hydration, again
+    // check full hydration, again
+    expect(mockedFetcher).toHaveBeenCalledTimes(2)
     expect(second.container.textContent).toMatchInlineSnapshot(`"fallback"`)
     await waitForDomChange({ container: second.container })
     expect(second.container.textContent).toMatchInlineSnapshot(`"SWR"`)
-    expect(mockedFetcher).toHaveBeenCalledTimes(2)
     console.info('*The warning above can be ignored (caught by ErrorBoundary).')
 
     second.unmount()
@@ -1377,10 +1377,16 @@ describe('useSWR - cache', () => {
       </ErrorBoundary>
     )
 
-    expect(third.container.textContent).toMatchInlineSnapshot(`"fallback"`)
+    // check loading
     expect(mockedFetcher).toHaveBeenCalledTimes(3)
+    expect(third.container.textContent).toMatchInlineSnapshot(`"fallback"`)
     console.info('*The warning above can be ignored (caught by ErrorBoundary).')
 
+    // don't wait for responses, immediately unmount and clear
+    third.unmount()
+    cache.clear()
+
+    // change response
     mockedFetcher.mockImplementationOnce(() => Promise.reject('error'))
 
     const fourth = render(
@@ -1391,12 +1397,13 @@ describe('useSWR - cache', () => {
       </ErrorBoundary>
     )
 
+    // check full hydration, but for error path
+    expect(mockedFetcher).toHaveBeenCalledTimes(4)
     expect(fourth.container.textContent).toMatchInlineSnapshot(`"fallback"`)
     await waitForDomChange({ container: fourth.container })
     expect(fourth.container.textContent).toMatchInlineSnapshot(
       `"error boundary"`
     )
-    expect(mockedFetcher).toHaveBeenCalledTimes(4)
     console.info('*The warning above can be ignored (caught by ErrorBoundary).')
   })
 })
