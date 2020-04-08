@@ -1361,7 +1361,7 @@ describe('useSWR - cache', () => {
       </ErrorBoundary>
     )
 
-    // check full hydration, third  time
+    // check full hydration, again
     expect(mockedFetcher).toHaveBeenCalledTimes(1)
     expect(second.container.textContent).toMatchInlineSnapshot(`"fallback"`)
     await waitForDomChange({ container: second.container })
@@ -1379,7 +1379,7 @@ describe('useSWR - cache', () => {
       </ErrorBoundary>
     )
 
-    // check full hydration, again
+    // check full hydration, third time
     expect(mockedFetcher).toHaveBeenCalledTimes(1)
     expect(third.container.textContent).toMatchInlineSnapshot(`"fallback"`)
     await waitForDomChange({ container: third.container })
@@ -1389,7 +1389,7 @@ describe('useSWR - cache', () => {
     cache.clear()
     mockedFetcher.mockClear()
 
-    // what if we don't wait for request to resolve
+    // what if we don't wait for request to resolve this time
     const fourth = render(
       <ErrorBoundary fallback={<div>error boundary</div>}>
         <Suspense fallback={<div>fallback</div>}>
