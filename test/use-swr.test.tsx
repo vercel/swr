@@ -1368,8 +1368,7 @@ describe('useSWR - cache', () => {
     second.unmount()
     cache.clear()
 
-    mockedFetcher.mockImplementationOnce(() => Promise.reject('error'))
-
+    // what if we don't wait for request to resolve
     const third = render(
       <ErrorBoundary fallback={<div>error boundary</div>}>
         <Suspense fallback={<div>fallback</div>}>
@@ -1378,13 +1377,26 @@ describe('useSWR - cache', () => {
       </ErrorBoundary>
     )
 
-    // hydration, again with errors this time
     expect(third.container.textContent).toMatchInlineSnapshot(`"fallback"`)
-    await waitForDomChange({ container: third.container })
-    expect(third.container.textContent).toMatchInlineSnapshot(
+    expect(mockedFetcher).toHaveBeenCalledTimes(3)
+    console.info('*The warning above can be ignored (caught by ErrorBoundary).')
+
+    mockedFetcher.mockImplementationOnce(() => Promise.reject('error'))
+
+    const fourth = render(
+      <ErrorBoundary fallback={<div>error boundary</div>}>
+        <Suspense fallback={<div>fallback</div>}>
+          <Section />
+        </Suspense>
+      </ErrorBoundary>
+    )
+
+    expect(fourth.container.textContent).toMatchInlineSnapshot(`"fallback"`)
+    await waitForDomChange({ container: fourth.container })
+    expect(fourth.container.textContent).toMatchInlineSnapshot(
       `"error boundary"`
     )
-    expect(mockedFetcher).toHaveBeenCalledTimes(3)
+    expect(mockedFetcher).toHaveBeenCalledTimes(4)
     console.info('*The warning above can be ignored (caught by ErrorBoundary).')
   })
 })
