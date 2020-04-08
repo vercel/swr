@@ -1325,16 +1325,16 @@ describe('useSWR - cache', () => {
 
   it('should clear cache when clear is called', async () => {
     const mockedFetcher = jest.fn(
-      () => new Promise(resolve => setTimeout(() => resolve('SWR'), 100))
+      () => new Promise(resolve => setTimeout(() => resolve('SWR'), 300))
     )
     function Section() {
       const { data } = useSWR('suspense-9', mockedFetcher, {
-        suspense: true,
-        dedupingInterval: 0
+        suspense: true
       })
       return <div>{data}</div>
     }
     // https://reactjs.org/docs/concurrent-mode-suspense.html#handling-errors
+    console.log('first')
     const first = render(
       <ErrorBoundary fallback={<div>error boundary</div>}>
         <Suspense fallback={<div>fallback</div>}>
@@ -1353,6 +1353,7 @@ describe('useSWR - cache', () => {
     cache.clear()
     mockedFetcher.mockClear()
 
+    console.log('second')
     const second = render(
       <ErrorBoundary fallback={<div>error boundary</div>}>
         <Suspense fallback={<div>fallback</div>}>
@@ -1371,6 +1372,7 @@ describe('useSWR - cache', () => {
     cache.clear()
     mockedFetcher.mockClear()
 
+    console.log('third')
     const third = render(
       <ErrorBoundary fallback={<div>error boundary</div>}>
         <Suspense fallback={<div>fallback</div>}>
@@ -1390,6 +1392,7 @@ describe('useSWR - cache', () => {
     mockedFetcher.mockClear()
 
     // what if we don't wait for request to resolve this time
+    console.log('fourth')
     const fourth = render(
       <ErrorBoundary fallback={<div>error boundary</div>}>
         <Suspense fallback={<div>fallback</div>}>
@@ -1408,10 +1411,12 @@ describe('useSWR - cache', () => {
     mockedFetcher.mockClear()
 
     // change response
+    // this one needs to be longer to expose race conditions
     mockedFetcher.mockImplementationOnce(
-      () => new Promise((_, reject) => setTimeout(() => reject('error'), 100))
+      () => new Promise((_, reject) => setTimeout(() => reject('error'), 500))
     )
 
+    console.log('fifth')
     const fifth = render(
       <ErrorBoundary fallback={<div>error boundary</div>}>
         <Suspense fallback={<div>fallback</div>}>
