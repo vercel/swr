@@ -1377,7 +1377,7 @@ describe('useSWR - cache', () => {
       </ErrorBoundary>
     )
 
-    // check loading
+    // just check loading
     expect(mockedFetcher).toHaveBeenCalledTimes(3)
     expect(third.container.textContent).toMatchInlineSnapshot(`"fallback"`)
     console.info('*The warning above can be ignored (caught by ErrorBoundary).')
