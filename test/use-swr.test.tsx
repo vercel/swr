@@ -1329,7 +1329,8 @@ describe('useSWR - cache', () => {
     )
     function Section() {
       const { data } = useSWR('suspense-9', mockedFetcher, {
-        suspense: true
+        suspense: true,
+        dedupingInterval: 0
       })
       return <div>{data}</div>
     }

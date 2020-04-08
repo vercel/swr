@@ -267,12 +267,14 @@ function useSWR<Data = any, Error = any>(
 
           CONCURRENT_PROMISES_TS[key] = startAt = Date.now()
 
-          newData = await CONCURRENT_PROMISES[key]
+          let p = CONCURRENT_PROMISES[key]
 
           setTimeout(() => {
             delete CONCURRENT_PROMISES[key]
             delete CONCURRENT_PROMISES_TS[key]
           }, config.dedupingInterval)
+
+          newData = await p
 
           // trigger the success event,
           // only do this for the original request.
