@@ -1324,10 +1324,13 @@ describe('useSWR - cache', () => {
   })
 
   it('should clear cache when clear is called', async () => {
-    const mockedFetcher = jest.fn(() => Promise.resolve('SWR'))
+    const mockedFetcher = jest.fn(
+      () => new Promise(resolve => setTimeout(() => resolve('SWR'), 100))
+    )
     function Section() {
       const { data } = useSWR('suspense-9', mockedFetcher, {
-        suspense: true
+        suspense: true,
+        dedupingInterval: 0
       })
       return <div>{data}</div>
     }
@@ -1345,10 +1348,10 @@ describe('useSWR - cache', () => {
     expect(first.container.textContent).toMatchInlineSnapshot(`"fallback"`)
     await waitForDomChange({ container: first.container })
     expect(first.container.textContent).toMatchInlineSnapshot(`"SWR"`)
-    console.info('*The warning above can be ignored (caught by ErrorBoundary).')
 
     first.unmount()
     cache.clear()
+    mockedFetcher.mockClear()
 
     const second = render(
       <ErrorBoundary fallback={<div>error boundary</div>}>
@@ -1358,17 +1361,16 @@ describe('useSWR - cache', () => {
       </ErrorBoundary>
     )
 
-    // check full hydration, again
-    expect(mockedFetcher).toHaveBeenCalledTimes(2)
+    // check full hydration, third  time
+    expect(mockedFetcher).toHaveBeenCalledTimes(1)
     expect(second.container.textContent).toMatchInlineSnapshot(`"fallback"`)
     await waitForDomChange({ container: second.container })
     expect(second.container.textContent).toMatchInlineSnapshot(`"SWR"`)
-    console.info('*The warning above can be ignored (caught by ErrorBoundary).')
 
     second.unmount()
     cache.clear()
+    mockedFetcher.mockClear()
 
-    // what if we don't wait for request to resolve
     const third = render(
       <ErrorBoundary fallback={<div>error boundary</div>}>
         <Suspense fallback={<div>fallback</div>}>
@@ -1377,18 +1379,17 @@ describe('useSWR - cache', () => {
       </ErrorBoundary>
     )
 
-    // just check loading
-    expect(mockedFetcher).toHaveBeenCalledTimes(3)
+    // check full hydration, again
+    expect(mockedFetcher).toHaveBeenCalledTimes(1)
     expect(third.container.textContent).toMatchInlineSnapshot(`"fallback"`)
-    console.info('*The warning above can be ignored (caught by ErrorBoundary).')
+    await waitForDomChange({ container: third.container })
+    expect(third.container.textContent).toMatchInlineSnapshot(`"SWR"`)
 
-    // don't wait for responses, immediately unmount and clear
     third.unmount()
     cache.clear()
+    mockedFetcher.mockClear()
 
-    // change response
-    mockedFetcher.mockImplementationOnce(() => Promise.reject('error'))
-
+    // what if we don't wait for request to resolve
     const fourth = render(
       <ErrorBoundary fallback={<div>error boundary</div>}>
         <Suspense fallback={<div>fallback</div>}>
@@ -1397,11 +1398,33 @@ describe('useSWR - cache', () => {
       </ErrorBoundary>
     )
 
-    // check full hydration, but for error path
-    expect(mockedFetcher).toHaveBeenCalledTimes(4)
+    // just check loading
+    expect(mockedFetcher).toHaveBeenCalledTimes(1)
     expect(fourth.container.textContent).toMatchInlineSnapshot(`"fallback"`)
-    await waitForDomChange({ container: fourth.container })
-    expect(fourth.container.textContent).toMatchInlineSnapshot(
+
+    // don't wait for responses, immediately unmount and clear
+    fourth.unmount()
+    cache.clear()
+    mockedFetcher.mockClear()
+
+    // change response
+    mockedFetcher.mockImplementationOnce(
+      () => new Promise((_, reject) => setTimeout(() => reject('error'), 100))
+    )
+
+    const fifth = render(
+      <ErrorBoundary fallback={<div>error boundary</div>}>
+        <Suspense fallback={<div>fallback</div>}>
+          <Section />
+        </Suspense>
+      </ErrorBoundary>
+    )
+
+    // check full hydration, but for error path
+    expect(mockedFetcher).toHaveBeenCalledTimes(1)
+    expect(fifth.container.textContent).toMatchInlineSnapshot(`"fallback"`)
+    await waitForDomChange({ container: fifth.container })
+    expect(fifth.container.textContent).toMatchInlineSnapshot(
       `"error boundary"`
     )
     console.info('*The warning above can be ignored (caught by ErrorBoundary).')
