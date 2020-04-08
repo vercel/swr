@@ -4,7 +4,6 @@ export interface ConfigInterface<
   Error = any,
   Fn extends fetcherFn<Data> = fetcherFn<Data>
 > {
-  revalidateOnMount?: boolean
   errorRetryInterval?: number
   errorRetryCount?: number
   loadingTimeout?: number
@@ -14,6 +13,7 @@ export interface ConfigInterface<
   refreshWhenHidden?: boolean
   refreshWhenOffline?: boolean
   revalidateOnFocus?: boolean
+  revalidateOnMount?: boolean
   revalidateOnReconnect?: boolean
   shouldRetryOnError?: boolean
   fetcher?: Fn

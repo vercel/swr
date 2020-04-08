@@ -95,6 +95,21 @@ describe('useSWR', () => {
     expect(fetch).not.toHaveBeenCalled()
   })
 
+  it('should call fetch function when revalidateOnMount is true even if initialData is set', async () => {
+    const fetch = jest.fn(() => 'SWR')
+
+    function Page() {
+      const { data } = useSWR('revalidateOnMount', fetch, {
+        revalidateOnMount: true,
+        initialData: 'gab'
+      })
+      return <div>hello, {data}</div>
+    }
+
+    render(<Page />)
+    expect(fetch).toHaveBeenCalled()
+  })
+
   it('should dedupe requests by default', async () => {
     let count = 0
     const fetch = () => {
