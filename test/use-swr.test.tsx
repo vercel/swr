@@ -1325,7 +1325,7 @@ describe('useSWR - cache', () => {
 
   it('should clear cache when clear is called', async () => {
     const mockedFetcher = jest.fn(
-      () => new Promise(resolve => setTimeout(() => resolve('SWR'), 300))
+      () => new Promise(resolve => setTimeout(() => resolve('SWR'), 100))
     )
     function Section() {
       const { data } = useSWR('suspense-9', mockedFetcher, {
@@ -1405,6 +1405,7 @@ describe('useSWR - cache', () => {
     // just check loading
     expect(mockedFetcher).toHaveBeenCalledTimes(1)
     expect(fourth.container.textContent).toMatchInlineSnapshot(`"fallback"`)
+    await waitForDomChange({ container: fourth.container })
 
     // don't wait for responses, immediately unmount and clear
     fourth.unmount()
@@ -1414,7 +1415,7 @@ describe('useSWR - cache', () => {
     // change response
     // this one needs to be longer to expose race conditions
     mockedFetcher.mockImplementationOnce(
-      () => new Promise((_, reject) => setTimeout(() => reject('error'), 500))
+      () => new Promise((_, reject) => setTimeout(() => reject('error'), 300))
     )
 
     console.log('fifth')
