@@ -1335,7 +1335,6 @@ describe('useSWR - cache', () => {
       return <div>{data}</div>
     }
     // https://reactjs.org/docs/concurrent-mode-suspense.html#handling-errors
-    console.log('first')
     const first = render(
       <ErrorBoundary fallback={<div>error boundary</div>}>
         <Suspense fallback={<div>fallback</div>}>
@@ -1354,7 +1353,6 @@ describe('useSWR - cache', () => {
     cache.clear()
     mockedFetcher.mockClear()
 
-    console.log('second')
     const second = render(
       <ErrorBoundary fallback={<div>error boundary</div>}>
         <Suspense fallback={<div>fallback</div>}>
@@ -1373,7 +1371,6 @@ describe('useSWR - cache', () => {
     cache.clear()
     mockedFetcher.mockClear()
 
-    console.log('third')
     const third = render(
       <ErrorBoundary fallback={<div>error boundary</div>}>
         <Suspense fallback={<div>fallback</div>}>
@@ -1393,7 +1390,6 @@ describe('useSWR - cache', () => {
     mockedFetcher.mockClear()
 
     // what if we don't wait for request to resolve this time
-    console.log('fourth')
     const fourth = render(
       <ErrorBoundary fallback={<div>error boundary</div>}>
         <Suspense fallback={<div>fallback</div>}>
@@ -1405,7 +1401,6 @@ describe('useSWR - cache', () => {
     // just check loading
     expect(mockedFetcher).toHaveBeenCalledTimes(1)
     expect(fourth.container.textContent).toMatchInlineSnapshot(`"fallback"`)
-    await waitForDomChange({ container: fourth.container })
 
     // don't wait for responses, immediately unmount and clear
     fourth.unmount()
@@ -1415,10 +1410,9 @@ describe('useSWR - cache', () => {
     // change response
     // this one needs to be longer to expose race conditions
     mockedFetcher.mockImplementationOnce(
-      () => new Promise((_, reject) => setTimeout(() => reject('error'), 300))
+      () => new Promise((_, reject) => setTimeout(() => reject('error'), 100))
     )
 
-    console.log('fifth')
     const fifth = render(
       <ErrorBoundary fallback={<div>error boundary</div>}>
         <Suspense fallback={<div>fallback</div>}>

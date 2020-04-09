@@ -217,6 +217,7 @@ function useSWR<Data = any, Error = any>(
       if (!key || !fn) return false
       if (unmountedRef.current) return false
       revalidateOpts = Object.assign({ dedupe: false }, revalidateOpts)
+      const initialCacheVersion = cache.version
 
       let loading = true
       let shouldDeduping =
@@ -276,79 +277,85 @@ function useSWR<Data = any, Error = any>(
 
           newData = await p
 
-          // trigger the success event,
-          // only do this for the original request.
-          config.onSuccess(newData, key, config)
+          if (cache.version === initialCacheVersion) {
+            // trigger the success event,
+            // only do this for the original request.
+            config.onSuccess(newData, key, config)
+          }
         }
 
-        // if the revalidation happened earlier than the local mutation,
-        // we have to ignore the result because it could override.
-        // meanwhile, a new revalidation should be triggered by the mutation.
-        if (MUTATION_TS[key] && startAt <= MUTATION_TS[key]) {
-          dispatch({ isValidating: false })
-          return false
-        }
+        if (cache.version === initialCacheVersion) {
+          // if the revalidation happened earlier than the local mutation,
+          // we have to ignore the result because it could override.
+          // meanwhile, a new revalidation should be triggered by the mutation.
+          if (MUTATION_TS[key] && startAt <= MUTATION_TS[key]) {
+            dispatch({ isValidating: false })
+            return false
+          }
 
-        cache.set(key, newData, false)
-        cache.set(keyErr, undefined, false)
+          cache.set(key, newData, false)
+          cache.set(keyErr, undefined, false)
 
-        // new state for the reducer
-        const newState: actionType<Data, Error> = {
-          isValidating: false
-        }
+          // new state for the reducer
+          const newState: actionType<Data, Error> = {
+            isValidating: false
+          }
 
-        if (typeof stateRef.current.error !== 'undefined') {
-          // we don't have an error
-          newState.error = undefined
-        }
-        if (config.compare(stateRef.current.data, newData)) {
-          // deep compare to avoid extra re-render
-          // do nothing
-        } else {
-          // data changed
-          newState.data = newData
-        }
+          if (typeof stateRef.current.error !== 'undefined') {
+            // we don't have an error
+            newState.error = undefined
+          }
+          if (config.compare(stateRef.current.data, newData)) {
+            // deep compare to avoid extra re-render
+            // do nothing
+          } else {
+            // data changed
+            newState.data = newData
+          }
 
-        // merge the new state
-        dispatch(newState)
+          // merge the new state
+          dispatch(newState)
 
-        if (!shouldDeduping) {
-          // also update other hooks
-          broadcastState(key, newData, undefined)
+          if (!shouldDeduping) {
+            // also update other hooks
+            broadcastState(key, newData, undefined)
+          }
         }
       } catch (err) {
         delete CONCURRENT_PROMISES[key]
         delete CONCURRENT_PROMISES_TS[key]
 
-        cache.set(keyErr, err, false)
+        if (cache.version === initialCacheVersion) {
+          cache.set(keyErr, err, false)
 
-        // get a new error
-        // don't use deep equal for errors
-        if (stateRef.current.error !== err) {
-          // we keep the stale data
-          dispatch({
-            isValidating: false,
-            error: err
-          })
+          // get a new error
+          // don't use deep equal for errors
+          if (stateRef.current.error !== err) {
+            // we keep the stale data
+            dispatch({
+              isValidating: false,
+              error: err
+            })
 
-          if (!shouldDeduping) {
-            // also broadcast to update other hooks
-            broadcastState(key, undefined, err)
+            if (!shouldDeduping) {
+              // also broadcast to update other hooks
+              broadcastState(key, undefined, err)
+            }
           }
-        }
 
-        // events and retry
-        config.onError(err, key, config)
-        if (config.shouldRetryOnError) {
-          // when retrying, we always enable deduping
-          const retryCount = (revalidateOpts.retryCount || 0) + 1
-          config.onErrorRetry(
-            err,
-            key,
-            config,
-            revalidate,
-            Object.assign({ dedupe: true }, revalidateOpts, { retryCount })
-          )
+          // events and retry
+          config.onError(err, key, config)
+          if (config.shouldRetryOnError) {
+            // when retrying, we always enable deduping
+            const retryCount = (revalidateOpts.retryCount || 0) + 1
+            config.onErrorRetry(
+              err,
+              key,
+              config,
+              revalidate,
+              Object.assign({ dedupe: true }, revalidateOpts, { retryCount })
+            )
+          }
         }
       }
 

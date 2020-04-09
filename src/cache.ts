@@ -1,14 +1,17 @@
 import { CacheInterface, keyInterface, cacheListener } from './types'
 import { mutate } from './use-swr'
 import hash from './libs/hash'
+import { CONCURRENT_PROMISES, CONCURRENT_PROMISES_TS } from './config'
 
 export default class Cache implements CacheInterface {
   private __cache: Map<string, any>
   private __listeners: cacheListener[]
+  public version: number
 
   constructor(initialData: any = {}) {
     this.__cache = new Map(Object.entries(initialData))
     this.__listeners = []
+    this.version = 0
   }
 
   get(key: keyInterface): any {
@@ -35,6 +38,13 @@ export default class Cache implements CacheInterface {
   clear(shouldNotify = true) {
     if (shouldNotify) this.__cache.forEach(key => mutate(key, null, false))
     this.__cache.clear()
+    Object.keys(CONCURRENT_PROMISES).forEach(k => {
+      delete CONCURRENT_PROMISES[k]
+    })
+    Object.keys(CONCURRENT_PROMISES_TS).forEach(k => {
+      delete CONCURRENT_PROMISES_TS[k]
+    })
+    this.version++
     this.notify()
   }
 
