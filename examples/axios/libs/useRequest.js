@@ -1,6 +1,5 @@
 import useSWR from 'swr'
 import axios from 'axios'
-import { useMemo } from 'react'
 
 export default function useRequest(request, { initialData, ...config } = {}) {
   const { data: response, error, isValidating, mutate } = useSWR(
