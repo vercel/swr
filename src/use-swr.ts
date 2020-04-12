@@ -117,6 +117,11 @@ const mutate: mutateInterface = async (
   return data
 }
 
+function useSWR<K extends any[], Data = any, Error = any>(
+  key: K,
+  fn: (...args: K) => Promise<Data>,
+  config?: ConfigInterface<Data, Error>
+): responseInterface<Data, Error>
 function useSWR<Data = any, Error = any>(
   key: keyInterface
 ): responseInterface<Data, Error>
