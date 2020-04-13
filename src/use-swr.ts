@@ -117,9 +117,24 @@ const mutate: mutateInterface = async (
   return data
 }
 
-function useSWR<K extends any[], Data = any, Error = any>(
-  key: K,
-  fn: (...args: K) => Promise<Data>,
+function useSWR<K1, Data = any, Error = any>(
+  key: [K1],
+  fn: (k1: K1) => Data | Promise<Data>,
+  config?: ConfigInterface<Data, Error>
+): responseInterface<Data, Error>
+function useSWR<K1, K2, Data = any, Error = any>(
+  key: [K1, K2],
+  fn: (k1: K1, k2: K2) => Data | Promise<Data>,
+  config?: ConfigInterface<Data, Error>
+): responseInterface<Data, Error>
+function useSWR<K1, K2, K3, Data = any, Error = any>(
+  key: [K1, K2, K3],
+  fn: (k1: K1, k2: K2, k3: K3) => Data | Promise<Data>,
+  config?: ConfigInterface<Data, Error>
+): responseInterface<Data, Error>
+function useSWR<K1, K2, K3, K4, Data = any, Error = any>(
+  key: [K1, K2, K3, K4],
+  fn: (k1: K1, k2: K2, k3: K3, k4: K4) => Data | Promise<Data>,
   config?: ConfigInterface<Data, Error>
 ): responseInterface<Data, Error>
 function useSWR<Data = any, Error = any>(
