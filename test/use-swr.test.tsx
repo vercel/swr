@@ -420,7 +420,11 @@ describe('useSWR - refresh', () => {
         refreshInterval: int,
         dedupingInterval: 100
       })
-      return <div onClick={() => setInt(int + 100)}>count: {data}</div>
+      return (
+        <div onClick={() => setInt(num => (num < 400 ? num + 100 : 0))}>
+          count: {data}
+        </div>
+      )
     }
     const { container } = render(<Page />)
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: "`)
@@ -460,6 +464,16 @@ describe('useSWR - refresh', () => {
       return new Promise(res => setTimeout(res, 300))
     })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 4"`)
+    await act(() => {
+      return new Promise(res => setTimeout(res, 110))
+    })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 5"`)
+    await act(() => {
+      fireEvent.click(container.firstElementChild)
+      // it will clear 400ms timer and stop
+      return new Promise(res => setTimeout(res, 110))
+    })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 5"`)
     await act(() => {
       return new Promise(res => setTimeout(res, 110))
     })
