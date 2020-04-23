@@ -200,13 +200,15 @@ Or using GraphQL:
 ```js
 import { request } from 'graphql-request'
 
-const API = 'https://api.graph.cool/simple/v1/movies'
+const API = 'https://api-us-west-2.graphcms.com/v2/ck9d4qde611l601xq4aio3ej0/master'
 const fetcher = query => request(API, query)
 
 function App () {
   const { data, error } = useSWR(
     `{
-      Movie(title: "Inception") {
+      movie(where:{
+        slug: "inception"
+      }) {
         releaseDate
         actors {
           name
