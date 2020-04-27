@@ -1267,6 +1267,40 @@ describe('useSWR - suspense', () => {
     // 'suspense-7' -> undefined -> 'suspense-8'
     expect(renderedResults).toEqual(['suspense-7', 'suspense-8'])
   })
+
+  // hold render when suspense
+  it('should pause when key is falsy', async () => {
+    const renderedResults = []
+
+    function Section() {
+      const [key, setKey] = useState(null)
+      const { data } = useSWR(
+        key,
+        k => new Promise(res => setTimeout(() => res(k), 50)),
+        {
+          suspense: true
+        }
+      )
+
+      useEffect(() => {
+        setKey('suspense-9')
+      }, [])
+
+      if (data !== renderedResults[renderedResults.length - 1]) {
+        renderedResults.push(data)
+      }
+
+      return <div>{data}</div>
+    }
+    render(
+      <Suspense fallback={<div>fallback</div>}>
+        <Section />
+      </Suspense>
+    )
+    await act(() => new Promise(res => setTimeout(res, 210)))
+
+    expect(renderedResults).toEqual(['suspense-9'])
+  })
 })
 
 describe('useSWR - cache', () => {
