@@ -1362,7 +1362,7 @@ describe('useSWR - cache', () => {
     expect(listener3).toHaveBeenCalledTimes(3)
   })
 
-  it.only('should allow serialization', () => {
+  it('should allow serialization', () => {
     // create new cache instance to don't get affected by other tests
     // updating the normal cache instance
     const tmpCache = new Cache()
