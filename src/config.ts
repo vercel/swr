@@ -71,7 +71,9 @@ const defaultConfig: ConfigInterface = {
   refreshWhenOffline: false,
   shouldRetryOnError: true,
   suspense: false,
-  compare: deepEqual
+  compare: deepEqual,
+
+  fetcher: url => fetch(url).then(res => res.json())
 }
 
 // Focus revalidate
