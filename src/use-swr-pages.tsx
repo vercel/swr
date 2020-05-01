@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState, useRef } from 'react'
+import React, { useCallback, useMemo, useState, useRef, useEffect } from 'react'
 
 import { cache } from './config'
 import {
@@ -89,6 +89,8 @@ function App () {
 */
 
 const pageCacheMap = new Map()
+
+const noop = () => undefined
 
 export function useSWRPages<OffsetType = any, Data = any, Error = any>(
   pageKey: string,
@@ -209,6 +211,15 @@ export function useSWRPages<OffsetType = any, Data = any, Error = any>(
     }
     return p
   }, [_pageFn, pageCount, pageSWRs, pageOffsets, pageKey])
+
+  useEffect(() => {
+    const unsubscribeCount = cache.subscribe(noop, pageCountKey)
+    const unsubscribeOffset = cache.subscribe(noop, pageOffsetKey)
+    return () => {
+      unsubscribeCount()
+      unsubscribeOffset()
+    }
+  }, [pageCountKey, pageOffsetKey])
 
   return {
     pages,

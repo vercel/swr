@@ -1375,6 +1375,41 @@ describe('useSWR - cache', () => {
       '{"key-1":"test-1","key-2":["test-2"],"key-3":{"value":"test-3"}}'
     )
   })
+
+  it('should purge inactive keys', async () => {
+    cache.clear(false)
+    const numbers = Array.from({ length: 300 }, (_, i) => i + 1)
+    numbers.forEach(n => {
+      cache.set(`cache-key-${n}`, `value-${n}`, false)
+      cache.deactivate(`cache-key-${n}`)
+    })
+
+    expect(cache.size()).toBe(300)
+
+    function PageOne() {
+      const { data } = useSWR('cache-key-301', () => 'value-300')
+      if (!data) return null
+      return <div>{data}</div>
+    }
+
+    function PageTwo() {
+      const { data } = useSWR('cache-key-302', () => 'value-300')
+      if (!data) return null
+      return <div>{data}</div>
+    }
+
+    const { container, unmount } = render(<PageOne />)
+
+    await waitForDomChange({ container })
+    await waitForDomChange({ container: render(<PageTwo />).container })
+
+    // we should have 300 origina keys + 2 keys per page (data and error)
+    expect(cache.size()).toBe(304)
+
+    unmount() // we unmount the first page
+
+    expect(cache.size()).toBe(2)
+  })
 })
 
 describe('useSWR - key', () => {

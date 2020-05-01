@@ -7,12 +7,17 @@ import hash from './libs/hash'
 // usage only
 const WILDCARD_KEY = Symbol()
 
+// This env variable let you customize the max size of the cache
+const MAX_SIZE = Number(process.env.SWR_CACHE_MAX_SIZE || 300)
+
 export default class Cache implements CacheInterface {
   private __cache: Map<string, any>
+  private __inactive: Set<string>
   private __listeners: Map<string | typeof WILDCARD_KEY, Set<cacheListener>>
 
   constructor() {
     this.__cache = new Map()
+    this.__inactive = new Set()
     this.__listeners = new Map([[WILDCARD_KEY, new Set<cacheListener>()]])
   }
 
@@ -25,7 +30,7 @@ export default class Cache implements CacheInterface {
     const [_key] = this.serializeKey(key)
     this.__cache.set(_key, value)
     if (shouldNotify) mutate(key, value, false)
-    this.notify('set', _key)
+    this.trigger('set', _key)
   }
 
   keys() {
@@ -40,14 +45,38 @@ export default class Cache implements CacheInterface {
   clear(shouldNotify = true) {
     if (shouldNotify) this.__cache.forEach(key => mutate(key, null, false))
     this.__cache.clear()
-    this.notify('clear')
+    this.trigger('clear')
   }
 
   delete(key: keyInterface, shouldNotify = true) {
     const [_key] = this.serializeKey(key)
     if (shouldNotify) mutate(key, null, false)
     this.__cache.delete(_key)
-    this.notify('delete', _key)
+    this.trigger('delete', _key)
+  }
+
+  isActive(key: keyInterface) {
+    const [_key] = this.serializeKey(key)
+    return this.__inactive.has(_key)
+  }
+
+  size() {
+    return this.__cache.size
+  }
+
+  purge() {
+    // only purge keys if we have reached the max allowed size
+    if (this.size() < MAX_SIZE) return
+    // here we delete the inactive keys first directly from cache
+    // this is to avoid triggering an event to listeners
+    this.__inactive.forEach(key => this.__cache.delete(key))
+    // then we clear the list of inactive keys
+    this.__inactive.clear()
+    // and now we try to deactivate all the keys
+    // this will deactivate any extra key that was not truly active
+    this.keys().forEach(key => this.deactivate(key))
+    // lastly, we will trigger a purge notification to all the subscribers
+    this.trigger('purge')
   }
 
   // TODO: introduce namespace for the cache
@@ -82,8 +111,11 @@ export default class Cache implements CacheInterface {
     }
 
     let _key: string | typeof WILDCARD_KEY = WILDCARD_KEY
+    let errKey: string
     if (key) {
-      _key = this.serializeKey(key)[0]
+      const serialized = this.serializeKey(key)
+      _key = serialized[0]
+      errKey = serialized[2]
     }
 
     let isSubscribed = true
@@ -93,10 +125,23 @@ export default class Cache implements CacheInterface {
       this.__listeners.set(_key, new Set<cacheListener>([listener]))
     }
 
+    // mark as active the key and error key if it's not wildcard
+    if (_key !== WILDCARD_KEY) {
+      this.activate(_key)
+      this.activate(errKey)
+    }
+
     return () => {
       if (!isSubscribed) return
       isSubscribed = false
       this.__listeners.get(_key).delete(listener)
+      // mark as inactive the key and error key if it's not wildcard
+      if (_key !== WILDCARD_KEY) {
+        this.deactivate(_key)
+        this.deactivate(errKey)
+      }
+      // every time a key listener is unsubscribed try to purge the cache
+      this.purge()
     }
   }
 
@@ -104,8 +149,38 @@ export default class Cache implements CacheInterface {
     return Object.fromEntries(this.__cache.entries())
   }
 
+  // mark a key as active
+  activate(key: keyInterface) {
+    const [_key] = this.serializeKey(key)
+    // if the key was inactive re-activate it
+    if (this.__inactive.has(_key)) {
+      this.__inactive.delete(_key)
+    }
+  }
+
+  // check if a key is active and deactivate it if not
+  deactivate(key: keyInterface) {
+    const [_key] = this.serializeKey(key)
+    // if it's already inactive do nothing
+    if (this.__inactive.has(_key)) return
+    // if there are no listeners subscriber deactivate it
+    if (!this.__listeners.has(_key)) {
+      this.__inactive.add(_key)
+      return
+    }
+    // if the list of subscribers is empty deactivate it
+    if (this.__listeners.get(_key).size === 0) this.__inactive.add(_key)
+  }
+
   // Notify Cache subscribers about a change in the cache
-  private notify(type: eventType, key?: string) {
+  private trigger(type: eventType, key?: string) {
+    // we handle the purge event in a special way to only notify
+    // wildcard subscribers, so they know a purge has happened
+    if (type === 'purge') {
+      const event = { type }
+      this.__listeners.get(WILDCARD_KEY).forEach(listener => listener(event))
+    }
+
     if (key) {
       const event = { key, type }
       // Call listeners subscribed to all keys
