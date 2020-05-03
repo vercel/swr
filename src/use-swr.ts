@@ -18,7 +18,6 @@ import defaultConfig, {
 } from './config'
 import isDocumentVisible from './libs/is-document-visible'
 import isOnline from './libs/is-online'
-import isFalsy from './libs/is-falsy'
 import throttle from './libs/throttle'
 import SWRConfigContext from './swr-config-context'
 import {
@@ -373,7 +372,7 @@ function useSWR<Data = any, Error = any>(
 
     // update the state if the key changed (not the inital render) or cache updated
     if (
-      (keyRef.current !== key && (!isFalsy(keyRef.current) && !isFalsy(key))) ||
+      (keyRef.current !== key && (!keyRef.current && !key)) ||
       !config.compare(currentHookData, latestKeyedData)
     ) {
       dispatch({ data: latestKeyedData })
