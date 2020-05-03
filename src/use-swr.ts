@@ -528,9 +528,6 @@ function useSWR<Data = any, Error = any>(
 
   // suspense
   if (config.suspense) {
-    if (IS_SERVER)
-      throw new Error('Suspense on server side is not yet supported!')
-
     // in suspense mode, we can't return empty state
     // (it should be suspended)
 
