@@ -90,8 +90,6 @@ function App () {
 
 const pageCacheMap = new Map()
 
-const noop = () => undefined
-
 export function useSWRPages<OffsetType = any, Data = any, Error = any>(
   pageKey: string,
   pageFn: pageComponentType<OffsetType, Data, Error>,
@@ -212,9 +210,12 @@ export function useSWRPages<OffsetType = any, Data = any, Error = any>(
     return p
   }, [_pageFn, pageCount, pageSWRs, pageOffsets, pageKey])
 
+  // This effect is used to keep track of the active keys
+  // The listener does nothing, but is recreated on each useEffect call
+  // So it's always a new function and don't get deduped by Set
   useEffect(() => {
-    const unsubscribeCount = cache.subscribe(noop, pageCountKey)
-    const unsubscribeOffset = cache.subscribe(noop, pageOffsetKey)
+    const unsubscribeCount = cache.subscribe(() => {}, pageCountKey)
+    const unsubscribeOffset = cache.subscribe(() => {}, pageOffsetKey)
     return () => {
       unsubscribeCount()
       unsubscribeOffset()

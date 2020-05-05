@@ -125,7 +125,7 @@ export default class Cache implements CacheInterface {
       this.__listeners.set(_key, new Set<cacheListener>([listener]))
     }
 
-    // mark as active the key and error key if it's not wildcard
+    // mark as active the key and error key, if it's not wildcard
     if (_key !== WILDCARD_KEY) {
       this.activate(_key)
       this.activate(errKey)

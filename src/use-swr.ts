@@ -40,11 +40,6 @@ const IS_SERVER = typeof window === 'undefined'
 // useLayoutEffect in the browser.
 const useIsomorphicLayoutEffect = IS_SERVER ? useEffect : useLayoutEffect
 
-// This function is used below to subscribe to key changes
-// The function does nothing, we only use it to keep track of
-// the hooks using a key
-const noop = () => undefined
-
 const trigger: triggerInterface = (_key, shouldRevalidate = true) => {
   // we are ignoring the second argument which correspond to the arguments
   // the fetcher will receive when key is an array
@@ -468,13 +463,9 @@ function useSWR<Data = any, Error = any>(
       window.addEventListener('online', (reconnect = softRevalidate))
     }
 
-    const unsubscribe = cache.subscribe(noop, key)
-
     return () => {
       // cleanup
       dispatch = () => null
-
-      unsubscribe()
 
       // mark it as unmounted
       unmountedRef.current = true
@@ -503,6 +494,14 @@ function useSWR<Data = any, Error = any>(
       }
     }
   }, [key, revalidate])
+
+  // This effect is used to keep track of the active keys
+  // The listener does nothing, but is recreated on each useEffect call
+  // So it's always a new function and don't get deduped by Set
+  useEffect(() => {
+    if (!key) return undefined
+    return cache.subscribe(() => {}, key)
+  }, [key])
 
   // set up polling
   useIsomorphicLayoutEffect(() => {
