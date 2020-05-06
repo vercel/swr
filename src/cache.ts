@@ -2,6 +2,13 @@ import { CacheInterface, keyInterface, cacheListener } from './types'
 import { mutate } from './use-swr'
 import hash from './libs/hash'
 
+const clone = (ref: any): any => {
+  if (ref !== null && typeof ref === 'object') {
+    return Object.assign(Object.create(Object.getPrototypeOf(ref)), ref)
+  }
+  return ref
+}
+
 export default class Cache implements CacheInterface {
   private __cache: Map<string, any>
   private __listeners: cacheListener[]
@@ -13,7 +20,7 @@ export default class Cache implements CacheInterface {
 
   get(key: keyInterface): any {
     const [_key] = this.serializeKey(key)
-    return this.__cache.get(_key)
+    return clone(this.__cache.get(_key))
   }
 
   set(key: keyInterface, value: any, shouldNotify = true): any {
