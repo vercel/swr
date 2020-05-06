@@ -20,12 +20,12 @@ export default class Cache implements CacheInterface {
 
   get(key: keyInterface): any {
     const [_key] = this.serializeKey(key)
-    return clone(this.__cache.get(_key))
+    return this.__cache.get(_key)
   }
 
   set(key: keyInterface, value: any, shouldNotify = true): any {
     const [_key] = this.serializeKey(key)
-    this.__cache.set(_key, value)
+    this.__cache.set(_key, clone(value))
     if (shouldNotify) mutate(key, value, false)
     this.notify()
   }
