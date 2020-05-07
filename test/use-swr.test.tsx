@@ -1281,7 +1281,6 @@ describe('useSWR - suspense', () => {
           suspense: true
         }
       )
-
       return <div>{data}</div>
     }
 
