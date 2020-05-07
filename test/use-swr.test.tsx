@@ -1270,36 +1270,49 @@ describe('useSWR - suspense', () => {
 
   // hold render when suspense
   it('should pause when key is falsy', async () => {
-    const renderedResults = []
-
-    function Section() {
-      const [key, setKey] = useState(null)
+    function SectionContent({ swrKey, onClick }) {
       const { data } = useSWR(
-        key,
-        k => new Promise(res => setTimeout(() => res(k), 50)),
+        () => (swrKey % 2 === 0 ? null : swrKey),
+        k => new Promise(res => setTimeout(() => res(k), 30)),
         {
           suspense: true
         }
       )
 
-      useEffect(() => {
-        setKey('suspense-9')
-      }, [])
-
-      if (data !== renderedResults[renderedResults.length - 1]) {
-        renderedResults.push(data)
-      }
-
-      return <div>{data}</div>
+      return (
+        <div onClick={onClick}>
+          {swrKey && data ? 'suspense-' + (9 + Number(data)) : undefined}
+        </div>
+      )
     }
-    render(
-      <Suspense fallback={<div>fallback</div>}>
-        <Section />
-      </Suspense>
-    )
-    await act(() => new Promise(res => setTimeout(res, 210)))
 
-    expect(renderedResults).toEqual(['suspense-9'])
+    const Section = () => {
+      const [key, setKey] = useState(0)
+      const handleClick = () => setKey(key + 1)
+
+      return (
+        <Suspense fallback={<div onClick={handleClick}>fallback</div>}>
+          <SectionContent onClick={handleClick} swrKey={key} />
+        </Suspense>
+      )
+    }
+
+    const { container } = render(<Section />)
+
+    async function clickAndWait(duration) {
+      fireEvent.click(container.firstElementChild)
+      return await act(
+        () => new Promise(resolve => setTimeout(resolve, duration))
+      )
+    }
+
+    expect(container.textContent).toMatchInlineSnapshot(`"fallback"`)
+    await clickAndWait(100)
+    expect(container.textContent).toMatchInlineSnapshot(`"suspense-10"`)
+    await clickAndWait(100)
+    expect(container.textContent).toMatchInlineSnapshot(`"fallback"`)
+    await clickAndWait(100)
+    expect(container.textContent).toMatchInlineSnapshot(`"suspense-10"`)
   })
 })
 

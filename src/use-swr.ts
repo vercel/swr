@@ -372,7 +372,7 @@ function useSWR<Data = any, Error = any>(
 
     // update the state if the key changed (not the inital render) or cache updated
     if (
-      (keyRef.current !== key && (!keyRef.current && !key)) ||
+      keyRef.current !== key ||
       !config.compare(currentHookData, latestKeyedData)
     ) {
       dispatch({ data: latestKeyedData })
@@ -543,10 +543,15 @@ function useSWR<Data = any, Error = any>(
       typeof latestError === 'undefined'
     ) {
       // need to start the request if it hasn't
+
       if (!CONCURRENT_PROMISES[key]) {
-        // trigger revalidate immediately
-        // to get the promise
-        revalidate()
+        if (key) {
+          // trigger revalidate immediately
+          // to get the promise
+          revalidate()
+        } else {
+          throw Promise.reject()
+        }
       }
 
       if (
