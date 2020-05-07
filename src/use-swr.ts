@@ -597,7 +597,7 @@ function useSWR<Data = any, Error = any>(
       data: {
         get: function() {
           stateDependencies.current.data = true
-          return keyRef.current === key ? stateRef.current.data : initialError
+          return keyRef.current === key ? stateRef.current.data : initialData
         }
       },
       isValidating: {
