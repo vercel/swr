@@ -543,15 +543,10 @@ function useSWR<Data = any, Error = any>(
       typeof latestError === 'undefined'
     ) {
       // need to start the request if it hasn't
-
       if (!CONCURRENT_PROMISES[key]) {
-        if (key) {
-          // trigger revalidate immediately
-          // to get the promise
-          revalidate()
-        } else {
-          throw Promise.reject()
-        }
+        // trigger revalidate immediately
+        // to get the promise
+        revalidate()
       }
 
       if (
@@ -569,6 +564,10 @@ function useSWR<Data = any, Error = any>(
     if (typeof latestData === 'undefined' && latestError) {
       // in suspense mode, throw error if there's no content
       throw latestError
+    }
+
+    if (!key) {
+      throw new Promise(() => {})
     }
 
     // return the latest data / error from cache

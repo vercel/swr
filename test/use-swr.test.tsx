@@ -1270,30 +1270,31 @@ describe('useSWR - suspense', () => {
 
   // hold render when suspense
   it('should pause when key is falsy', async () => {
-    function SectionContent({ swrKey, onClick }) {
+    function SectionContent({ swrKey }) {
       const { data } = useSWR(
-        () => (swrKey % 2 === 0 ? null : swrKey),
-        k => new Promise(res => setTimeout(() => res(k), 30)),
+        () => (swrKey % 2 ? null : 'suspense-' + swrKey),
+        key =>
+          new Promise(res =>
+            setTimeout(() => res(key.replace('suspense-', '')), 100)
+          ),
         {
           suspense: true
         }
       )
 
-      return (
-        <div onClick={onClick}>
-          {swrKey && data ? 'suspense-' + (9 + Number(data)) : undefined}
-        </div>
-      )
+      return <div>{data}</div>
     }
 
     const Section = () => {
-      const [key, setKey] = useState(0)
+      const [key, setKey] = useState(9)
       const handleClick = () => setKey(key + 1)
 
       return (
-        <Suspense fallback={<div onClick={handleClick}>fallback</div>}>
-          <SectionContent onClick={handleClick} swrKey={key} />
-        </Suspense>
+        <div onClick={handleClick}>
+          <Suspense fallback={<div>fallback</div>}>
+            <SectionContent swrKey={key} />
+          </Suspense>
+        </div>
       )
     }
 
@@ -1306,13 +1307,21 @@ describe('useSWR - suspense', () => {
       )
     }
 
-    expect(container.textContent).toMatchInlineSnapshot(`"fallback"`)
-    await clickAndWait(100)
-    expect(container.textContent).toMatchInlineSnapshot(`"suspense-10"`)
-    await clickAndWait(100)
-    expect(container.textContent).toMatchInlineSnapshot(`"fallback"`)
-    await clickAndWait(100)
-    expect(container.textContent).toMatchInlineSnapshot(`"suspense-10"`)
+    expect(
+      container.firstElementChild.lastElementChild.textContent
+    ).toMatchInlineSnapshot(`"fallback"`)
+    await clickAndWait(150)
+    expect(
+      container.firstElementChild.lastElementChild.textContent
+    ).toMatchInlineSnapshot(`"10"`)
+    await clickAndWait(150)
+    expect(
+      container.firstElementChild.lastElementChild.textContent
+    ).toMatchInlineSnapshot(`"fallback"`)
+    await clickAndWait(150)
+    expect(
+      container.firstElementChild.lastElementChild.textContent
+    ).toMatchInlineSnapshot(`"12"`)
   })
 })
 
