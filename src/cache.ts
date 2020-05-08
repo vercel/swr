@@ -57,7 +57,7 @@ export default class Cache implements CacheInterface {
 
   isActive(key: keyInterface) {
     const [_key] = this.serializeKey(key)
-    return this.__inactive.has(_key)
+    return !this.__inactive.has(_key)
   }
 
   size() {
