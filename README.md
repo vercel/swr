@@ -239,18 +239,6 @@ const { data } = useSWR(() => shouldFetch ? '/api/data' : null, fetcher)
 const { data } = useSWR(() => '/api/data?uid=' + user.id, fetcher)
 ```
 
-If you want to use a constant `key` and prevent initial revalidation you can simply set `revalidateOnMount` option to false.
-
-```js
-// disable automatic revalidation on mount
-const { data } = useSWR('/api/data', fetcher, {
-  revalidateOnMount: false
-})
-
-// ...later you can trigger revalidation in a callback or after another event
-const onClick = useCallback(() => trigger('/api/data'), [])
-```
-
 ### Dependent Fetching
 
 SWR also allows you to fetch data that depends on other data. It ensures the maximum possible parallelism (avoiding waterfalls), as well as serial fetching when a piece of dynamic data is required for the next data fetch to happen.
