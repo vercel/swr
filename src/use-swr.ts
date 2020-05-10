@@ -586,13 +586,13 @@ function useSWR<Data = any, Error = any>(
         // so we need to match the latest key and data (fallback to `initialData`)
         get: function() {
           stateDependencies.current.error = true
-          return stateRef.current.error
+          return keyRef.current === key ? stateRef.current.error : initialError
         }
       },
       data: {
         get: function() {
           stateDependencies.current.data = true
-          return stateRef.current.data
+          return keyRef.current === key ? stateRef.current.data : initialData
         }
       },
       isValidating: {

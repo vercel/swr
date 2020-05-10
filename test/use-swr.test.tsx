@@ -1409,4 +1409,46 @@ describe('useSWR - key', () => {
     await act(() => new Promise(res => setTimeout(res, 140)))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"key-1"`) // 1, time=550
   })
+
+  it('should return undefined after key change when fetcher is synchronized', async () => {
+    const samples = {
+      '1': 'a',
+      '2': 'b',
+      '3': 'c'
+    }
+
+    function Page() {
+      const [sampleKey, setKey] = React.useState(1)
+      const { data } = useSWR(
+        `key-2-${sampleKey}`,
+        key => samples[key.replace('key-2-', '')]
+      )
+      return (
+        <div
+          onClick={() => {
+            setKey(sampleKey + 1)
+          }}
+        >
+          hello, {sampleKey}:{data}
+        </div>
+      )
+    }
+    const { container } = render(<Page />)
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"hello, 1:"`
+    )
+    await waitForDomChange({ container }) // mount
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"hello, 1:a"`
+    )
+    fireEvent.click(container.firstElementChild)
+    // first rerender on key change
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"hello, 2:"`
+    )
+    await act(() => new Promise(res => setTimeout(res, 100)))
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"hello, 2:b"`
+    )
+  })
 })
