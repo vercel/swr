@@ -113,6 +113,7 @@ const { data, error, isValidating, mutate } = useSWR(key, fetcher, options)
 - `suspense = false`: enable React Suspense mode [(details)](#suspense-mode)
 - `fetcher = undefined`: the default fetcher function
 - `initialData`: initial data to be returned (note: This is per-hook)
+- `revalidateOnMount`: enable or disable automatic revalidation when component is mounted (by default revalidation occurs on mount when initialData is not set, use this flag to force behavior)
 - `revalidateOnFocus = true`: auto revalidate when window gets focused
 - `revalidateOnReconnect = true`: automatically revalidate when the browser regains a network connection (via `navigator.onLine`)
 - `refreshInterval = 0`: polling interval (disabled by default)

@@ -13,6 +13,7 @@ export interface ConfigInterface<
   refreshWhenHidden?: boolean
   refreshWhenOffline?: boolean
   revalidateOnFocus?: boolean
+  revalidateOnMount?: boolean
   revalidateOnReconnect?: boolean
   shouldRetryOnError?: boolean
   fetcher?: Fn
