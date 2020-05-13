@@ -44,15 +44,23 @@ const trigger: triggerInterface = (_key, shouldRevalidate = true) => {
   // we are ignoring the second argument which correspond to the arguments
   // the fetcher will receive when key is an array
   const [key, , keyErr] = cache.serializeKey(_key)
-  if (!key) return
+  if (!key) return Promise.resolve()
 
   const updaters = CACHE_REVALIDATORS[key]
+
   if (key && updaters) {
     const currentData = cache.get(key)
     const currentError = cache.get(keyErr)
+    const promises = []
     for (let i = 0; i < updaters.length; ++i) {
-      updaters[i](shouldRevalidate, currentData, currentError, i > 0)
+      promises.push(
+        updaters[i](shouldRevalidate, currentData, currentError, i > 0)
+      )
     }
+    // return new updated value
+    return Promise.all(promises).then(() => cache.get(key))
+  } else {
+    return Promise.resolve(cache.get(key))
   }
 }
 
