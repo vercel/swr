@@ -380,7 +380,7 @@ mutate('/api/users', async users => {
 
 ### Returned Data from Mutate
 
-Most probably, you need to data mutate used to update the cache when you passed a promise or async function.
+Most probably, you need the data used to update the cache when you passed a promise or async function.
 
 The function will returns the updated document, or throw an error, everytime you call it.
 
