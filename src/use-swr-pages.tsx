@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState, useRef } from 'react'
+import React, { useCallback, useMemo, useState, useRef, useEffect } from 'react'
 
 import { cache } from './config'
 import {
@@ -98,6 +98,7 @@ export function useSWRPages<OffsetType = any, Data = any, Error = any>(
 ): pagesResponseInterface<Data, Error> {
   const pageCountKey = `_swr_page_count_` + pageKey
   const pageOffsetKey = `_swr_page_offset_` + pageKey
+  const pageSWRsKey = `_swr_page_swrs_` + pageKey
 
   const [pageCount, setPageCount] = useState<number>(
     cache.get(pageCountKey) || 1
@@ -105,7 +106,19 @@ export function useSWRPages<OffsetType = any, Data = any, Error = any>(
   const [pageOffsets, setPageOffsets] = useState<OffsetType[]>(
     cache.get(pageOffsetKey) || [null]
   )
-  const [pageSWRs, setPageSWRs] = useState<responseInterface<Data, Error>[]>([])
+  const [pageSWRs, setPageSWRs] = useState<responseInterface<Data, Error>[]>(
+    cache.get(pageSWRsKey) || []
+  )
+
+  useEffect(() => {
+    setPageCount(cache.get(pageCountKey) || 1)
+  }, [pageCountKey])
+  useEffect(() => {
+    setPageOffsets(cache.get(pageOffsetKey) || [null])
+  }, [pageOffsetKey])
+  useEffect(() => {
+    setPageSWRs(cache.get(pageSWRsKey) || [])
+  }, [pageSWRsKey])
 
   const pageFnRef = useRef(pageFn)
   const emptyPageRef = useRef(false)
