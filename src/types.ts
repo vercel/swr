@@ -59,7 +59,7 @@ export type triggerInterface = (
   key: keyInterface,
   shouldRevalidate?: boolean
 ) => void
-type mutateCallback<Data = any> = (currentValue: Data) => Promise<Data>
+type mutateCallback<Data = any> = (currentValue: Data) => Promise<Data> | Data
 export type mutateInterface<Data = any> = (
   key: keyInterface,
   data?: Data | Promise<Data> | mutateCallback<Data>,
