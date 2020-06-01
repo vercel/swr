@@ -1,4 +1,4 @@
-[![SWR](https://assets.zeit.co/image/upload/v1572289618/swr/banner.png)](https://swr.now.sh)
+[![SWR](https://assets.vercel.com/image/upload/v1572289618/swr/banner.png)](https://swr.now.sh)
 
 <p align="center">
 
@@ -380,9 +380,9 @@ mutate('/api/users', async users => {
 
 ### Returned Data from Mutate
 
-Most probably, you need to data mutate used to update the cache when you passed a promise or async function.
+Most probably, you need some data to update the cache. The data is resolved or returned from the promise or async function you passed to `mutate`.
 
-The function will returns the updated document, or throw an error, everytime you call it.
+The function will return an updated document to let `mutate` update the corresponding cache value. It could throw an error somehow, every time when you call it.
 
 ```js
 try {
