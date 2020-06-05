@@ -81,6 +81,10 @@ const mutate: mutateInterface = async (
 
   let data, error
 
+  // Keep track of timestamps before await asynchronously
+  const beforeMutationTs = MUTATION_TS[key]
+  const beforeConcurrentPromisesTs = CONCURRENT_PROMISES_TS[key]
+
   if (_data && typeof _data === 'function') {
     // `_data` is a function, call it passing current cache value
     try {
@@ -97,6 +101,15 @@ const mutate: mutateInterface = async (
     }
   } else {
     data = _data
+  }
+
+  // Check if other mutations have occurred since we've started awaiting, if so then do not persist this change
+  if (
+    beforeMutationTs !== MUTATION_TS[key] ||
+    beforeConcurrentPromisesTs !== CONCURRENT_PROMISES_TS[key]
+  ) {
+    if (error) throw error
+    return data
   }
 
   if (typeof data !== 'undefined') {
