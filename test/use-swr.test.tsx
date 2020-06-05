@@ -1085,7 +1085,7 @@ describe('useSWR - local mutation', () => {
 
     // Simulate toggling "on"
     await act(async () => {
-      mutate('mutate-3', async () => 'on', false)
+      mutate('mutate-3', 'on', false)
       expect(
         mutate(
           'mutate-3',
