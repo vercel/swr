@@ -1086,17 +1086,18 @@ describe('useSWR - local mutation', () => {
     // Simulate toggling "on"
     await act(async () => {
       mutate('mutate-3', async () => 'on', false)
-      const newValue = await mutate(
-        'mutate-3',
-        new Promise(res =>
-          setTimeout(() => {
-            value = 'on'
-            res('on')
-          }, 200)
-        ),
-        false
-      )
-      expect(newValue).toBe('on')
+      expect(
+        mutate(
+          'mutate-3',
+          new Promise(res =>
+            setTimeout(() => {
+              value = 'on'
+              res('on')
+            }, 200)
+          ),
+          false
+        )
+      ).resolves.toBe('on')
     })
 
     // Validate local state is now "on"
@@ -1105,17 +1106,18 @@ describe('useSWR - local mutation', () => {
     // Simulate toggling "off"
     await act(async () => {
       mutate('mutate-3', 'off', false)
-      const latestValue = await mutate(
-        'mutate-3',
-        new Promise(res =>
-          setTimeout(() => {
-            value = 'off'
-            res('off')
-          }, 400)
-        ),
-        false
-      )
-      expect(latestValue).toBe('off')
+      expect(
+        mutate(
+          'mutate-3',
+          new Promise(res =>
+            setTimeout(() => {
+              value = 'off'
+              res('off')
+            }, 400)
+          ),
+          false
+        )
+      ).resolves.toBe('off')
     })
 
     // Validate local state is now "off"
