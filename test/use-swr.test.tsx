@@ -1067,6 +1067,71 @@ describe('useSWR - local mutation', () => {
     expect(container.textContent).toMatchInlineSnapshot(`"3"`)
   })
 
+  it('should ignore in flight mutations when calling another async mutate', async () => {
+    let value = 'off'
+    function Page() {
+      const { data } = useSWR(
+        'mutate-3',
+        () => new Promise(res => setTimeout(() => res(value), 200))
+      )
+
+      return <div>{data}</div>
+    }
+
+    const { container } = render(<Page />)
+
+    await act(() => new Promise(res => setTimeout(res, 250)))
+    expect(container.textContent).toMatchInlineSnapshot(`"off"`) // Initial state
+
+    // Simulate toggling "on"
+    await act(async () => {
+      mutate('mutate-3', 'on', false)
+      expect(
+        mutate(
+          'mutate-3',
+          new Promise(res =>
+            setTimeout(() => {
+              value = 'on'
+              res('on')
+            }, 200)
+          ),
+          false
+        )
+      ).resolves.toBe('on')
+    })
+
+    // Validate local state is now "on"
+    expect(container.textContent).toMatchInlineSnapshot(`"on"`)
+
+    // Simulate toggling "off"
+    await act(async () => {
+      mutate('mutate-3', 'off', false)
+      expect(
+        mutate(
+          'mutate-3',
+          new Promise(res =>
+            setTimeout(() => {
+              value = 'off'
+              res('off')
+            }, 400)
+          ),
+          false
+        )
+      ).resolves.toBe('off')
+    })
+
+    // Validate local state is now "off"
+    expect(container.textContent).toMatchInlineSnapshot(`"off"`)
+
+    // Wait for toggling "on" promise to resolve, but the "on" mutation is cancelled
+    await act(() => new Promise(res => setTimeout(res, 200)))
+    expect(container.textContent).toMatchInlineSnapshot(`"off"`)
+
+    // Wait for toggling "off" promise to resolve
+    await act(() => new Promise(res => setTimeout(res, 200)))
+    expect(container.textContent).toMatchInlineSnapshot(`"off"`)
+  })
+
   it('null is stringified when found inside an array', async () => {
     let value = 0
 
