@@ -811,6 +811,51 @@ describe('useSWR - error', () => {
     expect(success).toEqual(null)
     expect(loadingSlow).toEqual(null)
   })
+
+  it('should not trigger the onError and onErrorRetry event after component unmount', async () => {
+    let retry = null,
+      failed = null
+    function Page() {
+      const { data } = useSWR(
+        'error-7',
+        () =>
+          new Promise((_, rej) =>
+            setTimeout(() => rej(new Error('error!')), 200)
+          ),
+        {
+          onError: (_, key) => {
+            failed = key
+          },
+          onErrorRetry: (_, key) => {
+            retry = key
+          },
+          dedupingInterval: 0
+        }
+      )
+      return <div>{data}</div>
+    }
+
+    function App() {
+      const [on, toggle] = useState(true)
+      return (
+        <div id="app" onClick={() => toggle(s => !s)}>
+          {on && <Page />}
+        </div>
+      )
+    }
+
+    const { container } = render(<App />)
+
+    expect(retry).toEqual(null)
+    expect(failed).toEqual(null)
+
+    await act(async () => new Promise(res => setTimeout(res, 10)))
+    await act(() => fireEvent.click(container.firstElementChild))
+    await act(async () => new Promise(res => setTimeout(res, 200)))
+
+    expect(retry).toEqual(null)
+    expect(failed).toEqual(null)
+  })
 })
 
 describe('useSWR - focus', () => {
