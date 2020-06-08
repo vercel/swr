@@ -1,10 +1,10 @@
-import { useContext, useRef } from 'react'
+import { useContext, useRef, useState } from 'react'
 
 import defaultConfig, { cache } from './config'
 import SWRConfigContext from './swr-config-context'
 import useSWR from './use-swr'
 
-import { keyType, ConfigInterface, fetcherFn } from './types'
+import { keyType, fetcherFn, ConfigInterface, responseInterface } from './types'
 type KeyLoader<Data = any> = (
   index: number,
   previousPageData: Data | null
@@ -17,18 +17,29 @@ type ExtendedConfigInterface<Data = any, Error = any> = ConfigInterface<
   initialPage?: number
   revalidateAllPages?: boolean
 }
+type ExtendedResponseInterface<Data = any, Error = any> = responseInterface<
+  Data[],
+  Error
+> & {
+  page?: number
+  setPage?: (page: number | ((page: number) => number)) => void
+}
 
-function useSWRInfinite<Data = any, Error = any>(getKey: KeyLoader)
+function useSWRInfinite<Data = any, Error = any>(
+  getKey: KeyLoader
+): ExtendedResponseInterface<Data, Error>
 function useSWRInfinite<Data = any, Error = any>(
   getKey: KeyLoader,
   config?: ExtendedConfigInterface<Data, Error>
-)
+): ExtendedResponseInterface<Data, Error>
 function useSWRInfinite<Data = any, Error = any>(
   getKey: KeyLoader,
   fn?: fetcherFn<Data>,
   config?: ExtendedConfigInterface<Data, Error>
-)
-function useSWRInfinite<Data = any, Error = any>(...args) {
+): ExtendedResponseInterface<Data, Error>
+function useSWRInfinite<Data = any, Error = any>(
+  ...args
+): ExtendedResponseInterface<Data, Error> {
   let getKey: KeyLoader<Data>,
     fn: fetcherFn<Data> | undefined,
     config: ExtendedConfigInterface<Data, Error> = {}
@@ -67,7 +78,8 @@ function useSWRInfinite<Data = any, Error = any>(...args) {
   }
 
   // how many pages should we load
-  const page = useRef<number>(initialPage)
+  const pageRef = useRef<number>(initialPage)
+  const [page, setPage] = useState<number>(initialPage)
 
   // get the serialized key of the first page
   let firstPageKey: string | null = null
@@ -85,32 +97,38 @@ function useSWRInfinite<Data = any, Error = any>(...args) {
   }
 
   // actual swr of all pages
-  const swr = useSWR<Data[], Error>(
+  const swr: ExtendedResponseInterface<Data, Error> = useSWR<Data[], Error>(
     firstPageKey ? ['many', firstPageKey] : null,
     async () => {
       // get the revalidate context
-      const { originalData } = cache.get(contextCacheKey) || {}
+      const { originalData, force } = cache.get(contextCacheKey) || {}
 
       // return an array of page data
       const data: Data[] = []
 
       let previousPageData = null
-      for (let i = 0; i < page.current; ++i) {
+      for (let i = 0; i < pageRef.current; ++i) {
         const [pageKey, pageArgs] = cache.serializeKey(
           getKey(i, previousPageData)
         )
+
+        if (!pageKey) {
+          // pageKey is falsy, stop fetching next pages
+          break
+        }
 
         // get the current page cache
         let pageData = cache.get(pageKey)
 
         // must revalidate if:
         // - forced to revalidate all
-        // - we revalidate the first page by default
+        // - we revalidate the first page by default (e.g.: upon focus)
         // - page has changed
         // - the offset has changed so the cache is missing
         const shouldRevalidatePage =
           revalidateAllPages ||
-          i === 0 ||
+          force ||
+          (typeof force === 'undefined' && i === 0) ||
           (originalData && !config.compare(originalData[i], pageData)) ||
           typeof pageData === 'undefined'
 
@@ -124,6 +142,7 @@ function useSWRInfinite<Data = any, Error = any>(...args) {
         }
 
         data.push(pageData)
+        previousPageData = pageData
       }
 
       // once we executed the data fetching based on the context, clear the context
@@ -138,23 +157,27 @@ function useSWRInfinite<Data = any, Error = any>(...args) {
   // extend the SWR API
   const mutate = swr.mutate
   swr.mutate = (data, shouldRevalidate = true) => {
-    if (shouldRevalidate && data) {
+    if (shouldRevalidate && typeof data !== 'undefined') {
       // we only revalidate the pages that are changed
       const originalData = swr.data
-      cache.set(contextCacheKey, { originalData })
+      cache.set(contextCacheKey, { originalData, force: false })
+    } else if (shouldRevalidate) {
+      // calling `mutate()`, we revalidate all pages
+      cache.set(contextCacheKey, { force: true })
     }
 
     return mutate(data, shouldRevalidate)
   }
-  // swr.page = page.current
-  // swr.setPage = arg => {
-  //   if (typeof arg === 'function') {
-  //     page.current = arg(page.current)
-  //   } else if (typeof arg === 'number') {
-  //     page.current = arg
-  //   }
-  //   mutate(page.current)
-  // }
+  swr.page = page
+  swr.setPage = arg => {
+    if (typeof arg === 'function') {
+      pageRef.current = arg(pageRef.current)
+    } else if (typeof arg === 'number') {
+      pageRef.current = arg
+    }
+    setPage(pageRef.current)
+    swr.mutate()
+  }
 
   return swr
 }

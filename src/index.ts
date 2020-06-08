@@ -1,5 +1,6 @@
 export * from './use-swr'
 import { default as useSWR } from './use-swr'
+export { useSWRInfinite } from './use-swr-infinite'
 export { useSWRPages } from './use-swr-pages'
 export { cache } from './config'
 export {
