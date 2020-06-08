@@ -740,36 +740,122 @@ describe('useSWR - error', () => {
       `"hello, SWR"`
     )
   })
-})
+  it('should trigger limited error retries if errorRetryCount exists', async () => {
+    let count = 0
+    function Page() {
+      const { data, error } = useSWR(
+        'error-5',
+        () => {
+          return new Promise((_, rej) =>
+            setTimeout(() => rej(new Error('error: ' + count++)), 100)
+          )
+        },
+        {
+          errorRetryCount: 1,
+          errorRetryInterval: 50,
+          dedupingInterval: 0
+        }
+      )
+      if (error) return <div>{error.message}</div>
+      return <div>hello, {data}</div>
+    }
+    const { container } = render(<Page />)
 
-it('should trigger limited error retries if errorRetryCount exists', async () => {
-  let count = 0
-  function Page() {
-    const { data, error } = useSWR(
-      'error-5',
-      () => {
-        return new Promise((_, rej) =>
-          setTimeout(() => rej(new Error('error: ' + count++)), 100)
-        )
-      },
-      {
-        errorRetryCount: 1,
-        errorRetryInterval: 50,
-        dedupingInterval: 0
-      }
-    )
-    if (error) return <div>{error.message}</div>
-    return <div>hello, {data}</div>
-  }
-  const { container } = render(<Page />)
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
+    await waitForDomChange({ container })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"error: 0"`)
+    await act(() => new Promise(res => setTimeout(res, 210))) // retry
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"error: 1"`)
+    await act(() => new Promise(res => setTimeout(res, 210))) // retry
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"error: 1"`)
+  })
 
-  expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
-  await waitForDomChange({ container })
-  expect(container.firstChild.textContent).toMatchInlineSnapshot(`"error: 0"`)
-  await act(() => new Promise(res => setTimeout(res, 210))) // retry
-  expect(container.firstChild.textContent).toMatchInlineSnapshot(`"error: 1"`)
-  await act(() => new Promise(res => setTimeout(res, 210))) // retry
-  expect(container.firstChild.textContent).toMatchInlineSnapshot(`"error: 1"`)
+  it('should not trigger the onLoadingSlow and onSuccess event after component unmount', async () => {
+    let loadingSlow = null,
+      success = null
+    function Page() {
+      const { data } = useSWR(
+        'error-6',
+        () => new Promise(res => setTimeout(() => res('SWR'), 200)),
+        {
+          onLoadingSlow: key => {
+            loadingSlow = key
+          },
+          onSuccess: (_, key) => {
+            success = key
+          },
+          loadingTimeout: 100
+        }
+      )
+      return <div>{data}</div>
+    }
+
+    function App() {
+      const [on, toggle] = useState(true)
+      return (
+        <div id="app" onClick={() => toggle(s => !s)}>
+          {on && <Page />}
+        </div>
+      )
+    }
+
+    const { container } = render(<App />)
+
+    expect(loadingSlow).toEqual(null)
+    expect(success).toEqual(null)
+
+    await act(async () => new Promise(res => setTimeout(res, 10)))
+    await act(() => fireEvent.click(container.firstElementChild))
+    await act(async () => new Promise(res => setTimeout(res, 200)))
+
+    expect(success).toEqual(null)
+    expect(loadingSlow).toEqual(null)
+  })
+
+  it('should not trigger the onError and onErrorRetry event after component unmount', async () => {
+    let retry = null,
+      failed = null
+    function Page() {
+      const { data } = useSWR(
+        'error-7',
+        () =>
+          new Promise((_, rej) =>
+            setTimeout(() => rej(new Error('error!')), 200)
+          ),
+        {
+          onError: (_, key) => {
+            failed = key
+          },
+          onErrorRetry: (_, key) => {
+            retry = key
+          },
+          dedupingInterval: 0
+        }
+      )
+      return <div>{data}</div>
+    }
+
+    function App() {
+      const [on, toggle] = useState(true)
+      return (
+        <div id="app" onClick={() => toggle(s => !s)}>
+          {on && <Page />}
+        </div>
+      )
+    }
+
+    const { container } = render(<App />)
+
+    expect(retry).toEqual(null)
+    expect(failed).toEqual(null)
+
+    await act(async () => new Promise(res => setTimeout(res, 10)))
+    await act(() => fireEvent.click(container.firstElementChild))
+    await act(async () => new Promise(res => setTimeout(res, 200)))
+
+    expect(retry).toEqual(null)
+    expect(failed).toEqual(null)
+  })
 })
 
 describe('useSWR - focus', () => {
