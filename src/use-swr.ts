@@ -221,6 +221,18 @@ function useSWR<Data = any, Error = any>(
   const unmountedRef = useRef(false)
   const keyRef = useRef(key)
 
+  // do unmount check for callbacks
+  const eventsRef = useRef({
+    emit: (
+      event,
+      ...params
+    ) => {
+      if (unmountedRef.current) return
+      config[event](...params)
+    }
+  })
+
+
   const boundMutate: responseInterface<Data, Error>['mutate'] = useCallback(
     (data, shouldRevalidate) => {
       return mutate(key, data, shouldRevalidate)
@@ -260,7 +272,7 @@ function useSWR<Data = any, Error = any>(
           // we trigger the loading slow event.
           if (config.loadingTimeout && !cache.get(key)) {
             setTimeout(() => {
-              if (loading) config.onLoadingSlow(key, config)
+              if (loading) eventsRef.current.emit('onLoadingSlow', key, config)
             }, config.loadingTimeout)
           }
 
@@ -281,7 +293,7 @@ function useSWR<Data = any, Error = any>(
 
           // trigger the success event,
           // only do this for the original request.
-          config.onSuccess(newData, key, config)
+          eventsRef.current.emit('onSuccess',newData, key, config)
         }
 
         const shouldIgnoreRequest =
@@ -363,11 +375,11 @@ function useSWR<Data = any, Error = any>(
         }
 
         // events and retry
-        config.onError(err, key, config)
+        eventsRef.current.emit('onError', err, key, config)
         if (config.shouldRetryOnError) {
           // when retrying, we always enable deduping
           const retryCount = (revalidateOpts.retryCount || 0) + 1
-          config.onErrorRetry(
+          eventsRef.current.emit('onErrorRetry',
             err,
             key,
             config,
