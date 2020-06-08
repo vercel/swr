@@ -17,6 +17,7 @@ const CONCURRENT_PROMISES_TS = {}
 const FOCUS_REVALIDATORS = {}
 const CACHE_REVALIDATORS = {}
 const MUTATION_TS = {}
+const MUTATION_END_TS = {}
 
 // error retry
 function onErrorRetry(
@@ -96,6 +97,7 @@ export {
   FOCUS_REVALIDATORS,
   CACHE_REVALIDATORS,
   MUTATION_TS,
+  MUTATION_END_TS,
   cache
 }
 export default defaultConfig
