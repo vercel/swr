@@ -217,15 +217,11 @@ function useSWR<Data = any, Error = any>(
 
   // do unmount check for callbacks
   const eventsRef = useRef({
-    emit: (
-      event,
-      ...params
-    ) => {
+    emit: (event, ...params) => {
       if (unmountedRef.current) return
       config[event](...params)
     }
   })
-
 
   const boundMutate: responseInterface<Data, Error>['mutate'] = useCallback(
     (data, shouldRevalidate) => {
@@ -301,7 +297,7 @@ function useSWR<Data = any, Error = any>(
 
           // trigger the success event,
           // only do this for the original request.
-          eventsRef.current.emit('onSuccess',newData, key, config)
+          eventsRef.current.emit('onSuccess', newData, key, config)
         }
 
         // if the revalidation happened earlier than the local mutation,
@@ -363,7 +359,8 @@ function useSWR<Data = any, Error = any>(
         if (config.shouldRetryOnError) {
           // when retrying, we always enable deduping
           const retryCount = (revalidateOpts.retryCount || 0) + 1
-          eventsRef.current.emit('onErrorRetry',
+          eventsRef.current.emit(
+            'onErrorRetry',
             err,
             key,
             config,
@@ -615,19 +612,22 @@ function useSWR<Data = any, Error = any>(
         get: function() {
           stateDependencies.current.error = true
           return keyRef.current === key ? stateRef.current.error : initialError
-        }
+        },
+        enumerable: true
       },
       data: {
         get: function() {
           stateDependencies.current.data = true
           return keyRef.current === key ? stateRef.current.data : initialData
-        }
+        },
+        enumerable: true
       },
       isValidating: {
         get: function() {
           stateDependencies.current.isValidating = true
           return stateRef.current.isValidating
-        }
+        },
+        enumerable: true
       }
     })
 
