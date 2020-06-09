@@ -1,0 +1,26 @@
+{
+  "name": "infinite-scrolling",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "webpack-dev-server"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "ts-loader": "7.0.5",
+    "typescript": "3.9.5",
+    "webpack": "4.43.0",
+    "webpack-cli": "3.3.11",
+    "webpack-dev-server": "3.11.0"
+  },
+  "dependencies": {
+    "@types/react": "16.9.35",
+    "@types/react-dom": "16.9.8",
+    "@types/react-window": "1.8.2",
+    "@types/react-window-infinite-loader": "1.0.3",
+    "react-window": "1.8.5",
+    "react-window-infinite-loader": "1.0.5"
+  }
+}
