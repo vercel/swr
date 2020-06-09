@@ -22,7 +22,9 @@ type ExtendedResponseInterface<Data = any, Error = any> = responseInterface<
   Error
 > & {
   page?: number
-  setPage?: (page: number | ((page: number) => number)) => void
+  setPage?: (
+    page: number | ((page: number) => number)
+  ) => Promise<Data[] | undefined>
 }
 
 function useSWRInfinite<Data = any, Error = any>(
@@ -187,7 +189,7 @@ function useSWRInfinite<Data = any, Error = any>(
       }
       cache.set(pageCountCacheKey, pageCountRef.current)
       rerender(v => !v)
-      swr.mutate(v => v)
+      return swr.mutate(v => v)
     },
     [swr.mutate, pageCountCacheKey]
   )
