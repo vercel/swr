@@ -64,7 +64,7 @@ function useSWRInfinite<Data = any, Error = any>(
     useContext(SWRConfigContext),
     config
   )
-  const {
+  let {
     initialPage = 1,
     revalidateAllPages = false,
     fetcher: defaultFetcher,
@@ -77,10 +77,6 @@ function useSWRInfinite<Data = any, Error = any>(
     fn = (defaultFetcher as unknown) as fetcherFn<Data>
   }
 
-  // how many pages should we load
-  const pageRef = useRef<number>(initialPage)
-  const [page, setPage] = useState<number>(initialPage)
-
   // get the serialized key of the first page
   let firstPageKey: string | null = null
   try {
@@ -89,12 +85,22 @@ function useSWRInfinite<Data = any, Error = any>(
     // not ready
   }
 
+  const rerender = useState<boolean>(false)[1]
+
   // we use cache to pass extra info (context) to fetcher so it can be globally shared
   // here we get the key of the fetcher context cache
   let contextCacheKey: string | null = null
   if (firstPageKey) {
     contextCacheKey = 'context@' + firstPageKey
   }
+
+  // page count is cached as well, so when navigating the list can be restored
+  let pageCountCacheKey: string | null = null
+  if (firstPageKey) {
+    pageCountCacheKey = 'page@' + firstPageKey
+    initialPage = cache.get(pageCountCacheKey) || initialPage
+  }
+  const pageCountRef = useRef<number>(initialPage)
 
   // actual swr of all pages
   const swr: ExtendedResponseInterface<Data, Error> = useSWR<Data[], Error>(
@@ -107,7 +113,7 @@ function useSWRInfinite<Data = any, Error = any>(
       const data: Data[] = []
 
       let previousPageData = null
-      for (let i = 0; i < pageRef.current; ++i) {
+      for (let i = 0; i < pageCountRef.current; ++i) {
         const [pageKey, pageArgs] = cache.serializeKey(
           getKey(i, previousPageData)
         )
@@ -156,7 +162,7 @@ function useSWRInfinite<Data = any, Error = any>(
 
   // extend the SWR API
   const mutate = swr.mutate
-  swr.page = page
+  swr.page = pageCountRef.current
   swr.mutate = useCallback(
     (data, shouldRevalidate = true) => {
       if (shouldRevalidate && typeof data !== 'undefined') {
@@ -175,11 +181,11 @@ function useSWRInfinite<Data = any, Error = any>(
   swr.setPage = useCallback(
     arg => {
       if (typeof arg === 'function') {
-        pageRef.current = arg(pageRef.current)
+        pageCountRef.current = arg(pageCountRef.current)
       } else if (typeof arg === 'number') {
-        pageRef.current = arg
+        pageCountRef.current = arg
       }
-      setPage(pageRef.current)
+      rerender(v => !v)
       swr.mutate(v => v)
     },
     [swr.mutate]

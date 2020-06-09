@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   render,
   waitForDomChange,
@@ -210,5 +210,54 @@ describe('useSWRInfinite', () => {
       `"page 0, page 1, page 2, "`
     )
     expect(requests).toEqual(3)
+  })
+
+  it('should cache page count', async () => {
+    let toggle
+
+    function Page() {
+      const { data, page, setPage } = useSWRInfinite<string, string>(
+        index => [`pagetest-5`, index],
+        async (_, index) => {
+          await new Promise(res => setTimeout(res, 100))
+          return `page ${index}, `
+        }
+      )
+
+      return (
+        <div
+          onClick={() => {
+            // load next page
+            setPage(page + 1)
+          }}
+        >
+          {data}
+        </div>
+      )
+    }
+
+    function App() {
+      const [showList, setShowList] = useState(true)
+      toggle = setShowList
+      return showList ? <Page /> : <div>yo</div>
+    }
+
+    const { container } = render(<App />)
+    expect(container.textContent).toMatchInlineSnapshot(`""`)
+    await waitForDomChange({ container }) // mount
+    expect(container.textContent).toMatchInlineSnapshot(`"page 0, "`)
+
+    // load next page
+    fireEvent.click(container.firstElementChild)
+    await act(() => new Promise(res => setTimeout(res, 150)))
+    expect(container.textContent).toMatchInlineSnapshot(`"page 0, page 1, "`)
+
+    // switch to another component
+    act(() => toggle(v => !v))
+    expect(container.textContent).toMatchInlineSnapshot(`"yo"`)
+
+    // switch back and it should still have 2 pages cached
+    act(() => toggle(v => !v))
+    expect(container.textContent).toMatchInlineSnapshot(`"page 0, page 1, "`)
   })
 })
