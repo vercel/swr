@@ -28,14 +28,14 @@ type ExtendedResponseInterface<Data = any, Error = any> = responseInterface<
 }
 
 function useSWRInfinite<Data = any, Error = any>(
-  getKey: KeyLoader
+  getKey: KeyLoader<Data>
 ): ExtendedResponseInterface<Data, Error>
 function useSWRInfinite<Data = any, Error = any>(
-  getKey: KeyLoader,
+  getKey: KeyLoader<Data>,
   config?: ExtendedConfigInterface<Data, Error>
 ): ExtendedResponseInterface<Data, Error>
 function useSWRInfinite<Data = any, Error = any>(
-  getKey: KeyLoader,
+  getKey: KeyLoader<Data>,
   fn?: fetcherFn<Data>,
   config?: ExtendedConfigInterface<Data, Error>
 ): ExtendedResponseInterface<Data, Error>
