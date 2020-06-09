@@ -1,9 +1,12 @@
-[![SWR](https://assets.zeit.co/image/upload/v1572289618/swr/banner.png)](https://swr.now.sh)
+[![SWR](https://assets.vercel.com/image/upload/v1572289618/swr/banner.png)](https://swr.now.sh)
 
 <p align="center">
-  <a aria-label="ZEIT logo" href="https://github.com/zeit">
-    <img src="https://badgen.net/badge/icon/MADE%20BY%20ZEIT?icon=zeit&label&color=black&labelColor=black">
+
+  <a aria-label="Vercel logo" href="https://vercel.com">
+    <img src="https://badgen.net/badge/icon/Made%20by%20Vercel?icon=zeit&label&color=black&labelColor=black">
   </a>
+  <br/>
+  
   <a aria-label="NPM version" href="https://www.npmjs.com/package/swr">
     <img alt="" src="https://badgen.net/npm/v/swr">
   </a>
@@ -103,13 +106,14 @@ const { data, error, isValidating, mutate } = useSWR(key, fetcher, options)
 - `data`: data for the given key resolved by `fetcher` (or undefined if not loaded)  
 - `error`: error thrown by `fetcher` (or undefined)  
 - `isValidating`: if there's a request or revalidation loading  
-- `mutate`: function to mutate the cached data
+- `mutate(data?, shouldRevalidate?)`: function to mutate the cached data
 
 #### Options
 
 - `suspense = false`: enable React Suspense mode [(details)](#suspense-mode)
 - `fetcher = undefined`: the default fetcher function
 - `initialData`: initial data to be returned (note: This is per-hook)
+- `revalidateOnMount`: enable or disable automatic revalidation when component is mounted (by default revalidation occurs on mount when initialData is not set, use this flag to force behavior)
 - `revalidateOnFocus = true`: auto revalidate when window gets focused
 - `revalidateOnReconnect = true`: automatically revalidate when the browser regains a network connection (via `navigator.onLine`)
 - `refreshInterval = 0`: polling interval (disabled by default)
@@ -121,11 +125,11 @@ const { data, error, isValidating, mutate } = useSWR(key, fetcher, options)
 - `loadingTimeout = 3000`: timeout to trigger the onLoadingSlow event
 - `errorRetryInterval = 5000`: error retry interval [(details)](#error-retries)
 - `errorRetryCount`: max error retry count [(details)](#error-retries)
-- `onLoadingSlow`: callback function when a request takes too long to load (see `loadingTimeout`)
-- `onSuccess`: callback function when a request finishes successfully
-- `onError`: callback function when a request returns an error
-- `onErrorRetry`: handler for [error retry](#error-retries)
-- `compare`: comparison function used to detect when returned data has changed, to avoid spurious rerenders. By default, [fast-deep-equal](https://github.com/epoberezkin/fast-deep-equal) is used.
+- `onLoadingSlow(key, config)`: callback function when a request takes too long to load (see `loadingTimeout`)
+- `onSuccess(data, key, config)`: callback function when a request finishes successfully
+- `onError(err, key, config)`: callback function when a request returns an error
+- `onErrorRetry(err, key, config, revalidate, revalidateOps)`: handler for [error retry](#error-retries)
+- `compare(a, b)`: comparison function used to detect when returned data has changed, to avoid spurious rerenders. By default, [fast-deep-equal](https://github.com/epoberezkin/fast-deep-equal) is used.
 
 When under a slow network (2G, <= 70Kbps), `errorRetryInterval` will be 10s, and
 `loadingTimeout` will be 5s by default.
@@ -341,6 +345,7 @@ function Profile () {
         // send a request to the API to update the data
         await requestUpdateUsername(newName)
         // update the local data immediately and revalidate (refetch)
+        // NOTE: key has to be passed to mutate as it's not bound
         mutate('/api/user', { ...data, name: newName })
       }}>Uppercase my name!</button>
     </div>
@@ -375,15 +380,43 @@ mutate('/api/users', async users => {
 
 ### Returned Data from Mutate
 
-Most probably, you need to data mutate used to update the cache when you passed a promise or async function.
+Most probably, you need some data to update the cache. The data is resolved or returned from the promise or async function you passed to `mutate`.
 
-The function will returns the updated document, or throw an error, everytime you call it.
+The function will return an updated document to let `mutate` update the corresponding cache value. It could throw an error somehow, every time when you call it.
 
 ```js
 try {
   const user = await mutate('/api/user', updateUser(newUser))
 } catch (error) {
   // Handle an error while updating the user here
+}
+```
+
+### Bound `mutate()`
+
+The SWR object returned by `useSWR` also contains a `mutate()` function that is pre-bound to the SWR's key.
+
+It is functionally equivalent to the global `mutate` function but does not require the `key` parameter.
+
+```js
+import useSWR from 'swr'
+
+function Profile () {
+  const { data, mutate } = useSWR('/api/user', fetcher)
+
+  return (
+    <div>
+      <h1>My name is {data.name}.</h1>
+      <button onClick={async () => {
+        const newName = data.name.toUpperCase()
+        // send a request to the API to update the data
+        await requestUpdateUsername(newName)
+        // update the local data immediately and revalidate (refetch)
+        // NOTE: key is not required when using useSWR's mutate as it's pre-bound
+        mutate({ ...data, name: newName })
+      }}>Uppercase my name!</button>
+    </div>
+  )
 }
 ```
 
@@ -481,10 +514,10 @@ Together with techniques like [page prefetching](https://nextjs.org/docs#prefetc
 <br/>
 
 ## Authors
-- Shu Ding ([@shuding_](https://twitter.com/shuding_)) – [ZEIT](https://zeit.co)
-- Guillermo Rauch ([@rauchg](https://twitter.com/rauchg)) – [ZEIT](https://zeit.co)
-- Joe Haddad ([@timer150](https://twitter.com/timer150)) - [ZEIT](https://zeit.co)
-- Paco Coursey ([@pacocoursey](https://twitter.com/pacocoursey)) - [ZEIT](https://zeit.co)
+- Shu Ding ([@shuding_](https://twitter.com/shuding_)) – [Vercel](https://vercel.com)
+- Guillermo Rauch ([@rauchg](https://twitter.com/rauchg)) – [Vercel](https://vercel.com)
+- Joe Haddad ([@timer150](https://twitter.com/timer150)) - [Vercel](https://vercel.com)
+- Paco Coursey ([@pacocoursey](https://twitter.com/pacocoursey)) - [Vercel](https://vercel.com)
 
 Thanks to Ryan Chen for providing the awesome `swr` npm package name!
 

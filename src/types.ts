@@ -13,6 +13,7 @@ export interface ConfigInterface<
   refreshWhenHidden?: boolean
   refreshWhenOffline?: boolean
   revalidateOnFocus?: boolean
+  revalidateOnMount?: boolean
   revalidateOnReconnect?: boolean
   shouldRetryOnError?: boolean
   fetcher?: Fn
@@ -58,7 +59,7 @@ export type triggerInterface = (
   key: keyInterface,
   shouldRevalidate?: boolean
 ) => void
-type mutateCallback<Data = any> = (currentValue: Data) => Data
+type mutateCallback<Data = any> = (currentValue: Data) => Promise<Data> | Data
 export type mutateInterface<Data = any> = (
   key: keyInterface,
   data?: Data | Promise<Data> | mutateCallback<Data>,
@@ -100,10 +101,10 @@ export type pageOffsetMapperType<Offset, Data, Error> = (
   index: number
 ) => Offset
 
-export type pagesResponseInterface = {
+export type pagesResponseInterface<Data, Error> = {
   pages: any
   pageCount: number
-  pageSWRs: responseInterface<any, any>[]
+  pageSWRs: responseInterface<Data, Error>[]
   isLoadingMore: boolean
   isReachingEnd: boolean
   isEmpty: boolean

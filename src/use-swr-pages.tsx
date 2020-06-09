@@ -95,7 +95,7 @@ export function useSWRPages<OffsetType = any, Data = any, Error = any>(
   pageFn: pageComponentType<OffsetType, Data, Error>,
   SWRToOffset: pageOffsetMapperType<OffsetType, Data, Error>,
   deps: any[] = []
-): pagesResponseInterface {
+): pagesResponseInterface<Data, Error> {
   const pageCountKey = `_swr_page_count_` + pageKey
   const pageOffsetKey = `_swr_page_offset_` + pageKey
 
