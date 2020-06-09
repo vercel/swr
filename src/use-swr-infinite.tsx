@@ -176,7 +176,7 @@ function useSWRInfinite<Data = any, Error = any>(
 
       return mutate(data, shouldRevalidate)
     },
-    [mutate, swr.data]
+    [mutate, swr.data, contextCacheKey]
   )
   swr.setPage = useCallback(
     arg => {
@@ -185,10 +185,11 @@ function useSWRInfinite<Data = any, Error = any>(
       } else if (typeof arg === 'number') {
         pageCountRef.current = arg
       }
+      cache.set(pageCountCacheKey, pageCountRef.current)
       rerender(v => !v)
       swr.mutate(v => v)
     },
-    [swr.mutate]
+    [swr.mutate, pageCountCacheKey]
   )
 
   return swr

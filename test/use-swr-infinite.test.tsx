@@ -259,5 +259,7 @@ describe('useSWRInfinite', () => {
     // switch back and it should still have 2 pages cached
     act(() => toggle(v => !v))
     expect(container.textContent).toMatchInlineSnapshot(`"page 0, page 1, "`)
+    await act(() => new Promise(res => setTimeout(res, 100)))
+    expect(container.textContent).toMatchInlineSnapshot(`"page 0, page 1, "`)
   })
 })
