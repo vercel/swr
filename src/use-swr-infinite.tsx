@@ -1,4 +1,4 @@
-import { useContext, useRef, useState } from 'react'
+import { useContext, useRef, useState, useCallback } from 'react'
 
 import defaultConfig, { cache } from './config'
 import SWRConfigContext from './swr-config-context'
@@ -156,28 +156,34 @@ function useSWRInfinite<Data = any, Error = any>(
 
   // extend the SWR API
   const mutate = swr.mutate
-  swr.mutate = (data, shouldRevalidate = true) => {
-    if (shouldRevalidate && typeof data !== 'undefined') {
-      // we only revalidate the pages that are changed
-      const originalData = swr.data
-      cache.set(contextCacheKey, { originalData, force: false })
-    } else if (shouldRevalidate) {
-      // calling `mutate()`, we revalidate all pages
-      cache.set(contextCacheKey, { force: true })
-    }
-
-    return mutate(data, shouldRevalidate)
-  }
   swr.page = page
-  swr.setPage = arg => {
-    if (typeof arg === 'function') {
-      pageRef.current = arg(pageRef.current)
-    } else if (typeof arg === 'number') {
-      pageRef.current = arg
-    }
-    setPage(pageRef.current)
-    swr.mutate()
-  }
+  swr.mutate = useCallback(
+    (data, shouldRevalidate = true) => {
+      if (shouldRevalidate && typeof data !== 'undefined') {
+        // we only revalidate the pages that are changed
+        const originalData = swr.data
+        cache.set(contextCacheKey, { originalData, force: false })
+      } else if (shouldRevalidate) {
+        // calling `mutate()`, we revalidate all pages
+        cache.set(contextCacheKey, { force: true })
+      }
+
+      return mutate(data, shouldRevalidate)
+    },
+    [mutate, swr.data]
+  )
+  swr.setPage = useCallback(
+    arg => {
+      if (typeof arg === 'function') {
+        pageRef.current = arg(pageRef.current)
+      } else if (typeof arg === 'number') {
+        pageRef.current = arg
+      }
+      setPage(pageRef.current)
+      swr.mutate()
+    },
+    [swr.mutate]
+  )
 
   return swr
 }

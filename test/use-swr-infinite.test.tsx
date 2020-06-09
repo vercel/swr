@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react'
 import {
-  cleanup,
   render,
   waitForDomChange,
   fireEvent,
@@ -10,8 +9,6 @@ import {
 import { useSWRInfinite } from '../src'
 
 describe('useSWRInfinite', () => {
-  afterEach(cleanup)
-
   it('should render the first page component', async () => {
     function Page() {
       const { data } = useSWRInfinite<string, string>(
