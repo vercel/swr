@@ -223,15 +223,11 @@ function useSWR<Data = any, Error = any>(
 
   // do unmount check for callbacks
   const eventsRef = useRef({
-    emit: (
-      event,
-      ...params
-    ) => {
+    emit: (event, ...params) => {
       if (unmountedRef.current) return
       config[event](...params)
     }
   })
-
 
   const boundMutate: responseInterface<Data, Error>['mutate'] = useCallback(
     (data, shouldRevalidate) => {
@@ -293,7 +289,7 @@ function useSWR<Data = any, Error = any>(
 
           // trigger the success event,
           // only do this for the original request.
-          eventsRef.current.emit('onSuccess',newData, key, config)
+          eventsRef.current.emit('onSuccess', newData, key, config)
         }
 
         const shouldIgnoreRequest =
@@ -379,7 +375,8 @@ function useSWR<Data = any, Error = any>(
         if (config.shouldRetryOnError) {
           // when retrying, we always enable deduping
           const retryCount = (revalidateOpts.retryCount || 0) + 1
-          eventsRef.current.emit('onErrorRetry',
+          eventsRef.current.emit(
+            'onErrorRetry',
             err,
             key,
             config,

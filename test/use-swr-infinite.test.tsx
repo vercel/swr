@@ -166,4 +166,49 @@ describe('useSWRInfinite', () => {
       `"0: foo, 1: bar, 2: foo, 3: bar, end."`
     )
   })
+
+  it('should skip fetching existing pages when loading more', async () => {
+    let requests = 0
+    function Page() {
+      const { data, page, setPage } = useSWRInfinite<string, string>(
+        index => [`pagetest-4`, index],
+        async (_, index) => {
+          requests++
+          await new Promise(res => setTimeout(res, 100))
+          return `page ${index}, `
+        }
+      )
+
+      return (
+        <div
+          onClick={() => {
+            // load next page
+            setPage(page + 1)
+          }}
+        >
+          {data}
+        </div>
+      )
+    }
+
+    const { container } = render(<Page />)
+    expect(container.textContent).toMatchInlineSnapshot(`""`)
+    await waitForDomChange({ container }) // mount
+    expect(container.textContent).toMatchInlineSnapshot(`"page 0, "`)
+    expect(requests).toEqual(1)
+
+    // load next page
+    fireEvent.click(container.firstElementChild)
+    await act(() => new Promise(res => setTimeout(res, 150)))
+    expect(container.textContent).toMatchInlineSnapshot(`"page 0, page 1, "`)
+    expect(requests).toEqual(2)
+
+    // load next page
+    fireEvent.click(container.firstElementChild)
+    await act(() => new Promise(res => setTimeout(res, 150)))
+    expect(container.textContent).toMatchInlineSnapshot(
+      `"page 0, page 1, page 2, "`
+    )
+    expect(requests).toEqual(3)
+  })
 })

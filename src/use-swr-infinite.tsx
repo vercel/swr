@@ -180,7 +180,7 @@ function useSWRInfinite<Data = any, Error = any>(
         pageRef.current = arg
       }
       setPage(pageRef.current)
-      swr.mutate()
+      swr.mutate(v => v)
     },
     [swr.mutate]
   )
