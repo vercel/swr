@@ -8,14 +8,7 @@ import {
   useMemo
 } from 'react'
 
-import defaultConfig, {
-  CACHE_REVALIDATORS,
-  CONCURRENT_PROMISES,
-  CONCURRENT_PROMISES_TS,
-  FOCUS_REVALIDATORS,
-  MUTATION_TS,
-  cache
-} from './config'
+import defaultConfig, { cache } from './config'
 import isDocumentVisible from './libs/is-document-visible'
 import isOnline from './libs/is-online'
 import throttle from './libs/throttle'
@@ -34,16 +27,34 @@ import {
 } from './types'
 
 const IS_SERVER = typeof window === 'undefined'
-
 // React currently throws a warning when using useLayoutEffect on the server.
 // To get around it, we can conditionally useEffect on the server (no-op) and
 // useLayoutEffect in the browser.
 const useIsomorphicLayoutEffect = IS_SERVER ? useEffect : useLayoutEffect
-
 // polyfill for requestIdleCallback
 const rIC = IS_SERVER
   ? null
   : window['requestIdleCallback'] || (f => setTimeout(f, 1))
+
+// global states
+const CONCURRENT_PROMISES = {}
+const CONCURRENT_PROMISES_TS = {}
+const FOCUS_REVALIDATORS = {}
+const CACHE_REVALIDATORS = {}
+const MUTATION_TS = {}
+
+// setup focus revalidation
+if (!IS_SERVER && window.addEventListener) {
+  const revalidate = () => {
+    if (!isDocumentVisible() || !isOnline()) return
+
+    for (let key in FOCUS_REVALIDATORS) {
+      if (FOCUS_REVALIDATORS[key][0]) FOCUS_REVALIDATORS[key][0]()
+    }
+  }
+  window.addEventListener('visibilitychange', revalidate, false)
+  window.addEventListener('focus', revalidate, false)
+}
 
 const trigger: triggerInterface = (_key, shouldRevalidate = true) => {
   // we are ignoring the second argument which correspond to the arguments

@@ -106,7 +106,8 @@ describe('useSWR', () => {
       return <div>hello, {data}</div>
     }
 
-    render(<Page />)
+    const { container } = render(<Page />)
+    await waitForDomChange({ container })
     expect(fetch).toHaveBeenCalled()
   })
 
