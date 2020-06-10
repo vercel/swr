@@ -55,10 +55,6 @@ export type updaterInterface<Data = any, Error = any> = (
   error?: Error,
   shouldDedupe?: boolean
 ) => boolean | Promise<boolean>
-export type triggerInterface = (
-  key: keyInterface,
-  shouldRevalidate?: boolean
-) => void
 type mutateCallback<Data = any> = (currentValue: Data) => Promise<Data> | Data
 export type mutateInterface<Data = any> = (
   key: keyInterface,
@@ -68,7 +64,8 @@ export type mutateInterface<Data = any> = (
 export type broadcastStateInterface<Data = any, Error = any> = (
   key: string,
   data: Data,
-  error?: Error
+  error?: Error,
+  shouldRevalidate?: boolean
 ) => void
 export type responseInterface<Data, Error> = {
   data?: Data

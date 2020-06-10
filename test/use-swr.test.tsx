@@ -7,7 +7,7 @@ import {
 } from '@testing-library/react'
 import React, { ReactNode, Suspense, useEffect, useState } from 'react'
 
-import useSWR, { mutate, SWRConfig, trigger, cache } from '../src'
+import useSWR, { mutate, SWRConfig, cache } from '../src'
 import Cache from '../src/cache'
 
 class ErrorBoundary extends React.Component<{ fallback: ReactNode }> {
@@ -930,7 +930,7 @@ describe('useSWR - local mutation', () => {
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
     await act(() => {
       // trigger revalidation
-      trigger('dynamic-7')
+      mutate('dynamic-7')
       return new Promise(res => setTimeout(res, 1))
     })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
@@ -953,7 +953,7 @@ describe('useSWR - local mutation', () => {
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
     await act(() => {
       // trigger revalidation
-      trigger('dynamic-12')
+      mutate('dynamic-12')
       return new Promise(res => setTimeout(res, 1))
     })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
@@ -1236,7 +1236,7 @@ describe('useSWR - local mutation', () => {
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
     await act(() => {
       // trigger revalidation
-      trigger([null])
+      mutate([null])
       return new Promise(res => setTimeout(res, 1))
     })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)

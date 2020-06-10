@@ -22,7 +22,6 @@ import {
   mutateInterface,
   responseInterface,
   RevalidateOptionInterface,
-  triggerInterface,
   updaterInterface
 } from './types'
 
@@ -56,27 +55,16 @@ if (!IS_SERVER && window.addEventListener) {
   window.addEventListener('focus', revalidate, false)
 }
 
-const trigger: triggerInterface = (_key, shouldRevalidate = true) => {
-  // we are ignoring the second argument which correspond to the arguments
-  // the fetcher will receive when key is an array
-  const [key, , keyErr] = cache.serializeKey(_key)
-  if (!key) return
-
+const broadcastState: broadcastStateInterface = (
+  key,
+  data,
+  error,
+  shouldRevalidate = false
+) => {
   const updaters = CACHE_REVALIDATORS[key]
-  if (key && updaters) {
-    const currentData = cache.get(key)
-    const currentError = cache.get(keyErr)
+  if (updaters) {
     for (let i = 0; i < updaters.length; ++i) {
-      updaters[i](shouldRevalidate, currentData, currentError, i > 0)
-    }
-  }
-}
-
-const broadcastState: broadcastStateInterface = (key, data, error) => {
-  const updaters = CACHE_REVALIDATORS[key]
-  if (key && updaters) {
-    for (let i = 0; i < updaters.length; ++i) {
-      updaters[i](false, data, error)
+      updaters[i](shouldRevalidate, data, error, i > 0)
     }
   }
 }
@@ -86,60 +74,58 @@ const mutate: mutateInterface = async (
   _data,
   shouldRevalidate = true
 ) => {
-  const [key] = cache.serializeKey(_key)
+  const [key, , keyErr] = cache.serializeKey(_key)
   if (!key) return
-
-  // if there is no new data, call revalidate against the key
-  if (typeof _data === 'undefined') return trigger(_key, shouldRevalidate)
-
-  // update timestamp
-  MUTATION_TS[key] = Date.now() - 1
 
   let data, error
 
-  // Keep track of timestamps before await asynchronously
-  const beforeMutationTs = MUTATION_TS[key]
-  const beforeConcurrentPromisesTs = CONCURRENT_PROMISES_TS[key]
-
-  if (_data && typeof _data === 'function') {
-    // `_data` is a function, call it passing current cache value
-    try {
-      data = await _data(cache.get(key))
-    } catch (err) {
-      error = err
-    }
-  } else if (_data && typeof _data.then === 'function') {
-    // `_data` is a promise
-    try {
-      data = await _data
-    } catch (err) {
-      error = err
-    }
+  // if there is no new data, call revalidate against the key
+  if (typeof _data === 'undefined') {
+    data = cache.get(key)
+    error = cache.get(keyErr)
   } else {
-    data = _data
-  }
+    // update timestamp
+    MUTATION_TS[key] = Date.now() - 1
 
-  // Check if other mutations have occurred since we've started awaiting, if so then do not persist this change
-  if (
-    beforeMutationTs !== MUTATION_TS[key] ||
-    beforeConcurrentPromisesTs !== CONCURRENT_PROMISES_TS[key]
-  ) {
-    if (error) throw error
-    return data
-  }
+    // Keep track of timestamps before await asynchronously
+    const beforeMutationTs = MUTATION_TS[key]
+    const beforeConcurrentPromisesTs = CONCURRENT_PROMISES_TS[key]
 
-  if (typeof data !== 'undefined') {
-    // update cached data, avoid notifying from the cache
-    cache.set(key, data, false)
+    if (_data && typeof _data === 'function') {
+      // `_data` is a function, call it passing current cache value
+      try {
+        data = await _data(cache.get(key))
+      } catch (err) {
+        error = err
+      }
+    } else if (_data && typeof _data.then === 'function') {
+      // `_data` is a promise
+      try {
+        data = await _data
+      } catch (err) {
+        error = err
+      }
+    } else {
+      data = _data
+    }
+
+    // Check if other mutations have occurred since we've started awaiting, if so then do not persist this change
+    if (
+      beforeMutationTs !== MUTATION_TS[key] ||
+      beforeConcurrentPromisesTs !== CONCURRENT_PROMISES_TS[key]
+    ) {
+      if (error) throw error
+      return data
+    }
+
+    if (typeof data !== 'undefined') {
+      // update cached data, avoid notifying from the cache
+      cache.set(key, data, false)
+    }
   }
 
   // update existing SWR Hooks' state
-  const updaters = CACHE_REVALIDATORS[key]
-  if (updaters) {
-    for (let i = 0; i < updaters.length; ++i) {
-      updaters[i](!!shouldRevalidate, data, error, i > 0)
-    }
-  }
+  broadcastState(key, data, error, shouldRevalidate)
 
   // throw error or return data to be used by caller of mutate
   if (error) throw error
@@ -649,5 +635,5 @@ function useSWR<Data = any, Error = any>(
 
 const SWRConfig = SWRConfigContext.Provider
 
-export { trigger, mutate, SWRConfig }
+export { mutate, SWRConfig }
 export default useSWR
