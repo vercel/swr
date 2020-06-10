@@ -2,9 +2,9 @@
 
 ## One-Click Deploy
 
-Deploy your own SWR project with Vercel Now.
+Deploy your own SWR project with Vercel.
 
-[![Deploy with Vercel Now](https://vercel.com/button)](https://vercel.com/new/project?template=https://github.com/vercel/swr/tree/master/examples/basic-typescript)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/project?template=https://github.com/vercel/swr/tree/master/examples/basic-typescript)
 
 ## How to Use
 
