@@ -253,7 +253,8 @@ function MyProjects () {
   // When passing a function, SWR will use the return
   // value as `key`. If the function throws or returns
   // falsy, SWR will know that some dependencies are not
-  // ready. In this ready. In this case it is `user`.
+  // ready. In this case `user.id` throws when `user`
+  // isn't loaded.
 
   if (!projects) return 'loading...'
   return 'You have ' + projects.length + ' projects'
