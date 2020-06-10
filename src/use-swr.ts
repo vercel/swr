@@ -40,6 +40,11 @@ const IS_SERVER = typeof window === 'undefined'
 // useLayoutEffect in the browser.
 const useIsomorphicLayoutEffect = IS_SERVER ? useEffect : useLayoutEffect
 
+// polyfill for requestIdleCallback
+const rIC = IS_SERVER
+  ? null
+  : window['requestIdleCallback'] || (f => setTimeout(f, 1))
+
 const trigger: triggerInterface = (_key, shouldRevalidate = true) => {
   // we are ignoring the second argument which correspond to the arguments
   // the fetcher will receive when key is an array
@@ -407,14 +412,10 @@ function useSWR<Data = any, Error = any>(
       config.revalidateOnMount ||
       (!config.initialData && config.revalidateOnMount === undefined)
     ) {
-      if (
-        typeof latestKeyedData !== 'undefined' &&
-        !IS_SERVER &&
-        window['requestIdleCallback']
-      ) {
+      if (typeof latestKeyedData !== 'undefined') {
         // delay revalidate if there's cache
         // to not block the rendering
-        window['requestIdleCallback'](softRevalidate)
+        rIC(softRevalidate)
       } else {
         softRevalidate()
       }
@@ -482,7 +483,7 @@ function useSWR<Data = any, Error = any>(
 
     // set up reconnecting when the browser regains network connection
     let reconnect = null
-    if (!IS_SERVER && window.addEventListener && config.revalidateOnReconnect) {
+    if (window.addEventListener && config.revalidateOnReconnect) {
       window.addEventListener('online', (reconnect = softRevalidate))
     }
 
@@ -512,7 +513,7 @@ function useSWR<Data = any, Error = any>(
         }
       }
 
-      if (!IS_SERVER && window.removeEventListener && reconnect !== null) {
+      if (window.removeEventListener && reconnect !== null) {
         window.removeEventListener('online', reconnect)
       }
     }
