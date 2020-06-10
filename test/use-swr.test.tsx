@@ -1409,29 +1409,6 @@ describe('useSWR - suspense', () => {
     expect(container.textContent).toMatchInlineSnapshot(`"hello, error"`) // get error with cache
   })
 
-  it('should render initial data if set', async () => {
-    const fetcher = jest.fn(() => 'SWR')
-
-    function Page() {
-      const { data } = useSWR('initial-data-1', fetcher, {
-        initialData: 'Initial',
-        suspense: true
-      })
-      return <div>hello, {data}</div>
-    }
-
-    const { container } = render(
-      <Suspense fallback={<div>fallback</div>}>
-        <Page />
-      </Suspense>
-    )
-
-    expect(fetcher).not.toBeCalled()
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"hello, Initial"`
-    )
-  })
-
   it('should pause when key changes', async () => {
     const renderedResults = []
 
@@ -1469,6 +1446,29 @@ describe('useSWR - suspense', () => {
     // fixes https://github.com/zeit/swr/issues/57
     // 'suspense-7' -> undefined -> 'suspense-8'
     expect(renderedResults).toEqual(['suspense-7', 'suspense-8'])
+  })
+
+  it('should render initial data if set', async () => {
+    const fetcher = jest.fn(() => 'SWR')
+
+    function Page() {
+      const { data } = useSWR('suspense-9', fetcher, {
+        initialData: 'Initial',
+        suspense: true
+      })
+      return <div>hello, {data}</div>
+    }
+
+    const { container } = render(
+      <Suspense fallback={<div>fallback</div>}>
+        <Page />
+      </Suspense>
+    )
+
+    expect(fetcher).not.toBeCalled()
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"hello, Initial"`
+    )
   })
 })
 
