@@ -1447,6 +1447,29 @@ describe('useSWR - suspense', () => {
     // 'suspense-7' -> undefined -> 'suspense-8'
     expect(renderedResults).toEqual(['suspense-7', 'suspense-8'])
   })
+
+  it('should render initial data if set', async () => {
+    const fetcher = jest.fn(() => 'SWR')
+
+    function Page() {
+      const { data } = useSWR('suspense-9', fetcher, {
+        initialData: 'Initial',
+        suspense: true
+      })
+      return <div>hello, {data}</div>
+    }
+
+    const { container } = render(
+      <Suspense fallback={<div>fallback</div>}>
+        <Page />
+      </Suspense>
+    )
+
+    expect(fetcher).not.toBeCalled()
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"hello, Initial"`
+    )
+  })
 })
 
 describe('useSWR - cache', () => {

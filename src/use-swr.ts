@@ -555,8 +555,8 @@ function useSWR<Data = any, Error = any>(
     // (it should be suspended)
 
     // try to get data and error from cache
-    let latestData = cache.get(key)
-    let latestError = cache.get(keyErr)
+    let latestData = cache.get(key) || initialData
+    let latestError = cache.get(keyErr) || initialError
 
     if (
       typeof latestData === 'undefined' &&
