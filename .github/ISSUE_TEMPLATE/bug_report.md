@@ -1,24 +1,24 @@
 ---
 name: Bug report
-about: Create a bug report for the Next.js core / examples
+about: Create a bug report for the SWR library
 ---
 
 # Bug report
 
 ## Description / Observed Behavior
 
-what kind of issues did you encounter with swr?
+What kind of issues did you encounter with SWR?
 
 ## Expected Behavior
 
-what did you expect swr to behave here?
+How did you expect SWR to behave here?
 
 ## Repro Steps / Code Example
 
-Or share your code snippet or a codesandbox link is also appreciated!
+Or share your code snippet or a [CodeSandbox](https://codesandbox.io) link is also appreciated!
 
 ## Additional Context
 
-swr version. 
+SWR version. 
 Add any other context about the problem here.
 
