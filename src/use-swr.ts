@@ -59,9 +59,8 @@ const trigger: triggerInterface = (_key, shouldRevalidate = true) => {
     }
     // return new updated value
     return Promise.all(promises).then(() => cache.get(key))
-  } else {
-    return Promise.resolve(cache.get(key))
   }
+  return Promise.resolve(cache.get(key))
 }
 
 const broadcastState: broadcastStateInterface = (key, data, error) => {
@@ -115,9 +114,12 @@ const mutate: mutateInterface = async (
   // update existing SWR Hooks' state
   const updaters = CACHE_REVALIDATORS[key]
   if (updaters) {
+    const promises = []
     for (let i = 0; i < updaters.length; ++i) {
-      updaters[i](!!shouldRevalidate, data, error, i > 0)
+      promises.push(updaters[i](!!shouldRevalidate, data, error, i > 0))
     }
+    // return new updated value
+    return Promise.all(promises).then(() => cache.get(key))
   }
 
   // throw error or return data to be used by caller of mutate
