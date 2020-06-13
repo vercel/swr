@@ -1,9 +1,12 @@
-[![SWR](https://assets.zeit.co/image/upload/v1572289618/swr/banner.png)](https://swr.now.sh)
+[![SWR](https://assets.vercel.com/image/upload/v1572289618/swr/banner.png)](https://swr.now.sh)
 
 <p align="center">
-  <a aria-label="ZEIT logo" href="https://github.com/zeit">
-    <img src="https://badgen.net/badge/icon/MADE%20BY%20ZEIT?icon=zeit&label&color=black&labelColor=black">
+
+  <a aria-label="Vercel logo" href="https://vercel.com">
+    <img src="https://badgen.net/badge/icon/Made%20by%20Vercel?icon=zeit&label&color=black&labelColor=black">
   </a>
+  <br/>
+  
   <a aria-label="NPM version" href="https://www.npmjs.com/package/swr">
     <img alt="" src="https://badgen.net/npm/v/swr">
   </a>
@@ -110,6 +113,7 @@ const { data, error, isValidating, mutate } = useSWR(key, fetcher, options)
 - `suspense = false`: enable React Suspense mode [(details)](#suspense-mode)
 - `fetcher = undefined`: the default fetcher function
 - `initialData`: initial data to be returned (note: This is per-hook)
+- `revalidateOnMount`: enable or disable automatic revalidation when component is mounted (by default revalidation occurs on mount when initialData is not set, use this flag to force behavior)
 - `revalidateOnFocus = true`: auto revalidate when window gets focused
 - `revalidateOnReconnect = true`: automatically revalidate when the browser regains a network connection (via `navigator.onLine`)
 - `refreshInterval = 0`: polling interval (disabled by default)
@@ -246,10 +250,11 @@ SWR also allows you to fetch data that depends on other data. It ensures the max
 function MyProjects () {
   const { data: user } = useSWR('/api/user')
   const { data: projects } = useSWR(() => '/api/projects?uid=' + user.id)
-  // When passing a function, SWR will use the
-  // return value as `key`. If the function throws,
-  // SWR will know that some dependencies are not
-  // ready. In this case it is `user`.
+  // When passing a function, SWR will use the return
+  // value as `key`. If the function throws or returns
+  // falsy, SWR will know that some dependencies are not
+  // ready. In this case `user.id` throws when `user`
+  // isn't loaded.
 
   if (!projects) return 'loading...'
   return 'You have ' + projects.length + ' projects'
@@ -376,9 +381,9 @@ mutate('/api/users', async users => {
 
 ### Returned Data from Mutate
 
-Most probably, you need to data mutate used to update the cache when you passed a promise or async function.
+Most probably, you need some data to update the cache. The data is resolved or returned from the promise or async function you passed to `mutate`.
 
-The function will returns the updated document, or throw an error, everytime you call it.
+The function will return an updated document to let `mutate` update the corresponding cache value. It could throw an error somehow, every time when you call it.
 
 ```js
 try {
@@ -510,10 +515,10 @@ Together with techniques like [page prefetching](https://nextjs.org/docs#prefetc
 <br/>
 
 ## Authors
-- Shu Ding ([@shuding_](https://twitter.com/shuding_)) – [ZEIT](https://zeit.co)
-- Guillermo Rauch ([@rauchg](https://twitter.com/rauchg)) – [ZEIT](https://zeit.co)
-- Joe Haddad ([@timer150](https://twitter.com/timer150)) - [ZEIT](https://zeit.co)
-- Paco Coursey ([@pacocoursey](https://twitter.com/pacocoursey)) - [ZEIT](https://zeit.co)
+- Shu Ding ([@shuding_](https://twitter.com/shuding_)) – [Vercel](https://vercel.com)
+- Guillermo Rauch ([@rauchg](https://twitter.com/rauchg)) – [Vercel](https://vercel.com)
+- Joe Haddad ([@timer150](https://twitter.com/timer150)) - [Vercel](https://vercel.com)
+- Paco Coursey ([@pacocoursey](https://twitter.com/pacocoursey)) - [Vercel](https://vercel.com)
 
 Thanks to Ryan Chen for providing the awesome `swr` npm package name!
 

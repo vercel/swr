@@ -81,6 +81,35 @@ describe('useSWR', () => {
     )
   })
 
+  it('should not call fetch function when revalidateOnMount is false', async () => {
+    const fetch = jest.fn(() => 'SWR')
+
+    function Page() {
+      const { data } = useSWR('revalidateOnMount', fetch, {
+        revalidateOnMount: false
+      })
+      return <div>hello, {data}</div>
+    }
+
+    render(<Page />)
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it('should call fetch function when revalidateOnMount is true even if initialData is set', async () => {
+    const fetch = jest.fn(() => 'SWR')
+
+    function Page() {
+      const { data } = useSWR('revalidateOnMount', fetch, {
+        revalidateOnMount: true,
+        initialData: 'gab'
+      })
+      return <div>hello, {data}</div>
+    }
+
+    render(<Page />)
+    expect(fetch).toHaveBeenCalled()
+  })
+
   it('should dedupe requests by default', async () => {
     let count = 0
     const fetch = () => {
@@ -711,36 +740,122 @@ describe('useSWR - error', () => {
       `"hello, SWR"`
     )
   })
-})
+  it('should trigger limited error retries if errorRetryCount exists', async () => {
+    let count = 0
+    function Page() {
+      const { data, error } = useSWR(
+        'error-5',
+        () => {
+          return new Promise((_, rej) =>
+            setTimeout(() => rej(new Error('error: ' + count++)), 100)
+          )
+        },
+        {
+          errorRetryCount: 1,
+          errorRetryInterval: 50,
+          dedupingInterval: 0
+        }
+      )
+      if (error) return <div>{error.message}</div>
+      return <div>hello, {data}</div>
+    }
+    const { container } = render(<Page />)
 
-it('should trigger limited error retries if errorRetryCount exists', async () => {
-  let count = 0
-  function Page() {
-    const { data, error } = useSWR(
-      'error-5',
-      () => {
-        return new Promise((_, rej) =>
-          setTimeout(() => rej(new Error('error: ' + count++)), 100)
-        )
-      },
-      {
-        errorRetryCount: 1,
-        errorRetryInterval: 50,
-        dedupingInterval: 0
-      }
-    )
-    if (error) return <div>{error.message}</div>
-    return <div>hello, {data}</div>
-  }
-  const { container } = render(<Page />)
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
+    await waitForDomChange({ container })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"error: 0"`)
+    await act(() => new Promise(res => setTimeout(res, 210))) // retry
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"error: 1"`)
+    await act(() => new Promise(res => setTimeout(res, 210))) // retry
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"error: 1"`)
+  })
 
-  expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
-  await waitForDomChange({ container })
-  expect(container.firstChild.textContent).toMatchInlineSnapshot(`"error: 0"`)
-  await act(() => new Promise(res => setTimeout(res, 210))) // retry
-  expect(container.firstChild.textContent).toMatchInlineSnapshot(`"error: 1"`)
-  await act(() => new Promise(res => setTimeout(res, 210))) // retry
-  expect(container.firstChild.textContent).toMatchInlineSnapshot(`"error: 1"`)
+  it('should not trigger the onLoadingSlow and onSuccess event after component unmount', async () => {
+    let loadingSlow = null,
+      success = null
+    function Page() {
+      const { data } = useSWR(
+        'error-6',
+        () => new Promise(res => setTimeout(() => res('SWR'), 200)),
+        {
+          onLoadingSlow: key => {
+            loadingSlow = key
+          },
+          onSuccess: (_, key) => {
+            success = key
+          },
+          loadingTimeout: 100
+        }
+      )
+      return <div>{data}</div>
+    }
+
+    function App() {
+      const [on, toggle] = useState(true)
+      return (
+        <div id="app" onClick={() => toggle(s => !s)}>
+          {on && <Page />}
+        </div>
+      )
+    }
+
+    const { container } = render(<App />)
+
+    expect(loadingSlow).toEqual(null)
+    expect(success).toEqual(null)
+
+    await act(async () => new Promise(res => setTimeout(res, 10)))
+    await act(() => fireEvent.click(container.firstElementChild))
+    await act(async () => new Promise(res => setTimeout(res, 200)))
+
+    expect(success).toEqual(null)
+    expect(loadingSlow).toEqual(null)
+  })
+
+  it('should not trigger the onError and onErrorRetry event after component unmount', async () => {
+    let retry = null,
+      failed = null
+    function Page() {
+      const { data } = useSWR(
+        'error-7',
+        () =>
+          new Promise((_, rej) =>
+            setTimeout(() => rej(new Error('error!')), 200)
+          ),
+        {
+          onError: (_, key) => {
+            failed = key
+          },
+          onErrorRetry: (_, key) => {
+            retry = key
+          },
+          dedupingInterval: 0
+        }
+      )
+      return <div>{data}</div>
+    }
+
+    function App() {
+      const [on, toggle] = useState(true)
+      return (
+        <div id="app" onClick={() => toggle(s => !s)}>
+          {on && <Page />}
+        </div>
+      )
+    }
+
+    const { container } = render(<App />)
+
+    expect(retry).toEqual(null)
+    expect(failed).toEqual(null)
+
+    await act(async () => new Promise(res => setTimeout(res, 10)))
+    await act(() => fireEvent.click(container.firstElementChild))
+    await act(async () => new Promise(res => setTimeout(res, 200)))
+
+    expect(retry).toEqual(null)
+    expect(failed).toEqual(null)
+  })
 })
 
 describe('useSWR - focus', () => {
@@ -1038,6 +1153,71 @@ describe('useSWR - local mutation', () => {
     expect(container.textContent).toMatchInlineSnapshot(`"3"`)
   })
 
+  it('should ignore in flight mutations when calling another async mutate', async () => {
+    let value = 'off'
+    function Page() {
+      const { data } = useSWR(
+        'mutate-3',
+        () => new Promise(res => setTimeout(() => res(value), 200))
+      )
+
+      return <div>{data}</div>
+    }
+
+    const { container } = render(<Page />)
+
+    await act(() => new Promise(res => setTimeout(res, 250)))
+    expect(container.textContent).toMatchInlineSnapshot(`"off"`) // Initial state
+
+    // Simulate toggling "on"
+    await act(async () => {
+      mutate('mutate-3', 'on', false)
+      expect(
+        mutate(
+          'mutate-3',
+          new Promise(res =>
+            setTimeout(() => {
+              value = 'on'
+              res('on')
+            }, 200)
+          ),
+          false
+        )
+      ).resolves.toBe('on')
+    })
+
+    // Validate local state is now "on"
+    expect(container.textContent).toMatchInlineSnapshot(`"on"`)
+
+    // Simulate toggling "off"
+    await act(async () => {
+      mutate('mutate-3', 'off', false)
+      expect(
+        mutate(
+          'mutate-3',
+          new Promise(res =>
+            setTimeout(() => {
+              value = 'off'
+              res('off')
+            }, 400)
+          ),
+          false
+        )
+      ).resolves.toBe('off')
+    })
+
+    // Validate local state is now "off"
+    expect(container.textContent).toMatchInlineSnapshot(`"off"`)
+
+    // Wait for toggling "on" promise to resolve, but the "on" mutation is cancelled
+    await act(() => new Promise(res => setTimeout(res, 200)))
+    expect(container.textContent).toMatchInlineSnapshot(`"off"`)
+
+    // Wait for toggling "off" promise to resolve
+    await act(() => new Promise(res => setTimeout(res, 200)))
+    expect(container.textContent).toMatchInlineSnapshot(`"off"`)
+  })
+
   it('null is stringified when found inside an array', async () => {
     let value = 0
 
@@ -1058,6 +1238,28 @@ describe('useSWR - local mutation', () => {
       trigger([null])
       return new Promise(res => setTimeout(res, 1))
     })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
+  })
+
+  it('should return promise from mutate without data', async () => {
+    let value = 0
+    function Page() {
+      const { data } = useSWR('dynamic-18', () => value++, {
+        dedupingInterval: 0
+      })
+      return <div>data: {data}</div>
+    }
+    const { container } = render(<Page />)
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
+    await waitForDomChange({ container }) // mount
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
+    let promise
+    await act(() => {
+      promise = mutate('dynamic-18')
+      return promise
+    })
+    expect(promise).toBeInstanceOf(Promise) // mutate returns a promise
+    expect(promise).resolves.toBe(1) // the return value should be the new cache
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
   })
 })
@@ -1267,6 +1469,29 @@ describe('useSWR - suspense', () => {
     // 'suspense-7' -> undefined -> 'suspense-8'
     expect(renderedResults).toEqual(['suspense-7', 'suspense-8'])
   })
+
+  it('should render initial data if set', async () => {
+    const fetcher = jest.fn(() => 'SWR')
+
+    function Page() {
+      const { data } = useSWR('suspense-9', fetcher, {
+        initialData: 'Initial',
+        suspense: true
+      })
+      return <div>hello, {data}</div>
+    }
+
+    const { container } = render(
+      <Suspense fallback={<div>fallback</div>}>
+        <Page />
+      </Suspense>
+    )
+
+    expect(fetcher).not.toBeCalled()
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"hello, Initial"`
+    )
+  })
 })
 
 describe('useSWR - cache', () => {
@@ -1447,5 +1672,47 @@ describe('useSWR - key', () => {
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`""`) // undefined, time=410
     await act(() => new Promise(res => setTimeout(res, 140)))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"key-1"`) // 1, time=550
+  })
+
+  it('should return undefined after key change when fetcher is synchronized', async () => {
+    const samples = {
+      '1': 'a',
+      '2': 'b',
+      '3': 'c'
+    }
+
+    function Page() {
+      const [sampleKey, setKey] = React.useState(1)
+      const { data } = useSWR(
+        `key-2-${sampleKey}`,
+        key => samples[key.replace('key-2-', '')]
+      )
+      return (
+        <div
+          onClick={() => {
+            setKey(sampleKey + 1)
+          }}
+        >
+          hello, {sampleKey}:{data}
+        </div>
+      )
+    }
+    const { container } = render(<Page />)
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"hello, 1:"`
+    )
+    await waitForDomChange({ container }) // mount
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"hello, 1:a"`
+    )
+    fireEvent.click(container.firstElementChild)
+    // first rerender on key change
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"hello, 2:"`
+    )
+    await act(() => new Promise(res => setTimeout(res, 100)))
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"hello, 2:b"`
+    )
   })
 })
