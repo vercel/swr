@@ -46,16 +46,23 @@ const trigger: triggerInterface = (_key, shouldRevalidate = true) => {
   // we are ignoring the second argument which correspond to the arguments
   // the fetcher will receive when key is an array
   const [key, , keyErr] = cache.serializeKey(_key)
-  if (!key) return
+  if (!key) return Promise.resolve()
 
   const updaters = CACHE_REVALIDATORS[key]
+
   if (key && updaters) {
     const currentData = cache.get(key)
     const currentError = cache.get(keyErr)
+    const promises = []
     for (let i = 0; i < updaters.length; ++i) {
-      updaters[i](shouldRevalidate, currentData, currentError, i > 0)
+      promises.push(
+        updaters[i](shouldRevalidate, currentData, currentError, i > 0)
+      )
     }
+    // return new updated value
+    return Promise.all(promises).then(() => cache.get(key))
   }
+  return Promise.resolve(cache.get(key))
 }
 
 const broadcastState: broadcastStateInterface = (key, data, error) => {
@@ -122,9 +129,12 @@ const mutate: mutateInterface = async (
   // update existing SWR Hooks' state
   const updaters = CACHE_REVALIDATORS[key]
   if (updaters) {
+    const promises = []
     for (let i = 0; i < updaters.length; ++i) {
-      updaters[i](!!shouldRevalidate, data, error, i > 0)
+      promises.push(updaters[i](!!shouldRevalidate, data, error, i > 0))
     }
+    // return new updated value
+    return Promise.all(promises).then(() => cache.get(key))
   }
 
   // throw error or return data to be used by caller of mutate
@@ -560,8 +570,8 @@ function useSWR<Data = any, Error = any>(
     // (it should be suspended)
 
     // try to get data and error from cache
-    let latestData = cache.get(key)
-    let latestError = cache.get(keyErr)
+    let latestData = cache.get(key) || initialData
+    let latestError = cache.get(keyErr) || initialError
 
     if (
       typeof latestData === 'undefined' &&
