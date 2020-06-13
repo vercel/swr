@@ -1,6 +1,6 @@
 {
   "name": "swr",
-  "version": "0.2.0",
+  "version": "0.2.3",
   "description": "React Hooks library for remote data fetching",
   "main": "./dist/index.js",
   "module": "./esm/index.js",
@@ -17,7 +17,7 @@
     "dev": "now dev",
     "build": "npm run build:esm && npm run build:cjs",
     "build:cjs": "ncc build src/index.ts -o dist -m -e react",
-    "build:esm": "tsc --target ESNext --module ES6 --outDir esm",
+    "build:esm": "tsc --module ES6 --outDir esm",
     "watch": "tsc --watch",
     "types:check": "tsc --noEmit",
     "format": "prettier --write \"{src,test,examples}/**/*.{ts,tsx}\"",

@@ -2,9 +2,9 @@ import useSWR from 'swr'
 import axios from 'axios'
 
 export default function useRequest(request, { initialData, ...config } = {}) {
-  const { data: response, error, isValidating, mutate } = useSWR(
+  return useSWR(
     request && JSON.stringify(request),
-    () => axios(request || {}),
+    () => axios(request || {}).then(response => response.data),
     {
       ...config,
       initialData: initialData && {
@@ -14,13 +14,5 @@ export default function useRequest(request, { initialData, ...config } = {}) {
         data: initialData
       }
     }
-  )
-
-  return {
-    data: response && response.data,
-    response,
-    error,
-    isValidating,
-    mutate
-  }
+  ) 
 }
