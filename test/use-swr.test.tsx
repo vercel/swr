@@ -1678,7 +1678,7 @@ describe('useSWR - key', () => {
   })
 })
 
-describe.only('useSWR - subscription', () => {
+describe('useSWR - subscription', () => {
   it('should setup subscription if a subscribe function is passed', async () => {
     const subscribe = jest.fn()
 
