@@ -559,6 +559,14 @@ function useSWR<Data = any, Error = any>(
     revalidate
   ])
 
+  // setup subscription
+  useEffect(() => {
+    if (!config.subscribe) return undefined
+    return config.subscribe(_key, boundMutate)
+    // we use key as dependency here but use _key internally to avoid this
+    // efect to clear and run again on every render if it's an array or function
+  }, [config.subscribe, key, boundMutate])
+
   // suspense
   if (config.suspense) {
     // in suspense mode, we can't return empty state

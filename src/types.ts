@@ -20,6 +20,10 @@ export interface ConfigInterface<
   suspense?: boolean
   initialData?: Data
 
+  subscribe?: (
+    key: keyInterface,
+    mutate: responseInterface<Data, Error>['mutate']
+  ) => () => void
   onLoadingSlow?: (key: string, config: ConfigInterface<Data, Error>) => void
   onSuccess?: (
     data: Data,
