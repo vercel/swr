@@ -2,16 +2,16 @@
 
 ## One-Click Deploy
 
-Deploy your own SWR project with ZEIT Now.
+Deploy your own SWR project with Vercel.
 
-[![Deploy with ZEIT Now](https://zeit.co/button)](https://zeit.co/new/project?template=https://github.com/zeit/swr/tree/master/examples/basic-typescript)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/project?template=https://github.com/vercel/swr/tree/master/examples/basic-typescript)
 
 ## How to Use
 
 Download the example:
 
 ```bash
-curl https://codeload.github.com/zeit/swr/tar.gz/master | tar -xz --strip=2 swr-master/examples/basic-typescript
+curl https://codeload.github.com/vercel/swr/tar.gz/master | tar -xz --strip=2 swr-master/examples/basic-typescript
 cd basic-typescript
 ```
 
@@ -25,7 +25,7 @@ npm install
 npm run dev
 ```
 
-Deploy it to the cloud with [now](https://zeit.co/home) ([download](https://zeit.co/download))
+Deploy it to the cloud with [now](https://vercel.com/home) ([download](https://vercel.com/download))
 
 ```
 now

@@ -1240,6 +1240,28 @@ describe('useSWR - local mutation', () => {
     })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
   })
+
+  it('should return promise from mutate without data', async () => {
+    let value = 0
+    function Page() {
+      const { data } = useSWR('dynamic-18', () => value++, {
+        dedupingInterval: 0
+      })
+      return <div>data: {data}</div>
+    }
+    const { container } = render(<Page />)
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
+    await waitForDomChange({ container }) // mount
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
+    let promise
+    await act(() => {
+      promise = mutate('dynamic-18')
+      return promise
+    })
+    expect(promise).toBeInstanceOf(Promise) // mutate returns a promise
+    expect(promise).resolves.toBe(1) // the return value should be the new cache
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
+  })
 })
 
 describe('useSWR - context configs', () => {
@@ -1446,6 +1468,29 @@ describe('useSWR - suspense', () => {
     // fixes https://github.com/zeit/swr/issues/57
     // 'suspense-7' -> undefined -> 'suspense-8'
     expect(renderedResults).toEqual(['suspense-7', 'suspense-8'])
+  })
+
+  it('should render initial data if set', async () => {
+    const fetcher = jest.fn(() => 'SWR')
+
+    function Page() {
+      const { data } = useSWR('suspense-9', fetcher, {
+        initialData: 'Initial',
+        suspense: true
+      })
+      return <div>hello, {data}</div>
+    }
+
+    const { container } = render(
+      <Suspense fallback={<div>fallback</div>}>
+        <Page />
+      </Suspense>
+    )
+
+    expect(fetcher).not.toBeCalled()
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"hello, Initial"`
+    )
   })
 })
 

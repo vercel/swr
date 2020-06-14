@@ -250,10 +250,11 @@ SWR also allows you to fetch data that depends on other data. It ensures the max
 function MyProjects () {
   const { data: user } = useSWR('/api/user')
   const { data: projects } = useSWR(() => '/api/projects?uid=' + user.id)
-  // When passing a function, SWR will use the
-  // return value as `key`. If the function throws,
-  // SWR will know that some dependencies are not
-  // ready. In this case it is `user`.
+  // When passing a function, SWR will use the return
+  // value as `key`. If the function throws or returns
+  // falsy, SWR will know that some dependencies are not
+  // ready. In this case `user.id` throws when `user`
+  // isn't loaded.
 
   if (!projects) return 'loading...'
   return 'You have ' + projects.length + ' projects'
