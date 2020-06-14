@@ -435,7 +435,6 @@ function useSWR<Data = any, Error = any>(
     ) {
       if (
         typeof latestKeyedData !== 'undefined' &&
-        !IS_SERVER &&
         window['requestIdleCallback']
       ) {
         // delay revalidate if there's cache
