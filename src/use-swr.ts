@@ -482,12 +482,11 @@ function useSWR<Data = any, Error = any>(
     const latestKeyedData = cache.get(key) || config.initialData
 
     // update the state if the key changed (not the inital render) or cache updated
-    if (
-      keyRef.current !== key ||
-      !config.compare(currentHookData, latestKeyedData)
-    ) {
-      dispatch({ data: latestKeyedData })
+    if (keyRef.current !== key) {
       keyRef.current = key
+    }
+    if (!config.compare(currentHookData, latestKeyedData)) {
+      dispatch({ data: latestKeyedData })
     }
 
     // revalidate with deduping
