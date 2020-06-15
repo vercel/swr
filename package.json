@@ -10,11 +10,11 @@
     "dist/**",
     "esm/**"
   ],
-  "repository": "zeit/swr",
+  "repository": "vercel/swr",
   "homepage": "https://swr.now.sh",
   "license": "MIT",
   "scripts": {
-    "dev": "now dev",
+    "dev": "vercel dev",
     "build": "npm run build:esm && npm run build:cjs",
     "build:cjs": "ncc build src/index.ts -o dist -m -e react",
     "build:esm": "tsc --module ES6 --outDir esm",
