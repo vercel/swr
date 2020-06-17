@@ -522,25 +522,36 @@ You can run a subscription to get new data in real-time and update the cache pas
 import useSWR from 'swr'
 
 function fetcher() {
-  return new Promise((resolve, reject) =>
-    navigator.geolocation.getCurrentPosition(resolve, reject)
-  )
+  return new Promise((resolve, reject) => {
+    const onSuccess = ({ coords }) => {
+      resolve({
+        latitude: coords.latitude,
+        longitude: coords.longitude
+      })
+    }
+
+    navigator.geolocation.getCurrentPosition(onSuccess, reject)
+  })
 }
 
-function subscribe() {
-  const id = navigator.geolocation.watchPosition(data => mutate(data, false))
+function subscribe(_, mutate) {
+  const id = navigator.geolocation.watchPosition(position => {
+    const coords = {
+      latitude: position.coords.latitude,
+      longitude: position.coords.longitude
+    }
+
+    mutate(coords, false)
+  })
   return () => navigator.geolocation.clearWatch(id)
 }
 
 function App() {
   const { data: position } = useSWR('geolocation', fetcher, { subscribe })
 
-  return (
-    <Map
-      latitude={position?.coords.latitude}
-      longitude={position?.coords.longitude}
-    />
-  )
+  if (!position) return null
+
+  return <Map latitude={position.latitude} longitude={position.longitude} />
 }
 ```
 
