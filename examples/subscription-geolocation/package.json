@@ -1,0 +1,19 @@
+{
+  "name": "subscription-geolocation",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "leaflet": "1.6.0",
+    "next": "9.3.3",
+    "react": "16.13.1",
+    "react-dom": "16.13.1",
+    "react-leaflet": "2.7.0",
+    "swr": "latest"
+  },
+  "scripts": {
+    "dev": "next",
+    "start": "next start",
+    "build": "next build"
+  }
+}
