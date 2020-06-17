@@ -518,6 +518,8 @@ Together with techniques like [page prefetching](https://nextjs.org/docs#prefetc
 
 You can run a subscription to get new data in real-time and update the cache passing a `subscribe` option to SWR. This function receives the `key` passed to SWR, and it receives the `mutate` function with the key already defined, as received from `useSWR`, this `mutate` function should be used to update the value when a new one comes from the stream of data the hook is subscribed to.
 
+The `subscribe` function must return a new function used to unsubscribe. This is similar to how effects work.
+
 ```js
 import useSWR from 'swr'
 
