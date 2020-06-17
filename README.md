@@ -125,6 +125,7 @@ const { data, error, isValidating, mutate } = useSWR(key, fetcher, options)
 - `loadingTimeout = 3000`: timeout to trigger the onLoadingSlow event
 - `errorRetryInterval = 5000`: error retry interval [(details)](#error-retries)
 - `errorRetryCount`: max error retry count [(details)](#error-retries)
+- `subscribe(key, mutate): () => void`: effect handler to run a subscription for the key
 - `onLoadingSlow(key, config)`: callback function when a request takes too long to load (see `loadingTimeout`)
 - `onSuccess(data, key, config)`: callback function when a request finishes successfully
 - `onError(err, key, config)`: callback function when a request returns an error
@@ -153,6 +154,7 @@ You can also use [global configuration](#global-configuration) to provide defaul
 - [Suspense Mode](#suspense-mode)
 - [Error Retries](#error-retries)
 - [Prefetching Data](#prefetching-data)
+- [Subscriptions](#subscriptions)
 
 ### Global Configuration
 
@@ -511,6 +513,38 @@ function prefetch () {
 
 And use it when you need to preload the **resources** (for example when [hovering](https://github.com/GoogleChromeLabs/quicklink) [a](https://github.com/guess-js/guess) [link](https://instant.page)).  
 Together with techniques like [page prefetching](https://nextjs.org/docs#prefetching-pages) in Next.js, you will be able to load both next page and data instantly.
+
+### Subscriptions
+
+You can run a subscription to get new data in real-time and update the cache passing a `subscribe` option to SWR. This function receives the `key` passed to SWR, and it receives the `mutate` function with the key already defined, as received from `useSWR`, this `mutate` function should be used to update the value when a new one comes from the stream of data the hook is subscribed to.
+
+```js
+import useSWR from 'swr'
+
+function fetcher() {
+  return new Promise((resolve, reject) =>
+    navigator.geolocation.getCurrentPosition(resolve, reject)
+  )
+}
+
+function subscribe() {
+  const id = navigator.geolocation.watchPosition(data => mutate(data, false))
+  return () => navigator.geolocation.clearWatch(id)
+}
+
+function App() {
+  const { data: position } = useSWR('geolocation', fetcher, { subscribe })
+
+  return (
+    <Map
+      latitude={position?.coords.latitude}
+      longitude={position?.coords.longitude}
+    />
+  )
+}
+```
+
+_Note the subscribe function must be stable between renders, use [useCallback](https://reactjs.org/docs/hooks-reference.html#usecallback) if you need to use props or state inside the subscribe function. Everytime the subscribe function change SWR will unsubscribe and subscribe again.
 
 <br/>
 
