@@ -96,7 +96,6 @@ describe('useSWR', () => {
   })
 
   it('should call fetch function when revalidateOnMount is true even if initialData is set', async () => {
-    jest.useFakeTimers()
     const fetch = jest.fn(() => 'SWR')
 
     function Page() {
@@ -107,8 +106,8 @@ describe('useSWR', () => {
       return <div>hello, {data}</div>
     }
 
-    render(<Page />)
-    jest.runAllTimers()
+    const { container } = render(<Page />)
+    await waitForDomChange({ container })
     expect(fetch).toHaveBeenCalled()
   })
 
