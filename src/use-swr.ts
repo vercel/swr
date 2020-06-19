@@ -77,7 +77,7 @@ const mutate: mutateInterface = async (
   _data,
   shouldRevalidate = true
 ) => {
-  const [key] = cache.serializeKey(_key)
+  const [key, , keyErr] = cache.serializeKey(_key)
   if (!key) return
 
   // if there is no new data, call revalidate against the key
@@ -122,6 +122,7 @@ const mutate: mutateInterface = async (
   if (typeof data !== 'undefined') {
     // update cached data, avoid notifying from the cache
     cache.set(key, data, false)
+    cache.set(keyErr, error, false)
   }
 
   // update existing SWR Hooks' state
