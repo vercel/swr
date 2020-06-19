@@ -13,6 +13,7 @@ import defaultConfig, {
   CONCURRENT_PROMISES,
   CONCURRENT_PROMISES_TS,
   FOCUS_REVALIDATORS,
+  RECONNECT_REVALIDATORS,
   MUTATION_TS,
   MUTATION_END_TS,
   cache
@@ -460,6 +461,16 @@ function useSWR<Data = any, Error = any>(
       }
     }
 
+    let onReconnect
+    if (config.revalidateOnReconnect) {
+      onReconnect = softRevalidate
+      if (!RECONNECT_REVALIDATORS[key]) {
+        RECONNECT_REVALIDATORS[key] = [onReconnect]
+      } else {
+        RECONNECT_REVALIDATORS[key].push(onReconnect)
+      }
+    }
+
     // register global cache update listener
     const onUpdate: updaterInterface<Data, Error> = (
       shouldRevalidate = true,
@@ -507,12 +518,6 @@ function useSWR<Data = any, Error = any>(
       CACHE_REVALIDATORS[key].push(onUpdate)
     }
 
-    // set up reconnecting when the browser regains network connection
-    let reconnect = null
-    if (!IS_SERVER && window.addEventListener && config.revalidateOnReconnect) {
-      window.addEventListener('online', (reconnect = softRevalidate))
-    }
-
     return () => {
       // cleanup
       dispatch = () => null
@@ -530,6 +535,14 @@ function useSWR<Data = any, Error = any>(
           revalidators.pop()
         }
       }
+      if (onReconnect && RECONNECT_REVALIDATORS[key]) {
+        const revalidators = RECONNECT_REVALIDATORS[key]
+        const index = revalidators.indexOf(onReconnect)
+        if (index >= 0) {
+          revalidators[index] = revalidators[revalidators.length - 1]
+          revalidators.pop()
+        }
+      }
       if (CACHE_REVALIDATORS[key]) {
         const revalidators = CACHE_REVALIDATORS[key]
         const index = revalidators.indexOf(onUpdate)
@@ -537,10 +550,6 @@ function useSWR<Data = any, Error = any>(
           revalidators[index] = revalidators[revalidators.length - 1]
           revalidators.pop()
         }
-      }
-
-      if (!IS_SERVER && window.removeEventListener && reconnect !== null) {
-        window.removeEventListener('online', reconnect)
       }
     }
   }, [key, revalidate])
