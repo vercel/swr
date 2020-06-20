@@ -122,8 +122,8 @@ const mutate: mutateInterface = async (
   if (typeof data !== 'undefined') {
     // update cached data, avoid notifying from the cache
     cache.set(key, data, false)
-    cache.set(keyErr, error, false)
   }
+  cache.set(keyErr, error, false)
 
   // update existing SWR Hooks' state
   const updaters = CACHE_REVALIDATORS[key]
