@@ -1262,6 +1262,35 @@ describe('useSWR - local mutation', () => {
     expect(promise).resolves.toBe(1) // the return value should be the new cache
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
   })
+
+  it('should update error in cache when mutate failed with error', async () => {
+    let value = 0
+    const key = 'mutate-4'
+    const message = 'mutate-error'
+    function Page() {
+      const { data, error } = useSWR(key, () => value)
+      return <div>{error ? error.message : `data: ${data}`}</div>
+    }
+    const { container } = render(<Page />)
+    await waitForDomChange({ container })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
+    await act(async () => {
+      await mutate(
+        key,
+        () => {
+          throw new Error(message)
+        },
+        false
+      )
+    })
+
+    const [, , keyErr] = cache.serializeKey(key)
+    const error = cache.get(keyErr)
+    expect(error.message).toMatchInlineSnapshot(`"${message}"`)
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"${message}"`
+    )
+  })
 })
 
 describe('useSWR - context configs', () => {
