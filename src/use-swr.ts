@@ -118,9 +118,8 @@ const mutate: mutateInterface = async (
     if (error) throw error
     return data
   }
-
+  // update cached data and error, avoid notifying from the cache
   if (typeof data !== 'undefined') {
-    // update cached data, avoid notifying from the cache
     cache.set(key, data, false)
   }
   cache.set(keyErr, error, false)
