@@ -29,7 +29,7 @@ describe('useSWRInfinite', () => {
 
   it('should render the multiple pages', async () => {
     function Page() {
-      const { data, page, setPage } = useSWRInfinite<string, string>(
+      const { data, size, setSize } = useSWRInfinite<string, string>(
         index => [`pagetest-2`, index],
         async (_, index) => {
           await new Promise(res => setTimeout(res, 100))
@@ -39,8 +39,8 @@ describe('useSWRInfinite', () => {
 
       useEffect(() => {
         // load next page if the current one is ready
-        if (page <= 2) setPage(page + 1)
-      }, [page])
+        if (size <= 2) setSize(size + 1)
+      }, [size])
 
       return <div>{data}</div>
     }
@@ -54,7 +54,7 @@ describe('useSWRInfinite', () => {
     )
   })
 
-  it('should support mutate and initialPage', async () => {
+  it('should support mutate and initialSize', async () => {
     // mock api
     let pageData = ['apple', 'banana', 'pineapple']
 
@@ -66,7 +66,7 @@ describe('useSWRInfinite', () => {
           return `${pageData[index]}, `
         },
         {
-          initialPage: 3
+          initialSize: 3
         }
       )
 
@@ -136,7 +136,7 @@ describe('useSWRInfinite', () => {
         },
         mockAPIFetcher,
         {
-          initialPage: 5
+          initialSize: 5
         }
       )
 
@@ -170,7 +170,7 @@ describe('useSWRInfinite', () => {
   it('should skip fetching existing pages when loading more', async () => {
     let requests = 0
     function Page() {
-      const { data, page, setPage } = useSWRInfinite<string, string>(
+      const { data, size, setSize } = useSWRInfinite<string, string>(
         index => [`pagetest-4`, index],
         async (_, index) => {
           requests++
@@ -183,7 +183,7 @@ describe('useSWRInfinite', () => {
         <div
           onClick={() => {
             // load next page
-            setPage(page + 1)
+            setSize(size + 1)
           }}
         >
           {data}
@@ -216,7 +216,7 @@ describe('useSWRInfinite', () => {
     let toggle
 
     function Page() {
-      const { data, page, setPage } = useSWRInfinite<string, string>(
+      const { data, size, setSize } = useSWRInfinite<string, string>(
         index => [`pagetest-5`, index],
         async (_, index) => {
           await new Promise(res => setTimeout(res, 100))
@@ -228,7 +228,7 @@ describe('useSWRInfinite', () => {
         <div
           onClick={() => {
             // load next page
-            setPage(page + 1)
+            setSize(size + 1)
           }}
         >
           {data}

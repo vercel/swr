@@ -14,16 +14,16 @@ type ExtendedConfigInterface<Data = any, Error = any> = ConfigInterface<
   Error,
   fetcherFn<Data[]>
 > & {
-  initialPage?: number
-  revalidateAllPages?: boolean
+  initialSize?: number
+  revalidateAll?: boolean
 }
 type ExtendedResponseInterface<Data = any, Error = any> = responseInterface<
   Data[],
   Error
 > & {
-  page?: number
-  setPage?: (
-    page: number | ((page: number) => number)
+  size?: number
+  setSize?: (
+    size: number | ((size: number) => number)
   ) => Promise<Data[] | undefined>
 }
 
@@ -67,8 +67,8 @@ function useSWRInfinite<Data = any, Error = any>(
     config
   )
   let {
-    initialPage = 1,
-    revalidateAllPages = false,
+    initialSize = 1,
+    revalidateAll = false,
     fetcher: defaultFetcher,
     ...extraConfig
   } = config
@@ -99,10 +99,10 @@ function useSWRInfinite<Data = any, Error = any>(
   // page count is cached as well, so when navigating the list can be restored
   let pageCountCacheKey: string | null = null
   if (firstPageKey) {
-    pageCountCacheKey = 'page@' + firstPageKey
-    initialPage = cache.get(pageCountCacheKey) || initialPage
+    pageCountCacheKey = 'size@' + firstPageKey
+    initialSize = cache.get(pageCountCacheKey) || initialSize
   }
-  const pageCountRef = useRef<number>(initialPage)
+  const pageCountRef = useRef<number>(initialSize)
 
   // actual swr of all pages
   const swr: ExtendedResponseInterface<Data, Error> = useSWR<Data[], Error>(
@@ -134,7 +134,7 @@ function useSWRInfinite<Data = any, Error = any>(
         // - page has changed
         // - the offset has changed so the cache is missing
         const shouldRevalidatePage =
-          revalidateAllPages ||
+          revalidateAll ||
           force ||
           (typeof force === 'undefined' && i === 0) ||
           (originalData && !config.compare(originalData[i], pageData)) ||
@@ -164,7 +164,7 @@ function useSWRInfinite<Data = any, Error = any>(
 
   // extend the SWR API
   const mutate = swr.mutate
-  swr.page = pageCountRef.current
+  swr.size = pageCountRef.current
   swr.mutate = useCallback(
     (data, shouldRevalidate = true) => {
       if (shouldRevalidate && typeof data !== 'undefined') {
@@ -180,7 +180,7 @@ function useSWRInfinite<Data = any, Error = any>(
     },
     [mutate, swr.data, contextCacheKey]
   )
-  swr.setPage = useCallback(
+  swr.setSize = useCallback(
     arg => {
       if (typeof arg === 'function') {
         pageCountRef.current = arg(pageCountRef.current)
