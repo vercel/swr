@@ -13,6 +13,7 @@ import defaultConfig, {
   CONCURRENT_PROMISES,
   CONCURRENT_PROMISES_TS,
   FOCUS_REVALIDATORS,
+  RECONNECT_REVALIDATORS,
   MUTATION_TS,
   MUTATION_END_TS,
   cache
@@ -247,19 +248,19 @@ function useSWR<Data = any, Error = any>(
     [key]
   )
 
-  const addRevalidator = (revalidators, revalidator) => {
-    if (!revalidator) return
+  const addRevalidator = (revalidators, callback) => {
+    if (!callback) return
     if (!revalidators[key]) {
-      revalidators[key] = [revalidator]
+      revalidators[key] = [callback]
     } else {
-      revalidators[key].push(revalidator)
+      revalidators[key].push(callback)
     }
   }
 
-  const removeRevalidator = (revlidators, revalidator) => {
+  const removeRevalidator = (revlidators, callback) => {
     if (revlidators[key]) {
       const revalidators = revlidators[key]
-      const index = revalidators.indexOf(revalidator)
+      const index = revalidators.indexOf(callback)
       if (index >= 0) {
         // 10x faster than splice
         // https://jsperf.com/array-remove-by-index
@@ -484,7 +485,7 @@ function useSWR<Data = any, Error = any>(
     }
 
     addRevalidator(FOCUS_REVALIDATORS, onFocus)
-    addRevalidator(FOCUS_REVALIDATORS, onReconnect)
+    addRevalidator(RECONNECT_REVALIDATORS, onReconnect)
 
     // register global cache update listener
     const onUpdate: updaterInterface<Data, Error> = (
@@ -541,7 +542,7 @@ function useSWR<Data = any, Error = any>(
       unmountedRef.current = true
 
       removeRevalidator(FOCUS_REVALIDATORS, onFocus)
-      removeRevalidator(FOCUS_REVALIDATORS, onReconnect)
+      removeRevalidator(RECONNECT_REVALIDATORS, onReconnect)
       removeRevalidator(CACHE_REVALIDATORS, onUpdate)
     }
   }, [key, revalidate])

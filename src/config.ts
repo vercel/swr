@@ -15,6 +15,7 @@ const cache = new Cache()
 const CONCURRENT_PROMISES = {}
 const CONCURRENT_PROMISES_TS = {}
 const FOCUS_REVALIDATORS = {}
+const RECONNECT_REVALIDATORS = {}
 const CACHE_REVALIDATORS = {}
 const MUTATION_TS = {}
 const MUTATION_END_TS = {}
@@ -77,30 +78,34 @@ const defaultConfig: ConfigInterface = {
 
 // setup DOM events listeners for `focus` and `reconnect` actions
 if (typeof window !== 'undefined' && window.addEventListener) {
-  const revalidate = () => {
+  const revalidate = revalidators => {
     if (!isDocumentVisible() || !isOnline()) return
 
-    for (const key in FOCUS_REVALIDATORS) {
-      if (FOCUS_REVALIDATORS[key][0]) FOCUS_REVALIDATORS[key][0]()
+    for (const key in revalidators) {
+      if (revalidators[key][0]) revalidators[key][0]()
     }
   }
 
   // focus revalidate
-  if (defaultConfig.revalidateOnFocus) {
-    window.addEventListener('visibilitychange', revalidate, false)
-    window.addEventListener('focus', revalidate, false)
-  }
-
+  window.addEventListener(
+    'visibilitychange',
+    () => revalidate(FOCUS_REVALIDATORS),
+    false
+  )
+  window.addEventListener('focus', () => revalidate(FOCUS_REVALIDATORS), false)
   // reconnect revalidate
-  if (defaultConfig.revalidateOnReconnect) {
-    window.addEventListener('online', revalidate, false)
-  }
+  window.addEventListener(
+    'online',
+    () => revalidate(RECONNECT_REVALIDATORS),
+    false
+  )
 }
 
 export {
   CONCURRENT_PROMISES,
   CONCURRENT_PROMISES_TS,
   FOCUS_REVALIDATORS,
+  RECONNECT_REVALIDATORS,
   CACHE_REVALIDATORS,
   MUTATION_TS,
   MUTATION_END_TS,
