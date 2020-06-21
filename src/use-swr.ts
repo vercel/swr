@@ -13,7 +13,6 @@ import defaultConfig, {
   CONCURRENT_PROMISES,
   CONCURRENT_PROMISES_TS,
   FOCUS_REVALIDATORS,
-  RECONNECT_REVALIDATORS,
   MUTATION_TS,
   MUTATION_END_TS,
   cache
@@ -248,6 +247,28 @@ function useSWR<Data = any, Error = any>(
     [key]
   )
 
+  const addRevalidator = (revalidators, revalidator) => {
+    if (!revalidator) return
+    if (!revalidators[key]) {
+      revalidators[key] = [revalidator]
+    } else {
+      revalidators[key].push(revalidator)
+    }
+  }
+
+  const removeRevalidator = (revlidators, revalidator) => {
+    if (revlidators[key]) {
+      const revalidators = revlidators[key]
+      const index = revalidators.indexOf(revalidator)
+      if (index >= 0) {
+        // 10x faster than splice
+        // https://jsperf.com/array-remove-by-index
+        revalidators[index] = revalidators[revalidators.length - 1]
+        revalidators.pop()
+      }
+    }
+  }
+
   // start a revalidation
   const revalidate = useCallback(
     async (
@@ -454,22 +475,16 @@ function useSWR<Data = any, Error = any>(
       // throttle: avoid being called twice from both listeners
       // and tabs being switched quickly
       onFocus = throttle(softRevalidate, config.focusThrottleInterval)
-      if (!FOCUS_REVALIDATORS[key]) {
-        FOCUS_REVALIDATORS[key] = [onFocus]
-      } else {
-        FOCUS_REVALIDATORS[key].push(onFocus)
-      }
     }
 
+    // when reconnect, revalidate
     let onReconnect
     if (config.revalidateOnReconnect) {
       onReconnect = softRevalidate
-      if (!RECONNECT_REVALIDATORS[key]) {
-        RECONNECT_REVALIDATORS[key] = [onReconnect]
-      } else {
-        RECONNECT_REVALIDATORS[key].push(onReconnect)
-      }
     }
+
+    addRevalidator(FOCUS_REVALIDATORS, onFocus)
+    addRevalidator(FOCUS_REVALIDATORS, onReconnect)
 
     // register global cache update listener
     const onUpdate: updaterInterface<Data, Error> = (
@@ -525,32 +540,9 @@ function useSWR<Data = any, Error = any>(
       // mark it as unmounted
       unmountedRef.current = true
 
-      if (onFocus && FOCUS_REVALIDATORS[key]) {
-        const revalidators = FOCUS_REVALIDATORS[key]
-        const index = revalidators.indexOf(onFocus)
-        if (index >= 0) {
-          // 10x faster than splice
-          // https://jsperf.com/array-remove-by-index
-          revalidators[index] = revalidators[revalidators.length - 1]
-          revalidators.pop()
-        }
-      }
-      if (onReconnect && RECONNECT_REVALIDATORS[key]) {
-        const revalidators = RECONNECT_REVALIDATORS[key]
-        const index = revalidators.indexOf(onReconnect)
-        if (index >= 0) {
-          revalidators[index] = revalidators[revalidators.length - 1]
-          revalidators.pop()
-        }
-      }
-      if (CACHE_REVALIDATORS[key]) {
-        const revalidators = CACHE_REVALIDATORS[key]
-        const index = revalidators.indexOf(onUpdate)
-        if (index >= 0) {
-          revalidators[index] = revalidators[revalidators.length - 1]
-          revalidators.pop()
-        }
-      }
+      removeRevalidator(FOCUS_REVALIDATORS, onFocus)
+      removeRevalidator(FOCUS_REVALIDATORS, onReconnect)
+      removeRevalidator(CACHE_REVALIDATORS, onUpdate)
     }
   }, [key, revalidate])
 

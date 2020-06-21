@@ -15,7 +15,6 @@ const cache = new Cache()
 const CONCURRENT_PROMISES = {}
 const CONCURRENT_PROMISES_TS = {}
 const FOCUS_REVALIDATORS = {}
-const RECONNECT_REVALIDATORS = {}
 const CACHE_REVALIDATORS = {}
 const MUTATION_TS = {}
 const MUTATION_END_TS = {}
@@ -76,37 +75,25 @@ const defaultConfig: ConfigInterface = {
   compare: deepEqual
 }
 
-// Focus revalidate
+// setup DOM events listeners for `focus` and `reconnect` actions
 if (typeof window !== 'undefined' && window.addEventListener) {
-  // only bind the events once
-  let focusEventsBinded = false
-  let onlineEventsBinded = false
-  if (!focusEventsBinded) {
-    const revalidate = () => {
-      if (!isDocumentVisible() || !isOnline()) return
+  const revalidate = () => {
+    if (!isDocumentVisible() || !isOnline()) return
 
-      for (const key in FOCUS_REVALIDATORS) {
-        if (FOCUS_REVALIDATORS[key][0]) FOCUS_REVALIDATORS[key][0]()
-      }
+    for (const key in FOCUS_REVALIDATORS) {
+      if (FOCUS_REVALIDATORS[key][0]) FOCUS_REVALIDATORS[key][0]()
     }
-    window.addEventListener('visibilitychange', revalidate, false)
-    window.addEventListener('focus', revalidate, false)
-
-    focusEventsBinded = true
   }
 
-  // set up reconnecting when the browser regains network connection
-  if (defaultConfig.revalidateOnReconnect && !onlineEventsBinded) {
-    const revalidate = () => {
-      if (!isOnline()) return
+  // focus revalidate
+  if (defaultConfig.revalidateOnFocus) {
+    window.addEventListener('visibilitychange', revalidate, false)
+    window.addEventListener('focus', revalidate, false)
+  }
 
-      for (const key in RECONNECT_REVALIDATORS) {
-        if (RECONNECT_REVALIDATORS[key][0]) RECONNECT_REVALIDATORS[key][0]()
-      }
-    }
+  // reconnect revalidate
+  if (defaultConfig.revalidateOnReconnect) {
     window.addEventListener('online', revalidate, false)
-
-    onlineEventsBinded = true
   }
 }
 
@@ -114,7 +101,6 @@ export {
   CONCURRENT_PROMISES,
   CONCURRENT_PROMISES_TS,
   FOCUS_REVALIDATORS,
-  RECONNECT_REVALIDATORS,
   CACHE_REVALIDATORS,
   MUTATION_TS,
   MUTATION_END_TS,
