@@ -42,6 +42,31 @@ const IS_SERVER = typeof window === 'undefined'
 // useLayoutEffect in the browser.
 const useIsomorphicLayoutEffect = IS_SERVER ? useEffect : useLayoutEffect
 
+// setup DOM events listeners for `focus` and `reconnect` actions
+if (!IS_SERVER && window.addEventListener) {
+  const revalidate = revalidators => {
+    if (!isDocumentVisible() || !isOnline()) return
+
+    for (const key in revalidators) {
+      if (revalidators[key][0]) revalidators[key][0]()
+    }
+  }
+
+  // focus revalidate
+  window.addEventListener(
+    'visibilitychange',
+    () => revalidate(FOCUS_REVALIDATORS),
+    false
+  )
+  window.addEventListener('focus', () => revalidate(FOCUS_REVALIDATORS), false)
+  // reconnect revalidate
+  window.addEventListener(
+    'online',
+    () => revalidate(RECONNECT_REVALIDATORS),
+    false
+  )
+}
+
 const trigger: triggerInterface = (_key, shouldRevalidate = true) => {
   // we are ignoring the second argument which correspond to the arguments
   // the fetcher will receive when key is an array

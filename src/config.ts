@@ -1,6 +1,5 @@
 import deepEqual from 'fast-deep-equal'
 import isDocumentVisible from './libs/is-document-visible'
-import isOnline from './libs/is-online'
 import {
   ConfigInterface,
   RevalidateOptionInterface,
@@ -74,31 +73,6 @@ const defaultConfig: ConfigInterface = {
   shouldRetryOnError: true,
   suspense: false,
   compare: deepEqual
-}
-
-// setup DOM events listeners for `focus` and `reconnect` actions
-if (typeof window !== 'undefined' && window.addEventListener) {
-  const revalidate = revalidators => {
-    if (!isDocumentVisible() || !isOnline()) return
-
-    for (const key in revalidators) {
-      if (revalidators[key][0]) revalidators[key][0]()
-    }
-  }
-
-  // focus revalidate
-  window.addEventListener(
-    'visibilitychange',
-    () => revalidate(FOCUS_REVALIDATORS),
-    false
-  )
-  window.addEventListener('focus', () => revalidate(FOCUS_REVALIDATORS), false)
-  // reconnect revalidate
-  window.addEventListener(
-    'online',
-    () => revalidate(RECONNECT_REVALIDATORS),
-    false
-  )
 }
 
 export {
