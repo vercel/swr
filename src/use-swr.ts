@@ -8,16 +8,7 @@ import {
   useMemo
 } from 'react'
 
-import defaultConfig, {
-  CACHE_REVALIDATORS,
-  CONCURRENT_PROMISES,
-  CONCURRENT_PROMISES_TS,
-  FOCUS_REVALIDATORS,
-  RECONNECT_REVALIDATORS,
-  MUTATION_TS,
-  MUTATION_END_TS,
-  cache
-} from './config'
+import defaultConfig, { cache } from './config'
 import isDocumentVisible from './libs/is-document-visible'
 import isOnline from './libs/is-online'
 import throttle from './libs/throttle'
@@ -41,6 +32,15 @@ const IS_SERVER = typeof window === 'undefined'
 // To get around it, we can conditionally useEffect on the server (no-op) and
 // useLayoutEffect in the browser.
 const useIsomorphicLayoutEffect = IS_SERVER ? useEffect : useLayoutEffect
+
+// global state managers
+const CONCURRENT_PROMISES = {}
+const CONCURRENT_PROMISES_TS = {}
+const FOCUS_REVALIDATORS = {}
+const RECONNECT_REVALIDATORS = {}
+const CACHE_REVALIDATORS = {}
+const MUTATION_TS = {}
+const MUTATION_END_TS = {}
 
 // setup DOM events listeners for `focus` and `reconnect` actions
 if (!IS_SERVER && window.addEventListener) {

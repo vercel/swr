@@ -10,15 +10,6 @@ import Cache from './cache'
 // cache
 const cache = new Cache()
 
-// state managers
-const CONCURRENT_PROMISES = {}
-const CONCURRENT_PROMISES_TS = {}
-const FOCUS_REVALIDATORS = {}
-const RECONNECT_REVALIDATORS = {}
-const CACHE_REVALIDATORS = {}
-const MUTATION_TS = {}
-const MUTATION_END_TS = {}
-
 // error retry
 function onErrorRetry(
   _,
@@ -75,14 +66,5 @@ const defaultConfig: ConfigInterface = {
   compare: deepEqual
 }
 
-export {
-  CONCURRENT_PROMISES,
-  CONCURRENT_PROMISES_TS,
-  FOCUS_REVALIDATORS,
-  RECONNECT_REVALIDATORS,
-  CACHE_REVALIDATORS,
-  MUTATION_TS,
-  MUTATION_END_TS,
-  cache
-}
+export { cache }
 export default defaultConfig
