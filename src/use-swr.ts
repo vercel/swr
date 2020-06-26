@@ -14,6 +14,7 @@ import defaultConfig, {
   CONCURRENT_PROMISES_TS,
   FOCUS_REVALIDATORS,
   MUTATION_TS,
+  MUTATION_END_TS,
   cache
 } from './config'
 import isDocumentVisible from './libs/is-document-visible'
@@ -83,14 +84,15 @@ const mutate: mutateInterface = async (
   // if there is no new data, call revalidate against the key
   if (typeof _data === 'undefined') return trigger(_key, shouldRevalidate)
 
-  // update timestamp
+  // update timestamps
   MUTATION_TS[key] = Date.now() - 1
+  MUTATION_END_TS[key] = 0
 
-  let data, error
-
-  // Keep track of timestamps before await asynchronously
+  // keep track of timestamps before await asynchronously
   const beforeMutationTs = MUTATION_TS[key]
   const beforeConcurrentPromisesTs = CONCURRENT_PROMISES_TS[key]
+
+  let data, error
 
   if (_data && typeof _data === 'function') {
     // `_data` is a function, call it passing current cache value
@@ -110,7 +112,7 @@ const mutate: mutateInterface = async (
     data = _data
   }
 
-  // Check if other mutations have occurred since we've started awaiting, if so then do not persist this change
+  // check if other mutations have occurred since we've started awaiting, if so then do not persist this change
   if (
     beforeMutationTs !== MUTATION_TS[key] ||
     beforeConcurrentPromisesTs !== CONCURRENT_PROMISES_TS[key]
@@ -125,6 +127,10 @@ const mutate: mutateInterface = async (
   }
   cache.set(keyErr, error, false)
 
+  // reset the timestamp to mark the mutation has ended
+  MUTATION_END_TS[key] = Date.now() - 1
+
+  // enter the revalidation stage
   // update existing SWR Hooks' state
   const updaters = CACHE_REVALIDATORS[key]
   if (updaters) {
@@ -187,7 +193,7 @@ function useSWR<Data = any, Error = any>(
   )
 
   if (typeof fn === 'undefined') {
-    // use a global fetcher
+    // use the global fetcher
     fn = config.fetcher
   }
 
@@ -269,20 +275,6 @@ function useSWR<Data = any, Error = any>(
           startAt = CONCURRENT_PROMISES_TS[key]
           newData = await CONCURRENT_PROMISES[key]
         } else {
-          // if not deduping the request (hard revalidate) but
-          // there're other ongoing request(s) at the same time,
-          // we need to ignore the other result(s) to avoid
-          // possible race conditions:
-          // req1------------------>res1
-          //      req2-------->res2
-          // in that case, the second response should not be overridden
-          // by the first one.
-          if (CONCURRENT_PROMISES[key]) {
-            // we can mark it as a mutation to ignore
-            // all requests which are fired before this one
-            MUTATION_TS[key] = Date.now() - 1
-          }
-
           // if no cache being rendered currently (it shows a blank page),
           // we trigger the loading slow event.
           if (config.loadingTimeout && !cache.get(key)) {
@@ -311,10 +303,34 @@ function useSWR<Data = any, Error = any>(
           eventsRef.current.emit('onSuccess', newData, key, config)
         }
 
-        // if the revalidation happened earlier than the local mutation,
-        // we have to ignore the result because it could override.
-        // meanwhile, a new revalidation should be triggered by the mutation.
-        if (MUTATION_TS[key] && startAt <= MUTATION_TS[key]) {
+        const shouldIgnoreRequest =
+          // if there're other ongoing request(s), started after the current one,
+          // we need to ignore the current one to avoid possible race conditions:
+          //   req1------------------>res1        (current one)
+          //        req2---------------->res2
+          // the request that fired later will always be kept.
+          CONCURRENT_PROMISES_TS[key] > startAt ||
+          // if there're other mutations(s), overlapped with the current revalidation:
+          // case 1:
+          //   req------------------>res
+          //       mutate------>end
+          // case 2:
+          //         req------------>res
+          //   mutate------>end
+          // case 3:
+          //   req------------------>res
+          //       mutate-------...---------->
+          // we have to ignore the revalidation result (res) because it's no longer fresh.
+          // meanwhile, a new revalidation should be triggered when the mutation ends.
+          (MUTATION_TS[key] &&
+            // case 1
+            (startAt <= MUTATION_TS[key] ||
+              // case 2
+              startAt <= MUTATION_END_TS[key] ||
+              // case 3
+              MUTATION_END_TS[key] === 0))
+
+        if (shouldIgnoreRequest) {
           dispatch({ isValidating: false })
           return false
         }
