@@ -1680,7 +1680,7 @@ describe('useSWR - key', () => {
 
 describe('useSWR - subscription', () => {
   it('should setup subscription if a subscribe function is passed', async () => {
-    const subscribe = jest.fn()
+    const subscribe = jest.fn(() => () => {})
 
     let value = 0
     function Page() {
@@ -1732,7 +1732,7 @@ describe('useSWR - subscription', () => {
   })
 
   it('should receive the key and mutate in subscribe', async () => {
-    const subscribe = jest.fn()
+    const subscribe = jest.fn(() => () => {})
 
     let value = 0
     function Page() {
@@ -1843,7 +1843,7 @@ describe('useSWR - subscription', () => {
   })
 
   it('should support global subscribe', async () => {
-    const subscribe = jest.fn()
+    const subscribe = jest.fn(() => () => {})
 
     let value = 0
     function Page() {
@@ -1865,5 +1865,70 @@ describe('useSWR - subscription', () => {
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
 
     expect(subscribe).toHaveBeenCalledWith('subscribe-7', expect.any(Function))
+  })
+
+  it('should only subscribe one time per key', async () => {
+    const unsubscribe = jest.fn(() => {})
+    const subscribe = jest.fn(() => unsubscribe)
+
+    let value = 0
+    function Page() {
+      const { data } = useSWR('subscribe-8', () => value++, {
+        subscribe,
+        dedupingInterval: 0
+      })
+
+      return <div>data: {data}</div>
+    }
+
+    const { container, rerender, unmount } = render(
+      <>
+        <Page />
+        <Page />
+      </>
+    )
+
+    expect(container).toMatchInlineSnapshot(`
+      <div>
+        <div>
+          data: 
+        </div>
+        <div>
+          data: 
+        </div>
+      </div>
+    `)
+    await waitForDomChange({ container }) // mount
+    expect(container).toMatchInlineSnapshot(`
+      <div>
+        <div>
+          data: 
+          0
+        </div>
+        <div>
+          data: 
+          0
+        </div>
+      </div>
+    `)
+
+    expect(subscribe).toHaveBeenCalledTimes(1)
+
+    rerender(<Page />)
+
+    expect(container).toMatchInlineSnapshot(`
+      <div>
+        <div>
+          data: 
+          0
+        </div>
+      </div>
+    `)
+
+    expect(subscribe).toHaveBeenCalledTimes(1)
+
+    unmount()
+
+    expect(unsubscribe).toHaveBeenCalledTimes(1)
   })
 })

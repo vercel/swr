@@ -17,6 +17,9 @@ const CONCURRENT_PROMISES_TS = {}
 const FOCUS_REVALIDATORS = {}
 const CACHE_REVALIDATORS = {}
 const MUTATION_TS = {}
+const SUBSCRIBERS: {
+  [key: string]: { count: number; unsubscribe(): void }
+} = {}
 
 // error retry
 function onErrorRetry(
@@ -96,6 +99,7 @@ export {
   FOCUS_REVALIDATORS,
   CACHE_REVALIDATORS,
   MUTATION_TS,
+  SUBSCRIBERS,
   cache
 }
 export default defaultConfig
