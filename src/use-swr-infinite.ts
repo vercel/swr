@@ -1,4 +1,4 @@
-import { useContext, useRef, useState, useCallback } from 'react'
+import { useContext, useRef, useState, useEffect, useCallback } from 'react'
 
 import defaultConfig, { cache } from './config'
 import SWRConfigContext from './swr-config-context'
@@ -16,6 +16,7 @@ type ExtendedConfigInterface<Data = any, Error = any> = ConfigInterface<
 > & {
   initialSize?: number
   revalidateAll?: boolean
+  persistSize?: boolean
 }
 type ExtendedResponseInterface<Data = any, Error = any> = responseInterface<
   Data[],
@@ -69,6 +70,7 @@ function useSWRInfinite<Data = any, Error = any>(
   let {
     initialSize = 1,
     revalidateAll = false,
+    persistSize = false,
     fetcher: defaultFetcher,
     ...extraConfig
   } = config
@@ -98,11 +100,19 @@ function useSWRInfinite<Data = any, Error = any>(
 
   // page count is cached as well, so when navigating the list can be restored
   let pageCountCacheKey: string | null = null
+  let cachedPageSize
   if (firstPageKey) {
     pageCountCacheKey = 'size@' + firstPageKey
-    initialSize = cache.get(pageCountCacheKey) || initialSize
+    cachedPageSize = cache.get(pageCountCacheKey)
   }
-  const pageCountRef = useRef<number>(initialSize)
+  const pageCountRef = useRef<number>(cachedPageSize || initialSize)
+
+  // every time the key changes, we reset the page size if it's not persisted
+  useEffect(() => {
+    if (!persistSize) {
+      pageCountRef.current = initialSize
+    }
+  }, [firstPageKey])
 
   // actual swr of all pages
   const swr: ExtendedResponseInterface<Data, Error> = useSWR<Data[], Error>(

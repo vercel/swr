@@ -262,4 +262,93 @@ describe('useSWRInfinite', () => {
     await act(() => new Promise(res => setTimeout(res, 100)))
     expect(container.textContent).toMatchInlineSnapshot(`"page 0, page 1, "`)
   })
+
+  it('should reset page size when key changes', async () => {
+    let toggle
+
+    function Page() {
+      const [t, setT] = useState(false)
+      const { data, size, setSize } = useSWRInfinite<string, string>(
+        index => [`pagetest-6`, index, t ? 'A' : 'B'],
+        async (_, index) => {
+          await new Promise(res => setTimeout(res, 100))
+          return `page ${index}, `
+        }
+      )
+
+      toggle = setT
+
+      return (
+        <div
+          onClick={() => {
+            // load next page
+            setSize(size + 1)
+          }}
+        >
+          {data}
+        </div>
+      )
+    }
+
+    const { container } = render(<Page />)
+    expect(container.textContent).toMatchInlineSnapshot(`""`)
+    await waitForDomChange({ container }) // mount
+    expect(container.textContent).toMatchInlineSnapshot(`"page 0, "`)
+
+    // load next page
+    fireEvent.click(container.firstElementChild)
+    await act(() => new Promise(res => setTimeout(res, 150)))
+    expect(container.textContent).toMatchInlineSnapshot(`"page 0, page 1, "`)
+
+    // switch key, it should have only 1 page
+    act(() => toggle(v => !v))
+    await act(() => new Promise(res => setTimeout(res, 150)))
+    expect(container.textContent).toMatchInlineSnapshot(`"page 0, "`)
+  })
+
+  it('should presist page size when key changes', async () => {
+    let toggle
+
+    function Page() {
+      const [t, setT] = useState(false)
+      const { data, size, setSize } = useSWRInfinite<string, string>(
+        index => [`pagetest-7`, index, t ? 'A' : 'B'],
+        async (_, index) => {
+          await new Promise(res => setTimeout(res, 100))
+          return `page ${index}, `
+        },
+        {
+          persistSize: true
+        }
+      )
+
+      toggle = setT
+
+      return (
+        <div
+          onClick={() => {
+            // load next page
+            setSize(size + 1)
+          }}
+        >
+          {data}
+        </div>
+      )
+    }
+
+    const { container } = render(<Page />)
+    expect(container.textContent).toMatchInlineSnapshot(`""`)
+    await waitForDomChange({ container }) // mount
+    expect(container.textContent).toMatchInlineSnapshot(`"page 0, "`)
+
+    // load next page
+    fireEvent.click(container.firstElementChild)
+    await act(() => new Promise(res => setTimeout(res, 150)))
+    expect(container.textContent).toMatchInlineSnapshot(`"page 0, page 1, "`)
+
+    // switch key, it should still have 2 pages
+    act(() => toggle(v => !v))
+    await act(() => new Promise(res => setTimeout(res, 250)))
+    expect(container.textContent).toMatchInlineSnapshot(`"page 0, page 1, "`)
+  })
 })
