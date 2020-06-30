@@ -156,7 +156,7 @@ function useSWRInfinite<Data = any, Error = any>(
           } else {
             pageData = await fn(pageKey)
           }
-          cache.set(pageKey, pageData, false)
+          cache.set(pageKey, pageData)
         }
 
         data.push(pageData)
@@ -180,10 +180,10 @@ function useSWRInfinite<Data = any, Error = any>(
       if (shouldRevalidate && typeof data !== 'undefined') {
         // we only revalidate the pages that are changed
         const originalData = swr.data
-        cache.set(contextCacheKey, { originalData, force: false }, false)
+        cache.set(contextCacheKey, { originalData, force: false })
       } else if (shouldRevalidate) {
         // calling `mutate()`, we revalidate all pages
-        cache.set(contextCacheKey, { force: true }, false)
+        cache.set(contextCacheKey, { force: true })
       }
 
       return mutate(data, shouldRevalidate)
@@ -197,7 +197,7 @@ function useSWRInfinite<Data = any, Error = any>(
       } else if (typeof arg === 'number') {
         pageCountRef.current = arg
       }
-      cache.set(pageCountCacheKey, pageCountRef.current, false)
+      cache.set(pageCountCacheKey, pageCountRef.current)
       rerender(v => !v)
       return swr.mutate(v => v)
     },
