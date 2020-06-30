@@ -1,5 +1,6 @@
 node_modules
 dist
+esm
 *.log
 *.tgz
 .env

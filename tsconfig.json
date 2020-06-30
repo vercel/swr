@@ -6,7 +6,7 @@
     "lib": [
       "esnext", "dom"
     ],
-    "module": "esnext",
+    "module": "commonjs",
     "moduleResolution": "node",
     "noEmitOnError": true,
     "noFallthroughCasesInSwitch": true,
