@@ -1524,7 +1524,7 @@ describe('useSWR - suspense', () => {
 })
 
 describe('useSWR - cache', () => {
-  it('should react to direct cache updates', async () => {
+  it('should not react to direct cache updates but mutate', async () => {
     cache.set('cache-1', 'custom cache message')
 
     function Page() {
@@ -1555,16 +1555,23 @@ describe('useSWR - cache', () => {
       </div>
     `)
 
-    act(() => cache.set('cache-1', 'a different message'))
+    act(async () => {
+      const value = 'a different message'
+      cache.set('cache-1', value)
+      await mutate('cache-1', value, false)
+    })
 
-    // content should be updated from new cache value
+    // content should be updated from new cache value, after mutate without revalidate
     expect(await findByText('a different message')).toMatchInlineSnapshot(`
       <div>
         a different message
       </div>
     `)
 
-    act(() => cache.delete('cache-1'))
+    act(async () => {
+      cache.delete('cache-1')
+      mutate('cache-1')
+    })
 
     // content should go back to be the fetched value
     expect(await findByText('random message')).toMatchInlineSnapshot(`
