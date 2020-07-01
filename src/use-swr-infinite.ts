@@ -106,11 +106,16 @@ function useSWRInfinite<Data = any, Error = any>(
     cachedPageSize = cache.get(pageCountCacheKey)
   }
   const pageCountRef = useRef<number>(cachedPageSize || initialSize)
+  const didMountRef = useRef<boolean>(false)
 
   // every time the key changes, we reset the page size if it's not persisted
   useEffect(() => {
-    if (!persistSize) {
-      pageCountRef.current = initialSize
+    if (didMountRef.current) {
+      if (!persistSize) {
+        pageCountRef.current = initialSize
+      }
+    } else {
+      didMountRef.current = true
     }
   }, [firstPageKey])
 
