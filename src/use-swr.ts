@@ -123,9 +123,9 @@ const mutate: mutateInterface = async (
 
   if (typeof data !== 'undefined') {
     // update cached data, avoid notifying from the cache
-    cache.set(key, data, false)
+    cache.set(key, data)
   }
-  cache.set(keyErr, error, false)
+  cache.set(keyErr, error)
 
   // reset the timestamp to mark the mutation has ended
   MUTATION_END_TS[key] = Date.now() - 1
@@ -335,8 +335,8 @@ function useSWR<Data = any, Error = any>(
           return false
         }
 
-        cache.set(key, newData, false)
-        cache.set(keyErr, undefined, false)
+        cache.set(key, newData)
+        cache.set(keyErr, undefined)
 
         // new state for the reducer
         const newState: actionType<Data, Error> = {
@@ -364,7 +364,7 @@ function useSWR<Data = any, Error = any>(
         delete CONCURRENT_PROMISES[key]
         delete CONCURRENT_PROMISES_TS[key]
 
-        cache.set(keyErr, err, false)
+        cache.set(keyErr, err)
 
         // get a new error
         // don't use deep equal for errors

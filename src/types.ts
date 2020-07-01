@@ -122,11 +122,11 @@ export type actionType<Data, Error> = {
 
 export interface CacheInterface {
   get(key: keyInterface): any
-  set(key: keyInterface, value: any, shouldNotify?: boolean): any
+  set(key: keyInterface, value: any): any
   keys(): string[]
   has(key: keyInterface): boolean
-  delete(key: keyInterface, shouldNotify?: boolean): void
-  clear(shouldNotify?: boolean): void
+  delete(key: keyInterface): void
+  clear(): void
   serializeKey(key: keyInterface): [string, any, string]
   subscribe(listener: cacheListener): () => void
 }
