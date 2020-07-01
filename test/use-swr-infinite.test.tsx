@@ -306,7 +306,7 @@ describe('useSWRInfinite', () => {
     expect(container.textContent).toMatchInlineSnapshot(`"page 0, "`)
   })
 
-  it('should presist page size when key changes', async () => {
+  it('should persist page size when key changes', async () => {
     let toggle
 
     function Page() {
@@ -349,6 +349,57 @@ describe('useSWRInfinite', () => {
     // switch key, it should still have 2 pages
     act(() => toggle(v => !v))
     await act(() => new Promise(res => setTimeout(res, 250)))
+    expect(container.textContent).toMatchInlineSnapshot(`"page 0, page 1, "`)
+  })
+
+  it('should persist page size when remount', async () => {
+    let toggle
+
+    function Comp() {
+      const { data, size, setSize } = useSWRInfinite<string, string>(
+        index => [`pagetest-8`, index],
+        async (_, index) => {
+          await new Promise(res => setTimeout(res, 100))
+          return `page ${index}, `
+        }
+      )
+
+      return (
+        <div
+          onClick={() => {
+            // load next page
+            setSize(size + 1)
+          }}
+        >
+          {data}
+        </div>
+      )
+    }
+
+    function Page() {
+      const [show, setShow] = useState(true)
+      toggle = setShow
+      return show ? <Comp /> : null
+    }
+
+    const { container } = render(<Page />)
+    expect(container.textContent).toMatchInlineSnapshot(`""`)
+    await waitForDomChange({ container }) // mount
+    expect(container.textContent).toMatchInlineSnapshot(`"page 0, "`)
+
+    // load next page
+    fireEvent.click(container.firstElementChild)
+    await act(() => new Promise(res => setTimeout(res, 150)))
+    expect(container.textContent).toMatchInlineSnapshot(`"page 0, page 1, "`)
+
+    // pages should be unmounted now
+    act(() => toggle(v => !v))
+    await act(() => new Promise(res => setTimeout(res, 50)))
+    expect(container.textContent).toMatchInlineSnapshot(`""`)
+
+    // remount, should still have 2 pages
+    act(() => toggle(v => !v))
+    await act(() => new Promise(res => setTimeout(res, 150)))
     expect(container.textContent).toMatchInlineSnapshot(`"page 0, page 1, "`)
   })
 })
