@@ -16,7 +16,7 @@
   "scripts": {
     "dev": "vercel dev",
     "build": "npm run build:esm && npm run build:cjs",
-    "build:cjs": "ncc build src/index.ts -o dist -m -e react",
+    "build:cjs": "tsc --outDir dist",
     "build:esm": "tsc --module ES6 --outDir esm",
     "watch": "tsc --watch",
     "types:check": "tsc --noEmit",
@@ -44,7 +44,6 @@
     "@types/react": "16.9.11",
     "@typescript-eslint/eslint-plugin": "2.5.0",
     "@typescript-eslint/parser": "2.5.0",
-    "@zeit/ncc": "0.20.5",
     "eslint": "6.6.0",
     "eslint-config-prettier": "6.5.0",
     "husky": "2.4.1",
