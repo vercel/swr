@@ -856,6 +856,34 @@ describe('useSWR - error', () => {
     expect(retry).toEqual(null)
     expect(failed).toEqual(null)
   })
+
+  it('should not trigger error retries if errorRetryCount is set to 0', async () => {
+    let count = 0
+    function Page() {
+      const { data, error } = useSWR(
+        'error-8',
+        () => {
+          return new Promise((_, rej) =>
+            setTimeout(() => rej(new Error('error: ' + count++)), 100)
+          )
+        },
+        {
+          errorRetryCount: 0,
+          errorRetryInterval: 50,
+          dedupingInterval: 0
+        }
+      )
+      if (error) return <div>{error.message}</div>
+      return <div>hello, {data}</div>
+    }
+    const { container } = render(<Page />)
+
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
+    await waitForDomChange({ container })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"error: 0"`)
+    await act(() => new Promise(res => setTimeout(res, 210))) // retry
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"error: 0"`)
+  })
 })
 
 describe('useSWR - focus', () => {
