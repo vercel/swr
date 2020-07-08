@@ -34,7 +34,7 @@ function onErrorRetry(
   }
 
   if (
-    config.errorRetryCount != null &&
+    typeof config.errorRetryCount === 'number' &&
     opts.retryCount > config.errorRetryCount
   ) {
     return
