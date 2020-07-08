@@ -33,7 +33,10 @@ function onErrorRetry(
     return
   }
 
-  if (config.errorRetryCount && opts.retryCount > config.errorRetryCount) {
+  if (
+    config.errorRetryCount != null &&
+    opts.retryCount > config.errorRetryCount
+  ) {
     return
   }
 
