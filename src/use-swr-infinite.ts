@@ -212,4 +212,4 @@ function useSWRInfinite<Data = any, Error = any>(
   return swr
 }
 
-export { useSWRInfinite }
+export { useSWRInfinite, ExtendedConfigInterface, ExtendedResponseInterface }
