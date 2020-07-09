@@ -224,6 +224,7 @@ function useSWR<Data = any, Error = any>(
       }
     }
     if (shouldUpdateState || config.suspense) {
+      if (unmountedRef.current) return
       rerender({})
     }
   }, [])
