@@ -62,7 +62,7 @@ function Profile () {
 ```
 
 In this example, the React Hook `useSWR` accepts a `key` and a `fetcher` function.
-`key` is a unique identifier of the request, normally the URL of the API. And the `fetcher` accepts
+The `key` is a unique identifier of the request, normally the URL of the API. And the `fetcher` accepts
 `key` as its parameter and returns the data asynchronously.
 
 `useSWR` also returns 2 values: `data` and `error`. When the request (fetcher) is not yet finished,
@@ -134,7 +134,7 @@ const { data, error, isValidating, mutate } = useSWR(key, fetcher, options)
 When under a slow network (2G, <= 70Kbps), `errorRetryInterval` will be 10s, and
 `loadingTimeout` will be 5s by default.
 
-You can also use [global configuration](#global-configuration) to provide default options.
+You can also use a [global configuration](#global-configuration) to provide default options.
 
 <br/>
 
@@ -263,7 +263,7 @@ function MyProjects () {
 
 ### Multiple Arguments
 
-In some scenarios, it's useful pass multiple arguments (can be any value or object) to the `fetcher` function. For example:
+In some scenarios, it's useful to pass multiple arguments (can be any value or object) to the `fetcher` function. For example:
 
 ```js
 useSWR('/api/user', url => fetchWithToken(url, token))
@@ -282,7 +282,7 @@ const { data: orders } = useSWR(user ? ['/api/orders', user] : null, fetchWithUs
 ```
 
 The key of the request is now the combination of both values. SWR **shallowly** compares
-the arguments on every render, and triggers revalidation if any of them has changed.  
+the arguments on every render and triggers revalidation if any of them has changed.  
 Keep in mind that you should not recreate objects when rendering, as they will be treated as different objects on every render:
 
 ```js
@@ -440,7 +440,7 @@ function App (props) {
 }
 ```
 
-It is still a server-side rendered site, but it’s also fully powered by SWR in the client side. 
+It is still a server-side rendered site, but it’s also fully powered by SWR in the client-side. 
 Which means the data can be dynamic and update itself over time and user interactions.
 
 ### Suspense Mode
@@ -491,7 +491,7 @@ useSWR(key, fetcher, {
 
 ### Prefetching Data
 
-There’re many ways to prefetch the data for SWR. For top level requests, [`rel="preload"`](https://developer.mozilla.org/en-US/docs/Web/HTML/Preloading_content) is highly recommended:
+There’re many ways to prefetch the data for SWR. For top-level requests, [`rel="preload"`](https://developer.mozilla.org/en-US/docs/Web/HTML/Preloading_content) is highly recommended:
 
 ```html
 <link rel="preload" href="/api/data" as="fetch" crossorigin="anonymous">
