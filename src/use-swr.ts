@@ -591,7 +591,7 @@ function useSWR<Data = any, Error = any>(
       typeof latestError === 'undefined'
     ) {
       // need to start the request if it hasn't
-      if (!CONCURRENT_PROMISES[key]) {
+      if (!(key in CONCURRENT_PROMISES)) {
         // trigger revalidate immediately
         // to get the promise
         revalidate()
