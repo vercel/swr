@@ -573,7 +573,7 @@ By default, requests made within 2 seconds are deduped. This can be changed by s
 const { data, error } = useSWR('/api/user', fetcher, { dedupingInterval: 1000 })
 ```
 
-This will duplicate the request at interval of 1 second
+This will deduplicate requests at an interval of 1 second.
 <br/>
 
 ## Authors
