@@ -1,4 +1,4 @@
-[![SWR](https://assets.vercel.com/image/upload/v1572289618/swr/banner.png)](https://swr.now.sh)
+[![SWR](https://assets.vercel.com/image/upload/v1572289618/swr/banner.png)](https://swr.vercel.app)
 
 <p align="center">
 
@@ -20,7 +20,7 @@
 
 ## Introduction
 
-[swr.now.sh](https://swr.now.sh)
+[swr.vercel.app](https://swr.vercel.app)
 
 SWR is a React Hooks library for remote data fetching.
 
@@ -72,7 +72,7 @@ of `fetcher` and rerenders the component.
 Note that `fetcher` can be any asynchronous function, so you can use your favourite data-fetching
 library to handle that part.
 
-Check out [swr.now.sh](https://swr.now.sh) for more demos of SWR, and [Examples](#examples) for the best practices.
+Check out [swr.vercel.app](https://swr.vercel.app) for more demos of SWR, and [Examples](#examples) for the best practices.
 
 <br/>
 
