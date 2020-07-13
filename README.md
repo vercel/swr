@@ -535,7 +535,7 @@ Together with techniques like [page prefetching](https://nextjs.org/docs#prefetc
 
 ### Request Deduplication
 
-SWR provides request deduplication by default. So, if you call the hook with same key multiple times, it will return the cached value ie. requests will not be duplicated.
+SWR deduplicates requests by default. If you call the hook with the same key multiple times, only one request is made. Duplicated calls will receive a value from cache.
 Only one request will be made and once the promise is fulfilled, it will update both components.
 Here, 'api/user' is the duplicate key
 
