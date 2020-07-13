@@ -567,7 +567,7 @@ export default function App() {
 }
 ```
 
-The default interval to dedupe a request is 2 seconds. This can be changed by setting the 'dedupingInterval' option. For example:
+By default, requests made within 2 seconds are deduped. This can be changed by setting the `dedupingInterval` option:
 
 ```js
 const { data, error } = useSWR('/api/user', fetcher, { dedupingInterval: 1000 })
