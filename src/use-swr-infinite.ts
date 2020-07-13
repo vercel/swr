@@ -9,7 +9,7 @@ type KeyLoader<Data = any> = (
   index: number,
   previousPageData: Data | null
 ) => keyType
-type ExtendedConfigInterface<Data = any, Error = any> = ConfigInterface<
+type SWRInfiniteConfigInterface<Data = any, Error = any> = ConfigInterface<
   Data[],
   Error,
   fetcherFn<Data[]>
@@ -18,7 +18,7 @@ type ExtendedConfigInterface<Data = any, Error = any> = ConfigInterface<
   revalidateAll?: boolean
   persistSize?: boolean
 }
-type ExtendedResponseInterface<Data = any, Error = any> = responseInterface<
+type SWRInfiniteResponseInterface<Data = any, Error = any> = responseInterface<
   Data[],
   Error
 > & {
@@ -30,22 +30,22 @@ type ExtendedResponseInterface<Data = any, Error = any> = responseInterface<
 
 function useSWRInfinite<Data = any, Error = any>(
   getKey: KeyLoader<Data>
-): ExtendedResponseInterface<Data, Error>
+): SWRInfiniteResponseInterface<Data, Error>
 function useSWRInfinite<Data = any, Error = any>(
   getKey: KeyLoader<Data>,
-  config?: ExtendedConfigInterface<Data, Error>
-): ExtendedResponseInterface<Data, Error>
+  config?: SWRInfiniteConfigInterface<Data, Error>
+): SWRInfiniteResponseInterface<Data, Error>
 function useSWRInfinite<Data = any, Error = any>(
   getKey: KeyLoader<Data>,
   fn?: fetcherFn<Data>,
-  config?: ExtendedConfigInterface<Data, Error>
-): ExtendedResponseInterface<Data, Error>
+  config?: SWRInfiniteConfigInterface<Data, Error>
+): SWRInfiniteResponseInterface<Data, Error>
 function useSWRInfinite<Data = any, Error = any>(
   ...args
-): ExtendedResponseInterface<Data, Error> {
+): SWRInfiniteResponseInterface<Data, Error> {
   let getKey: KeyLoader<Data>,
     fn: fetcherFn<Data> | undefined,
-    config: ExtendedConfigInterface<Data, Error> = {}
+    config: SWRInfiniteConfigInterface<Data, Error> = {}
 
   if (args.length >= 1) {
     getKey = args[0]
@@ -120,7 +120,7 @@ function useSWRInfinite<Data = any, Error = any>(
   }, [firstPageKey])
 
   // actual swr of all pages
-  const swr: ExtendedResponseInterface<Data, Error> = useSWR<Data[], Error>(
+  const swr: SWRInfiniteResponseInterface<Data, Error> = useSWR<Data[], Error>(
     firstPageKey ? ['many', firstPageKey] : null,
     async () => {
       // get the revalidate context
@@ -212,4 +212,8 @@ function useSWRInfinite<Data = any, Error = any>(
   return swr
 }
 
-export { useSWRInfinite }
+export {
+  useSWRInfinite,
+  SWRInfiniteConfigInterface,
+  SWRInfiniteResponseInterface
+}
