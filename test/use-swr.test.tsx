@@ -1903,7 +1903,7 @@ describe('useSWR - config callbacks', () => {
 
     function Page(props) {
       const { data } = useSWR(
-        'config callbacks - onErrorRetry',
+        'config callbacks - onLoadingSlow',
         () => new Promise(res => setTimeout(() => res(count++), 200)),
         {
           onLoadingSlow: () => {
