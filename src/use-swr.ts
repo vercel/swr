@@ -192,6 +192,11 @@ function useSWR<Data = any, Error = any>(
     config
   )
 
+  const lastestConfig = useRef(config)
+  useIsomorphicLayoutEffect(() => {
+    lastestConfig.current = config
+  })
+
   if (typeof fn === 'undefined') {
     // use the global fetcher
     fn = config.fetcher
@@ -237,7 +242,7 @@ function useSWR<Data = any, Error = any>(
   const eventsRef = useRef({
     emit: (event, ...params) => {
       if (unmountedRef.current) return
-      config[event](...params)
+      lastestConfig.current[event](...params)
     }
   })
 
