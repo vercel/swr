@@ -40,7 +40,7 @@ export default function useRequest<Data = unknown, Error = unknown>(
       initialData: initialData && {
         status: 200,
         statusText: 'InitialData',
-        config: request,
+        config: request!,
         headers: {},
         data: initialData
       }
