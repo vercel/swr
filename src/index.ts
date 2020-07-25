@@ -14,4 +14,5 @@ export {
   responseInterface,
   CacheInterface
 } from './types'
+export { useSWRSuspense } from './use-swr-suspense'
 export default useSWR

@@ -17,6 +17,8 @@ import defaultConfig, {
   MUTATION_END_TS,
   cache
 } from './config'
+
+import { suspenseGroup } from './use-swr-suspense'
 import isDocumentVisible from './libs/is-document-visible'
 import isOnline from './libs/is-online'
 import throttle from './libs/throttle'
@@ -198,6 +200,9 @@ function useSWR<Data = any, Error = any>(
     // use the global fetcher
     fn = config.fetcher
   }
+
+  const inSuspenseGroup = suspenseGroup.started
+  const inSuspense = config.suspense || inSuspenseGroup
 
   const initialData = cache.get(key) || config.initialData
   const initialError = cache.get(keyErr)
@@ -580,7 +585,7 @@ function useSWR<Data = any, Error = any>(
   ])
 
   // suspense
-  if (config.suspense) {
+  if (inSuspense) {
     // in suspense mode, we can't return empty state
     // (it should be suspended)
 
@@ -604,11 +609,17 @@ function useSWR<Data = any, Error = any>(
         typeof CONCURRENT_PROMISES[key].then === 'function'
       ) {
         // if it is a promise
-        throw CONCURRENT_PROMISES[key]
+        if (inSuspenseGroup) {
+          // we don't throw here if it's in suspense group
+          suspenseGroup.promises.push(CONCURRENT_PROMISES[key])
+        } else {
+          // single suspense swr
+          throw CONCURRENT_PROMISES[key]
+        }
+      } else {
+        // it's a value, return it directly (override)
+        latestData = CONCURRENT_PROMISES[key]
       }
-
-      // it's a value, return it directly (override)
-      latestData = CONCURRENT_PROMISES[key]
     }
 
     if (typeof latestData === 'undefined' && latestError) {

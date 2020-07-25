@@ -7,7 +7,13 @@ import {
 } from '@testing-library/react'
 import React, { ReactNode, Suspense, useEffect, useState } from 'react'
 
-import useSWR, { mutate, SWRConfig, trigger, cache } from '../src'
+import useSWR, {
+  mutate,
+  SWRConfig,
+  trigger,
+  cache,
+  useSWRSuspense
+} from '../src'
 import Cache from '../src/cache'
 
 class ErrorBoundary extends React.Component<{ fallback: ReactNode }> {
@@ -1536,6 +1542,40 @@ describe('useSWR - suspense', () => {
     // fixes https://github.com/zeit/swr/issues/57
     // 'suspense-7' -> undefined -> 'suspense-8'
     expect(renderedResults).toEqual(['suspense-7', 'suspense-8'])
+  })
+
+  it('should work with suspense guards', async () => {
+    const fetcher = () => new Promise(res => setTimeout(() => res('data'), 100))
+
+    function Section() {
+      const [a, b, c] = useSWRSuspense(swr => {
+        const { data: a_ } = swr('suspense-guards-1', fetcher)
+        const { data: b_ } = swr('suspense-guards-2', fetcher)
+        // you can use `useSWR` too but the linter might yell
+        const { data: c_ } = useSWR('suspense-guards-3', fetcher)
+        return [a_, b_, c_]
+      })
+
+      // will be executed after *all* SWRs inside are resolved
+      expect(a).toBe('data')
+      expect(b).toBe('data')
+      expect(c).toBe('data')
+
+      return (
+        <div>
+          {a}, {b}, {c}
+        </div>
+      )
+    }
+    const { container } = render(
+      <Suspense fallback={<div>fallback</div>}>
+        <Section />
+      </Suspense>
+    )
+
+    expect(container.textContent).toMatchInlineSnapshot(`"fallback"`)
+    await act(() => new Promise(res => setTimeout(res, 110))) // it only takes 100ms
+    expect(container.textContent).toMatchInlineSnapshot(`"data, data, data"`)
   })
 
   it('should render initial data if set', async () => {
