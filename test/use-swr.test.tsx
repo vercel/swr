@@ -1292,7 +1292,7 @@ describe('useSWR - local mutation', () => {
   })
 
   it('should update error in cache when mutate failed with error', async () => {
-    let value = 0
+    const value = 0
     const key = 'mutate-4'
     const message = 'mutate-error'
     function Page() {
@@ -1303,21 +1303,32 @@ describe('useSWR - local mutation', () => {
     await waitForDomChange({ container })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
     await act(async () => {
-      await mutate(
-        key,
-        () => {
-          throw new Error(message)
-        },
-        false
-      )
+      // mutate error will be thrown, add try catch to avoid crashing
+      try {
+        await mutate(
+          key,
+          () => {
+            throw new Error(message)
+          },
+          false
+        )
+      } catch (e) {
+        // do nothing
+      }
     })
 
     const [, , keyErr] = cache.serializeKey(key)
-    const error = cache.get(keyErr)
-    expect(error.message).toMatchInlineSnapshot(`"${message}"`)
+    let cacheError = cache.get(keyErr)
+    expect(cacheError.message).toMatchInlineSnapshot(`"${message}"`)
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"${message}"`
     )
+    // if mutate succeed, error should be cleared
+    await act(async () => {
+      await mutate(key, value, false)
+    })
+    cacheError = cache.get(keyErr)
+    expect(cacheError).toMatchInlineSnapshot(`undefined`)
   })
 })
 
