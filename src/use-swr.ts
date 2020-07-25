@@ -509,9 +509,6 @@ function useSWR<Data = any, Error = any>(
       onReconnect = softRevalidate
     }
 
-    addRevalidator(FOCUS_REVALIDATORS, onFocus)
-    addRevalidator(RECONNECT_REVALIDATORS, onReconnect)
-
     // register global cache update listener
     const onUpdate: updaterInterface<Data, Error> = (
       shouldRevalidate = true,
@@ -552,12 +549,9 @@ function useSWR<Data = any, Error = any>(
       return false
     }
 
-    // add updater to listeners
-    if (!CACHE_REVALIDATORS[key]) {
-      CACHE_REVALIDATORS[key] = [onUpdate]
-    } else {
-      CACHE_REVALIDATORS[key].push(onUpdate)
-    }
+    addRevalidator(FOCUS_REVALIDATORS, onFocus)
+    addRevalidator(RECONNECT_REVALIDATORS, onReconnect)
+    addRevalidator(CACHE_REVALIDATORS, onUpdate)
 
     return () => {
       // cleanup
