@@ -36,6 +36,11 @@ import {
 
 const IS_SERVER = typeof window === 'undefined'
 
+// polyfill for requestIdleCallback
+const rIC = IS_SERVER
+  ? null
+  : window['requestIdleCallback'] || (f => setTimeout(f, 1))
+
 // React currently throws a warning when using useLayoutEffect on the server.
 // To get around it, we can conditionally useEffect on the server (no-op) and
 // useLayoutEffect in the browser.
@@ -437,14 +442,10 @@ function useSWR<Data = any, Error = any>(
       config.revalidateOnMount ||
       (!config.initialData && config.revalidateOnMount === undefined)
     ) {
-      if (
-        typeof latestKeyedData !== 'undefined' &&
-        !IS_SERVER &&
-        window['requestIdleCallback']
-      ) {
+      if (typeof latestKeyedData !== 'undefined') {
         // delay revalidate if there's cache
         // to not block the rendering
-        window['requestIdleCallback'](softRevalidate)
+        rIC(softRevalidate)
       } else {
         softRevalidate()
       }
