@@ -8,15 +8,7 @@ import {
   useMemo
 } from 'react'
 
-import defaultConfig, {
-  CACHE_REVALIDATORS,
-  CONCURRENT_PROMISES,
-  CONCURRENT_PROMISES_TS,
-  FOCUS_REVALIDATORS,
-  MUTATION_TS,
-  MUTATION_END_TS,
-  cache
-} from './config'
+import defaultConfig, { cache } from './config'
 import isDocumentVisible from './libs/is-document-visible'
 import isOnline from './libs/is-online'
 import throttle from './libs/throttle'
@@ -45,6 +37,40 @@ const rIC = IS_SERVER
 // To get around it, we can conditionally useEffect on the server (no-op) and
 // useLayoutEffect in the browser.
 const useIsomorphicLayoutEffect = IS_SERVER ? useEffect : useLayoutEffect
+
+// global state managers
+const CONCURRENT_PROMISES = {}
+const CONCURRENT_PROMISES_TS = {}
+const FOCUS_REVALIDATORS = {}
+const RECONNECT_REVALIDATORS = {}
+const CACHE_REVALIDATORS = {}
+const MUTATION_TS = {}
+const MUTATION_END_TS = {}
+
+// setup DOM events listeners for `focus` and `reconnect` actions
+if (!IS_SERVER && window.addEventListener) {
+  const revalidate = revalidators => {
+    if (!isDocumentVisible() || !isOnline()) return
+
+    for (const key in revalidators) {
+      if (revalidators[key][0]) revalidators[key][0]()
+    }
+  }
+
+  // focus revalidate
+  window.addEventListener(
+    'visibilitychange',
+    () => revalidate(FOCUS_REVALIDATORS),
+    false
+  )
+  window.addEventListener('focus', () => revalidate(FOCUS_REVALIDATORS), false)
+  // reconnect revalidate
+  window.addEventListener(
+    'online',
+    () => revalidate(RECONNECT_REVALIDATORS),
+    false
+  )
+}
 
 const trigger: triggerInterface = (_key, shouldRevalidate = true) => {
   // we are ignoring the second argument which correspond to the arguments
@@ -255,6 +281,28 @@ function useSWR<Data = any, Error = any>(
     [key]
   )
 
+  const addRevalidator = (revalidators, callback) => {
+    if (!callback) return
+    if (!revalidators[key]) {
+      revalidators[key] = [callback]
+    } else {
+      revalidators[key].push(callback)
+    }
+  }
+
+  const removeRevalidator = (revlidators, callback) => {
+    if (revlidators[key]) {
+      const revalidators = revlidators[key]
+      const index = revalidators.indexOf(callback)
+      if (index >= 0) {
+        // 10x faster than splice
+        // https://jsperf.com/array-remove-by-index
+        revalidators[index] = revalidators[revalidators.length - 1]
+        revalidators.pop()
+      }
+    }
+  }
+
   // start a revalidation
   const revalidate = useCallback(
     async (
@@ -457,11 +505,12 @@ function useSWR<Data = any, Error = any>(
       // throttle: avoid being called twice from both listeners
       // and tabs being switched quickly
       onFocus = throttle(softRevalidate, config.focusThrottleInterval)
-      if (!FOCUS_REVALIDATORS[key]) {
-        FOCUS_REVALIDATORS[key] = [onFocus]
-      } else {
-        FOCUS_REVALIDATORS[key].push(onFocus)
-      }
+    }
+
+    // when reconnect, revalidate
+    let onReconnect
+    if (config.revalidateOnReconnect) {
+      onReconnect = softRevalidate
     }
 
     // register global cache update listener
@@ -504,18 +553,9 @@ function useSWR<Data = any, Error = any>(
       return false
     }
 
-    // add updater to listeners
-    if (!CACHE_REVALIDATORS[key]) {
-      CACHE_REVALIDATORS[key] = [onUpdate]
-    } else {
-      CACHE_REVALIDATORS[key].push(onUpdate)
-    }
-
-    // set up reconnecting when the browser regains network connection
-    let reconnect = null
-    if (!IS_SERVER && window.addEventListener && config.revalidateOnReconnect) {
-      window.addEventListener('online', (reconnect = softRevalidate))
-    }
+    addRevalidator(FOCUS_REVALIDATORS, onFocus)
+    addRevalidator(RECONNECT_REVALIDATORS, onReconnect)
+    addRevalidator(CACHE_REVALIDATORS, onUpdate)
 
     return () => {
       // cleanup
@@ -524,28 +564,9 @@ function useSWR<Data = any, Error = any>(
       // mark it as unmounted
       unmountedRef.current = true
 
-      if (onFocus && FOCUS_REVALIDATORS[key]) {
-        const revalidators = FOCUS_REVALIDATORS[key]
-        const index = revalidators.indexOf(onFocus)
-        if (index >= 0) {
-          // 10x faster than splice
-          // https://jsperf.com/array-remove-by-index
-          revalidators[index] = revalidators[revalidators.length - 1]
-          revalidators.pop()
-        }
-      }
-      if (CACHE_REVALIDATORS[key]) {
-        const revalidators = CACHE_REVALIDATORS[key]
-        const index = revalidators.indexOf(onUpdate)
-        if (index >= 0) {
-          revalidators[index] = revalidators[revalidators.length - 1]
-          revalidators.pop()
-        }
-      }
-
-      if (!IS_SERVER && window.removeEventListener && reconnect !== null) {
-        window.removeEventListener('online', reconnect)
-      }
+      removeRevalidator(FOCUS_REVALIDATORS, onFocus)
+      removeRevalidator(RECONNECT_REVALIDATORS, onReconnect)
+      removeRevalidator(CACHE_REVALIDATORS, onUpdate)
     }
   }, [key, revalidate])
 
