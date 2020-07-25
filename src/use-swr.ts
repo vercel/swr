@@ -139,9 +139,11 @@ const mutate: mutateInterface = async (
       promises.push(updaters[i](!!shouldRevalidate, data, error, i > 0))
     }
     // return new updated value
-    return Promise.all(promises).then(() => cache.get(key))
+    return Promise.all(promises).then(() => {
+      if (error) throw error
+      return cache.get(key)
+    })
   }
-
   // throw error or return data to be used by caller of mutate
   if (error) throw error
   return data
