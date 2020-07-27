@@ -193,7 +193,9 @@ function useSWR<Data = any, Error = any>(
   )
 
   const configRef = useRef(config)
-  configRef.current = config
+  useIsomorphicLayoutEffect(() => {
+    configRef.current = config
+  })
 
   if (typeof fn === 'undefined') {
     // use the global fetcher
