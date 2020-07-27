@@ -463,7 +463,7 @@ function Profile() {
 function App() {
   return (
     <Suspense fallback={<div>loading...</div>}>
-      <Profile />
+      <Profile/>
     </Suspense>
   )
 }
