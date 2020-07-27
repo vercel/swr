@@ -507,7 +507,7 @@ Another choice is to prefetch the data conditionally. You can have a function to
 
 ```js
 function prefetch() {
-  mutate('/api/data',fetch('/api/data').then(res => res.json()))
+  mutate('/api/data', fetch('/api/data').then(res => res.json()))
   // the second parameter is a Promise
   // SWR will use the result when it resolves
 }
