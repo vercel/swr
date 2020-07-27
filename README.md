@@ -315,14 +315,13 @@ function App() {
     <div>
       <Profile />
       <button onClick={() => {
-          // set the cookie as expired
-          document.cookie =
-            'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+         // set the cookie as expired
+         document.cookie =
+           'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
 
-          // tell all SWRs with this key to revalidate
-          mutate('/api/user')
-        }}
-      >
+         // tell all SWRs with this key to revalidate
+         mutate('/api/user')
+        }}>
         Logout
       </button>
     </div>
@@ -348,13 +347,13 @@ function Profile() {
     <div>
       <h1>My name is {data.name}.</h1>
       <button onClick={async () => {
-          const newName = data.name.toUpperCase()
-          // send a request to the API to update the data
-          await requestUpdateUsername(newName)
-          // update the local data immediately and revalidate (refetch)
-          // NOTE: key has to be passed to mutate as it's not bound
-          mutate('/api/user', { ...data, name: newName })
-        }}>Uppercase my name!</button>
+         const newName = data.name.toUpperCase()
+         // send a request to the API to update the data
+         await requestUpdateUsername(newName)
+         // update the local data immediately and revalidate (refetch)
+         // NOTE: key has to be passed to mutate as it's not bound
+         mutate('/api/user', { ...data, name: newName })
+       }}>Uppercase my name!</button>
     </div>
   )
 }
@@ -415,13 +414,13 @@ function Profile() {
     <div>
       <h1>My name is {data.name}.</h1>
       <button onClick={async () => {
-          const newName = data.name.toUpperCase()
-          // send a request to the API to update the data
-          await requestUpdateUsername(newName)
-          // update the local data immediately and revalidate (refetch)
-          // NOTE: key is not required when using useSWR's mutate as it's pre-bound
-          mutate({ ...data, name: newName })
-        }}>Uppercase my name!</button>
+         const newName = data.name.toUpperCase()
+         // send a request to the API to update the data
+         await requestUpdateUsername(newName)
+         // update the local data immediately and revalidate (refetch)
+         // NOTE: key is not required when using useSWR's mutate as it's pre-bound
+         mutate({ ...data, name: newName })
+       }}>Uppercase my name!</button>
     </div>
   )
 }
