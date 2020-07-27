@@ -178,7 +178,7 @@ function App() {
     <SWRConfig
       value={{
         refreshInterval: 3000,
-        fetcher: (...args) => fetch(...args).then((res) => res.json()),
+        fetcher: (...args) => fetch(...args).then(res => res.json())
       }}
     >
       <Dashboard />
@@ -195,7 +195,7 @@ You can use any library to handle data fetching, for example:
 ```js
 import fetch from 'unfetch'
 
-const fetcher = (url) => fetch(url).then((r) => r.json())
+const fetcher = url => fetch(url).then(r => r.json())
 
 function App() {
   const { data } = useSWR('/api/data', fetcher)
@@ -209,7 +209,7 @@ Or using GraphQL:
 import { request } from 'graphql-request'
 
 const API = 'https://api.graph.cool/simple/v1/movies'
-const fetcher = (query) => request(API, query)
+const fetcher = query => request(API, query)
 
 function App() {
   const { data, error } = useSWR(
@@ -220,7 +220,7 @@ function App() {
           name
         }
       }
-    }`
+    }`,
     fetcher
   )
   // ...
@@ -240,7 +240,7 @@ Use `null` or pass a function as the `key` to `useSWR` to conditionally fetch da
 const { data } = useSWR(shouldFetch ? '/api/data' : null, fetcher)
 
 // ...or return a falsy value
-const { data } = useSWR(() => (shouldFetch ? '/api/data' : null), fetcher)
+const { data } = useSWR(() => shouldFetch ? '/api/data' : null, fetcher)
 
 // ... or throw an error when user.id is not defined
 const { data } = useSWR(() => '/api/data?uid=' + user.id, fetcher)
@@ -270,7 +270,7 @@ function MyProjects() {
 In some scenarios, it's useful to pass multiple arguments (can be any value or object) to the `fetcher` function. For example:
 
 ```js
-useSWR('/api/user', (url) => fetchWithToken(url, token))
+useSWR('/api/user', url => fetchWithToken(url, token))
 ```
 
 This is **incorrect**. Because the identifier (also the index of the cache) of the data is `'/api/data'`,
@@ -282,10 +282,7 @@ Instead, you can use an **array** as the `key` parameter, which contains multipl
 const { data: user } = useSWR(['/api/user', token], fetchWithToken)
 
 // ...and pass it as an argument to another query
-const { data: orders } = useSWR(
-  user ? ['/api/orders', user] : null,
-  fetchWithUser
-)
+const { data: orders } = useSWR(user ? ['/api/orders', user] : null, fetchWithUser)
 ```
 
 The key of the request is now the combination of both values. SWR **shallowly** compares
@@ -317,8 +314,7 @@ function App() {
   return (
     <div>
       <Profile />
-      <button
-        onClick={() => {
+      <button onClick={() => {
           // set the cookie as expired
           document.cookie =
             'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
@@ -351,18 +347,14 @@ function Profile() {
   return (
     <div>
       <h1>My name is {data.name}.</h1>
-      <button
-        onClick={async () => {
+      <button onClick={async () => {
           const newName = data.name.toUpperCase()
           // send a request to the API to update the data
           await requestUpdateUsername(newName)
           // update the local data immediately and revalidate (refetch)
           // NOTE: key has to be passed to mutate as it's not bound
           mutate('/api/user', { ...data, name: newName })
-        }}
-      >
-        Uppercase my name!
-      </button>
+        }}>Uppercase my name!</button>
     </div>
   )
 }
@@ -375,9 +367,9 @@ But many POST APIs will just return the updated data directly, so we don’t nee
 Here’s an example showing the “local mutate - request - update” usage:
 
 ```js
-mutate('/api/user', newUser, false) // use `false` to mutate without revalidation
+mutate('/api/user', newUser, false)      // use `false` to mutate without revalidation
 mutate('/api/user', updateUser(newUser)) // `updateUser` is a Promise of the request,
-// which returns the updated document
+                                         // which returns the updated document
 ```
 
 ### Mutate Based on Current Data
@@ -387,7 +379,7 @@ In many cases, you are receiving a single value back from your API and want to u
 With `mutate`, you can pass an async function which will receive the current cached value, if any, and let you return an updated document.
 
 ```js
-mutate('/api/users', async (users) => {
+mutate('/api/users', async users => {
   const user = await fetcher('/api/users/1')
   return [user, ...users.slice(1)]
 })
@@ -422,18 +414,14 @@ function Profile() {
   return (
     <div>
       <h1>My name is {data.name}.</h1>
-      <button
-        onClick={async () => {
+      <button onClick={async () => {
           const newName = data.name.toUpperCase()
           // send a request to the API to update the data
           await requestUpdateUsername(newName)
           // update the local data immediately and revalidate (refetch)
           // NOTE: key is not required when using useSWR's mutate as it's pre-bound
           mutate({ ...data, name: newName })
-        }}
-      >
-        Uppercase my name!
-      </button>
+        }}>Uppercase my name!</button>
     </div>
   )
 }
@@ -521,7 +509,7 @@ Another choice is to prefetch the data conditionally. You can have a function to
 
 ```js
 function prefetch() {
-  mutate('/api/data',fetch('/api/data').then((res) => res.json()))
+  mutate('/api/data',fetch('/api/data').then(res => res.json()))
   // the second parameter is a Promise
   // SWR will use the result when it resolves
 }
