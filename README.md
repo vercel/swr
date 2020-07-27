@@ -220,7 +220,7 @@ function App() {
           name
         }
       }
-    }`,
+    }`
     fetcher
   )
   // ...
@@ -503,7 +503,7 @@ useSWR(key, fetcher, {
 
     // retry after 5 seconds
     setTimeout(() => revalidate({ retryCount: retryCount + 1 }), 5000)
-  },
+  }
 })
 ```
 
@@ -512,7 +512,7 @@ useSWR(key, fetcher, {
 There’re many ways to prefetch the data for SWR. For top-level requests, [`rel="preload"`](https://developer.mozilla.org/en-US/docs/Web/HTML/Preloading_content) is highly recommended:
 
 ```html
-<link rel="preload" href="/api/data" as="fetch" crossorigin="anonymous" />
+<link rel="preload" href="/api/data" as="fetch" crossorigin="anonymous">
 ```
 
 This will prefetch the data before the JavaScript starts downloading. And your incoming fetch requests will reuse the result (including SWR, of course).
@@ -521,10 +521,7 @@ Another choice is to prefetch the data conditionally. You can have a function to
 
 ```js
 function prefetch() {
-  mutate(
-    '/api/data',
-    fetch('/api/data').then((res) => res.json())
-  )
+  mutate('/api/data',fetch('/api/data').then((res) => res.json()))
   // the second parameter is a Promise
   // SWR will use the result when it resolves
 }
@@ -578,7 +575,7 @@ This will deduplicate requests at an interval of 1 second.
 
 ## Authors
 
-- Shu Ding ([@shuding\_](https://twitter.com/shuding_)) – [Vercel](https://vercel.com)
+- Shu Ding ([@shuding_](https://twitter.com/shuding_)) – [Vercel](https://vercel.com)
 - Guillermo Rauch ([@rauchg](https://twitter.com/rauchg)) – [Vercel](https://vercel.com)
 - Joe Haddad ([@timer150](https://twitter.com/timer150)) - [Vercel](https://vercel.com)
 - Paco Coursey ([@pacocoursey](https://twitter.com/pacocoursey)) - [Vercel](https://vercel.com)
