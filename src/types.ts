@@ -71,7 +71,8 @@ export type mutateInterface<Data = any> = (
 export type broadcastStateInterface<Data = any, Error = any> = (
   key: string,
   data: Data,
-  error?: Error
+  error?: Error,
+  isValidating?: boolean
 ) => void
 export type responseInterface<Data, Error> = {
   data?: Data
@@ -127,7 +128,7 @@ export interface CacheInterface {
   has(key: keyInterface): boolean
   delete(key: keyInterface): void
   clear(): void
-  serializeKey(key: keyInterface): [string, any, string]
+  serializeKey(key: keyInterface): [string, any, string, string]
   subscribe(listener: cacheListener): () => void
 }
 

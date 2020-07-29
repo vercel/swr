@@ -42,7 +42,7 @@ export default class Cache implements CacheInterface {
   }
 
   // TODO: introduce namespace for the cache
-  serializeKey(key: keyInterface): [string, any, string] {
+  serializeKey(key: keyInterface): [string, any, string, string] {
     let args = null
     if (typeof key === 'function') {
       try {
@@ -63,8 +63,9 @@ export default class Cache implements CacheInterface {
     }
 
     const errorKey = key ? 'err@' + key : ''
+    const isValidatingKey = key ? 'validating@' + key : ''
 
-    return [key, args, errorKey]
+    return [key, args, errorKey, isValidatingKey]
   }
 
   subscribe(listener: cacheListener) {
