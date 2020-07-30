@@ -1,6 +1,5 @@
 import deepEqual from 'fast-deep-equal'
 import isDocumentVisible from './libs/is-document-visible'
-import isOnline from './libs/is-online'
 import {
   ConfigInterface,
   RevalidateOptionInterface,
@@ -10,16 +9,6 @@ import Cache from './cache'
 
 // cache
 const cache = new Cache()
-
-// state managers
-const CONCURRENT_PROMISES = {}
-const CONCURRENT_PROMISES_TS = {}
-const FOCUS_REVALIDATORS = {}
-const CACHE_REVALIDATORS = {}
-const MUTATION_TS = {}
-const SUBSCRIBERS: {
-  [key: string]: { count: number; unsubscribe(): void }
-} = {}
 
 // error retry
 function onErrorRetry(
@@ -35,7 +24,10 @@ function onErrorRetry(
     return
   }
 
-  if (config.errorRetryCount && opts.retryCount > config.errorRetryCount) {
+  if (
+    typeof config.errorRetryCount === 'number' &&
+    opts.retryCount > config.errorRetryCount
+  ) {
     return
   }
 
@@ -77,29 +69,5 @@ const defaultConfig: ConfigInterface = {
   compare: deepEqual
 }
 
-// Focus revalidate
-let eventsBinded = false
-if (typeof window !== 'undefined' && window.addEventListener && !eventsBinded) {
-  const revalidate = () => {
-    if (!isDocumentVisible() || !isOnline()) return
-
-    for (let key in FOCUS_REVALIDATORS) {
-      if (FOCUS_REVALIDATORS[key][0]) FOCUS_REVALIDATORS[key][0]()
-    }
-  }
-  window.addEventListener('visibilitychange', revalidate, false)
-  window.addEventListener('focus', revalidate, false)
-  // only bind the events once
-  eventsBinded = true
-}
-
-export {
-  CONCURRENT_PROMISES,
-  CONCURRENT_PROMISES_TS,
-  FOCUS_REVALIDATORS,
-  CACHE_REVALIDATORS,
-  MUTATION_TS,
-  SUBSCRIBERS,
-  cache
-}
+export { cache }
 export default defaultConfig

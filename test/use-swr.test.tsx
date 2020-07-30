@@ -106,7 +106,8 @@ describe('useSWR', () => {
       return <div>hello, {data}</div>
     }
 
-    render(<Page />)
+    const { container } = render(<Page />)
+    await waitForDomChange({ container })
     expect(fetch).toHaveBeenCalled()
   })
 
@@ -856,6 +857,34 @@ describe('useSWR - error', () => {
     expect(retry).toEqual(null)
     expect(failed).toEqual(null)
   })
+
+  it('should not trigger error retries if errorRetryCount is set to 0', async () => {
+    let count = 0
+    function Page() {
+      const { data, error } = useSWR(
+        'error-8',
+        () => {
+          return new Promise((_, rej) =>
+            setTimeout(() => rej(new Error('error: ' + count++)), 100)
+          )
+        },
+        {
+          errorRetryCount: 0,
+          errorRetryInterval: 50,
+          dedupingInterval: 0
+        }
+      )
+      if (error) return <div>{error.message}</div>
+      return <div>hello, {data}</div>
+    }
+    const { container } = render(<Page />)
+
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
+    await waitForDomChange({ container })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"error: 0"`)
+    await act(() => new Promise(res => setTimeout(res, 210))) // retry
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"error: 0"`)
+  })
 })
 
 describe('useSWR - focus', () => {
@@ -1262,6 +1291,46 @@ describe('useSWR - local mutation', () => {
     expect(promise).resolves.toBe(1) // the return value should be the new cache
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
   })
+
+  it('should update error in cache when mutate failed with error', async () => {
+    const value = 0
+    const key = 'mutate-4'
+    const message = 'mutate-error'
+    function Page() {
+      const { data, error } = useSWR(key, () => value)
+      return <div>{error ? error.message : `data: ${data}`}</div>
+    }
+    const { container } = render(<Page />)
+    await waitForDomChange({ container })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
+    await act(async () => {
+      // mutate error will be thrown, add try catch to avoid crashing
+      try {
+        await mutate(
+          key,
+          () => {
+            throw new Error(message)
+          },
+          false
+        )
+      } catch (e) {
+        // do nothing
+      }
+    })
+
+    const [, , keyErr] = cache.serializeKey(key)
+    let cacheError = cache.get(keyErr)
+    expect(cacheError.message).toMatchInlineSnapshot(`"${message}"`)
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"${message}"`
+    )
+    // if mutate succeed, error should be cleared
+    await act(async () => {
+      await mutate(key, value, false)
+    })
+    cacheError = cache.get(keyErr)
+    expect(cacheError).toMatchInlineSnapshot(`undefined`)
+  })
 })
 
 describe('useSWR - context configs', () => {
@@ -1495,7 +1564,7 @@ describe('useSWR - suspense', () => {
 })
 
 describe('useSWR - cache', () => {
-  it('should react to direct cache updates', async () => {
+  it('should not react to direct cache updates but mutate', async () => {
     cache.set('cache-1', 'custom cache message')
 
     function Page() {
@@ -1526,16 +1595,23 @@ describe('useSWR - cache', () => {
       </div>
     `)
 
-    act(() => cache.set('cache-1', 'a different message'))
+    act(async () => {
+      const value = 'a different message'
+      cache.set('cache-1', value)
+      await mutate('cache-1', value, false)
+    })
 
-    // content should be updated from new cache value
+    // content should be updated from new cache value, after mutate without revalidate
     expect(await findByText('a different message')).toMatchInlineSnapshot(`
       <div>
         a different message
       </div>
     `)
 
-    act(() => cache.delete('cache-1'))
+    act(async () => {
+      cache.delete('cache-1')
+      mutate('cache-1')
+    })
 
     // content should go back to be the fetched value
     expect(await findByText('random message')).toMatchInlineSnapshot(`

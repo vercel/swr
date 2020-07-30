@@ -5,7 +5,7 @@ export default (req, res) => {
     res.json({
       loggedIn: true,
       name: 'Shu',
-      avatar: 'https://github.com/quietshu.png'
+      avatar: 'https://github.com/shuding.png'
     })
     return
   }

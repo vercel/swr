@@ -53,8 +53,9 @@ export interface RevalidateOptionInterface {
   dedupe?: boolean
 }
 
-type keyFunction = () => string | any[] | null
-export type keyInterface = keyFunction | string | any[] | null
+export type keyType = string | any[] | null
+type keyFunction = () => keyType
+export type keyInterface = keyFunction | keyType
 export type updaterInterface<Data = any, Error = any> = (
   shouldRevalidate?: boolean,
   data?: Data,
@@ -65,7 +66,9 @@ export type triggerInterface = (
   key: keyInterface,
   shouldRevalidate?: boolean
 ) => Promise<any>
-type mutateCallback<Data = any> = (currentValue: Data) => Promise<Data> | Data
+export type mutateCallback<Data = any> = (
+  currentValue: Data
+) => Promise<Data> | Data
 export type mutateInterface<Data = any> = (
   key: keyInterface,
   data?: Data | Promise<Data> | mutateCallback<Data>,
@@ -125,11 +128,11 @@ export type actionType<Data, Error> = {
 
 export interface CacheInterface {
   get(key: keyInterface): any
-  set(key: keyInterface, value: any, shouldNotify?: boolean): any
+  set(key: keyInterface, value: any): any
   keys(): string[]
   has(key: keyInterface): boolean
-  delete(key: keyInterface, shouldNotify?: boolean): void
-  clear(shouldNotify?: boolean): void
+  delete(key: keyInterface): void
+  clear(): void
   serializeKey(key: keyInterface): [string, any, string]
   subscribe(listener: cacheListener): () => void
 }

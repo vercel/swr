@@ -1,5 +1,4 @@
 import { CacheInterface, keyInterface, cacheListener } from './types'
-import { mutate } from './use-swr'
 import hash from './libs/hash'
 
 export default class Cache implements CacheInterface {
@@ -16,10 +15,9 @@ export default class Cache implements CacheInterface {
     return this.__cache.get(_key)
   }
 
-  set(key: keyInterface, value: any, shouldNotify = true): any {
+  set(key: keyInterface, value: any): any {
     const [_key] = this.serializeKey(key)
     this.__cache.set(_key, value)
-    if (shouldNotify) mutate(key, value, false)
     this.notify()
   }
 
@@ -32,15 +30,13 @@ export default class Cache implements CacheInterface {
     return this.__cache.has(_key)
   }
 
-  clear(shouldNotify = true) {
-    if (shouldNotify) this.__cache.forEach(key => mutate(key, null, false))
+  clear() {
     this.__cache.clear()
     this.notify()
   }
 
-  delete(key: keyInterface, shouldNotify = true) {
+  delete(key: keyInterface) {
     const [_key] = this.serializeKey(key)
-    if (shouldNotify) mutate(key, null, false)
     this.__cache.delete(_key)
     this.notify()
   }
