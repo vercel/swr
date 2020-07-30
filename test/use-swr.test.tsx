@@ -226,7 +226,7 @@ describe('useSWR', () => {
 
     function Page() {
       const { data: v1 } = useSWR(
-        ['args-1', obj, arr],
+        ['args-1', obj, arr] as const,
         (a, b, c) => a + b.v + c[0]
       )
 
@@ -235,7 +235,7 @@ describe('useSWR', () => {
 
       // different object
       const { data: v3 } = useSWR(
-        ['args-2', obj, 'world'],
+        ['args-2', obj, 'world'] as const,
         (a, b, c) => a + b.v + c
       )
 
@@ -260,7 +260,7 @@ describe('useSWR', () => {
 
     function Page() {
       const { data } = useSWR(
-        () => ['args-3', obj, arr],
+        () => ['args-3', obj, arr] as const,
         (a, b, c) => a + b.v + c[0]
       )
 

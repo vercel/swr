@@ -187,9 +187,9 @@ function useSWR<Data = any, Error = any>(
   key: keyInterface,
   config?: ConfigInterface<Data, Error>
 ): responseInterface<Data, Error>
-function useSWR<Data = any, Error = any>(
-  key: keyInterface,
-  fn?: fetcherFn<Data>,
+function useSWR<Data = any, Error = any, TKey extends readonly any[] = any[]>(
+  key: keyInterface<TKey>,
+  fn?: fetcherFn<Data, TKey>,
   config?: ConfigInterface<Data, Error>
 ): responseInterface<Data, Error>
 function useSWR<Data = any, Error = any>(
