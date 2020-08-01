@@ -5,7 +5,8 @@ import {
   useLayoutEffect,
   useState,
   useRef,
-  useMemo
+  useMemo,
+  useDebugValue
 } from 'react'
 
 import defaultConfig, { cache } from './config'
@@ -246,6 +247,9 @@ function useSWR<Data = any, Error = any>(
     error: initialError,
     isValidating: false
   })
+
+  // display the data label in the React DevTools next to SWR hooks
+  useDebugValue(stateRef.current.data)
 
   const rerender = useState(null)[1]
   let dispatch = useCallback(payload => {
