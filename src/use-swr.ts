@@ -5,7 +5,8 @@ import {
   useLayoutEffect,
   useState,
   useRef,
-  useMemo
+  useMemo,
+  useDebugValue
 } from 'react'
 
 import defaultConfig, { cache } from './config'
@@ -228,6 +229,11 @@ function useSWR<Data = any, Error = any>(
     config
   )
 
+  const configRef = useRef(config)
+  useIsomorphicLayoutEffect(() => {
+    configRef.current = config
+  })
+
   if (typeof fn === 'undefined') {
     // use the global fetcher
     fn = config.fetcher
@@ -249,6 +255,9 @@ function useSWR<Data = any, Error = any>(
     error: initialError,
     isValidating: false
   })
+
+  // display the data label in the React DevTools next to SWR hooks
+  useDebugValue(stateRef.current.data)
 
   const rerender = useState(null)[1]
   let dispatch = useCallback(payload => {
@@ -273,7 +282,7 @@ function useSWR<Data = any, Error = any>(
   const eventsRef = useRef({
     emit: (event, ...params) => {
       if (unmountedRef.current) return
-      config[event](...params)
+      configRef.current[event](...params)
     }
   })
 
@@ -646,8 +655,15 @@ function useSWR<Data = any, Error = any>(
     // (it should be suspended)
 
     // try to get data and error from cache
-    let latestData = cache.get(key) || initialData
-    let latestError = cache.get(keyErr) || initialError
+    let latestData = cache.get(key)
+    let latestError = cache.get(keyErr)
+
+    if (typeof latestData === 'undefined') {
+      latestData = initialData
+    }
+    if (typeof latestError === 'undefined') {
+      latestError = initialError
+    }
 
     if (
       typeof latestData === 'undefined' &&
