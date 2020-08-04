@@ -614,7 +614,7 @@ function useSWR<Data = any, Error = any>(
   ])
 
   // setup subscription
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     // If we haven't received a subscribe function we will do nothing here
     if (!config.subscribe) return undefined
 
