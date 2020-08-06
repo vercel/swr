@@ -12,7 +12,6 @@ import {
 import defaultConfig, { cache } from './config'
 import isDocumentVisible from './libs/is-document-visible'
 import isOnline from './libs/is-online'
-import throttle from './libs/throttle'
 import SWRConfigContext from './swr-config-context'
 import {
   actionType,
@@ -508,15 +507,16 @@ function useSWR<Data = any, Error = any>(
       }
     }
 
-    const onFocus = throttle(
-      () => {
-        if (configRef.current.revalidateOnFocus) {
-          softRevalidate()
-        }
-      },
-      configRef,
-      'focusThrottleInterval'
-    )
+    let pending = false
+    const onFocus = () => {
+      if (pending || !configRef.current.revalidateOnFocus) return
+      pending = true
+      softRevalidate()
+      setTimeout(
+        () => (pending = false),
+        configRef.current.focusThrottleInterval
+      )
+    }
 
     const onReconnect = () => {
       if (configRef.current.revalidateOnReconnect) {
