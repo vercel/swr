@@ -936,6 +936,172 @@ describe('useSWR - focus', () => {
     })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
   })
+  it('revalidateOnFocus shoule be stateful', async () => {
+    let value = 0
+
+    function Page() {
+      const [revalidateOnFocus, toggle] = useState(false)
+      const { data } = useSWR('dynamic-revalidateOnFocus', () => value++, {
+        dedupingInterval: 0,
+        revalidateOnFocus,
+        focusThrottleInterval: 0
+      })
+      return <div onClick={() => toggle(s => !s)}>data: {data}</div>
+    }
+    const { container } = render(<Page />)
+
+    // hydration
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
+    await waitForDomChange({ container }) // mount
+
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
+    await act(() => {
+      // trigger revalidation
+      fireEvent.focus(window)
+      return new Promise(res => setTimeout(res, 1))
+    })
+    // data should not change
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
+
+    // change revalidateOnFocus to true
+    fireEvent.click(container.firstElementChild)
+
+    await act(() => {
+      // trigger revalidation
+      fireEvent.focus(window)
+      return new Promise(res => setTimeout(res, 1))
+    })
+    // data should update
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
+
+    await act(() => {
+      // trigger revalidation
+      fireEvent.focus(window)
+      return new Promise(res => setTimeout(res, 1))
+    })
+    // data should update
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 2"`)
+
+    // change revalidateOnFocus to false
+    fireEvent.click(container.firstElementChild)
+    await act(() => {
+      // trigger revalidation
+      fireEvent.focus(window)
+      return new Promise(res => setTimeout(res, 1))
+    })
+    // data should not change
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 2"`)
+  })
+
+  it('focusThrottleInterval should work', async () => {
+    let value = 0
+
+    function Page() {
+      const { data } = useSWR(
+        'focusThrottleInterval should work',
+        () => value++,
+        {
+          dedupingInterval: 0,
+          revalidateOnFocus: true,
+          focusThrottleInterval: 200
+        }
+      )
+      return <div>data: {data}</div>
+    }
+    const { container } = render(<Page />)
+
+    // hydration
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
+    await waitForDomChange({ container }) // mount
+
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
+
+    await act(() => {
+      // trigger revalidation
+      fireEvent.focus(window)
+      return new Promise(res => setTimeout(res, 1))
+    })
+
+    await act(() => {
+      fireEvent.focus(window)
+      return new Promise(res => setTimeout(res, 210))
+    })
+
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
+
+    await act(() => {
+      fireEvent.focus(window)
+      return new Promise(res => setTimeout(res, 1))
+    })
+
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 2"`)
+  })
+
+  it('focusThrottleInterval should be stateful', async () => {
+    let value = 0
+
+    function Page() {
+      const [focusThrottleInterval, setInterval] = useState(200)
+      const { data } = useSWR(
+        'focusThrottleInterval should be stateful',
+        () => value++,
+        {
+          dedupingInterval: 0,
+          revalidateOnFocus: true,
+          focusThrottleInterval
+        }
+      )
+      return <div onClick={() => setInterval(s => s + 100)}>data: {data}</div>
+    }
+    const { container } = render(<Page />)
+
+    // hydration
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
+    await waitForDomChange({ container }) // mount
+
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
+
+    await act(() => {
+      fireEvent.focus(window)
+      return new Promise(res => setTimeout(res, 210))
+    })
+
+    await act(() => {
+      fireEvent.focus(window)
+      return new Promise(res => setTimeout(res, 210))
+    })
+
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 2"`)
+    fireEvent.click(container.firstElementChild)
+
+    await act(() => {
+      fireEvent.focus(window)
+      return new Promise(res => setTimeout(res, 1))
+    })
+
+    await act(() => {
+      fireEvent.focus(window)
+      return new Promise(res => setTimeout(res, 210))
+    })
+
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 3"`)
+
+    await act(() => {
+      return new Promise(res => setTimeout(res, 100))
+    })
+
+    await act(() => {
+      fireEvent.focus(window)
+      return new Promise(res => setTimeout(res, 310))
+    })
+
+    await act(() => {
+      fireEvent.focus(window)
+      return new Promise(res => setTimeout(res, 1))
+    })
+
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 5"`)
+  })
 })
 
 describe('useSWR - local mutation', () => {

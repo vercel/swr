@@ -12,7 +12,6 @@ import {
 import defaultConfig, { cache } from './config'
 import isDocumentVisible from './libs/is-document-visible'
 import isOnline from './libs/is-online'
-import throttle from './libs/throttle'
 import SWRConfigContext from './swr-config-context'
 import {
   actionType,
@@ -508,18 +507,21 @@ function useSWR<Data = any, Error = any>(
       }
     }
 
-    // whenever the window gets focused, revalidate
-    let onFocus
-    if (config.revalidateOnFocus) {
-      // throttle: avoid being called twice from both listeners
-      // and tabs being switched quickly
-      onFocus = throttle(softRevalidate, config.focusThrottleInterval)
+    let pending = false
+    const onFocus = () => {
+      if (pending || !configRef.current.revalidateOnFocus) return
+      pending = true
+      softRevalidate()
+      setTimeout(
+        () => (pending = false),
+        configRef.current.focusThrottleInterval
+      )
     }
 
-    // when reconnect, revalidate
-    let onReconnect
-    if (config.revalidateOnReconnect) {
-      onReconnect = softRevalidate
+    const onReconnect = () => {
+      if (configRef.current.revalidateOnReconnect) {
+        softRevalidate()
+      }
     }
 
     // register global cache update listener
