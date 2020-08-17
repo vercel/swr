@@ -11,7 +11,7 @@
     "esm/**"
   ],
   "repository": "vercel/swr",
-  "homepage": "https://swr.now.sh",
+  "homepage": "https://swr.vercel.app",
   "license": "MIT",
   "scripts": {
     "build": "npm run build:esm && npm run build:cjs",
