@@ -49,11 +49,9 @@ export interface RevalidateOptionInterface {
   dedupe?: boolean
 }
 
-export type keyType<TKey extends readonly any[] = any[]> = string | TKey | null
-type keyFunction<TKey extends readonly any[] = any[]> = () => keyType<TKey>
-export type keyInterface<TKey extends readonly any[] = any[]> =
-  | keyFunction<TKey>
-  | keyType<TKey>
+export type keyType<TKey = any> = string | TKey | null
+type keyFunction<TKey> = () => keyType<TKey>
+export type keyInterface<TKey = any> = keyFunction<TKey> | keyType<TKey>
 export type updaterInterface<Data = any, Error = any> = (
   shouldRevalidate?: boolean,
   data?: Data,
