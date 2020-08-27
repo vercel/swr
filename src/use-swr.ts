@@ -138,12 +138,14 @@ const mutate: mutateInterface = async (
   if (_data && typeof _data === 'function') {
     // `_data` is a function, call it passing current cache value
     try {
-      data = await _data(cache.get(key))
+      _data = _data(cache.get(key))
     } catch (err) {
       error = err
     }
-  } else if (_data && typeof _data.then === 'function') {
-    // `_data` is a promise
+  }
+  // if `_data` is promise originally or the returned value from `_data()` is promise
+  // keep resolving it
+  if (_data && typeof _data.then === 'function') {
     try {
       data = await _data
     } catch (err) {
