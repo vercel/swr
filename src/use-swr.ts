@@ -246,7 +246,7 @@ function useSWR<Data = any, Error = any>(
 
   const initialData = cache.get(key) || config.initialData
   const initialError = cache.get(keyErr)
-  const initialIsValidating = cache.get(keyValidating)
+  const initialIsValidating = !!cache.get(keyValidating)
 
   // if a state is accessed (data, error or isValidating),
   // we add the state to dependencies so if the state is
