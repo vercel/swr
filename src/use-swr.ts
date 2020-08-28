@@ -235,7 +235,7 @@ function useSWR<Data = any, Error = any>(
     fn = config.fetcher
   }
 
-  const initialData = cache.get(key) || config.initialData
+  const initialData = cache.get(key) === undefined ? config.initialData : cache.get(key)
   const initialError = cache.get(keyErr)
 
   // if a state is accessed (data, error or isValidating),
@@ -479,7 +479,7 @@ function useSWR<Data = any, Error = any>(
     // and trigger a revalidation
 
     const currentHookData = stateRef.current.data
-    const latestKeyedData = cache.get(key) || config.initialData
+    const latestKeyedData = cache.get(key) === undefined ? config.initialData : cache.get(key)
 
     // update the state if the key changed (not the inital render) or cache updated
     if (keyRef.current !== key) {
