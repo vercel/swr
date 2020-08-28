@@ -48,7 +48,7 @@ export interface RevalidateOptionInterface {
 }
 
 export type keyType = string | any[] | null
-type keyFunction = () => keyType
+type keyFunction = (pageIndex: number, previousPageData: any) => keyType
 export type keyInterface = keyFunction | keyType
 export type updaterInterface<Data = any, Error = any> = (
   shouldRevalidate?: boolean,
