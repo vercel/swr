@@ -259,6 +259,10 @@ function useSWR<Data = any, Error = any>(
   let dispatch = useCallback(payload => {
     let shouldUpdateState = false
     for (let k in payload) {
+      if (stateRef.current[k] === payload[k]) {
+        continue;
+      }
+
       stateRef.current[k] = payload[k]
       if (stateDependencies.current[k]) {
         shouldUpdateState = true
