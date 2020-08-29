@@ -260,7 +260,7 @@ function useSWR<Data = any, Error = any>(
     let shouldUpdateState = false
     for (let k in payload) {
       if (stateRef.current[k] === payload[k]) {
-        continue;
+        continue
       }
 
       stateRef.current[k] = payload[k]
@@ -352,7 +352,10 @@ function useSWR<Data = any, Error = any>(
           }
 
           if (fnArgs !== null) {
-            CONCURRENT_PROMISES[key] = fn(...fnArgs)
+            const [, ...fnArgsWithoutKey] = fnArgs
+            CONCURRENT_PROMISES[key] = config.passKeyToFetcher
+              ? fn(...fnArgs)
+              : fn(...fnArgsWithoutKey)
           } else {
             CONCURRENT_PROMISES[key] = fn(key)
           }
