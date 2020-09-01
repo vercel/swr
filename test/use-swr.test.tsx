@@ -1918,6 +1918,54 @@ describe('useSWR - key', () => {
       `"hello, 2:b"`
     )
   })
+
+  it('should revalidate if a function key changes identity', async () => {
+    const closureFunctions: {[key: string]: () => Promise<string>} = {}
+
+    const closureFactory = (id) => {
+      if (closureFunctions[id]) return closureFunctions[id]
+      closureFunctions[id] = () => Promise.resolve(`data-${id}`)
+      return closureFunctions[id]
+    }
+
+    let updateId
+
+    const fetcher = fn => fn()
+
+    function Page() {
+      const [id, setId] = React.useState('first')
+      updateId = setId
+      const fnWithClosure = closureFactory(id)
+      const { data } = useSWR([fnWithClosure], fetcher)
+
+      return (
+        <div>
+          {data}
+        </div>
+      )
+    }
+
+    const { container } = render(<Page />);
+    const closureSpy = jest.spyOn(closureFunctions, 'first')
+    await waitForDomChange({ container })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"data-first"`
+    )
+    expect(closureSpy).toHaveBeenCalledTimes(1)
+    
+    // update, but don't change the id.
+    // Function identity should stay the same, and useSWR should not call the function again.
+    await act(() => updateId('first'));
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"data-first"`
+    )
+    expect(closureSpy).toHaveBeenCalledTimes(1)
+
+    await act(() => updateId('second'))
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"data-second"`
+    )
+  })
 })
 
 describe('useSWR - config callbacks', () => {
