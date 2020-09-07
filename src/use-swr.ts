@@ -571,6 +571,20 @@ function useSWR<Data = any, Error = any>(
     addRevalidator(RECONNECT_REVALIDATORS, onReconnect)
     addRevalidator(CACHE_REVALIDATORS, onUpdate)
 
+    return () => {
+      // cleanup
+      dispatch = () => null
+
+      // mark it as unmounted
+      unmountedRef.current = true
+
+      removeRevalidator(FOCUS_REVALIDATORS, onFocus)
+      removeRevalidator(RECONNECT_REVALIDATORS, onReconnect)
+      removeRevalidator(CACHE_REVALIDATORS, onUpdate)
+    }
+  }, [key, revalidate])
+
+  useIsomorphicLayoutEffect(() => {
     let timer = null
     const tick = async () => {
       if (
@@ -583,6 +597,7 @@ function useSWR<Data = any, Error = any>(
         // and let the error retry function handle it
         await revalidate({ dedupe: true })
       }
+      // Read the latest refreshInterval
       if (configRef.current.refreshInterval) {
         timer = setTimeout(tick, configRef.current.refreshInterval)
       }
@@ -590,21 +605,15 @@ function useSWR<Data = any, Error = any>(
     if (configRef.current.refreshInterval) {
       timer = setTimeout(tick, configRef.current.refreshInterval)
     }
-
     return () => {
-      // cleanup
-      dispatch = () => null
-
-      // mark it as unmounted
-      unmountedRef.current = true
-
-      removeRevalidator(FOCUS_REVALIDATORS, onFocus)
-      removeRevalidator(RECONNECT_REVALIDATORS, onReconnect)
-      removeRevalidator(CACHE_REVALIDATORS, onUpdate)
-
       if (timer) clearTimeout(timer)
     }
-  }, [key, revalidate])
+  }, [
+    config.refreshInterval,
+    config.refreshWhenHidden,
+    config.refreshWhenOffline,
+    revalidate
+  ])
 
   // suspense
   if (config.suspense) {
