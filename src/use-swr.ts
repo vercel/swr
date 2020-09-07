@@ -571,6 +571,7 @@ function useSWR<Data = any, Error = any>(
     addRevalidator(RECONNECT_REVALIDATORS, onReconnect)
     addRevalidator(CACHE_REVALIDATORS, onUpdate)
 
+    let timer = null
     const tick = async () => {
       if (
         !stateRef.current.error &&
@@ -583,11 +584,11 @@ function useSWR<Data = any, Error = any>(
         await revalidate({ dedupe: true })
       }
       if (configRef.current.refreshInterval) {
-        setTimeout(tick, configRef.current.refreshInterval)
+        timer = setTimeout(tick, configRef.current.refreshInterval)
       }
     }
     if (configRef.current.refreshInterval) {
-      setTimeout(tick, configRef.current.refreshInterval)
+      timer = setTimeout(tick, configRef.current.refreshInterval)
     }
 
     return () => {
@@ -600,6 +601,8 @@ function useSWR<Data = any, Error = any>(
       removeRevalidator(FOCUS_REVALIDATORS, onFocus)
       removeRevalidator(RECONNECT_REVALIDATORS, onReconnect)
       removeRevalidator(CACHE_REVALIDATORS, onUpdate)
+
+      if (timer) clearTimeout(timer)
     }
   }, [key, revalidate])
 
