@@ -260,7 +260,7 @@ function useSWR<Data = any, Error = any>(
     let shouldUpdateState = false
     for (let k in payload) {
       if (stateRef.current[k] === payload[k]) {
-        continue;
+        continue
       }
 
       stateRef.current[k] = payload[k]
@@ -571,6 +571,25 @@ function useSWR<Data = any, Error = any>(
     addRevalidator(RECONNECT_REVALIDATORS, onReconnect)
     addRevalidator(CACHE_REVALIDATORS, onUpdate)
 
+    const tick = async () => {
+      if (
+        !stateRef.current.error &&
+        (configRef.current.refreshWhenHidden || isDocumentVisible()) &&
+        (configRef.current.refreshWhenOffline || isOnline())
+      ) {
+        // only revalidate when the page is visible
+        // if API request errored, we stop polling in this round
+        // and let the error retry function handle it
+        await revalidate({ dedupe: true })
+      }
+      if (configRef.current.refreshInterval) {
+        setTimeout(tick, configRef.current.refreshInterval)
+      }
+    }
+    if (configRef.current.refreshInterval) {
+      setTimeout(tick, configRef.current.refreshInterval)
+    }
+
     return () => {
       // cleanup
       dispatch = () => null
@@ -583,37 +602,6 @@ function useSWR<Data = any, Error = any>(
       removeRevalidator(CACHE_REVALIDATORS, onUpdate)
     }
   }, [key, revalidate])
-
-  // set up polling
-  useIsomorphicLayoutEffect(() => {
-    let timer = null
-    const tick = async () => {
-      if (
-        !stateRef.current.error &&
-        (config.refreshWhenHidden || isDocumentVisible()) &&
-        (config.refreshWhenOffline || isOnline())
-      ) {
-        // only revalidate when the page is visible
-        // if API request errored, we stop polling in this round
-        // and let the error retry function handle it
-        await revalidate({ dedupe: true })
-      }
-      if (config.refreshInterval) {
-        timer = setTimeout(tick, config.refreshInterval)
-      }
-    }
-    if (config.refreshInterval) {
-      timer = setTimeout(tick, config.refreshInterval)
-    }
-    return () => {
-      if (timer) clearTimeout(timer)
-    }
-  }, [
-    config.refreshInterval,
-    config.refreshWhenHidden,
-    config.refreshWhenOffline,
-    revalidate
-  ])
 
   // suspense
   if (config.suspense) {

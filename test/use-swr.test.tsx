@@ -462,7 +462,7 @@ describe('useSWR - refresh', () => {
     await waitForDomChange({ container }) // mount
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 0"`)
     await act(() => {
-      return new Promise(res => setTimeout(res, 210))
+      return new Promise(res => setTimeout(res, 200))
     })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 1"`)
     await act(() => {
@@ -475,39 +475,111 @@ describe('useSWR - refresh', () => {
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 2"`)
     await act(() => {
       fireEvent.click(container.firstElementChild)
-      // it will clear 200ms timer and setup a new 300ms timer
+      // 200ms timer will be execute and then setup a new 300ms timer
       return new Promise(res => setTimeout(res, 200))
     })
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 2"`)
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 3"`)
     await act(() => {
-      return new Promise(res => setTimeout(res, 110))
+      return new Promise(res => setTimeout(res, 200))
     })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 3"`)
     await act(() => {
       // wait for new 300ms timer
-      return new Promise(res => setTimeout(res, 310))
+      return new Promise(res => setTimeout(res, 100))
     })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 4"`)
     await act(() => {
       fireEvent.click(container.firstElementChild)
-      // it will clear 300ms timer and setup a new 400ms timer
+      // 300ms timer will be execute and then setup a new 400ms timer
       return new Promise(res => setTimeout(res, 300))
     })
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 4"`)
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 5"`)
     await act(() => {
-      return new Promise(res => setTimeout(res, 110))
+      return new Promise(res => setTimeout(res, 300))
     })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 5"`)
     await act(() => {
       fireEvent.click(container.firstElementChild)
-      // it will clear 400ms timer and stop
-      return new Promise(res => setTimeout(res, 110))
+      // 400ms timer will be execute and then stop
+      return new Promise(res => setTimeout(res, 100))
     })
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 5"`)
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 6"`)
     await act(() => {
-      return new Promise(res => setTimeout(res, 110))
+      return new Promise(res => setTimeout(res, 400))
     })
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 5"`)
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 6"`)
+
+    await act(() => {
+      return new Promise(res => setTimeout(res, 400))
+    })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 6"`)
+
+    await act(() => {
+      return new Promise(res => setTimeout(res, 400))
+    })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 6"`)
+  })
+
+  it('should update data upon interval changes -- changes happened during revalidate', async () => {
+    let count = 0
+    const STOP_POLLING_THRESHOLD = 2
+    function Page() {
+      const [flag, setFlag] = useState(0)
+      const shouldPoll = flag < STOP_POLLING_THRESHOLD
+      const { data } = useSWR(
+        '/interval-changes-during-revalidate',
+        () => count++,
+        {
+          refreshInterval: shouldPoll ? 200 : 0,
+          dedupingInterval: 100,
+          onSuccess() {
+            setFlag(value => value + 1)
+          }
+        }
+      )
+      return (
+        <div>
+          count: {data} {flag}
+        </div>
+      )
+    }
+    const { container } = render(<Page />)
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"count:  0"`
+    )
+
+    await waitForDomChange({ container }) // mount
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"count: 0 1"`
+    )
+
+    await act(() => {
+      return new Promise(res => setTimeout(res, 200))
+    })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"count: 1 2"`
+    )
+
+    await act(() => {
+      return new Promise(res => setTimeout(res, 200))
+    })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"count: 1 2"`
+    )
+
+    await act(() => {
+      return new Promise(res => setTimeout(res, 200))
+    })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"count: 1 2"`
+    )
+
+    await act(() => {
+      return new Promise(res => setTimeout(res, 200))
+    })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"count: 1 2"`
+    )
   })
 
   it('should allow use custom isEqual method', async () => {
@@ -1920,9 +1992,9 @@ describe('useSWR - key', () => {
   })
 
   it('should revalidate if a function key changes identity', async () => {
-    const closureFunctions: {[key: string]: () => Promise<string>} = {}
+    const closureFunctions: { [key: string]: () => Promise<string> } = {}
 
-    const closureFactory = (id) => {
+    const closureFactory = id => {
       if (closureFunctions[id]) return closureFunctions[id]
       closureFunctions[id] = () => Promise.resolve(`data-${id}`)
       return closureFunctions[id]
@@ -1938,24 +2010,20 @@ describe('useSWR - key', () => {
       const fnWithClosure = closureFactory(id)
       const { data } = useSWR([fnWithClosure], fetcher)
 
-      return (
-        <div>
-          {data}
-        </div>
-      )
+      return <div>{data}</div>
     }
 
-    const { container } = render(<Page />);
+    const { container } = render(<Page />)
     const closureSpy = jest.spyOn(closureFunctions, 'first')
     await waitForDomChange({ container })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"data-first"`
     )
     expect(closureSpy).toHaveBeenCalledTimes(1)
-    
+
     // update, but don't change the id.
     // Function identity should stay the same, and useSWR should not call the function again.
-    await act(() => updateId('first'));
+    await act(() => updateId('first'))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"data-first"`
     )
