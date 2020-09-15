@@ -260,7 +260,7 @@ function useSWR<Data = any, Error = any>(
     let shouldUpdateState = false
     for (let k in payload) {
       if (stateRef.current[k] === payload[k]) {
-        continue;
+        continue
       }
 
       stateRef.current[k] = payload[k]
@@ -584,26 +584,26 @@ function useSWR<Data = any, Error = any>(
     }
   }, [key, revalidate])
 
-  // set up polling
   useIsomorphicLayoutEffect(() => {
     let timer = null
     const tick = async () => {
       if (
         !stateRef.current.error &&
-        (config.refreshWhenHidden || isDocumentVisible()) &&
-        (config.refreshWhenOffline || isOnline())
+        (configRef.current.refreshWhenHidden || isDocumentVisible()) &&
+        (configRef.current.refreshWhenOffline || isOnline())
       ) {
         // only revalidate when the page is visible
         // if API request errored, we stop polling in this round
         // and let the error retry function handle it
         await revalidate({ dedupe: true })
       }
-      if (config.refreshInterval) {
-        timer = setTimeout(tick, config.refreshInterval)
+      // Read the latest refreshInterval
+      if (configRef.current.refreshInterval && !stateRef.current.error) {
+        timer = setTimeout(tick, configRef.current.refreshInterval)
       }
     }
-    if (config.refreshInterval) {
-      timer = setTimeout(tick, config.refreshInterval)
+    if (configRef.current.refreshInterval) {
+      timer = setTimeout(tick, configRef.current.refreshInterval)
     }
     return () => {
       if (timer) clearTimeout(timer)
