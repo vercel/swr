@@ -75,7 +75,7 @@ if (!IS_SERVER && window.addEventListener) {
 const trigger: triggerInterface = (_key, shouldRevalidate = true) => {
   // we are ignoring the second argument which correspond to the arguments
   // the fetcher will receive when key is an array
-  const [key, , keyErr] = cache.serializeKey(_key)
+  const [key, , keyErr, keyValidating] = cache.serializeKey(_key)
   if (!key) return Promise.resolve()
 
   const updaters = CACHE_REVALIDATORS[key]
@@ -83,10 +83,17 @@ const trigger: triggerInterface = (_key, shouldRevalidate = true) => {
   if (key && updaters) {
     const currentData = cache.get(key)
     const currentError = cache.get(keyErr)
+    const currentIsValidating = cache.get(keyValidating)
     const promises = []
     for (let i = 0; i < updaters.length; ++i) {
       promises.push(
-        updaters[i](shouldRevalidate, currentData, currentError, i > 0)
+        updaters[i](
+          shouldRevalidate,
+          currentData,
+          currentError,
+          currentIsValidating,
+          i > 0
+        )
       )
     }
     // return new updated value
@@ -95,11 +102,16 @@ const trigger: triggerInterface = (_key, shouldRevalidate = true) => {
   return Promise.resolve(cache.get(key))
 }
 
-const broadcastState: broadcastStateInterface = (key, data, error) => {
+const broadcastState: broadcastStateInterface = (
+  key,
+  data,
+  error,
+  isValidating
+) => {
   const updaters = CACHE_REVALIDATORS[key]
   if (key && updaters) {
     for (let i = 0; i < updaters.length; ++i) {
-      updaters[i](false, data, error)
+      updaters[i](false, data, error, isValidating)
     }
   }
 }
@@ -167,7 +179,9 @@ const mutate: mutateInterface = async (
   if (updaters) {
     const promises = []
     for (let i = 0; i < updaters.length; ++i) {
-      promises.push(updaters[i](!!shouldRevalidate, data, error, i > 0))
+      promises.push(
+        updaters[i](!!shouldRevalidate, data, error, undefined, i > 0)
+      )
     }
     // return new updated value
     return Promise.all(promises).then(() => {
@@ -216,7 +230,7 @@ function useSWR<Data = any, Error = any>(
   // `key` can change but `fn` shouldn't
   // (because `revalidate` only depends on `key`)
   // `keyErr` is the cache key for error objects
-  const [key, fnArgs, keyErr] = cache.serializeKey(_key)
+  const [key, fnArgs, keyErr, keyValidating] = cache.serializeKey(_key)
 
   config = Object.assign(
     {},
@@ -242,6 +256,7 @@ function useSWR<Data = any, Error = any>(
 
   const initialData = resolveData()
   const initialError = cache.get(keyErr)
+  const initialIsValidating = !!cache.get(keyValidating)
 
   // if a state is accessed (data, error or isValidating),
   // we add the state to dependencies so if the state is
@@ -254,7 +269,7 @@ function useSWR<Data = any, Error = any>(
   const stateRef = useRef({
     data: initialData,
     error: initialError,
-    isValidating: false
+    isValidating: initialIsValidating
   })
 
   // display the data label in the React DevTools next to SWR hooks
@@ -338,6 +353,11 @@ function useSWR<Data = any, Error = any>(
         dispatch({
           isValidating: true
         })
+        cache.set(keyValidating, true)
+        if (!shouldDeduping) {
+          // also update other hooks
+          broadcastState(key, undefined, undefined, true)
+        }
 
         let newData
         let startAt
@@ -410,6 +430,7 @@ function useSWR<Data = any, Error = any>(
 
         cache.set(key, newData)
         cache.set(keyErr, undefined)
+        cache.set(keyValidating, false)
 
         // new state for the reducer
         const newState: actionType<Data, Error> = {
@@ -431,7 +452,7 @@ function useSWR<Data = any, Error = any>(
 
         if (!shouldDeduping) {
           // also update other hooks
-          broadcastState(key, newData, undefined)
+          broadcastState(key, newData, undefined, false)
         }
       } catch (err) {
         delete CONCURRENT_PROMISES[key]
@@ -450,7 +471,7 @@ function useSWR<Data = any, Error = any>(
 
           if (!shouldDeduping) {
             // also broadcast to update other hooks
-            broadcastState(key, undefined, err)
+            broadcastState(key, undefined, err, false)
           }
         }
 
@@ -537,6 +558,7 @@ function useSWR<Data = any, Error = any>(
       shouldRevalidate = true,
       updatedData,
       updatedError,
+      updatedIsValidating,
       dedupe = true
     ) => {
       // update hook state
@@ -555,6 +577,14 @@ function useSWR<Data = any, Error = any>(
       // because it can be `undefined`
       if (stateRef.current.error !== updatedError) {
         newState.error = updatedError
+        needUpdate = true
+      }
+
+      if (
+        typeof updatedIsValidating !== 'undefined' &&
+        stateRef.current.isValidating !== updatedIsValidating
+      ) {
+        newState.isValidating = updatedIsValidating
         needUpdate = true
       }
 

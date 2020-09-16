@@ -220,6 +220,50 @@ describe('useSWR', () => {
     expect(container.textContent).toMatchInlineSnapshot(`"err err err"`)
   })
 
+  it('should broadcast isValidating', async () => {
+    function useBroadcast3() {
+      const { isValidating, revalidate } = useSWR(
+        'broadcast-3',
+        () => new Promise(res => setTimeout(res, 100)),
+        {
+          // need to turn of deduping otherwise
+          // revalidating will be ignored
+          dedupingInterval: 10
+        }
+      )
+      return { isValidating, revalidate }
+    }
+    function Initiator() {
+      const { isValidating, revalidate } = useBroadcast3()
+      useEffect(() => {
+        const timeout = setTimeout(() => {
+          revalidate()
+        }, 200)
+        return () => clearTimeout(timeout)
+      }, [])
+      return <>{isValidating ? 'true' : 'false'}</>
+    }
+    function Consumer() {
+      const { isValidating } = useBroadcast3()
+      return <>{isValidating ? 'true' : 'false'}</>
+    }
+    function Page() {
+      return (
+        <>
+          <Initiator /> <Consumer /> <Consumer />
+        </>
+      )
+    }
+    const { container } = render(<Page />)
+    expect(container.textContent).toMatchInlineSnapshot(`"true true true"`)
+    await act(() => new Promise(res => setTimeout(res, 100)))
+    expect(container.textContent).toMatchInlineSnapshot(`"false false false"`)
+    await act(() => new Promise(res => setTimeout(res, 100)))
+    expect(container.textContent).toMatchInlineSnapshot(`"true true true"`)
+    await act(() => new Promise(res => setTimeout(res, 100)))
+    expect(container.textContent).toMatchInlineSnapshot(`"false false false"`)
+  })
+
   it('should accept object args', async () => {
     const obj = { v: 'hello' }
     const arr = ['world']
