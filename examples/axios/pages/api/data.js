@@ -1,4 +1,4 @@
-import fetch from 'isomorphic-unfetch'
+import axios from 'axios'
 
 const projects = [
   'facebook/flipper', 'vuejs/vuepress', 'rust-lang/rust', 'zeit/next.js'
@@ -7,8 +7,13 @@ const projects = [
 export default (req, res) => {
   if (req.query.id) {
     // a slow endpoint for getting repo data
-    fetch(`https://api.github.com/repos/${req.query.id}`)
-      .then(resp => resp.json())
+    axios(`https://api.github.com/repos/${req.query.id}`)
+    .then(resp => resp.data)
+    .then(data => {
+      setTimeout(() => {
+        res.json(data)
+      }, 2000)
+    })
       .then(data => {
         setTimeout(() => {
           res.json(data)
