@@ -6,7 +6,7 @@
     <img src="https://badgen.net/badge/icon/Made%20by%20Vercel?icon=zeit&label&color=black&labelColor=black">
   </a>
   <br/>
-  
+
   <a aria-label="NPM version" href="https://www.npmjs.com/package/swr">
     <img alt="" src="https://badgen.net/npm/v/swr">
   </a>
@@ -24,7 +24,7 @@
 
 SWR is a React Hooks library for remote data fetching.
 
-The name “**SWR**” is derived from `stale-while-revalidate`, a cache invalidation strategy popularized by [HTTP RFC 5861](https://tools.ietf.org/html/rfc5861).  
+The name “**SWR**” is derived from `stale-while-revalidate`, a cache invalidation strategy popularized by [HTTP RFC 5861](https://tools.ietf.org/html/rfc5861).
 **SWR** first returns the data from cache (stale), then sends the fetch request (revalidate), and finally comes with the up-to-date data again.
 
 It features:
@@ -131,7 +131,7 @@ const { data, error, isValidating, mutate } = useSWR(key, fetcher, options)
 - `onSuccess(data, key, config)`: callback function when a request finishes successfully
 - `onError(err, key, config)`: callback function when a request returns an error
 - `onErrorRetry(err, key, config, revalidate, revalidateOps)`: handler for [error retry](#error-retries)
-- `compare(a, b)`: comparison function used to detect when returned data has changed, to avoid spurious rerenders. By default, [fast-deep-equal](https://github.com/epoberezkin/fast-deep-equal) is used.
+- `compare(a, b)`: comparison function used to detect when returned data has changed, to avoid spurious rerenders. By default, [`dequal/lite`](https://github.com/lukeed/dequal) is used.
 
 When under a slow network (2G, <= 70Kbps), `errorRetryInterval` will be 10s, and
 `loadingTimeout` will be 5s by default.
@@ -189,7 +189,7 @@ function App() {
 
 ### Data Fetching
 
-`fetcher` is a function that **accepts the `key`** of SWR, and returns a value or a Promise.  
+`fetcher` is a function that **accepts the `key`** of SWR, and returns a value or a Promise.
 You can use any library to handle data fetching, for example:
 
 ```js
@@ -286,7 +286,7 @@ const { data: orders } = useSWR(user ? ['/api/orders', user] : null, fetchWithUs
 ```
 
 The key of the request is now the combination of both values. SWR **shallowly** compares
-the arguments on every render and triggers revalidation if any of them has changed.  
+the arguments on every render and triggers revalidation if any of them has changed.
 Keep in mind that you should not recreate objects when rendering, as they will be treated as different objects on every render:
 
 ```js
@@ -361,7 +361,7 @@ function Profile() {
 Clicking the button in the example above will send a POST request to modify the remote data, locally update the client data and
 try to fetch the latest one (revalidate).
 
-But many POST APIs will just return the updated data directly, so we don’t need to revalidate again.  
+But many POST APIs will just return the updated data directly, so we don’t need to revalidate again.
 Here’s an example showing the “local mutate - request - update” usage:
 
 ```js
@@ -513,7 +513,7 @@ function prefetch() {
 }
 ```
 
-And use it when you need to preload the **resources** (for example when [hovering](https://github.com/GoogleChromeLabs/quicklink) [a](https://github.com/guess-js/guess) [link](https://instant.page)).  
+And use it when you need to preload the **resources** (for example when [hovering](https://github.com/GoogleChromeLabs/quicklink) [a](https://github.com/guess-js/guess) [link](https://instant.page)).
 Together with techniques like [page prefetching](https://nextjs.org/docs#prefetching-pages) in Next.js, you will be able to load both next page and data instantly.
 
 ### Request Deduplication

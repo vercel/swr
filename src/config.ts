@@ -1,4 +1,4 @@
-import deepEqual from 'fast-deep-equal'
+import { dequal } from 'dequal/lite'
 import isDocumentVisible from './libs/is-document-visible'
 import {
   ConfigInterface,
@@ -66,7 +66,7 @@ const defaultConfig: ConfigInterface = {
   refreshWhenOffline: false,
   shouldRetryOnError: true,
   suspense: false,
-  compare: deepEqual,
+  compare: dequal,
 
   fetcher: url => fetch(url).then(res => res.json())
 }
