@@ -650,6 +650,43 @@ function useSWR<Data = any, Error = any>(
     revalidate
   ])
 
+  // define returned state
+  // can be memorized since the state is a ref
+  const memoizedState = useMemo(() => {
+    const state = { revalidate, mutate: boundMutate } as responseInterface<
+      Data,
+      Error
+    >
+    Object.defineProperties(state, {
+      error: {
+        // `key` might be changed in the upcoming hook re-render,
+        // but the previous state will stay
+        // so we need to match the latest key and data (fallback to `initialData`)
+        get: function() {
+          stateDependencies.current.error = true
+          return keyRef.current === key ? stateRef.current.error : initialError
+        },
+        enumerable: true
+      },
+      data: {
+        get: function() {
+          stateDependencies.current.data = true
+          return keyRef.current === key ? stateRef.current.data : initialData
+        },
+        enumerable: true
+      },
+      isValidating: {
+        get: function() {
+          stateDependencies.current.isValidating = true
+          return stateRef.current.isValidating
+        },
+        enumerable: true
+      }
+    })
+
+    return state
+  }, [revalidate])
+
   // suspense
   if (config.suspense) {
     // in suspense mode, we can't return empty state
@@ -705,42 +742,7 @@ function useSWR<Data = any, Error = any>(
     }
   }
 
-  // define returned state
-  // can be memorized since the state is a ref
-  return useMemo(() => {
-    const state = { revalidate, mutate: boundMutate } as responseInterface<
-      Data,
-      Error
-    >
-    Object.defineProperties(state, {
-      error: {
-        // `key` might be changed in the upcoming hook re-render,
-        // but the previous state will stay
-        // so we need to match the latest key and data (fallback to `initialData`)
-        get: function() {
-          stateDependencies.current.error = true
-          return keyRef.current === key ? stateRef.current.error : initialError
-        },
-        enumerable: true
-      },
-      data: {
-        get: function() {
-          stateDependencies.current.data = true
-          return keyRef.current === key ? stateRef.current.data : initialData
-        },
-        enumerable: true
-      },
-      isValidating: {
-        get: function() {
-          stateDependencies.current.isValidating = true
-          return stateRef.current.isValidating
-        },
-        enumerable: true
-      }
-    })
-
-    return state
-  }, [revalidate])
+  return memoizedState
 }
 
 const SWRConfig = SWRConfigContext.Provider

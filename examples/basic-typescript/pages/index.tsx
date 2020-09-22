@@ -4,7 +4,7 @@ import fetch from '../libs/fetch'
 
 import useSWR from 'swr'
 
-export default () => {
+function HomePage() {
   const { data } = useSWR<string[]>('/api/data', fetch)
 
   return (
@@ -24,3 +24,5 @@ export default () => {
     </div>
   )
 }
+
+export default HomePage

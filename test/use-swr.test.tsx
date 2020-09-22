@@ -2117,7 +2117,7 @@ describe('useSWR - config callbacks', () => {
     let state = null
     let count = 0
 
-    function Page(props) {
+    function Page(props: { text: string }) {
       const { data, revalidate } = useSWR(
         'config callbacks - onSuccess',
         () => new Promise(res => setTimeout(() => res(count++), 200)),
@@ -2166,7 +2166,7 @@ describe('useSWR - config callbacks', () => {
     let state = null
     let count = 0
 
-    function Page(props) {
+    function Page(props: { text: string }) {
       const { data, revalidate, error } = useSWR(
         'config callbacks - onError',
         () =>
@@ -2218,7 +2218,7 @@ describe('useSWR - config callbacks', () => {
   it('should trigger the onErrorRetry event with the latest version of the onErrorRetry callback', async () => {
     let state = null
     let count = 0
-    function Page(props) {
+    function Page(props: { text: string }) {
       const { data, error } = useSWR(
         'config callbacks - onErrorRetry',
         () =>
@@ -2271,7 +2271,7 @@ describe('useSWR - config callbacks', () => {
     let state = null
     let count = 0
 
-    function Page(props) {
+    function Page(props: { text: string }) {
       const { data } = useSWR(
         'config callbacks - onLoadingSlow',
         () => new Promise(res => setTimeout(() => res(count++), 200)),

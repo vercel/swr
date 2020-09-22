@@ -40,6 +40,7 @@ export default function useRequest<Data = unknown, Error = unknown>(
       initialData: initialData && {
         status: 200,
         statusText: 'InitialData',
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         config: request!,
         headers: {},
         data: initialData
