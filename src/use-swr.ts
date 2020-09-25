@@ -308,9 +308,9 @@ function useSWR<Data = any, Error = any>(
 
   const boundMutate: responseInterface<Data, Error>['mutate'] = useCallback(
     (data, shouldRevalidate) => {
-      return mutate(key, data, shouldRevalidate)
+      return mutate(keyRef.current, data, shouldRevalidate)
     },
-    [key]
+    []
   )
 
   const addRevalidator = (revalidators, callback) => {
