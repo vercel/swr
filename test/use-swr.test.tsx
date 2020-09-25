@@ -1645,6 +1645,36 @@ describe('useSWR - local mutation', () => {
     cacheError = cache.get(keyErr)
     expect(cacheError).toMatchInlineSnapshot(`undefined`)
   })
+
+  it('should keep the `mutate` function referential equal', async () => {
+    const refs = []
+
+    function Section() {
+      const [key, setKey] = useState(null)
+      const { data, mutate: boundMutate } = useSWR(
+        key,
+        () => new Promise(res => setTimeout(() => res(1), 10))
+      )
+
+      useEffect(() => {
+        const timeout = setTimeout(() => setKey('mutate-5'), 100)
+        return () => clearTimeout(timeout)
+      }, [])
+
+      refs.push(boundMutate)
+      return <div>{data}</div>
+    }
+
+    render(<Section />)
+    await act(() => new Promise(res => setTimeout(res, 120)))
+    mutate('mutate-5', 2)
+    await act(() => new Promise(res => setTimeout(res, 50)))
+
+    // check all `setSize`s are referential equal.
+    for (let ref of refs) {
+      expect(ref).toEqual(refs[0])
+    }
+  })
 })
 
 describe('useSWR - context configs', () => {
