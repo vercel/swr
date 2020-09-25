@@ -13,7 +13,10 @@ export default function hash(args: any[]): string {
   let key = 'arg'
   for (let i = 0; i < args.length; ++i) {
     let _hash
-    if (args[i] === null || (typeof args[i] !== 'object' && typeof args[i] !== 'function')) {
+    if (
+      args[i] === null ||
+      (typeof args[i] !== 'object' && typeof args[i] !== 'function')
+    ) {
       // need to consider the case that args[i] is a string:
       // args[i]        _hash
       // "undefined" -> '"undefined"'
