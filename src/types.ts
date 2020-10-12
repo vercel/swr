@@ -54,7 +54,8 @@ export type updaterInterface<Data = any, Error = any> = (
   shouldRevalidate?: boolean,
   data?: Data,
   error?: Error,
-  shouldDedupe?: boolean
+  shouldDedupe?: boolean,
+  dedupe?: boolean
 ) => boolean | Promise<boolean>
 export type triggerInterface = (
   key: keyInterface,
