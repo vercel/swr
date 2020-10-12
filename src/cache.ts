@@ -15,17 +15,17 @@ export default class Cache implements CacheInterface {
     return this.__cache.get(_key)
   }
 
-  set(key: keyInterface, value: any): any {
+  set(key: keyInterface, value: any) {
     const [_key] = this.serializeKey(key)
     this.__cache.set(_key, value)
     this.notify()
   }
 
-  keys() {
+  keys(): string[] {
     return Array.from(this.__cache.keys())
   }
 
-  has(key: keyInterface) {
+  has(key: keyInterface): boolean {
     const [_key] = this.serializeKey(key)
     return this.__cache.has(_key)
   }
