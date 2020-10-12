@@ -20,6 +20,8 @@ export interface ConfigInterface<
   suspense?: boolean
   initialData?: Data
 
+  isOnline?: () => boolean
+  isDocumentVisible?: () => boolean
   onLoadingSlow?: (key: string, config: ConfigInterface<Data, Error>) => void
   onSuccess?: (
     data: Data,
