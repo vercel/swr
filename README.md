@@ -543,8 +543,8 @@ function UserProfileAvatar() {
 export default function App() {
   return (
     <div>
-      <UserAvatar />
-      <UserProfile />
+      <UserProfileName />
+      <UserProfileAvatar />
     </div>
   )
 }
