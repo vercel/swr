@@ -1033,6 +1033,37 @@ describe('useSWR - error', () => {
     await act(() => new Promise(res => setTimeout(res, 210))) // retry
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"error: 0"`)
   })
+
+  it('should not clear error during revalidating until fetcher is finished successfully', async () => {
+    const errors = []
+    const key = 'error-9'
+    function Page() {
+      const { error } = useSWR(
+        key,
+        () => {
+          return new Promise((_, rej) => rej(new Error('error')))
+        },
+        {
+          errorRetryCount: 0,
+          errorRetryInterval: 0,
+          dedupingInterval: 0
+        }
+      )
+      useEffect(() => {
+        errors.push(error ? error.message : null)
+      }, [error])
+
+      return <div>hello, {error ? error.message : null}</div>
+    }
+    const { container } = render(<Page />)
+    await waitForDomChange({ container })
+    await act(() => {
+      return mutate(key, undefined, true)
+    })
+    // initial -> first error -> mutate -> receive another error
+    // error won't be cleared during revalidation
+    expect(errors).toEqual([null, 'error', 'error'])
+  })
 })
 
 describe('useSWR - focus', () => {

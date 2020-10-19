@@ -356,7 +356,12 @@ function useSWR<Data = any, Error = any>(
         cache.set(keyValidating, true)
         if (!shouldDeduping) {
           // also update other hooks
-          broadcastState(key, undefined, undefined, true)
+          broadcastState(
+            key,
+            stateRef.current.data,
+            stateRef.current.error,
+            true
+          )
         }
 
         let newData
@@ -452,7 +457,7 @@ function useSWR<Data = any, Error = any>(
 
         if (!shouldDeduping) {
           // also update other hooks
-          broadcastState(key, newData, undefined, false)
+          broadcastState(key, newData, newState.error, false)
         }
       } catch (err) {
         delete CONCURRENT_PROMISES[key]
