@@ -47,7 +47,7 @@ const slowConnection =
   ['slow-2g', '2g'].indexOf(navigator['connection'].effectiveType) !== -1
 
 // config
-const defaultConfig: ConfigInterface = {
+const defaultConfig = {
   // events
   onLoadingSlow: () => {},
   onSuccess: () => {},
@@ -69,7 +69,7 @@ const defaultConfig: ConfigInterface = {
   compare: dequal,
 
   fetcher: url => fetch(url).then(res => res.json())
-}
+} as const
 
 export { cache }
 export default defaultConfig

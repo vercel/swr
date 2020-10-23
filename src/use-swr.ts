@@ -195,36 +195,29 @@ const mutate: mutateInterface = async (
 }
 
 function useSWR<Data = any, Error = any>(
-  key: keyInterface
-): responseInterface<Data, Error>
-function useSWR<Data = any, Error = any>(
-  key: keyInterface,
-  config?: ConfigInterface<Data, Error>
-): responseInterface<Data, Error>
-function useSWR<Data = any, Error = any>(
-  key: keyInterface,
-  fn?: fetcherFn<Data>,
-  config?: ConfigInterface<Data, Error>
-): responseInterface<Data, Error>
-function useSWR<Data = any, Error = any>(
-  ...args
+  ...args:
+    | readonly [keyInterface]
+    | readonly [keyInterface, fetcherFn<Data>]
+    | readonly [keyInterface, ConfigInterface<Data, Error>]
+    | readonly [keyInterface, fetcherFn<Data>, ConfigInterface<Data, Error>]
 ): responseInterface<Data, Error> {
-  let _key: keyInterface,
-    fn: fetcherFn<Data> | undefined,
-    config: ConfigInterface<Data, Error> = {}
-  if (args.length >= 1) {
-    _key = args[0]
-  }
-  if (args.length > 2) {
-    fn = args[1]
-    config = args[2]
-  } else {
-    if (typeof args[1] === 'function') {
-      fn = args[1]
-    } else if (typeof args[1] === 'object') {
-      config = args[1]
-    }
-  }
+  const _key = args[0]
+  const config = Object.assign(
+    {},
+    defaultConfig,
+    useContext(SWRConfigContext),
+    args.length === 3
+      ? args[2]
+      : args.length === 2 && typeof args[1] === 'object'
+      ? args[1]
+      : {}
+  )
+  const fn =
+    args.length === 3
+      ? args[1]
+      : args.length === 2 && typeof args[1] === 'function'
+      ? args[1]
+      : config.fetcher
 
   // we assume `key` as the identifier of the request
   // `key` can change but `fn` shouldn't
@@ -232,22 +225,10 @@ function useSWR<Data = any, Error = any>(
   // `keyErr` is the cache key for error objects
   const [key, fnArgs, keyErr, keyValidating] = cache.serializeKey(_key)
 
-  config = Object.assign(
-    {},
-    defaultConfig,
-    useContext(SWRConfigContext),
-    config
-  )
-
   const configRef = useRef(config)
   useIsomorphicLayoutEffect(() => {
     configRef.current = config
   })
-
-  if (typeof fn === 'undefined') {
-    // use the global fetcher
-    fn = config.fetcher
-  }
 
   const resolveData = () => {
     const cachedData = cache.get(key)
