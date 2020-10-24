@@ -31,25 +31,30 @@ const IS_SERVER = typeof window === 'undefined'
 // polyfill for requestIdleCallback
 const rIC = IS_SERVER
   ? null
-  : window['requestIdleCallback'] || (f => setTimeout(f, 1))
+  : window['requestIdleCallback'] || 
+  ((f: (...args: any[]) => void) => setTimeout(f, 1))
 
 // React currently throws a warning when using useLayoutEffect on the server.
 // To get around it, we can conditionally useEffect on the server (no-op) and
 // useLayoutEffect in the browser.
 const useIsomorphicLayoutEffect = IS_SERVER ? useEffect : useLayoutEffect
 
+type revalidatorInterface = (...args: any[]) => void
 // global state managers
-const CONCURRENT_PROMISES = {}
-const CONCURRENT_PROMISES_TS = {}
-const FOCUS_REVALIDATORS = {}
-const RECONNECT_REVALIDATORS = {}
-const CACHE_REVALIDATORS = {}
-const MUTATION_TS = {}
-const MUTATION_END_TS = {}
+const CONCURRENT_PROMISES: Record<string, any> = {}
+const CONCURRENT_PROMISES_TS: Record<string, number> = {}
+const FOCUS_REVALIDATORS: Record<string, revalidatorInterface[]> = {}
+const RECONNECT_REVALIDATORS: Record<
+  string,
+  revalidatorInterface[]
+> = {}
+const CACHE_REVALIDATORS: Record<string, updaterInterface[]> = {}
+const MUTATION_TS: Record<string, number> = {}
+const MUTATION_END_TS: Record<string, number> = {}
 
 // setup DOM events listeners for `focus` and `reconnect` actions
 if (!IS_SERVER && window.addEventListener) {
-  const revalidate = revalidators => {
+  const revalidate = (revalidators: Record<string, revalidatorInterface[]>) => {
     if (!isDocumentVisible() || !isOnline()) return
 
     for (const key in revalidators) {
@@ -256,15 +261,15 @@ function useSWR<Data = any, Error = any>(
   // display the data label in the React DevTools next to SWR hooks
   useDebugValue(stateRef.current.data)
 
-  const rerender = useState(null)[1]
+  const rerender = useState<unknown>(null)[1]
   let dispatch = useCallback(payload => {
     let shouldUpdateState = false
     for (let k in payload) {
       if (stateRef.current[k] === payload[k]) {
         continue
       }
-
       stateRef.current[k] = payload[k]
+  
       if (stateDependencies.current[k]) {
         shouldUpdateState = true
       }
@@ -294,7 +299,10 @@ function useSWR<Data = any, Error = any>(
     []
   )
 
-  const addRevalidator = (revalidators, callback) => {
+  const addRevalidator = (
+    revalidators: Record<string, revalidatorInterface[]>,
+    callback: revalidatorInterface
+  ) => {
     if (!callback) return
     if (!revalidators[key]) {
       revalidators[key] = [callback]
@@ -303,7 +311,10 @@ function useSWR<Data = any, Error = any>(
     }
   }
 
-  const removeRevalidator = (revlidators, callback) => {
+  const removeRevalidator = (
+    revlidators: Record<string, revalidatorInterface[]>,
+    callback: revalidatorInterface
+  ) => {
     if (revlidators[key]) {
       const revalidators = revlidators[key]
       const index = revalidators.indexOf(callback)
