@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/ban-ts-ignore */
+/* TODO: use @ts-expect-error after upgrading typescript verison */
 import { dequal } from 'dequal/lite'
 import isDocumentVisible from './libs/is-document-visible'
 import {

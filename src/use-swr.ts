@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/ban-ts-ignore */
+/* TODO: use @ts-expect-error after upgrading typescript verison */
 import {
   useCallback,
   useContext,
@@ -31,9 +33,9 @@ const IS_SERVER = typeof window === 'undefined'
 // polyfill for requestIdleCallback
 const rIC = IS_SERVER
   ? null
-  // @ts-ignore
-  : window['requestIdleCallback'] || 
-  ((f: (...args: any[]) => void) => setTimeout(f, 1))
+  : // @ts-ignore
+    window['requestIdleCallback'] ||
+    ((f: (...args: any[]) => void) => setTimeout(f, 1))
 
 // React currently throws a warning when using useLayoutEffect on the server.
 // To get around it, we can conditionally useEffect on the server (no-op) and
@@ -45,10 +47,7 @@ type revalidatorInterface = (...args: any[]) => void
 const CONCURRENT_PROMISES: Record<string, any> = {}
 const CONCURRENT_PROMISES_TS: Record<string, number> = {}
 const FOCUS_REVALIDATORS: Record<string, revalidatorInterface[]> = {}
-const RECONNECT_REVALIDATORS: Record<
-  string,
-  revalidatorInterface[]
-> = {}
+const RECONNECT_REVALIDATORS: Record<string, revalidatorInterface[]> = {}
 const CACHE_REVALIDATORS: Record<string, updaterInterface[]> = {}
 const MUTATION_TS: Record<string, number> = {}
 const MUTATION_END_TS: Record<string, number> = {}
