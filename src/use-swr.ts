@@ -31,6 +31,7 @@ const IS_SERVER = typeof window === 'undefined'
 // polyfill for requestIdleCallback
 const rIC = IS_SERVER
   ? null
+  // @ts-ignore
   : window['requestIdleCallback'] || 
   ((f: (...args: any[]) => void) => setTimeout(f, 1))
 
@@ -140,7 +141,7 @@ const mutate: mutateInterface = async (
   const beforeMutationTs = MUTATION_TS[key]
   const beforeConcurrentPromisesTs = CONCURRENT_PROMISES_TS[key]
 
-  let data, error
+  let data: any, error: any
 
   if (_data && typeof _data === 'function') {
     // `_data` is a function, call it passing current cache value
@@ -265,11 +266,13 @@ function useSWR<Data = any, Error = any>(
   let dispatch = useCallback(payload => {
     let shouldUpdateState = false
     for (let k in payload) {
+      // @ts-ignore
       if (stateRef.current[k] === payload[k]) {
         continue
       }
+      // @ts-ignore
       stateRef.current[k] = payload[k]
-  
+      // @ts-ignore
       if (stateDependencies.current[k]) {
         shouldUpdateState = true
       }
@@ -286,8 +289,10 @@ function useSWR<Data = any, Error = any>(
 
   // do unmount check for callbacks
   const eventsRef = useRef({
+    // @ts-ignore
     emit: (event, ...params) => {
       if (unmountedRef.current) return
+      // @ts-ignore
       configRef.current[event](...params)
     }
   })
@@ -613,7 +618,7 @@ function useSWR<Data = any, Error = any>(
   }, [key, revalidate])
 
   useIsomorphicLayoutEffect(() => {
-    let timer = null
+    let timer: any = null
     const tick = async () => {
       if (
         !stateRef.current.error &&

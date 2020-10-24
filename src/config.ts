@@ -12,8 +12,8 @@ const cache = new Cache()
 
 // error retry
 function onErrorRetry(
-  _,
-  __,
+  _: unknown,
+  __: string,
   config: Readonly<Required<ConfigInterface>>,
   revalidate: revalidateType,
   opts: Required<RevalidateOptionInterface>
@@ -43,7 +43,9 @@ function onErrorRetry(
 // slow connection (<= 70Kbps)
 const slowConnection =
   typeof window !== 'undefined' &&
+  // @ts-ignore
   navigator['connection'] &&
+  // @ts-ignore
   ['slow-2g', '2g'].indexOf(navigator['connection'].effectiveType) !== -1
 
 // config
@@ -68,7 +70,7 @@ const defaultConfig = {
   suspense: false,
   compare: dequal,
 
-  fetcher: url => fetch(url).then(res => res.json())
+  fetcher: (url: string) => fetch(url).then(res => res.json())
 } as const
 
 export { cache }

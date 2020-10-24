@@ -195,7 +195,7 @@ function useSWRInfinite<Data = any, Error = any>(
       }
       cache.set(pageCountCacheKey, pageCountRef.current)
       rerender(v => !v)
-      return mutate(v => v)
+      return mutate((v: any) => v)
     },
     [mutate, pageCountCacheKey]
   )
