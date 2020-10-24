@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-ts-ignore */
-/* TODO: use @ts-expect-error after upgrading typescript verison */
+/* TODO: use @ts-expect-error after upgrading typescript */
 import {
   useCallback,
   useContext,
@@ -33,8 +33,7 @@ const IS_SERVER = typeof window === 'undefined'
 // polyfill for requestIdleCallback
 const rIC = IS_SERVER
   ? null
-  : // @ts-ignore
-    window['requestIdleCallback'] ||
+  : ((window as unknown) as any)['requestIdleCallback'] ||
     ((f: (...args: any[]) => void) => setTimeout(f, 1))
 
 // React currently throws a warning when using useLayoutEffect on the server.
