@@ -163,7 +163,7 @@ function useSWRInfinite<Data = any, Error = any>(
   )
 
   // keep the data inside a ref
-  const dataRef = useRef<Data[]>(swr.data)
+  const dataRef = useRef(swr.data)
   useEffect(() => {
     dataRef.current = swr.data
   }, [swr.data])
