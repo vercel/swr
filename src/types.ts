@@ -34,9 +34,9 @@ export interface ConfigInterface<
   onErrorRetry?: (
     err: Error,
     key: string,
-    config: ConfigInterface<Data, Error>,
+    config: Readonly<Required<ConfigInterface<Data, Error>>>,
     revalidate: revalidateType,
-    revalidateOpts: RevalidateOptionInterface
+    opts: Required<RevalidateOptionInterface>
   ) => void
 
   compare?: (a: Data | undefined, b: Data | undefined) => boolean

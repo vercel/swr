@@ -14,9 +14,9 @@ const cache = new Cache()
 function onErrorRetry(
   _,
   __,
-  config: ConfigInterface,
+  config: Readonly<Required<ConfigInterface>>,
   revalidate: revalidateType,
-  opts: RevalidateOptionInterface
+  opts: Required<RevalidateOptionInterface>
 ): void {
   if (!isDocumentVisible()) {
     // if it's hidden, stop
@@ -32,7 +32,7 @@ function onErrorRetry(
   }
 
   // exponential backoff
-  const count = Math.min(opts.retryCount || 0, 8)
+  const count = Math.min(opts.retryCount, 8)
   const timeout =
     ~~((Math.random() + 0.5) * (1 << count)) * config.errorRetryInterval
   setTimeout(revalidate, timeout, opts)
