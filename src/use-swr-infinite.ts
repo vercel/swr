@@ -45,17 +45,17 @@ function useSWRInfinite<Data = any, Error = any>(
     {},
     defaultConfig,
     useContext(SWRConfigContext),
-    args.length === 2 && typeof args[1] === 'object'
-      ? args[1]
-      : args.length === 3
+    args.length === 3
       ? args[2]
+      : args.length === 2 && typeof args[1] === 'object'
+      ? args[1]
       : {}
   )
 
   const fn =
-    args.length === 2 && typeof args[1] === 'function'
+    args.length === 3
       ? args[1]
-      : args.length === 3
+      : args.length === 2 && typeof args[1] === 'function'
       ? args[1]
       : config.fetcher
 
