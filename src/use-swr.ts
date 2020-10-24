@@ -323,11 +323,11 @@ function useSWR<Data = any, Error = any>(
     ): Promise<boolean> => {
       if (!key || !fn) return false
       if (unmountedRef.current) return false
-      revalidateOpts = Object.assign({ dedupe: false }, revalidateOpts)
+      const { retryCount = 0, dedupe = false } = revalidateOpts
 
       let loading = true
       let shouldDeduping =
-        typeof CONCURRENT_PROMISES[key] !== 'undefined' && revalidateOpts.dedupe
+        typeof CONCURRENT_PROMISES[key] !== 'undefined' && dedupe
 
       // start fetching
       try {
@@ -465,15 +465,11 @@ function useSWR<Data = any, Error = any>(
         eventsRef.current.emit('onError', err, key, config)
         if (config.shouldRetryOnError) {
           // when retrying, we always enable deduping
-          const retryCount = (revalidateOpts.retryCount || 0) + 1
-          eventsRef.current.emit(
-            'onErrorRetry',
-            err,
-            key,
-            config,
-            revalidate,
-            Object.assign({ dedupe: true }, revalidateOpts, { retryCount })
-          )
+
+          eventsRef.current.emit('onErrorRetry', err, key, config, revalidate, {
+            retryCount: retryCount + 1,
+            dedupe: true
+          })
         }
       }
 
