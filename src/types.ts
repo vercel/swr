@@ -20,16 +20,19 @@ export interface ConfigInterface<
   suspense?: boolean
   initialData?: Data
 
-  onLoadingSlow?: (key: string, config: ConfigInterface<Data, Error>) => void
+  onLoadingSlow?: (
+    key: string,
+    config: Readonly<Required<ConfigInterface<Data, Error>>>
+  ) => void
   onSuccess?: (
     data: Data,
     key: string,
-    config: ConfigInterface<Data, Error>
+    config: Readonly<Required<ConfigInterface<Data, Error>>>
   ) => void
   onError?: (
     err: Error,
     key: string,
-    config: ConfigInterface<Data, Error>
+    config: Readonly<Required<ConfigInterface<Data, Error>>>
   ) => void
   onErrorRetry?: (
     err: Error,
