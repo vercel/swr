@@ -1,4 +1,4 @@
-export type fetcherFn<Data> = (...args: any) => Data | Promise<Data>
+export type fetcherFn<Data> = ((...args: any) => Data | Promise<Data>) | null
 export interface ConfigInterface<
   Data = any,
   Error = any,
