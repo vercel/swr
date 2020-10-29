@@ -19,11 +19,12 @@ export interface ConfigInterface<
   fetcher?: Fn
   suspense?: boolean
   initialData?: Data
-
   onLoadingSlow?: (
     key: string,
     config: Readonly<Required<ConfigInterface<Data, Error>>>
   ) => void
+  isOnline?: () => boolean
+  isDocumentVisible?: () => boolean
   onSuccess?: (
     data: Data,
     key: string,
