@@ -198,9 +198,13 @@ const mutate: mutateInterface = async (
 function useSWR<Data = any, Error = any>(
   ...args:
     | readonly [keyInterface]
-    | readonly [keyInterface, fetcherFn<Data>]
+    | readonly [keyInterface, fetcherFn<Data> | null]
     | readonly [keyInterface, ConfigInterface<Data, Error>]
-    | readonly [keyInterface, fetcherFn<Data>, ConfigInterface<Data, Error>]
+    | readonly [
+        keyInterface,
+        fetcherFn<Data> | null,
+        ConfigInterface<Data, Error>
+      ]
 ): responseInterface<Data, Error> {
   const _key = args[0]
   const config = Object.assign(
@@ -217,6 +221,12 @@ function useSWR<Data = any, Error = any>(
     args.length === 3
       ? args[1]
       : args.length === 2 && typeof args[1] === 'function'
+      ? args[1]
+      : /** 
+          pass fn as null will disable revalidate 
+          https://paco.sh/blog/shared-hook-state-with-swr 
+        */
+      args[1] === null
       ? args[1]
       : config.fetcher
 
