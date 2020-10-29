@@ -1,11 +1,11 @@
 import { dequal } from 'dequal/lite'
-import isDocumentVisible from './libs/is-document-visible'
 import {
   ConfigInterface,
   RevalidateOptionInterface,
   revalidateType
 } from './types'
 import Cache from './cache'
+import webPreset from './libs/web-preset'
 
 // cache
 const cache = new Cache()
@@ -18,7 +18,7 @@ function onErrorRetry(
   revalidate: revalidateType,
   opts: RevalidateOptionInterface
 ): void {
-  if (!isDocumentVisible()) {
+  if (!config.isDocumentVisible()) {
     // if it's hidden, stop
     // it will auto revalidate when focus
     return
@@ -68,7 +68,9 @@ const defaultConfig: ConfigInterface = {
   suspense: false,
   compare: dequal,
 
-  fetcher: url => fetch(url).then(res => res.json())
+  fetcher: webPreset.fetcher,
+  isOnline: webPreset.isOnline,
+  isDocumentVisible: webPreset.isDocumentVisible
 }
 
 export { cache }

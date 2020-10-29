@@ -10,8 +10,6 @@ import {
 } from 'react'
 
 import defaultConfig, { cache } from './config'
-import isDocumentVisible from './libs/is-document-visible'
-import isOnline from './libs/is-online'
 import SWRConfigContext from './swr-config-context'
 import {
   actionType,
@@ -50,7 +48,7 @@ const MUTATION_END_TS = {}
 // setup DOM events listeners for `focus` and `reconnect` actions
 if (!IS_SERVER && window.addEventListener) {
   const revalidate = revalidators => {
-    if (!isDocumentVisible() || !isOnline()) return
+    if (!defaultConfig.isDocumentVisible() || !defaultConfig.isOnline()) return
 
     for (const key in revalidators) {
       if (revalidators[key][0]) revalidators[key][0]()
@@ -629,8 +627,9 @@ function useSWR<Data = any, Error = any>(
     const tick = async () => {
       if (
         !stateRef.current.error &&
-        (configRef.current.refreshWhenHidden || isDocumentVisible()) &&
-        (configRef.current.refreshWhenOffline || isOnline())
+        (configRef.current.refreshWhenHidden ||
+          configRef.current.isDocumentVisible()) &&
+        (configRef.current.refreshWhenOffline || configRef.current.isOnline())
       ) {
         // only revalidate when the page is visible
         // if API request errored, we stop polling in this round
