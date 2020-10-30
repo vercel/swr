@@ -70,7 +70,9 @@ const defaultConfig: ConfigInterface = {
 
   fetcher: webPreset.fetcher,
   isOnline: webPreset.isOnline,
-  isDocumentVisible: webPreset.isDocumentVisible
+  isDocumentVisible: webPreset.isDocumentVisible,
+  setOnFocus: webPreset.setOnFocus,
+  setOnConnect: webPreset.setOnConnect
 }
 
 export { cache }

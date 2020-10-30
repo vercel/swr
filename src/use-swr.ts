@@ -46,7 +46,12 @@ const MUTATION_TS = {}
 const MUTATION_END_TS = {}
 
 // setup DOM events listeners for `focus` and `reconnect` actions
-if (!IS_SERVER && window.addEventListener) {
+setup({
+  setOnFocus: defaultConfig.setOnFocus,
+  setOnConnect: defaultConfig.setOnConnect
+})
+
+function setup(preset) {
   const revalidate = revalidators => {
     if (!defaultConfig.isDocumentVisible() || !defaultConfig.isOnline()) return
 
@@ -56,18 +61,14 @@ if (!IS_SERVER && window.addEventListener) {
   }
 
   // focus revalidate
-  window.addEventListener(
-    'visibilitychange',
-    () => revalidate(FOCUS_REVALIDATORS),
-    false
-  )
-  window.addEventListener('focus', () => revalidate(FOCUS_REVALIDATORS), false)
+  if (preset.setOnFocus) {
+    preset.setOnFocus(() => revalidate(FOCUS_REVALIDATORS))
+  }
+
   // reconnect revalidate
-  window.addEventListener(
-    'online',
-    () => revalidate(RECONNECT_REVALIDATORS),
-    false
-  )
+  if (preset.setOnConnect) {
+    preset.setOnConnect(() => revalidate(RECONNECT_REVALIDATORS))
+  }
 }
 
 const trigger: triggerInterface = (_key, shouldRevalidate = true) => {
