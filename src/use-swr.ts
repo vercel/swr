@@ -45,6 +45,12 @@ const CACHE_REVALIDATORS = {}
 const MUTATION_TS = {}
 const MUTATION_END_TS = {}
 
+// generate strictly increasing timestamps
+let now = (() => {
+  let ts = 0
+  return () => ts++
+})()
+
 // setup DOM events listeners for `focus` and `reconnect` actions
 if (!IS_SERVER && window.addEventListener) {
   const revalidate = revalidators => {
@@ -122,28 +128,32 @@ const mutate: mutateInterface = async (
   const [key, , keyErr] = cache.serializeKey(_key)
   if (!key) return
 
-  // if there is no new data, call revalidate against the key
+  // if there is no new data to update, let's just revalidate the key
   if (typeof _data === 'undefined') return trigger(_key, shouldRevalidate)
 
-  // update timestamps
-  MUTATION_TS[key] = Date.now() - 1
+  // update global timestamps
+  MUTATION_TS[key] = now() - 1
   MUTATION_END_TS[key] = 0
 
-  // keep track of timestamps before await asynchronously
+  // track timestamps before await asynchronously
   const beforeMutationTs = MUTATION_TS[key]
   const beforeConcurrentPromisesTs = CONCURRENT_PROMISES_TS[key]
 
   let data, error
+  let isMutationAsync = false
 
   if (_data && typeof _data === 'function') {
     // `_data` is a function, call it passing current cache value
     try {
-      data = await _data(cache.get(key))
+      _data = _data(cache.get(key))
     } catch (err) {
       error = err
     }
-  } else if (_data && typeof _data.then === 'function') {
+  }
+
+  if (_data && typeof _data.then === 'function') {
     // `_data` is a promise
+    isMutationAsync = true
     try {
       data = await _data
     } catch (err) {
@@ -153,7 +163,8 @@ const mutate: mutateInterface = async (
     data = _data
   }
 
-  // check if other mutations have occurred since we've started awaiting, if so then do not persist this change
+  // check if other mutations have occurred since we've started this mutation
+  // if so we don't update cache or broadcast change, just return the data
   if (
     beforeMutationTs !== MUTATION_TS[key] ||
     beforeConcurrentPromisesTs !== CONCURRENT_PROMISES_TS[key]
@@ -163,13 +174,30 @@ const mutate: mutateInterface = async (
   }
 
   if (typeof data !== 'undefined') {
-    // update cached data, avoid notifying from the cache
+    // update cached data
     cache.set(key, data)
   }
+  // always update or reset the error
   cache.set(keyErr, error)
 
   // reset the timestamp to mark the mutation has ended
-  MUTATION_END_TS[key] = Date.now() - 1
+  MUTATION_END_TS[key] = now() - 1
+
+  if (!isMutationAsync) {
+    // let's always broadcast in the next tick
+    // to dedupe synchronous mutation calls
+    await 0
+
+    // we skip broadcasting if there's another mutation
+    // happened synchronously
+    if (
+      beforeMutationTs !== MUTATION_TS[key] ||
+      beforeConcurrentPromisesTs !== CONCURRENT_PROMISES_TS[key]
+    ) {
+      if (error) throw error
+      return data
+    }
+  }
 
   // enter the revalidation stage
   // update existing SWR Hooks' state
@@ -385,7 +413,7 @@ function useSWR<Data = any, Error = any>(
             CONCURRENT_PROMISES[key] = fn(key)
           }
 
-          CONCURRENT_PROMISES_TS[key] = startAt = Date.now()
+          CONCURRENT_PROMISES_TS[key] = startAt = now()
 
           newData = await CONCURRENT_PROMISES[key]
 
