@@ -1523,6 +1523,7 @@ describe('useSWR - local mutation', () => {
     expect(container.textContent).toMatchInlineSnapshot(`"1"`) // directly from cache
     await act(() => new Promise(res => setTimeout(res, 150))) // still suspending
     mutate('mutate-2', 3) // set it to 3. this will drop the ongoing request
+    await 0
     expect(container.textContent).toMatchInlineSnapshot(`"3"`)
     await act(() => new Promise(res => setTimeout(res, 100)))
     expect(container.textContent).toMatchInlineSnapshot(`"3"`)
