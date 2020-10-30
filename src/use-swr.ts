@@ -46,7 +46,7 @@ const MUTATION_TS = {}
 const MUTATION_END_TS = {}
 
 // generate strictly increasing timestamps
-let now = (() => {
+const now = (() => {
   let ts = 0
   return () => ts++
 })()
@@ -140,7 +140,7 @@ const mutate: mutateInterface = async (
   const beforeConcurrentPromisesTs = CONCURRENT_PROMISES_TS[key]
 
   let data, error
-  let isMutationAsync = false
+  let isAsyncMutation = false
 
   if (_data && typeof _data === 'function') {
     // `_data` is a function, call it passing current cache value
@@ -153,7 +153,7 @@ const mutate: mutateInterface = async (
 
   if (_data && typeof _data.then === 'function') {
     // `_data` is a promise
-    isMutationAsync = true
+    isAsyncMutation = true
     try {
       data = await _data
     } catch (err) {
@@ -163,15 +163,19 @@ const mutate: mutateInterface = async (
     data = _data
   }
 
-  // check if other mutations have occurred since we've started this mutation
-  // if so we don't update cache or broadcast change, just return the data
-  if (
-    beforeMutationTs !== MUTATION_TS[key] ||
-    beforeConcurrentPromisesTs !== CONCURRENT_PROMISES_TS[key]
-  ) {
-    if (error) throw error
-    return data
+  const shouldAbort = (): boolean | void => {
+    // check if other mutations have occurred since we've started this mutation
+    if (
+      beforeMutationTs !== MUTATION_TS[key] ||
+      beforeConcurrentPromisesTs !== CONCURRENT_PROMISES_TS[key]
+    ) {
+      if (error) throw error
+      return true
+    }
   }
+
+  // if there's a race we don't update cache or broadcast change, just return the data
+  if (shouldAbort()) return data
 
   if (typeof data !== 'undefined') {
     // update cached data
@@ -183,21 +187,14 @@ const mutate: mutateInterface = async (
   // reset the timestamp to mark the mutation has ended
   MUTATION_END_TS[key] = now() - 1
 
-  if (!isMutationAsync) {
+  if (!isAsyncMutation) {
     // let's always broadcast in the next tick
     // to dedupe synchronous mutation calls
     // check out https://github.com/vercel/swr/pull/735 for more details
     await 0
 
-    // we skip broadcasting if there's another mutation
-    // happened synchronously
-    if (
-      beforeMutationTs !== MUTATION_TS[key] ||
-      beforeConcurrentPromisesTs !== CONCURRENT_PROMISES_TS[key]
-    ) {
-      if (error) throw error
-      return data
-    }
+    // we skip broadcasting if there's another mutation happened synchronously
+    if (shouldAbort()) return data
   }
 
   // enter the revalidation stage
