@@ -211,24 +211,26 @@ function useSWR<Data = any, Error = any>(
     {},
     defaultConfig,
     useContext(SWRConfigContext),
-    args.length === 3
+    args.length > 2
       ? args[2]
       : args.length === 2 && typeof args[1] === 'object'
       ? args[1]
       : {}
   )
-  const fn =
-    args.length === 3
-      ? args[1]
-      : args.length === 2 && typeof args[1] === 'function'
-      ? args[1]
-      : /** 
+  // in typescript args.length > 2 is not same as args.lenth === 3
+  // we do a safe type assertion by ourself here
+  // args.length === 3
+  const fn = (args.length > 2
+    ? args[1]
+    : args.length === 2 && typeof args[1] === 'function'
+    ? args[1]
+    : /** 
           pass fn as null will disable revalidate 
           https://paco.sh/blog/shared-hook-state-with-swr 
         */
-      args[1] === null
-      ? args[1]
-      : config.fetcher
+    args[1] === null
+    ? args[1]
+    : config.fetcher) as fetcherFn<Data> | null
 
   // we assume `key` as the identifier of the request
   // `key` can change but `fn` shouldn't
