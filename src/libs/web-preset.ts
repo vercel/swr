@@ -20,18 +20,18 @@ function isDocumentVisible(): boolean {
   return true
 }
 
-function setOnFocus(callback) {
+const fetcher = (url: any) => fetch(url).then(res => res.json())
+
+function setOnFocus(callback: (...args: unknown[]) => void) {
   if (!isWindowEventTarget) return
   window.addEventListener('focus', callback, false)
   window.addEventListener('visibilitychange', callback, false)
 }
 
-function setOnConnect(callback) {
+function setOnConnect(callback: (...args: unknown[]) => void) {
   if (!isWindowEventTarget) return
   window.addEventListener('online', callback, false)
 }
-
-const fetcher = url => fetch(url).then(res => res.json())
 
 export default {
   isOnline,

@@ -2346,7 +2346,7 @@ describe('useSWR - config callbacks', () => {
     expect(state).toEqual('a')
 
     await act(() => {
-      return new Promise(res => setTimeout(res, 301))
+      return new Promise(res => setTimeout(res, 350))
     })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"Error: 1"`)
     expect(container.firstElementChild.getAttribute('title')).toEqual('b')

@@ -1,4 +1,4 @@
-export type fetcherFn<Data> = ((...args: any) => Data | Promise<Data>) | null
+export type fetcherFn<Data> = (...args: any) => Data | Promise<Data>
 export interface ConfigInterface<
   Data = any,
   Error = any,
@@ -19,31 +19,38 @@ export interface ConfigInterface<
   fetcher?: Fn
   suspense?: boolean
   initialData?: Data
-
+  onLoadingSlow?: (
+    key: string,
+    config: Readonly<Required<ConfigInterface<Data, Error>>>
+  ) => void
   isOnline?: () => boolean
   isDocumentVisible?: () => boolean
-  onLoadingSlow?: (key: string, config: ConfigInterface<Data, Error>) => void
   onSuccess?: (
     data: Data,
     key: string,
-    config: ConfigInterface<Data, Error>
+    config: Readonly<Required<ConfigInterface<Data, Error>>>
   ) => void
   onError?: (
     err: Error,
     key: string,
-    config: ConfigInterface<Data, Error>
+    config: Readonly<Required<ConfigInterface<Data, Error>>>
   ) => void
   onErrorRetry?: (
     err: Error,
     key: string,
-    config: ConfigInterface<Data, Error>,
+    config: Readonly<Required<ConfigInterface<Data, Error>>>,
     revalidate: revalidateType,
-    revalidateOpts: RevalidateOptionInterface
+    opts: Required<RevalidateOptionInterface>
   ) => void
-  setOnFocus?(callback?): void
-  setOnConnect?(callback?): void
+  setOnFocus?: ListenerInterface['setOnConnect']
+  setOnConnect?: ListenerInterface['setOnFocus']
 
   compare?: (a: Data | undefined, b: Data | undefined) => boolean
+}
+
+export interface ListenerInterface {
+  setOnFocus: (callback: (...args: any[]) => void) => void
+  setOnConnect: (callback: (...args: any[]) => void) => void
 }
 
 export interface RevalidateOptionInterface {
