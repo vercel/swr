@@ -10,6 +10,7 @@
     "dist/**",
     "esm/**"
   ],
+  "sideEffects": false,
   "repository": "vercel/swr",
   "homepage": "https://swr.vercel.app",
   "license": "MIT",
