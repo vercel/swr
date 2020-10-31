@@ -1,6 +1,6 @@
 {
   "name": "swr",
-  "version": "0.3.7",
+  "version": "0.3.8-beta.1",
   "description": "React Hooks library for remote data fetching",
   "main": "./dist/index.js",
   "module": "./esm/index.js",
@@ -10,6 +10,7 @@
     "dist/**",
     "esm/**"
   ],
+  "sideEffects": false,
   "repository": "vercel/swr",
   "homepage": "https://swr.vercel.app",
   "license": "MIT",
