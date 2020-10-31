@@ -73,7 +73,9 @@ const defaultConfig = {
   compare: dequal,
   fetcher: webPreset.fetcher,
   isOnline: webPreset.isOnline,
-  isDocumentVisible: webPreset.isDocumentVisible
+  isDocumentVisible: webPreset.isDocumentVisible,
+  setOnFocus: webPreset.setOnFocus,
+  setOnConnect: webPreset.setOnConnect
 } as const
 
 export { cache }

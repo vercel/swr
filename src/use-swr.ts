@@ -23,7 +23,8 @@ import {
   responseInterface,
   RevalidateOptionInterface,
   triggerInterface,
-  updaterInterface
+  updaterInterface,
+  ListenerInterface
 } from './types'
 
 const IS_SERVER = typeof window === 'undefined'
@@ -49,28 +50,29 @@ const CACHE_REVALIDATORS: Record<string, updaterInterface[]> = {}
 const MUTATION_TS: Record<string, number> = {}
 const MUTATION_END_TS: Record<string, number> = {}
 
-// setup DOM events listeners for `focus` and `reconnect` actions
-if (!IS_SERVER && window.addEventListener) {
+setup({
+  setOnFocus: defaultConfig.setOnFocus,
+  setOnConnect: defaultConfig.setOnConnect
+})
+
+function setup(preset: ListenerInterface) {
   const revalidate = (revalidators: Record<string, revalidatorInterface[]>) => {
     if (!defaultConfig.isDocumentVisible() || !defaultConfig.isOnline()) return
+
     for (const key in revalidators) {
       if (revalidators[key][0]) revalidators[key][0]()
     }
   }
 
   // focus revalidate
-  window.addEventListener(
-    'visibilitychange',
-    () => revalidate(FOCUS_REVALIDATORS),
-    false
-  )
-  window.addEventListener('focus', () => revalidate(FOCUS_REVALIDATORS), false)
+  if (preset.setOnFocus) {
+    preset.setOnFocus(() => revalidate(FOCUS_REVALIDATORS))
+  }
+
   // reconnect revalidate
-  window.addEventListener(
-    'online',
-    () => revalidate(RECONNECT_REVALIDATORS),
-    false
-  )
+  if (preset.setOnConnect) {
+    preset.setOnConnect(() => revalidate(RECONNECT_REVALIDATORS))
+  }
 }
 
 const trigger: triggerInterface = (_key, shouldRevalidate = true) => {
