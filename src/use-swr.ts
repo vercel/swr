@@ -26,10 +26,10 @@ import {
 
 const IS_SERVER = typeof window === 'undefined'
 
-// polyfill for requestIdleCallback
-const rIC = IS_SERVER
+// polyfill for requestAnimationFrame
+const rAF = IS_SERVER
   ? null
-  : window['requestIdleCallback'] || (f => setTimeout(f, 1))
+  : window['requestAnimationFrame'] || (f => setTimeout(f, 1))
 
 // React currently throws a warning when using useLayoutEffect on the server.
 // To get around it, we can conditionally useEffect on the server (no-op) and
@@ -533,7 +533,7 @@ function useSWR<Data = any, Error = any>(
       if (typeof latestKeyedData !== 'undefined') {
         // delay revalidate if there's cache
         // to not block the rendering
-        rIC(softRevalidate)
+        rAF(softRevalidate)
       } else {
         softRevalidate()
       }
