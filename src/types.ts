@@ -64,8 +64,8 @@ export type triggerInterface = (
   shouldRevalidate?: boolean
 ) => Promise<any>
 export type mutateCallback<Data = any> = (
-  currentValue: Data
-) => Promise<Data> | Data
+  currentValue: undefined | Data
+) => Promise<undefined | Data> | undefined | Data
 export type mutateInterface<Data = any> = (
   key: keyInterface,
   data?: Data | Promise<Data> | mutateCallback<Data>,
