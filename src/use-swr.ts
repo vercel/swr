@@ -29,11 +29,10 @@ import {
 
 const IS_SERVER = typeof window === 'undefined'
 
-// polyfill for requestIdleCallback
-const rIC = IS_SERVER
-  ? null
-  : ((window as unknown) as any)['requestIdleCallback'] ||
-    ((f: (...args: any[]) => void) => setTimeout(f, 1))
+// polyfill for requestAnimationFrame
+const rAF = IS_SERVER
+  ? () => {}
+  : window['requestAnimationFrame'] || (f => setTimeout(f, 1))
 
 // React currently throws a warning when using useLayoutEffect on the server.
 // To get around it, we can conditionally useEffect on the server (no-op) and
@@ -49,6 +48,12 @@ const RECONNECT_REVALIDATORS: Record<string, revalidatorInterface[]> = {}
 const CACHE_REVALIDATORS: Record<string, updaterInterface[]> = {}
 const MUTATION_TS: Record<string, number> = {}
 const MUTATION_END_TS: Record<string, number> = {}
+
+// generate strictly increasing timestamps
+const now = (() => {
+  let ts = 0
+  return () => ts++
+})()
 
 setup({
   setOnFocus: defaultConfig.setOnFocus,
@@ -127,28 +132,32 @@ const mutate: mutateInterface = async (
   const [key, , keyErr] = cache.serializeKey(_key)
   if (!key) return
 
-  // if there is no new data, call revalidate against the key
+  // if there is no new data to update, let's just revalidate the key
   if (typeof _data === 'undefined') return trigger(_key, shouldRevalidate)
 
-  // update timestamps
-  MUTATION_TS[key] = Date.now() - 1
+  // update global timestamps
+  MUTATION_TS[key] = now() - 1
   MUTATION_END_TS[key] = 0
 
-  // keep track of timestamps before await asynchronously
+  // track timestamps before await asynchronously
   const beforeMutationTs = MUTATION_TS[key]
   const beforeConcurrentPromisesTs = CONCURRENT_PROMISES_TS[key]
 
   let data: any, error: any
+  let isAsyncMutation = false
 
   if (_data && typeof _data === 'function') {
     // `_data` is a function, call it passing current cache value
     try {
-      data = await _data(cache.get(key))
+      _data = _data(cache.get(key))
     } catch (err) {
       error = err
     }
-  } else if (_data && typeof _data.then === 'function') {
+  }
+
+  if (_data && typeof _data.then === 'function') {
     // `_data` is a promise
+    isAsyncMutation = true
     try {
       data = await _data
     } catch (err) {
@@ -158,23 +167,39 @@ const mutate: mutateInterface = async (
     data = _data
   }
 
-  // check if other mutations have occurred since we've started awaiting, if so then do not persist this change
-  if (
-    beforeMutationTs !== MUTATION_TS[key] ||
-    beforeConcurrentPromisesTs !== CONCURRENT_PROMISES_TS[key]
-  ) {
-    if (error) throw error
-    return data
+  const shouldAbort = (): boolean | void => {
+    // check if other mutations have occurred since we've started this mutation
+    if (
+      beforeMutationTs !== MUTATION_TS[key] ||
+      beforeConcurrentPromisesTs !== CONCURRENT_PROMISES_TS[key]
+    ) {
+      if (error) throw error
+      return true
+    }
   }
 
+  // if there's a race we don't update cache or broadcast change, just return the data
+  if (shouldAbort()) return data
+
   if (typeof data !== 'undefined') {
-    // update cached data, avoid notifying from the cache
+    // update cached data
     cache.set(key, data)
   }
+  // always update or reset the error
   cache.set(keyErr, error)
 
   // reset the timestamp to mark the mutation has ended
-  MUTATION_END_TS[key] = Date.now() - 1
+  MUTATION_END_TS[key] = now() - 1
+
+  if (!isAsyncMutation) {
+    // let's always broadcast in the next tick
+    // to dedupe synchronous mutation calls
+    // check out https://github.com/vercel/swr/pull/735 for more details
+    await 0
+
+    // we skip broadcasting if there's another mutation happened synchronously
+    if (shouldAbort()) return data
+  }
 
   // enter the revalidation stage
   // update existing SWR Hooks' state
@@ -393,7 +418,7 @@ function useSWR<Data = any, Error = any>(
             CONCURRENT_PROMISES[key] = fn(key)
           }
 
-          CONCURRENT_PROMISES_TS[key] = startAt = Date.now()
+          CONCURRENT_PROMISES_TS[key] = startAt = now()
 
           newData = await CONCURRENT_PROMISES[key]
 
@@ -537,7 +562,7 @@ function useSWR<Data = any, Error = any>(
       if (typeof latestKeyedData !== 'undefined') {
         // delay revalidate if there's cache
         // to not block the rendering
-        rIC(softRevalidate)
+        rAF(softRevalidate)
       } else {
         softRevalidate()
       }

@@ -1524,7 +1524,8 @@ describe('useSWR - local mutation', () => {
     )
     // call bound mutate
     fireEvent.click(container.firstElementChild)
-    // expect new updated value
+    // expect new updated value (after a tick)
+    await 0
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"data: mutated"`
     )
@@ -1547,6 +1548,7 @@ describe('useSWR - local mutation', () => {
     expect(container.textContent).toMatchInlineSnapshot(`"1"`) // directly from cache
     await act(() => new Promise(res => setTimeout(res, 150))) // still suspending
     mutate('mutate-2', 3) // set it to 3. this will drop the ongoing request
+    await 0
     expect(container.textContent).toMatchInlineSnapshot(`"3"`)
     await act(() => new Promise(res => setTimeout(res, 100)))
     expect(container.textContent).toMatchInlineSnapshot(`"3"`)
@@ -1568,9 +1570,14 @@ describe('useSWR - local mutation', () => {
     await act(() => new Promise(res => setTimeout(res, 250)))
     expect(container.textContent).toMatchInlineSnapshot(`"off"`) // Initial state
 
+    mutate('mutate-3', 'on', false)
+
+    // Validate local state is now "on"
+    await 0
+    expect(container.textContent).toMatchInlineSnapshot(`"on"`)
+
     // Simulate toggling "on"
     await act(async () => {
-      mutate('mutate-3', 'on', false)
       expect(
         mutate(
           'mutate-3',
@@ -1585,12 +1592,14 @@ describe('useSWR - local mutation', () => {
       ).resolves.toBe('on')
     })
 
-    // Validate local state is now "on"
-    expect(container.textContent).toMatchInlineSnapshot(`"on"`)
+    mutate('mutate-3', 'off', false)
+
+    // Validate local state is now "off"
+    await 0
+    expect(container.textContent).toMatchInlineSnapshot(`"off"`)
 
     // Simulate toggling "off"
     await act(async () => {
-      mutate('mutate-3', 'off', false)
       expect(
         mutate(
           'mutate-3',
@@ -1605,15 +1614,12 @@ describe('useSWR - local mutation', () => {
       ).resolves.toBe('off')
     })
 
-    // Validate local state is now "off"
-    expect(container.textContent).toMatchInlineSnapshot(`"off"`)
-
     // Wait for toggling "on" promise to resolve, but the "on" mutation is cancelled
-    await act(() => new Promise(res => setTimeout(res, 200)))
+    await act(() => new Promise(res => setTimeout(res, 210)))
     expect(container.textContent).toMatchInlineSnapshot(`"off"`)
 
     // Wait for toggling "off" promise to resolve
-    await act(() => new Promise(res => setTimeout(res, 200)))
+    await act(() => new Promise(res => setTimeout(res, 210)))
     expect(container.textContent).toMatchInlineSnapshot(`"off"`)
   })
 
@@ -1730,6 +1736,39 @@ describe('useSWR - local mutation', () => {
     for (let ref of refs) {
       expect(ref).toEqual(refs[0])
     }
+  })
+
+  it('should dedupe synchronous mutations', async () => {
+    const mutationRecivedValues = []
+    const renderRecivedValues = []
+
+    function Component() {
+      const { data, mutate: boundMutate } = useSWR('mutate-6', () => 0)
+
+      useEffect(() => {
+        setTimeout(() => {
+          // let's mutate twice, synchronously
+          boundMutate(v => {
+            mutationRecivedValues.push(v) // should be 0
+            return 1
+          }, false)
+          boundMutate(v => {
+            mutationRecivedValues.push(v) // should be 1
+            return 2
+          }, false)
+        }, 1)
+      }, [])
+
+      renderRecivedValues.push(data) // should be 0 -> 2, never render 1 in between
+      return null
+    }
+
+    render(<Component />)
+
+    await act(() => new Promise(res => setTimeout(res, 50)))
+
+    expect(mutationRecivedValues).toEqual([0, 1])
+    expect(renderRecivedValues).toEqual([undefined, 0, 2])
   })
 })
 
