@@ -6,6 +6,7 @@ import {
   waitForDomChange
 } from '@testing-library/react'
 import React, { ReactNode, Suspense, useEffect, useState } from 'react'
+import { callbackify } from 'util'
 
 import useSWR, { mutate, SWRConfig, cache } from '../src'
 import Cache from '../src/cache'
@@ -2442,5 +2443,58 @@ describe('useSWR - config callbacks', () => {
       `"hello, 0, b"`
     )
     expect(state).toEqual('b')
+  })
+})
+
+describe('useSWR - events', () => {
+  it('should work well with customize connect events', async () => {
+    let state = 0
+    let revalidateOnConnect = null
+    let isOnline = false
+    function setOnline(nextOnlineState) {
+      isOnline = nextOnlineState
+      if (isOnline && revalidateOnConnect) {
+        revalidateOnConnect()
+      }
+    }
+
+    function Page() {
+      const { data } = useSWR(
+        'config-connect-0',
+        () => {
+          return new Promise(res => setTimeout(() => res(++state), 100))
+        },
+        {
+          revalidateOnReconnect: true,
+          revalidateOnMount: false,
+          isDocumentVisible: () => true,
+          isOnline: () => isOnline,
+          setOnConnect: callback => {
+            revalidateOnConnect = callback
+          }
+        }
+      )
+      return <div>hello, {data}</div>
+    }
+
+    const { container } = render(<Page />)
+
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
+    await act(() => {
+      setOnline(true)
+      return new Promise(res => setTimeout(res, 150))
+    })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, 1"`)
+
+    await act(() => {
+      setOnline(false)
+      return new Promise(res => setTimeout(res, 150))
+    })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, 1"`)
+    await act(() => {
+      setOnline(true)
+      return new Promise(res => setTimeout(res, 150))
+    })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, 1"`)
   })
 })

@@ -49,8 +49,8 @@ export interface ConfigInterface<
 }
 
 export interface ListenerInterface {
-  setOnFocus: (callback: (...args: any[]) => void) => void
-  setOnConnect: (callback: (...args: any[]) => void) => void
+  setOnFocus?: (callback?: (...args: any[]) => void) => void
+  setOnConnect?: (callback?: (...args: any[]) => void) => void
 }
 
 export interface RevalidateOptionInterface {

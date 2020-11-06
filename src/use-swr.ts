@@ -55,12 +55,19 @@ const now = (() => {
   return () => ts++
 })()
 
-setup({
-  setOnFocus: defaultConfig.setOnFocus,
-  setOnConnect: defaultConfig.setOnConnect
-})
+function once(fn: (...a: any[]) => any) {
+  let isCalled = false
+  let ret: any
+  return (...args: any[]) => {
+    if (isCalled) return ret
+    isCalled = true
+    ret = fn(...args)
+    return ret
+  }
+}
 
-function setup(preset: ListenerInterface) {
+const setup = once((preset?: ListenerInterface) => {
+  if (!preset) return
   const revalidate = (revalidators: Record<string, revalidatorInterface[]>) => {
     if (!defaultConfig.isDocumentVisible() || !defaultConfig.isOnline()) return
 
@@ -76,9 +83,11 @@ function setup(preset: ListenerInterface) {
 
   // reconnect revalidate
   if (preset.setOnConnect) {
-    preset.setOnConnect(() => revalidate(RECONNECT_REVALIDATORS))
+    preset.setOnConnect(() => {
+      return revalidate(RECONNECT_REVALIDATORS)
+    })
   }
-}
+})
 
 const trigger: triggerInterface = (_key, shouldRevalidate = true) => {
   // we are ignoring the second argument which correspond to the arguments
@@ -268,6 +277,10 @@ function useSWR<Data = any, Error = any>(
   const configRef = useRef(config)
   useIsomorphicLayoutEffect(() => {
     configRef.current = config
+  })
+  setup({
+    setOnFocus: config.setOnFocus,
+    setOnConnect: config.setOnConnect
   })
 
   const resolveData = () => {
@@ -644,7 +657,6 @@ function useSWR<Data = any, Error = any>(
 
       // mark it as unmounted
       unmountedRef.current = true
-
       removeRevalidator(FOCUS_REVALIDATORS, onFocus)
       removeRevalidator(RECONNECT_REVALIDATORS, onReconnect)
       removeRevalidator(CACHE_REVALIDATORS, onUpdate)
