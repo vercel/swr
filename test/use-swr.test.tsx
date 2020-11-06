@@ -6,8 +6,6 @@ import {
   waitForDomChange
 } from '@testing-library/react'
 import React, { ReactNode, Suspense, useEffect, useState } from 'react'
-import { callbackify } from 'util'
-
 import useSWR, { mutate, SWRConfig, cache } from '../src'
 import Cache from '../src/cache'
 
@@ -2460,13 +2458,11 @@ describe('useSWR - events', () => {
 
     function Page() {
       const { data } = useSWR(
-        'config-connect-0',
-        () => {
-          return new Promise(res => setTimeout(() => res(++state), 100))
-        },
+        'config - revalidateOnReconnect',
+        () => new Promise(res => setTimeout(() => res(++state), 100)),
         {
           revalidateOnReconnect: true,
-          revalidateOnMount: false,
+          dedupingInterval: 0, // make `softRevalidate` equals `revalidate`
           isDocumentVisible: () => true,
           isOnline: () => isOnline,
           setOnConnect: callback => {
@@ -2478,23 +2474,26 @@ describe('useSWR - events', () => {
     }
 
     const { container } = render(<Page />)
+    const resolveAfter = ms => new Promise(res => setTimeout(res, ms))
 
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
+    await waitForDomChange({ container })
     await act(() => {
       setOnline(true)
-      return new Promise(res => setTimeout(res, 150))
+      return resolveAfter(150)
     })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, 1"`)
 
     await act(() => {
       setOnline(false)
-      return new Promise(res => setTimeout(res, 150))
+      return resolveAfter(150)
     })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, 1"`)
+
     await act(() => {
       setOnline(true)
-      return new Promise(res => setTimeout(res, 150))
+      return resolveAfter(150)
     })
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, 1"`)
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, 2"`)
   })
 })

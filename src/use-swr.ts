@@ -657,6 +657,7 @@ function useSWR<Data = any, Error = any>(
 
       // mark it as unmounted
       unmountedRef.current = true
+
       removeRevalidator(FOCUS_REVALIDATORS, onFocus)
       removeRevalidator(RECONNECT_REVALIDATORS, onReconnect)
       removeRevalidator(CACHE_REVALIDATORS, onUpdate)
