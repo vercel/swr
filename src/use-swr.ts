@@ -14,6 +14,7 @@ import {
 
 import defaultConfig, { cache } from './config'
 import SWRConfigContext from './swr-config-context'
+import { addListener, removeListener } from './libs/events'
 import {
   actionType,
   broadcastStateInterface,
@@ -23,6 +24,7 @@ import {
   mutateInterface,
   responseInterface,
   RevalidateOptionInterface,
+  listenerInterface,
   triggerInterface,
   updaterInterface
 } from './types'
@@ -39,12 +41,11 @@ const rAF = IS_SERVER
 // useLayoutEffect in the browser.
 const useIsomorphicLayoutEffect = IS_SERVER ? useEffect : useLayoutEffect
 
-type revalidatorInterface = (...args: any[]) => void
 // global state managers
 const CONCURRENT_PROMISES: Record<string, any> = {}
 const CONCURRENT_PROMISES_TS: Record<string, number> = {}
-const FOCUS_REVALIDATORS: Record<string, revalidatorInterface[]> = {}
-const RECONNECT_REVALIDATORS: Record<string, revalidatorInterface[]> = {}
+const FOCUS_REVALIDATORS: Record<string, listenerInterface[]> = {}
+const RECONNECT_REVALIDATORS: Record<string, listenerInterface[]> = {}
 const CACHE_REVALIDATORS: Record<string, updaterInterface[]> = {}
 const MUTATION_TS: Record<string, number> = {}
 const MUTATION_END_TS: Record<string, number> = {}
@@ -56,7 +57,7 @@ const now = (() => {
 })()
 
 const invokeRevalidators = (
-  revalidators: Record<string, revalidatorInterface[]>
+  revalidators: Record<string, listenerInterface[]>
 ) => {
   if (!defaultConfig.isDocumentVisible() || !defaultConfig.isOnline()) return
 
@@ -344,34 +345,6 @@ function useSWR<Data = any, Error = any>(
     []
   )
 
-  const addRevalidator = (
-    revalidators: Record<string, revalidatorInterface[]>,
-    callback: revalidatorInterface
-  ) => {
-    if (!callback) return
-    if (!revalidators[key]) {
-      revalidators[key] = [callback]
-    } else {
-      revalidators[key].push(callback)
-    }
-  }
-
-  const removeRevalidator = (
-    revlidators: Record<string, revalidatorInterface[]>,
-    callback: revalidatorInterface
-  ) => {
-    if (revlidators[key]) {
-      const revalidators = revlidators[key]
-      const index = revalidators.indexOf(callback)
-      if (index >= 0) {
-        // 10x faster than splice
-        // https://jsperf.com/array-remove-by-index
-        revalidators[index] = revalidators[revalidators.length - 1]
-        revalidators.pop()
-      }
-    }
-  }
-
   // start a revalidation
   const revalidate = useCallback(
     async (
@@ -640,9 +613,9 @@ function useSWR<Data = any, Error = any>(
       return false
     }
 
-    addRevalidator(FOCUS_REVALIDATORS, onFocus)
-    addRevalidator(RECONNECT_REVALIDATORS, onReconnect)
-    addRevalidator(CACHE_REVALIDATORS, onUpdate)
+    addListener(FOCUS_REVALIDATORS, key, onFocus)
+    addListener(RECONNECT_REVALIDATORS, key, onReconnect)
+    addListener(CACHE_REVALIDATORS, key, onUpdate)
 
     return () => {
       // cleanup
@@ -651,9 +624,9 @@ function useSWR<Data = any, Error = any>(
       // mark it as unmounted
       unmountedRef.current = true
 
-      removeRevalidator(FOCUS_REVALIDATORS, onFocus)
-      removeRevalidator(RECONNECT_REVALIDATORS, onReconnect)
-      removeRevalidator(CACHE_REVALIDATORS, onUpdate)
+      removeListener(FOCUS_REVALIDATORS, key, onFocus)
+      removeListener(RECONNECT_REVALIDATORS, key, onReconnect)
+      removeListener(CACHE_REVALIDATORS, key, onUpdate)
     }
   }, [key, revalidate])
 

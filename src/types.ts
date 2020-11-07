@@ -42,14 +42,16 @@ export interface ConfigInterface<
     revalidate: revalidateType,
     opts: Required<RevalidateOptionInterface>
   ) => void
-  useOnFocus?: ListenerCallbackInterface
-  useOnConnect?: ListenerCallbackInterface
+  useOnFocus?: listenerCallbackInterface
+  useOnConnect?: listenerCallbackInterface
 
   compare?: (a: Data | undefined, b: Data | undefined) => boolean
 }
 
-export type ListenerCallbackInterface = (
-  callback?: (...args: any[]) => void
+export type listenerInterface = (...args: any[]) => void
+
+export type listenerCallbackInterface = (
+  callback?: listenerInterface
 ) => () => void
 
 export interface RevalidateOptionInterface {

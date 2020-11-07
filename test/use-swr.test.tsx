@@ -2488,7 +2488,6 @@ describe('useSWR - events', () => {
 
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
     await waitForDomChange({ container })
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, 1"`)
     await act(() => {
       setOnline(true)
       return resolveAfter(150)

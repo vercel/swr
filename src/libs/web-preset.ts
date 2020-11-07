@@ -1,5 +1,12 @@
+import { listenerInterface } from '../types'
+import { addListener, removeListener, invokeEvent } from './events'
+
 const isWindowEventTarget =
   typeof window !== 'undefined' && window.addEventListener
+
+const domListenersMap: Record<string, listenerInterface[]> = {}
+const hasNoListeners = (event: string): boolean =>
+  !domListenersMap[event] || domListenersMap[event].length === 0
 
 function isOnline(): boolean {
   if (typeof navigator.onLine !== 'undefined') {
@@ -22,21 +29,41 @@ function isDocumentVisible(): boolean {
 
 const fetcher = (url: any) => fetch(url).then(res => res.json())
 
-function useOnFocus(callback: (...args: unknown[]) => void): () => void {
+const invokeFocus = () => invokeEvent(domListenersMap, 'focus')
+const invokeReconnect = () => invokeEvent(domListenersMap, 'reconnect')
+
+function useOnFocus(callback: listenerInterface): () => void {
   if (!isWindowEventTarget) return () => {}
-  window.addEventListener('focus', callback, false)
-  window.addEventListener('visibilitychange', callback, false)
+  // when first listener attach
+  if (hasNoListeners('focus')) {
+    window.addEventListener('focus', invokeFocus, false)
+    window.addEventListener('visibilitychange', invokeFocus, false)
+  }
+  addListener(domListenersMap, 'focus', callback)
+
   return () => {
-    window.removeEventListener('focus', callback, false)
-    window.removeEventListener('visibilitychange', callback, false)
+    removeListener(domListenersMap, 'focus', callback)
+    // when last listener dettach
+    if (hasNoListeners('focus')) {
+      window.removeEventListener('focus', invokeFocus, false)
+      window.removeEventListener('visibilitychange', invokeFocus, false)
+    }
   }
 }
 
-function useOnConnect(callback: (...args: unknown[]) => void): () => void {
+function useOnConnect(callback: listenerInterface): () => void {
   if (!isWindowEventTarget) return () => {}
-  window.addEventListener('online', callback, false)
+  // when first listener attach
+  if (hasNoListeners('reconnect')) {
+    window.addEventListener('online', invokeReconnect, false)
+  }
+  addListener(domListenersMap, 'reconnect', callback)
   return () => {
-    window.removeEventListener('online', callback, false)
+    removeListener(domListenersMap, 'reconnect', callback)
+    // when last listener dettach
+    if (hasNoListeners('reconnect')) {
+      window.removeEventListener('online', invokeReconnect, false)
+    }
   }
 }
 
