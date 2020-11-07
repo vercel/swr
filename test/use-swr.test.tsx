@@ -2464,36 +2464,47 @@ describe('useSWR - events', () => {
           revalidateOnReconnect: true,
           dedupingInterval: 0, // make `softRevalidate` equals `revalidate`
           isDocumentVisible: () => true,
-          isOnline: () => isOnline,
-          setOnConnect: callback => {
-            revalidateOnConnect = callback
-          }
+          isOnline: () => isOnline
         }
       )
       return <div>hello, {data}</div>
     }
 
-    const { container } = render(<Page />)
+    const { container } = render(
+      <SWRConfig
+        value={{
+          useOnConnect: callback => {
+            revalidateOnConnect = callback
+            return () => {
+              revalidateOnConnect = null
+            }
+          }
+        }}
+      >
+        <Page />
+      </SWRConfig>
+    )
     const resolveAfter = ms => new Promise(res => setTimeout(res, ms))
 
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
     await waitForDomChange({ container })
-    await act(() => {
-      setOnline(true)
-      return resolveAfter(150)
-    })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, 1"`)
-
-    await act(() => {
-      setOnline(false)
-      return resolveAfter(150)
-    })
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, 1"`)
-
     await act(() => {
       setOnline(true)
       return resolveAfter(150)
     })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, 2"`)
+
+    await act(() => {
+      setOnline(false)
+      return resolveAfter(150)
+    })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, 2"`)
+
+    await act(() => {
+      setOnline(true)
+      return resolveAfter(150)
+    })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, 3"`)
   })
 })

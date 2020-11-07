@@ -42,16 +42,15 @@ export interface ConfigInterface<
     revalidate: revalidateType,
     opts: Required<RevalidateOptionInterface>
   ) => void
-  setOnFocus?: ListenerInterface['setOnConnect']
-  setOnConnect?: ListenerInterface['setOnFocus']
+  useOnFocus?: ListenerCallbackInterface
+  useOnConnect?: ListenerCallbackInterface
 
   compare?: (a: Data | undefined, b: Data | undefined) => boolean
 }
 
-export interface ListenerInterface {
-  setOnFocus?: (callback?: (...args: any[]) => void) => void
-  setOnConnect?: (callback?: (...args: any[]) => void) => void
-}
+export type ListenerCallbackInterface = (
+  callback?: (...args: any[]) => void
+) => () => void
 
 export interface RevalidateOptionInterface {
   retryCount?: number

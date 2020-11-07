@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-ignore */
 /* TODO: use @ts-expect-error after upgrading typescript */
 import {
+  createElement,
   useCallback,
   useContext,
   useEffect,
@@ -23,8 +24,7 @@ import {
   responseInterface,
   RevalidateOptionInterface,
   triggerInterface,
-  updaterInterface,
-  ListenerInterface
+  updaterInterface
 } from './types'
 
 const IS_SERVER = typeof window === 'undefined'
@@ -55,39 +55,15 @@ const now = (() => {
   return () => ts++
 })()
 
-function once(fn: (...a: any[]) => any) {
-  let isCalled = false
-  let ret: any
-  return (...args: any[]) => {
-    if (isCalled) return ret
-    isCalled = true
-    ret = fn(...args)
-    return ret
+const invokeRevalidators = (
+  revalidators: Record<string, revalidatorInterface[]>
+) => {
+  if (!defaultConfig.isDocumentVisible() || !defaultConfig.isOnline()) return
+
+  for (const key in revalidators) {
+    if (revalidators[key][0]) revalidators[key][0]()
   }
 }
-
-const setup = once((preset?: ListenerInterface) => {
-  if (!preset) return
-  const revalidate = (revalidators: Record<string, revalidatorInterface[]>) => {
-    if (!defaultConfig.isDocumentVisible() || !defaultConfig.isOnline()) return
-
-    for (const key in revalidators) {
-      if (revalidators[key][0]) revalidators[key][0]()
-    }
-  }
-
-  // focus revalidate
-  if (preset.setOnFocus) {
-    preset.setOnFocus(() => revalidate(FOCUS_REVALIDATORS))
-  }
-
-  // reconnect revalidate
-  if (preset.setOnConnect) {
-    preset.setOnConnect(() => {
-      return revalidate(RECONNECT_REVALIDATORS)
-    })
-  }
-})
 
 const trigger: triggerInterface = (_key, shouldRevalidate = true) => {
   // we are ignoring the second argument which correspond to the arguments
@@ -243,10 +219,11 @@ function useSWR<Data = any, Error = any>(
       ]
 ): responseInterface<Data, Error> {
   const _key = args[0]
+  const swrContextConfig = useContext(SWRConfigContext)
   const config = Object.assign(
     {},
     defaultConfig,
-    useContext(SWRConfigContext),
+    swrContextConfig,
     args.length > 2
       ? args[2]
       : args.length === 2 && typeof args[1] === 'object'
@@ -278,10 +255,26 @@ function useSWR<Data = any, Error = any>(
   useIsomorphicLayoutEffect(() => {
     configRef.current = config
   })
-  setup({
-    setOnFocus: config.setOnFocus,
-    setOnConnect: config.setOnConnect
-  })
+
+  useEffect(() => {
+    if (swrContextConfig !== null) return
+    let releaseOnFocus = () => {}
+    let releaseOnConnect = () => {}
+    if (config.useOnFocus) {
+      releaseOnFocus = config.useOnFocus(() =>
+        invokeRevalidators(FOCUS_REVALIDATORS)
+      )
+    }
+    if (config.useOnConnect) {
+      releaseOnConnect = config.useOnConnect(() =>
+        invokeRevalidators(RECONNECT_REVALIDATORS)
+      )
+    }
+    return () => {
+      releaseOnFocus && releaseOnFocus()
+      releaseOnConnect && releaseOnConnect()
+    }
+  }, [config.useOnFocus, config.useOnConnect])
 
   const resolveData = () => {
     const cachedData = cache.get(key)
@@ -791,7 +784,31 @@ function useSWR<Data = any, Error = any>(
   return memoizedState
 }
 
-const SWRConfig = SWRConfigContext.Provider
+function SWRConfig(props: {
+  children: React.ReactElement
+  value: ConfigInterface
+}) {
+  const { value: config } = props
+  useEffect(() => {
+    let releaseOnFocus = () => {}
+    let releaseOnConnect = () => {}
+    if (config.useOnFocus) {
+      releaseOnFocus = config.useOnFocus(() =>
+        invokeRevalidators(FOCUS_REVALIDATORS)
+      )
+    }
+    if (config.useOnConnect) {
+      releaseOnConnect = config.useOnConnect(() =>
+        invokeRevalidators(RECONNECT_REVALIDATORS)
+      )
+    }
+    return () => {
+      releaseOnFocus && releaseOnFocus()
+      releaseOnConnect && releaseOnConnect()
+    }
+  }, [config.useOnFocus, config.useOnConnect])
+  return createElement(SWRConfigContext.Provider, props)
+}
 
 export { mutate, SWRConfig }
 export default useSWR
