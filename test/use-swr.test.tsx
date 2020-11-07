@@ -2473,7 +2473,7 @@ describe('useSWR - events', () => {
     const { container } = render(
       <SWRConfig
         value={{
-          useOnConnect: callback => {
+          setOnConnect: callback => {
             revalidateOnConnect = callback
             return () => {
               revalidateOnConnect = null

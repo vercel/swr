@@ -261,13 +261,13 @@ function useSWR<Data = any, Error = any>(
     if (swrContextConfig !== null) return
     let releaseOnFocus = () => {}
     let releaseOnConnect = () => {}
-    if (config.useOnFocus) {
-      releaseOnFocus = config.useOnFocus(() =>
+    if (config.setOnFocus) {
+      releaseOnFocus = config.setOnFocus(() =>
         invokeRevalidators(FOCUS_REVALIDATORS)
       )
     }
-    if (config.useOnConnect) {
-      releaseOnConnect = config.useOnConnect(() =>
+    if (config.setOnConnect) {
+      releaseOnConnect = config.setOnConnect(() =>
         invokeRevalidators(RECONNECT_REVALIDATORS)
       )
     }
@@ -275,7 +275,7 @@ function useSWR<Data = any, Error = any>(
       releaseOnFocus && releaseOnFocus()
       releaseOnConnect && releaseOnConnect()
     }
-  }, [config.useOnFocus, config.useOnConnect])
+  }, [config.setOnFocus, config.setOnConnect])
 
   const resolveData = () => {
     const cachedData = cache.get(key)
@@ -757,21 +757,18 @@ function useSWR<Data = any, Error = any>(
   return memoizedState
 }
 
-function SWRConfig(props: {
-  children: React.ReactElement
-  value: ConfigInterface
-}) {
+function SWRConfig(props: React.PropsWithChildren<{ value: ConfigInterface }>) {
   const { value: config } = props
   useEffect(() => {
     let releaseOnFocus = () => {}
     let releaseOnConnect = () => {}
-    if (config.useOnFocus) {
-      releaseOnFocus = config.useOnFocus(() =>
+    if (config.setOnFocus) {
+      releaseOnFocus = config.setOnFocus(() =>
         invokeRevalidators(FOCUS_REVALIDATORS)
       )
     }
-    if (config.useOnConnect) {
-      releaseOnConnect = config.useOnConnect(() =>
+    if (config.setOnConnect) {
+      releaseOnConnect = config.setOnConnect(() =>
         invokeRevalidators(RECONNECT_REVALIDATORS)
       )
     }
@@ -779,7 +776,7 @@ function SWRConfig(props: {
       releaseOnFocus && releaseOnFocus()
       releaseOnConnect && releaseOnConnect()
     }
-  }, [config.useOnFocus, config.useOnConnect])
+  }, [config.setOnFocus, config.setOnConnect])
   return createElement(SWRConfigContext.Provider, props)
 }
 

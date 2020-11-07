@@ -42,8 +42,8 @@ export interface ConfigInterface<
     revalidate: revalidateType,
     opts: Required<RevalidateOptionInterface>
   ) => void
-  useOnFocus?: listenerCallbackInterface
-  useOnConnect?: listenerCallbackInterface
+  setOnFocus?: listenerCallbackInterface
+  setOnConnect?: listenerCallbackInterface
 
   compare?: (a: Data | undefined, b: Data | undefined) => boolean
 }

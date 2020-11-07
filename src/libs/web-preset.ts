@@ -32,7 +32,7 @@ const fetcher = (url: any) => fetch(url).then(res => res.json())
 const invokeFocus = () => invokeEvent(domListenersMap, 'focus')
 const invokeOnline = () => invokeEvent(domListenersMap, 'online')
 
-function useOnFocus(callback: listenerInterface): () => void {
+function setOnFocus(callback: listenerInterface): () => void {
   if (!isWindowEventTarget) return () => {}
   // when first listener attach
   if (hasNoListeners('focus')) {
@@ -51,7 +51,7 @@ function useOnFocus(callback: listenerInterface): () => void {
   }
 }
 
-function useOnConnect(callback: listenerInterface): () => void {
+function setOnConnect(callback: listenerInterface): () => void {
   if (!isWindowEventTarget) return () => {}
   // when first listener attach
   if (hasNoListeners('online')) {
@@ -71,6 +71,6 @@ export default {
   isOnline,
   isDocumentVisible,
   fetcher,
-  useOnFocus,
-  useOnConnect
+  setOnFocus,
+  setOnConnect
 }

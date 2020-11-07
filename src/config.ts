@@ -74,8 +74,8 @@ const defaultConfig = {
   fetcher: webPreset.fetcher,
   isOnline: webPreset.isOnline,
   isDocumentVisible: webPreset.isDocumentVisible,
-  useOnFocus: webPreset.useOnFocus,
-  useOnConnect: webPreset.useOnConnect
+  setOnFocus: webPreset.setOnFocus,
+  setOnConnect: webPreset.setOnConnect
 } as const
 
 export { cache }
