@@ -30,7 +30,7 @@ function isDocumentVisible(): boolean {
 const fetcher = (url: any) => fetch(url).then(res => res.json())
 
 const invokeFocus = () => invokeEvent(domListenersMap, 'focus')
-const invokeReconnect = () => invokeEvent(domListenersMap, 'reconnect')
+const invokeOnline = () => invokeEvent(domListenersMap, 'online')
 
 function useOnFocus(callback: listenerInterface): () => void {
   if (!isWindowEventTarget) return () => {}
@@ -54,15 +54,15 @@ function useOnFocus(callback: listenerInterface): () => void {
 function useOnConnect(callback: listenerInterface): () => void {
   if (!isWindowEventTarget) return () => {}
   // when first listener attach
-  if (hasNoListeners('reconnect')) {
-    window.addEventListener('online', invokeReconnect, false)
+  if (hasNoListeners('online')) {
+    window.addEventListener('online', invokeOnline, false)
   }
-  addListener(domListenersMap, 'reconnect', callback)
+  addListener(domListenersMap, 'online', callback)
   return () => {
-    removeListener(domListenersMap, 'reconnect', callback)
+    removeListener(domListenersMap, 'online', callback)
     // when last listener dettach
-    if (hasNoListeners('reconnect')) {
-      window.removeEventListener('online', invokeReconnect, false)
+    if (hasNoListeners('online')) {
+      window.removeEventListener('online', invokeOnline, false)
     }
   }
 }
