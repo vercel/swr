@@ -24,7 +24,8 @@ import {
   updaterInterface
 } from './types'
 
-const IS_SERVER = typeof window === 'undefined'
+// @ts-ignore
+const IS_SERVER = typeof window === 'undefined' || !!(typeof Deno !== 'undefined' && Deno && Deno.version && Deno.version.deno)
 
 // polyfill for requestAnimationFrame
 const rAF = IS_SERVER
