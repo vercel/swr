@@ -2255,6 +2255,36 @@ describe('useSWR - key', () => {
       `"data-second"`
     )
   })
+
+  it('should cleanup state when key turns to empty', async () => {
+    function Page() {
+      const [cnt, setCnt] = useState(1)
+      const { isValidating } = useSWR(
+        cnt === -1 ? '' : `key-empty-${cnt}`,
+        () => new Promise(r => setTimeout(r, 1000))
+      )
+
+      return (
+        <div onClick={() => setCnt(cnt == 2 ? -1 : cnt + 1)}>
+          {isValidating ? 'true' : 'false'}
+        </div>
+      )
+    }
+
+    const { container } = render(<Page />)
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"true"`)
+    await act(() => {
+      fireEvent.click(container.firstElementChild)
+      return new Promise(res => setTimeout(res, 10))
+    })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"true"`)
+    await act(() => {
+      fireEvent.click(container.firstElementChild)
+      return new Promise(res => setTimeout(res, 10))
+    })
+    await new Promise(r => setTimeout(r, 10))
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"false"`)
+  })
 })
 
 describe('useSWR - config callbacks', () => {

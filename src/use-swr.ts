@@ -537,7 +537,12 @@ function useSWR<Data = any, Error = any>(
 
   // mounted (client side rendering)
   useIsomorphicLayoutEffect(() => {
-    if (!key) return undefined
+    if (!key) {
+      if (keyRef.current !== key) unmountedRef.current = false
+      keyRef.current = key
+      dispatch({ isValidating: false })
+      return undefined
+    }
 
     // after `key` updates, we need to mark it as mounted
     unmountedRef.current = false
