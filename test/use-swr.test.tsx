@@ -1,6 +1,5 @@
 import {
   act,
-  cleanup,
   fireEvent,
   render,
   waitForDomChange
@@ -26,8 +25,6 @@ class ErrorBoundary extends React.Component<{ fallback: ReactNode }> {
 }
 
 describe('useSWR', () => {
-  afterEach(cleanup)
-
   it('should return `undefined` on hydration', () => {
     function Page() {
       const { data } = useSWR('constant-1', () => 'SWR')
@@ -358,8 +355,6 @@ describe('useSWR', () => {
 })
 
 describe('useSWR - loading', () => {
-  afterEach(cleanup)
-
   const loadData = () => new Promise(res => setTimeout(() => res('data'), 100))
 
   it('should return loading state', async () => {
@@ -434,8 +429,6 @@ describe('useSWR - loading', () => {
 })
 
 describe('useSWR - refresh', () => {
-  afterEach(cleanup)
-
   it('should rerender automatically on interval', async () => {
     let count = 0
 
@@ -701,8 +694,6 @@ describe('useSWR - refresh', () => {
 })
 
 describe('useSWR - revalidate', () => {
-  afterEach(cleanup)
-
   it('should rerender after triggering revalidation', async () => {
     let value = 0
 
@@ -787,8 +778,6 @@ describe('useSWR - revalidate', () => {
 })
 
 describe('useSWR - error', () => {
-  afterEach(cleanup)
-
   it('should handle errors', async () => {
     function Page() {
       const { data, error } = useSWR(
@@ -1067,8 +1056,6 @@ describe('useSWR - error', () => {
 })
 
 describe('useSWR - focus', () => {
-  afterEach(cleanup)
-
   it('should revalidate on focus by default', async () => {
     let value = 0
 
@@ -1284,8 +1271,6 @@ describe('useSWR - focus', () => {
 })
 
 describe('useSWR - local mutation', () => {
-  afterEach(cleanup)
-
   it('should trigger revalidation programmatically', async () => {
     let value = 0
 
@@ -1773,8 +1758,6 @@ describe('useSWR - local mutation', () => {
 })
 
 describe('useSWR - context configs', () => {
-  afterEach(cleanup)
-
   it('should read the config fallback from the context', async () => {
     let value = 0
     const fetcher = () => value++
@@ -1805,8 +1788,6 @@ describe('useSWR - context configs', () => {
 })
 
 describe('useSWR - suspense', () => {
-  afterEach(cleanup)
-
   it('should render fallback', async () => {
     function Section() {
       const { data } = useSWR(
@@ -2079,8 +2060,6 @@ describe('useSWR - cache', () => {
 })
 
 describe('useSWR - key', () => {
-  afterEach(cleanup)
-
   it('should respect requests after key has changed', async () => {
     let rerender
 
