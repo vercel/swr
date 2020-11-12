@@ -3,9 +3,9 @@ module.exports = {
   testRegex: '/test/.*\\.test\\.tsx$',
   globals: {
     'ts-jest': {
-      diagnostics: {
+      diagnostics: false /**{
         warnOnly: true
-      }
+      } */
     }
   }
 }
