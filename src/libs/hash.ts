@@ -22,7 +22,6 @@ export default function hash(args: any[]): string {
       // "undefined" -> '"undefined"'
       // undefined   -> 'undefined'
       // 123         -> '123'
-      // null        -> 'null'
       // "null"      -> '"null"'
       if (typeof args[i] === 'string') {
         _hash = '"' + args[i] + '"'
