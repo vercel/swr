@@ -1493,6 +1493,26 @@ describe('useSWR - local mutation', () => {
     expect(callback).toHaveBeenCalledWith('cached data')
   })
 
+  it('should call function with undefined if key not cached', async () => {
+    const increment = jest.fn(currentValue =>
+      currentValue == null ? undefined : currentValue + 1
+    )
+
+    await mutate('dynamic-15.1', increment, false)
+
+    expect(increment).toHaveBeenCalledTimes(1)
+    expect(increment).toHaveBeenLastCalledWith(undefined)
+    expect(increment).toHaveLastReturnedWith(undefined)
+
+    cache.set('dynamic-15.1', 42)
+
+    await mutate('dynamic-15.1', increment, false)
+
+    expect(increment).toHaveBeenCalledTimes(2)
+    expect(increment).toHaveBeenLastCalledWith(42)
+    expect(increment).toHaveLastReturnedWith(43)
+  })
+
   it('should return results of the mutation', async () => {
     // returns the data if promise resolved
     expect(mutate('dynamic-16', Promise.resolve('data'))).resolves.toBe('data')
