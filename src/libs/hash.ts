@@ -13,7 +13,8 @@ export default function hash(args: any[]): string {
   let key = 'arg'
   for (let i = 0; i < args.length; ++i) {
     if (args[i] === null) {
-      return (key += '@null')
+      key += '@null'
+      continue
     }
     let _hash
     if (typeof args[i] !== 'object' && typeof args[i] !== 'function') {
