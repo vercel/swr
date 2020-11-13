@@ -173,11 +173,11 @@ describe('useSWR', () => {
       )
     }
     const { container } = render(<Page />)
-    await act(() => new Promise(res => setTimeout(res, 10)))
+    await act(() => sleep(10))
     expect(container.textContent).toMatchInlineSnapshot(`"0 0 0"`)
-    await act(() => new Promise(res => setTimeout(res, 100)))
+    await act(() => sleep(100))
     expect(container.textContent).toMatchInlineSnapshot(`"1 1 1"`)
-    await act(() => new Promise(res => setTimeout(res, 100)))
+    await act(() => sleep(100))
     expect(container.textContent).toMatchInlineSnapshot(`"2 2 2"`)
   })
 
@@ -209,11 +209,11 @@ describe('useSWR', () => {
       )
     }
     const { container } = render(<Page />)
-    await act(() => new Promise(res => setTimeout(res, 10)))
+    await act(() => sleep(10))
     expect(container.textContent).toMatchInlineSnapshot(`"0 0 0"`)
-    await act(() => new Promise(res => setTimeout(res, 100)))
+    await act(() => sleep(100))
     expect(container.textContent).toMatchInlineSnapshot(`"1 1 1"`)
-    await act(() => new Promise(res => setTimeout(res, 100)))
+    await act(() => sleep(100))
     expect(container.textContent).toMatchInlineSnapshot(`"err err err"`)
   })
 
@@ -253,11 +253,11 @@ describe('useSWR', () => {
     }
     const { container } = render(<Page />)
     expect(container.textContent).toMatchInlineSnapshot(`"true true true"`)
-    await act(() => new Promise(res => setTimeout(res, 100)))
+    await act(() => sleep(100))
     expect(container.textContent).toMatchInlineSnapshot(`"false false false"`)
-    await act(() => new Promise(res => setTimeout(res, 100)))
+    await act(() => sleep(100))
     expect(container.textContent).toMatchInlineSnapshot(`"true true true"`)
-    await act(() => new Promise(res => setTimeout(res, 100)))
+    await act(() => sleep(100))
     expect(container.textContent).toMatchInlineSnapshot(`"false false false"`)
   })
 
@@ -367,9 +367,9 @@ describe('useSWR - loading', () => {
 
     const { container } = render(<Page />)
     expect(container.textContent).toMatchInlineSnapshot(`"hello, , loading"`)
-    await waitForDomChange({ container })
-    expect(container.textContent).toMatchInlineSnapshot(`"hello, data, ready"`)
 
+    await act(() => sleep(110))
+    expect(container.textContent).toMatchInlineSnapshot(`"hello, data, ready"`)
     //    data       isValidating
     // -> undefined, false
     // -> undefined, true
@@ -387,7 +387,9 @@ describe('useSWR - loading', () => {
     }
 
     const { container } = render(<Page />)
-    await waitForDomChange({ container })
+
+    await act(() => sleep(110))
+
     expect(container.textContent).toMatchInlineSnapshot(`"hello, data"`)
 
     //    data
@@ -417,7 +419,7 @@ describe('useSWR - loading', () => {
     const { container } = render(<Page />)
     expect(container.textContent).toMatchInlineSnapshot(`"hello"`)
 
-    await act(() => new Promise(res => setTimeout(res, 110))) // wait
+    await act(() => sleep(110)) // wait
     // it doesn't re-render, but fetch was triggered
     expect(renderCount).toEqual(1)
     expect(dataLoaded).toEqual(true)
@@ -439,13 +441,15 @@ describe('useSWR - refresh', () => {
 
     // hydration
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: "`)
-    await waitForDomChange({ container }) // mount
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 0"`)
-    await act(() => new Promise(res => setTimeout(res, 210))) // update
+
+    // mount
+    await screen.findByText('count: 0')
+
+    await act(() => sleep(210)) // update
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 1"`)
-    await act(() => new Promise(res => setTimeout(res, 50))) // no update
+    await act(() => sleep(50)) // no update
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 1"`)
-    await act(() => new Promise(res => setTimeout(res, 150))) // update
+    await act(() => sleep(150)) // update
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 2"`)
   })
 
@@ -463,15 +467,17 @@ describe('useSWR - refresh', () => {
 
     // hydration
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: "`)
-    await waitForDomChange({ container }) // mount
+
+    // mount
+    await screen.findByText('count: 0')
+
+    await act(() => sleep(210)) // no update (deduped)
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 0"`)
-    await act(() => new Promise(res => setTimeout(res, 210))) // no update (deduped)
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 0"`)
-    await act(() => new Promise(res => setTimeout(res, 200))) // update
+    await act(() => sleep(200)) // update
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 1"`)
-    await act(() => new Promise(res => setTimeout(res, 200))) // no update (deduped)
+    await act(() => sleep(200)) // no update (deduped)
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 1"`)
-    await act(() => new Promise(res => setTimeout(res, 200))) // update
+    await act(() => sleep(200)) // update
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 2"`)
   })
 
@@ -492,54 +498,42 @@ describe('useSWR - refresh', () => {
     const { container } = render(<Page />)
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: "`)
 
-    await waitForDomChange({ container }) // mount
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 0"`)
-    await act(() => {
-      return new Promise(res => setTimeout(res, 210))
-    })
+    // mount
+    await screen.findByText('count: 0')
+
+    await act(() => sleep(210))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 1"`)
-    await act(() => {
-      return new Promise(res => setTimeout(res, 50))
-    })
+    await act(() => sleep(50))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 1"`)
-    await act(() => {
-      return new Promise(res => setTimeout(res, 150))
-    })
+    await act(() => sleep(150))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 2"`)
-    await act(() => {
-      fireEvent.click(container.firstElementChild)
-      // it will clear 200ms timer and setup a new 300ms timer
-      return new Promise(res => setTimeout(res, 200))
-    })
+    fireEvent.click(container.firstElementChild)
+
+    await act(() => sleep(200))
+
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 2"`)
-    await act(() => {
-      return new Promise(res => setTimeout(res, 110))
-    })
+
+    await act(() => sleep(110))
+
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 3"`)
-    await act(() => {
-      // wait for new 300ms timer
-      return new Promise(res => setTimeout(res, 310))
-    })
+
+    await act(() => sleep(310))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 4"`)
+    fireEvent.click(container.firstElementChild)
     await act(() => {
-      fireEvent.click(container.firstElementChild)
       // it will clear 300ms timer and setup a new 400ms timer
-      return new Promise(res => setTimeout(res, 300))
+      return sleep(300)
     })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 4"`)
-    await act(() => {
-      return new Promise(res => setTimeout(res, 110))
-    })
+    await act(() => sleep(110))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 5"`)
+    fireEvent.click(container.firstElementChild)
     await act(() => {
-      fireEvent.click(container.firstElementChild)
       // it will clear 400ms timer and stop
-      return new Promise(res => setTimeout(res, 110))
+      return sleep(110)
     })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 5"`)
-    await act(() => {
-      return new Promise(res => setTimeout(res, 110))
-    })
+    await act(() => sleep(110))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 5"`)
   })
 
@@ -571,76 +565,59 @@ describe('useSWR - refresh', () => {
       `"count:  0"`
     )
 
-    await waitForDomChange({ container }) // mount
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"count: 0 1"`
-    )
+    await screen.findByText('count: 0 1')
 
-    await act(() => {
-      return new Promise(res => setTimeout(res, 200))
-    })
+    await act(() => sleep(200))
+
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"count: 1 2"`
     )
 
-    await act(() => {
-      return new Promise(res => setTimeout(res, 200))
-    })
+    await act(() => sleep(200))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"count: 1 2"`
     )
 
-    await act(() => {
-      return new Promise(res => setTimeout(res, 200))
-    })
+    await act(() => sleep(200))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"count: 1 2"`
     )
 
-    await act(() => {
-      return new Promise(res => setTimeout(res, 200))
-    })
+    await act(() => sleep(200))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"count: 1 2"`
     )
 
+    fireEvent.click(container.firstElementChild)
+
     await act(() => {
-      fireEvent.click(container.firstElementChild)
       // it will setup a new 200ms timer
-      return new Promise(res => setTimeout(res, 100))
+      return sleep(100)
     })
 
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"count: 1 0"`
     )
 
-    await act(() => {
-      return new Promise(res => setTimeout(res, 100))
-    })
+    await act(() => sleep(100))
 
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"count: 2 1"`
     )
 
-    await act(() => {
-      return new Promise(res => setTimeout(res, 200))
-    })
+    await act(() => sleep(200))
 
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"count: 3 2"`
     )
 
-    await act(() => {
-      return new Promise(res => setTimeout(res, 200))
-    })
+    await act(() => sleep(200))
 
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"count: 3 2"`
     )
 
-    await act(() => {
-      return new Promise(res => setTimeout(res, 200))
-    })
+    await act(() => sleep(200))
 
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"count: 3 2"`
@@ -648,44 +625,49 @@ describe('useSWR - refresh', () => {
   })
 
   it('should allow use custom isEqual method', async () => {
+    let count = 0
+    const fetcher = jest.fn(() => ({
+      timestamp: ++count,
+      version: '1.0'
+    }))
     function Page() {
-      const { data, revalidate } = useSWR(
-        'dynamic-11',
-        () => ({
-          timestamp: +new Date(),
-          version: '1.0'
-        }),
-        {
-          compare: function isEqual(a, b) {
-            if (a === b) {
-              return true
-            }
-            if (!a || !b) {
-              return false
-            }
-            return a.version === b.version
+      const { data, mutate: change } = useSWR('dynamic-11', fetcher, {
+        compare: function isEqual(a, b) {
+          if (a === b) {
+            return true
           }
+          if (!a || !b) {
+            return false
+          }
+          return a.version === b.version
         }
-      )
+      })
 
       if (!data) {
         return <div>loading</div>
       }
-      return <button onClick={revalidate}>{data.timestamp}</button>
+      return <button onClick={() => change()}>{data.timestamp}</button>
     }
 
     const { container } = render(<Page />)
 
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"loading"`)
-    await waitForDomChange({ container })
-    const firstContent = container.firstChild.textContent
-    await act(() => {
-      // trigger revalidation
-      fireEvent.click(container.firstElementChild)
-      return new Promise(res => setTimeout(res, 1))
+
+    await screen.findByText('1')
+    expect(fetcher).toBeCalledTimes(1)
+    expect(fetcher).toReturnWith({
+      timestamp: 1,
+      version: '1.0'
     })
-    const secondContent = container.firstChild.textContent
-    expect(firstContent).toEqual(secondContent)
+
+    fireEvent.click(container.firstElementChild)
+    await act(() => sleep(1))
+    expect(fetcher).toBeCalledTimes(2)
+    expect(fetcher).toReturnWith({
+      timestamp: 2,
+      version: '1.0'
+    })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"1"`)
   })
 })
 
