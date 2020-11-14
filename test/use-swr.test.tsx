@@ -1057,10 +1057,12 @@ describe('useSWR - focus', () => {
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
     await waitForDomChange({ container }) // mount
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
+    // mount
+    await screen.findByText('data: 0')
+    // trigger revalidation
+    fireEvent.focus(window)
     await act(() => {
-      // trigger revalidation
-      fireEvent.focus(window)
-      return new Promise(res => setTimeout(res, 1))
+      return sleep(1)
     })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
   })
@@ -1079,12 +1081,12 @@ describe('useSWR - focus', () => {
 
     // hydration
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
-    await waitForDomChange({ container }) // mount
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
+    // mount
+    await screen.findByText('data: 0')
+    // trigger revalidation
+    fireEvent.focus(window)
     await act(() => {
-      // trigger revalidation
-      fireEvent.focus(window)
-      return new Promise(res => setTimeout(res, 1))
+      return sleep(1)
     })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
   })
@@ -1104,42 +1106,43 @@ describe('useSWR - focus', () => {
 
     // hydration
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
-    await waitForDomChange({ container }) // mount
+    // mount
+    await screen.findByText('data: 0')
 
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
+    // trigger revalidation
+    fireEvent.focus(window)
+
     await act(() => {
-      // trigger revalidation
-      fireEvent.focus(window)
-      return new Promise(res => setTimeout(res, 1))
+      return sleep(1)
     })
     // data should not change
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
 
     // change revalidateOnFocus to true
     fireEvent.click(container.firstElementChild)
+    // trigger revalidation
+    fireEvent.focus(window)
 
     await act(() => {
-      // trigger revalidation
-      fireEvent.focus(window)
-      return new Promise(res => setTimeout(res, 1))
+      return sleep(1)
     })
     // data should update
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
+    // trigger revalidation
+    fireEvent.focus(window)
 
     await act(() => {
-      // trigger revalidation
-      fireEvent.focus(window)
-      return new Promise(res => setTimeout(res, 1))
+      return sleep(1)
     })
     // data should update
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 2"`)
 
     // change revalidateOnFocus to false
     fireEvent.click(container.firstElementChild)
+    // trigger revalidation
+    fireEvent.focus(window)
     await act(() => {
-      // trigger revalidation
-      fireEvent.focus(window)
-      return new Promise(res => setTimeout(res, 1))
+      return sleep(1)
     })
     // data should not change
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 2"`)
@@ -1164,26 +1167,22 @@ describe('useSWR - focus', () => {
 
     // hydration
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
-    await waitForDomChange({ container }) // mount
-
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
-
+    // mount
+    await screen.findByText('data: 0')
+    // trigger revalidation
+    fireEvent.focus(window)
     await act(() => {
-      // trigger revalidation
-      fireEvent.focus(window)
-      return new Promise(res => setTimeout(res, 1))
+      return sleep(1)
     })
-
+    fireEvent.focus(window)
     await act(() => {
-      fireEvent.focus(window)
-      return new Promise(res => setTimeout(res, 210))
+      return sleep(210)
     })
 
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
-
+    fireEvent.focus(window)
     await act(() => {
-      fireEvent.focus(window)
-      return new Promise(res => setTimeout(res, 1))
+      return sleep(1)
     })
 
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 2"`)
@@ -1209,47 +1208,41 @@ describe('useSWR - focus', () => {
 
     // hydration
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
-    await waitForDomChange({ container }) // mount
+    // mount
+    await screen.findByText('data: 0')
 
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
-
+    fireEvent.focus(window)
     await act(() => {
-      fireEvent.focus(window)
-      return new Promise(res => setTimeout(res, 210))
+      return sleep(210)
     })
-
+    fireEvent.focus(window)
     await act(() => {
-      fireEvent.focus(window)
-      return new Promise(res => setTimeout(res, 210))
+      return sleep(210)
     })
 
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 2"`)
     fireEvent.click(container.firstElementChild)
-
+    fireEvent.focus(window)
     await act(() => {
-      fireEvent.focus(window)
-      return new Promise(res => setTimeout(res, 1))
+      return sleep(1)
     })
-
+    fireEvent.focus(window)
     await act(() => {
-      fireEvent.focus(window)
-      return new Promise(res => setTimeout(res, 210))
+      return sleep(210)
     })
 
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 3"`)
 
     await act(() => {
-      return new Promise(res => setTimeout(res, 100))
+      return sleep(100)
     })
-
+    fireEvent.focus(window)
     await act(() => {
-      fireEvent.focus(window)
-      return new Promise(res => setTimeout(res, 310))
+      return sleep(310)
     })
-
+    fireEvent.focus(window)
     await act(() => {
-      fireEvent.focus(window)
-      return new Promise(res => setTimeout(res, 1))
+      return sleep(1)
     })
 
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 5"`)
@@ -1462,26 +1455,6 @@ describe('useSWR - local mutation', () => {
     const callback = jest.fn()
     await mutate('dynamic-15', callback)
     expect(callback).toHaveBeenCalledWith('cached data')
-  })
-
-  it('should call function with undefined if key not cached', async () => {
-    const increment = jest.fn(currentValue =>
-      currentValue == null ? undefined : currentValue + 1
-    )
-
-    await mutate('dynamic-15.1', increment, false)
-
-    expect(increment).toHaveBeenCalledTimes(1)
-    expect(increment).toHaveBeenLastCalledWith(undefined)
-    expect(increment).toHaveLastReturnedWith(undefined)
-
-    cache.set('dynamic-15.1', 42)
-
-    await mutate('dynamic-15.1', increment, false)
-
-    expect(increment).toHaveBeenCalledTimes(2)
-    expect(increment).toHaveBeenLastCalledWith(42)
-    expect(increment).toHaveLastReturnedWith(43)
   })
 
   it('should return results of the mutation', async () => {
