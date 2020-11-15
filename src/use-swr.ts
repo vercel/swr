@@ -24,8 +24,10 @@ import {
   updaterInterface
 } from './types'
 
-// @ts-ignore
-const IS_SERVER = typeof window === 'undefined' || !!(typeof Deno !== 'undefined' && Deno && Deno.version && Deno.version.deno)
+const IS_SERVER =
+  typeof window === 'undefined' ||
+  // @ts-ignore
+  !!(typeof Deno !== 'undefined' && Deno && Deno.version && Deno.version.deno)
 
 // polyfill for requestAnimationFrame
 const rAF = IS_SERVER
@@ -301,7 +303,7 @@ function useSWR<Data = any, Error = any>(
   useDebugValue(stateRef.current.data)
 
   const rerender = useState(null)[1]
-  let dispatch = useCallback(payload => {
+  let dispatch = useCallback((payload: actionType<Data, Error>) => {
     let shouldUpdateState = false
     for (let k in payload) {
       if (stateRef.current[k] === payload[k]) {
