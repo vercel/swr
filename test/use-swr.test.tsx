@@ -1263,13 +1263,16 @@ describe('useSWR - local mutation', () => {
 
     // hydration
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
-    await waitForDomChange({ container }) // mount
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
-    await act(() => {
-      // trigger revalidation
+
+    // mount
+    await screen.findByText('data: 0')
+
+    act(() => {
+      // mutate and revalidate
       mutate('dynamic-7')
-      return new Promise(res => setTimeout(res, 1))
     })
+    await act(() => sleep(1))
+
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
   })
 
@@ -1286,13 +1289,15 @@ describe('useSWR - local mutation', () => {
 
     // hydration
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
-    await waitForDomChange({ container }) // mount
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
-    await act(() => {
+    // mount
+    await screen.findByText('data: 0')
+
+    act(() => {
       // trigger revalidation
       mutate('dynamic-12')
-      return new Promise(res => setTimeout(res, 1))
     })
+    await act(() => sleep(1))
+
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
   })
 
@@ -1309,13 +1314,15 @@ describe('useSWR - local mutation', () => {
 
     // hydration
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
-    await waitForDomChange({ container }) // mount
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
-    await act(() => {
+
+    //mount
+    await screen.findByText('data: 0')
+
+    act(() => {
       // mutate and revalidate
       mutate('dynamic-8', 'mutate')
-      return new Promise(res => setTimeout(res, 1))
     })
+    await act(() => sleep(1))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
   })
 
@@ -1335,13 +1342,14 @@ describe('useSWR - local mutation', () => {
 
     // hydration
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
-    await waitForDomChange({ container }) // mount
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
-    await act(() => {
+
+    //mount
+    await screen.findByText('data: 0')
+    act(() => {
       // mutate and revalidate
       mutate('dynamic-13')
-      return new Promise(res => setTimeout(res, 1))
     })
+    await act(() => sleep(1))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
   })
 
@@ -1358,19 +1366,21 @@ describe('useSWR - local mutation', () => {
 
     // hydration
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
-    await waitForDomChange({ container }) // mount
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"data: truth"`
-    )
-    await act(() => {
+    //mount
+    await screen.findByText('data: truth')
+
+    act(() => {
       // mutate and revalidate
       mutate('dynamic-9', 'local')
-      return new Promise(res => setTimeout(res, 1))
     })
+    await act(() => sleep(1))
+
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"data: local"`
     )
-    await act(() => new Promise(res => setTimeout(res, 200))) // recovers
+
+    await act(() => sleep(200)) // recovers
+
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"data: truth"`
     )
@@ -1387,8 +1397,10 @@ describe('useSWR - local mutation', () => {
 
     // hydration
     expect(container.textContent).toMatchInlineSnapshot(`"data: "`)
-    await waitForDomChange({ container }) // mount
-    expect(container.textContent).toMatchInlineSnapshot(`"data: 0"`)
+
+    //mount
+    await screen.findByText('data: 0')
+
     await act(() => {
       // mutate and revalidate
       return mutate(
@@ -1397,7 +1409,7 @@ describe('useSWR - local mutation', () => {
         false
       )
     })
-    await act(() => new Promise(res => setTimeout(res, 110)))
+    await act(() => sleep(110))
     expect(container.textContent).toMatchInlineSnapshot(`"data: 999"`)
   })
 
@@ -1412,8 +1424,10 @@ describe('useSWR - local mutation', () => {
 
     // hydration
     expect(container.textContent).toMatchInlineSnapshot(`"data: "`)
-    await waitForDomChange({ container }) // mount
-    expect(container.textContent).toMatchInlineSnapshot(`"data: 0"`)
+
+    //mount
+    await screen.findByText('data: 0')
+
     await act(() => {
       // mutate and revalidate
       return mutate(
@@ -1422,7 +1436,8 @@ describe('useSWR - local mutation', () => {
         false
       )
     })
-    await act(() => new Promise(res => setTimeout(res, 110)))
+    await act(() => sleep(110))
+
     expect(container.textContent).toMatchInlineSnapshot(`"data: 999"`)
   })
 
@@ -1439,13 +1454,15 @@ describe('useSWR - local mutation', () => {
 
     // hydration
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
-    await waitForDomChange({ container }) // mount
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
-    await act(() => {
+
+    //mount
+    await screen.findByText('data: 0')
+
+    act(() => {
       // trigger revalidation
       mutate('dynamic-14')
-      return new Promise(res => setTimeout(res, 1))
     })
+    await act(() => sleep(1))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
   })
 
@@ -1482,14 +1499,12 @@ describe('useSWR - local mutation', () => {
 
     // hydration
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
-    await waitForDomChange({ container }) // mount
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"data: fetched"`
-    )
+    //mount
+    await screen.findByText('data: fetched')
     // call bound mutate
     fireEvent.click(container.firstElementChild)
     // expect new updated value (after a tick)
-    await 0
+    await act(async () => await 0)
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"data: mutated"`
     )
@@ -1497,7 +1512,9 @@ describe('useSWR - local mutation', () => {
 
   it('should ignore in flight requests when mutating', async () => {
     // set it to 1
-    mutate('mutate-2', 1)
+    act(() => {
+      mutate('mutate-2', 1)
+    })
 
     function Section() {
       const { data } = useSWR(
@@ -1510,11 +1527,13 @@ describe('useSWR - local mutation', () => {
     const { container } = render(<Section />)
 
     expect(container.textContent).toMatchInlineSnapshot(`"1"`) // directly from cache
-    await act(() => new Promise(res => setTimeout(res, 150))) // still suspending
-    mutate('mutate-2', 3) // set it to 3. this will drop the ongoing request
-    await 0
+    await act(() => sleep(150)) // still suspending
+    act(() => {
+      mutate('mutate-2', 3)
+    }) // set it to 3. this will drop the ongoing request
+    await act(async () => await 0)
     expect(container.textContent).toMatchInlineSnapshot(`"3"`)
-    await act(() => new Promise(res => setTimeout(res, 100)))
+    await act(() => sleep(100))
     expect(container.textContent).toMatchInlineSnapshot(`"3"`)
   })
 
@@ -1531,13 +1550,15 @@ describe('useSWR - local mutation', () => {
 
     const { container } = render(<Page />)
 
-    await act(() => new Promise(res => setTimeout(res, 250)))
+    await act(() => sleep(250))
     expect(container.textContent).toMatchInlineSnapshot(`"off"`) // Initial state
 
-    mutate('mutate-3', 'on', false)
+    act(() => {
+      mutate('mutate-3', 'on', false)
+    })
 
     // Validate local state is now "on"
-    await 0
+    await act(async () => await 0)
     expect(container.textContent).toMatchInlineSnapshot(`"on"`)
 
     // Simulate toggling "on"
@@ -1556,10 +1577,12 @@ describe('useSWR - local mutation', () => {
       ).resolves.toBe('on')
     })
 
-    mutate('mutate-3', 'off', false)
+    act(() => {
+      mutate('mutate-3', 'off', false)
+    })
 
     // Validate local state is now "off"
-    await 0
+    await act(async () => await 0)
     expect(container.textContent).toMatchInlineSnapshot(`"off"`)
 
     // Simulate toggling "off"
@@ -1579,11 +1602,11 @@ describe('useSWR - local mutation', () => {
     })
 
     // Wait for toggling "on" promise to resolve, but the "on" mutation is cancelled
-    await act(() => new Promise(res => setTimeout(res, 210)))
+    await act(() => sleep(210))
     expect(container.textContent).toMatchInlineSnapshot(`"off"`)
 
     // Wait for toggling "off" promise to resolve
-    await act(() => new Promise(res => setTimeout(res, 210)))
+    await act(() => sleep(210))
     expect(container.textContent).toMatchInlineSnapshot(`"off"`)
   })
 
@@ -1600,13 +1623,13 @@ describe('useSWR - local mutation', () => {
 
     // hydration
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
-    await waitForDomChange({ container }) // mount
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
-    await act(() => {
+    //mount
+    await screen.findByText('data: 0')
+    act(() => {
       // trigger revalidation
       mutate([null])
-      return new Promise(res => setTimeout(res, 1))
     })
+    await act(() => sleep(1))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
   })
 
@@ -1620,8 +1643,8 @@ describe('useSWR - local mutation', () => {
     }
     const { container } = render(<Page />)
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
-    await waitForDomChange({ container }) // mount
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
+    // mount
+    await screen.findByText('data: 0')
     let promise
     await act(() => {
       promise = mutate('dynamic-18')
@@ -1641,8 +1664,8 @@ describe('useSWR - local mutation', () => {
       return <div>{error ? error.message : `data: ${data}`}</div>
     }
     const { container } = render(<Page />)
-    await waitForDomChange({ container })
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
+    //mount
+    await screen.findByText('data: 0')
     await act(async () => {
       // mutate error will be thrown, add try catch to avoid crashing
       try {
@@ -1666,7 +1689,7 @@ describe('useSWR - local mutation', () => {
     )
     // if mutate succeed, error should be cleared
     await act(async () => {
-      await mutate(key, value, false)
+      return mutate(key, value, false)
     })
     cacheError = cache.get(keyErr)
     expect(cacheError).toMatchInlineSnapshot(`undefined`)
@@ -1692,9 +1715,11 @@ describe('useSWR - local mutation', () => {
     }
 
     render(<Section />)
-    await act(() => new Promise(res => setTimeout(res, 120)))
-    mutate('mutate-5', 2)
-    await act(() => new Promise(res => setTimeout(res, 50)))
+    await act(() => sleep(120))
+    act(() => {
+      mutate('mutate-5', 2)
+    })
+    await act(() => sleep(50))
 
     // check all `setSize`s are referential equal.
     for (let ref of refs) {
@@ -1729,7 +1754,7 @@ describe('useSWR - local mutation', () => {
 
     render(<Component />)
 
-    await act(() => new Promise(res => setTimeout(res, 50)))
+    await act(() => sleep(50))
 
     expect(mutationRecivedValues).toEqual([0, 1])
     expect(renderRecivedValues).toEqual([undefined, 0, 2])
@@ -1759,9 +1784,9 @@ describe('useSWR - context configs', () => {
 
     // hydration
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
-    await waitForDomChange({ container }) // mount
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
-    await act(() => new Promise(res => setTimeout(res, 110))) // update
+    // mount
+    await screen.findByText('data: 0')
+    await act(() => sleep(110)) // update
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
   })
 })
