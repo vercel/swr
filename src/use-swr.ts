@@ -315,8 +315,11 @@ function useSWR<Data = any, Error = any>(
         shouldUpdateState = true
       }
     }
+
     if (shouldUpdateState || config.suspense) {
-      if (unmountedRef.current) return
+      // if component is unmounted, should skip rerender
+      // if component is not mounted, should skip rerender
+      if (unmountedRef.current || !initialMountedRef.current) return
       rerender({})
     }
   }, [])
@@ -324,6 +327,9 @@ function useSWR<Data = any, Error = any>(
   // error ref inside revalidate (is last request errored?)
   const unmountedRef = useRef(false)
   const keyRef = useRef(key)
+
+  // check if component is mounted in suspense mode
+  const initialMountedRef = useRef(false)
 
   // do unmount check for callbacks
   const eventsRef = useRef({
@@ -536,6 +542,8 @@ function useSWR<Data = any, Error = any>(
     // after `key` updates, we need to mark it as mounted
     unmountedRef.current = false
 
+    initialMountedRef.current = true
+
     // after the component is mounted (hydrated),
     // we need to update the data from the cache
     // and trigger a revalidation
@@ -744,6 +752,7 @@ function useSWR<Data = any, Error = any>(
       if (!CONCURRENT_PROMISES[key]) {
         // trigger revalidate immediately
         // to get the promise
+        // in this revalidate, should not rerender
         revalidate()
       }
 
