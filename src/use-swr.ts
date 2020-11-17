@@ -319,7 +319,7 @@ function useSWR<Data = any, Error = any>(
     if (shouldUpdateState || config.suspense) {
       // if component is unmounted, should skip rerender
       // if component is not mounted, should skip rerender
-      if (unmountedRef.current || !firstMountedRef.current) return
+      if (unmountedRef.current || !initialMountedRef.current) return
       rerender({})
     }
   }, [])
@@ -329,7 +329,7 @@ function useSWR<Data = any, Error = any>(
   const keyRef = useRef(key)
 
   // check if component is mounted in suspense mode
-  const firstMountedRef = useRef(false)
+  const initialMountedRef = useRef(false)
 
   // do unmount check for callbacks
   const eventsRef = useRef({
@@ -542,7 +542,7 @@ function useSWR<Data = any, Error = any>(
     // after `key` updates, we need to mark it as mounted
     unmountedRef.current = false
 
-    firstMountedRef.current = true
+    initialMountedRef.current = true
 
     // after the component is mounted (hydrated),
     // we need to update the data from the cache
