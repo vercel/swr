@@ -315,8 +315,9 @@ function useSWR<Data = any, Error = any>(
         shouldUpdateState = true
       }
     }
+
     if (shouldUpdateState || config.suspense) {
-      if (unmountedRef.current) return
+      if (unmountedRef.current || !firstMountedRef.current) return
       rerender({})
     }
   }, [])
@@ -324,6 +325,8 @@ function useSWR<Data = any, Error = any>(
   // error ref inside revalidate (is last request errored?)
   const unmountedRef = useRef(false)
   const keyRef = useRef(key)
+
+  const firstMountedRef = useRef(false)
 
   // do unmount check for callbacks
   const eventsRef = useRef({
@@ -535,6 +538,8 @@ function useSWR<Data = any, Error = any>(
 
     // after `key` updates, we need to mark it as mounted
     unmountedRef.current = false
+
+    firstMountedRef.current = true
 
     // after the component is mounted (hydrated),
     // we need to update the data from the cache
