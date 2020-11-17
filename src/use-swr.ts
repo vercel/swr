@@ -719,7 +719,7 @@ function useSWR<Data = any, Error = any>(
       isValidating: {
         get: function() {
           stateDependencies.current.isValidating = true
-          return stateRef.current.isValidating
+          return key ? stateRef.current.isValidating : false
         },
         enumerable: true
       }
