@@ -1792,6 +1792,10 @@ describe('useSWR - context configs', () => {
 })
 
 describe('useSWR - suspense', () => {
+  afterEach(() => {
+    jest.clearAllMocks()
+    jest.restoreAllMocks()
+  })
   it('should render fallback', async () => {
     function Section() {
       const { data } = useSWR(
@@ -1811,7 +1815,7 @@ describe('useSWR - suspense', () => {
 
     // hydration
     expect(container.textContent).toMatchInlineSnapshot(`"fallback"`)
-    await act(() => new Promise(res => setTimeout(res, 110))) // update
+    await act(() => sleep(110)) // update
     expect(container.textContent).toMatchInlineSnapshot(`"SWR"`)
   })
 
@@ -1854,17 +1858,16 @@ describe('useSWR - suspense', () => {
       })
       return <div>{data}</div>
     }
-    const { container } = render(
+    render(
       <Suspense fallback={<div>fallback</div>}>
         <Section />
       </Suspense>
     )
 
-    // hydration
-    expect(container.textContent).toMatchInlineSnapshot(`"hello"`)
+    await screen.findByText('hello')
   })
-
   it('should throw errors', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => {})
     function Section() {
       const { data } = useSWR(
         'suspense-5',
@@ -1887,10 +1890,10 @@ describe('useSWR - suspense', () => {
 
     // hydration
     expect(container.textContent).toMatchInlineSnapshot(`"fallback"`)
-    await act(() => new Promise(res => setTimeout(res, 150))) // still suspending
+    await act(() => sleep(150)) // still suspending
     expect(container.textContent).toMatchInlineSnapshot(`"error boundary"`)
-
-    console.info('*The warning above can be ignored (caught by ErrorBoundary).')
+    // 1 for js-dom 1 for react-error-boundray
+    expect(console.error).toHaveBeenCalledTimes(2)
   })
 
   it('should render cached data with error', async () => {
@@ -1920,13 +1923,12 @@ describe('useSWR - suspense', () => {
     )
 
     expect(container.textContent).toMatchInlineSnapshot(`"hello, "`) // directly from cache
-    await act(() => new Promise(res => setTimeout(res, 150))) // still suspending
+    await act(() => sleep(150)) // still suspending
     expect(container.textContent).toMatchInlineSnapshot(`"hello, error"`) // get error with cache
   })
 
   it('should pause when key changes', async () => {
     const renderedResults = []
-
     function Section() {
       const [key, setKey] = useState('suspense-7')
       const { data } = useSWR(
@@ -1956,8 +1958,7 @@ describe('useSWR - suspense', () => {
       </Suspense>
     )
 
-    await act(() => new Promise(res => setTimeout(res, 110)))
-
+    await screen.findByText('suspense-8')
     // fixes https://github.com/zeit/swr/issues/57
     // 'suspense-7' -> undefined -> 'suspense-8'
     expect(renderedResults).toEqual(['suspense-7', 'suspense-8'])
@@ -1999,7 +2000,7 @@ describe('useSWR - cache', () => {
     }
 
     // render using custom cache
-    const { queryByText, findByText } = render(
+    const { queryByText } = render(
       <React.Suspense fallback={null}>
         <Page />
       </React.Suspense>
@@ -2013,32 +2014,31 @@ describe('useSWR - cache', () => {
     `)
 
     // content should be updated with fetcher results
-    expect(await findByText('random message')).toMatchInlineSnapshot(`
+    expect(await screen.findByText('random message')).toMatchInlineSnapshot(`
       <div>
         random message
       </div>
     `)
-
-    act(async () => {
-      const value = 'a different message'
+    const value = 'a different message'
+    act(() => {
       cache.set('cache-1', value)
-      await mutate('cache-1', value, false)
     })
+    await act(async () => mutate('cache-1', value, false))
 
     // content should be updated from new cache value, after mutate without revalidate
-    expect(await findByText('a different message')).toMatchInlineSnapshot(`
+    expect(await screen.findByText('a different message'))
+      .toMatchInlineSnapshot(`
       <div>
         a different message
       </div>
     `)
-
-    act(async () => {
+    act(() => {
       cache.delete('cache-1')
-      mutate('cache-1')
     })
+    await act(() => mutate('cache-1'))
 
     // content should go back to be the fetched value
-    expect(await findByText('random message')).toMatchInlineSnapshot(`
+    expect(await screen.findByText('random message')).toMatchInlineSnapshot(`
       <div>
         random message
       </div>
@@ -2086,11 +2086,10 @@ describe('useSWR - key', () => {
 
     const { container } = render(<Page />)
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`""`)
-    await waitForDomChange({ container })
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"short request"`
-    )
-    await act(() => new Promise(res => setTimeout(res, 110))) // wait 100ms until "long request" finishes
+
+    await screen.findByText('short request')
+
+    await act(() => sleep(110)) // wait 100ms until "long request" finishes
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"short request"`
     ) // should be "short request" still
@@ -2098,7 +2097,7 @@ describe('useSWR - key', () => {
     // manually trigger a re-render from outside
     // this triggers a re-render, and a read access to `swr.data`
     // but the result should still be "short request"
-    await act(() => rerender(x => x + 1))
+    act(() => rerender(x => x + 1))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"short request"`
     )
@@ -2125,11 +2124,11 @@ describe('useSWR - key', () => {
     // -> 520      1,         '1'
     const { container } = render(<Page />)
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`""`) // undefined, time=0
-    await act(() => new Promise(res => setTimeout(res, 210)))
+    await act(() => sleep(210))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"key-0"`) // 0, time=210
-    await act(() => new Promise(res => setTimeout(res, 200)))
+    await act(() => sleep(200))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`""`) // undefined, time=410
-    await act(() => new Promise(res => setTimeout(res, 140)))
+    await act(() => sleep(140))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"key-1"`) // 1, time=550
   })
 
@@ -2160,16 +2159,15 @@ describe('useSWR - key', () => {
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"hello, 1:"`
     )
-    await waitForDomChange({ container }) // mount
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"hello, 1:a"`
-    )
+
+    await screen.findByText('hello, 1:a')
+
     fireEvent.click(container.firstElementChild)
     // first rerender on key change
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"hello, 2:"`
     )
-    await act(() => new Promise(res => setTimeout(res, 100)))
+    await act(() => sleep(100))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"hello, 2:b"`
     )
@@ -2199,21 +2197,21 @@ describe('useSWR - key', () => {
 
     const { container } = render(<Page />)
     const closureSpy = jest.spyOn(closureFunctions, 'first')
-    await waitForDomChange({ container })
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"data-first"`
-    )
+
+    await screen.findByText('data-first')
     expect(closureSpy).toHaveBeenCalledTimes(1)
 
     // update, but don't change the id.
     // Function identity should stay the same, and useSWR should not call the function again.
-    await act(() => updateId('first'))
+    act(() => updateId('first'))
+    await act(async () => await 0)
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"data-first"`
     )
     expect(closureSpy).toHaveBeenCalledTimes(1)
 
-    await act(() => updateId('second'))
+    act(() => updateId('second'))
+    await act(async () => await 0)
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"data-second"`
     )
@@ -2244,11 +2242,8 @@ describe('useSWR - config callbacks', () => {
     )
     expect(state).toEqual(null)
 
-    await waitForDomChange({ container })
-    // since the promise resolved, the onSuccess callback assign `props.text` to `state`
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"hello, 0, a"`
-    )
+    await screen.findByText('hello, 0, a')
+
     expect(state).toEqual('a')
 
     // props changed, but the onSuccess callback does not trigger yet, `state` is same as before
@@ -2258,11 +2253,10 @@ describe('useSWR - config callbacks', () => {
     )
     expect(state).toEqual('a')
 
-    await act(() => {
-      // trigger revalidation, this would re-trigger the onSuccess callback
-      fireEvent.click(container.firstElementChild)
-      return new Promise(res => setTimeout(res, 201))
-    })
+    // trigger revalidation, this would re-trigger the onSuccess callback
+    fireEvent.click(container.firstElementChild)
+
+    await act(() => sleep(201))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"hello, 1, b"`
     )
@@ -2313,11 +2307,9 @@ describe('useSWR - config callbacks', () => {
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"Error: 0"`)
     expect(container.firstElementChild.getAttribute('title')).toEqual('b')
     expect(state).toEqual('a')
+    fireEvent.click(container.firstElementChild)
+    await act(() => sleep(210))
 
-    await act(() => {
-      fireEvent.click(container.firstElementChild)
-      return new Promise(res => setTimeout(res, 201))
-    })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"Error: 1"`)
     expect(container.firstElementChild.getAttribute('title')).toEqual('b')
     expect(state).toEqual('b')
@@ -2354,9 +2346,7 @@ describe('useSWR - config callbacks', () => {
     )
     expect(state).toEqual(null)
 
-    await waitForDomChange({ container })
-
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"Error: 0"`)
+    await screen.findByText('Error: 0')
     expect(container.firstElementChild.getAttribute('title')).toEqual('a')
     expect(state).toEqual('a')
 
@@ -2367,9 +2357,7 @@ describe('useSWR - config callbacks', () => {
     expect(container.firstElementChild.getAttribute('title')).toEqual('b')
     expect(state).toEqual('a')
 
-    await act(() => {
-      return new Promise(res => setTimeout(res, 350))
-    })
+    await act(() => sleep(350))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"Error: 1"`)
     expect(container.firstElementChild.getAttribute('title')).toEqual('b')
     expect(state).toEqual('b')
@@ -2407,20 +2395,14 @@ describe('useSWR - config callbacks', () => {
     )
     expect(state).toEqual(null)
 
-    await act(() => {
-      // wait 100ms to trigger onLoadingSlow event, but not success yet.
-      return new Promise(res => setTimeout(res, 101))
-    })
+    await act(() => sleep(101))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"hello, , a"`
     )
     expect(state).toEqual('a')
     rerender(<Page text="b" />)
 
-    await act(() => {
-      // now trigger onSuccess event
-      return new Promise(res => setTimeout(res, 100))
-    })
+    await act(() => sleep(100))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"hello, 0, b"`
     )
