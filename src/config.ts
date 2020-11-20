@@ -1,11 +1,11 @@
-import deepEqual from 'fast-deep-equal'
-import isDocumentVisible from './libs/is-document-visible'
+import { dequal } from 'dequal/lite'
 import {
   ConfigInterface,
   RevalidateOptionInterface,
   revalidateType
 } from './types'
 import Cache from './cache'
+import webPreset from './libs/web-preset'
 
 // cache
 const cache = new Cache()
@@ -18,7 +18,7 @@ function onErrorRetry(
   revalidate: revalidateType,
   opts: RevalidateOptionInterface
 ): void {
-  if (!isDocumentVisible()) {
+  if (!config.isDocumentVisible()) {
     // if it's hidden, stop
     // it will auto revalidate when focus
     return
@@ -66,7 +66,11 @@ const defaultConfig: ConfigInterface = {
   refreshWhenOffline: false,
   shouldRetryOnError: true,
   suspense: false,
-  compare: deepEqual
+  compare: dequal,
+
+  fetcher: webPreset.fetcher,
+  isOnline: webPreset.isOnline,
+  isDocumentVisible: webPreset.isDocumentVisible
 }
 
 export { cache }

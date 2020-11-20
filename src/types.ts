@@ -1,4 +1,4 @@
-export type fetcherFn<Data> = (...args: any) => Data | Promise<Data>
+export type fetcherFn<Data> = ((...args: any) => Data | Promise<Data>) | null
 export interface ConfigInterface<
   Data = any,
   Error = any,
@@ -20,6 +20,8 @@ export interface ConfigInterface<
   suspense?: boolean
   initialData?: Data
 
+  isOnline?: () => boolean
+  isDocumentVisible?: () => boolean
   onLoadingSlow?: (key: string, config: ConfigInterface<Data, Error>) => void
   onSuccess?: (
     data: Data,
@@ -54,15 +56,16 @@ export type updaterInterface<Data = any, Error = any> = (
   shouldRevalidate?: boolean,
   data?: Data,
   error?: Error,
-  shouldDedupe?: boolean
+  shouldDedupe?: boolean,
+  dedupe?: boolean
 ) => boolean | Promise<boolean>
 export type triggerInterface = (
   key: keyInterface,
   shouldRevalidate?: boolean
 ) => Promise<any>
 export type mutateCallback<Data = any> = (
-  currentValue: Data
-) => Promise<Data> | Data
+  currentValue: undefined | Data
+) => Promise<undefined | Data> | undefined | Data
 export type mutateInterface<Data = any> = (
   key: keyInterface,
   data?: Data | Promise<Data> | mutateCallback<Data>,
@@ -71,7 +74,8 @@ export type mutateInterface<Data = any> = (
 export type broadcastStateInterface<Data = any, Error = any> = (
   key: string,
   data: Data,
-  error?: Error
+  error?: Error,
+  isValidating?: boolean
 ) => void
 export type responseInterface<Data, Error> = {
   data?: Data
@@ -127,7 +131,7 @@ export interface CacheInterface {
   has(key: keyInterface): boolean
   delete(key: keyInterface): void
   clear(): void
-  serializeKey(key: keyInterface): [string, any, string]
+  serializeKey(key: keyInterface): [string, any, string, string]
   subscribe(listener: cacheListener): () => void
 }
 

@@ -402,4 +402,43 @@ describe('useSWRInfinite', () => {
     await act(() => new Promise(res => setTimeout(res, 150)))
     expect(container.textContent).toMatchInlineSnapshot(`"page 0, page 1, "`)
   })
+
+  it('should keep `mutate` referential equal', async () => {
+    const setters = []
+
+    function Comp() {
+      const { data, size, setSize } = useSWRInfinite<string, string>(
+        index => [`pagetest-9`, index],
+        async (_, index) => {
+          await new Promise(res => setTimeout(res, 100))
+          return `page ${index}, `
+        }
+      )
+
+      setters.push(setSize)
+
+      return (
+        <div
+          onClick={() => {
+            // load next page
+            setSize(size + 1)
+          }}
+        >
+          {data}
+        </div>
+      )
+    }
+
+    const { container } = render(<Comp />)
+    await waitForDomChange({ container }) // mount
+
+    // load next page
+    fireEvent.click(container.firstElementChild)
+    await act(() => new Promise(res => setTimeout(res, 150)))
+
+    // check all `setSize`s are referential equal.
+    for (let setSize of setters) {
+      expect(setSize).toEqual(setters[0])
+    }
+  })
 })

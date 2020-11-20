@@ -1,6 +1,6 @@
 {
   "name": "swr",
-  "version": "0.3.0",
+  "version": "0.3.9",
   "description": "React Hooks library for remote data fetching",
   "main": "./dist/index.js",
   "module": "./esm/index.js",
@@ -11,7 +11,7 @@
     "esm/**"
   ],
   "repository": "vercel/swr",
-  "homepage": "https://swr.now.sh",
+  "homepage": "https://swr.vercel.app",
   "license": "MIT",
   "scripts": {
     "build": "npm run build:esm && npm run build:cjs",
@@ -46,6 +46,8 @@
     "@zeit/ncc": "0.20.5",
     "eslint": "6.6.0",
     "eslint-config-prettier": "6.5.0",
+    "eslint-plugin-react": "7.20.6",
+    "eslint-plugin-react-hooks": "4.1.2",
     "husky": "2.4.1",
     "jest": "24.9.0",
     "lint-staged": "8.2.1",
@@ -56,9 +58,9 @@
     "typescript": "3.6.4"
   },
   "dependencies": {
-    "fast-deep-equal": "2.0.1"
+    "dequal": "2.0.2"
   },
   "peerDependencies": {
-    "react": "^16.11.0"
+    "react": "^16.11.0 || ^17.0.0"
   }
 }

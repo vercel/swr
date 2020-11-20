@@ -22,8 +22,8 @@ type SWRInfiniteResponseInterface<Data = any, Error = any> = responseInterface<
   Data[],
   Error
 > & {
-  size?: number
-  setSize?: (
+  size: number
+  setSize: (
     size: number | ((size: number) => number)
   ) => Promise<Data[] | undefined>
 }
@@ -120,7 +120,7 @@ function useSWRInfinite<Data = any, Error = any>(
   }, [firstPageKey])
 
   // actual swr of all pages
-  const swr: SWRInfiniteResponseInterface<Data, Error> = useSWR<Data[], Error>(
+  const swr = useSWR<Data[], Error>(
     firstPageKey ? ['many', firstPageKey] : null,
     async () => {
       // get the revalidate context
@@ -177,25 +177,31 @@ function useSWRInfinite<Data = any, Error = any>(
     extraConfig
   )
 
-  // extend the SWR API
-  const mutate = swr.mutate
-  swr.size = pageCountRef.current
-  swr.mutate = useCallback(
+  // keep the data inside a ref
+  const dataRef = useRef<Data[]>(swr.data)
+  useEffect(() => {
+    dataRef.current = swr.data
+  }, [swr.data])
+
+  const mutate = useCallback(
     (data, shouldRevalidate = true) => {
       if (shouldRevalidate && typeof data !== 'undefined') {
         // we only revalidate the pages that are changed
-        const originalData = swr.data
+        const originalData = dataRef.current
         cache.set(contextCacheKey, { originalData, force: false })
       } else if (shouldRevalidate) {
         // calling `mutate()`, we revalidate all pages
         cache.set(contextCacheKey, { force: true })
       }
 
-      return mutate(data, shouldRevalidate)
+      return swr.mutate(data, shouldRevalidate)
     },
-    [mutate, swr.data, contextCacheKey]
+    [swr.mutate, contextCacheKey]
   )
-  swr.setSize = useCallback(
+
+  // extend the SWR API
+  const size = pageCountRef.current
+  const setSize = useCallback(
     arg => {
       if (typeof arg === 'function') {
         pageCountRef.current = arg(pageCountRef.current)
@@ -204,12 +210,17 @@ function useSWRInfinite<Data = any, Error = any>(
       }
       cache.set(pageCountCacheKey, pageCountRef.current)
       rerender(v => !v)
-      return swr.mutate(v => v)
+      return mutate(v => v)
     },
-    [swr.mutate, pageCountCacheKey]
+    [mutate, pageCountCacheKey]
   )
 
-  return swr
+  return {
+    ...swr,
+    mutate,
+    size,
+    setSize
+  } as SWRInfiniteResponseInterface<Data, Error>
 }
 
 export {
