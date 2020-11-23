@@ -335,6 +335,7 @@ function useSWR<Data = any, Error = any>(
   const eventsRef = useRef({
     emit: (event, ...params) => {
       if (unmountedRef.current) return
+      if (!initialMountedRef.current) return
       configRef.current[event](...params)
     }
   })
