@@ -273,7 +273,7 @@ In some scenarios, it's useful to pass multiple arguments (can be any value or o
 useSWR('/api/user', url => fetchWithToken(url, token))
 ```
 
-This is **incorrect**. Because the identifier (also the index of the cache) of the data is `'/api/data'`,
+This is **incorrect**. Because the identifier (also the index of the cache) of the data is `'/api/user'`,
 so even if `token` changes, SWR will still have the same key and return the wrong data.
 
 Instead, you can use an **array** as the `key` parameter, which contains multiple arguments of `fetcher`:
