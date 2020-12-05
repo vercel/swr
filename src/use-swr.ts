@@ -788,7 +788,27 @@ function useSWR<Data = any, Error = any>(
   return memoizedState
 }
 
+const cleanUpForTest = async () => {
+  let promises = new Set<Promise<any>>()
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const sizeBefore = promises.size
+    for (const promise of Object.values(CONCURRENT_PROMISES)) {
+      promises.add(promise as Promise<any>)
+    }
+    if (promises.size === sizeBefore) {
+      break
+    }
+    try {
+      await Promise.all(promises)
+    } catch (e) {
+      // swallow exceptions since they should be handled somewhere else.
+    }
+  }
+  cache.clear()
+}
+
 const SWRConfig = SWRConfigContext.Provider
 
-export { trigger, mutate, SWRConfig }
+export { trigger, mutate, SWRConfig, cleanUpForTest }
 export default useSWR

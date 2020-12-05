@@ -7,7 +7,13 @@ import {
 } from '@testing-library/react'
 import React, { ReactNode, Suspense, useEffect, useState } from 'react'
 
-import useSWR, { mutate, SWRConfig, trigger, cache } from '../src'
+import useSWR, {
+  mutate,
+  SWRConfig,
+  trigger,
+  cache,
+  cleanUpForTest
+} from '../src'
 import Cache from '../src/cache'
 
 class ErrorBoundary extends React.Component<{ fallback: ReactNode }> {
@@ -2492,5 +2498,25 @@ describe('useSWR - config callbacks', () => {
       `"hello, 0, b"`
     )
     expect(state).toEqual('b')
+  })
+})
+
+describe('useSWR - clears state', () => {
+  it('should not have a dangling request between tests', async () => {
+    function Page() {
+      const { data } = useSWR('data', async () => {
+        await new Promise(res => setTimeout(res, 100))
+        return 'foo'
+      })
+      return <div>Data is: {data}</div>
+    }
+    const { container } = render(<Page />)
+    expect(container.firstChild.textContent).toMatch('Data is: ')
+
+    await act(async () => {
+      await cleanUpForTest()
+    })
+
+    expect(container.firstChild.textContent).toMatch('Data is: foo')
   })
 })
