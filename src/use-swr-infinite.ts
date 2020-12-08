@@ -152,11 +152,8 @@ function useSWRInfinite<Data = any, Error = any>(
         const shouldRevalidatePage =
           revalidateAll ||
           force ||
-          (typeof force === 'undefined' &&
-            i === 0 &&
-            typeof originalData !== 'undefined') ||
-          (typeof originalData !== 'undefined' &&
-            !config.compare(originalData[i], pageData)) ||
+          (typeof force === 'undefined' && i === 0 && originalData) ||
+          (originalData && !config.compare(originalData[i], pageData)) ||
           typeof pageData === 'undefined'
 
         if (shouldRevalidatePage) {
