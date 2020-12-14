@@ -2254,15 +2254,11 @@ describe('useSWR - key', () => {
 
     const { container } = render(<Page />)
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"true"`)
-    await act(() => {
-      fireEvent.click(container.firstElementChild)
-      return new Promise(res => setTimeout(res, 10))
-    })
+    fireEvent.click(container.firstElementChild)
+    await act(() => sleep(10))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"true"`)
-    await act(() => {
-      fireEvent.click(container.firstElementChild)
-      return new Promise(res => setTimeout(res, 10))
-    })
+    fireEvent.click(container.firstElementChild)
+    await act(() => sleep(10))
     await new Promise(r => setTimeout(r, 10))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"false"`)
   })
