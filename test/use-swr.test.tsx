@@ -1115,7 +1115,8 @@ describe('useSWR - focus', () => {
     })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
   })
-  it('revalidateOnFocus shoule be stateful', async () => {
+
+  it('revalidateOnFocus should be stateful', async () => {
     let value = 0
 
     function Page() {
