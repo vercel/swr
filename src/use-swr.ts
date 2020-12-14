@@ -60,7 +60,9 @@ if (!IS_SERVER && window.addEventListener) {
     if (!defaultConfig.isDocumentVisible() || !defaultConfig.isOnline()) return
 
     for (const key in revalidators) {
-      if (revalidators[key][0]) revalidators[key][0]()
+      for (const fn of revalidators[key]) {
+        if (fn()) break
+      }
     }
   }
 
@@ -579,13 +581,14 @@ function useSWR<Data = any, Error = any>(
 
     let pending = false
     const onFocus = () => {
-      if (pending || !configRef.current.revalidateOnFocus) return
+      if (pending || !configRef.current.revalidateOnFocus) return false
       pending = true
       softRevalidate()
       setTimeout(
         () => (pending = false),
         configRef.current.focusThrottleInterval
       )
+      return true
     }
 
     const onReconnect = () => {
