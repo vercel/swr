@@ -27,7 +27,6 @@ import {
   ListenerInterface
 } from './types'
 
-// @ts-ignore
 const IS_SERVER =
   typeof window === 'undefined' ||
   // @ts-ignore
@@ -301,7 +300,7 @@ function useSWR<Data = any, Error = any>(
   useDebugValue(stateRef.current.data)
 
   const rerender = useState<unknown>(null)[1]
-  let dispatch = useCallback(payload => {
+  let dispatch = useCallback((payload: actionType<Data, Error>) => {
     let shouldUpdateState = false
     for (let k in payload) {
       // @ts-ignore
@@ -315,8 +314,11 @@ function useSWR<Data = any, Error = any>(
         shouldUpdateState = true
       }
     }
+
     if (shouldUpdateState || config.suspense) {
-      if (unmountedRef.current) return
+      // if component is unmounted, should skip rerender
+      // if component is not mounted, should skip rerender
+      if (unmountedRef.current || !initialMountedRef.current) return
       rerender({})
     }
   }, [])
@@ -325,11 +327,15 @@ function useSWR<Data = any, Error = any>(
   const unmountedRef = useRef(false)
   const keyRef = useRef(key)
 
+  // check if component is mounted in suspense mode
+  const initialMountedRef = useRef(false)
+
   // do unmount check for callbacks
   const eventsRef = useRef({
     // @ts-ignore
     emit: (event, ...params) => {
       if (unmountedRef.current) return
+      if (!initialMountedRef.current) return
       // @ts-ignore
       configRef.current[event](...params)
     }
@@ -540,6 +546,8 @@ function useSWR<Data = any, Error = any>(
     // after `key` updates, we need to mark it as mounted
     unmountedRef.current = false
 
+    initialMountedRef.current = true
+
     // after the component is mounted (hydrated),
     // we need to update the data from the cache
     // and trigger a revalidation
@@ -715,7 +723,7 @@ function useSWR<Data = any, Error = any>(
       isValidating: {
         get: function() {
           stateDependencies.current.isValidating = true
-          return stateRef.current.isValidating
+          return key ? stateRef.current.isValidating : false
         },
         enumerable: true
       }
@@ -748,6 +756,7 @@ function useSWR<Data = any, Error = any>(
       if (!CONCURRENT_PROMISES[key]) {
         // trigger revalidate immediately
         // to get the promise
+        // in this revalidate, should not rerender
         revalidate()
       }
 
