@@ -1474,6 +1474,26 @@ describe('useSWR - local mutation', () => {
     expect(callback).toHaveBeenCalledWith('cached data')
   })
 
+  it('should call function with undefined if key not cached', async () => {
+    const increment = jest.fn(currentValue =>
+      currentValue == null ? undefined : currentValue + 1
+    )
+
+    await mutate('dynamic-15.1', increment, false)
+
+    expect(increment).toHaveBeenCalledTimes(1)
+    expect(increment).toHaveBeenLastCalledWith(undefined)
+    expect(increment).toHaveLastReturnedWith(undefined)
+
+    cache.set('dynamic-15.1', 42)
+
+    await mutate('dynamic-15.1', increment, false)
+
+    expect(increment).toHaveBeenCalledTimes(2)
+    expect(increment).toHaveBeenLastCalledWith(42)
+    expect(increment).toHaveLastReturnedWith(43)
+  })
+
   it('should return results of the mutation', async () => {
     // returns the data if promise resolved
     expect(mutate('dynamic-16', Promise.resolve('data'))).resolves.toBe('data')
@@ -2215,6 +2235,32 @@ describe('useSWR - key', () => {
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"data-second"`
     )
+  })
+
+  it('should cleanup state when key turns to empty', async () => {
+    function Page() {
+      const [cnt, setCnt] = useState(1)
+      const { isValidating } = useSWR(
+        cnt === -1 ? '' : `key-empty-${cnt}`,
+        () => new Promise(r => setTimeout(r, 1000))
+      )
+
+      return (
+        <div onClick={() => setCnt(cnt == 2 ? -1 : cnt + 1)}>
+          {isValidating ? 'true' : 'false'}
+        </div>
+      )
+    }
+
+    const { container } = render(<Page />)
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"true"`)
+    fireEvent.click(container.firstElementChild)
+    await act(() => sleep(10))
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"true"`)
+    fireEvent.click(container.firstElementChild)
+    await act(() => sleep(10))
+    await new Promise(r => setTimeout(r, 10))
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"false"`)
   })
 })
 
