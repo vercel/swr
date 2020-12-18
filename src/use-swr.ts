@@ -675,7 +675,7 @@ function useSWR<Data = any, Error = any>(
         await revalidate({ dedupe: true })
       }
       // Read the latest refreshInterval
-      if (configRef.current.refreshInterval && !stateRef.current.error) {
+      if (configRef.current.refreshInterval) {
         timer = setTimeout(tick, configRef.current.refreshInterval)
       }
     }
