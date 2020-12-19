@@ -1790,6 +1790,29 @@ describe('useSWR - local mutation', () => {
     expect(mutationRecivedValues).toEqual([0, 1])
     expect(renderRecivedValues).toEqual([undefined, 0, 2])
   })
+
+  it('mutate before mount should not block rerender', async () => {
+    const prefetch = () => Promise.resolve('prefetch-data')
+    const fetcher = () =>
+      new Promise(resolve => {
+        setTimeout(() => resolve('data'), 100)
+      })
+    await act(() => mutate('prefetch', prefetch))
+
+    function Page() {
+      const { data } = useSWR('prefetch', fetcher)
+      return <div>{data}</div>
+    }
+
+    const { container } = render(<Page />)
+
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"prefetch-data"`
+    )
+
+    await act(() => new Promise(res => setTimeout(res, 150)))
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data"`)
+  })
 })
 
 describe('useSWR - context configs', () => {
