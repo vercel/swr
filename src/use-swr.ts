@@ -51,7 +51,7 @@ const MUTATION_END_TS = {}
 // generate strictly increasing timestamps
 const now = (() => {
   let ts = 0
-  return () => ts++
+  return () => ++ts
 })()
 
 // setup DOM events listeners for `focus` and `reconnect` actions
