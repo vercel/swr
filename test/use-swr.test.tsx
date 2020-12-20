@@ -355,6 +355,32 @@ describe('useSWR', () => {
       `"hello, SWR"`
     )
   })
+
+  it('should use fetch api as default fetcher', async () => {
+    const users = [{ name: 'bob' }, { name: 'sue' }]
+    global['fetch'] = () => Promise.resolve()
+    const mockFetch = body =>
+      Promise.resolve({ json: () => Promise.resolve(body) } as any)
+    const fn = jest
+      .spyOn(window, 'fetch')
+      .mockImplementation(() => mockFetch(users))
+
+    function Users() {
+      const { data } = useSWR('http://localhost:3000/api/users')
+
+      return <div>hello, {data && data.map(u => u.name).join(' and ')}</div>
+    }
+
+    const { container } = render(<Users />)
+
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
+    expect(fn).toBeCalled()
+    await waitForDomChange({ container })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"hello, bob and sue"`
+    )
+    delete global['fetch']
+  })
 })
 
 describe('useSWR - loading', () => {
