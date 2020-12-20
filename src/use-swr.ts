@@ -51,7 +51,7 @@ const MUTATION_END_TS = {}
 // generate strictly increasing timestamps
 const now = (() => {
   let ts = 0
-  return () => ts++
+  return () => ++ts
 })()
 
 // setup DOM events listeners for `focus` and `reconnect` actions
@@ -215,10 +215,6 @@ const mutate: mutateInterface = async (
       if (error) throw error
       return cache.get(key)
     })
-  } else {
-    // eslint-disable-next-line require-atomic-updates
-    MUTATION_TS[key] = undefined
-    MUTATION_END_TS[key] = undefined
   }
   // throw error or return data to be used by caller of mutate
   if (error) throw error
