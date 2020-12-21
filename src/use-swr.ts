@@ -51,7 +51,7 @@ const MUTATION_END_TS = {}
 // generate strictly increasing timestamps
 const now = (() => {
   let ts = 0
-  return () => ts++
+  return () => ++ts
 })()
 
 // setup DOM events listeners for `focus` and `reconnect` actions
@@ -680,7 +680,7 @@ function useSWR<Data = any, Error = any>(
         await revalidate({ dedupe: true })
       }
       // Read the latest refreshInterval
-      if (configRef.current.refreshInterval && !stateRef.current.error) {
+      if (configRef.current.refreshInterval) {
         timer = setTimeout(tick, configRef.current.refreshInterval)
       }
     }

@@ -355,6 +355,32 @@ describe('useSWR', () => {
       `"hello, SWR"`
     )
   })
+
+  it('should use fetch api as default fetcher', async () => {
+    const users = [{ name: 'bob' }, { name: 'sue' }]
+    global['fetch'] = () => Promise.resolve()
+    const mockFetch = body =>
+      Promise.resolve({ json: () => Promise.resolve(body) } as any)
+    const fn = jest
+      .spyOn(window, 'fetch')
+      .mockImplementation(() => mockFetch(users))
+
+    function Users() {
+      const { data } = useSWR('http://localhost:3000/api/users')
+
+      return <div>hello, {data && data.map(u => u.name).join(' and ')}</div>
+    }
+
+    const { container } = render(<Users />)
+
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
+    expect(fn).toBeCalled()
+    await waitForDomChange({ container })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"hello, bob and sue"`
+    )
+    delete global['fetch']
+  })
 })
 
 describe('useSWR - loading', () => {
@@ -1790,6 +1816,29 @@ describe('useSWR - local mutation', () => {
 
     expect(mutationRecivedValues).toEqual([0, 1])
     expect(renderRecivedValues).toEqual([undefined, 0, 2])
+  })
+
+  it('mutate before mount should not block rerender', async () => {
+    const prefetch = () => Promise.resolve('prefetch-data')
+    const fetcher = () =>
+      new Promise(resolve => {
+        setTimeout(() => resolve('data'), 100)
+      })
+    await act(() => mutate('prefetch', prefetch))
+
+    function Page() {
+      const { data } = useSWR('prefetch', fetcher)
+      return <div>{data}</div>
+    }
+
+    const { container } = render(<Page />)
+
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"prefetch-data"`
+    )
+
+    await act(() => new Promise(res => setTimeout(res, 150)))
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data"`)
   })
 })
 
