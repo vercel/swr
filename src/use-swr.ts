@@ -594,7 +594,9 @@ function useSWR<Data = any, Error = any>(
     const onReconnect = () => {
       if (configRef.current.revalidateOnReconnect) {
         softRevalidate()
+        return true
       }
+      return false
     }
 
     // register global cache update listener
