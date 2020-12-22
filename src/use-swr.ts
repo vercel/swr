@@ -435,34 +435,36 @@ function useSWR<Data = any, Error = any>(
           eventsRef.current.emit('onSuccess', newData, key, config)
         }
 
-        const shouldIgnoreRequest =
-          // if there're other ongoing request(s), started after the current one,
-          // we need to ignore the current one to avoid possible race conditions:
-          //   req1------------------>res1        (current one)
-          //        req2---------------->res2
-          // the request that fired later will always be kept.
-          CONCURRENT_PROMISES_TS[key] > startAt ||
-          // if there're other mutations(s), overlapped with the current revalidation:
-          // case 1:
-          //   req------------------>res
-          //       mutate------>end
-          // case 2:
-          //         req------------>res
-          //   mutate------>end
-          // case 3:
-          //   req------------------>res
-          //       mutate-------...---------->
-          // we have to ignore the revalidation result (res) because it's no longer fresh.
-          // meanwhile, a new revalidation should be triggered when the mutation ends.
-          (MUTATION_TS[key] &&
-            // case 1
-            (startAt <= MUTATION_TS[key] ||
-              // case 2
-              startAt <= MUTATION_END_TS[key] ||
-              // case 3
-              MUTATION_END_TS[key] === 0))
+        // if there're other ongoing request(s), started after the current one,
+        // we need to ignore the current one to avoid possible race conditions:
+        //   req1------------------>res1        (current one)
+        //        req2---------------->res2
+        // the request that fired later will always be kept.
+        if (CONCURRENT_PROMISES_TS[key] > startAt) {
+          return false
+        }
 
-        if (shouldIgnoreRequest) {
+        // if there're other mutations(s), overlapped with the current revalidation:
+        // case 1:
+        //   req------------------>res
+        //       mutate------>end
+        // case 2:
+        //         req------------>res
+        //   mutate------>end
+        // case 3:
+        //   req------------------>res
+        //       mutate-------...---------->
+        // we have to ignore the revalidation result (res) because it's no longer fresh.
+        // meanwhile, a new revalidation should be triggered when the mutation ends.
+        if (
+          MUTATION_TS[key] &&
+          // case 1
+          (startAt <= MUTATION_TS[key] ||
+            // case 2
+            startAt <= MUTATION_END_TS[key] ||
+            // case 3
+            MUTATION_END_TS[key] === 0)
+        ) {
           dispatch({ isValidating: false })
           return false
         }

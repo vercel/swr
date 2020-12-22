@@ -810,6 +810,40 @@ describe('useSWR - revalidate', () => {
     })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"1"`)
   })
+
+  it('should keep isValidating be true when there are two concurrent requests', async () => {
+    function Page() {
+      const { isValidating, revalidate } = useSWR(
+        'keep isValidating for concurrent requests',
+        () =>
+          new Promise(res => {
+            setTimeout(res, 200)
+          }),
+        { revalidateOnMount: false }
+      )
+
+      return (
+        <button onClick={revalidate}>{isValidating ? 'true' : 'false'}</button>
+      )
+    }
+
+    const { container } = render(<Page />)
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"false"`)
+
+    await act(async () => {
+      // trigger the first revalidation
+      fireEvent.click(container.firstElementChild)
+      await new Promise(res => setTimeout(res, 100))
+      expect(container.firstChild.textContent).toMatchInlineSnapshot(`"true"`)
+      // trigger the second revalidation
+      fireEvent.click(container.firstElementChild)
+      await new Promise(res => setTimeout(res, 110))
+      // first revalidation is over, second revalidation is still in progress
+      expect(container.firstChild.textContent).toMatchInlineSnapshot(`"true"`)
+      return new Promise(res => setTimeout(res, 100))
+    })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"false"`)
+  })
 })
 
 describe('useSWR - error', () => {
