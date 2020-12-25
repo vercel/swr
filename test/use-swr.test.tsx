@@ -798,16 +798,16 @@ describe('useSWR - revalidate', () => {
     await waitForDomChange({ container })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"0"`)
 
-    await act(async () => {
-      // trigger the slower revalidation
-      faster = false
-      fireEvent.click(container.firstElementChild)
-      await new Promise(res => setTimeout(res, 10))
-      // trigger the faster revalidation
-      faster = true
-      fireEvent.click(container.firstElementChild)
-      return new Promise(res => setTimeout(res, 210))
-    })
+    // trigger the slower revalidation
+    faster = false
+    fireEvent.click(container.firstElementChild)
+
+    await act(async () => new Promise(res => setTimeout(res, 10)))
+    // trigger the faster revalidation
+    faster = true
+    fireEvent.click(container.firstElementChild)
+
+    await act(async () => new Promise(res => setTimeout(res, 210)))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"1"`)
   })
 
