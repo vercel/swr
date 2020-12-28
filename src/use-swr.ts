@@ -384,10 +384,10 @@ function useSWR<Data = any, Error = any>(
 
       // start fetching
       try {
+        cache.set(keyValidating, true)
         dispatch({
           isValidating: true
         })
-        cache.set(keyValidating, true)
         if (!shouldDeduping) {
           // also update other hooks
           broadcastState(
@@ -465,6 +465,7 @@ function useSWR<Data = any, Error = any>(
             // case 3
             MUTATION_END_TS[key] === 0)
         ) {
+          cache.set(keyValidating, false)
           dispatch({ isValidating: false })
           return false
         }
@@ -499,6 +500,7 @@ function useSWR<Data = any, Error = any>(
         delete CONCURRENT_PROMISES[key]
         delete CONCURRENT_PROMISES_TS[key]
 
+        cache.set(keyValidating, false)
         cache.set(keyErr, err)
 
         // get a new error
@@ -693,6 +695,13 @@ function useSWR<Data = any, Error = any>(
     config.refreshWhenOffline,
     revalidate
   ])
+
+  // sync stateRef with cache
+  dispatch({
+    data: initialData,
+    error: initialError,
+    isValidating: initialIsValidating
+  })
 
   // define returned state
   // can be memorized since the state is a ref
