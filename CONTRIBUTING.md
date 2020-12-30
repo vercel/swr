@@ -22,6 +22,8 @@ If possible, you can add other additional context like how this feature can be i
 
 ### Local Development
 
+To develop SWR locally, you can use the Vite SWR playground to play with the source code inside the browser. You can follow these steps:
+
 ```bash
 yarn install
 yarn register
@@ -29,7 +31,7 @@ yarn prepare:vite
 yarn dev:vite
 ```
 
-- For SSR
+To test SSR related features, you need to use the Next.js SWR playground instead:
 
 ```bash
 yarn install

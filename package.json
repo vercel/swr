@@ -15,8 +15,6 @@
   "homepage": "https://swr.vercel.app",
   "license": "MIT",
   "scripts": {
-    "dev:vite": "concurrently \"yarn watch:esm\" \"cd playground/vite-swr && yarn dev\"",
-    "dev:next": "concurrently \"yarn watch:esm\" \"cd playground/next-swr && yarn dev\"",
     "build": "npm run build:esm && npm run build:cjs",
     "build:cjs": "ncc build src/index.ts -o dist -m -e react",
     "build:esm": "tsc --module ES6 --outDir esm",
@@ -29,7 +27,9 @@
     "test": "jest",
     "register": "yarn link && cd node_modules/react && yarn link",
     "prepare:vite": "cd playground && git clone https://github.com/promer94/vite-swr && cd vite-swr && yarn && yarn link react && yarn link swr",
-    "prepare:next": "yarn build && cd playground && git clone https://github.com/promer94/next-swr && cd next-swr && yarn && yarn link react && yarn link swr"
+    "prepare:next": "yarn build && cd playground && git clone https://github.com/promer94/next-swr && cd next-swr && yarn && yarn link react && yarn link swr",
+    "dev:vite": "concurrently \"yarn watch:esm\" \"cd playground/vite-swr && yarn dev\"",
+    "dev:next": "concurrently \"yarn watch:esm\" \"cd playground/next-swr && yarn dev\""
   },
   "husky": {
     "hooks": {
