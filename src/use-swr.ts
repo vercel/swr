@@ -376,6 +376,7 @@ function useSWR<Data = any, Error = any>(
     ): Promise<boolean> => {
       if (!key || !fn) return false
       if (unmountedRef.current) return false
+      if (config.isPaused()) return false
       revalidateOpts = Object.assign({ dedupe: false }, revalidateOpts)
 
       let loading = true
@@ -498,6 +499,13 @@ function useSWR<Data = any, Error = any>(
       } catch (err) {
         delete CONCURRENT_PROMISES[key]
         delete CONCURRENT_PROMISES_TS[key]
+
+        if (config.isPaused()) {
+          dispatch({
+            isValidating: false
+          })
+          return false
+        }
 
         cache.set(keyErr, err)
 

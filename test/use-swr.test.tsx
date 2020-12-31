@@ -1875,7 +1875,7 @@ describe('useSWR - local mutation', () => {
   })
 })
 
-describe('useSWR - context configs', () => {
+describe('useSWR - configs', () => {
   afterEach(cleanup)
 
   it('should read the config fallback from the context', async () => {
@@ -1883,7 +1883,7 @@ describe('useSWR - context configs', () => {
     const fetcher = () => value++
 
     function Section() {
-      const { data } = useSWR('dynamic-10')
+      const { data } = useSWR('config-0')
       return <div>data: {data}</div>
     }
     function Page() {
@@ -1904,6 +1904,48 @@ describe('useSWR - context configs', () => {
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
     await act(() => new Promise(res => setTimeout(res, 110))) // update
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
+  })
+
+  it('should stop revalidations when config.isPaused returns true', async () => {
+    const key = 'config-1'
+    let value = 0
+    let isSwrPaused = false
+    const fetcher = () => {
+      if (value === 2) throw new Error()
+      return value++
+    }
+
+    function Page() {
+      // config provider
+      const { mutate: boundMutate, data } = useSWR(key, fetcher, {
+        revalidateOnMount: true,
+        isPaused() {
+          return isSwrPaused
+        }
+      })
+
+      useEffect(() => {
+        // revalidate on mount and turn to idle
+        isSwrPaused = true
+      }, [])
+
+      return <div onClick={() => boundMutate()}>data: {data}</div>
+    }
+    const { container } = render(<Page />)
+
+    await waitForDomChange({ container })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
+    await act(async () => await 0)
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
+    fireEvent.click(container.firstElementChild)
+    await act(async () => await 0)
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
+    isSwrPaused = true
+    fireEvent.click(container.firstElementChild)
+    isSwrPaused = false
+    await act(async () => await 0)
+    // await act(() => {return new Promise(res => setTimeout(res, 50))})
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
   })
 })
 
