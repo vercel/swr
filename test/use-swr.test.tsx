@@ -1875,7 +1875,7 @@ describe('useSWR - local mutation', () => {
   })
 })
 
-describe('useSWR - context configs', () => {
+describe('useSWR - configs', () => {
   afterEach(cleanup)
 
   it('should read the config fallback from the context', async () => {
@@ -1883,7 +1883,7 @@ describe('useSWR - context configs', () => {
     const fetcher = () => value++
 
     function Section() {
-      const { data } = useSWR('dynamic-10')
+      const { data } = useSWR('config-0')
       return <div>data: {data}</div>
     }
     function Page() {
@@ -1904,6 +1904,41 @@ describe('useSWR - context configs', () => {
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
     await act(() => new Promise(res => setTimeout(res, 110))) // update
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
+  })
+
+  it('should stop revalidations when config.isIdle returns true', async () => {
+    let value = 0
+    let isSwrdle = false
+    const fetcher = () => value++
+
+    function Page() {
+      // config provider
+      const { mutate: boundMutate, data } = useSWR('config-1', fetcher, {
+        revalidateOnMount: true,
+        isIdle() {
+          return isSwrdle
+        }
+      })
+
+      useEffect(() => {
+        // revalidate on mount and turn to idle
+        isSwrdle = true
+        const timeout = setTimeout(() => {
+          boundMutate()
+        }, 100)
+        return () => clearTimeout(timeout)
+      }, [])
+
+      return <div>data: {data}</div>
+    }
+    const { container } = render(<Page />)
+
+    await waitForDomChange({ container }) // mount
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
+    await act(() => new Promise(res => setTimeout(res, 50))) // first revalidation
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
+    await act(() => new Promise(res => setTimeout(res, 100))) // second delayed revalidation
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
   })
 })
 
