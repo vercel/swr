@@ -376,6 +376,7 @@ function useSWR<Data = any, Error = any>(
     ): Promise<boolean> => {
       if (!key || !fn) return false
       if (unmountedRef.current) return false
+      if (config.isIdle()) return false
       revalidateOpts = Object.assign({ dedupe: false }, revalidateOpts)
 
       let loading = true
