@@ -22,7 +22,7 @@ export interface ConfigInterface<
 
   isOnline?: () => boolean
   isDocumentVisible?: () => boolean
-  isIdle?: () => boolean
+  isPaused?: () => boolean
   onLoadingSlow?: (key: string, config: ConfigInterface<Data, Error>) => void
   onSuccess?: (
     data: Data,

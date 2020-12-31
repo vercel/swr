@@ -1906,38 +1906,45 @@ describe('useSWR - configs', () => {
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
   })
 
-  it('should stop revalidations when config.isIdle returns true', async () => {
+  it('should stop revalidations when config.isPaused returns true', async () => {
+    const key = 'config-1'
     let value = 0
-    let isSwrdle = false
-    const fetcher = () => value++
+    let isSwrPaused = false
+    const fetcher = () => {
+      if (value === 2) throw new Error()
+      return value++
+    }
 
     function Page() {
       // config provider
-      const { mutate: boundMutate, data } = useSWR('config-1', fetcher, {
+      const { mutate: boundMutate, data } = useSWR(key, fetcher, {
         revalidateOnMount: true,
-        isIdle() {
-          return isSwrdle
+        isPaused() {
+          return isSwrPaused
         }
       })
 
       useEffect(() => {
         // revalidate on mount and turn to idle
-        isSwrdle = true
-        const timeout = setTimeout(() => {
-          boundMutate()
-        }, 100)
-        return () => clearTimeout(timeout)
+        isSwrPaused = true
       }, [])
 
-      return <div>data: {data}</div>
+      return <div onClick={() => boundMutate()}>data: {data}</div>
     }
     const { container } = render(<Page />)
 
-    await waitForDomChange({ container }) // mount
+    await waitForDomChange({ container })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
-    await act(() => new Promise(res => setTimeout(res, 50))) // first revalidation
+    await act(async () => await 0)
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
-    await act(() => new Promise(res => setTimeout(res, 100))) // second delayed revalidation
+    fireEvent.click(container.firstElementChild)
+    await act(async () => await 0)
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
+    isSwrPaused = true
+    fireEvent.click(container.firstElementChild)
+    isSwrPaused = false
+    await act(async () => await 0)
+    // await act(() => {return new Promise(res => setTimeout(res, 50))})
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
   })
 })
