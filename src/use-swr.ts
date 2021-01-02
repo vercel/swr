@@ -671,7 +671,7 @@ function useSWR<Data = any, Error = any>(
   }, [key, revalidate])
 
   useIsomorphicLayoutEffect(() => {
-    const timer = { id: null }
+    let timer = null
     const tick = async () => {
       if (
         !stateRef.current.error &&
@@ -685,17 +685,17 @@ function useSWR<Data = any, Error = any>(
         await revalidate({ dedupe: true })
       }
       // Read the latest refreshInterval
-      if (configRef.current.refreshInterval && timer.id) {
-        timer.id = setTimeout(tick, configRef.current.refreshInterval)
+      if (configRef.current.refreshInterval && timer) {
+        timer = setTimeout(tick, configRef.current.refreshInterval)
       }
     }
     if (configRef.current.refreshInterval) {
-      timer.id = setTimeout(tick, configRef.current.refreshInterval)
+      timer = setTimeout(tick, configRef.current.refreshInterval)
     }
     return () => {
-      if (timer.id) {
-        clearTimeout(timer.id)
-        timer.id = null
+      if (timer) {
+        timer = null
+        clearTimeout(timer)
       }
     }
   }, [
