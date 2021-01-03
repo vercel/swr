@@ -754,13 +754,13 @@ describe('useSWR - refresh', () => {
     // first refresh
     await act(() => sleep(100))
     expect(fetcherWithToken).toBeCalledTimes(2)
-    expect(fetcherWithToken).toBeCalledWith('0')
+    expect(fetcherWithToken).toHaveBeenLastCalledWith('0')
     await act(() => sleep(200))
 
     // second refresh start
     await act(() => sleep(100))
     expect(fetcherWithToken).toBeCalledTimes(3)
-    expect(fetcherWithToken).toBeCalledWith('0')
+    expect(fetcherWithToken).toHaveBeenLastCalledWith('0')
     // change the key during revalidation
     // The second refresh will not start a new timer
     fireEvent.click(container.firstElementChild)
@@ -768,12 +768,12 @@ describe('useSWR - refresh', () => {
     // first refresh with new key 1
     await act(() => sleep(100))
     expect(fetcherWithToken).toBeCalledTimes(4)
-    expect(fetcherWithToken).toBeCalledWith('1')
+    expect(fetcherWithToken).toHaveBeenLastCalledWith('1')
     await act(() => sleep(210))
 
     // second refresh with new key 1
     expect(fetcherWithToken).toBeCalledTimes(5)
-    expect(fetcherWithToken).toBeCalledWith('1')
+    expect(fetcherWithToken).toHaveBeenLastCalledWith('1')
   })
 })
 
