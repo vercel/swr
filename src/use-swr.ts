@@ -694,8 +694,8 @@ function useSWR<Data = any, Error = any>(
     }
     return () => {
       if (timer) {
-        timer = null
         clearTimeout(timer)
+        timer = null
       }
     }
   }, [
