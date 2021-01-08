@@ -28,14 +28,18 @@ class ErrorBoundary extends React.Component<{ fallback: ReactNode }> {
 describe('useSWR', () => {
   afterEach(cleanup)
 
-  it('should return `undefined` on hydration', () => {
+  it('should return `undefined` on hydration', async () => {
     function Page() {
       const { data } = useSWR('constant-1', () => 'SWR')
       return <div>hello, {typeof data === 'undefined' ? '' : 'ERROR'}</div>
     }
-    const { container } = render(<Page />)
-
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
+    await act(async () => {
+      const { container } = render(<Page />)
+      expect(container.firstChild.textContent).toMatchInlineSnapshot(
+        `"hello, "`
+      )
+      await 0
+    })
   })
 
   it('should return data after hydration', async () => {
@@ -1000,6 +1004,7 @@ describe('useSWR - error', () => {
       `"hello, SWR"`
     )
   })
+
   it('should trigger limited error retries if errorRetryCount exists', async () => {
     let count = 0
     function Page() {
@@ -1065,7 +1070,7 @@ describe('useSWR - error', () => {
     expect(success).toEqual(null)
 
     await act(async () => new Promise(res => setTimeout(res, 10)))
-    await act(() => fireEvent.click(container.firstElementChild))
+    fireEvent.click(container.firstElementChild)
     await act(async () => new Promise(res => setTimeout(res, 200)))
 
     expect(success).toEqual(null)
@@ -1110,7 +1115,7 @@ describe('useSWR - error', () => {
     expect(failed).toEqual(null)
 
     await act(async () => new Promise(res => setTimeout(res, 10)))
-    await act(() => fireEvent.click(container.firstElementChild))
+    fireEvent.click(container.firstElementChild)
     await act(async () => new Promise(res => setTimeout(res, 200)))
 
     expect(retry).toEqual(null)
@@ -1588,10 +1593,9 @@ describe('useSWR - local mutation', () => {
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
     await waitForDomChange({ container }) // mount
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
-    await act(() => {
+    await act(async () => {
       // trigger revalidation
-      mutate('dynamic-14')
-      return new Promise(res => setTimeout(res, 1))
+      await mutate('dynamic-14')
     })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
   })
@@ -1645,18 +1649,24 @@ describe('useSWR - local mutation', () => {
         <div onClick={() => boundMutate('mutated', false)}>data: {data}</div>
       )
     }
-    const { container } = render(<Page />)
+
+    let container
+    await act(async () => {
+      ;({ container } = render(<Page />))
+      expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
+      await 0
+    })
 
     // hydration
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
-    await waitForDomChange({ container }) // mount
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"data: fetched"`
     )
     // call bound mutate
-    fireEvent.click(container.firstElementChild)
-    // expect new updated value (after a tick)
-    await 0
+    await act(async () => {
+      fireEvent.click(container.firstElementChild)
+      // expect new updated value (after a tick)
+      await 0
+    })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"data: mutated"`
     )
@@ -1674,15 +1684,17 @@ describe('useSWR - local mutation', () => {
       return <div>{data}</div>
     }
 
-    const { container } = render(<Section />)
+    await act(async () => {
+      const { container } = render(<Section />)
 
-    expect(container.textContent).toMatchInlineSnapshot(`"1"`) // directly from cache
-    await act(() => new Promise(res => setTimeout(res, 150))) // still suspending
-    mutate('mutate-2', 3) // set it to 3. this will drop the ongoing request
-    await 0
-    expect(container.textContent).toMatchInlineSnapshot(`"3"`)
-    await act(() => new Promise(res => setTimeout(res, 100)))
-    expect(container.textContent).toMatchInlineSnapshot(`"3"`)
+      expect(container.textContent).toMatchInlineSnapshot(`"1"`) // directly from cache
+      await act(() => new Promise(res => setTimeout(res, 150))) // still suspending
+      mutate('mutate-2', 3) // set it to 3. this will drop the ongoing request
+      await 0
+      expect(container.textContent).toMatchInlineSnapshot(`"3"`)
+      await act(() => new Promise(res => setTimeout(res, 100)))
+      expect(container.textContent).toMatchInlineSnapshot(`"3"`)
+    })
   })
 
   it('should ignore in flight mutations when calling another async mutate', async () => {
@@ -1696,62 +1708,64 @@ describe('useSWR - local mutation', () => {
       return <div>{data}</div>
     }
 
-    const { container } = render(<Page />)
-
-    await act(() => new Promise(res => setTimeout(res, 250)))
-    expect(container.textContent).toMatchInlineSnapshot(`"off"`) // Initial state
-
-    mutate('mutate-3', 'on', false)
-
-    // Validate local state is now "on"
-    await 0
-    expect(container.textContent).toMatchInlineSnapshot(`"on"`)
-
-    // Simulate toggling "on"
     await act(async () => {
-      expect(
-        mutate(
-          'mutate-3',
-          new Promise(res =>
-            setTimeout(() => {
-              value = 'on'
-              res('on')
-            }, 200)
-          ),
-          false
-        )
-      ).resolves.toBe('on')
+      const { container } = render(<Page />)
+
+      await act(() => new Promise(res => setTimeout(res, 250)))
+      expect(container.textContent).toMatchInlineSnapshot(`"off"`) // Initial state
+
+      mutate('mutate-3', 'on', false)
+
+      // Validate local state is now "on"
+      await 0
+      expect(container.textContent).toMatchInlineSnapshot(`"on"`)
+
+      // Simulate toggling "on"
+      await act(async () => {
+        expect(
+          mutate(
+            'mutate-3',
+            new Promise(res =>
+              setTimeout(() => {
+                value = 'on'
+                res('on')
+              }, 200)
+            ),
+            false
+          )
+        ).resolves.toBe('on')
+      })
+
+      mutate('mutate-3', 'off', false)
+
+      // Validate local state is now "off"
+      await 0
+      expect(container.textContent).toMatchInlineSnapshot(`"off"`)
+
+      // Simulate toggling "off"
+      await act(async () => {
+        expect(
+          mutate(
+            'mutate-3',
+            new Promise(res =>
+              setTimeout(() => {
+                value = 'off'
+                res('off')
+              }, 400)
+            ),
+            false
+          )
+        ).resolves.toBe('off')
+      })
+
+      // Wait for toggling "on" promise to resolve, but the "on" mutation is cancelled
+      await act(() => new Promise(res => setTimeout(res, 210)))
+      expect(container.textContent).toMatchInlineSnapshot(`"off"`)
+
+      // Wait for toggling "off" promise to resolve
+      await act(() => new Promise(res => setTimeout(res, 210)))
+      expect(container.textContent).toMatchInlineSnapshot(`"off"`)
     })
-
-    mutate('mutate-3', 'off', false)
-
-    // Validate local state is now "off"
-    await 0
-    expect(container.textContent).toMatchInlineSnapshot(`"off"`)
-
-    // Simulate toggling "off"
-    await act(async () => {
-      expect(
-        mutate(
-          'mutate-3',
-          new Promise(res =>
-            setTimeout(() => {
-              value = 'off'
-              res('off')
-            }, 400)
-          ),
-          false
-        )
-      ).resolves.toBe('off')
-    })
-
-    // Wait for toggling "on" promise to resolve, but the "on" mutation is cancelled
-    await act(() => new Promise(res => setTimeout(res, 210)))
-    expect(container.textContent).toMatchInlineSnapshot(`"off"`)
-
-    // Wait for toggling "off" promise to resolve
-    await act(() => new Promise(res => setTimeout(res, 210)))
-    expect(container.textContent).toMatchInlineSnapshot(`"off"`)
   })
 
   it('null is stringified when found inside an array', async () => {
@@ -2065,12 +2079,16 @@ describe('useSWR - suspense', () => {
       })
       return <div>{data}</div>
     }
-    const { container } = render(
-      <Suspense fallback={<div>fallback</div>}>
-        <Section />
-      </Suspense>
-    )
 
+    let container
+    await act(async () => {
+      ;({ container } = render(
+        <Suspense fallback={<div>fallback</div>}>
+          <Section />
+        </Suspense>
+      ))
+      await 0
+    })
     // hydration
     expect(container.textContent).toMatchInlineSnapshot(`"hello"`)
   })
@@ -2087,6 +2105,9 @@ describe('useSWR - suspense', () => {
       )
       return <div>{data}</div>
     }
+
+    // ErrorBoundary throws an error, so we temporarily ignore console.error to keep the console output clean.
+    const spy = jest.spyOn(console, 'error').mockImplementation()
     // https://reactjs.org/docs/concurrent-mode-suspense.html#handling-errors
     const { container } = render(
       <ErrorBoundary fallback={<div>error boundary</div>}>
@@ -2101,7 +2122,8 @@ describe('useSWR - suspense', () => {
     await act(() => new Promise(res => setTimeout(res, 150))) // still suspending
     expect(container.textContent).toMatchInlineSnapshot(`"error boundary"`)
 
-    console.info('*The warning above can be ignored (caught by ErrorBoundary).')
+    // restore console.error
+    spy.mockRestore()
   })
 
   it('should render cached data with error', async () => {
@@ -2230,7 +2252,7 @@ describe('useSWR - cache', () => {
       </div>
     `)
 
-    act(async () => {
+    await act(async () => {
       const value = 'a different message'
       cache.set('cache-1', value)
       await mutate('cache-1', value, false)
@@ -2243,9 +2265,9 @@ describe('useSWR - cache', () => {
       </div>
     `)
 
-    act(async () => {
+    await act(async () => {
       cache.delete('cache-1')
-      mutate('cache-1')
+      await mutate('cache-1')
     })
 
     // content should go back to be the fetched value
@@ -2311,7 +2333,9 @@ describe('useSWR - key', () => {
     // manually trigger a re-render from outside
     // this triggers a re-render, and a read access to `swr.data`
     // but the result should still be "short request"
-    await act(() => rerender(x => x + 1))
+    act(() => {
+      rerender(x => x + 1)
+    })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"short request"`
     )
@@ -2420,13 +2444,19 @@ describe('useSWR - key', () => {
 
     // update, but don't change the id.
     // Function identity should stay the same, and useSWR should not call the function again.
-    await act(() => updateId('first'))
+    await act(async () => {
+      updateId('first')
+      await 0
+    })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"data-first"`
     )
     expect(closureSpy).toHaveBeenCalledTimes(1)
 
-    await act(() => updateId('second'))
+    await act(async () => {
+      updateId('second')
+      await 0
+    })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"data-second"`
     )
