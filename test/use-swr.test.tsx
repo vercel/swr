@@ -1960,27 +1960,32 @@ describe('useSWR - configs', () => {
   it('should stop revalidations when config.isPaused returns true', async () => {
     const key = 'config-1'
     let value = 0
-    let isSwrPaused = false
     const fetcher = () => {
       if (value === 2) throw new Error()
       return value++
     }
+    const revalidate = () => mutate(key)
 
     function Page() {
-      // config provider
-      const { mutate: boundMutate, data } = useSWR(key, fetcher, {
+      const [paused, setPaused] = useState(false)
+      const { data, error } = useSWR(key, fetcher, {
         revalidateOnMount: true,
+        refreshInterval: 200,
         isPaused() {
-          return isSwrPaused
+          return paused
         }
       })
 
       useEffect(() => {
         // revalidate on mount and turn to idle
-        isSwrPaused = true
+        setPaused(true)
       }, [])
 
-      return <div onClick={() => boundMutate()}>data: {data}</div>
+      return (
+        <div onClick={() => setPaused(!paused)}>
+          {error ? error : `data: ${data}`}
+        </div>
+      )
     }
     const { container } = render(<Page />)
 
@@ -1988,15 +1993,19 @@ describe('useSWR - configs', () => {
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
     await act(async () => await 0)
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
-    fireEvent.click(container.firstElementChild)
+    revalidate()
     await act(async () => await 0)
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
-    isSwrPaused = true
+    revalidate()
     fireEvent.click(container.firstElementChild)
-    isSwrPaused = false
     await act(async () => await 0)
-    // await act(() => {return new Promise(res => setTimeout(res, 50))})
+    revalidate()
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
+    await act(async () => await 0)
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
+    fireEvent.click(container.firstElementChild)
+    await act(async () => await new Promise(res => setTimeout(res, 400)))
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
   })
 })
 
