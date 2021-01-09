@@ -2,21 +2,20 @@
   "name": "swr",
   "version": "0.4.0",
   "description": "React Hooks library for remote data fetching",
-  "main": "./dist/index.js",
-  "module": "./esm/index.js",
-  "react-native": "./esm/index.js",
-  "types": "./dist/index.d.ts",
+  "source": "src/index.ts",
+  "main": "dist/index.js",
+  "module": "dist/index.module.js",
+  "exports": "dist/index.modern.js",
+  "react-native": "dist/index.module.js",
+  "types": "dist/index.d.ts",
   "files": [
-    "dist/**",
-    "esm/**"
+    "dist/**"
   ],
   "repository": "vercel/swr",
   "homepage": "https://swr.vercel.app",
   "license": "MIT",
   "scripts": {
-    "build": "npm run build:esm && npm run build:cjs",
-    "build:cjs": "ncc build src/index.ts -o dist -m -e react",
-    "build:esm": "tsc --module ES6 --outDir esm",
+    "build": "microbundle --no-sourcemap -f modern,es,cjs",
     "watch": "tsc --watch",
     "types:check": "tsc --noEmit",
     "format": "prettier --write \"{src,test,examples}/**/*.{ts,tsx}\"",
@@ -41,9 +40,8 @@
     "@types/jest": "25.2.3",
     "@types/node": "11.12.0",
     "@types/react": "16.9.11",
-    "@typescript-eslint/eslint-plugin": "2.5.0",
-    "@typescript-eslint/parser": "2.5.0",
-    "@zeit/ncc": "0.20.5",
+    "@typescript-eslint/eslint-plugin": "4.12.0",
+    "@typescript-eslint/parser": "4.12.0",
     "eslint": "6.6.0",
     "eslint-config-prettier": "6.5.0",
     "eslint-plugin-react": "7.20.6",
@@ -51,11 +49,12 @@
     "husky": "2.4.1",
     "jest": "25.5.4",
     "lint-staged": "8.2.1",
+    "microbundle": "0.13.0",
     "prettier": "1.18.2",
     "react": "16.11.0",
     "react-dom": "16.11.0",
     "ts-jest": "25.5.1",
-    "typescript": "3.6.4"
+    "typescript": "4.1.3"
   },
   "dependencies": {
     "dequal": "2.0.2"

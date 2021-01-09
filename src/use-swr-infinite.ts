@@ -25,7 +25,7 @@ type SWRInfiniteResponseInterface<Data = any, Error = any> = responseInterface<
 > & {
   size: number
   setSize: (
-    size: number | ((size: number) => number)
+    newSize: number | ((oldSize: number) => number)
   ) => Promise<Data[] | undefined>
 }
 
