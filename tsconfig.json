@@ -6,7 +6,7 @@
     "lib": [
       "esnext", "dom"
     ],
-    "module": "commonjs",
+    "module": "ESNext",
     "moduleResolution": "node",
     "noEmitOnError": true,
     "noFallthroughCasesInSwitch": true,
@@ -17,7 +17,7 @@
     "types": [
       "node", "jest"
     ],
-    "target": "es5",
+    "target": "ESNext",
     "typeRoots": [
       "./types",
       "./node_modules/@types"

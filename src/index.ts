@@ -1,5 +1,5 @@
 export * from './use-swr'
-import { default as useSWR } from './use-swr'
+export { default } from './use-swr'
 export {
   useSWRInfinite,
   SWRInfiniteConfigInterface,
@@ -14,4 +14,3 @@ export {
   responseInterface,
   CacheInterface
 } from './types'
-export default useSWR
