@@ -1,5 +1,8 @@
 function isOnline(): boolean {
-  if (typeof navigator.onLine !== 'undefined') {
+  if (
+    typeof navigator !== 'undefined' &&
+    typeof navigator.onLine !== 'undefined'
+  ) {
     return navigator.onLine
   }
   // always assume it's online
