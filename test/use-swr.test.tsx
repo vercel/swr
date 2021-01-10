@@ -1307,6 +1307,7 @@ describe('useSWR - focus', () => {
 
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
 
+    await act(() => new Promise(res => setTimeout(res, 1)))
     await act(() => {
       // trigger revalidation
       fireEvent.focus(window)
@@ -1574,7 +1575,7 @@ describe('useSWR - local mutation', () => {
         false
       )
     })
-    await act(() => new Promise(res => setTimeout(res, 110)))
+    await act(() => new Promise(res => setTimeout(res, 120)))
     expect(container.textContent).toMatchInlineSnapshot(`"data: 999"`)
   })
 
