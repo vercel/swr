@@ -302,7 +302,7 @@ function useSWR<Data = any, Error = any>(
   // display the data label in the React DevTools next to SWR hooks
   useDebugValue(stateRef.current.data)
 
-  const rerender = useState(null)[1]
+  const [, rerender] = useState(null)
   let dispatch = useCallback((payload: actionType<Data, Error>) => {
     let shouldUpdateState = false
     for (let k in payload) {

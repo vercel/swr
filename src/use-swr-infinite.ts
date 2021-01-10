@@ -90,7 +90,7 @@ function useSWRInfinite<Data = any, Error = any>(
     // not ready
   }
 
-  const rerender = useState<boolean>(false)[1]
+  const [, rerender] = useState<boolean>(false)
 
   // we use cache to pass extra info (context) to fetcher so it can be globally shared
   // here we get the key of the fetcher context cache
