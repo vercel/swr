@@ -1332,7 +1332,7 @@ describe('useSWR - focus', () => {
     let value = 0
 
     function Page() {
-      const [focusThrottleInterval, setInterval] = useState(200)
+      const [focusThrottleInterval, setFocusThrottleInterval] = useState(200)
       const { data } = useSWR(
         'focusThrottleInterval should be stateful',
         () => value++,
@@ -1342,7 +1342,11 @@ describe('useSWR - focus', () => {
           focusThrottleInterval
         }
       )
-      return <div onClick={() => setInterval(s => s + 100)}>data: {data}</div>
+      return (
+        <div onClick={() => setFocusThrottleInterval(s => s + 100)}>
+          data: {data}
+        </div>
+      )
     }
     const { container } = render(<Page />)
 
