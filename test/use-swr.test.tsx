@@ -1568,6 +1568,7 @@ describe('useSWR - local mutation', () => {
     expect(container.textContent).toMatchInlineSnapshot(`"data: "`)
     await waitForDomChange({ container }) // mount
     expect(container.textContent).toMatchInlineSnapshot(`"data: 0"`)
+    await act(() => new Promise(res => setTimeout(res, 1)))
     await act(() => {
       // mutate and revalidate
       return mutate(
