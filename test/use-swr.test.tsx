@@ -1195,10 +1195,11 @@ describe('useSWR - focus', () => {
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
     await waitForDomChange({ container }) // mount
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
+    await 0
     await act(() => {
       // trigger revalidation
       fireEvent.focus(window)
-      return new Promise(res => setTimeout(res, 1))
+      return new Promise(res => setTimeout(res, 100))
     })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
   })
@@ -1540,11 +1541,11 @@ describe('useSWR - local mutation', () => {
       // mutate and revalidate
       return mutate(
         'mutate-promise',
-        new Promise(res => setTimeout(() => res(999), 100)),
+        new Promise(res => setTimeout(() => res(999), 50)),
         false
       )
     })
-    await act(() => new Promise(res => setTimeout(res, 110)))
+    await act(() => new Promise(res => setTimeout(res, 100)))
     expect(container.textContent).toMatchInlineSnapshot(`"data: 999"`)
   })
 
@@ -2620,7 +2621,7 @@ describe('useSWR - config callbacks', () => {
     expect(state).toEqual('a')
 
     await act(() => {
-      return new Promise(res => setTimeout(res, 301))
+      return new Promise(res => setTimeout(res, 350))
     })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"Error: 1"`)
     expect(container.firstElementChild.getAttribute('title')).toEqual('b')
