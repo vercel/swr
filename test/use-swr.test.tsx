@@ -1195,7 +1195,7 @@ describe('useSWR - focus', () => {
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
     await waitForDomChange({ container }) // mount
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
-    await 0
+    await act(() => new Promise(res => setTimeout(res, 1)))
     await act(() => {
       // trigger revalidation
       fireEvent.focus(window)
@@ -1357,6 +1357,7 @@ describe('useSWR - focus', () => {
 
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
 
+    await act(() => new Promise(res => setTimeout(res, 1)))
     await act(() => {
       fireEvent.focus(window)
       return new Promise(res => setTimeout(res, 210))
