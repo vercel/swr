@@ -303,26 +303,29 @@ function useSWR<Data = any, Error = any>(
   useDebugValue(stateRef.current.data)
 
   const [, rerender] = useState(null)
-  let dispatch = useCallback((payload: actionType<Data, Error>) => {
-    let shouldUpdateState = false
-    for (let k in payload) {
-      if (stateRef.current[k] === payload[k]) {
-        continue
+  let dispatch = useCallback(
+    (payload: actionType<Data, Error>) => {
+      let shouldUpdateState = false
+      for (let k in payload) {
+        if (stateRef.current[k] === payload[k]) {
+          continue
+        }
+
+        stateRef.current[k] = payload[k]
+        if (stateDependencies.current[k]) {
+          shouldUpdateState = true
+        }
       }
 
-      stateRef.current[k] = payload[k]
-      if (stateDependencies.current[k]) {
-        shouldUpdateState = true
+      if (shouldUpdateState || config.suspense) {
+        // if component is unmounted, should skip rerender
+        // if component is not mounted, should skip rerender
+        if (unmountedRef.current || !initialMountedRef.current) return
+        rerender({})
       }
-    }
-
-    if (shouldUpdateState || config.suspense) {
-      // if component is unmounted, should skip rerender
-      // if component is not mounted, should skip rerender
-      if (unmountedRef.current || !initialMountedRef.current) return
-      rerender({})
-    }
-  }, [])
+    },
+    [config.suspense]
+  )
 
   // error ref inside revalidate (is last request errored?)
   const unmountedRef = useRef(false)
