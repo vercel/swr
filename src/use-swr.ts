@@ -55,7 +55,7 @@ const now = (() => {
 })()
 
 // setup DOM events listeners for `focus` and `reconnect` actions
-if (!IS_SERVER) {
+if (!IS_SERVER && window.addEventListener && document.addEventListener) {
   const revalidate = revalidators => {
     if (!defaultConfig.isDocumentVisible() || !defaultConfig.isOnline()) return
 
@@ -64,39 +64,19 @@ if (!IS_SERVER) {
     }
   }
 
-  const hasWindow = typeof window !== 'undefined'
-  const hasDocument = typeof document !== 'undefined'
-  if (hasWindow) {
-    // focus revalidate
-    if (hasDocument) {
-      // `window.addEventListener('visibilitychange', ...)` doesn't work on 'iOS < 14'
-      // Use `document.addEventListener` instead
-      // Ref: https://developer.mozilla.org/en-US/docs/Web/API/Document/visibilitychange_event
-      document.addEventListener(
-        'visibilitychange',
-        () => revalidate(FOCUS_REVALIDATORS),
-        false
-      )
-    } else {
-      window.addEventListener(
-        'visibilitychange',
-        () => revalidate(FOCUS_REVALIDATORS),
-        false
-      )
-    }
-    window.addEventListener(
-      'focus',
-      () => revalidate(FOCUS_REVALIDATORS),
-      false
-    )
-
-    // reconnect revalidate
-    window.addEventListener(
-      'online',
-      () => revalidate(RECONNECT_REVALIDATORS),
-      false
-    )
-  }
+  // focus revalidate
+  document.addEventListener(
+    'visibilitychange',
+    () => revalidate(FOCUS_REVALIDATORS),
+    false
+  )
+  window.addEventListener('focus', () => revalidate(FOCUS_REVALIDATORS), false)
+  // reconnect revalidate
+  window.addEventListener(
+    'online',
+    () => revalidate(RECONNECT_REVALIDATORS),
+    false
+  )
 }
 
 const trigger: triggerInterface = (_key, shouldRevalidate = true) => {
