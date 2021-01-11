@@ -216,12 +216,24 @@ function useSWRInfinite<Data = any, Error = any>(
     [mutate, pageCountCacheKey]
   )
 
-  // Use Object.assign to avoid unnecessary re-renders caused by triggering all the getters of the returned swr object
-  return Object.assign({}, swr, {
+  // Use getter functions to avoid unnecessary re-renders caused by triggering all the getters of the returned swr object
+  return {
+    get error() {
+      return swr.error
+    },
+    get data() {
+      return swr.data
+    },
+    get revalidate() {
+      return swr.revalidate
+    },
+    get isValidating() {
+      return swr.isValidating
+    },
     mutate,
     size,
     setSize
-  }) as SWRInfiniteResponseInterface<Data, Error>
+  } as SWRInfiniteResponseInterface<Data, Error>
 }
 
 export {
