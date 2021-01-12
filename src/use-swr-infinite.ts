@@ -1,11 +1,4 @@
-import {
-  useContext,
-  useRef,
-  useState,
-  useMemo,
-  useEffect,
-  useCallback
-} from 'react'
+import { useContext, useRef, useState, useEffect, useCallback } from 'react'
 
 import defaultConfig, { cache } from './config'
 import SWRConfigContext from './swr-config-context'
@@ -191,8 +184,6 @@ function useSWRInfinite<Data = any, Error = any>(
     dataRef.current = swr.data
   }, [swr.data])
 
-  const boundMutate = useMemo(() => swr.mutate, [swr])
-
   const mutate = useCallback(
     (data, shouldRevalidate = true) => {
       if (shouldRevalidate && typeof data !== 'undefined') {
@@ -204,9 +195,9 @@ function useSWRInfinite<Data = any, Error = any>(
         cache.set(contextCacheKey, { force: true })
       }
 
-      return boundMutate(data, shouldRevalidate)
+      return swr.mutate(data, shouldRevalidate)
     },
-    [boundMutate, contextCacheKey]
+    [swr.mutate, contextCacheKey]
   )
 
   // extend the SWR API
@@ -226,11 +217,23 @@ function useSWRInfinite<Data = any, Error = any>(
   )
 
   // Use getter functions to avoid unnecessary re-renders caused by triggering all the getters of the returned swr object
-  return Object.assign(swr, {
+  return {
+    get error() {
+      return swr.error
+    },
+    get data() {
+      return swr.data
+    },
+    get revalidate() {
+      return swr.revalidate
+    },
+    get isValidating() {
+      return swr.isValidating
+    },
     mutate,
     size,
     setSize
-  }) as SWRInfiniteResponseInterface<Data, Error>
+  } as SWRInfiniteResponseInterface<Data, Error>
 }
 
 export {
