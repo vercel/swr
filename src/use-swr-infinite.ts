@@ -150,20 +150,17 @@ function useSWRInfinite<Data = any, Error = any>(
         // should fetch (or revalidate) if:
         // - `revalidateAll` is enabled
         // - `mutate()` called
-        // - it's the first page and one of:
-        //   - first render (no dataRef) and no cache (no pageData)
-        //   - not first render (has dataRef) and cache exists (has pageData)
-        // - cache has updated
-        // - the offset has changed so the cache is missing
+        // - the cache is missing
+        // - it's the first page and it's not the first render
+        // - cache has changed
         const shouldFetchPage =
           revalidateAll ||
           force ||
+          typeof pageData === 'undefined' ||
           (typeof force === 'undefined' &&
             i === 0 &&
-            (typeof dataRef.current === 'undefined') ===
-              (typeof pageData === 'undefined')) ||
-          (originalData && !config.compare(originalData[i], pageData)) ||
-          typeof pageData === 'undefined'
+            typeof dataRef.current !== 'undefined') ||
+          (originalData && !config.compare(originalData[i], pageData))
 
         if (shouldFetchPage) {
           if (pageArgs !== null) {
