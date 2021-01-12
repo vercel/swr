@@ -302,7 +302,7 @@ function useSWR<Data = any, Error = any>(
   // display the data label in the React DevTools next to SWR hooks
   useDebugValue(stateRef.current.data)
 
-  const rerender = useState(null)[1]
+  const rerender = useState({})[1]
   let dispatch = useCallback((payload: actionType<Data, Error>) => {
     let shouldUpdateState = false
     for (let k in payload) {
@@ -348,23 +348,19 @@ function useSWR<Data = any, Error = any>(
   )
 
   const addRevalidator = (revalidators, callback) => {
-    if (!callback) return
     if (!revalidators[key]) {
       revalidators[key] = [callback]
     } else {
       revalidators[key].push(callback)
     }
-  }
-
-  const removeRevalidator = (revlidators, callback) => {
-    if (revlidators[key]) {
-      const revalidators = revlidators[key]
-      const index = revalidators.indexOf(callback)
+    return () => {
+      const keyedRevalidators = revalidators[key]
+      const index = keyedRevalidators.indexOf(callback)
       if (index >= 0) {
-        // 10x faster than splice
-        // https://jsperf.com/array-remove-by-index
-        revalidators[index] = revalidators[revalidators.length - 1]
-        revalidators.pop()
+        // O(1): faster than splice
+        keyedRevalidators[index] =
+          keyedRevalidators[keyedRevalidators.length - 1]
+        keyedRevalidators.pop()
       }
     }
   }
@@ -528,14 +524,11 @@ function useSWR<Data = any, Error = any>(
         if (config.shouldRetryOnError) {
           // when retrying, we always enable deduping
           const retryCount = (revalidateOpts.retryCount || 0) + 1
-          eventsRef.current.emit(
-            'onErrorRetry',
-            err,
-            key,
-            config,
-            revalidate,
-            Object.assign({ dedupe: true }, revalidateOpts, { retryCount })
-          )
+          eventsRef.current.emit('onErrorRetry', err, key, config, revalidate, {
+            dedupe: true,
+            ...revalidateOpts,
+            retryCount
+          })
         }
       }
 
@@ -562,9 +555,7 @@ function useSWR<Data = any, Error = any>(
     const latestKeyedData = resolveData()
 
     // update the state if the key changed (not the inital render) or cache updated
-    if (keyRef.current !== key) {
-      keyRef.current = key
-    }
+    keyRef.current = key
     if (!config.compare(currentHookData, latestKeyedData)) {
       dispatch({ data: latestKeyedData })
     }
@@ -652,9 +643,12 @@ function useSWR<Data = any, Error = any>(
       return false
     }
 
-    addRevalidator(FOCUS_REVALIDATORS, onFocus)
-    addRevalidator(RECONNECT_REVALIDATORS, onReconnect)
-    addRevalidator(CACHE_REVALIDATORS, onUpdate)
+    const removeFocusRevalidator = addRevalidator(FOCUS_REVALIDATORS, onFocus)
+    const removeReconnectRevalidator = addRevalidator(
+      RECONNECT_REVALIDATORS,
+      onReconnect
+    )
+    const removeUpdateRevalidator = addRevalidator(CACHE_REVALIDATORS, onUpdate)
 
     return () => {
       // cleanup
@@ -663,9 +657,9 @@ function useSWR<Data = any, Error = any>(
       // mark it as unmounted
       unmountedRef.current = true
 
-      removeRevalidator(FOCUS_REVALIDATORS, onFocus)
-      removeRevalidator(RECONNECT_REVALIDATORS, onReconnect)
-      removeRevalidator(CACHE_REVALIDATORS, onUpdate)
+      removeFocusRevalidator()
+      removeReconnectRevalidator()
+      removeUpdateRevalidator()
     }
   }, [key, revalidate])
 
