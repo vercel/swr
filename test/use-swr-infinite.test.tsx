@@ -6,7 +6,7 @@ import {
   act
 } from '@testing-library/react'
 
-import { useSWRInfinite, mutate } from '../src'
+import { useSWRInfinite } from '../src'
 
 describe('useSWRInfinite', () => {
   it('should render the first page component', async () => {
@@ -59,7 +59,7 @@ describe('useSWRInfinite', () => {
     let pageData = ['apple', 'banana', 'pineapple']
 
     function Page() {
-      const { data, mutate: boundMutate } = useSWRInfinite<string, string>(
+      const { data, mutate } = useSWRInfinite<string, string>(
         index => [`pagetest-3`, index],
         async (_, index) => {
           await new Promise(res => setTimeout(res, 100))
@@ -74,7 +74,7 @@ describe('useSWRInfinite', () => {
         <div
           onClick={() => {
             // reload the entire list
-            boundMutate()
+            mutate()
           }}
         >
           {data}
@@ -440,27 +440,5 @@ describe('useSWRInfinite', () => {
     for (let setSize of setters) {
       expect(setSize).toEqual(setters[0])
     }
-  })
-
-  it('should share initial cache from `useSWR`', async () => {
-    const cachedData = new Date().toISOString()
-    mutate('shared-cache-0', cachedData)
-
-    function Page() {
-      const { data } = useSWRInfinite<string, string>(
-        index => `shared-cache-${index}`,
-        async () => {
-          await new Promise(res => setTimeout(res, 200))
-          return cachedData
-        }
-      )
-
-      return <div>{data}</div>
-    }
-    const { container } = render(<Page />)
-    expect(container.textContent).toMatchInlineSnapshot(`""`)
-    // after a rerender we should already have the cached data rendered
-    await act(() => new Promise(res => setTimeout(res, 10)))
-    expect(container.textContent).toMatchInlineSnapshot(`"${cachedData}"`)
   })
 })

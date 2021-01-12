@@ -5,7 +5,6 @@ import SWRConfigContext from './swr-config-context'
 import useSWR from './use-swr'
 
 import { keyType, fetcherFn, ConfigInterface, responseInterface } from './types'
-
 type KeyLoader<Data = any> = (
   index: number,
   previousPageData: Data | null
@@ -152,7 +151,7 @@ function useSWRInfinite<Data = any, Error = any>(
         const shouldRevalidatePage =
           revalidateAll ||
           force ||
-          (typeof force === 'undefined' && i === 0 && originalData) ||
+          (typeof force === 'undefined' && i === 0) ||
           (originalData && !config.compare(originalData[i], pageData)) ||
           typeof pageData === 'undefined'
 
