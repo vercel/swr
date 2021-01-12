@@ -120,6 +120,9 @@ function useSWRInfinite<Data = any, Error = any>(
     }
   }, [firstPageKey])
 
+  // keep the data inside a ref
+  const dataRef = useRef<Data[]>()
+
   // actual swr of all pages
   const swr = useSWR<Data[], Error>(
     firstPageKey ? ['many', firstPageKey] : null,
@@ -144,19 +147,25 @@ function useSWRInfinite<Data = any, Error = any>(
         // get the current page cache
         let pageData = cache.get(pageKey)
 
-        // must revalidate if:
-        // - forced to revalidate all
-        // - we revalidate the first page by default (e.g.: upon focus)
-        // - page has changed
+        // should fetch (or revalidate) if:
+        // - `revalidateAll` is enabled
+        // - `mutate()` called
+        // - it's the first page and one of:
+        //   - first render (no dataRef) and no cache (no pageData)
+        //   - not first render (has dataRef) and cache exists (has pageData)
+        // - cache has updated
         // - the offset has changed so the cache is missing
-        const shouldRevalidatePage =
+        const shouldFetchPage =
           revalidateAll ||
           force ||
-          (typeof force === 'undefined' && i === 0 && originalData) ||
+          (typeof force === 'undefined' &&
+            i === 0 &&
+            (typeof dataRef.current === 'undefined') ===
+              (typeof pageData === 'undefined')) ||
           (originalData && !config.compare(originalData[i], pageData)) ||
           typeof pageData === 'undefined'
 
-        if (shouldRevalidatePage) {
+        if (shouldFetchPage) {
           if (pageArgs !== null) {
             pageData = await fn(...pageArgs)
           } else {
@@ -178,8 +187,7 @@ function useSWRInfinite<Data = any, Error = any>(
     extraConfig
   )
 
-  // keep the data inside a ref
-  const dataRef = useRef<Data[]>(swr.data)
+  // update dataRef
   useEffect(() => {
     dataRef.current = swr.data
   }, [swr.data])
