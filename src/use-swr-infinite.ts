@@ -217,23 +217,26 @@ function useSWRInfinite<Data = any, Error = any>(
   )
 
   // Use getter functions to avoid unnecessary re-renders caused by triggering all the getters of the returned swr object
-  return {
-    get error() {
-      return swr.error
+  const swrInfinite = { size, setSize, mutate }
+  Object.defineProperties(swrInfinite, {
+    error: {
+      get: () => swr.error,
+      enumerable: true
     },
-    get data() {
-      return swr.data
+    data: {
+      get: () => swr.data,
+      enumerable: true
     },
-    get revalidate() {
-      return swr.revalidate
+    revalidate: {
+      get: () => swr.revalidate,
+      enumerable: true
     },
-    get isValidating() {
-      return swr.isValidating
-    },
-    mutate,
-    size,
-    setSize
-  } as SWRInfiniteResponseInterface<Data, Error>
+    isValidating: {
+      get: () => swr.isValidating,
+      enumerable: true
+    }
+  })
+  return swrInfinite as SWRInfiniteResponseInterface<Data, Error>
 }
 
 export {
