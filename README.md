@@ -132,6 +132,7 @@ const { data, error, isValidating, mutate } = useSWR(key, fetcher, options)
 - `onError(err, key, config)`: callback function when a request returns an error
 - `onErrorRetry(err, key, config, revalidate, revalidateOps)`: handler for [error retry](#error-retries)
 - `compare(a, b)`: comparison function used to detect when returned data has changed, to avoid spurious rerenders. By default, [`dequal/lite`](https://github.com/lukeed/dequal) is used.
+- `isPaused()`: function to detect whether pause revalidations, will ignore fetched data and errors when it returns `true`. Returns `false` by default.
 
 When under a slow network (2G, <= 70Kbps), `errorRetryInterval` will be 10s, and
 `loadingTimeout` will be 5s by default.
