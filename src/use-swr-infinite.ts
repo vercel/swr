@@ -96,14 +96,14 @@ function useSWRInfinite<Data = any, Error = any>(
   // here we get the key of the fetcher context cache
   let contextCacheKey: string | null = null
   if (firstPageKey) {
-    contextCacheKey = 'context@' + firstPageKey
+    contextCacheKey = 'ctx@' + firstPageKey
   }
 
   // page count is cached as well, so when navigating the list can be restored
   let pageCountCacheKey: string | null = null
   let cachedPageSize
   if (firstPageKey) {
-    pageCountCacheKey = 'size@' + firstPageKey
+    pageCountCacheKey = 'len@' + firstPageKey
     cachedPageSize = cache.get(pageCountCacheKey)
   }
   const pageCountRef = useRef<number>(cachedPageSize || initialSize)
@@ -122,10 +122,10 @@ function useSWRInfinite<Data = any, Error = any>(
 
   // actual swr of all pages
   const swr = useSWR<Data[], Error>(
-    firstPageKey ? ['many', firstPageKey] : null,
+    firstPageKey ? ['inf', firstPageKey] : null,
     async () => {
       // get the revalidate context
-      const { originalData, force } = cache.get(contextCacheKey) || {}
+      const { o: originalData, f: force } = cache.get(contextCacheKey) || {}
 
       // return an array of page data
       const data: Data[] = []
@@ -189,10 +189,10 @@ function useSWRInfinite<Data = any, Error = any>(
       if (shouldRevalidate && typeof data !== 'undefined') {
         // we only revalidate the pages that are changed
         const originalData = dataRef.current
-        cache.set(contextCacheKey, { originalData, force: false })
+        cache.set(contextCacheKey, { o: originalData, f: false })
       } else if (shouldRevalidate) {
         // calling `mutate()`, we revalidate all pages
-        cache.set(contextCacheKey, { force: true })
+        cache.set(contextCacheKey, { f: true })
       }
 
       return swr.mutate(data, shouldRevalidate)
