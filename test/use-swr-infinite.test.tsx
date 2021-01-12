@@ -463,4 +463,27 @@ describe('useSWRInfinite', () => {
     await act(() => new Promise(res => setTimeout(res, 10)))
     expect(container.textContent).toMatchInlineSnapshot(`"${cachedData}"`)
   })
+
+  it('should not break refreshInterval', async () => {
+    let value = 0
+    function Page() {
+      const { data } = useSWRInfinite<number, string>(
+        index => `interval-0-${index}`,
+        () => value++,
+        {
+          dedupingInterval: 0,
+          refreshInterval: 100
+        }
+      )
+
+      return <div>{data}</div>
+    }
+    const { container } = render(<Page />)
+    expect(container.textContent).toMatchInlineSnapshot(`""`)
+    await waitForDomChange({ container }) // mount
+    expect(container.textContent).toMatchInlineSnapshot(`"0"`)
+    // after 300ms the rendered result should be 3
+    await act(() => new Promise(res => setTimeout(res, 310)))
+    expect(container.textContent).toMatchInlineSnapshot(`"3"`)
+  })
 })
