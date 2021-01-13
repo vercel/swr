@@ -324,7 +324,9 @@ function useSWR<Data = any, Error = any>(
         rerender({})
       }
     },
-    [config.suspense]
+    // config.suspense isn't allowed to change during the lifecycle
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
   )
 
   // error ref inside revalidate (is last request errored?)
