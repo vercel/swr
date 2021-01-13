@@ -463,4 +463,52 @@ describe('useSWRInfinite', () => {
     await act(() => new Promise(res => setTimeout(res, 10)))
     expect(container.textContent).toMatchInlineSnapshot(`"${cachedData}"`)
   })
+
+  it('should re-use initialData', async () => {
+    const dummyResponses = {
+      '/api?page=1': ['page-1-1', 'page-1-2'],
+      '/api?page=2': ['page-2-1', 'page-2-2']
+    }
+    let requests = []
+
+    function Page() {
+      const { data, size, setSize } = useSWRInfinite<string[], string>(
+        index => {
+          return [`page-test-10`, `/api?page=${index + 1}`]
+        },
+        async (_, index) => {
+          await new Promise(res => setTimeout(res, 100))
+          requests.push(index)
+          return dummyResponses[index]
+        },
+        {
+          initialData: [dummyResponses[`/api?page=1`]]
+        }
+      )
+
+      return (
+        <div
+          onClick={() => {
+            // load next page
+            setSize(size + 1)
+          }}
+        >
+          {(data ? [].concat(...data) : []).join(', ')}
+        </div>
+      )
+    }
+
+    const { container } = render(<Page />)
+
+    // render with the initialData
+    expect(container.textContent).toMatchInlineSnapshot(`"page-1-1, page-1-2"`)
+    expect(requests).toEqual([]) // should use the initial data
+    fireEvent.click(container.firstElementChild)
+    await waitForDomChange({ container })
+    // Should this reuse the cached data for `page=1`?
+    expect(requests).toEqual(['/api?page=1', '/api?page=2'])
+    expect(container.textContent).toMatchInlineSnapshot(
+      `"page-1-1, page-1-2, page-2-1, page-2-2"`
+    )
+  })
 })
