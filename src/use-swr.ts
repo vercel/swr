@@ -221,6 +221,8 @@ const mutate: mutateInterface = async (
   return data
 }
 
+let didWarnChangingConfigSuspense = false
+
 function useSWR<Data = any, Error = any>(
   key: keyInterface
 ): responseInterface<Data, Error>
@@ -270,6 +272,20 @@ function useSWR<Data = any, Error = any>(
   useIsomorphicLayoutEffect(() => {
     configRef.current = config
   })
+
+  if (process.env.NODE_ENV !== 'production') {
+    if (
+      !didWarnChangingConfigSuspense &&
+      configRef.current &&
+      typeof configRef.current.suspense !== 'undefined' &&
+      configRef.current.suspense !== config.suspense
+    ) {
+      console.error(
+        'config.suspense should not be changed during the lifecycle'
+      )
+      didWarnChangingConfigSuspense = true
+    }
+  }
 
   if (typeof fn === 'undefined') {
     // use the global fetcher

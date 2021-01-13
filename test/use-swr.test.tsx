@@ -1927,7 +1927,11 @@ describe('useSWR - local mutation', () => {
 })
 
 describe('useSWR - configs', () => {
-  afterEach(cleanup)
+  afterEach(() => {
+    jest.clearAllMocks()
+    jest.restoreAllMocks()
+    cleanup()
+  })
 
   it('should read the config fallback from the context', async () => {
     let value = 0
@@ -2006,6 +2010,44 @@ describe('useSWR - configs', () => {
     fireEvent.click(container.firstElementChild)
     await act(async () => await new Promise(res => setTimeout(res, 400)))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
+  })
+
+  it('should warn for changing the config.suspense option during the lifecycle', async () => {
+    function Page() {
+      const [suspense, setSuspense] = useState(true)
+      const { data } = useSWR('config-2', () => 'data', {
+        suspense
+      })
+      return (
+        <div onClick={() => setSuspense(!suspense)}>
+          {data}:{`${suspense}`}
+        </div>
+      )
+    }
+
+    jest.spyOn(console, 'error').mockImplementation(() => {})
+
+    const { container } = render(<Page />)
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"data:true"`
+    )
+
+    fireEvent.click(container.firstElementChild)
+    await waitForDomChange({ container })
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"data:false"`
+    )
+    expect(console.error).toBeCalledWith(
+      'config.suspense should not be changed during the lifecycle'
+    )
+    expect(console.error).toBeCalledTimes(1)
+
+    fireEvent.click(container.firstElementChild)
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"data:true"`
+    )
+    // console.error shouldn't be called twice
+    expect(console.error).toBeCalledTimes(1)
   })
 })
 
