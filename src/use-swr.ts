@@ -55,7 +55,7 @@ const now = (() => {
 })()
 
 // setup DOM events listeners for `focus` and `reconnect` actions
-if (!IS_SERVER && window.addEventListener) {
+if (!IS_SERVER && window.addEventListener && document.addEventListener) {
   const revalidate = revalidators => {
     if (!defaultConfig.isDocumentVisible() || !defaultConfig.isOnline()) return
 
@@ -65,7 +65,7 @@ if (!IS_SERVER && window.addEventListener) {
   }
 
   // focus revalidate
-  window.addEventListener(
+  document.addEventListener(
     'visibilitychange',
     () => revalidate(FOCUS_REVALIDATORS),
     false
@@ -582,7 +582,7 @@ function useSWR<Data = any, Error = any>(
       config.revalidateOnMount ||
       (!config.initialData && config.revalidateOnMount === undefined)
     ) {
-      if (typeof latestKeyedData !== 'undefined') {
+      if (typeof latestKeyedData !== 'undefined' && !IS_SERVER) {
         // delay revalidate if there's cache
         // to not block the rendering
         rAF(softRevalidate)

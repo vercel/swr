@@ -113,7 +113,7 @@ const { data, error, isValidating, mutate } = useSWR(key, fetcher, options)
 #### Options
 
 - `suspense = false`: enable React Suspense mode [(details)](#suspense-mode)
-- `fetcher = undefined`: the default fetcher function
+- `fetcher = window.fetch`: the default fetcher function
 - `initialData`: initial data to be returned (note: This is per-hook)
 - `revalidateOnMount`: enable or disable automatic revalidation when component is mounted (by default revalidation occurs on mount when initialData is not set, use this flag to force behavior)
 - `revalidateOnFocus = true`: auto revalidate when window gets focused
@@ -132,6 +132,7 @@ const { data, error, isValidating, mutate } = useSWR(key, fetcher, options)
 - `onError(err, key, config)`: callback function when a request returns an error
 - `onErrorRetry(err, key, config, revalidate, revalidateOps)`: handler for [error retry](#error-retries)
 - `compare(a, b)`: comparison function used to detect when returned data has changed, to avoid spurious rerenders. By default, [`dequal/lite`](https://github.com/lukeed/dequal) is used.
+- `isPaused()`: function to detect whether pause revalidations, will ignore fetched data and errors when it returns `true`. Returns `false` by default.
 
 When under a slow network (2G, <= 70Kbps), `errorRetryInterval` will be 10s, and
 `loadingTimeout` will be 5s by default.

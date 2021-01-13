@@ -216,12 +216,27 @@ function useSWRInfinite<Data = any, Error = any>(
     [mutate, pageCountCacheKey]
   )
 
-  return {
-    ...swr,
-    mutate,
-    size,
-    setSize
-  } as SWRInfiniteResponseInterface<Data, Error>
+  // Use getter functions to avoid unnecessary re-renders caused by triggering all the getters of the returned swr object
+  const swrInfinite = { size, setSize, mutate }
+  Object.defineProperties(swrInfinite, {
+    error: {
+      get: () => swr.error,
+      enumerable: true
+    },
+    data: {
+      get: () => swr.data,
+      enumerable: true
+    },
+    revalidate: {
+      get: () => swr.revalidate,
+      enumerable: true
+    },
+    isValidating: {
+      get: () => swr.isValidating,
+      enumerable: true
+    }
+  })
+  return swrInfinite as SWRInfiniteResponseInterface<Data, Error>
 }
 
 export {
