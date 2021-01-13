@@ -302,27 +302,32 @@ function useSWR<Data = any, Error = any>(
   // display the data label in the React DevTools next to SWR hooks
   useDebugValue(stateRef.current.data)
 
-  const rerender = useState(null)[1]
-  let dispatch = useCallback((payload: actionType<Data, Error>) => {
-    let shouldUpdateState = false
-    for (let k in payload) {
-      if (stateRef.current[k] === payload[k]) {
-        continue
+  const [, rerender] = useState(null)
+  let dispatch = useCallback(
+    (payload: actionType<Data, Error>) => {
+      let shouldUpdateState = false
+      for (let k in payload) {
+        if (stateRef.current[k] === payload[k]) {
+          continue
+        }
+
+        stateRef.current[k] = payload[k]
+        if (stateDependencies.current[k]) {
+          shouldUpdateState = true
+        }
       }
 
-      stateRef.current[k] = payload[k]
-      if (stateDependencies.current[k]) {
-        shouldUpdateState = true
+      if (shouldUpdateState || config.suspense) {
+        // if component is unmounted, should skip rerender
+        // if component is not mounted, should skip rerender
+        if (unmountedRef.current || !initialMountedRef.current) return
+        rerender({})
       }
-    }
-
-    if (shouldUpdateState || config.suspense) {
-      // if component is unmounted, should skip rerender
-      // if component is not mounted, should skip rerender
-      if (unmountedRef.current || !initialMountedRef.current) return
-      rerender({})
-    }
-  }, [])
+    },
+    // config.suspense isn't allowed to change during the lifecycle
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  )
 
   // error ref inside revalidate (is last request errored?)
   const unmountedRef = useRef(false)
