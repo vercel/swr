@@ -43,7 +43,7 @@ describe('useSWR - suspense', () => {
     // hydration
     expect(container.textContent).toMatchInlineSnapshot(`"fallback"`)
     await act(() => sleep(110)) // update
-    expect(container.textContent).toMatchInlineSnapshot(`"SWR"`)
+    await screen.findByText('SWR')
   })
 
   it('should render multiple SWR fallbacks', async () => {
