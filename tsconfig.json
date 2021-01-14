@@ -8,7 +8,6 @@
     ],
     "module": "commonjs",
     "moduleResolution": "node",
-    "noEmitOnError": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
     "noUnusedLocals": true,
