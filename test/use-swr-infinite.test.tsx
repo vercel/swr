@@ -34,6 +34,8 @@ describe('useSWRInfinite', () => {
       useEffect(() => {
         // load next page if the current one is ready
         if (size <= 2) setSize(size + 1)
+        // The setSize function is guaranteed to be referential equal
+        // eslint-disable-next-line react-hooks/exhaustive-deps
       }, [size])
 
       return <div>{data}</div>

@@ -240,6 +240,8 @@ describe('useSWR', () => {
           revalidate()
         }, 200)
         return () => clearTimeout(timeout)
+        // the revalidate function is always the same reference because the key of the useSWR is static (broadcast-3)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
       }, [])
       return <>{isValidating ? 'true' : 'false'}</>
     }
@@ -1888,6 +1890,8 @@ describe('useSWR - local mutation', () => {
             return 2
           }, false)
         }, 1)
+        // the mutate function is guaranteed to be the same reference
+        // eslint-disable-next-line react-hooks/exhaustive-deps
       }, [])
 
       renderRecivedValues.push(data) // should be 0 -> 2, never render 1 in between

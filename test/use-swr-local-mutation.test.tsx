@@ -520,6 +520,8 @@ describe('useSWR - local mutation', () => {
             return 2
           }, false)
         }, 1)
+        // the mutate function is guaranteed to be the same reference
+        // eslint-disable-next-line react-hooks/exhaustive-deps
       }, [])
 
       renderRecivedValues.push(data) // should be 0 -> 2, never render 1 in between

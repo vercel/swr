@@ -216,6 +216,8 @@ describe('useSWR', () => {
           revalidate()
         }, 200)
         return () => clearTimeout(timeout)
+        // the revalidate function is always the same reference because the key of the useSWR is static (broadcast-3)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
       }, [])
       return <>{isValidating ? 'true' : 'false'}</>
     }
