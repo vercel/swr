@@ -482,7 +482,6 @@ function useSWR<Data = any, Error = any>(
           return false
         }
 
-        cache.set(key, newData)
         cache.set(keyErr, undefined)
         cache.set(keyValidating, false)
 
@@ -499,6 +498,7 @@ function useSWR<Data = any, Error = any>(
           // deep compare to avoid extra re-render
           // data changed
           newState.data = newData
+          cache.set(key, newData)
         }
 
         // merge the new state
