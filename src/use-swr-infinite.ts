@@ -118,6 +118,8 @@ function useSWRInfinite<Data = any, Error = any>(
     } else {
       didMountRef.current = true
     }
+    // initialSize isn't allowed to change during the lifecycle
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [firstPageKey])
 
   // actual swr of all pages
@@ -197,7 +199,9 @@ function useSWRInfinite<Data = any, Error = any>(
 
       return swr.mutate(data, shouldRevalidate)
     },
-    [swr.mutate, contextCacheKey]
+    // swr.mutate is always the same reference
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [contextCacheKey]
   )
 
   // extend the SWR API
