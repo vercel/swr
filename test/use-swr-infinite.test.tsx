@@ -1,12 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import {
-  render,
-  waitForDomChange,
-  fireEvent,
-  act
-} from '@testing-library/react'
-
+import { render, fireEvent, act, screen } from '@testing-library/react'
 import { useSWRInfinite, mutate } from '../src'
+import { sleep } from './utils'
 
 describe('useSWRInfinite', () => {
   it('should render the first page component', async () => {
@@ -14,7 +9,7 @@ describe('useSWRInfinite', () => {
       const { data } = useSWRInfinite<string, string>(
         index => `page-${index}`,
         async key => {
-          await new Promise(res => setTimeout(res, 100))
+          await sleep(100)
           return key
         }
       )
@@ -23,8 +18,7 @@ describe('useSWRInfinite', () => {
     }
     const { container } = render(<Page />)
     expect(container.textContent).toMatchInlineSnapshot(`""`)
-    await waitForDomChange({ container }) // mount
-    expect(container.textContent).toMatchInlineSnapshot(`"page-0"`)
+    await screen.findByText('page-0')
   })
 
   it('should render the multiple pages', async () => {
@@ -32,7 +26,7 @@ describe('useSWRInfinite', () => {
       const { data, size, setSize } = useSWRInfinite<string, string>(
         index => [`pagetest-2`, index],
         async (_, index) => {
-          await new Promise(res => setTimeout(res, 100))
+          await sleep(100)
           return `page ${index}, `
         }
       )
@@ -40,6 +34,8 @@ describe('useSWRInfinite', () => {
       useEffect(() => {
         // load next page if the current one is ready
         if (size <= 2) setSize(size + 1)
+        // The setSize function is guaranteed to be referential equal
+        // eslint-disable-next-line react-hooks/exhaustive-deps
       }, [size])
 
       return <div>{data}</div>
@@ -47,11 +43,7 @@ describe('useSWRInfinite', () => {
 
     const { container } = render(<Page />)
     expect(container.textContent).toMatchInlineSnapshot(`""`)
-    await waitForDomChange({ container }) // mount
-    // should have 3 pages at the same time
-    expect(container.textContent).toMatchInlineSnapshot(
-      `"page 0, page 1, page 2, "`
-    )
+    await screen.findByText('page 0, page 1, page 2,')
   })
 
   it('should support mutate and initialSize', async () => {
@@ -62,7 +54,7 @@ describe('useSWRInfinite', () => {
       const { data, mutate: boundMutate } = useSWRInfinite<string, string>(
         index => [`pagetest-3`, index],
         async (_, index) => {
-          await new Promise(res => setTimeout(res, 100))
+          await sleep(100)
           return `${pageData[index]}, `
         },
         {
@@ -84,16 +76,13 @@ describe('useSWRInfinite', () => {
 
     const { container } = render(<Page />)
     expect(container.textContent).toMatchInlineSnapshot(`""`)
-    await waitForDomChange({ container }) // mount
-    expect(container.textContent).toMatchInlineSnapshot(
-      `"apple, banana, pineapple, "`
-    )
+    await screen.findByText('apple, banana, pineapple,')
 
     // change the source data to 'watermelon'
     pageData[1] = 'watermelon'
     // revalidate
     fireEvent.click(container.firstElementChild)
-    await act(() => new Promise(res => setTimeout(res, 350)))
+    await act(() => sleep(350))
     expect(container.textContent).toMatchInlineSnapshot(
       `"apple, watermelon, pineapple, "`
     )
@@ -102,7 +91,7 @@ describe('useSWRInfinite', () => {
   it('should support api cursor', async () => {
     // an API that supports the `?offset=` param
     async function mockAPIFetcher(url) {
-      await new Promise(res => setTimeout(res, 100))
+      await sleep(100)
       const parse = url.match(/\?offset=(\d+)/)
       const offset = parse ? +parse[1] + 1 : 0
       if (offset <= 3) {
@@ -161,10 +150,11 @@ describe('useSWRInfinite', () => {
 
     const { container } = render(<Page />)
     expect(container.textContent).toMatchInlineSnapshot(`""`)
-    await waitForDomChange({ container }) // mount
-    expect(container.textContent).toMatchInlineSnapshot(
-      `"0: foo, 1: bar, 2: foo, 3: bar, end."`
-    )
+    await screen.findByText('0: foo,')
+    await screen.findByText('1: bar,')
+    await screen.findByText('2: foo,')
+    await screen.findByText('3: bar,')
+    await screen.findByText('end.')
   })
 
   it('should skip fetching existing pages when loading more', async () => {
@@ -174,7 +164,7 @@ describe('useSWRInfinite', () => {
         index => [`pagetest-4`, index],
         async (_, index) => {
           requests++
-          await new Promise(res => setTimeout(res, 100))
+          await sleep(100)
           return `page ${index}, `
         }
       )
@@ -193,19 +183,18 @@ describe('useSWRInfinite', () => {
 
     const { container } = render(<Page />)
     expect(container.textContent).toMatchInlineSnapshot(`""`)
-    await waitForDomChange({ container }) // mount
-    expect(container.textContent).toMatchInlineSnapshot(`"page 0, "`)
+    await screen.findByText('page 0,') // mounted
     expect(requests).toEqual(1)
 
     // load next page
     fireEvent.click(container.firstElementChild)
-    await act(() => new Promise(res => setTimeout(res, 150)))
+    await act(() => sleep(150))
     expect(container.textContent).toMatchInlineSnapshot(`"page 0, page 1, "`)
     expect(requests).toEqual(2)
 
     // load next page
     fireEvent.click(container.firstElementChild)
-    await act(() => new Promise(res => setTimeout(res, 150)))
+    await act(() => sleep(150))
     expect(container.textContent).toMatchInlineSnapshot(
       `"page 0, page 1, page 2, "`
     )
@@ -219,7 +208,7 @@ describe('useSWRInfinite', () => {
       const { data, size, setSize } = useSWRInfinite<string, string>(
         index => [`pagetest-5`, index],
         async (_, index) => {
-          await new Promise(res => setTimeout(res, 100))
+          await sleep(100)
           return `page ${index}, `
         }
       )
@@ -244,12 +233,10 @@ describe('useSWRInfinite', () => {
 
     const { container } = render(<App />)
     expect(container.textContent).toMatchInlineSnapshot(`""`)
-    await waitForDomChange({ container }) // mount
-    expect(container.textContent).toMatchInlineSnapshot(`"page 0, "`)
-
+    await screen.findByText('page 0,')
     // load next page
     fireEvent.click(container.firstElementChild)
-    await act(() => new Promise(res => setTimeout(res, 150)))
+    await act(() => sleep(150))
     expect(container.textContent).toMatchInlineSnapshot(`"page 0, page 1, "`)
 
     // switch to another component
@@ -259,7 +246,7 @@ describe('useSWRInfinite', () => {
     // switch back and it should still have 2 pages cached
     act(() => toggle(v => !v))
     expect(container.textContent).toMatchInlineSnapshot(`"page 0, page 1, "`)
-    await act(() => new Promise(res => setTimeout(res, 100)))
+    await act(() => sleep(100))
     expect(container.textContent).toMatchInlineSnapshot(`"page 0, page 1, "`)
   })
 
@@ -271,7 +258,7 @@ describe('useSWRInfinite', () => {
       const { data, size, setSize } = useSWRInfinite<string, string>(
         index => [`pagetest-6`, index, t ? 'A' : 'B'],
         async (_, index) => {
-          await new Promise(res => setTimeout(res, 100))
+          await sleep(100)
           return `page ${index}, `
         }
       )
@@ -292,17 +279,16 @@ describe('useSWRInfinite', () => {
 
     const { container } = render(<Page />)
     expect(container.textContent).toMatchInlineSnapshot(`""`)
-    await waitForDomChange({ container }) // mount
-    expect(container.textContent).toMatchInlineSnapshot(`"page 0, "`)
+    await screen.findByText('page 0,')
 
     // load next page
     fireEvent.click(container.firstElementChild)
-    await act(() => new Promise(res => setTimeout(res, 150)))
+    await act(() => sleep(150))
     expect(container.textContent).toMatchInlineSnapshot(`"page 0, page 1, "`)
 
     // switch key, it should have only 1 page
     act(() => toggle(v => !v))
-    await act(() => new Promise(res => setTimeout(res, 150)))
+    await act(() => sleep(150))
     expect(container.textContent).toMatchInlineSnapshot(`"page 0, "`)
   })
 
@@ -314,7 +300,7 @@ describe('useSWRInfinite', () => {
       const { data, size, setSize } = useSWRInfinite<string, string>(
         index => [`pagetest-7`, index, t ? 'A' : 'B'],
         async (_, index) => {
-          await new Promise(res => setTimeout(res, 100))
+          await sleep(100)
           return `page ${index}, `
         },
         {
@@ -338,17 +324,16 @@ describe('useSWRInfinite', () => {
 
     const { container } = render(<Page />)
     expect(container.textContent).toMatchInlineSnapshot(`""`)
-    await waitForDomChange({ container }) // mount
-    expect(container.textContent).toMatchInlineSnapshot(`"page 0, "`)
+    await screen.findByText('page 0,')
 
     // load next page
     fireEvent.click(container.firstElementChild)
-    await act(() => new Promise(res => setTimeout(res, 150)))
+    await act(() => sleep(150))
     expect(container.textContent).toMatchInlineSnapshot(`"page 0, page 1, "`)
 
     // switch key, it should still have 2 pages
     act(() => toggle(v => !v))
-    await act(() => new Promise(res => setTimeout(res, 250)))
+    await act(() => sleep(250))
     expect(container.textContent).toMatchInlineSnapshot(`"page 0, page 1, "`)
   })
 
@@ -359,7 +344,7 @@ describe('useSWRInfinite', () => {
       const { data, size, setSize } = useSWRInfinite<string, string>(
         index => [`pagetest-8`, index],
         async (_, index) => {
-          await new Promise(res => setTimeout(res, 100))
+          await sleep(100)
           return `page ${index}, `
         }
       )
@@ -384,22 +369,21 @@ describe('useSWRInfinite', () => {
 
     const { container } = render(<Page />)
     expect(container.textContent).toMatchInlineSnapshot(`""`)
-    await waitForDomChange({ container }) // mount
-    expect(container.textContent).toMatchInlineSnapshot(`"page 0, "`)
+    await screen.findByText('page 0,')
 
     // load next page
     fireEvent.click(container.firstElementChild)
-    await act(() => new Promise(res => setTimeout(res, 150)))
+    await act(() => sleep(150))
     expect(container.textContent).toMatchInlineSnapshot(`"page 0, page 1, "`)
 
     // pages should be unmounted now
     act(() => toggle(v => !v))
-    await act(() => new Promise(res => setTimeout(res, 50)))
+    await act(() => sleep(50))
     expect(container.textContent).toMatchInlineSnapshot(`""`)
 
     // remount, should still have 2 pages
     act(() => toggle(v => !v))
-    await act(() => new Promise(res => setTimeout(res, 150)))
+    await act(() => sleep(150))
     expect(container.textContent).toMatchInlineSnapshot(`"page 0, page 1, "`)
   })
 
@@ -410,7 +394,7 @@ describe('useSWRInfinite', () => {
       const { data, size, setSize } = useSWRInfinite<string, string>(
         index => [`pagetest-9`, index],
         async (_, index) => {
-          await new Promise(res => setTimeout(res, 100))
+          await sleep(100)
           return `page ${index}, `
         }
       )
@@ -430,11 +414,11 @@ describe('useSWRInfinite', () => {
     }
 
     const { container } = render(<Comp />)
-    await waitForDomChange({ container }) // mount
+    await screen.findByText('page 0,')
 
     // load next page
     fireEvent.click(container.firstElementChild)
-    await act(() => new Promise(res => setTimeout(res, 150)))
+    await act(() => sleep(150))
 
     // check all `setSize`s are referential equal.
     for (let setSize of setters) {
@@ -485,5 +469,51 @@ describe('useSWRInfinite', () => {
     // after 300ms the rendered result should be 3
     await act(() => new Promise(res => setTimeout(res, 310)))
     expect(container.textContent).toMatchInlineSnapshot(`"3"`)
+  })
+    
+  it('should re-use initialData', async () => {
+    const dummyResponses = {
+      '/api?page=1': ['page-1-1', 'page-1-2'],
+      '/api?page=2': ['page-2-1', 'page-2-2']
+    }
+    let requests = []
+
+    function Page() {
+      const { data, size, setSize } = useSWRInfinite<string[], string>(
+        index => {
+          return [`page-test-10`, `/api?page=${index + 1}`]
+        },
+        async (_, index) => {
+          await new Promise(res => setTimeout(res, 100))
+          requests.push(index)
+          return dummyResponses[index]
+        },
+        {
+          initialData: [dummyResponses[`/api?page=1`]]
+        }
+      )
+
+      return (
+        <div
+          onClick={() => {
+            // load next page
+            setSize(size + 1)
+          }}
+        >
+          {(data ? [].concat(...data) : []).join(', ')}
+        </div>
+      )
+    }
+
+    const { container } = render(<Page />)
+
+    // render with the initialData
+    expect(container.textContent).toMatchInlineSnapshot(`"page-1-1, page-1-2"`)
+    expect(requests).toEqual([]) // should use the initial data
+    fireEvent.click(container.firstElementChild)
+
+    // Should this reuse the cached data for `page=1`?
+    await screen.findByText('page-1-1, page-1-2, page-2-1, page-2-2')
+    expect(requests).toEqual(['/api?page=1', '/api?page=2'])
   })
 })

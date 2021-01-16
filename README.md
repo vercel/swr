@@ -209,8 +209,7 @@ Or using GraphQL:
 ```js
 import { request } from 'graphql-request'
 
-const API = 'https://api.graph.cool/simple/v1/movies'
-const fetcher = query => request(API, query)
+const fetcher = query => request('/api/graphql', query)
 
 function App() {
   const { data, error } = useSWR(
