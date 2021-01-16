@@ -85,7 +85,7 @@ function useSWRInfinite<Data = any, Error = any>(
   // get the serialized key of the first page
   let firstPageKey: string | null = null
   try {
-    ;[firstPageKey] = cache.serializeKey(getKey(0, null))
+    [firstPageKey] = cache.serializeKey(getKey(0, null))
   } catch (err) {
     // not ready
   }
@@ -122,6 +122,9 @@ function useSWRInfinite<Data = any, Error = any>(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [firstPageKey])
 
+  // keep the data inside a ref
+  const dataRef = useRef<Data[]>()
+
   // actual swr of all pages
   const swr = useSWR<Data[], Error>(
     firstPageKey ? ['many', firstPageKey] : null,
@@ -146,19 +149,22 @@ function useSWRInfinite<Data = any, Error = any>(
         // get the current page cache
         let pageData = cache.get(pageKey)
 
-        // must revalidate if:
-        // - forced to revalidate all
-        // - we revalidate the first page by default (e.g.: upon focus)
-        // - page has changed
-        // - the offset has changed so the cache is missing
-        const shouldRevalidatePage =
+        // should fetch (or revalidate) if:
+        // - `revalidateAll` is enabled
+        // - `mutate()` called
+        // - the cache is missing
+        // - it's the first page and it's not the first render
+        // - cache has changed
+        const shouldFetchPage =
           revalidateAll ||
           force ||
-          (typeof force === 'undefined' && i === 0 && originalData) ||
-          (originalData && !config.compare(originalData[i], pageData)) ||
-          typeof pageData === 'undefined'
+          typeof pageData === 'undefined' ||
+          (typeof force === 'undefined' &&
+            i === 0 &&
+            typeof dataRef.current !== 'undefined') ||
+          (originalData && !config.compare(originalData[i], pageData))
 
-        if (shouldRevalidatePage) {
+        if (shouldFetchPage) {
           if (pageArgs !== null) {
             pageData = await fn(...pageArgs)
           } else {
@@ -180,8 +186,7 @@ function useSWRInfinite<Data = any, Error = any>(
     extraConfig
   )
 
-  // keep the data inside a ref
-  const dataRef = useRef<Data[]>(swr.data)
+  // update dataRef
   useEffect(() => {
     dataRef.current = swr.data
   }, [swr.data])
