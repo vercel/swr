@@ -464,8 +464,6 @@ describe('useSWRInfinite', () => {
     }
     const { container } = render(<Page />)
     expect(container.textContent).toMatchInlineSnapshot(`""`)
-    await waitForDomChange({ container }) // mount
-    expect(container.textContent).toMatchInlineSnapshot(`"0"`)
     // after 300ms the rendered result should be 3
     await act(() => new Promise(res => setTimeout(res, 310)))
     expect(container.textContent).toMatchInlineSnapshot(`"3"`)
