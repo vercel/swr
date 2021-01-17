@@ -18,6 +18,7 @@ export interface ConfigInterface<
   shouldRetryOnError?: boolean
   fetcher?: Fn
   suspense?: boolean
+  immutable?: boolean
   initialData?: Data
 
   isOnline?: () => boolean

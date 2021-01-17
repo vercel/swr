@@ -577,11 +577,20 @@ function useSWR<Data = any, Error = any>(
     // revalidate with deduping
     const softRevalidate = () => revalidate({ dedupe: true })
 
-    // trigger a revalidation
-    if (
-      config.revalidateOnMount ||
-      (!config.initialData && config.revalidateOnMount === undefined)
-    ) {
+    const noInitialData = config.initialData === undefined
+
+    // trigger a revalidation on mount if necessary
+    const revalidateOnMount =
+      // if the resource is immutable, and we don't have anything to return
+      config.immutable
+        ? cache.get(key) === undefined && noInitialData
+        : // if `revalidateOnMount` is set, use the config
+        // otherwise, if we don't have initial data we have to revalidate
+        config.revalidateOnMount !== undefined
+        ? config.revalidateOnMount
+        : noInitialData
+
+    if (revalidateOnMount) {
       if (typeof latestKeyedData !== 'undefined' && !IS_SERVER) {
         // delay revalidate if there's cache
         // to not block the rendering
