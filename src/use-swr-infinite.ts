@@ -85,12 +85,12 @@ function useSWRInfinite<Data = any, Error = any>(
   // get the serialized key of the first page
   let firstPageKey: string | null = null
   try {
-    ;[firstPageKey] = cache.serializeKey(getKey(0, null))
+    [firstPageKey] = cache.serializeKey(getKey(0, null))
   } catch (err) {
     // not ready
   }
 
-  const rerender = useState<boolean>(false)[1]
+  const [, rerender] = useState<boolean>(false)
 
   // we use cache to pass extra info (context) to fetcher so it can be globally shared
   // here we get the key of the fetcher context cache
@@ -118,7 +118,12 @@ function useSWRInfinite<Data = any, Error = any>(
     } else {
       didMountRef.current = true
     }
+    // initialSize isn't allowed to change during the lifecycle
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [firstPageKey])
+
+  // keep the data inside a ref
+  const dataRef = useRef<Data[]>()
 
   // actual swr of all pages
   const swr = useSWR<Data[], Error>(
@@ -144,19 +149,22 @@ function useSWRInfinite<Data = any, Error = any>(
         // get the current page cache
         let pageData = cache.get(pageKey)
 
-        // must revalidate if:
-        // - forced to revalidate all
-        // - we revalidate the first page by default (e.g.: upon focus)
-        // - page has changed
-        // - the offset has changed so the cache is missing
-        const shouldRevalidatePage =
+        // should fetch (or revalidate) if:
+        // - `revalidateAll` is enabled
+        // - `mutate()` called
+        // - the cache is missing
+        // - it's the first page and it's not the first render
+        // - cache has changed
+        const shouldFetchPage =
           revalidateAll ||
           force ||
-          (typeof force === 'undefined' && i === 0 && originalData) ||
-          (originalData && !config.compare(originalData[i], pageData)) ||
-          typeof pageData === 'undefined'
+          typeof pageData === 'undefined' ||
+          (typeof force === 'undefined' &&
+            i === 0 &&
+            typeof dataRef.current !== 'undefined') ||
+          (originalData && !config.compare(originalData[i], pageData))
 
-        if (shouldRevalidatePage) {
+        if (shouldFetchPage) {
           if (pageArgs !== null) {
             pageData = await fn(...pageArgs)
           } else {
@@ -178,8 +186,7 @@ function useSWRInfinite<Data = any, Error = any>(
     extraConfig
   )
 
-  // keep the data inside a ref
-  const dataRef = useRef<Data[]>(swr.data)
+  // update dataRef
   useEffect(() => {
     dataRef.current = swr.data
   }, [swr.data])
@@ -197,7 +204,9 @@ function useSWRInfinite<Data = any, Error = any>(
 
       return swr.mutate(data, shouldRevalidate)
     },
-    [swr.mutate, contextCacheKey]
+    // swr.mutate is always the same reference
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [contextCacheKey]
   )
 
   // extend the SWR API
@@ -216,12 +225,27 @@ function useSWRInfinite<Data = any, Error = any>(
     [mutate, pageCountCacheKey]
   )
 
-  return {
-    ...swr,
-    mutate,
-    size,
-    setSize
-  } as SWRInfiniteResponseInterface<Data, Error>
+  // Use getter functions to avoid unnecessary re-renders caused by triggering all the getters of the returned swr object
+  const swrInfinite = { size, setSize, mutate }
+  Object.defineProperties(swrInfinite, {
+    error: {
+      get: () => swr.error,
+      enumerable: true
+    },
+    data: {
+      get: () => swr.data,
+      enumerable: true
+    },
+    revalidate: {
+      get: () => swr.revalidate,
+      enumerable: true
+    },
+    isValidating: {
+      get: () => swr.isValidating,
+      enumerable: true
+    }
+  })
+  return swrInfinite as SWRInfiniteResponseInterface<Data, Error>
 }
 
 export {
