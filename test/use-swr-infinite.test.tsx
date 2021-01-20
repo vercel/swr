@@ -468,7 +468,7 @@ describe('useSWRInfinite', () => {
     await act(() => new Promise(res => setTimeout(res, 310)))
     expect(container.textContent).toMatchInlineSnapshot(`"3"`)
   })
-    
+
   it('should re-use initialData', async () => {
     const dummyResponses = {
       '/api?page=1': ['page-1-1', 'page-1-2'],
