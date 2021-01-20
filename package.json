@@ -16,6 +16,7 @@
   "license": "MIT",
   "scripts": {
     "build": "microbundle --no-sourcemap -f modern,es,cjs",
+    "postbuild": "echo \";Object.defineProperty(exports,'__esModule',{value:true})\" >> dist/index.js",
     "watch": "tsc --watch",
     "types:check": "tsc --noEmit",
     "format": "prettier --write \"{src,test,examples}/**/*.{ts,tsx}\"",
