@@ -1,4 +1,16 @@
-export type fetcherFn<Data> = ((...args: any) => Data | Promise<Data>) | null
+export type observableFetcher<Data> = {
+  subscribe(
+    onNext: (data: Data) => void,
+    onError: (err: any) => void,
+    onComplete: () => void
+  ): () => void
+}
+export type promiseFetcher<Data> = (...args: any) => Data | Promise<Data>
+
+export type fetcherFn<Data> =
+  | promiseFetcher<Data>
+  | observableFetcher<Data>
+  | null
 export interface ConfigInterface<
   Data = any,
   Error = any,

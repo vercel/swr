@@ -246,7 +246,10 @@ function useSWR<Data = any, Error = any>(
     fn = args[1]
     config = args[2]
   } else {
-    if (typeof args[1] === 'function') {
+    if (
+      typeof args[1] === 'function' ||
+      (typeof args[1] === 'object' && typeof args[1].subscribe === 'function')
+    ) {
       fn = args[1]
     } else if (typeof args[1] === 'object') {
       config = args[1]
@@ -381,7 +384,7 @@ function useSWR<Data = any, Error = any>(
     async (
       revalidateOpts: RevalidateOptionInterface = {}
     ): Promise<boolean> => {
-      if (!key || !fn) return false
+      if (!key || !fn || typeof fn !== 'function') return false
       if (unmountedRef.current) return false
       if (configRef.current.isPaused()) return false
       revalidateOpts = Object.assign({ dedupe: false }, revalidateOpts)
@@ -663,9 +666,24 @@ function useSWR<Data = any, Error = any>(
     addRevalidator(RECONNECT_REVALIDATORS, onReconnect)
     addRevalidator(CACHE_REVALIDATORS, onUpdate)
 
-    return () => {
+    let unsubscribe
+    if (typeof fn === 'object' && typeof fn.subscribe === 'function') {
+      unsubscribe = fn.subscribe(
+        data => {
+          boundMutate(data)
+        },
+        err => {
+          cache.set(keyErr, err)
+          dispatch({ error: err })
+        },
+        teardown
+      )
+    }
+
+    function teardown() {
       // cleanup
       dispatch = () => null
+      typeof unsubscribe === 'function' && unsubscribe()
 
       // mark it as unmounted
       unmountedRef.current = true
@@ -674,6 +692,8 @@ function useSWR<Data = any, Error = any>(
       removeRevalidator(RECONNECT_REVALIDATORS, onReconnect)
       removeRevalidator(CACHE_REVALIDATORS, onUpdate)
     }
+
+    return teardown
   }, [key, revalidate])
 
   useIsomorphicLayoutEffect(() => {

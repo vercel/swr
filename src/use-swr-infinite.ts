@@ -129,6 +129,8 @@ function useSWRInfinite<Data = any, Error = any>(
   const swr = useSWR<Data[], Error>(
     firstPageKey ? ['many', firstPageKey] : null,
     async () => {
+      // TODO: support subscribe mode in swr-infinite
+      if (typeof fn !== 'function') return undefined
       // get the revalidate context
       const { originalData, force } = cache.get(contextCacheKey) || {}
 
