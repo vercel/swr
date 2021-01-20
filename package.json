@@ -37,8 +37,8 @@
     ]
   },
   "devDependencies": {
-    "@testing-library/react": "9.4.0",
-    "@types/jest": "24.0.20",
+    "@testing-library/react": "10.1.0",
+    "@types/jest": "25.2.3",
     "@types/node": "11.12.0",
     "@types/react": "16.9.11",
     "@typescript-eslint/eslint-plugin": "2.5.0",
@@ -49,12 +49,12 @@
     "eslint-plugin-react": "7.20.6",
     "eslint-plugin-react-hooks": "4.1.2",
     "husky": "2.4.1",
-    "jest": "24.9.0",
+    "jest": "25.5.4",
     "lint-staged": "8.2.1",
     "prettier": "1.18.2",
     "react": "16.11.0",
     "react-dom": "16.11.0",
-    "ts-jest": "24.1.0",
+    "ts-jest": "25.5.1",
     "typescript": "3.6.4"
   },
   "dependencies": {
