@@ -85,7 +85,7 @@ function useSWRInfinite<Data = any, Error = any>(
   // get the serialized key of the first page
   let firstPageKey: string | null = null
   try {
-    [firstPageKey] = cache.serializeKey(getKey(0, null))
+    ;[firstPageKey] = cache.serializeKey(getKey(0, null))
   } catch (err) {
     // not ready
   }
