@@ -51,11 +51,11 @@ const MUTATION_END_TS = {}
 // generate strictly increasing timestamps
 const now = (() => {
   let ts = 0
-  return () => ts++
+  return () => ++ts
 })()
 
 // setup DOM events listeners for `focus` and `reconnect` actions
-if (!IS_SERVER && window.addEventListener) {
+if (!IS_SERVER && window.addEventListener && document.addEventListener) {
   const revalidate = revalidators => {
     if (!defaultConfig.isDocumentVisible() || !defaultConfig.isOnline()) return
 
@@ -65,7 +65,7 @@ if (!IS_SERVER && window.addEventListener) {
   }
 
   // focus revalidate
-  window.addEventListener(
+  document.addEventListener(
     'visibilitychange',
     () => revalidate(FOCUS_REVALIDATORS),
     false
@@ -302,27 +302,32 @@ function useSWR<Data = any, Error = any>(
   // display the data label in the React DevTools next to SWR hooks
   useDebugValue(stateRef.current.data)
 
-  const rerender = useState(null)[1]
-  let dispatch = useCallback((payload: actionType<Data, Error>) => {
-    let shouldUpdateState = false
-    for (let k in payload) {
-      if (stateRef.current[k] === payload[k]) {
-        continue
+  const [, rerender] = useState(null)
+  let dispatch = useCallback(
+    (payload: actionType<Data, Error>) => {
+      let shouldUpdateState = false
+      for (let k in payload) {
+        if (stateRef.current[k] === payload[k]) {
+          continue
+        }
+
+        stateRef.current[k] = payload[k]
+        if (stateDependencies.current[k]) {
+          shouldUpdateState = true
+        }
       }
 
-      stateRef.current[k] = payload[k]
-      if (stateDependencies.current[k]) {
-        shouldUpdateState = true
+      if (shouldUpdateState || config.suspense) {
+        // if component is unmounted, should skip rerender
+        // if component is not mounted, should skip rerender
+        if (unmountedRef.current || !initialMountedRef.current) return
+        rerender({})
       }
-    }
-
-    if (shouldUpdateState || config.suspense) {
-      // if component is unmounted, should skip rerender
-      // if component is not mounted, should skip rerender
-      if (unmountedRef.current || !initialMountedRef.current) return
-      rerender({})
-    }
-  }, [])
+    },
+    // config.suspense isn't allowed to change during the lifecycle
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  )
 
   // error ref inside revalidate (is last request errored?)
   const unmountedRef = useRef(false)
@@ -332,13 +337,15 @@ function useSWR<Data = any, Error = any>(
   const initialMountedRef = useRef(false)
 
   // do unmount check for callbacks
-  const eventsRef = useRef({
-    emit: (event, ...params) => {
+  const eventsCallback = useCallback(
+    (event, ...params) => {
       if (unmountedRef.current) return
       if (!initialMountedRef.current) return
+      if (key !== keyRef.current) return
       configRef.current[event](...params)
-    }
-  })
+    },
+    [key]
+  )
 
   const boundMutate: responseInterface<Data, Error>['mutate'] = useCallback(
     (data, shouldRevalidate) => {
@@ -376,6 +383,7 @@ function useSWR<Data = any, Error = any>(
     ): Promise<boolean> => {
       if (!key || !fn) return false
       if (unmountedRef.current) return false
+      if (configRef.current.isPaused()) return false
       revalidateOpts = Object.assign({ dedupe: false }, revalidateOpts)
 
       let loading = true
@@ -411,7 +419,7 @@ function useSWR<Data = any, Error = any>(
           // we trigger the loading slow event.
           if (config.loadingTimeout && !cache.get(key)) {
             setTimeout(() => {
-              if (loading) eventsRef.current.emit('onLoadingSlow', key, config)
+              if (loading) eventsCallback('onLoadingSlow', key, config)
             }, config.loadingTimeout)
           }
 
@@ -432,37 +440,39 @@ function useSWR<Data = any, Error = any>(
 
           // trigger the success event,
           // only do this for the original request.
-          eventsRef.current.emit('onSuccess', newData, key, config)
+          eventsCallback('onSuccess', newData, key, config)
         }
 
-        const shouldIgnoreRequest =
-          // if there're other ongoing request(s), started after the current one,
-          // we need to ignore the current one to avoid possible race conditions:
-          //   req1------------------>res1        (current one)
-          //        req2---------------->res2
-          // the request that fired later will always be kept.
-          CONCURRENT_PROMISES_TS[key] > startAt ||
-          // if there're other mutations(s), overlapped with the current revalidation:
-          // case 1:
-          //   req------------------>res
-          //       mutate------>end
-          // case 2:
-          //         req------------>res
-          //   mutate------>end
-          // case 3:
-          //   req------------------>res
-          //       mutate-------...---------->
-          // we have to ignore the revalidation result (res) because it's no longer fresh.
-          // meanwhile, a new revalidation should be triggered when the mutation ends.
-          (MUTATION_TS[key] &&
-            // case 1
-            (startAt <= MUTATION_TS[key] ||
-              // case 2
-              startAt <= MUTATION_END_TS[key] ||
-              // case 3
-              MUTATION_END_TS[key] === 0))
+        // if there're other ongoing request(s), started after the current one,
+        // we need to ignore the current one to avoid possible race conditions:
+        //   req1------------------>res1        (current one)
+        //        req2---------------->res2
+        // the request that fired later will always be kept.
+        if (CONCURRENT_PROMISES_TS[key] > startAt) {
+          return false
+        }
 
-        if (shouldIgnoreRequest) {
+        // if there're other mutations(s), overlapped with the current revalidation:
+        // case 1:
+        //   req------------------>res
+        //       mutate------>end
+        // case 2:
+        //         req------------>res
+        //   mutate------>end
+        // case 3:
+        //   req------------------>res
+        //       mutate-------...---------->
+        // we have to ignore the revalidation result (res) because it's no longer fresh.
+        // meanwhile, a new revalidation should be triggered when the mutation ends.
+        if (
+          MUTATION_TS[key] &&
+          // case 1
+          (startAt <= MUTATION_TS[key] ||
+            // case 2
+            startAt <= MUTATION_END_TS[key] ||
+            // case 3
+            MUTATION_END_TS[key] === 0)
+        ) {
           dispatch({ isValidating: false })
           return false
         }
@@ -496,6 +506,12 @@ function useSWR<Data = any, Error = any>(
       } catch (err) {
         delete CONCURRENT_PROMISES[key]
         delete CONCURRENT_PROMISES_TS[key]
+        if (configRef.current.isPaused()) {
+          dispatch({
+            isValidating: false
+          })
+          return false
+        }
 
         cache.set(keyErr, err)
 
@@ -515,11 +531,11 @@ function useSWR<Data = any, Error = any>(
         }
 
         // events and retry
-        eventsRef.current.emit('onError', err, key, config)
+        eventsCallback('onError', err, key, config)
         if (config.shouldRetryOnError) {
           // when retrying, we always enable deduping
           const retryCount = (revalidateOpts.retryCount || 0) + 1
-          eventsRef.current.emit(
+          eventsCallback(
             'onErrorRetry',
             err,
             key,
@@ -568,7 +584,7 @@ function useSWR<Data = any, Error = any>(
       config.revalidateOnMount ||
       (!config.initialData && config.revalidateOnMount === undefined)
     ) {
-      if (typeof latestKeyedData !== 'undefined') {
+      if (typeof latestKeyedData !== 'undefined' && !IS_SERVER) {
         // delay revalidate if there's cache
         // to not block the rendering
         rAF(softRevalidate)
@@ -675,7 +691,7 @@ function useSWR<Data = any, Error = any>(
         await revalidate({ dedupe: true })
       }
       // Read the latest refreshInterval
-      if (configRef.current.refreshInterval && !stateRef.current.error) {
+      if (configRef.current.refreshInterval && timer) {
         timer = setTimeout(tick, configRef.current.refreshInterval)
       }
     }
@@ -683,7 +699,10 @@ function useSWR<Data = any, Error = any>(
       timer = setTimeout(tick, configRef.current.refreshInterval)
     }
     return () => {
-      if (timer) clearTimeout(timer)
+      if (timer) {
+        clearTimeout(timer)
+        timer = null
+      }
     }
   }, [
     config.refreshInterval,

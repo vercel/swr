@@ -12,17 +12,17 @@ export default function hash(args: any[]): string {
   if (!args.length) return ''
   let key = 'arg'
   for (let i = 0; i < args.length; ++i) {
+    if (args[i] === null) {
+      key += '@null'
+      continue
+    }
     let _hash
-    if (
-      args[i] === null ||
-      (typeof args[i] !== 'object' && typeof args[i] !== 'function')
-    ) {
+    if (typeof args[i] !== 'object' && typeof args[i] !== 'function') {
       // need to consider the case that args[i] is a string:
       // args[i]        _hash
       // "undefined" -> '"undefined"'
       // undefined   -> 'undefined'
       // 123         -> '123'
-      // null        -> 'null'
       // "null"      -> '"null"'
       if (typeof args[i] === 'string') {
         _hash = '"' + args[i] + '"'
