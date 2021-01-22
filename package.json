@@ -2,6 +2,7 @@
   "name": "swr",
   "version": "0.4.0",
   "description": "React Hooks library for remote data fetching",
+  "type": "module",
   "source": "src/index.ts",
   "module": "dist/swr.module.js",
   "exports": "dist/swr.modern.js",
