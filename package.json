@@ -3,7 +3,6 @@
   "version": "0.4.0",
   "description": "React Hooks library for remote data fetching",
   "source": "src/index.ts",
-  "main": "dist/index.js",
   "module": "dist/index.module.js",
   "exports": "dist/index.modern.js",
   "react-native": "dist/index.module.js",
@@ -15,8 +14,7 @@
   "homepage": "https://swr.vercel.app",
   "license": "MIT",
   "scripts": {
-    "build": "microbundle --no-sourcemap -f modern,es,cjs",
-    "postbuild": "echo \";Object.defineProperty(exports,'__esModule',{value:true})\" >> dist/index.js",
+    "build": "microbundle --no-sourcemap -f modern,es",
     "watch": "tsc --watch",
     "types:check": "tsc --noEmit",
     "format": "prettier --write \"{src,test,examples}/**/*.{ts,tsx}\"",
