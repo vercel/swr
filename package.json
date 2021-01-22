@@ -3,9 +3,9 @@
   "version": "0.4.0",
   "description": "React Hooks library for remote data fetching",
   "source": "src/index.ts",
-  "module": "dist/index.module.js",
-  "exports": "dist/index.modern.js",
-  "react-native": "dist/index.module.js",
+  "module": "dist/swr.module.js",
+  "exports": "dist/swr.modern.js",
+  "react-native": "dist/swr.module.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist/**"
