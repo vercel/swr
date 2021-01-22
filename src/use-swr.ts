@@ -549,6 +549,16 @@ function useSWR<Data = any, Error = any>(
       loading = false
       return true
     },
+    // dispatch is immutable, and `eventsCallback`, `fnArgs`, `keyErr`, and `keyValidating` are based on `key`,
+    // so we can them from the deps array.
+    //
+    // FIXME:
+    // `fn` and `config` might be changed during the lifecycle,
+    // but they might be changed every render like this.
+    // useSWR('key', () => fetch('/api/'), { suspense: true })
+    // So we omit the values from the deps array
+    // even though it might cause unexpected behaviors.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [key]
   )
 
@@ -746,7 +756,13 @@ function useSWR<Data = any, Error = any>(
     })
 
     return state
-  }, [revalidate])
+    // `boundMutate` is immutable, and the immutability of `revalidate` depends on `key`
+    // so we can omit them from the deps array,
+    // but we put it to enable react-hooks/exhaustive-deps rule.
+    // `initialData` and `initialError` are not initial values
+    // because they are changed during the lifecycle
+    // so we should add them in the deps array.
+  }, [revalidate, initialData, initialError, boundMutate, key])
 
   // suspense
   if (config.suspense) {
