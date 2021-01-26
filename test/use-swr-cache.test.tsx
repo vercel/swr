@@ -15,25 +15,17 @@ describe('useSWR - cache', () => {
     }
 
     // render using custom cache
-    const { queryByText } = render(
+    render(
       <React.Suspense fallback={null}>
         <Page />
       </React.Suspense>
     )
 
     // content should come from custom cache
-    expect(queryByText('custom cache message')).toMatchInlineSnapshot(`
-      <div>
-        custom cache message
-      </div>
-    `)
+    expect(await screen.findByText('custom cache message')).toBeInTheDocument()
 
     // content should be updated with fetcher results
-    expect(await screen.findByText('random message')).toMatchInlineSnapshot(`
-      <div>
-        random message
-      </div>
-    `)
+    expect(await screen.findByText('random message')).toBeInTheDocument()
     const value = 'a different message'
     act(() => {
       cache.set('cache-1', value)
@@ -41,23 +33,14 @@ describe('useSWR - cache', () => {
     await act(async () => mutate('cache-1', value, false))
 
     // content should be updated from new cache value, after mutate without revalidate
-    expect(await screen.findByText('a different message'))
-      .toMatchInlineSnapshot(`
-      <div>
-        a different message
-      </div>
-    `)
+    expect(await screen.findByText('a different message')).toBeInTheDocument()
     act(() => {
       cache.delete('cache-1')
     })
     await act(() => mutate('cache-1'))
 
     // content should go back to be the fetched value
-    expect(await screen.findByText('random message')).toMatchInlineSnapshot(`
-      <div>
-        random message
-      </div>
-    `)
+    expect(await screen.findByText('random message')).toBeInTheDocument()
   })
 
   it('should notify subscribers when a cache item changed', async () => {
