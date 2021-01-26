@@ -5,6 +5,11 @@ export {
   SWRInfiniteConfigInterface,
   SWRInfiniteResponseInterface
 } from './use-swr-infinite'
+export {
+  useSWRSubscription,
+  SWRSubscription,
+  SWRSubscriptionResponse
+} from './use-swr-subscription'
 export { cache } from './config'
 export {
   ConfigInterface,
