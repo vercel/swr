@@ -1,3 +1,5 @@
+// `null` is used for a hack to manage shared state with SWR
+// https://github.com/vercel/swr/pull/918
 export type fetcherFn<Data> = ((...args: any) => Data | Promise<Data>) | null
 export interface ConfigInterface<
   Data = any,
