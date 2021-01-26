@@ -381,7 +381,7 @@ function useSWR<Data = any, Error = any>(
     async (
       revalidateOpts: RevalidateOptionInterface = {}
     ): Promise<boolean> => {
-      if (!key || !fn || typeof fn !== 'function') return false
+      if (!key || !fn) return false
       if (unmountedRef.current) return false
       if (configRef.current.isPaused()) return false
       revalidateOpts = Object.assign({ dedupe: false }, revalidateOpts)
