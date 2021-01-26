@@ -2,9 +2,12 @@ import { useEffect } from 'react'
 import useSWR from './use-swr'
 import { keyInterface, ConfigInterface } from './types'
 
-type SWRSubscription<Data> = (
-  onData: (data: Data) => void,
-  onError: (err: any) => void
+type SWRSubscription<Data, Error> = (
+  key: keyInterface,
+  callbacks: {
+    onData(data: Data): void
+    onError(err: Error): void
+  }
 ) => void
 
 type SWRSubscriptionResponse<Data, Error> = {
@@ -17,11 +20,11 @@ const disposers = new Map()
 
 function useSWRSubscription<Data = any, Error = any>(
   key: keyInterface,
-  subscribe: SWRSubscription<Data>
+  subscribe: SWRSubscription<Data, Error>
 ): SWRSubscriptionResponse<Data, Error>
 function useSWRSubscription<Data = any, Error = any>(
   key: keyInterface,
-  subscribe: SWRSubscription<Data>,
+  subscribe: SWRSubscription<Data, Error>,
   config?: ConfigInterface<Data, Error>
 ): SWRSubscriptionResponse<Data, Error> {
   const { data, error, mutate } = useSWR(key, null, config)
@@ -29,13 +32,14 @@ function useSWRSubscription<Data = any, Error = any>(
   useEffect(() => {
     subscriptions.set(key, (subscriptions.get(key) || 0) + 1)
     const onData = val => mutate(val, false)
-    const onError = err =>
+    const onError = err => {
       mutate(() => {
         throw err
       }, false)
+    }
 
     if (subscriptions.get(key) === 1) {
-      const dispose = subscribe(onData, onError)
+      const dispose = subscribe(key, { onData, onError })
       disposers.set(key, dispose)
     }
     return () => {

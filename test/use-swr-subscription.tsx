@@ -4,16 +4,16 @@ import { sleep } from './utils'
 import { useSWRSubscription } from '../src'
 
 describe('useSWRSubscription', () => {
-  it('should update state when fetcher is an observable', async () => {
-    const key = 'observable-0'
+  it('should update state when fetcher is a subscription', async () => {
+    const key = 'sub-0'
     let intervalId
     let res = 0
-    function subscribe(onNext, onError) {
+    function subscribe(_key, { onData, onError }) {
       intervalId = setInterval(() => {
         if (res === 3) {
-          onError('error')
+          onError(_key + 'error')
         } else {
-          onNext(res)
+          onData(_key + res)
         }
         res++
       }, 100)
@@ -31,15 +31,19 @@ describe('useSWRSubscription', () => {
     await sleep(10)
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`""`)
     await sleep(100)
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"0"`)
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"${key}0"`)
     await sleep(100)
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"1"`)
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"${key}1"`)
     await sleep(100)
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"2"`)
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"${key}2"`)
     await sleep(100)
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"error"`)
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"${key}error"`
+    )
     clearInterval(intervalId)
     await sleep(100)
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"error"`)
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"${key}error"`
+    )
   })
 })
