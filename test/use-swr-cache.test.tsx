@@ -22,10 +22,10 @@ describe('useSWR - cache', () => {
     )
 
     // content should come from custom cache
-    expect(await screen.findByText('custom cache message')).toBeInTheDocument()
+    await screen.findByText('custom cache message')
 
     // content should be updated with fetcher results
-    expect(await screen.findByText('random message')).toBeInTheDocument()
+    await screen.findByText('random message')
     const value = 'a different message'
     act(() => {
       cache.set('cache-1', value)
@@ -33,14 +33,14 @@ describe('useSWR - cache', () => {
     await act(async () => mutate('cache-1', value, false))
 
     // content should be updated from new cache value, after mutate without revalidate
-    expect(await screen.findByText('a different message')).toBeInTheDocument()
+    await screen.findByText('a different message')
     act(() => {
       cache.delete('cache-1')
     })
     await act(() => mutate('cache-1'))
 
     // content should go back to be the fetched value
-    expect(await screen.findByText('random message')).toBeInTheDocument()
+    await screen.findByText('random message')
   })
 
   it('should notify subscribers when a cache item changed', async () => {
