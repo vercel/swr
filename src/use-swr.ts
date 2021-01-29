@@ -814,6 +814,9 @@ function useSWR<Data = any, Error = any>(
     return {
       error: latestError,
       data: latestData,
+      // revalidate will be deprecated in the 1.x release
+      // because mutate() covers the same use case of revalidate().
+      // This remains only for backward compatibility
       revalidate,
       mutate: boundMutate,
       isValidating: stateRef.current.isValidating
