@@ -1,3 +1,5 @@
+// `null` is used for a hack to manage shared state with SWR
+// https://github.com/vercel/swr/pull/918
 export type fetcherFn<Data> = ((...args: any) => Data | Promise<Data>) | null
 export interface ConfigInterface<
   Data = any,
@@ -91,33 +93,6 @@ export type responseInterface<Data, Error> = {
 export type revalidateType = (
   revalidateOpts: RevalidateOptionInterface
 ) => Promise<boolean>
-
-export type pagesWithSWRType<Data, Error> = (
-  swr: responseInterface<Data, Error>
-) => responseInterface<Data, Error>
-export type pagesPropsInterface<Offset, Data, Error> = {
-  // offset can be any type
-  offset: Offset
-  withSWR: pagesWithSWRType<Data, Error>
-}
-
-export type pageComponentType<Offset, Data, Error> = (
-  props: pagesPropsInterface<Offset, Data, Error>
-) => any
-export type pageOffsetMapperType<Offset, Data, Error> = (
-  SWR: responseInterface<Data, Error>,
-  index: number
-) => Offset
-
-export type pagesResponseInterface<Data, Error> = {
-  pages: any
-  pageCount: number
-  pageSWRs: responseInterface<Data, Error>[]
-  isLoadingMore: boolean
-  isReachingEnd: boolean
-  isEmpty: boolean
-  loadMore: () => void
-}
 
 export type actionType<Data, Error> = {
   data?: Data
