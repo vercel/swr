@@ -7,15 +7,11 @@ describe('useSWR - config callbacks', () => {
   it('should trigger the onSuccess event with the latest version of the onSuccess callback', async () => {
     let state = null
     let count = 0
-    let promise
 
     function Page(props: { text: string }) {
       const { data, revalidate } = useSWR(
         'config callbacks - onSuccess',
-        () => {
-          promise = createResponse(count++)
-          return promise
-        },
+        () => createResponse(count++),
         { onSuccess: () => (state = props.text) }
       )
       return (
@@ -40,10 +36,7 @@ describe('useSWR - config callbacks', () => {
 
     // trigger revalidation, this would re-trigger the onSuccess callback
     fireEvent.click(screen.getByText(/hello/))
-
-    await act(() => promise)
-    expect(screen.getByText('hello, 1, b')).toBeInTheDocument()
-
+    await screen.findByText('hello, 1, b')
     // the onSuccess callback should capture the latest `props.text`
     expect(state).toEqual('b')
   })
@@ -51,15 +44,11 @@ describe('useSWR - config callbacks', () => {
   it('should trigger the onError event with the latest version of the onError callback', async () => {
     let state = null
     let count = 0
-    let promise
 
     function Page(props: { text: string }) {
       const { data, revalidate, error } = useSWR(
         'config callbacks - onError',
-        () => {
-          promise = createResponse(new Error(`Error: ${count++}`))
-          return promise
-        },
+        () => createResponse(new Error(`Error: ${count++}`)),
         { onError: () => (state = props.text) }
       )
       if (error)
@@ -88,15 +77,9 @@ describe('useSWR - config callbacks', () => {
     expect(screen.getByText('Error: 0')).toBeInTheDocument()
     expect(screen.getByTitle('b')).toBeInTheDocument()
     expect(state).toEqual('a')
+
     fireEvent.click(screen.getByTitle('b'))
-
-    try {
-      await act(() => promise)
-    } catch (e) {
-      // expect an error
-    }
-
-    expect(screen.getByText('Error: 1')).toBeInTheDocument()
+    await screen.findByText('Error: 1')
     expect(screen.getByTitle('b')).toBeInTheDocument()
     expect(state).toEqual('b')
   })
@@ -104,20 +87,15 @@ describe('useSWR - config callbacks', () => {
   it('should trigger the onErrorRetry event with the latest version of the onErrorRetry callback', async () => {
     let state = null
     let count = 0
-    let promise
-    let revalidatePromise
 
     function Page(props: { text: string }) {
       const { data, error } = useSWR(
         'config callbacks - onErrorRetry',
-        () => {
-          promise = createResponse(new Error(`Error: ${count++}`))
-          return promise
-        },
+        () => createResponse(new Error(`Error: ${count++}`)),
         {
           onErrorRetry: (_, __, ___, revalidate, revalidateOpts) => {
             state = props.text
-            revalidatePromise = revalidate(revalidateOpts)
+            revalidate(revalidateOpts)
           }
         }
       )
@@ -144,8 +122,8 @@ describe('useSWR - config callbacks', () => {
     expect(screen.getByTitle('b')).toBeInTheDocument()
     expect(state).toEqual('a')
 
-    await act(() => revalidatePromise)
-    expect(screen.getByText('Error: 1')).toBeInTheDocument()
+    // revalidate
+    await screen.findByText('Error: 1')
     expect(screen.getByTitle('b')).toBeInTheDocument()
     expect(state).toEqual('b')
   })
@@ -154,15 +132,11 @@ describe('useSWR - config callbacks', () => {
     const LOADING_TIMEOUT = 5
     let state = null
     let count = 0
-    let promise
 
     function Page(props: { text: string }) {
       const { data } = useSWR(
         'config callbacks - onLoadingSlow',
-        () => {
-          promise = createResponse(count++, { delay: LOADING_TIMEOUT * 2 })
-          return promise
-        },
+        () => createResponse(count++, { delay: LOADING_TIMEOUT * 2 }),
         {
           onLoadingSlow: () => {
             state = props.text
@@ -185,13 +159,14 @@ describe('useSWR - config callbacks', () => {
     expect(screen.getByText('hello, , a')).toBeInTheDocument()
     expect(state).toEqual(null)
 
+    // should trigger a loading slow event
     await act(() => sleep(LOADING_TIMEOUT))
     expect(screen.getByText('hello, , a')).toBeInTheDocument()
     expect(state).toEqual('a')
-    rerender(<Page text="b" />)
 
-    await act(() => promise)
-    expect(screen.getByText('hello, 0, b')).toBeInTheDocument()
+    // onSuccess callback should be called with the latest prop value
+    rerender(<Page text="b" />)
+    await screen.findByText('hello, 0, b')
     expect(state).toEqual('b')
   })
 })
