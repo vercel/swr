@@ -178,21 +178,20 @@ describe('useSWR - local mutation', () => {
 
     // hydration
     expect(container.textContent).toMatchInlineSnapshot(`"data: "`)
-
     //mount
     await screen.findByText('data: 0')
+    // wait for interval
+    await act(() => sleep(1))
 
     await act(() => {
       // mutate and revalidate
       return mutate(
         'mutate-async-fn',
-        async () => new Promise(res => setTimeout(() => res(999), 100)),
+        async () => new Promise(res => setTimeout(() => res(999), 10)),
         false
       )
     })
-    await act(() => sleep(110))
-
-    expect(container.textContent).toMatchInlineSnapshot(`"data: 999"`)
+    await screen.findByText('data: 999')
   })
 
   it('should trigger on mutation without data', async () => {
