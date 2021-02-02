@@ -180,9 +180,9 @@ describe('useSWR - local mutation', () => {
     expect(container.textContent).toMatchInlineSnapshot(`"data: "`)
     //mount
     await screen.findByText('data: 0')
-    // wait for interval
-    await act(() => sleep(1))
 
+    // wait for dedupingInterval
+    await act(() => sleep(1))
     await act(() => {
       // mutate and revalidate
       return mutate(
