@@ -187,7 +187,7 @@ describe('useSWR - local mutation', () => {
       // mutate and revalidate
       return mutate(
         'mutate-async-fn',
-        async () => new Promise(res => setTimeout(() => res(999), 10)),
+        async () => new Promise(res => setTimeout(() => res(999), 100)),
         false
       )
     })
