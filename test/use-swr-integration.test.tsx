@@ -1,5 +1,5 @@
-import { act, render, screen } from '@testing-library/react'
-import React, { useEffect } from 'react'
+import { act, render, screen, fireEvent } from '@testing-library/react'
+import React, { useState, useEffect } from 'react'
 import useSWR from '../src'
 import { sleep } from './utils'
 
@@ -309,6 +309,34 @@ describe('useSWR', () => {
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"hello, Initial"`
     )
+  })
+
+  it('should revalidate even if initialData is provided', async () => {
+    const fetcher = key => key
+
+    function Page() {
+      const [key, setKey] = useState('initial-data-with-initial-data')
+      const { data } = useSWR(key, fetcher, {
+        initialData: 'Initial'
+      })
+      return (
+        <div onClick={() => setKey('initial-data-with-initial-data-update')}>
+          hello, {data}
+        </div>
+      )
+    }
+
+    const { container } = render(<Page />)
+
+    // render with the initial data
+    await screen.findByText('hello, Initial')
+
+    // change the key
+    await act(() => sleep(1))
+    fireEvent.click(container.firstElementChild)
+
+    // render with data the fetcher returns
+    await screen.findByText('hello, initial-data-with-initial-data-update')
   })
 
   it('should set config as second parameter', async () => {
