@@ -178,10 +178,11 @@ describe('useSWR - local mutation', () => {
 
     // hydration
     expect(container.textContent).toMatchInlineSnapshot(`"data: "`)
-
     //mount
     await screen.findByText('data: 0')
 
+    // wait for dedupingInterval
+    await act(() => sleep(1))
     await act(() => {
       // mutate and revalidate
       return mutate(
@@ -190,9 +191,7 @@ describe('useSWR - local mutation', () => {
         false
       )
     })
-    await act(() => sleep(110))
-
-    expect(container.textContent).toMatchInlineSnapshot(`"data: 999"`)
+    await screen.findByText('data: 999')
   })
 
   it('should trigger on mutation without data', async () => {
