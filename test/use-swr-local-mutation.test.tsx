@@ -181,7 +181,7 @@ describe('useSWR - local mutation', () => {
     //mount
     await screen.findByText('data: 0')
 
-    // wait for dedupingInterval
+    // wait for the next tick
     await act(() => sleep(1))
     await act(() => {
       // mutate and revalidate
