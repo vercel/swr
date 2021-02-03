@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import useSWR from '../src'
 import { sleep } from './utils'
 
-const waitForDedupingInterval = async () => await act(() => sleep(1))
+const waitForNextTick = async () => await act(() => sleep(1))
 
 describe('useSWR - focus', () => {
   it('should revalidate on focus by default', async () => {
@@ -22,7 +22,7 @@ describe('useSWR - focus', () => {
     // mount
     await screen.findByText('data: 0')
 
-    await waitForDedupingInterval()
+    await waitForNextTick()
     // trigger revalidation
     fireEvent.focus(window)
     await screen.findByText('data: 1')
@@ -45,7 +45,7 @@ describe('useSWR - focus', () => {
     // mount
     await screen.findByText('data: 0')
 
-    await waitForDedupingInterval()
+    await waitForNextTick()
     // trigger revalidation
     fireEvent.focus(window)
     // should not be revalidated
@@ -70,7 +70,7 @@ describe('useSWR - focus', () => {
     // mount
     await screen.findByText('data: 0')
 
-    await waitForDedupingInterval()
+    await waitForNextTick()
     // trigger revalidation
     fireEvent.focus(window)
     // data should not change
@@ -83,13 +83,13 @@ describe('useSWR - focus', () => {
     // data should update
     await screen.findByText('data: 1')
 
-    await waitForDedupingInterval()
+    await waitForNextTick()
     // trigger revalidation
     fireEvent.focus(window)
     // data should update
     await screen.findByText('data: 2')
 
-    await waitForDedupingInterval()
+    await waitForNextTick()
     // change revalidateOnFocus to false
     fireEvent.click(container.firstElementChild)
     // trigger revalidation
@@ -120,7 +120,7 @@ describe('useSWR - focus', () => {
     // mount
     await screen.findByText('data: 0')
 
-    await waitForDedupingInterval()
+    await waitForNextTick()
     // trigger revalidation
     fireEvent.focus(window)
     // still in throttling interval
@@ -159,7 +159,7 @@ describe('useSWR - focus', () => {
     // mount
     await screen.findByText('data: 0')
 
-    await waitForDedupingInterval()
+    await waitForNextTick()
     // trigger revalidation
     fireEvent.focus(window)
     // wait for throttle interval
@@ -168,7 +168,7 @@ describe('useSWR - focus', () => {
     fireEvent.focus(window)
     await screen.findByText('data: 2')
 
-    await waitForDedupingInterval()
+    await waitForNextTick()
     // increase focusThrottleInterval
     fireEvent.click(container.firstElementChild)
     // wait for throttle interval
