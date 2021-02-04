@@ -55,7 +55,12 @@ const now = (() => {
 })()
 
 // setup DOM events listeners for `focus` and `reconnect` actions
-if (!IS_SERVER && window.addEventListener && document.addEventListener) {
+if (
+  !IS_SERVER &&
+  window.addEventListener &&
+  typeof document !== 'undefined' &&
+  typeof document.addEventListener !== 'undefined'
+) {
   const revalidate = revalidators => {
     if (!defaultConfig.isDocumentVisible() || !defaultConfig.isOnline()) return
 
