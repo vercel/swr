@@ -312,7 +312,10 @@ describe('useSWR', () => {
   })
 
   it('should revalidate even if initialData is provided', async () => {
-    const fetcher = key => key
+    const fetcher = async key => {
+      await sleep(50)
+      return key
+    }
 
     function Page() {
       const [key, setKey] = useState('initial-data-with-initial-data')
@@ -321,7 +324,7 @@ describe('useSWR', () => {
       })
       return (
         <div onClick={() => setKey('initial-data-with-initial-data-update')}>
-          hello, {data}
+          {data ? `hello, ${data}` : 'loading'}
         </div>
       )
     }
@@ -331,9 +334,18 @@ describe('useSWR', () => {
     // render with the initial data
     await screen.findByText('hello, Initial')
 
+    await act(() => sleep(1))
+    fireEvent.focus(window)
+
+    await screen.findByText('hello, initial-data-with-initial-data')
+
     // change the key
     await act(() => sleep(1))
     fireEvent.click(container.firstElementChild)
+
+    // a request is still in flight
+    await act(() => sleep(10))
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"loading"`)
 
     // render with data the fetcher returns
     await screen.findByText('hello, initial-data-with-initial-data-update')
