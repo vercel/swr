@@ -276,7 +276,7 @@ function useSWR<Data = any, Error = any>(
     fn = config.fetcher
   }
 
-  const onWillFetchOnMount = () => {
+  const willRevalidateOnMount = () => {
     return (
       config.revalidateOnMount ||
       (!config.initialData && config.revalidateOnMount === undefined)
@@ -289,7 +289,7 @@ function useSWR<Data = any, Error = any>(
   }
 
   const resolveIsValidating = () => {
-    return !!cache.get(keyValidating) || onWillFetchOnMount()
+    return !!cache.get(keyValidating) || willRevalidateOnMount()
   }
 
   const initialData = resolveData()
@@ -601,7 +601,7 @@ function useSWR<Data = any, Error = any>(
     const softRevalidate = () => revalidate({ dedupe: true })
 
     // trigger a revalidation
-    if (onWillFetchOnMount()) {
+    if (willRevalidateOnMount()) {
       if (typeof latestKeyedData !== 'undefined' && !IS_SERVER) {
         // delay revalidate if there's cache
         // to not block the rendering
