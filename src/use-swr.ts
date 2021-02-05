@@ -276,14 +276,25 @@ function useSWR<Data = any, Error = any>(
     fn = config.fetcher
   }
 
+  const onWillFetchOnMount = () => {
+    return (
+      config.revalidateOnMount ||
+      (!config.initialData && config.revalidateOnMount === undefined)
+    )
+  }
+
   const resolveData = () => {
     const cachedData = cache.get(key)
     return typeof cachedData === 'undefined' ? config.initialData : cachedData
   }
 
+  const resolveIsValidating = () => {
+    return !!cache.get(keyValidating) || onWillFetchOnMount()
+  }
+
   const initialData = resolveData()
   const initialError = cache.get(keyErr)
-  const initialIsValidating = !!cache.get(keyValidating)
+  const initialIsValidating = resolveIsValidating()
 
   // if a state is accessed (data, error or isValidating),
   // we add the state to dependencies so if the state is
@@ -590,10 +601,7 @@ function useSWR<Data = any, Error = any>(
     const softRevalidate = () => revalidate({ dedupe: true })
 
     // trigger a revalidation
-    if (
-      config.revalidateOnMount ||
-      (!config.initialData && config.revalidateOnMount === undefined)
-    ) {
+    if (onWillFetchOnMount()) {
       if (typeof latestKeyedData !== 'undefined' && !IS_SERVER) {
         // delay revalidate if there's cache
         // to not block the rendering
