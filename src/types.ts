@@ -41,6 +41,8 @@ export interface ConfigInterface<
     revalidate: revalidateType,
     revalidateOpts: RevalidateOptionInterface
   ) => void
+  onFocus?: (cb: () => void) => void
+  onReconnect?: (cb: () => void) => void
 
   compare: (a: Data | undefined, b: Data | undefined) => boolean
 }

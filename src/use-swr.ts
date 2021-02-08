@@ -55,12 +55,7 @@ const now = (() => {
 })()
 
 // setup DOM events listeners for `focus` and `reconnect` actions
-if (
-  !IS_SERVER &&
-  window.addEventListener &&
-  typeof document !== 'undefined' &&
-  typeof document.addEventListener !== 'undefined'
-) {
+if (!IS_SERVER) {
   const revalidate = revalidators => {
     if (!defaultConfig.isDocumentVisible() || !defaultConfig.isOnline()) return
 
@@ -69,19 +64,13 @@ if (
     }
   }
 
-  // focus revalidate
-  document.addEventListener(
-    'visibilitychange',
-    () => revalidate(FOCUS_REVALIDATORS),
-    false
-  )
-  window.addEventListener('focus', () => revalidate(FOCUS_REVALIDATORS), false)
-  // reconnect revalidate
-  window.addEventListener(
-    'online',
-    () => revalidate(RECONNECT_REVALIDATORS),
-    false
-  )
+  if (typeof defaultConfig.onFocus === 'function') {
+    defaultConfig.onFocus(() => revalidate(FOCUS_REVALIDATORS))
+  }
+
+  if (typeof defaultConfig.onReconnect === 'function') {
+    defaultConfig.onReconnect(() => revalidate(RECONNECT_REVALIDATORS))
+  }
 }
 
 const trigger: triggerInterface = (_key, shouldRevalidate = true) => {
