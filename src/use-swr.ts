@@ -231,30 +231,29 @@ function useSWR<Data = any, Error = any>(
 ): responseInterface<Data, Error>
 function useSWR<Data = any, Error = any>(
   key: keyInterface,
-  config?: ConfigInterface<Data, Error>
+  config?: Partial<ConfigInterface<Data, Error>>
 ): responseInterface<Data, Error>
 function useSWR<Data = any, Error = any>(
   key: keyInterface,
-  fn?: fetcherFn<Data>,
-  config?: ConfigInterface<Data, Error>
+  // `null` is used for a hack to manage shared state with SWR
+  // https://github.com/vercel/swr/pull/918
+  fn?: fetcherFn<Data> | null,
+  config?: Partial<ConfigInterface<Data, Error>>
 ): responseInterface<Data, Error>
 function useSWR<Data = any, Error = any>(
-  ...args
+  _key: keyInterface,
+  ...options: any[]
 ): responseInterface<Data, Error> {
-  let _key: keyInterface,
-    fn: fetcherFn<Data> | undefined,
-    config: ConfigInterface<Data, Error> = {}
-  if (args.length >= 1) {
-    _key = args[0]
-  }
-  if (args.length > 2) {
-    fn = args[1]
-    config = args[2]
+  let _fn: fetcherFn<Data> | undefined,
+    _config: Partial<ConfigInterface<Data, Error>> = {}
+  if (options.length > 1) {
+    _fn = options[0]
+    _config = options[1]
   } else {
-    if (typeof args[1] === 'function') {
-      fn = args[1]
-    } else if (typeof args[1] === 'object') {
-      config = args[1]
+    if (typeof options[0] === 'function') {
+      _fn = options[0]
+    } else if (typeof options[0] === 'object') {
+      _config = options[0]
     }
   }
 
@@ -264,11 +263,11 @@ function useSWR<Data = any, Error = any>(
   // `keyErr` is the cache key for error objects
   const [key, fnArgs, keyErr, keyValidating] = cache.serializeKey(_key)
 
-  config = Object.assign(
+  const config: ConfigInterface<Data, Error> = Object.assign(
     {},
     defaultConfig,
     useContext(SWRConfigContext),
-    config
+    _config
   )
 
   const configRef = useRef(config)
@@ -276,10 +275,7 @@ function useSWR<Data = any, Error = any>(
     configRef.current = config
   })
 
-  if (typeof fn === 'undefined') {
-    // use the global fetcher
-    fn = config.fetcher
-  }
+  const fn = typeof _fn !== 'undefined' ? _fn : config.fetcher
 
   const resolveData = () => {
     const cachedData = cache.get(key)

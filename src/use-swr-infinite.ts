@@ -34,39 +34,36 @@ function useSWRInfinite<Data = any, Error = any>(
 ): SWRInfiniteResponseInterface<Data, Error>
 function useSWRInfinite<Data = any, Error = any>(
   getKey: KeyLoader<Data>,
-  config?: SWRInfiniteConfigInterface<Data, Error>
+  config?: Partial<SWRInfiniteConfigInterface<Data, Error>>
 ): SWRInfiniteResponseInterface<Data, Error>
 function useSWRInfinite<Data = any, Error = any>(
   getKey: KeyLoader<Data>,
   fn?: fetcherFn<Data>,
-  config?: SWRInfiniteConfigInterface<Data, Error>
+  config?: Partial<SWRInfiniteConfigInterface<Data, Error>>
 ): SWRInfiniteResponseInterface<Data, Error>
 function useSWRInfinite<Data = any, Error = any>(
-  ...args
+  getKey: KeyLoader<Data>,
+  ...options: any[]
 ): SWRInfiniteResponseInterface<Data, Error> {
-  let getKey: KeyLoader<Data>,
-    fn: fetcherFn<Data> | undefined,
-    config: SWRInfiniteConfigInterface<Data, Error> = {}
+  let _fn: fetcherFn<Data> | undefined,
+    _config: Partial<SWRInfiniteConfigInterface<Data, Error>> = {}
 
-  if (args.length >= 1) {
-    getKey = args[0]
-  }
-  if (args.length > 2) {
-    fn = args[1]
-    config = args[2]
+  if (options.length > 1) {
+    _fn = options[0]
+    _config = options[1]
   } else {
-    if (typeof args[1] === 'function') {
-      fn = args[1]
-    } else if (typeof args[1] === 'object') {
-      config = args[1]
+    if (typeof options[0] === 'function') {
+      _fn = options[0]
+    } else if (typeof options[0] === 'object') {
+      _config = options[0]
     }
   }
 
-  config = Object.assign(
+  const config: SWRInfiniteConfigInterface<Data, Error> = Object.assign(
     {},
     defaultConfig,
     useContext(SWRConfigContext),
-    config
+    _config
   )
   let {
     initialSize = 1,
@@ -76,11 +73,7 @@ function useSWRInfinite<Data = any, Error = any>(
     ...extraConfig
   } = config
 
-  if (typeof fn === 'undefined') {
-    // use the global fetcher
-    // we have to convert the type here
-    fn = (defaultFetcher as unknown) as fetcherFn<Data>
-  }
+  const fn = typeof _fn !== 'undefined' ? _fn : defaultFetcher
 
   // get the serialized key of the first page
   let firstPageKey: string | null = null
