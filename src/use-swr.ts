@@ -155,6 +155,8 @@ const mutate: mutateInterface = async (
     try {
       _data = _data(cache.get(key))
     } catch (err) {
+      // if `_data` function throws an error synchronously, it shouldn't be cached
+      _data = undefined
       error = err
     }
   }
