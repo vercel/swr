@@ -214,19 +214,18 @@ describe('useSWR - suspense', () => {
       `"hello, Initial"`
     )
   })
-  it.only('should not avoid unnecessary renders', async () => {
+  it('should avoid unnecessary re-renders', async () => {
     let renderCount = 0
-    let beforeRenderCount = 0
+    let startRenderCount = 0
     function Section() {
-      ++beforeRenderCount
-      const { data, isValidating } = useSWR(
+      ++startRenderCount
+      const { data } = useSWR(
         'suspense-10',
         () => new Promise(res => setTimeout(() => res('SWR'), 100)),
         {
           suspense: true
         }
       )
-      console.log(data, isValidating)
       ++renderCount
       return <div>{data}</div>
     }
@@ -238,10 +237,9 @@ describe('useSWR - suspense', () => {
 
     // hydration
     expect(container.textContent).toMatchInlineSnapshot(`"fallback"`)
-    await act(() => sleep(110)) // update
     await screen.findByText('SWR')
-    await act(() => sleep(2000)) // update
-    expect(beforeRenderCount).toBe(4)
-    expect(renderCount).toBe(3)
+    await act(() => sleep(100)) // wait a moment to observe unnecessary renders
+    expect(startRenderCount).toBe(2) // fallback + data
+    expect(renderCount).toBe(1) // data
   })
 })
