@@ -214,4 +214,34 @@ describe('useSWR - suspense', () => {
       `"hello, Initial"`
     )
   })
+  it.only('should not avoid unnecessary renders', async () => {
+    let renderCount = 0
+    let beforeRenderCount = 0
+    function Section() {
+      ++beforeRenderCount
+      const { data, isValidating } = useSWR(
+        'suspense-10',
+        () => new Promise(res => setTimeout(() => res('SWR'), 100)),
+        {
+          suspense: true
+        }
+      )
+      console.log(data, isValidating)
+      ++renderCount
+      return <div>{data}</div>
+    }
+    const { container } = render(
+      <Suspense fallback={<div>fallback</div>}>
+        <Section />
+      </Suspense>
+    )
+
+    // hydration
+    expect(container.textContent).toMatchInlineSnapshot(`"fallback"`)
+    await act(() => sleep(110)) // update
+    await screen.findByText('SWR')
+    await act(() => sleep(2000)) // update
+    expect(beforeRenderCount).toBe(4)
+    expect(renderCount).toBe(3)
+  })
 })
