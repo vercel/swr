@@ -71,7 +71,9 @@ const defaultConfig: ConfigInterface = {
   fetcher: webPreset.fetcher,
   isOnline: webPreset.isOnline,
   isDocumentVisible: webPreset.isDocumentVisible,
-  isPaused: () => false
+  isPaused: () => false,
+  onFocus: webPreset.onFocus,
+  onReconnect: webPreset.onReconnect
 }
 
 export { cache }

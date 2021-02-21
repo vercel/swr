@@ -22,8 +22,33 @@ function isDocumentVisible(): boolean {
 
 const fetcher = url => fetch(url).then(res => res.json())
 
+function onFocus(cb: () => void) {
+  if (
+    typeof window !== 'undefined' &&
+    typeof window.addEventListener !== 'undefined' &&
+    typeof document !== 'undefined' &&
+    typeof document.addEventListener !== 'undefined'
+  ) {
+    // focus revalidate
+    document.addEventListener('visibilitychange', () => cb(), false)
+    window.addEventListener('focus', () => cb(), false)
+  }
+}
+
+function onReconnect(cb: () => void) {
+  if (
+    typeof window !== 'undefined' &&
+    typeof window.addEventListener !== 'undefined'
+  ) {
+    // reconnect revalidate
+    window.addEventListener('online', () => cb(), false)
+  }
+}
+
 export default {
   isOnline,
   isDocumentVisible,
-  fetcher
+  fetcher,
+  onFocus,
+  onReconnect
 }
