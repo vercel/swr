@@ -309,7 +309,7 @@ function useSWR<Data = any, Error = any>(
         }
       }
 
-      if (shouldUpdateState || config.suspense) {
+      if (shouldUpdateState) {
         // if component is unmounted, should skip rerender
         // if component is not mounted, should skip rerender
         if (unmountedRef.current || !initialMountedRef.current) return
@@ -713,57 +713,16 @@ function useSWR<Data = any, Error = any>(
     revalidate
   ])
 
-  // define returned state
-  // can be memorized since the state is a ref
-  const memoizedState = useMemo(() => {
-    const state = { revalidate, mutate: boundMutate } as responseInterface<
-      Data,
-      Error
-    >
-    Object.defineProperties(state, {
-      error: {
-        // `key` might be changed in the upcoming hook re-render,
-        // but the previous state will stay
-        // so we need to match the latest key and data (fallback to `initialData`)
-        get: function() {
-          stateDependencies.current.error = true
-          return keyRef.current === key ? stateRef.current.error : initialError
-        },
-        enumerable: true
-      },
-      data: {
-        get: function() {
-          stateDependencies.current.data = true
-          return keyRef.current === key ? stateRef.current.data : initialData
-        },
-        enumerable: true
-      },
-      isValidating: {
-        get: function() {
-          stateDependencies.current.isValidating = true
-          return key ? stateRef.current.isValidating : false
-        },
-        enumerable: true
-      }
-    })
-
-    return state
-    // `boundMutate` is immutable, and the immutability of `revalidate` depends on `key`
-    // so we can omit them from the deps array,
-    // but we put it to enable react-hooks/exhaustive-deps rule.
-    // `initialData` and `initialError` are not initial values
-    // because they are changed during the lifecycle
-    // so we should add them in the deps array.
-  }, [revalidate, initialData, initialError, boundMutate, key])
-
   // suspense
+  let latestData
+  let latestError
   if (config.suspense) {
     // in suspense mode, we can't return empty state
     // (it should be suspended)
 
     // try to get data and error from cache
-    let latestData = cache.get(key)
-    let latestError = cache.get(keyErr)
+    latestData = cache.get(key)
+    latestError = cache.get(keyErr)
 
     if (typeof latestData === 'undefined') {
       latestData = initialData
@@ -800,21 +759,69 @@ function useSWR<Data = any, Error = any>(
       // in suspense mode, throw error if there's no content
       throw latestError
     }
-
-    // return the latest data / error from cache
-    // in case `key` has changed
-    return {
-      error: latestError,
-      data: latestData,
-      // revalidate will be deprecated in the 1.x release
-      // because mutate() covers the same use case of revalidate().
-      // This remains only for backward compatibility
-      revalidate,
-      mutate: boundMutate,
-      isValidating: stateRef.current.isValidating
-    }
   }
 
+  // define returned state
+  // can be memorized since the state is a ref
+  const memoizedState = useMemo(() => {
+    // revalidate will be deprecated in the 1.x release
+    // because mutate() covers the same use case of revalidate().
+    // This remains only for backward compatibility
+    const state = { revalidate, mutate: boundMutate } as responseInterface<
+      Data,
+      Error
+    >
+    Object.defineProperties(state, {
+      error: {
+        // `key` might be changed in the upcoming hook re-render,
+        // but the previous state will stay
+        // so we need to match the latest key and data (fallback to `initialData`)
+        get: function() {
+          stateDependencies.current.error = true
+          if (config.suspense) {
+            return latestError
+          }
+          return keyRef.current === key ? stateRef.current.error : initialError
+        },
+        enumerable: true
+      },
+      data: {
+        get: function() {
+          stateDependencies.current.data = true
+          if (config.suspense) {
+            return latestData
+          }
+          return keyRef.current === key ? stateRef.current.data : initialData
+        },
+        enumerable: true
+      },
+      isValidating: {
+        get: function() {
+          stateDependencies.current.isValidating = true
+          return key ? stateRef.current.isValidating : false
+        },
+        enumerable: true
+      }
+    })
+
+    return state
+    // `config.suspense` isn't allowed to change during the lifecycle.
+    // `boundMutate` is immutable, and the immutability of `revalidate` depends on `key`
+    // so we can omit them from the deps array,
+    // but we put it to enable react-hooks/exhaustive-deps rule.
+    // `initialData` and `initialError` are not initial values
+    // because they are changed during the lifecycle
+    // so we should add them in the deps array.
+  }, [
+    revalidate,
+    initialData,
+    initialError,
+    boundMutate,
+    key,
+    config.suspense,
+    latestError,
+    latestData
+  ])
   return memoizedState
 }
 
