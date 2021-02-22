@@ -22,7 +22,7 @@ function isDocumentVisible(): boolean {
 
 const fetcher = url => fetch(url).then(res => res.json())
 
-function onFocus(cb: () => void) {
+function registerOnFocus(cb: () => void) {
   if (
     typeof window !== 'undefined' &&
     typeof window.addEventListener !== 'undefined' &&
@@ -35,7 +35,7 @@ function onFocus(cb: () => void) {
   }
 }
 
-function onReconnect(cb: () => void) {
+function registerOnReconnect(cb: () => void) {
   if (
     typeof window !== 'undefined' &&
     typeof window.addEventListener !== 'undefined'
@@ -49,6 +49,6 @@ export default {
   isOnline,
   isDocumentVisible,
   fetcher,
-  onFocus,
-  onReconnect
+  registerOnFocus,
+  registerOnReconnect
 }

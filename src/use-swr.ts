@@ -64,12 +64,12 @@ if (!IS_SERVER) {
     }
   }
 
-  if (typeof defaultConfig.onFocus === 'function') {
-    defaultConfig.onFocus(() => revalidate(FOCUS_REVALIDATORS))
+  if (typeof defaultConfig.registerOnFocus === 'function') {
+    defaultConfig.registerOnFocus(() => revalidate(FOCUS_REVALIDATORS))
   }
 
-  if (typeof defaultConfig.onReconnect === 'function') {
-    defaultConfig.onReconnect(() => revalidate(RECONNECT_REVALIDATORS))
+  if (typeof defaultConfig.registerOnReconnect === 'function') {
+    defaultConfig.registerOnReconnect(() => revalidate(RECONNECT_REVALIDATORS))
   }
 }
 
