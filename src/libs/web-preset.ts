@@ -1,13 +1,12 @@
-function isOnline(): boolean {
-  if (
-    typeof navigator !== 'undefined' &&
-    typeof navigator.onLine !== 'undefined'
-  ) {
-    return navigator.onLine
-  }
-  // always assume it's online
-  return true
-}
+/**
+ * Due to bug https://bugs.chromium.org/p/chromium/issues/detail?id=678075,
+ * it's not reliable to detect if the browser is currently online or offline
+ * based on `navigator.onLine`.
+ * As a work around, we always assume it's online on first load, and change
+ * the status upon `online` or `offline` events.
+ */
+let online = true
+const isOnline = () => online
 
 function isDocumentVisible(): boolean {
   if (
@@ -41,7 +40,17 @@ function registerOnReconnect(cb: () => void) {
     typeof window.addEventListener !== 'undefined'
   ) {
     // reconnect revalidate
-    window.addEventListener('online', () => cb(), false)
+    window.addEventListener(
+      'online',
+      () => {
+        online = true
+        cb()
+      },
+      false
+    )
+
+    // nothing to revalidate, just update the status
+    window.addEventListener('offline', () => (online = false), false)
   }
 }
 
