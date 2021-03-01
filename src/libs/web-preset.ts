@@ -11,7 +11,7 @@ const isOnline = () => online
 const isDocumentVisible = () => {
   if (
     typeof document !== 'undefined' &&
-    typeof document.visibilityState !== 'undefined'
+    document.visibilityState !== undefined
   ) {
     return document.visibilityState !== 'hidden'
   }
@@ -24,9 +24,9 @@ const fetcher = url => fetch(url).then(res => res.json())
 const registerOnFocus = (cb: () => void) => {
   if (
     typeof window !== 'undefined' &&
-    typeof window.addEventListener !== 'undefined' &&
+    window.addEventListener !== undefined &&
     typeof document !== 'undefined' &&
-    typeof document.addEventListener !== 'undefined'
+    document.addEventListener !== undefined
   ) {
     // focus revalidate
     document.addEventListener('visibilitychange', () => cb(), false)
@@ -35,10 +35,7 @@ const registerOnFocus = (cb: () => void) => {
 }
 
 const registerOnReconnect = (cb: () => void) => {
-  if (
-    typeof window !== 'undefined' &&
-    typeof window.addEventListener !== 'undefined'
-  ) {
+  if (typeof window !== 'undefined' && window.addEventListener !== undefined) {
     // reconnect revalidate
     window.addEventListener(
       'online',
