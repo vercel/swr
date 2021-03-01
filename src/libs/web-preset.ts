@@ -8,7 +8,7 @@
 let online = true
 const isOnline = () => online
 
-function isDocumentVisible(): boolean {
+const isDocumentVisible = () => {
   if (
     typeof document !== 'undefined' &&
     typeof document.visibilityState !== 'undefined'
@@ -21,7 +21,7 @@ function isDocumentVisible(): boolean {
 
 const fetcher = url => fetch(url).then(res => res.json())
 
-function registerOnFocus(cb: () => void) {
+const registerOnFocus = (cb: () => void) => {
   if (
     typeof window !== 'undefined' &&
     typeof window.addEventListener !== 'undefined' &&
@@ -34,7 +34,7 @@ function registerOnFocus(cb: () => void) {
   }
 }
 
-function registerOnReconnect(cb: () => void) {
+const registerOnReconnect = (cb: () => void) => {
   if (
     typeof window !== 'undefined' &&
     typeof window.addEventListener !== 'undefined'
