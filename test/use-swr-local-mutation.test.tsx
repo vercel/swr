@@ -1,6 +1,5 @@
 import { act, render, screen, fireEvent } from '@testing-library/react'
 import React, { useEffect, useState } from 'react'
-import { unstable_batchedUpdates } from 'react-dom'
 import useSWR, { mutate, cache } from '../src'
 import { sleep } from './utils'
 
@@ -503,7 +502,7 @@ describe('useSWR - local mutation', () => {
     }
   })
 
-  it('should apply synchronous mutations independently', async () => {
+  it('should dedupe synchronous mutations', async () => {
     const mutationRecivedValues = []
     const renderRecivedValues = []
 
@@ -512,19 +511,15 @@ describe('useSWR - local mutation', () => {
 
       useEffect(() => {
         setTimeout(() => {
-          // swr no longer batch sync mutations
-          // so you have to batch the updates on yourself
-          unstable_batchedUpdates(() => {
-            // let's mutate twice, synchronously
-            boundMutate(v => {
-              mutationRecivedValues.push(v) // should be 0
-              return 1
-            }, false)
-            boundMutate(v => {
-              mutationRecivedValues.push(v) // should be 1
-              return 2
-            }, false)
-          })
+          // let's mutate twice, synchronously
+          boundMutate(v => {
+            mutationRecivedValues.push(v) // should be 0
+            return 1
+          }, false)
+          boundMutate(v => {
+            mutationRecivedValues.push(v) // should be 1
+            return 2
+          }, false)
         }, 1)
         // the mutate function is guaranteed to be the same reference
         // eslint-disable-next-line react-hooks/exhaustive-deps
