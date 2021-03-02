@@ -289,7 +289,7 @@ function useSWR<Data = any, Error = any>(
   }
 
   const resolveIsValidating = () => {
-    return !!cache.get(keyValidating) || willRevalidateOnMount()
+    return !!cache.get(keyValidating) || (key && willRevalidateOnMount())
   }
 
   const initialData = resolveData()
