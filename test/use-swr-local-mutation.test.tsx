@@ -277,6 +277,8 @@ describe('useSWR - local mutation', () => {
     await screen.findByText('data: fetched')
     // call bound mutate
     fireEvent.click(container.firstElementChild)
+    // expect new updated value (after a tick)
+    await act(async () => await 0)
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"data: mutated"`
     )
@@ -303,6 +305,7 @@ describe('useSWR - local mutation', () => {
     act(() => {
       mutate('mutate-2', 3)
     }) // set it to 3. this will drop the ongoing request
+    await act(async () => await 0)
     expect(container.textContent).toMatchInlineSnapshot(`"3"`)
     await act(() => sleep(100))
     expect(container.textContent).toMatchInlineSnapshot(`"3"`)
@@ -329,6 +332,7 @@ describe('useSWR - local mutation', () => {
     })
 
     // Validate local state is now "on"
+    await act(async () => await 0)
     expect(container.textContent).toMatchInlineSnapshot(`"on"`)
 
     // Simulate toggling "on"
@@ -352,6 +356,7 @@ describe('useSWR - local mutation', () => {
     })
 
     // Validate local state is now "off"
+    await act(async () => await 0)
     expect(container.textContent).toMatchInlineSnapshot(`"off"`)
 
     // Simulate toggling "off"

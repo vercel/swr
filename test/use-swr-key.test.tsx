@@ -144,14 +144,14 @@ describe('useSWR - key', () => {
     // update, but don't change the id.
     // Function identity should stay the same, and useSWR should not call the function again.
     act(() => updateId('first'))
-    await act(() => sleep(0))
+    await act(async () => await 0)
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"data-first"`
     )
     expect(closureSpy).toHaveBeenCalledTimes(1)
 
     act(() => updateId('second'))
-    await act(() => sleep(0))
+    await act(async () => await 0)
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"data-second"`
     )
