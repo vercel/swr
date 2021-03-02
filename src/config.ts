@@ -47,34 +47,32 @@ const slowConnection =
   ['slow-2g', '2g'].indexOf(navigator['connection'].effectiveType) !== -1
 
 // config
-const defaultConfig: ConfigInterface = {
-  // events
-  onLoadingSlow: () => {},
-  onSuccess: () => {},
-  onError: () => {},
-  onErrorRetry,
+const defaultConfig: ConfigInterface = Object.assign(
+  {
+    // events
+    onLoadingSlow: () => {},
+    onSuccess: () => {},
+    onError: () => {},
+    onErrorRetry,
 
-  errorRetryInterval: (slowConnection ? 10 : 5) * 1000,
-  focusThrottleInterval: 5 * 1000,
-  dedupingInterval: 2 * 1000,
-  loadingTimeout: (slowConnection ? 5 : 3) * 1000,
+    errorRetryInterval: (slowConnection ? 10 : 5) * 1000,
+    focusThrottleInterval: 5 * 1000,
+    dedupingInterval: 2 * 1000,
+    loadingTimeout: (slowConnection ? 5 : 3) * 1000,
 
-  refreshInterval: 0,
-  revalidateOnFocus: true,
-  revalidateOnReconnect: true,
-  refreshWhenHidden: false,
-  refreshWhenOffline: false,
-  shouldRetryOnError: true,
-  suspense: false,
-  compare: dequal,
+    refreshInterval: 0,
+    revalidateOnFocus: true,
+    revalidateOnReconnect: true,
+    refreshWhenHidden: false,
+    refreshWhenOffline: false,
+    shouldRetryOnError: true,
+    suspense: false,
+    compare: dequal,
 
-  fetcher: webPreset.fetcher,
-  isOnline: webPreset.isOnline,
-  isDocumentVisible: webPreset.isDocumentVisible,
-  isPaused: () => false,
-  registerOnFocus: webPreset.registerOnFocus,
-  registerOnReconnect: webPreset.registerOnReconnect
-}
+    isPaused: () => false
+  },
+  webPreset
+)
 
 export { cache }
 export default defaultConfig
