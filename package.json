@@ -25,8 +25,8 @@
     "lint:fix": "eslint \"{src,test,examples}/**/*.{ts,tsx}\" --fix",
     "test": "jest",
     "register": "yarn link && cd node_modules/react && yarn link",
-    "prepare:vite": "yarn build && cd playground && git clone https://github.com/promer94/vite-swr && cd vite-swr && yarn && yarn link react && yarn link swr",
-    "prepare:next": "yarn build && cd playground && git clone https://github.com/promer94/next-swr && cd next-swr && yarn && yarn link react && yarn link swr",
+    "prepare:vite": "git clone https://github.com/promer94/vite-swr playground/vite-swr && cd playground/vite-swr && yarn && yarn link react && yarn link swr",
+    "prepare:next": "git clone https://github.com/promer94/next-swr playground/next-swr && cd playground/next-swr && yarn && yarn link react && yarn link swr",
     "dev:vite": "concurrently \"yarn watch:esm\" \"cd playground/vite-swr && yarn dev\"",
     "dev:next": "concurrently \"yarn watch:esm\" \"cd playground/next-swr && yarn dev\""
   },

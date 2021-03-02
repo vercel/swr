@@ -27,6 +27,7 @@ To develop SWR locally, you can use the Vite SWR playground to play with the sou
 ```bash
 yarn install
 yarn register
+yarn build
 yarn prepare:vite
 yarn dev:vite
 ```
@@ -36,6 +37,7 @@ To test SSR related features, you need to use the Next.js SWR playground instead
 ```bash
 yarn install
 yarn register
+yarn build
 yarn prepare:next
 yarn dev:next
 ```
