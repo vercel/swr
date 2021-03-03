@@ -22,7 +22,7 @@ describe('useSWR - config callbacks', () => {
     }
     const { rerender } = render(<Page text={'a'} />)
     // the onSuccess callback does not trigger yet, the state still null.
-    expect(screen.getByText('hello, , a')).toBeInTheDocument()
+    screen.getByText('hello, , a')
     expect(state).toEqual(null)
 
     await screen.findByText('hello, 0, a')
@@ -31,7 +31,7 @@ describe('useSWR - config callbacks', () => {
 
     // props changed, but the onSuccess callback does not trigger yet, `state` is same as before
     rerender(<Page text={'b'} />)
-    expect(screen.getByText('hello, 0, b')).toBeInTheDocument()
+    screen.getByText('hello, 0, b')
     expect(state).toEqual('a')
 
     // trigger revalidation, this would re-trigger the onSuccess callback
@@ -66,7 +66,7 @@ describe('useSWR - config callbacks', () => {
 
     const { rerender } = render(<Page text="a" />)
 
-    expect(screen.getByText('hello, , a')).toBeInTheDocument()
+    screen.getByText('hello, , a')
     expect(state).toEqual(null)
     await screen.findByText('Error: 0')
 
@@ -74,13 +74,13 @@ describe('useSWR - config callbacks', () => {
 
     // props changed, but the onError callback doese not trigger yet.
     rerender(<Page text="b" />)
-    expect(screen.getByText('Error: 0')).toBeInTheDocument()
-    expect(screen.getByTitle('b')).toBeInTheDocument()
+    screen.getByText('Error: 0')
+    screen.getByTitle('b')
     expect(state).toEqual('a')
 
     fireEvent.click(screen.getByTitle('b'))
     await screen.findByText('Error: 1')
-    expect(screen.getByTitle('b')).toBeInTheDocument()
+    screen.getByTitle('b')
     expect(state).toEqual('b')
   })
 
@@ -108,23 +108,23 @@ describe('useSWR - config callbacks', () => {
     }
 
     const { rerender } = render(<Page text="a" />)
-    expect(screen.getByText('hello, , a')).toBeInTheDocument()
+    screen.getByText('hello, , a')
     expect(state).toEqual(null)
 
     await screen.findByText('Error: 0')
-    expect(screen.getByTitle('a')).toBeInTheDocument()
+    screen.getByTitle('a')
     expect(state).toEqual('a')
 
     // since the onErrorRetry schedule a timer to trigger revalidation, update props.text now
     rerender(<Page text="b" />)
     // not revalidate yet.
-    expect(screen.getByText('Error: 0')).toBeInTheDocument()
-    expect(screen.getByTitle('b')).toBeInTheDocument()
+    screen.getByText('Error: 0')
+    screen.getByTitle('b')
     expect(state).toEqual('a')
 
     // revalidate
     await screen.findByText('Error: 1')
-    expect(screen.getByTitle('b')).toBeInTheDocument()
+    screen.getByTitle('b')
     expect(state).toEqual('b')
   })
 
@@ -156,12 +156,12 @@ describe('useSWR - config callbacks', () => {
 
     const { rerender } = render(<Page text="a" />)
 
-    expect(screen.getByText('hello, , a')).toBeInTheDocument()
+    screen.getByText('hello, , a')
     expect(state).toEqual(null)
 
     // should trigger a loading slow event
     await act(() => sleep(LOADING_TIMEOUT))
-    expect(screen.getByText('hello, , a')).toBeInTheDocument()
+    screen.getByText('hello, , a')
     expect(state).toEqual('a')
 
     // onSuccess callback should be called with the latest prop value
