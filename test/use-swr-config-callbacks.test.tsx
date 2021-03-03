@@ -88,13 +88,13 @@ describe('useSWR - config callbacks', () => {
     // props changed, but the onError callback doese not trigger yet.
     rerender(<Page text="b" />)
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"Error: 0"`)
-    expect(container.firstElementChild.getAttribute('title')).toEqual('b')
+    expect(container.firstElementChild).toHaveAttribute('title', 'b')
     expect(state).toEqual('a')
     fireEvent.click(container.firstElementChild)
     await act(() => sleep(210))
 
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"Error: 1"`)
-    expect(container.firstElementChild.getAttribute('title')).toEqual('b')
+    expect(container.firstElementChild).toHaveAttribute('title', 'b')
     expect(state).toEqual('b')
   })
 
@@ -130,19 +130,19 @@ describe('useSWR - config callbacks', () => {
     expect(state).toEqual(null)
 
     await screen.findByText('Error: 0')
-    expect(container.firstElementChild.getAttribute('title')).toEqual('a')
+    expect(container.firstElementChild).toHaveAttribute('title', 'a')
     expect(state).toEqual('a')
 
     // since the onErrorRetry schedule a timer to trigger revalidation, update props.text now
     rerender(<Page text="b" />)
     // not revalidate yet.
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"Error: 0"`)
-    expect(container.firstElementChild.getAttribute('title')).toEqual('b')
+    expect(container.firstElementChild).toHaveAttribute('title', 'b')
     expect(state).toEqual('a')
 
     await act(() => sleep(350))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"Error: 1"`)
-    expect(container.firstElementChild.getAttribute('title')).toEqual('b')
+    expect(container.firstElementChild).toHaveAttribute('title', 'b')
     expect(state).toEqual('b')
   })
 

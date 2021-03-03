@@ -37,6 +37,7 @@
     ]
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "5.11.9",
     "@testing-library/react": "10.1.0",
     "@types/jest": "25.2.3",
     "@types/node": "11.12.0",
@@ -46,8 +47,10 @@
     "@zeit/ncc": "0.20.5",
     "eslint": "6.6.0",
     "eslint-config-prettier": "6.5.0",
+    "eslint-plugin-jest-dom": "3.6.5",
     "eslint-plugin-react": "7.20.6",
     "eslint-plugin-react-hooks": "4.1.2",
+    "eslint-plugin-testing-library": "3.10.1",
     "husky": "2.4.1",
     "jest": "25.5.4",
     "lint-staged": "8.2.1",
