@@ -23,7 +23,8 @@
     ]
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "./jest-setup.ts"
   ],
   "watchOptions": {
     // Use native file system events for files and directories
