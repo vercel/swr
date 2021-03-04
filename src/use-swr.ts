@@ -187,11 +187,6 @@ const mutate: mutateInterface = async (
   MUTATION_END_TS[key] = now() - 1
 
   if (!isAsyncMutation) {
-    // let's always broadcast in the next tick
-    // to dedupe synchronous mutation calls
-    // check out https://github.com/vercel/swr/pull/735 for more details
-    await 0
-
     // we skip broadcasting if there's another mutation happened synchronously
     if (shouldAbort()) return data
   }

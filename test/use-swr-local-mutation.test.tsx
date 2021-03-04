@@ -502,7 +502,8 @@ describe('useSWR - local mutation', () => {
     }
   })
 
-  it('should dedupe synchronous mutations', async () => {
+  // https://github.com/vercel/swr/pull/1003
+  it('should not dedupe synchronous mutations', async () => {
     const mutationRecivedValues = []
     const renderRecivedValues = []
 
@@ -534,6 +535,6 @@ describe('useSWR - local mutation', () => {
     await act(() => sleep(50))
 
     expect(mutationRecivedValues).toEqual([0, 1])
-    expect(renderRecivedValues).toEqual([undefined, 0, 2])
+    expect(renderRecivedValues).toEqual([undefined, 0, 1, 2])
   })
 })
