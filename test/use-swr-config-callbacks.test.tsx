@@ -1,7 +1,7 @@
 import { act, render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 import useSWR from '../src'
-import { sleep } from './utils'
+import { sleep, createResponse } from './utils'
 
 describe('useSWR - config callbacks', () => {
   it('should trigger the onSuccess event with the latest version of the onSuccess callback', async () => {
@@ -11,7 +11,7 @@ describe('useSWR - config callbacks', () => {
     function Page(props: { text: string }) {
       const { data, revalidate } = useSWR(
         'config callbacks - onSuccess',
-        () => new Promise(res => setTimeout(() => res(count++), 200)),
+        () => createResponse(count++),
         { onSuccess: () => (state = props.text) }
       )
       return (
@@ -20,11 +20,9 @@ describe('useSWR - config callbacks', () => {
         </div>
       )
     }
-    const { container, rerender } = render(<Page text={'a'} />)
+    const { rerender } = render(<Page text={'a'} />)
     // the onSuccess callback does not trigger yet, the state still null.
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"hello, , a"`
-    )
+    screen.getByText('hello, , a')
     expect(state).toEqual(null)
 
     await screen.findByText('hello, 0, a')
@@ -33,18 +31,12 @@ describe('useSWR - config callbacks', () => {
 
     // props changed, but the onSuccess callback does not trigger yet, `state` is same as before
     rerender(<Page text={'b'} />)
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"hello, 0, b"`
-    )
+    screen.getByText('hello, 0, b')
     expect(state).toEqual('a')
 
     // trigger revalidation, this would re-trigger the onSuccess callback
-    fireEvent.click(container.firstElementChild)
-
-    await act(() => sleep(201))
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"hello, 1, b"`
-    )
+    fireEvent.click(screen.getByText(/hello/))
+    await screen.findByText('hello, 1, b')
     // the onSuccess callback should capture the latest `props.text`
     expect(state).toEqual('b')
   })
@@ -56,10 +48,7 @@ describe('useSWR - config callbacks', () => {
     function Page(props: { text: string }) {
       const { data, revalidate, error } = useSWR(
         'config callbacks - onError',
-        () =>
-          new Promise((_, rej) =>
-            setTimeout(() => rej(new Error(`Error: ${count++}`)), 200)
-          ),
+        () => createResponse(new Error(`Error: ${count++}`)),
         { onError: () => (state = props.text) }
       )
       if (error)
@@ -75,11 +64,9 @@ describe('useSWR - config callbacks', () => {
       )
     }
 
-    const { container, rerender } = render(<Page text="a" />)
+    const { rerender } = render(<Page text="a" />)
 
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"hello, , a"`
-    )
+    screen.getByText('hello, , a')
     expect(state).toEqual(null)
     await screen.findByText('Error: 0')
 
@@ -87,31 +74,28 @@ describe('useSWR - config callbacks', () => {
 
     // props changed, but the onError callback doese not trigger yet.
     rerender(<Page text="b" />)
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"Error: 0"`)
-    expect(container.firstElementChild).toHaveAttribute('title', 'b')
+    screen.getByText('Error: 0')
+    screen.getByTitle('b')
     expect(state).toEqual('a')
-    fireEvent.click(container.firstElementChild)
-    await act(() => sleep(210))
 
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"Error: 1"`)
-    expect(container.firstElementChild).toHaveAttribute('title', 'b')
+    fireEvent.click(screen.getByTitle('b'))
+    await screen.findByText('Error: 1')
+    screen.getByTitle('b')
     expect(state).toEqual('b')
   })
 
   it('should trigger the onErrorRetry event with the latest version of the onErrorRetry callback', async () => {
     let state = null
     let count = 0
+
     function Page(props: { text: string }) {
       const { data, error } = useSWR(
         'config callbacks - onErrorRetry',
-        () =>
-          new Promise((_, rej) =>
-            setTimeout(() => rej(new Error(`Error: ${count++}`)), 200)
-          ),
+        () => createResponse(new Error(`Error: ${count++}`)),
         {
           onErrorRetry: (_, __, ___, revalidate, revalidateOpts) => {
             state = props.text
-            setTimeout(() => revalidate(revalidateOpts), 100)
+            revalidate(revalidateOpts)
           }
         }
       )
@@ -123,37 +107,36 @@ describe('useSWR - config callbacks', () => {
       )
     }
 
-    const { container, rerender } = render(<Page text="a" />)
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"hello, , a"`
-    )
+    const { rerender } = render(<Page text="a" />)
+    screen.getByText('hello, , a')
     expect(state).toEqual(null)
 
     await screen.findByText('Error: 0')
-    expect(container.firstElementChild).toHaveAttribute('title', 'a')
+    screen.getByTitle('a')
     expect(state).toEqual('a')
 
     // since the onErrorRetry schedule a timer to trigger revalidation, update props.text now
     rerender(<Page text="b" />)
     // not revalidate yet.
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"Error: 0"`)
-    expect(container.firstElementChild).toHaveAttribute('title', 'b')
+    screen.getByText('Error: 0')
+    screen.getByTitle('b')
     expect(state).toEqual('a')
 
-    await act(() => sleep(350))
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"Error: 1"`)
-    expect(container.firstElementChild).toHaveAttribute('title', 'b')
+    // revalidate
+    await screen.findByText('Error: 1')
+    screen.getByTitle('b')
     expect(state).toEqual('b')
   })
 
   it('should trigger the onLoadingSlow and onSuccess event with the lastest version of the callbacks', async () => {
+    const LOADING_TIMEOUT = 5
     let state = null
     let count = 0
 
     function Page(props: { text: string }) {
       const { data } = useSWR(
         'config callbacks - onLoadingSlow',
-        () => new Promise(res => setTimeout(() => res(count++), 200)),
+        () => createResponse(count++, { delay: LOADING_TIMEOUT * 2 }),
         {
           onLoadingSlow: () => {
             state = props.text
@@ -161,7 +144,7 @@ describe('useSWR - config callbacks', () => {
           onSuccess: () => {
             state = props.text
           },
-          loadingTimeout: 100
+          loadingTimeout: LOADING_TIMEOUT
         }
       )
       return (
@@ -171,24 +154,19 @@ describe('useSWR - config callbacks', () => {
       )
     }
 
-    const { container, rerender } = render(<Page text="a" />)
+    const { rerender } = render(<Page text="a" />)
 
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"hello, , a"`
-    )
+    screen.getByText('hello, , a')
     expect(state).toEqual(null)
 
-    await act(() => sleep(101))
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"hello, , a"`
-    )
+    // should trigger a loading slow event
+    await act(() => sleep(LOADING_TIMEOUT))
+    screen.getByText('hello, , a')
     expect(state).toEqual('a')
-    rerender(<Page text="b" />)
 
-    await act(() => sleep(100))
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"hello, 0, b"`
-    )
+    // onSuccess callback should be called with the latest prop value
+    rerender(<Page text="b" />)
+    await screen.findByText('hello, 0, b')
     expect(state).toEqual('b')
   })
 })
