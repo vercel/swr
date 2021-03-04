@@ -1,3 +1,4 @@
 dist/**/*
 esm/**/*
 node_modules
+playground

@@ -18,11 +18,17 @@
     "build:cjs": "ncc build src/index.ts -o dist -m -e react",
     "build:esm": "tsc --module ES6 --outDir esm",
     "watch": "tsc --watch",
+    "watch:esm": "tsc --module ES6 --outDir esm --target esnext --watch",
     "types:check": "tsc --noEmit",
     "format": "prettier --write \"{src,test,examples}/**/*.{ts,tsx}\"",
     "lint": "eslint \"{src,test,examples}/**/*.{ts,tsx}\"",
     "lint:fix": "eslint \"{src,test,examples}/**/*.{ts,tsx}\" --fix",
-    "test": "jest"
+    "test": "jest",
+    "register": "yarn link && cd node_modules/react && yarn link",
+    "prepare:vite": "git clone https://github.com/promer94/vite-swr playground/vite-swr && cd playground/vite-swr && yarn && yarn link react && yarn link swr",
+    "prepare:next": "git clone https://github.com/promer94/next-swr playground/next-swr && cd playground/next-swr && yarn && yarn link react && yarn link swr",
+    "dev:vite": "concurrently \"yarn watch:esm\" \"cd playground/vite-swr && yarn dev\"",
+    "dev:next": "concurrently \"yarn watch:esm\" \"cd playground/next-swr && yarn dev\""
   },
   "husky": {
     "hooks": {
@@ -45,6 +51,7 @@
     "@typescript-eslint/eslint-plugin": "2.5.0",
     "@typescript-eslint/parser": "2.5.0",
     "@zeit/ncc": "0.20.5",
+    "concurrently": "6.0.0",
     "eslint": "6.6.0",
     "eslint-config-prettier": "6.5.0",
     "eslint-plugin-jest-dom": "3.6.5",
