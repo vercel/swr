@@ -18,7 +18,7 @@ import {
   fetcherFn,
   keyInterface,
   mutateInterface,
-  responseInterface,
+  ResponseInterface,
   RevalidateOptionInterface,
   triggerInterface,
   updaterInterface
@@ -39,14 +39,16 @@ const rAF = IS_SERVER
 // useLayoutEffect in the browser.
 const useIsomorphicLayoutEffect = IS_SERVER ? useEffect : useLayoutEffect
 
+type revalidatorInterface = (...args: any[]) => void
+
 // global state managers
-const CONCURRENT_PROMISES = {}
-const CONCURRENT_PROMISES_TS = {}
-const FOCUS_REVALIDATORS = {}
-const RECONNECT_REVALIDATORS = {}
-const CACHE_REVALIDATORS = {}
-const MUTATION_TS = {}
-const MUTATION_END_TS = {}
+const CONCURRENT_PROMISES: Record<string, any> = {}
+const CONCURRENT_PROMISES_TS: Record<string, number> = {}
+const FOCUS_REVALIDATORS: Record<string, revalidatorInterface[]> = {}
+const RECONNECT_REVALIDATORS: Record<string, revalidatorInterface[]> = {}
+const CACHE_REVALIDATORS: Record<string, updaterInterface[]> = {}
+const MUTATION_TS: Record<string, number> = {}
+const MUTATION_END_TS: Record<string, number> = {}
 
 // generate strictly increasing timestamps
 const now = (() => {
@@ -56,7 +58,7 @@ const now = (() => {
 
 // setup DOM events listeners for `focus` and `reconnect` actions
 if (!IS_SERVER) {
-  const revalidate = revalidators => {
+  const revalidate = (revalidators: Record<string, revalidatorInterface[]>) => {
     if (!defaultConfig.isDocumentVisible() || !defaultConfig.isOnline()) return
 
     for (const key in revalidators) {
@@ -136,7 +138,7 @@ const mutate: mutateInterface = async (
   const beforeMutationTs = MUTATION_TS[key]
   const beforeConcurrentPromisesTs = CONCURRENT_PROMISES_TS[key]
 
-  let data, error
+  let data: any, error: unknown
   let isAsyncMutation = false
 
   if (_data && typeof _data === 'function') {
@@ -213,35 +215,41 @@ const mutate: mutateInterface = async (
 }
 
 function useSWR<Data = any, Error = any>(
-  key: keyInterface
-): responseInterface<Data, Error>
-function useSWR<Data = any, Error = any>(
-  key: keyInterface,
-  config?: Partial<ConfigInterface<Data, Error>>
-): responseInterface<Data, Error>
-function useSWR<Data = any, Error = any>(
-  key: keyInterface,
-  // `null` is used for a hack to manage shared state with SWR
-  // https://github.com/vercel/swr/pull/918
-  fn?: fetcherFn<Data> | null,
-  config?: Partial<ConfigInterface<Data, Error>>
-): responseInterface<Data, Error>
-function useSWR<Data = any, Error = any>(
-  _key: keyInterface,
-  ...options: any[]
-): responseInterface<Data, Error> {
-  let _fn: fetcherFn<Data> | undefined,
-    _config: Partial<ConfigInterface<Data, Error>> = {}
-  if (options.length > 1) {
-    _fn = options[0]
-    _config = options[1]
-  } else {
-    if (typeof options[0] === 'function') {
-      _fn = options[0]
-    } else if (typeof options[0] === 'object') {
-      _config = options[0]
-    }
-  }
+  ...args:
+    | readonly [keyInterface]
+    | readonly [keyInterface, fetcherFn<Data> | null]
+    | readonly [keyInterface, Partial<ConfigInterface<Data, Error>>]
+    | readonly [
+        keyInterface,
+        fetcherFn<Data> | null,
+        Partial<ConfigInterface<Data, Error>>
+      ]
+): ResponseInterface<Data, Error> {
+  const _key = args[0]
+  const config = Object.assign(
+    {},
+    defaultConfig,
+    useContext(SWRConfigContext),
+    args.length > 2
+      ? args[2]
+      : args.length === 2 && typeof args[1] === 'object'
+      ? args[1]
+      : {}
+  )
+  // in typescript args.length > 2 is not same as args.lenth === 3
+  // we do a safe type assertion here
+  // args.length === 3
+  const fn = (args.length > 2
+    ? args[1]
+    : args.length === 2 && typeof args[1] === 'function'
+    ? args[1]
+    : /** 
+          pass fn as null will disable revalidate 
+          https://paco.sh/blog/shared-hook-state-with-swr 
+        */
+    args[1] === null
+    ? args[1]
+    : config.fetcher) as fetcherFn<Data> | null
 
   // we assume `key` as the identifier of the request
   // `key` can change but `fn` shouldn't
@@ -249,19 +257,10 @@ function useSWR<Data = any, Error = any>(
   // `keyErr` is the cache key for error objects
   const [key, fnArgs, keyErr, keyValidating] = cache.serializeKey(_key)
 
-  const config: ConfigInterface<Data, Error> = Object.assign(
-    {},
-    defaultConfig,
-    useContext(SWRConfigContext),
-    _config
-  )
-
   const configRef = useRef(config)
   useIsomorphicLayoutEffect(() => {
     configRef.current = config
   })
-
-  const fn = typeof _fn !== 'undefined' ? _fn : config.fetcher
 
   const resolveData = () => {
     const cachedData = cache.get(key)
@@ -289,16 +288,19 @@ function useSWR<Data = any, Error = any>(
   // display the data label in the React DevTools next to SWR hooks
   useDebugValue(stateRef.current.data)
 
-  const [, rerender] = useState(null)
+  const rerender = useState<unknown>(null)[1]
+
   let dispatch = useCallback(
     (payload: actionType<Data, Error>) => {
       let shouldUpdateState = false
       for (let k in payload) {
+        // @ts-ignore
         if (stateRef.current[k] === payload[k]) {
           continue
         }
-
+        // @ts-ignore
         stateRef.current[k] = payload[k]
+        // @ts-ignore
         if (stateDependencies.current[k]) {
           shouldUpdateState = true
         }
@@ -329,19 +331,23 @@ function useSWR<Data = any, Error = any>(
       if (unmountedRef.current) return
       if (!initialMountedRef.current) return
       if (key !== keyRef.current) return
+      // @ts-ignore
       configRef.current[event](...params)
     },
     [key]
   )
 
-  const boundMutate: responseInterface<Data, Error>['mutate'] = useCallback(
+  const boundMutate: ResponseInterface<Data, Error>['mutate'] = useCallback(
     (data, shouldRevalidate) => {
       return mutate(keyRef.current, data, shouldRevalidate)
     },
     []
   )
 
-  const addRevalidator = (revalidators, callback) => {
+  const addRevalidator = (
+    revalidators: Record<string, revalidatorInterface[]>,
+    callback: revalidatorInterface
+  ) => {
     if (!callback) return
     if (!revalidators[key]) {
       revalidators[key] = [callback]
@@ -350,7 +356,10 @@ function useSWR<Data = any, Error = any>(
     }
   }
 
-  const removeRevalidator = (revlidators, callback) => {
+  const removeRevalidator = (
+    revlidators: Record<string, revalidatorInterface[]>,
+    callback: revalidatorInterface
+  ) => {
     if (revlidators[key]) {
       const revalidators = revlidators[key]
       const index = revalidators.indexOf(callback)
@@ -371,11 +380,11 @@ function useSWR<Data = any, Error = any>(
       if (!key || !fn) return false
       if (unmountedRef.current) return false
       if (configRef.current.isPaused()) return false
-      revalidateOpts = Object.assign({ dedupe: false }, revalidateOpts)
+      const { retryCount = 0, dedupe = false } = revalidateOpts
 
       let loading = true
       let shouldDeduping =
-        typeof CONCURRENT_PROMISES[key] !== 'undefined' && revalidateOpts.dedupe
+        typeof CONCURRENT_PROMISES[key] !== 'undefined' && dedupe
 
       // start fetching
       try {
@@ -521,15 +530,10 @@ function useSWR<Data = any, Error = any>(
         eventsCallback('onError', err, key, config)
         if (config.shouldRetryOnError) {
           // when retrying, we always enable deduping
-          const retryCount = (revalidateOpts.retryCount || 0) + 1
-          eventsCallback(
-            'onErrorRetry',
-            err,
-            key,
-            config,
-            revalidate,
-            Object.assign({ dedupe: true }, revalidateOpts, { retryCount })
-          )
+          eventsCallback('onErrorRetry', err, key, config, revalidate, {
+            retryCount: retryCount + 1,
+            dedupe: true
+          })
         }
       }
 
@@ -584,6 +588,8 @@ function useSWR<Data = any, Error = any>(
       if (typeof latestKeyedData !== 'undefined' && !IS_SERVER) {
         // delay revalidate if there's cache
         // to not block the rendering
+
+        //@ts-ignore it's safe to use requestAnimationFrame in browser
         rAF(softRevalidate)
       } else {
         softRevalidate()
@@ -674,7 +680,7 @@ function useSWR<Data = any, Error = any>(
   }, [key, revalidate])
 
   useIsomorphicLayoutEffect(() => {
-    let timer = null
+    let timer: any = null
     const tick = async () => {
       if (
         !stateRef.current.error &&
@@ -709,8 +715,8 @@ function useSWR<Data = any, Error = any>(
   ])
 
   // suspense
-  let latestData
-  let latestError
+  let latestData: Data | undefined
+  let latestError: unknown
   if (config.suspense) {
     // in suspense mode, we can't return empty state
     // (it should be suspended)
@@ -762,7 +768,7 @@ function useSWR<Data = any, Error = any>(
     // revalidate will be deprecated in the 1.x release
     // because mutate() covers the same use case of revalidate().
     // This remains only for backward compatibility
-    const state = { revalidate, mutate: boundMutate } as responseInterface<
+    const state = { revalidate, mutate: boundMutate } as ResponseInterface<
       Data,
       Error
     >

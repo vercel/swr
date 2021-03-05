@@ -23,23 +23,26 @@ export interface ConfigInterface<
   isOnline: () => boolean
   isDocumentVisible: () => boolean
   isPaused: () => boolean
-  onLoadingSlow: (key: string, config: ConfigInterface<Data, Error>) => void
+  onLoadingSlow: (
+    key: string,
+    config: Readonly<Required<ConfigInterface<Data, Error>>>
+  ) => void
   onSuccess: (
     data: Data,
     key: string,
-    config: ConfigInterface<Data, Error>
+    config: Readonly<Required<ConfigInterface<Data, Error>>>
   ) => void
   onError: (
     err: Error,
     key: string,
-    config: ConfigInterface<Data, Error>
+    config: Readonly<Required<ConfigInterface<Data, Error>>>
   ) => void
   onErrorRetry: (
     err: Error,
     key: string,
-    config: ConfigInterface<Data, Error>,
+    config: Readonly<Required<ConfigInterface<Data, Error>>>,
     revalidate: revalidateType,
-    revalidateOpts: RevalidateOptionInterface
+    revalidateOpts: Required<RevalidateOptionInterface>
   ) => void
   registerOnFocus?: (cb: () => void) => void
   registerOnReconnect?: (cb: () => void) => void
@@ -80,7 +83,7 @@ export type broadcastStateInterface<Data = any, Error = any> = (
   error?: Error,
   isValidating?: boolean
 ) => void
-export type responseInterface<Data, Error> = {
+export interface ResponseInterface<Data = any, Error = any> {
   data?: Data
   error?: Error
   revalidate: () => Promise<boolean>
@@ -94,7 +97,7 @@ export type revalidateType = (
   revalidateOpts: RevalidateOptionInterface
 ) => Promise<boolean>
 
-export type actionType<Data, Error> = {
+export type actionType<Data = any, Error = any> = {
   data?: Data
   error?: Error
   isValidating?: boolean

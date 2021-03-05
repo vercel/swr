@@ -4,25 +4,26 @@ import defaultConfig, { cache } from './config'
 import SWRConfigContext from './swr-config-context'
 import useSWR from './use-swr'
 
-import { keyType, fetcherFn, ConfigInterface, responseInterface } from './types'
+import {
+  keyType,
+  fetcherFn,
+  ConfigInterface,
+  ResponseInterface,
+  mutateCallback
+} from './types'
 
 type KeyLoader<Data = any> = (
   index: number,
   previousPageData: Data | null
 ) => keyType
-type SWRInfiniteConfigInterface<Data = any, Error = any> = ConfigInterface<
-  Data[],
-  Error,
-  fetcherFn<Data[]>
-> & {
+interface SWRInfiniteConfigInterface<Data = any, Error = any>
+  extends ConfigInterface<Data[], Error, fetcherFn<Data[]>> {
   initialSize?: number
   revalidateAll?: boolean
   persistSize?: boolean
 }
-type SWRInfiniteResponseInterface<Data = any, Error = any> = responseInterface<
-  Data[],
-  Error
-> & {
+interface SWRInfiniteResponseInterface<Data = any, Error = any>
+  extends ResponseInterface<Data[], Error> {
   size: number
   setSize: (
     size: number | ((size: number) => number)
@@ -30,50 +31,46 @@ type SWRInfiniteResponseInterface<Data = any, Error = any> = responseInterface<
 }
 
 function useSWRInfinite<Data = any, Error = any>(
-  getKey: KeyLoader<Data>
-): SWRInfiniteResponseInterface<Data, Error>
-function useSWRInfinite<Data = any, Error = any>(
-  getKey: KeyLoader<Data>,
-  config?: Partial<SWRInfiniteConfigInterface<Data, Error>>
-): SWRInfiniteResponseInterface<Data, Error>
-function useSWRInfinite<Data = any, Error = any>(
-  getKey: KeyLoader<Data>,
-  fn?: fetcherFn<Data>,
-  config?: Partial<SWRInfiniteConfigInterface<Data, Error>>
-): SWRInfiniteResponseInterface<Data, Error>
-function useSWRInfinite<Data = any, Error = any>(
-  getKey: KeyLoader<Data>,
-  ...options: any[]
+  ...args:
+    | readonly [KeyLoader<Data>]
+    | readonly [KeyLoader<Data>, fetcherFn<Data>]
+    | readonly [
+        KeyLoader<Data>,
+        Partial<SWRInfiniteConfigInterface<Data, Error>>
+      ]
+    | readonly [
+        KeyLoader<Data>,
+        fetcherFn<Data>,
+        Partial<SWRInfiniteConfigInterface<Data, Error>>
+      ]
 ): SWRInfiniteResponseInterface<Data, Error> {
-  let _fn: fetcherFn<Data> | undefined,
-    _config: Partial<SWRInfiniteConfigInterface<Data, Error>> = {}
+  const getKey = args[0]
 
-  if (options.length > 1) {
-    _fn = options[0]
-    _config = options[1]
-  } else {
-    if (typeof options[0] === 'function') {
-      _fn = options[0]
-    } else if (typeof options[0] === 'object') {
-      _config = options[0]
-    }
-  }
-
-  const config: SWRInfiniteConfigInterface<Data, Error> = Object.assign(
+  const config = Object.assign(
     {},
     defaultConfig,
     useContext(SWRConfigContext),
-    _config
+    args.length > 2
+      ? args[2]
+      : args.length === 2 && typeof args[1] === 'object'
+      ? args[1]
+      : {}
   )
-  let {
+  // in typescript args.length > 2 is not same as args.lenth === 3
+  // we do a safe type assertion here
+  // args.length === 3
+  const fn = (args.length > 2
+    ? args[1]
+    : args.length === 2 && typeof args[1] === 'function'
+    ? args[1]
+    : config.fetcher) as fetcherFn<Data>
+
+  const {
     initialSize = 1,
     revalidateAll = false,
     persistSize = false,
-    fetcher: defaultFetcher,
     ...extraConfig
   } = config
-
-  const fn = typeof _fn !== 'undefined' ? _fn : defaultFetcher
 
   // get the serialized key of the first page
   let firstPageKey: string | null = null
@@ -185,7 +182,10 @@ function useSWRInfinite<Data = any, Error = any>(
   }, [swr.data])
 
   const mutate = useCallback(
-    (data, shouldRevalidate = true) => {
+    (
+      data: Data[] | Promise<Data[]> | mutateCallback<Data[]> | undefined,
+      shouldRevalidate = true
+    ) => {
       if (shouldRevalidate && typeof data !== 'undefined') {
         // we only revalidate the pages that are changed
         const originalData = dataRef.current

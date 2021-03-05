@@ -16,6 +16,7 @@
     "types": [
       "node", "jest"
     ],
+    "strict": true,
     "target": "es5",
     "typeRoots": [
       "./types",

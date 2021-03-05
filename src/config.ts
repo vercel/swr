@@ -12,11 +12,11 @@ const cache = new Cache()
 
 // error retry
 function onErrorRetry(
-  _,
-  __,
-  config: ConfigInterface,
+  _: unknown,
+  __: string,
+  config: Readonly<Required<ConfigInterface>>,
   revalidate: revalidateType,
-  opts: RevalidateOptionInterface
+  opts: Required<RevalidateOptionInterface>
 ): void {
   if (!config.isDocumentVisible()) {
     // if it's hidden, stop
@@ -32,7 +32,7 @@ function onErrorRetry(
   }
 
   // exponential backoff
-  const count = Math.min(opts.retryCount || 0, 8)
+  const count = Math.min(opts.retryCount, 8)
   const timeout =
     ~~((Math.random() + 0.5) * (1 << count)) * config.errorRetryInterval
   setTimeout(revalidate, timeout, opts)
@@ -43,36 +43,36 @@ function onErrorRetry(
 // slow connection (<= 70Kbps)
 const slowConnection =
   typeof window !== 'undefined' &&
+  // @ts-ignore
   navigator['connection'] &&
+  // @ts-ignore
   ['slow-2g', '2g'].indexOf(navigator['connection'].effectiveType) !== -1
 
 // config
-const defaultConfig: ConfigInterface = Object.assign(
-  {
-    // events
-    onLoadingSlow: () => {},
-    onSuccess: () => {},
-    onError: () => {},
-    onErrorRetry,
+const defaultConfig = {
+  // events
+  onLoadingSlow: () => {},
+  onSuccess: () => {},
+  onError: () => {},
+  onErrorRetry,
 
-    errorRetryInterval: (slowConnection ? 10 : 5) * 1000,
-    focusThrottleInterval: 5 * 1000,
-    dedupingInterval: 2 * 1000,
-    loadingTimeout: (slowConnection ? 5 : 3) * 1000,
+  errorRetryInterval: (slowConnection ? 10 : 5) * 1000,
+  focusThrottleInterval: 5 * 1000,
+  dedupingInterval: 2 * 1000,
+  loadingTimeout: (slowConnection ? 5 : 3) * 1000,
 
-    refreshInterval: 0,
-    revalidateOnFocus: true,
-    revalidateOnReconnect: true,
-    refreshWhenHidden: false,
-    refreshWhenOffline: false,
-    shouldRetryOnError: true,
-    suspense: false,
-    compare: dequal,
+  refreshInterval: 0,
+  revalidateOnFocus: true,
+  revalidateOnReconnect: true,
+  refreshWhenHidden: false,
+  refreshWhenOffline: false,
+  shouldRetryOnError: true,
+  suspense: false,
+  compare: dequal,
 
-    isPaused: () => false
-  },
-  webPreset
-)
+  isPaused: () => false,
+  ...webPreset
+} as const
 
 export { cache }
 export default defaultConfig
