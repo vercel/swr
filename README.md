@@ -347,11 +347,15 @@ function Profile() {
       <h1>My name is {data.name}.</h1>
       <button onClick={async () => {
         const newName = data.name.toUpperCase()
-        // send a request to the API to update the data
+        
+        // update the local data immediately, but disable the revalidation
+        mutate('/api/user', { ...data, name: newName }, false)
+        
+        // send a request to the API to update the source
         await requestUpdateUsername(newName)
-        // update the local data immediately and revalidate (refetch)
-        // NOTE: key has to be passed to mutate as it's not bound
-        mutate('/api/user', { ...data, name: newName })
+        
+        // trigger a revalidation (refetch) to make sure our local data is correct
+        mutate('/api/user')
       }}>Uppercase my name!</button>
     </div>
   )

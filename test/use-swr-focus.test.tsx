@@ -3,7 +3,11 @@ import React, { useState } from 'react'
 import useSWR from '../src'
 import { sleep } from './utils'
 
-const waitForNextTick = async () => await act(() => sleep(1))
+const waitForNextTick = () => act(() => sleep(1))
+const focusWindow = () =>
+  act(async () => {
+    fireEvent.focus(window)
+  })
 
 describe('useSWR - focus', () => {
   it('should revalidate on focus by default', async () => {
@@ -24,7 +28,8 @@ describe('useSWR - focus', () => {
 
     await waitForNextTick()
     // trigger revalidation
-    fireEvent.focus(window)
+    await focusWindow()
+
     await screen.findByText('data: 1')
   })
 
@@ -47,7 +52,7 @@ describe('useSWR - focus', () => {
 
     await waitForNextTick()
     // trigger revalidation
-    fireEvent.focus(window)
+    await focusWindow()
     // should not be revalidated
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
   })
@@ -72,20 +77,20 @@ describe('useSWR - focus', () => {
 
     await waitForNextTick()
     // trigger revalidation
-    fireEvent.focus(window)
+    await focusWindow()
     // data should not change
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
 
     // change revalidateOnFocus to true
     fireEvent.click(container.firstElementChild)
     // trigger revalidation
-    fireEvent.focus(window)
+    await focusWindow()
     // data should update
     await screen.findByText('data: 1')
 
     await waitForNextTick()
     // trigger revalidation
-    fireEvent.focus(window)
+    await focusWindow()
     // data should update
     await screen.findByText('data: 2')
 
@@ -93,7 +98,7 @@ describe('useSWR - focus', () => {
     // change revalidateOnFocus to false
     fireEvent.click(container.firstElementChild)
     // trigger revalidation
-    fireEvent.focus(window)
+    await focusWindow()
     // data should not change
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 2"`)
   })
@@ -122,17 +127,17 @@ describe('useSWR - focus', () => {
 
     await waitForNextTick()
     // trigger revalidation
-    fireEvent.focus(window)
+    await focusWindow()
     // still in throttling interval
     await act(() => sleep(20))
     // should be throttled
-    fireEvent.focus(window)
+    await focusWindow()
     await screen.findByText('data: 1')
     // wait for focusThrottleInterval
     await act(() => sleep(100))
 
     // trigger revalidation again
-    fireEvent.focus(window)
+    await focusWindow()
     await screen.findByText('data: 2')
   })
 
@@ -161,11 +166,11 @@ describe('useSWR - focus', () => {
 
     await waitForNextTick()
     // trigger revalidation
-    fireEvent.focus(window)
+    await focusWindow()
     // wait for throttle interval
     await act(() => sleep(100))
     // trigger revalidation
-    fireEvent.focus(window)
+    await focusWindow()
     await screen.findByText('data: 2')
 
     await waitForNextTick()
@@ -174,21 +179,21 @@ describe('useSWR - focus', () => {
     // wait for throttle interval
     await act(() => sleep(100))
     // trigger revalidation
-    fireEvent.focus(window)
+    await focusWindow()
     // wait for throttle interval
     await act(() => sleep(100))
     // should be throttled
-    fireEvent.focus(window)
+    await focusWindow()
     await screen.findByText('data: 3')
 
     // wait for throttle interval
     await act(() => sleep(150))
     // trigger revalidation
-    fireEvent.focus(window)
+    await focusWindow()
     // wait for throttle intervals
     await act(() => sleep(150))
     // trigger revalidation
-    fireEvent.focus(window)
+    await focusWindow()
     await screen.findByText('data: 5')
   })
 })

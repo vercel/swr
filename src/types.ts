@@ -1,50 +1,50 @@
-// `null` is used for a hack to manage shared state with SWR
-// https://github.com/vercel/swr/pull/918
-export type fetcherFn<Data> = ((...args: any) => Data | Promise<Data>) | null
+export type fetcherFn<Data> = (...args: any) => Data | Promise<Data>
 export interface ConfigInterface<
   Data = any,
   Error = any,
   Fn extends fetcherFn<Data> = fetcherFn<Data>
 > {
-  errorRetryInterval?: number
+  errorRetryInterval: number
   errorRetryCount?: number
-  loadingTimeout?: number
-  focusThrottleInterval?: number
-  dedupingInterval?: number
-  refreshInterval?: number
-  refreshWhenHidden?: boolean
-  refreshWhenOffline?: boolean
-  revalidateOnFocus?: boolean
+  loadingTimeout: number
+  focusThrottleInterval: number
+  dedupingInterval: number
+  refreshInterval: number
+  refreshWhenHidden: boolean
+  refreshWhenOffline: boolean
+  revalidateOnFocus: boolean
   revalidateOnMount?: boolean
-  revalidateOnReconnect?: boolean
-  shouldRetryOnError?: boolean
-  fetcher?: Fn
-  suspense?: boolean
+  revalidateOnReconnect: boolean
+  shouldRetryOnError: boolean
+  fetcher: Fn
+  suspense: boolean
   initialData?: Data
 
-  isOnline?: () => boolean
-  isDocumentVisible?: () => boolean
-  isPaused?: () => boolean
-  onLoadingSlow?: (key: string, config: ConfigInterface<Data, Error>) => void
-  onSuccess?: (
+  isOnline: () => boolean
+  isDocumentVisible: () => boolean
+  isPaused: () => boolean
+  onLoadingSlow: (key: string, config: ConfigInterface<Data, Error>) => void
+  onSuccess: (
     data: Data,
     key: string,
     config: ConfigInterface<Data, Error>
   ) => void
-  onError?: (
+  onError: (
     err: Error,
     key: string,
     config: ConfigInterface<Data, Error>
   ) => void
-  onErrorRetry?: (
+  onErrorRetry: (
     err: Error,
     key: string,
     config: ConfigInterface<Data, Error>,
     revalidate: revalidateType,
     revalidateOpts: RevalidateOptionInterface
   ) => void
+  registerOnFocus?: (cb: () => void) => void
+  registerOnReconnect?: (cb: () => void) => void
 
-  compare?: (a: Data | undefined, b: Data | undefined) => boolean
+  compare: (a: Data | undefined, b: Data | undefined) => boolean
 }
 
 export interface RevalidateOptionInterface {
