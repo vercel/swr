@@ -1,10 +1,11 @@
 module.exports = {
   preset: 'ts-jest',
   testRegex: '/test/.*\\.test\\.tsx$',
+  modulePathIgnorePatterns: ['<rootDir>/examples/'],
+  setupFilesAfterEnv: ['<rootDir>/jest-setup.ts'],
   globals: {
     'ts-jest': {
-      diagnostics: false
+      tsconfig: 'tsconfig.test.json'
     }
-  },
-  modulePathIgnorePatterns: ['<rootDir>/examples/']
+  }
 }

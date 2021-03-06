@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import React, { useState } from 'react'
-import useSWR from '../src'
+import useSWR, { cache } from '../src'
 import { sleep } from './utils'
 
 describe('useSWR - refresh', () => {
@@ -201,15 +201,16 @@ describe('useSWR - refresh', () => {
     )
   })
 
-  it('should allow use custom isEqual method', async () => {
+  it('should allow use custom compare method', async () => {
     let count = 0
+    const key = 'dynamic-11'
     const fetcher = jest.fn(() => ({
       timestamp: ++count,
       version: '1.0'
     }))
     function Page() {
-      const { data, mutate: change } = useSWR('dynamic-11', fetcher, {
-        compare: function isEqual(a, b) {
+      const { data, mutate: change } = useSWR(key, fetcher, {
+        compare: function compare(a, b) {
           if (a === b) {
             return true
           }
@@ -244,6 +245,9 @@ describe('useSWR - refresh', () => {
       timestamp: 2,
       version: '1.0'
     })
+
+    const cachedData = cache.get(key)
+    expect(cachedData.timestamp.toString()).toEqual('1')
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"1"`)
   })
 
@@ -293,5 +297,62 @@ describe('useSWR - refresh', () => {
     // second refresh with new key 1
     expect(fetcherWithToken).toBeCalledTimes(5)
     expect(fetcherWithToken).toHaveBeenLastCalledWith('1')
+  })
+
+  it('the previous interval timer should not call onSuccess callback if key changes too fast', async () => {
+    const fetcherWithToken = jest.fn(async token => {
+      await sleep(200)
+      return token
+    })
+    const onSuccess = jest.fn((data, key) => {
+      return `${data} ${key}`
+    })
+    function Page() {
+      const [count, setCount] = useState(0)
+      const { data } = useSWR(`${count.toString()}-hash`, fetcherWithToken, {
+        refreshInterval: 100,
+        dedupingInterval: 50,
+        onSuccess
+      })
+      return (
+        <button
+          onClick={() => setCount(count + 1)}
+        >{`click me ${data}`}</button>
+      )
+    }
+    const { container } = render(<Page />)
+
+    // initial revalidate
+    await act(() => sleep(200))
+    expect(fetcherWithToken).toBeCalledTimes(1)
+    expect(onSuccess).toBeCalledTimes(1)
+    expect(onSuccess).toHaveLastReturnedWith(`0-hash 0-hash`)
+    // first refresh
+    await act(() => sleep(100))
+    expect(fetcherWithToken).toBeCalledTimes(2)
+    expect(fetcherWithToken).toHaveBeenLastCalledWith('0-hash')
+    await act(() => sleep(200))
+    expect(onSuccess).toBeCalledTimes(2)
+    expect(onSuccess).toHaveLastReturnedWith(`0-hash 0-hash`)
+
+    // second refresh start
+    await act(() => sleep(100))
+    expect(fetcherWithToken).toBeCalledTimes(3)
+    expect(fetcherWithToken).toHaveBeenLastCalledWith('0-hash')
+    // change the key during revalidation
+    // The second refresh will not start a new timer
+    fireEvent.click(container.firstElementChild)
+
+    // first refresh with new key 1
+    await act(() => sleep(100))
+    expect(fetcherWithToken).toBeCalledTimes(4)
+    expect(fetcherWithToken).toHaveBeenLastCalledWith('1-hash')
+    await act(() => sleep(210))
+    expect(onSuccess).toBeCalledTimes(3)
+    expect(onSuccess).toHaveLastReturnedWith(`1-hash 1-hash`)
+
+    // second refresh with new key 1
+    expect(fetcherWithToken).toBeCalledTimes(5)
+    expect(fetcherWithToken).toHaveBeenLastCalledWith('1-hash')
   })
 })

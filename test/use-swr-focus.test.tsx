@@ -3,6 +3,12 @@ import React, { useState } from 'react'
 import useSWR from '../src'
 import { sleep } from './utils'
 
+const waitForNextTick = () => act(() => sleep(1))
+const focusWindow = () =>
+  act(async () => {
+    fireEvent.focus(window)
+  })
+
 describe('useSWR - focus', () => {
   it('should revalidate on focus by default', async () => {
     let value = 0
@@ -20,9 +26,10 @@ describe('useSWR - focus', () => {
     // mount
     await screen.findByText('data: 0')
 
-    await act(() => sleep(1))
+    await waitForNextTick()
     // trigger revalidation
-    fireEvent.focus(window)
+    await focusWindow()
+
     await screen.findByText('data: 1')
   })
 
@@ -42,11 +49,11 @@ describe('useSWR - focus', () => {
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
     // mount
     await screen.findByText('data: 0')
+
+    await waitForNextTick()
     // trigger revalidation
-    fireEvent.focus(window)
-    await act(() => {
-      return sleep(1)
-    })
+    await focusWindow()
+    // should not be revalidated
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
   })
   it('revalidateOnFocus shoule be stateful', async () => {
@@ -68,44 +75,30 @@ describe('useSWR - focus', () => {
     // mount
     await screen.findByText('data: 0')
 
-    await act(() => sleep(1))
-
+    await waitForNextTick()
     // trigger revalidation
-    fireEvent.focus(window)
-
-    await act(() => {
-      return sleep(1)
-    })
+    await focusWindow()
     // data should not change
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
 
-    await act(() => sleep(1))
     // change revalidateOnFocus to true
     fireEvent.click(container.firstElementChild)
     // trigger revalidation
-    fireEvent.focus(window)
-
-    await act(() => {
-      return sleep(1)
-    })
+    await focusWindow()
     // data should update
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
+    await screen.findByText('data: 1')
+
+    await waitForNextTick()
     // trigger revalidation
-    fireEvent.focus(window)
-
-    await act(() => {
-      return sleep(1)
-    })
+    await focusWindow()
     // data should update
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 2"`)
+    await screen.findByText('data: 2')
 
+    await waitForNextTick()
     // change revalidateOnFocus to false
     fireEvent.click(container.firstElementChild)
     // trigger revalidation
-    fireEvent.focus(window)
-    await act(() => {
-      return sleep(1)
-    })
+    await focusWindow()
     // data should not change
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 2"`)
   })
@@ -120,7 +113,7 @@ describe('useSWR - focus', () => {
         {
           dedupingInterval: 0,
           revalidateOnFocus: true,
-          focusThrottleInterval: 200
+          focusThrottleInterval: 50
         }
       )
       return <div>data: {data}</div>
@@ -131,30 +124,28 @@ describe('useSWR - focus', () => {
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
     // mount
     await screen.findByText('data: 0')
+
+    await waitForNextTick()
     // trigger revalidation
-    fireEvent.focus(window)
-    await act(() => {
-      return sleep(1)
-    })
-    fireEvent.focus(window)
-    await act(() => {
-      return sleep(210)
-    })
+    await focusWindow()
+    // still in throttling interval
+    await act(() => sleep(20))
+    // should be throttled
+    await focusWindow()
+    await screen.findByText('data: 1')
+    // wait for focusThrottleInterval
+    await act(() => sleep(100))
 
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
-    fireEvent.focus(window)
-    await act(() => {
-      return sleep(1)
-    })
-
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 2"`)
+    // trigger revalidation again
+    await focusWindow()
+    await screen.findByText('data: 2')
   })
 
   it('focusThrottleInterval should be stateful', async () => {
     let value = 0
 
     function Page() {
-      const [focusThrottleInterval, setInterval] = useState(200)
+      const [focusThrottleInterval, setInterval] = useState(50)
       const { data } = useSWR(
         'focusThrottleInterval should be stateful',
         () => value++,
@@ -173,40 +164,36 @@ describe('useSWR - focus', () => {
     // mount
     await screen.findByText('data: 0')
 
-    fireEvent.focus(window)
-    await act(() => {
-      return sleep(210)
-    })
-    fireEvent.focus(window)
-    await act(() => {
-      return sleep(210)
-    })
+    await waitForNextTick()
+    // trigger revalidation
+    await focusWindow()
+    // wait for throttle interval
+    await act(() => sleep(100))
+    // trigger revalidation
+    await focusWindow()
+    await screen.findByText('data: 2')
 
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 2"`)
+    await waitForNextTick()
+    // increase focusThrottleInterval
     fireEvent.click(container.firstElementChild)
-    fireEvent.focus(window)
-    await act(() => {
-      return sleep(1)
-    })
-    fireEvent.focus(window)
-    await act(() => {
-      return sleep(210)
-    })
+    // wait for throttle interval
+    await act(() => sleep(100))
+    // trigger revalidation
+    await focusWindow()
+    // wait for throttle interval
+    await act(() => sleep(100))
+    // should be throttled
+    await focusWindow()
+    await screen.findByText('data: 3')
 
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 3"`)
-
-    await act(() => {
-      return sleep(100)
-    })
-    fireEvent.focus(window)
-    await act(() => {
-      return sleep(310)
-    })
-    fireEvent.focus(window)
-    await act(() => {
-      return sleep(1)
-    })
-
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 5"`)
+    // wait for throttle interval
+    await act(() => sleep(150))
+    // trigger revalidation
+    await focusWindow()
+    // wait for throttle intervals
+    await act(() => sleep(150))
+    // trigger revalidation
+    await focusWindow()
+    await screen.findByText('data: 5')
   })
 })
