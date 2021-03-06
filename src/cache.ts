@@ -1,7 +1,7 @@
-import { CacheInterface, keyInterface, cacheListener } from './types'
+import { Cache as CacheType, keyInterface, cacheListener } from './types'
 import hash from './libs/hash'
 
-export default class Cache implements CacheInterface {
+export default class Cache implements CacheType {
   private __cache: Map<string, any>
   private __listeners: cacheListener[]
 

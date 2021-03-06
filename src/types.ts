@@ -99,26 +99,10 @@ export type actionType<Data, Error> = {
   isValidating?: boolean
 }
 
-export interface CacheInterface {
-  get(key: keyInterface): any
-  set(key: keyInterface, value: any): any
-  keys(): string[]
-  has(key: keyInterface): boolean
-  delete(key: keyInterface): void
-  clear(): void
-  serializeKey(key: keyInterface): [string, any, string, string]
-  subscribe(listener: cacheListener): () => void
-}
-
 export type cacheListener = () => void
 
 // Public types
 
-export type SWRConfiguration<
-  Data = any,
-  Error = any,
-  Fn extends fetcherFn<Data> = fetcherFn<Data>
-> = Partial<Configuration<Data, Error, Fn>>
 /**
  * @deprecated `ConfigInterface` will be renamed to `SWRConfiguration`.
  */
@@ -127,15 +111,12 @@ export type ConfigInterface<
   Error = any,
   Fn extends fetcherFn<Data> = fetcherFn<Data>
 > = Partial<Configuration<Data, Error, Fn>>
-
-export type SWRInfiniteConfiguration<
+export type SWRConfiguration<
   Data = any,
-  Error = any
-> = SWRConfiguration<Data[], Error, fetcherFn<Data[]>> & {
-  initialSize?: number
-  revalidateAll?: boolean
-  persistSize?: boolean
-}
+  Error = any,
+  Fn extends fetcherFn<Data> = fetcherFn<Data>
+> = Partial<Configuration<Data, Error, Fn>>
+
 /**
  * @deprecated `SWRInfiniteConfigInterface` will be renamed to `SWRInfiniteConfiguration`.
  */
@@ -147,16 +128,15 @@ export type SWRInfiniteConfigInterface<
   revalidateAll?: boolean
   persistSize?: boolean
 }
-
-export type SWRInfiniteResponse<Data = any, Error = any> = responseInterface<
-  Data[],
-  Error
-> & {
-  size: number
-  setSize: (
-    size: number | ((size: number) => number)
-  ) => Promise<Data[] | undefined>
+export type SWRInfiniteConfiguration<
+  Data = any,
+  Error = any
+> = SWRConfiguration<Data[], Error, fetcherFn<Data[]>> & {
+  initialSize?: number
+  revalidateAll?: boolean
+  persistSize?: boolean
 }
+
 /**
  * @deprecated `SWRInfiniteResponseInterface` will be renamed to `SWRInfiniteResponse`.
  */
@@ -168,4 +148,37 @@ export type SWRInfiniteResponseInterface<
   setSize: (
     size: number | ((size: number) => number)
   ) => Promise<Data[] | undefined>
+}
+export type SWRInfiniteResponse<Data = any, Error = any> = responseInterface<
+  Data[],
+  Error
+> & {
+  size: number
+  setSize: (
+    size: number | ((size: number) => number)
+  ) => Promise<Data[] | undefined>
+}
+
+/**
+ * @deprecated `CacheInterface` will be renamed to `Cache`.
+ */
+export interface CacheInterface {
+  get(key: keyInterface): any
+  set(key: keyInterface, value: any): any
+  keys(): string[]
+  has(key: keyInterface): boolean
+  delete(key: keyInterface): void
+  clear(): void
+  serializeKey(key: keyInterface): [string, any, string, string]
+  subscribe(listener: cacheListener): () => void
+}
+export interface Cache {
+  get(key: keyInterface): any
+  set(key: keyInterface, value: any): any
+  keys(): string[]
+  has(key: keyInterface): boolean
+  delete(key: keyInterface): void
+  clear(): void
+  serializeKey(key: keyInterface): [string, any, string, string]
+  subscribe(listener: cacheListener): () => void
 }

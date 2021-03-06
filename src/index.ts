@@ -11,11 +11,6 @@ export { cache } from './config'
 
 // Types
 export {
-  // Legacy
-  ConfigInterface,
-  SWRInfiniteConfigInterface,
-  SWRInfiniteResponseInterface,
-  // Latest
   SWRConfiguration,
   SWRInfiniteConfiguration,
   SWRInfiniteResponse,
@@ -23,5 +18,10 @@ export {
   RevalidateOptionInterface,
   keyInterface,
   responseInterface,
+  Cache,
+  // Legacy, for backwards compatibility
+  ConfigInterface,
+  SWRInfiniteConfigInterface,
+  SWRInfiniteResponseInterface,
   CacheInterface
 } from './types'
