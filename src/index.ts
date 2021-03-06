@@ -4,11 +4,7 @@ export default useSWR
 export * from './use-swr'
 
 // `useSWRInfinite`
-export {
-  useSWRInfinite,
-  SWRInfiniteConfigInterface,
-  SWRInfiniteResponseInterface
-} from './use-swr-infinite'
+export { useSWRInfinite } from './use-swr-infinite'
 
 // Cache related, to be replaced by the new APIs
 export { cache } from './config'
@@ -17,8 +13,12 @@ export { cache } from './config'
 export {
   // Legacy
   ConfigInterface,
+  SWRInfiniteConfigInterface,
+  SWRInfiniteResponseInterface,
   // Latest
   SWRConfiguration,
+  SWRInfiniteConfiguration,
+  SWRInfiniteResponse,
   revalidateType,
   RevalidateOptionInterface,
   keyInterface,

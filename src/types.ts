@@ -114,6 +114,11 @@ export type cacheListener = () => void
 
 // Public types
 
+export type SWRConfiguration<
+  Data = any,
+  Error = any,
+  Fn extends fetcherFn<Data> = fetcherFn<Data>
+> = Partial<Configuration<Data, Error, Fn>>
 /**
  * @deprecated `ConfigInterface` will be renamed to `SWRConfiguration`.
  */
@@ -123,8 +128,44 @@ export type ConfigInterface<
   Fn extends fetcherFn<Data> = fetcherFn<Data>
 > = Partial<Configuration<Data, Error, Fn>>
 
-export type SWRConfiguration<
+export type SWRInfiniteConfiguration<
   Data = any,
-  Error = any,
-  Fn extends fetcherFn<Data> = fetcherFn<Data>
-> = Partial<Configuration<Data, Error, Fn>>
+  Error = any
+> = SWRConfiguration<Data[], Error, fetcherFn<Data[]>> & {
+  initialSize?: number
+  revalidateAll?: boolean
+  persistSize?: boolean
+}
+/**
+ * @deprecated `SWRInfiniteConfigInterface` will be renamed to `SWRInfiniteConfiguration`.
+ */
+export type SWRInfiniteConfigInterface<
+  Data = any,
+  Error = any
+> = SWRConfiguration<Data[], Error, fetcherFn<Data[]>> & {
+  initialSize?: number
+  revalidateAll?: boolean
+  persistSize?: boolean
+}
+
+export type SWRInfiniteResponse<Data = any, Error = any> = responseInterface<
+  Data[],
+  Error
+> & {
+  size: number
+  setSize: (
+    size: number | ((size: number) => number)
+  ) => Promise<Data[] | undefined>
+}
+/**
+ * @deprecated `SWRInfiniteResponseInterface` will be renamed to `SWRInfiniteResponse`.
+ */
+export type SWRInfiniteResponseInterface<
+  Data = any,
+  Error = any
+> = responseInterface<Data[], Error> & {
+  size: number
+  setSize: (
+    size: number | ((size: number) => number)
+  ) => Promise<Data[] | undefined>
+}
