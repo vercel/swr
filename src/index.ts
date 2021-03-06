@@ -14,7 +14,7 @@ export {
   SWRConfiguration,
   SWRInfiniteConfiguration,
   SWRInfiniteResponse,
-  revalidateType,
+  Revalidator,
   RevalidateOptions,
   Key,
   responseInterface,
@@ -23,7 +23,8 @@ export {
   ConfigInterface,
   SWRInfiniteConfigInterface,
   SWRInfiniteResponseInterface,
+  revalidateType,
   RevalidateOptionInterface,
-  CacheInterface,
-  keyInterface
+  keyInterface,
+  CacheInterface
 } from './types'

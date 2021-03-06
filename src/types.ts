@@ -84,9 +84,6 @@ export type responseInterface<Data, Error> = {
   ) => Promise<Data | undefined>
   isValidating: boolean
 }
-export type revalidateType = (
-  revalidateOpts: RevalidateOptions
-) => Promise<boolean>
 
 export type actionType<Data, Error> = {
   data?: Data
@@ -195,3 +192,13 @@ export interface RevalidateOptions {
  */
 export type keyInterface = keyFunction | keyType
 export type Key = keyFunction | keyType
+
+/**
+ * @deprecated `revalidateType` will be renamed to `Revalidator`.
+ */
+export type revalidateType = (
+  revalidateOpts: RevalidateOptions
+) => Promise<boolean>
+export type Revalidator = (
+  revalidateOpts: RevalidateOptions
+) => Promise<boolean>
