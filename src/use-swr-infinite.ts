@@ -55,7 +55,8 @@ function useSWRInfinite<Data = any, Error = any>(
 
   const {
     initialSize = 1,
-    revalidateAll = false,
+    // should revalidate pages when a refresh timer is invoked
+    revalidateAll = !!config.refreshInterval,
     persistSize = false,
     ...extraConfig
   } = config
@@ -102,10 +103,11 @@ function useSWRInfinite<Data = any, Error = any>(
 
   // keep the data inside a ref
   const dataRef = useRef<Data[]>()
+  const lastFetchedDataRef = useRef<Data[]>()
 
   // actual swr of all pages
   const swr = useSWR<Data[], Error>(
-    firstPageKey ? ['many', firstPageKey] : null,
+    firstPageKey ? ['many', firstPageKey, pageCountRef.current] : null,
     async () => {
       // get the revalidate context
       const { originalData, force } = cache.get(contextCacheKey) || {}
@@ -131,15 +133,11 @@ function useSWRInfinite<Data = any, Error = any>(
         // - `revalidateAll` is enabled
         // - `mutate()` called
         // - the cache is missing
-        // - it's the first page and it's not the first render
         // - cache has changed
         const shouldFetchPage =
           revalidateAll ||
           force ||
           typeof pageData === 'undefined' ||
-          (typeof force === 'undefined' &&
-            i === 0 &&
-            typeof dataRef.current !== 'undefined') ||
           (originalData && !config.compare(originalData[i], pageData))
 
         if (shouldFetchPage) {
@@ -153,6 +151,7 @@ function useSWRInfinite<Data = any, Error = any>(
 
         data.push(pageData)
         previousPageData = pageData
+        lastFetchedDataRef.current = data
       }
 
       // once we executed the data fetching based on the context, clear the context
@@ -161,7 +160,11 @@ function useSWRInfinite<Data = any, Error = any>(
       // return the data
       return data
     },
-    extraConfig
+    // do not pass initialData for updating to revalidate
+    {
+      ...extraConfig,
+      initialData: didMountRef.current ? undefined : extraConfig.initialData
+    }
   )
 
   // update dataRef
@@ -198,9 +201,8 @@ function useSWRInfinite<Data = any, Error = any>(
       }
       cache.set(pageCountCacheKey, pageCountRef.current)
       rerender(v => !v)
-      return mutate(v => v)
     },
-    [mutate, pageCountCacheKey]
+    [pageCountCacheKey]
   )
 
   // Use getter functions to avoid unnecessary re-renders caused by triggering all the getters of the returned swr object
@@ -211,7 +213,9 @@ function useSWRInfinite<Data = any, Error = any>(
       enumerable: true
     },
     data: {
-      get: () => swr.data,
+      get: () =>
+        // return the last data when revalidating
+        swr.data !== undefined ? swr.data : lastFetchedDataRef.current,
       enumerable: true
     },
     // revalidate will be deprecated in the 1.x release
