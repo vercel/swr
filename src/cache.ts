@@ -1,4 +1,4 @@
-import { Cache as CacheType, keyInterface, cacheListener } from './types'
+import { Cache as CacheType, Key, cacheListener } from './types'
 import hash from './libs/hash'
 
 export default class Cache implements CacheType {
@@ -10,12 +10,12 @@ export default class Cache implements CacheType {
     this.__listeners = []
   }
 
-  get(key: keyInterface): any {
+  get(key: Key): any {
     const [_key] = this.serializeKey(key)
     return this.__cache.get(_key)
   }
 
-  set(key: keyInterface, value: any): any {
+  set(key: Key, value: any): any {
     const [_key] = this.serializeKey(key)
     this.__cache.set(_key, value)
     this.notify()
@@ -25,7 +25,7 @@ export default class Cache implements CacheType {
     return Array.from(this.__cache.keys())
   }
 
-  has(key: keyInterface) {
+  has(key: Key) {
     const [_key] = this.serializeKey(key)
     return this.__cache.has(_key)
   }
@@ -35,14 +35,14 @@ export default class Cache implements CacheType {
     this.notify()
   }
 
-  delete(key: keyInterface) {
+  delete(key: Key) {
     const [_key] = this.serializeKey(key)
     this.__cache.delete(_key)
     this.notify()
   }
 
   // TODO: introduce namespace for the cache
-  serializeKey(key: keyInterface): [string, any, string, string] {
+  serializeKey(key: Key): [string, any, string, string] {
     let args = null
     if (typeof key === 'function') {
       try {

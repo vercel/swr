@@ -15,13 +15,15 @@ export {
   SWRInfiniteConfiguration,
   SWRInfiniteResponse,
   revalidateType,
-  RevalidateOptionInterface,
-  keyInterface,
+  RevalidateOptions,
+  Key,
   responseInterface,
   Cache,
   // Legacy, for backwards compatibility
   ConfigInterface,
   SWRInfiniteConfigInterface,
   SWRInfiniteResponseInterface,
-  CacheInterface
+  RevalidateOptionInterface,
+  CacheInterface,
+  keyInterface
 } from './types'

@@ -17,10 +17,10 @@ import {
   Configuration,
   SWRConfiguration,
   fetcherFn,
-  keyInterface,
+  Key,
   mutateInterface,
   responseInterface,
-  RevalidateOptionInterface,
+  RevalidateOptions,
   triggerInterface,
   updaterInterface
 } from './types'
@@ -214,21 +214,21 @@ const mutate: mutateInterface = async (
 }
 
 function useSWR<Data = any, Error = any>(
-  key: keyInterface
+  key: Key
 ): responseInterface<Data, Error>
 function useSWR<Data = any, Error = any>(
-  key: keyInterface,
+  key: Key,
   config?: SWRConfiguration<Data, Error>
 ): responseInterface<Data, Error>
 function useSWR<Data = any, Error = any>(
-  key: keyInterface,
+  key: Key,
   // `null` is used for a hack to manage shared state with SWR
   // https://github.com/vercel/swr/pull/918
   fn?: fetcherFn<Data> | null,
   config?: SWRConfiguration<Data, Error>
 ): responseInterface<Data, Error>
 function useSWR<Data = any, Error = any>(
-  _key: keyInterface,
+  _key: Key,
   ...options: any[]
 ): responseInterface<Data, Error> {
   let _fn: fetcherFn<Data> | undefined,
@@ -377,9 +377,7 @@ function useSWR<Data = any, Error = any>(
 
   // start a revalidation
   const revalidate = useCallback(
-    async (
-      revalidateOpts: RevalidateOptionInterface = {}
-    ): Promise<boolean> => {
+    async (revalidateOpts: RevalidateOptions = {}): Promise<boolean> => {
       if (!key || !fn) return false
       if (unmountedRef.current) return false
       if (configRef.current.isPaused()) return false

@@ -1,9 +1,5 @@
 import { dequal } from 'dequal/lite'
-import {
-  SWRConfiguration,
-  RevalidateOptionInterface,
-  revalidateType
-} from './types'
+import { SWRConfiguration, RevalidateOptions, revalidateType } from './types'
 import Cache from './cache'
 import webPreset from './libs/web-preset'
 
@@ -16,7 +12,7 @@ function onErrorRetry(
   __,
   config: SWRConfiguration,
   revalidate: revalidateType,
-  opts: RevalidateOptionInterface
+  opts: RevalidateOptions
 ): void {
   if (!config.isDocumentVisible()) {
     // if it's hidden, stop
