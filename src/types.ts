@@ -38,7 +38,7 @@ export type Configuration<
     key: string,
     config: Configuration<Data, Error>,
     revalidate: Revalidator,
-    revalidateOpts: RevalidateOptions
+    revalidateOpts: RevalidatorOptions
   ) => void
   registerOnFocus?: (cb: () => void) => void
   registerOnReconnect?: (cb: () => void) => void
@@ -100,6 +100,36 @@ export type SWRConfiguration<
 > = Partial<Configuration<Data, Error, Fn>>
 
 /**
+ * @deprecated `keyInterface` will be renamed to `Key`.
+ */
+export type keyInterface = keyFunction | keyType
+export type Key = keyFunction | keyType
+
+/**
+ * @deprecated `responseInterface` will be renamed to `SWRResponse`.
+ */
+export type responseInterface<Data, Error> = {
+  data?: Data
+  error?: Error
+  revalidate: () => Promise<boolean>
+  mutate: (
+    data?: Data | Promise<Data> | mutateCallback<Data>,
+    shouldRevalidate?: boolean
+  ) => Promise<Data | undefined>
+  isValidating: boolean
+}
+export type SWRResponse<Data, Error> = {
+  data?: Data
+  error?: Error
+  revalidate: () => Promise<boolean>
+  mutate: (
+    data?: Data | Promise<Data> | mutateCallback<Data>,
+    shouldRevalidate?: boolean
+  ) => Promise<Data | undefined>
+  isValidating: boolean
+}
+
+/**
  * @deprecated `SWRInfiniteConfigInterface` will be renamed to `SWRInfiniteConfiguration`.
  */
 export type SWRInfiniteConfigInterface<
@@ -142,6 +172,28 @@ export type SWRInfiniteResponse<Data = any, Error = any> = SWRResponse<
 }
 
 /**
+ * @deprecated `RevalidateOptionInterface` will be renamed to `RevalidatorOptions`.
+ */
+export interface RevalidateOptionInterface {
+  retryCount?: number
+  dedupe?: boolean
+}
+export interface RevalidatorOptions {
+  retryCount?: number
+  dedupe?: boolean
+}
+
+/**
+ * @deprecated `revalidateType` will be renamed to `Revalidator`.
+ */
+export type revalidateType = (
+  revalidateOpts: RevalidatorOptions
+) => Promise<boolean>
+export type Revalidator = (
+  revalidateOpts: RevalidatorOptions
+) => Promise<boolean>
+
+/**
  * @deprecated `CacheInterface` will be renamed to `Cache`.
  */
 export interface CacheInterface {
@@ -163,56 +215,4 @@ export interface Cache {
   clear(): void
   serializeKey(key: Key): [string, any, string, string]
   subscribe(listener: cacheListener): () => void
-}
-
-/**
- * @deprecated `RevalidateOptionInterface` will be renamed to `RevalidateOptions`.
- */
-export interface RevalidateOptionInterface {
-  retryCount?: number
-  dedupe?: boolean
-}
-export interface RevalidateOptions {
-  retryCount?: number
-  dedupe?: boolean
-}
-
-/**
- * @deprecated `keyInterface` will be renamed to `Key`.
- */
-export type keyInterface = keyFunction | keyType
-export type Key = keyFunction | keyType
-
-/**
- * @deprecated `revalidateType` will be renamed to `Revalidator`.
- */
-export type revalidateType = (
-  revalidateOpts: RevalidateOptions
-) => Promise<boolean>
-export type Revalidator = (
-  revalidateOpts: RevalidateOptions
-) => Promise<boolean>
-
-/**
- * @deprecated `responseInterface` will be renamed to `SWRResponse`.
- */
-export type responseInterface<Data, Error> = {
-  data?: Data
-  error?: Error
-  revalidate: () => Promise<boolean>
-  mutate: (
-    data?: Data | Promise<Data> | mutateCallback<Data>,
-    shouldRevalidate?: boolean
-  ) => Promise<Data | undefined>
-  isValidating: boolean
-}
-export type SWRResponse<Data, Error> = {
-  data?: Data
-  error?: Error
-  revalidate: () => Promise<boolean>
-  mutate: (
-    data?: Data | Promise<Data> | mutateCallback<Data>,
-    shouldRevalidate?: boolean
-  ) => Promise<Data | undefined>
-  isValidating: boolean
 }

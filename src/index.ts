@@ -15,7 +15,7 @@ export {
   SWRInfiniteConfiguration,
   SWRInfiniteResponse,
   Revalidator,
-  RevalidateOptions,
+  RevalidatorOptions,
   Key,
   SWRResponse,
   Cache,

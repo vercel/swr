@@ -20,7 +20,7 @@ import {
   Key,
   mutateInterface,
   SWRResponse,
-  RevalidateOptions,
+  RevalidatorOptions,
   triggerInterface,
   updaterInterface
 } from './types'
@@ -375,7 +375,7 @@ function useSWR<Data = any, Error = any>(
 
   // start a revalidation
   const revalidate = useCallback(
-    async (revalidateOpts: RevalidateOptions = {}): Promise<boolean> => {
+    async (revalidateOpts: RevalidatorOptions = {}): Promise<boolean> => {
       if (!key || !fn) return false
       if (unmountedRef.current) return false
       if (configRef.current.isPaused()) return false
