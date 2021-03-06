@@ -4,13 +4,18 @@ import defaultConfig, { cache } from './config'
 import SWRConfigContext from './swr-config-context'
 import useSWR from './use-swr'
 
-import { keyType, fetcherFn, ConfigInterface, responseInterface } from './types'
+import {
+  keyType,
+  fetcherFn,
+  SWRConfiguration,
+  responseInterface
+} from './types'
 
 type KeyLoader<Data = any> = (
   index: number,
   previousPageData: Data | null
 ) => keyType
-type SWRInfiniteConfigInterface<Data = any, Error = any> = ConfigInterface<
+type SWRInfiniteConfigInterface<Data = any, Error = any> = SWRConfiguration<
   Data[],
   Error,
   fetcherFn<Data[]>

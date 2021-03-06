@@ -1,6 +1,6 @@
 import { dequal } from 'dequal/lite'
 import {
-  ConfigInterface,
+  SWRConfiguration,
   RevalidateOptionInterface,
   revalidateType
 } from './types'
@@ -14,7 +14,7 @@ const cache = new Cache()
 function onErrorRetry(
   _,
   __,
-  config: ConfigInterface,
+  config: SWRConfiguration,
   revalidate: revalidateType,
   opts: RevalidateOptionInterface
 ): void {
@@ -47,7 +47,7 @@ const slowConnection =
   ['slow-2g', '2g'].indexOf(navigator['connection'].effectiveType) !== -1
 
 // config
-const defaultConfig: ConfigInterface = Object.assign(
+const defaultConfig: SWRConfiguration = Object.assign(
   {
     // events
     onLoadingSlow: () => {},

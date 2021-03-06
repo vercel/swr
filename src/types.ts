@@ -1,9 +1,12 @@
+// Internal types
+
 export type fetcherFn<Data> = (...args: any) => Data | Promise<Data>
-export interface ConfigInterface<
+
+export type Configuration<
   Data = any,
   Error = any,
   Fn extends fetcherFn<Data> = fetcherFn<Data>
-> {
+> = {
   errorRetryInterval: number
   errorRetryCount?: number
   loadingTimeout: number
@@ -16,28 +19,24 @@ export interface ConfigInterface<
   revalidateOnMount?: boolean
   revalidateOnReconnect: boolean
   shouldRetryOnError: boolean
-  fetcher: Fn
   suspense: boolean
+  fetcher: Fn
   initialData?: Data
 
   isOnline: () => boolean
   isDocumentVisible: () => boolean
   isPaused: () => boolean
-  onLoadingSlow: (key: string, config: ConfigInterface<Data, Error>) => void
+  onLoadingSlow: (key: string, config: Configuration<Data, Error>) => void
   onSuccess: (
     data: Data,
     key: string,
-    config: ConfigInterface<Data, Error>
+    config: Configuration<Data, Error>
   ) => void
-  onError: (
-    err: Error,
-    key: string,
-    config: ConfigInterface<Data, Error>
-  ) => void
+  onError: (err: Error, key: string, config: Configuration<Data, Error>) => void
   onErrorRetry: (
     err: Error,
     key: string,
-    config: ConfigInterface<Data, Error>,
+    config: Configuration<Data, Error>,
     revalidate: revalidateType,
     revalidateOpts: RevalidateOptionInterface
   ) => void
@@ -112,3 +111,20 @@ export interface CacheInterface {
 }
 
 export type cacheListener = () => void
+
+// Public types
+
+/**
+ * @deprecated `ConfigInterface` will be renamed to `SWRConfiguration`.
+ */
+export type ConfigInterface<
+  Data = any,
+  Error = any,
+  Fn extends fetcherFn<Data> = fetcherFn<Data>
+> = Partial<Configuration<Data, Error, Fn>>
+
+export type SWRConfiguration<
+  Data = any,
+  Error = any,
+  Fn extends fetcherFn<Data> = fetcherFn<Data>
+> = Partial<Configuration<Data, Error, Fn>>

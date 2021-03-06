@@ -14,7 +14,8 @@ import SWRConfigContext from './swr-config-context'
 import {
   actionType,
   broadcastStateInterface,
-  ConfigInterface,
+  Configuration,
+  SWRConfiguration,
   fetcherFn,
   keyInterface,
   mutateInterface,
@@ -217,21 +218,21 @@ function useSWR<Data = any, Error = any>(
 ): responseInterface<Data, Error>
 function useSWR<Data = any, Error = any>(
   key: keyInterface,
-  config?: Partial<ConfigInterface<Data, Error>>
+  config?: SWRConfiguration<Data, Error>
 ): responseInterface<Data, Error>
 function useSWR<Data = any, Error = any>(
   key: keyInterface,
   // `null` is used for a hack to manage shared state with SWR
   // https://github.com/vercel/swr/pull/918
   fn?: fetcherFn<Data> | null,
-  config?: Partial<ConfigInterface<Data, Error>>
+  config?: SWRConfiguration<Data, Error>
 ): responseInterface<Data, Error>
 function useSWR<Data = any, Error = any>(
   _key: keyInterface,
   ...options: any[]
 ): responseInterface<Data, Error> {
   let _fn: fetcherFn<Data> | undefined,
-    _config: Partial<ConfigInterface<Data, Error>> = {}
+    _config: SWRConfiguration<Data, Error> = {}
   if (options.length > 1) {
     _fn = options[0]
     _config = options[1]
@@ -249,12 +250,12 @@ function useSWR<Data = any, Error = any>(
   // `keyErr` is the cache key for error objects
   const [key, fnArgs, keyErr, keyValidating] = cache.serializeKey(_key)
 
-  const config: ConfigInterface<Data, Error> = Object.assign(
+  const config = Object.assign(
     {},
     defaultConfig,
     useContext(SWRConfigContext),
     _config
-  )
+  ) as Configuration<Data, Error>
 
   const configRef = useRef(config)
   useIsomorphicLayoutEffect(() => {
