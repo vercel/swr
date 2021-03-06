@@ -17,7 +17,7 @@ export {
   Revalidator,
   RevalidateOptions,
   Key,
-  responseInterface,
+  SWRResponse,
   Cache,
   // Legacy, for backwards compatibility
   ConfigInterface,
@@ -26,5 +26,6 @@ export {
   revalidateType,
   RevalidateOptionInterface,
   keyInterface,
+  responseInterface,
   CacheInterface
 } from './types'

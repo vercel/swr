@@ -19,7 +19,7 @@ import {
   fetcherFn,
   Key,
   mutateInterface,
-  responseInterface,
+  SWRResponse,
   RevalidateOptions,
   triggerInterface,
   updaterInterface
@@ -213,24 +213,22 @@ const mutate: mutateInterface = async (
   return data
 }
 
-function useSWR<Data = any, Error = any>(
-  key: Key
-): responseInterface<Data, Error>
+function useSWR<Data = any, Error = any>(key: Key): SWRResponse<Data, Error>
 function useSWR<Data = any, Error = any>(
   key: Key,
   config?: SWRConfiguration<Data, Error>
-): responseInterface<Data, Error>
+): SWRResponse<Data, Error>
 function useSWR<Data = any, Error = any>(
   key: Key,
   // `null` is used for a hack to manage shared state with SWR
   // https://github.com/vercel/swr/pull/918
   fn?: fetcherFn<Data> | null,
   config?: SWRConfiguration<Data, Error>
-): responseInterface<Data, Error>
+): SWRResponse<Data, Error>
 function useSWR<Data = any, Error = any>(
   _key: Key,
   ...options: any[]
-): responseInterface<Data, Error> {
+): SWRResponse<Data, Error> {
   let _fn: fetcherFn<Data> | undefined,
     _config: SWRConfiguration<Data, Error> = {}
   if (options.length > 1) {
@@ -346,7 +344,7 @@ function useSWR<Data = any, Error = any>(
     [key]
   )
 
-  const boundMutate: responseInterface<Data, Error>['mutate'] = useCallback(
+  const boundMutate: SWRResponse<Data, Error>['mutate'] = useCallback(
     (data, shouldRevalidate) => {
       return mutate(keyRef.current, data, shouldRevalidate)
     },
@@ -769,7 +767,7 @@ function useSWR<Data = any, Error = any>(
     // revalidate will be deprecated in the 1.x release
     // because mutate() covers the same use case of revalidate().
     // This remains only for backward compatibility
-    const state = { revalidate, mutate: boundMutate } as responseInterface<
+    const state = { revalidate, mutate: boundMutate } as SWRResponse<
       Data,
       Error
     >

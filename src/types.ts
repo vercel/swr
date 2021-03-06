@@ -37,7 +37,7 @@ export type Configuration<
     err: Error,
     key: string,
     config: Configuration<Data, Error>,
-    revalidate: revalidateType,
+    revalidate: Revalidator,
     revalidateOpts: RevalidateOptions
   ) => void
   registerOnFocus?: (cb: () => void) => void
@@ -74,16 +74,6 @@ export type broadcastStateInterface<Data = any, Error = any> = (
   error?: Error,
   isValidating?: boolean
 ) => void
-export type responseInterface<Data, Error> = {
-  data?: Data
-  error?: Error
-  revalidate: () => Promise<boolean>
-  mutate: (
-    data?: Data | Promise<Data> | mutateCallback<Data>,
-    shouldRevalidate?: boolean
-  ) => Promise<Data | undefined>
-  isValidating: boolean
-}
 
 export type actionType<Data, Error> = {
   data?: Data
@@ -132,16 +122,16 @@ export type SWRInfiniteConfiguration<
 /**
  * @deprecated `SWRInfiniteResponseInterface` will be renamed to `SWRInfiniteResponse`.
  */
-export type SWRInfiniteResponseInterface<
-  Data = any,
-  Error = any
-> = responseInterface<Data[], Error> & {
+export type SWRInfiniteResponseInterface<Data = any, Error = any> = SWRResponse<
+  Data[],
+  Error
+> & {
   size: number
   setSize: (
     size: number | ((size: number) => number)
   ) => Promise<Data[] | undefined>
 }
-export type SWRInfiniteResponse<Data = any, Error = any> = responseInterface<
+export type SWRInfiniteResponse<Data = any, Error = any> = SWRResponse<
   Data[],
   Error
 > & {
@@ -202,3 +192,27 @@ export type revalidateType = (
 export type Revalidator = (
   revalidateOpts: RevalidateOptions
 ) => Promise<boolean>
+
+/**
+ * @deprecated `responseInterface` will be renamed to `SWRResponse`.
+ */
+export type responseInterface<Data, Error> = {
+  data?: Data
+  error?: Error
+  revalidate: () => Promise<boolean>
+  mutate: (
+    data?: Data | Promise<Data> | mutateCallback<Data>,
+    shouldRevalidate?: boolean
+  ) => Promise<Data | undefined>
+  isValidating: boolean
+}
+export type SWRResponse<Data, Error> = {
+  data?: Data
+  error?: Error
+  revalidate: () => Promise<boolean>
+  mutate: (
+    data?: Data | Promise<Data> | mutateCallback<Data>,
+    shouldRevalidate?: boolean
+  ) => Promise<Data | undefined>
+  isValidating: boolean
+}
