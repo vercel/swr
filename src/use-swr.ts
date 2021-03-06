@@ -12,17 +12,17 @@ import {
 import defaultConfig, { cache } from './config'
 import SWRConfigContext from './swr-config-context'
 import {
-  actionType,
-  broadcastStateInterface,
+  Action,
+  Broadcaster,
   Configuration,
   SWRConfiguration,
-  fetcherFn,
+  Fetcher,
   Key,
-  mutateInterface,
+  Mutator,
   SWRResponse,
   RevalidatorOptions,
-  triggerInterface,
-  updaterInterface
+  Trigger,
+  Updater
 } from './types'
 
 const IS_SERVER =
@@ -74,7 +74,7 @@ if (!IS_SERVER) {
   }
 }
 
-const trigger: triggerInterface = (_key, shouldRevalidate = true) => {
+const trigger: Trigger = (_key, shouldRevalidate = true) => {
   // we are ignoring the second argument which correspond to the arguments
   // the fetcher will receive when key is an array
   const [key, , keyErr, keyValidating] = cache.serializeKey(_key)
@@ -104,12 +104,7 @@ const trigger: triggerInterface = (_key, shouldRevalidate = true) => {
   return Promise.resolve(cache.get(key))
 }
 
-const broadcastState: broadcastStateInterface = (
-  key,
-  data,
-  error,
-  isValidating
-) => {
+const broadcastState: Broadcaster = (key, data, error, isValidating) => {
   const updaters = CACHE_REVALIDATORS[key]
   if (key && updaters) {
     for (let i = 0; i < updaters.length; ++i) {
@@ -118,11 +113,7 @@ const broadcastState: broadcastStateInterface = (
   }
 }
 
-const mutate: mutateInterface = async (
-  _key,
-  _data,
-  shouldRevalidate = true
-) => {
+const mutate: Mutator = async (_key, _data, shouldRevalidate = true) => {
   const [key, , keyErr] = cache.serializeKey(_key)
   if (!key) return
 
@@ -222,14 +213,14 @@ function useSWR<Data = any, Error = any>(
   key: Key,
   // `null` is used for a hack to manage shared state with SWR
   // https://github.com/vercel/swr/pull/918
-  fn?: fetcherFn<Data> | null,
+  fn?: Fetcher<Data> | null,
   config?: SWRConfiguration<Data, Error>
 ): SWRResponse<Data, Error>
 function useSWR<Data = any, Error = any>(
   _key: Key,
   ...options: any[]
 ): SWRResponse<Data, Error> {
-  let _fn: fetcherFn<Data> | undefined,
+  let _fn: Fetcher<Data> | undefined,
     _config: SWRConfiguration<Data, Error> = {}
   if (options.length > 1) {
     _fn = options[0]
@@ -301,7 +292,7 @@ function useSWR<Data = any, Error = any>(
 
   const [, rerender] = useState(null)
   let dispatch = useCallback(
-    (payload: actionType<Data, Error>) => {
+    (payload: Action<Data, Error>) => {
       let shouldUpdateState = false
       for (let k in payload) {
         if (stateRef.current[k] === payload[k]) {
@@ -476,7 +467,7 @@ function useSWR<Data = any, Error = any>(
         cache.set(keyValidating, false)
 
         // new state for the reducer
-        const newState: actionType<Data, Error> = {
+        const newState: Action<Data, Error> = {
           isValidating: false
         }
 
@@ -613,7 +604,7 @@ function useSWR<Data = any, Error = any>(
     }
 
     // register global cache update listener
-    const onUpdate: updaterInterface<Data, Error> = (
+    const onUpdate: Updater<Data, Error> = (
       shouldRevalidate = true,
       updatedData,
       updatedError,
@@ -621,7 +612,7 @@ function useSWR<Data = any, Error = any>(
       dedupe = true
     ) => {
       // update hook state
-      const newState: actionType<Data, Error> = {}
+      const newState: Action<Data, Error> = {}
       let needUpdate = false
 
       if (

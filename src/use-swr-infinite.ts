@@ -5,8 +5,8 @@ import SWRConfigContext from './swr-config-context'
 import useSWR from './use-swr'
 
 import {
-  keyType,
-  fetcherFn,
+  ValueKey,
+  Fetcher,
   SWRInfiniteConfiguration,
   SWRInfiniteResponse
 } from './types'
@@ -14,7 +14,7 @@ import {
 type KeyLoader<Data = any> = (
   index: number,
   previousPageData: Data | null
-) => keyType
+) => ValueKey
 
 function useSWRInfinite<Data = any, Error = any>(
   getKey: KeyLoader<Data>
@@ -25,14 +25,14 @@ function useSWRInfinite<Data = any, Error = any>(
 ): SWRInfiniteResponse<Data, Error>
 function useSWRInfinite<Data = any, Error = any>(
   getKey: KeyLoader<Data>,
-  fn?: fetcherFn<Data>,
+  fn?: Fetcher<Data>,
   config?: Partial<SWRInfiniteConfiguration<Data, Error>>
 ): SWRInfiniteResponse<Data, Error>
 function useSWRInfinite<Data = any, Error = any>(
   getKey: KeyLoader<Data>,
   ...options: any[]
 ): SWRInfiniteResponse<Data, Error> {
-  let _fn: fetcherFn<Data> | undefined,
+  let _fn: Fetcher<Data> | undefined,
     _config: Partial<SWRInfiniteConfiguration<Data, Error>> = {}
 
   if (options.length > 1) {

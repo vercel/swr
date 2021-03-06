@@ -1,11 +1,11 @@
 // Internal types
 
-export type fetcherFn<Data> = (...args: any) => Data | Promise<Data>
+export type Fetcher<Data> = (...args: any) => Data | Promise<Data>
 
 export type Configuration<
   Data = any,
   Error = any,
-  Fn extends fetcherFn<Data> = fetcherFn<Data>
+  Fn extends Fetcher<Data> = Fetcher<Data>
 > = {
   errorRetryInterval: number
   errorRetryCount?: number
@@ -46,42 +46,40 @@ export type Configuration<
   compare: (a: Data | undefined, b: Data | undefined) => boolean
 }
 
-export type keyType = string | any[] | null
-type keyFunction = () => keyType
+export type ValueKey = string | any[] | null
 
-export type updaterInterface<Data = any, Error = any> = (
+export type Updater<Data = any, Error = any> = (
   shouldRevalidate?: boolean,
   data?: Data,
   error?: Error,
   shouldDedupe?: boolean,
   dedupe?: boolean
 ) => boolean | Promise<boolean>
-export type triggerInterface = (
-  key: Key,
-  shouldRevalidate?: boolean
-) => Promise<any>
-export type mutateCallback<Data = any> = (
+export type Trigger = (key: Key, shouldRevalidate?: boolean) => Promise<any>
+
+type MutatorCallback<Data = any> = (
   currentValue: undefined | Data
 ) => Promise<undefined | Data> | undefined | Data
-export type mutateInterface<Data = any> = (
+
+export type Mutator<Data = any> = (
   key: Key,
-  data?: Data | Promise<Data> | mutateCallback<Data>,
+  data?: Data | Promise<Data> | MutatorCallback<Data>,
   shouldRevalidate?: boolean
 ) => Promise<Data | undefined>
-export type broadcastStateInterface<Data = any, Error = any> = (
+export type Broadcaster<Data = any, Error = any> = (
   key: string,
   data: Data,
   error?: Error,
   isValidating?: boolean
 ) => void
 
-export type actionType<Data, Error> = {
+export type Action<Data, Error> = {
   data?: Data
   error?: Error
   isValidating?: boolean
 }
 
-export type cacheListener = () => void
+export type CacheListener = () => void
 
 // Public types
 
@@ -91,19 +89,19 @@ export type cacheListener = () => void
 export type ConfigInterface<
   Data = any,
   Error = any,
-  Fn extends fetcherFn<Data> = fetcherFn<Data>
+  Fn extends Fetcher<Data> = Fetcher<Data>
 > = Partial<Configuration<Data, Error, Fn>>
 export type SWRConfiguration<
   Data = any,
   Error = any,
-  Fn extends fetcherFn<Data> = fetcherFn<Data>
+  Fn extends Fetcher<Data> = Fetcher<Data>
 > = Partial<Configuration<Data, Error, Fn>>
 
 /**
  * @deprecated `keyInterface` will be renamed to `Key`.
  */
-export type keyInterface = keyFunction | keyType
-export type Key = keyFunction | keyType
+export type keyInterface = ValueKey | (() => ValueKey)
+export type Key = ValueKey | (() => ValueKey)
 
 /**
  * @deprecated `responseInterface` will be renamed to `SWRResponse`.
@@ -113,7 +111,7 @@ export type responseInterface<Data, Error> = {
   error?: Error
   revalidate: () => Promise<boolean>
   mutate: (
-    data?: Data | Promise<Data> | mutateCallback<Data>,
+    data?: Data | Promise<Data> | MutatorCallback<Data>,
     shouldRevalidate?: boolean
   ) => Promise<Data | undefined>
   isValidating: boolean
@@ -123,7 +121,7 @@ export type SWRResponse<Data, Error> = {
   error?: Error
   revalidate: () => Promise<boolean>
   mutate: (
-    data?: Data | Promise<Data> | mutateCallback<Data>,
+    data?: Data | Promise<Data> | MutatorCallback<Data>,
     shouldRevalidate?: boolean
   ) => Promise<Data | undefined>
   isValidating: boolean
@@ -135,7 +133,7 @@ export type SWRResponse<Data, Error> = {
 export type SWRInfiniteConfigInterface<
   Data = any,
   Error = any
-> = SWRConfiguration<Data[], Error, fetcherFn<Data[]>> & {
+> = SWRConfiguration<Data[], Error, Fetcher<Data[]>> & {
   initialSize?: number
   revalidateAll?: boolean
   persistSize?: boolean
@@ -143,7 +141,7 @@ export type SWRInfiniteConfigInterface<
 export type SWRInfiniteConfiguration<
   Data = any,
   Error = any
-> = SWRConfiguration<Data[], Error, fetcherFn<Data[]>> & {
+> = SWRConfiguration<Data[], Error, Fetcher<Data[]>> & {
   initialSize?: number
   revalidateAll?: boolean
   persistSize?: boolean
@@ -204,7 +202,7 @@ export interface CacheInterface {
   delete(key: Key): void
   clear(): void
   serializeKey(key: Key): [string, any, string, string]
-  subscribe(listener: cacheListener): () => void
+  subscribe(listener: CacheListener): () => void
 }
 export interface Cache {
   get(key: Key): any
@@ -214,5 +212,5 @@ export interface Cache {
   delete(key: Key): void
   clear(): void
   serializeKey(key: Key): [string, any, string, string]
-  subscribe(listener: cacheListener): () => void
+  subscribe(listener: CacheListener): () => void
 }

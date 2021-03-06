@@ -1,9 +1,9 @@
-import { Cache as CacheType, Key, cacheListener } from './types'
+import { Cache as CacheType, Key, CacheListener } from './types'
 import hash from './libs/hash'
 
 export default class Cache implements CacheType {
   private __cache: Map<string, any>
-  private __listeners: cacheListener[]
+  private __listeners: CacheListener[]
 
   constructor(initialData: any = {}) {
     this.__cache = new Map(Object.entries(initialData))
@@ -68,7 +68,7 @@ export default class Cache implements CacheType {
     return [key, args, errorKey, isValidatingKey]
   }
 
-  subscribe(listener: cacheListener) {
+  subscribe(listener: CacheListener) {
     if (typeof listener !== 'function') {
       throw new Error('Expected the listener to be a function.')
     }
