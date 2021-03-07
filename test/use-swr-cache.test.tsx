@@ -1,7 +1,8 @@
-import { act, render, screen } from '@testing-library/react'
-import React from 'react'
-import useSWR, { mutate, cache } from '../src'
+import { act, fireEvent, render, screen } from '@testing-library/react'
+import React, { useState } from 'react'
+import useSWR, { mutate, cache, createProvider, SWRConfig } from '../src'
 import Cache from '../src/cache'
+import { sleep } from './utils'
 
 describe('useSWR - cache', () => {
   it('should not react to direct cache updates but mutate', async () => {
@@ -58,5 +59,43 @@ describe('useSWR - cache', () => {
     tmpCache.set('cache-2', 'a different message')
 
     expect(listener).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('useSWR - UNSTABLE custom cache', () => {
+  it('should be able to get cache changes through cache.set', async () => {
+    const getKey = _key => 'custom-cache-1' + _key
+    const fetcher = _key => 'res:' + _key
+    const key1 = getKey(1)
+    const key2 = getKey(2)
+
+    const customCache = new Map()
+
+    function Section() {
+      const [index, setIndex] = useState(1)
+      const { data } = useSWR(getKey(index), fetcher)
+
+      return <div onClick={() => setIndex(2)}>{data}</div>
+    }
+
+    const { provider } = createProvider(customCache)
+    function Page() {
+      return (
+        <SWRConfig value={{ provider }}>
+          <Section />
+        </SWRConfig>
+      )
+    }
+
+    const { container } = render(<Page />)
+    await screen.findByText(fetcher(key1))
+
+    expect(customCache.get(key2)).toBe(undefined)
+    fireEvent.click(container.firstElementChild)
+    await act(() => sleep(10))
+    // await act(async () => await mutate(key2, fetcher(key2)))
+
+    expect(customCache.get(key1)).toBe(fetcher(key1))
+    expect(customCache.get(key2)).toBe(fetcher(key2))
   })
 })

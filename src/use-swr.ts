@@ -8,9 +8,10 @@ import {
   useDebugValue
 } from 'react'
 
-import defaultConfig, { cache } from './config'
+import defaultConfig, { cache as globalCache } from './config'
 import { IS_SERVER, rAF, useIsomorphicLayoutEffect } from './env'
 import SWRConfigContext from './swr-config-context'
+import { serializeKey } from './cache'
 import {
   Action,
   Broadcaster,
@@ -61,9 +62,10 @@ if (!IS_SERVER) {
 }
 
 const trigger: Trigger = (_key, shouldRevalidate = true) => {
+  const cache = globalCache
   // we are ignoring the second argument which correspond to the arguments
   // the fetcher will receive when key is an array
-  const [key, , keyErr, keyValidating] = cache.serializeKey(_key)
+  const [key, , keyErr, keyValidating] = serializeKey(_key)
   if (!key) return Promise.resolve()
 
   const updaters = CACHE_REVALIDATORS[key]
@@ -100,7 +102,8 @@ const broadcastState: Broadcaster = (key, data, error, isValidating) => {
 }
 
 const mutate: Mutator = async (_key, _data, shouldRevalidate = true) => {
-  const [key, , keyErr] = cache.serializeKey(_key)
+  const cache = globalCache
+  const [key, , keyErr] = serializeKey(_key)
   if (!key) return
 
   // if there is no new data to update, let's just revalidate the key
@@ -202,10 +205,11 @@ function useSWR<Data = any, Error = any>(
       ]
 ): SWRResponse<Data, Error> {
   const _key = args[0]
+  const swrContext = useContext(SWRConfigContext)
   const config = Object.assign(
     {},
     defaultConfig,
-    useContext(SWRConfigContext),
+    swrContext,
     args.length > 2
       ? args[2]
       : args.length === 2 && typeof args[1] === 'object'
@@ -228,16 +232,17 @@ function useSWR<Data = any, Error = any>(
     ? args[1]
     : config.fetcher) as Fetcher<Data> | null
 
-  // we assume `key` as the identifier of the request
-  // `key` can change but `fn` shouldn't
-  // (because `revalidate` only depends on `key`)
-  // `keyErr` is the cache key for error objects
-  const [key, fnArgs, keyErr, keyValidating] = cache.serializeKey(_key)
-
+  const cache = swrContext.provider || globalCache
   const configRef = useRef(config)
   useIsomorphicLayoutEffect(() => {
     configRef.current = config
   })
+
+  // we assume `key` as the identifier of the request
+  // `key` can change but `fn` shouldn't
+  // (because `revalidate` only depends on `key`)
+  // `keyErr` is the cache key for error objects
+  const [key, fnArgs, keyErr, keyValidating] = serializeKey(_key)
 
   const willRevalidateOnMount = () => {
     return (

@@ -209,10 +209,14 @@ export interface CacheInterface {
 export interface Cache {
   get(key: Key): any
   set(key: Key, value: any): any
-  keys(): string[]
-  has(key: Key): boolean
   delete(key: Key): void
-  clear(): void
-  serializeKey(key: Key): [string, any, string, string]
-  subscribe(listener: CacheListener): () => void
+}
+
+export type CacheProvider = {
+  set(key: Key, value: any): void
+  delete(key: Key): void
+}
+
+export type SWRContext = SWRConfiguration & {
+  provider?: Cache
 }

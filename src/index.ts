@@ -2,12 +2,18 @@
 import { default as useSWR } from './use-swr'
 export default useSWR
 export * from './use-swr'
+import { cache } from './config'
 
 // `useSWRInfinite`
 export { useSWRInfinite } from './use-swr-infinite'
 
-// Cache related, to be replaced by the new APIs
-export { cache } from './config'
+/**
+ * @deprecated exposed `cache` will be removed
+ */
+export { cache }
+
+// Custom cache
+export { createProvider } from './cache'
 
 // Types
 export {

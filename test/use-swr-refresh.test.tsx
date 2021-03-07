@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import React, { useState } from 'react'
-import useSWR, { cache } from '../src'
+import useSWR, { createProvider, SWRConfig } from '../src'
 import { sleep } from './utils'
 
 describe('useSWR - refresh', () => {
@@ -227,7 +227,13 @@ describe('useSWR - refresh', () => {
       return <button onClick={() => change()}>{data.timestamp}</button>
     }
 
-    const { container } = render(<Page />)
+    const customCache = new Map()
+    const { provider } = createProvider(customCache)
+    const { container } = render(
+      <SWRConfig value={{ provider }}>
+        <Page />
+      </SWRConfig>
+    )
 
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"loading"`)
 
@@ -246,7 +252,7 @@ describe('useSWR - refresh', () => {
       version: '1.0'
     })
 
-    const cachedData = cache.get(key)
+    const cachedData = customCache.get(key)
     expect(cachedData.timestamp.toString()).toEqual('1')
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"1"`)
   })

@@ -1,6 +1,61 @@
-import { Cache as CacheType, Key, CacheListener } from './types'
+import { Cache as CacheType, Key, CacheListener, CacheProvider } from './types'
 import hash from './libs/hash'
 
+export function serializeKey(key: Key): [string, any, string, string] {
+  let args = null
+  if (typeof key === 'function') {
+    try {
+      key = key()
+    } catch (err) {
+      // dependencies not ready
+      key = ''
+    }
+  }
+
+  if (Array.isArray(key)) {
+    // args array
+    args = key
+    key = hash(key)
+  } else {
+    // convert null to ''
+    key = String(key || '')
+  }
+
+  const errorKey = key ? 'err@' + key : ''
+  const isValidatingKey = key ? 'validating@' + key : ''
+
+  return [key, args, errorKey, isValidatingKey]
+}
+
+export function createProvider(
+  _provider: CacheProvider
+): { provider: CacheType } {
+  const _cache = new Map()
+
+  function cacheSet(key: Key, value: any): any {
+    const [_key] = serializeKey(key)
+    _cache.set(_key, value)
+    _provider.set(_key, value)
+  }
+
+  function cacheDelete(key: Key): void {
+    const [_key] = serializeKey(key)
+    _cache.delete(_key)
+    _provider.delete(_key)
+  }
+
+  function cacheGet(key: Key): any {
+    return _cache.get(key)
+  }
+
+  const provider = {
+    set: cacheSet,
+    get: cacheGet,
+    delete: cacheDelete
+  }
+
+  return { provider }
+}
 export default class Cache implements CacheType {
   private cache: Map<string, any>
   private subs: CacheListener[]
@@ -21,15 +76,24 @@ export default class Cache implements CacheType {
     this.notify()
   }
 
+  /**
+   * @deprecate cache.subscribe will be removed
+   */
   keys() {
     return Array.from(this.cache.keys())
   }
 
+  /**
+   * @deprecate cache.has will be removed
+   */
   has(key: Key) {
     const [_key] = this.serializeKey(key)
     return this.cache.has(_key)
   }
 
+  /**
+   * @deprecate cache.clear will be removed
+   */
   clear() {
     this.cache.clear()
     this.notify()
@@ -41,33 +105,16 @@ export default class Cache implements CacheType {
     this.notify()
   }
 
-  // TODO: introduce namespace for the cache
+  /**
+   * @deprecate cache.serializeKey will be removed
+   */
   serializeKey(key: Key): [string, any, string, string] {
-    let args = null
-    if (typeof key === 'function') {
-      try {
-        key = key()
-      } catch (err) {
-        // dependencies not ready
-        key = ''
-      }
-    }
-
-    if (Array.isArray(key)) {
-      // args array
-      args = key
-      key = hash(key)
-    } else {
-      // convert null to ''
-      key = String(key || '')
-    }
-
-    const errorKey = key ? 'err@' + key : ''
-    const isValidatingKey = key ? 'validating@' + key : ''
-
-    return [key, args, errorKey, isValidatingKey]
+    return serializeKey(key)
   }
 
+  /**
+   * @deprecate cache.subscribe will be removed
+   */
   subscribe(listener: CacheListener) {
     if (typeof listener !== 'function') {
       throw new Error('Expected the listener to be a function.')
