@@ -1,12 +1,10 @@
 [![SWR](https://assets.vercel.com/image/upload/v1572289618/swr/banner.png)](https://swr.vercel.app)
 
 <p align="center">
-
   <a aria-label="Vercel logo" href="https://vercel.com">
     <img src="https://badgen.net/badge/icon/Made%20by%20Vercel?icon=zeit&label&color=black&labelColor=black">
   </a>
   <br/>
-
   <a aria-label="NPM version" href="https://www.npmjs.com/package/swr">
     <img alt="" src="https://badgen.net/npm/v/swr">
   </a>
@@ -22,25 +20,25 @@
 
 [swr.vercel.app](https://swr.vercel.app)
 
-SWR is a React Hooks library for remote data fetching.
+SWR is a React Hooks library for data fetching.
 
 The name “**SWR**” is derived from `stale-while-revalidate`, a cache invalidation strategy popularized by [HTTP RFC 5861](https://tools.ietf.org/html/rfc5861).
 **SWR** first returns the data from cache (stale), then sends the fetch request (revalidate), and finally comes with the up-to-date data again.
 
-It features:
+With just one single line of code, you can simplify the logic of data fetching in your project, and also have all these amazing features out-of-the-box:
 
-- Transport and protocol agnostic data fetching
-- Fast page navigation
-- Revalidation on focus
-- Interval polling
-- Request deduplication
-- Local mutation
-- Pagination
-- TypeScript ready
+- Transport and protocol agnostic
+- Fast, lightweight and reusable
+- Built-in cache and request deduplication
+- Built-in error retry
+- Revalidation on focus and network recovery
+- Pagination and scroll position recovery
+- Local mutation (Optimistic UI)
+- Polling support
 - SSR support
 - Suspense mode
-- React Native support
-- Minimal API
+- React Native ready
+- TypeScript ready
 
 ...and a lot more.
 
@@ -83,7 +81,7 @@ Check out [swr.vercel.app](https://swr.vercel.app) for documentation and example
 
 ## Authors
 
-- Shu Ding ([@shuding_](https://twitter.com/shuding_)) – [Vercel](https://vercel.com)
+- Shu Ding ([@shuding\_](https://twitter.com/shuding_)) – [Vercel](https://vercel.com)
 - Guillermo Rauch ([@rauchg](https://twitter.com/rauchg)) – [Vercel](https://vercel.com)
 - Joe Haddad ([@timer150](https://twitter.com/timer150)) - [Vercel](https://vercel.com)
 - Paco Coursey ([@pacocoursey](https://twitter.com/pacocoursey)) - [Vercel](https://vercel.com)

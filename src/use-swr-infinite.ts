@@ -5,6 +5,7 @@ import SWRConfigContext from './swr-config-context'
 import useSWR from './use-swr'
 
 import { keyType, fetcherFn, ConfigInterface, responseInterface } from './types'
+
 type KeyLoader<Data = any> = (
   index: number,
   previousPageData: Data | null
@@ -33,39 +34,36 @@ function useSWRInfinite<Data = any, Error = any>(
 ): SWRInfiniteResponseInterface<Data, Error>
 function useSWRInfinite<Data = any, Error = any>(
   getKey: KeyLoader<Data>,
-  config?: SWRInfiniteConfigInterface<Data, Error>
+  config?: Partial<SWRInfiniteConfigInterface<Data, Error>>
 ): SWRInfiniteResponseInterface<Data, Error>
 function useSWRInfinite<Data = any, Error = any>(
   getKey: KeyLoader<Data>,
   fn?: fetcherFn<Data>,
-  config?: SWRInfiniteConfigInterface<Data, Error>
+  config?: Partial<SWRInfiniteConfigInterface<Data, Error>>
 ): SWRInfiniteResponseInterface<Data, Error>
 function useSWRInfinite<Data = any, Error = any>(
-  ...args
+  getKey: KeyLoader<Data>,
+  ...options: any[]
 ): SWRInfiniteResponseInterface<Data, Error> {
-  let getKey: KeyLoader<Data>,
-    fn: fetcherFn<Data> | undefined,
-    config: SWRInfiniteConfigInterface<Data, Error> = {}
+  let _fn: fetcherFn<Data> | undefined,
+    _config: Partial<SWRInfiniteConfigInterface<Data, Error>> = {}
 
-  if (args.length >= 1) {
-    getKey = args[0]
-  }
-  if (args.length > 2) {
-    fn = args[1]
-    config = args[2]
+  if (options.length > 1) {
+    _fn = options[0]
+    _config = options[1]
   } else {
-    if (typeof args[1] === 'function') {
-      fn = args[1]
-    } else if (typeof args[1] === 'object') {
-      config = args[1]
+    if (typeof options[0] === 'function') {
+      _fn = options[0]
+    } else if (typeof options[0] === 'object') {
+      _config = options[0]
     }
   }
 
-  config = Object.assign(
+  const config: SWRInfiniteConfigInterface<Data, Error> = Object.assign(
     {},
     defaultConfig,
     useContext(SWRConfigContext),
-    config
+    _config
   )
   let {
     initialSize = 1,
@@ -75,11 +73,7 @@ function useSWRInfinite<Data = any, Error = any>(
     ...extraConfig
   } = config
 
-  if (typeof fn === 'undefined') {
-    // use the global fetcher
-    // we have to convert the type here
-    fn = (defaultFetcher as unknown) as fetcherFn<Data>
-  }
+  const fn = typeof _fn !== 'undefined' ? _fn : defaultFetcher
 
   // get the serialized key of the first page
   let firstPageKey: string | null = null
@@ -89,7 +83,7 @@ function useSWRInfinite<Data = any, Error = any>(
     // not ready
   }
 
-  const rerender = useState<boolean>(false)[1]
+  const [, rerender] = useState<boolean>(false)
 
   // we use cache to pass extra info (context) to fetcher so it can be globally shared
   // here we get the key of the fetcher context cache
@@ -117,7 +111,12 @@ function useSWRInfinite<Data = any, Error = any>(
     } else {
       didMountRef.current = true
     }
+    // initialSize isn't allowed to change during the lifecycle
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [firstPageKey])
+
+  // keep the data inside a ref
+  const dataRef = useRef<Data[]>()
 
   // actual swr of all pages
   const swr = useSWR<Data[], Error>(
@@ -143,19 +142,22 @@ function useSWRInfinite<Data = any, Error = any>(
         // get the current page cache
         let pageData = cache.get(pageKey)
 
-        // must revalidate if:
-        // - forced to revalidate all
-        // - we revalidate the first page by default (e.g.: upon focus)
-        // - page has changed
-        // - the offset has changed so the cache is missing
-        const shouldRevalidatePage =
+        // should fetch (or revalidate) if:
+        // - `revalidateAll` is enabled
+        // - `mutate()` called
+        // - the cache is missing
+        // - it's the first page and it's not the first render
+        // - cache has changed
+        const shouldFetchPage =
           revalidateAll ||
           force ||
-          (typeof force === 'undefined' && i === 0) ||
-          (originalData && !config.compare(originalData[i], pageData)) ||
-          typeof pageData === 'undefined'
+          typeof pageData === 'undefined' ||
+          (typeof force === 'undefined' &&
+            i === 0 &&
+            typeof dataRef.current !== 'undefined') ||
+          (originalData && !config.compare(originalData[i], pageData))
 
-        if (shouldRevalidatePage) {
+        if (shouldFetchPage) {
           if (pageArgs !== null) {
             pageData = await fn(...pageArgs)
           } else {
@@ -177,27 +179,32 @@ function useSWRInfinite<Data = any, Error = any>(
     extraConfig
   )
 
-  const swrInfinite = swr as SWRInfiniteResponseInterface<Data, Error>
+  // update dataRef
+  useEffect(() => {
+    dataRef.current = swr.data
+  }, [swr.data])
 
-  // extend the SWR API
-  const mutate = swrInfinite.mutate
-  swrInfinite.size = pageCountRef.current
-  swrInfinite.mutate = useCallback(
+  const mutate = useCallback(
     (data, shouldRevalidate = true) => {
       if (shouldRevalidate && typeof data !== 'undefined') {
         // we only revalidate the pages that are changed
-        const originalData = swrInfinite.data
+        const originalData = dataRef.current
         cache.set(contextCacheKey, { originalData, force: false })
       } else if (shouldRevalidate) {
         // calling `mutate()`, we revalidate all pages
         cache.set(contextCacheKey, { force: true })
       }
 
-      return mutate(data, shouldRevalidate)
+      return swr.mutate(data, shouldRevalidate)
     },
-    [mutate, swrInfinite.data, contextCacheKey]
+    // swr.mutate is always the same reference
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [contextCacheKey]
   )
-  swrInfinite.setSize = useCallback(
+
+  // extend the SWR API
+  const size = pageCountRef.current
+  const setSize = useCallback(
     arg => {
       if (typeof arg === 'function') {
         pageCountRef.current = arg(pageCountRef.current)
@@ -206,12 +213,35 @@ function useSWRInfinite<Data = any, Error = any>(
       }
       cache.set(pageCountCacheKey, pageCountRef.current)
       rerender(v => !v)
-      return swrInfinite.mutate(v => v)
+      return mutate(v => v)
     },
-    [swrInfinite.mutate, pageCountCacheKey]
+    [mutate, pageCountCacheKey]
   )
 
-  return swrInfinite
+  // Use getter functions to avoid unnecessary re-renders caused by triggering all the getters of the returned swr object
+  const swrInfinite = { size, setSize, mutate }
+  Object.defineProperties(swrInfinite, {
+    error: {
+      get: () => swr.error,
+      enumerable: true
+    },
+    data: {
+      get: () => swr.data,
+      enumerable: true
+    },
+    // revalidate will be deprecated in the 1.x release
+    // because mutate() covers the same use case of revalidate().
+    // This remains only for backward compatibility
+    revalidate: {
+      get: () => swr.revalidate,
+      enumerable: true
+    },
+    isValidating: {
+      get: () => swr.isValidating,
+      enumerable: true
+    }
+  })
+  return swrInfinite as SWRInfiniteResponseInterface<Data, Error>
 }
 
 export {

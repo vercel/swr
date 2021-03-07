@@ -1,6 +1,6 @@
 # SWR Contribution Guidelines
 
-Thank you for reading this guide and we appreciate any contribution. 
+Thank you for reading this guide and we appreciate any contribution.
 
 ## Ask a Question
 
@@ -22,6 +22,26 @@ If possible, you can add other additional context like how this feature can be i
 
 ### Local Development
 
+To develop SWR locally, you can use the Vite SWR playground to play with the source code inside the browser. You can follow these steps:
+
+```bash
+yarn install
+yarn register
+yarn build
+yarn prepare:vite
+yarn dev:vite
+```
+
+To test SSR related features, you need to use the Next.js SWR playground instead:
+
+```bash
+yarn install
+yarn register
+yarn build
+yarn prepare:next
+yarn dev:next
+```
+
 ## Update Documentation
 
-To update the [SWR Documentation](https://swr.vercel.app), you can contribute to the [website repository](https://github.com/vercel/swr-site). 
+To update the [SWR Documentation](https://swr.vercel.app), you can contribute to the [website repository](https://github.com/vercel/swr-site).

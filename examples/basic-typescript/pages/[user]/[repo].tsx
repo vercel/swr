@@ -4,7 +4,7 @@ import fetch from '../../libs/fetch'
 
 import useSWR from 'swr'
 
-export default () => {
+function Repo() {
   const id =
     typeof window !== 'undefined' ? window.location.pathname.slice(1) : ''
   const { data } = useSWR<{
@@ -33,3 +33,5 @@ export default () => {
     </div>
   )
 }
+
+export default Repo

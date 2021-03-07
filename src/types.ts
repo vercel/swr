@@ -4,42 +4,47 @@ export interface ConfigInterface<
   Error = any,
   Fn extends fetcherFn<Data> = fetcherFn<Data>
 > {
-  errorRetryInterval?: number
+  errorRetryInterval: number
   errorRetryCount?: number
-  loadingTimeout?: number
-  focusThrottleInterval?: number
-  dedupingInterval?: number
-  refreshInterval?: number
-  refreshWhenHidden?: boolean
-  refreshWhenOffline?: boolean
-  revalidateOnFocus?: boolean
+  loadingTimeout: number
+  focusThrottleInterval: number
+  dedupingInterval: number
+  refreshInterval: number
+  refreshWhenHidden: boolean
+  refreshWhenOffline: boolean
+  revalidateOnFocus: boolean
   revalidateOnMount?: boolean
-  revalidateOnReconnect?: boolean
-  shouldRetryOnError?: boolean
-  fetcher?: Fn
-  suspense?: boolean
+  revalidateOnReconnect: boolean
+  shouldRetryOnError: boolean
+  fetcher: Fn
+  suspense: boolean
   initialData?: Data
 
-  onLoadingSlow?: (key: string, config: ConfigInterface<Data, Error>) => void
-  onSuccess?: (
+  isOnline: () => boolean
+  isDocumentVisible: () => boolean
+  isPaused: () => boolean
+  onLoadingSlow: (key: string, config: ConfigInterface<Data, Error>) => void
+  onSuccess: (
     data: Data,
     key: string,
     config: ConfigInterface<Data, Error>
   ) => void
-  onError?: (
+  onError: (
     err: Error,
     key: string,
     config: ConfigInterface<Data, Error>
   ) => void
-  onErrorRetry?: (
+  onErrorRetry: (
     err: Error,
     key: string,
     config: ConfigInterface<Data, Error>,
     revalidate: revalidateType,
     revalidateOpts: RevalidateOptionInterface
   ) => void
+  registerOnFocus?: (cb: () => void) => void
+  registerOnReconnect?: (cb: () => void) => void
 
-  compare?: (a: Data | undefined, b: Data | undefined) => boolean
+  compare: (a: Data | undefined, b: Data | undefined) => boolean
 }
 
 export interface RevalidateOptionInterface {
@@ -54,15 +59,16 @@ export type updaterInterface<Data = any, Error = any> = (
   shouldRevalidate?: boolean,
   data?: Data,
   error?: Error,
-  shouldDedupe?: boolean
+  shouldDedupe?: boolean,
+  dedupe?: boolean
 ) => boolean | Promise<boolean>
 export type triggerInterface = (
   key: keyInterface,
   shouldRevalidate?: boolean
 ) => Promise<any>
 export type mutateCallback<Data = any> = (
-  currentValue: Data
-) => Promise<Data> | Data
+  currentValue: undefined | Data
+) => Promise<undefined | Data> | undefined | Data
 export type mutateInterface<Data = any> = (
   key: keyInterface,
   data?: Data | Promise<Data> | mutateCallback<Data>,
@@ -87,33 +93,6 @@ export type responseInterface<Data, Error> = {
 export type revalidateType = (
   revalidateOpts: RevalidateOptionInterface
 ) => Promise<boolean>
-
-export type pagesWithSWRType<Data, Error> = (
-  swr: responseInterface<Data, Error>
-) => responseInterface<Data, Error>
-export type pagesPropsInterface<Offset, Data, Error> = {
-  // offset can be any type
-  offset: Offset
-  withSWR: pagesWithSWRType<Data, Error>
-}
-
-export type pageComponentType<Offset, Data, Error> = (
-  props: pagesPropsInterface<Offset, Data, Error>
-) => any
-export type pageOffsetMapperType<Offset, Data, Error> = (
-  SWR: responseInterface<Data, Error>,
-  index: number
-) => Offset
-
-export type pagesResponseInterface<Data, Error> = {
-  pages: any
-  pageCount: number
-  pageSWRs: responseInterface<Data, Error>[]
-  isLoadingMore: boolean
-  isReachingEnd: boolean
-  isEmpty: boolean
-  loadMore: () => void
-}
 
 export type actionType<Data, Error> = {
   data?: Data

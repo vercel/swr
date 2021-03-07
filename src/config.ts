@@ -1,11 +1,11 @@
 import { dequal } from 'dequal/lite'
-import isDocumentVisible from './libs/is-document-visible'
 import {
   ConfigInterface,
   RevalidateOptionInterface,
   revalidateType
 } from './types'
 import Cache from './cache'
+import webPreset from './libs/web-preset'
 
 // cache
 const cache = new Cache()
@@ -18,7 +18,7 @@ function onErrorRetry(
   revalidate: revalidateType,
   opts: RevalidateOptionInterface
 ): void {
-  if (!isDocumentVisible()) {
+  if (!config.isDocumentVisible()) {
     // if it's hidden, stop
     // it will auto revalidate when focus
     return
@@ -47,29 +47,32 @@ const slowConnection =
   ['slow-2g', '2g'].indexOf(navigator['connection'].effectiveType) !== -1
 
 // config
-const defaultConfig: ConfigInterface = {
-  // events
-  onLoadingSlow: () => {},
-  onSuccess: () => {},
-  onError: () => {},
-  onErrorRetry,
+const defaultConfig: ConfigInterface = Object.assign(
+  {
+    // events
+    onLoadingSlow: () => {},
+    onSuccess: () => {},
+    onError: () => {},
+    onErrorRetry,
 
-  errorRetryInterval: (slowConnection ? 10 : 5) * 1000,
-  focusThrottleInterval: 5 * 1000,
-  dedupingInterval: 2 * 1000,
-  loadingTimeout: (slowConnection ? 5 : 3) * 1000,
+    errorRetryInterval: (slowConnection ? 10 : 5) * 1000,
+    focusThrottleInterval: 5 * 1000,
+    dedupingInterval: 2 * 1000,
+    loadingTimeout: (slowConnection ? 5 : 3) * 1000,
 
-  refreshInterval: 0,
-  revalidateOnFocus: true,
-  revalidateOnReconnect: true,
-  refreshWhenHidden: false,
-  refreshWhenOffline: false,
-  shouldRetryOnError: true,
-  suspense: false,
-  compare: dequal,
+    refreshInterval: 0,
+    revalidateOnFocus: true,
+    revalidateOnReconnect: true,
+    refreshWhenHidden: false,
+    refreshWhenOffline: false,
+    shouldRetryOnError: true,
+    suspense: false,
+    compare: dequal,
 
-  fetcher: url => fetch(url).then(res => res.json())
-}
+    isPaused: () => false
+  },
+  webPreset
+)
 
 export { cache }
 export default defaultConfig
