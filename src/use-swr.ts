@@ -352,8 +352,7 @@ function useSWR<Data = any, Error = any>(
     []
   )
 
-  const addRevalidator = (revalidators, callback) => {
-    if (!callback) return
+  const addRevalidator = (revalidators: object, callback: () => void) => {
     if (!revalidators[key]) {
       revalidators[key] = [callback]
     } else {
