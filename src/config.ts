@@ -1,9 +1,5 @@
 import { dequal } from 'dequal/lite'
-import {
-  ConfigInterface,
-  RevalidateOptionInterface,
-  revalidateType
-} from './types'
+import { Configuration, RevalidatorOptions, Revalidator } from './types'
 import Cache from './cache'
 import webPreset from './libs/web-preset'
 
@@ -14,9 +10,9 @@ const cache = new Cache()
 function onErrorRetry(
   _: unknown,
   __: string,
-  config: Readonly<Required<ConfigInterface>>,
-  revalidate: revalidateType,
-  opts: Required<RevalidateOptionInterface>
+  config: Readonly<Required<Configuration>>,
+  revalidate: Revalidator,
+  opts: Required<RevalidatorOptions>
 ): void {
   if (!config.isDocumentVisible()) {
     // if it's hidden, stop

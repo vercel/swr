@@ -22,11 +22,11 @@ function useSWRInfinite<Data = any, Error = any>(
   ...args:
     | readonly [KeyLoader<Data>]
     | readonly [KeyLoader<Data>, Fetcher<Data>]
-    | readonly [KeyLoader<Data>, Partial<SWRInfiniteConfiguration<Data, Error>>]
+    | readonly [KeyLoader<Data>, SWRInfiniteConfiguration<Data, Error>]
     | readonly [
         KeyLoader<Data>,
         Fetcher<Data>,
-        Partial<SWRInfiniteConfiguration<Data, Error>>
+        SWRInfiniteConfiguration<Data, Error>
       ]
 ): SWRInfiniteResponse<Data, Error> {
   const getKey = args[0]

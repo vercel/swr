@@ -16,8 +16,8 @@ export interface Configuration<
   revalidateOnMount?: boolean
   revalidateOnReconnect: boolean
   shouldRetryOnError: boolean
-  fetcher: Fn
   suspense: boolean
+  fetcher: Fn
   initialData?: Data
 
   isOnline: () => boolean
@@ -48,11 +48,6 @@ export interface Configuration<
   registerOnReconnect?: (cb: () => void) => void
 
   compare: (a: Data | undefined, b: Data | undefined) => boolean
-}
-
-export interface RevalidateOptionInterface {
-  retryCount?: number
-  dedupe?: boolean
 }
 
 export type ValueKey = string | any[] | null
@@ -125,7 +120,7 @@ export type responseInterface<Data, Error> = {
   ) => Promise<Data | undefined>
   isValidating: boolean
 }
-export type SWRResponse<Data, Error> = {
+export interface SWRResponse<Data, Error> {
   data?: Data
   error?: Error
   revalidate: () => Promise<boolean>
@@ -168,10 +163,8 @@ export type SWRInfiniteResponseInterface<Data = any, Error = any> = SWRResponse<
     size: number | ((size: number) => number)
   ) => Promise<Data[] | undefined>
 }
-export type SWRInfiniteResponse<Data = any, Error = any> = SWRResponse<
-  Data[],
-  Error
-> & {
+export interface SWRInfiniteResponse<Data = any, Error = any>
+  extends SWRResponse<Data[], Error> {
   size: number
   setSize: (
     size: number | ((size: number) => number)
