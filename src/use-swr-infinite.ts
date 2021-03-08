@@ -1,3 +1,4 @@
+// TODO: use @ts-expect-error
 import { useContext, useRef, useState, useEffect, useCallback } from 'react'
 
 import defaultConfig, { cache } from './config'
@@ -5,45 +6,29 @@ import SWRConfigContext from './swr-config-context'
 import useSWR from './use-swr'
 
 import {
-  keyType,
-  fetcherFn,
-  ConfigInterface,
-  ResponseInterface,
-  mutateCallback
+  ValueKey,
+  Fetcher,
+  SWRInfiniteConfiguration,
+  SWRInfiniteResponse,
+  MutatorCallback
 } from './types'
 
 type KeyLoader<Data = any> = (
   index: number,
   previousPageData: Data | null
-) => keyType
-interface SWRInfiniteConfigInterface<Data = any, Error = any>
-  extends ConfigInterface<Data[], Error, fetcherFn<Data[]>> {
-  initialSize?: number
-  revalidateAll?: boolean
-  persistSize?: boolean
-}
-interface SWRInfiniteResponseInterface<Data = any, Error = any>
-  extends ResponseInterface<Data[], Error> {
-  size: number
-  setSize: (
-    size: number | ((size: number) => number)
-  ) => Promise<Data[] | undefined>
-}
+) => ValueKey
 
 function useSWRInfinite<Data = any, Error = any>(
   ...args:
     | readonly [KeyLoader<Data>]
-    | readonly [KeyLoader<Data>, fetcherFn<Data>]
+    | readonly [KeyLoader<Data>, Fetcher<Data>]
+    | readonly [KeyLoader<Data>, Partial<SWRInfiniteConfiguration<Data, Error>>]
     | readonly [
         KeyLoader<Data>,
-        Partial<SWRInfiniteConfigInterface<Data, Error>>
+        Fetcher<Data>,
+        Partial<SWRInfiniteConfiguration<Data, Error>>
       ]
-    | readonly [
-        KeyLoader<Data>,
-        fetcherFn<Data>,
-        Partial<SWRInfiniteConfigInterface<Data, Error>>
-      ]
-): SWRInfiniteResponseInterface<Data, Error> {
+): SWRInfiniteResponse<Data, Error> {
   const getKey = args[0]
 
   const config = Object.assign(
@@ -63,7 +48,7 @@ function useSWRInfinite<Data = any, Error = any>(
     ? args[1]
     : args.length === 2 && typeof args[1] === 'function'
     ? args[1]
-    : config.fetcher) as fetcherFn<Data>
+    : config.fetcher) as Fetcher<Data>
 
   const {
     initialSize = 1,
@@ -182,10 +167,7 @@ function useSWRInfinite<Data = any, Error = any>(
   }, [swr.data])
 
   const mutate = useCallback(
-    (
-      data: Data[] | Promise<Data[]> | mutateCallback<Data[]> | undefined,
-      shouldRevalidate = true
-    ) => {
+    (data: MutatorCallback, shouldRevalidate = true) => {
       if (shouldRevalidate && typeof data !== 'undefined') {
         // we only revalidate the pages that are changed
         const originalData = dataRef.current
@@ -241,11 +223,7 @@ function useSWRInfinite<Data = any, Error = any>(
       enumerable: true
     }
   })
-  return swrInfinite as SWRInfiniteResponseInterface<Data, Error>
+  return (swrInfinite as unknown) as SWRInfiniteResponse<Data, Error>
 }
 
-export {
-  useSWRInfinite,
-  SWRInfiniteConfigInterface,
-  SWRInfiniteResponseInterface
-}
+export { useSWRInfinite }
