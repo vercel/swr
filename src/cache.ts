@@ -1,21 +1,21 @@
-import { CacheInterface, keyInterface, cacheListener } from './types'
+import { Cache as CacheType, Key, CacheListener } from './types'
 import hash from './libs/hash'
 
 export default class Cache implements CacheInterface {
   private cache: Map<string, any>
-  private subs: cacheListener[]
+  private subs: CacheListener[]
 
   constructor(initialData: any = {}) {
     this.cache = new Map(Object.entries(initialData))
     this.subs = []
   }
 
-  get(key: keyInterface): any {
+  get(key: Key): any {
     const [_key] = this.serializeKey(key)
     return this.cache.get(_key)
   }
 
-  set(key: keyInterface, value: any): any {
+  set(key: Key, value: any): any {
     const [_key] = this.serializeKey(key)
     this.cache.set(_key, value)
     this.notify()
@@ -25,7 +25,7 @@ export default class Cache implements CacheInterface {
     return Array.from(this.cache.keys())
   }
 
-  has(key: keyInterface) {
+  has(key: Key) {
     const [_key] = this.serializeKey(key)
     return this.cache.has(_key)
   }
@@ -35,14 +35,14 @@ export default class Cache implements CacheInterface {
     this.notify()
   }
 
-  delete(key: keyInterface) {
+  delete(key: Key) {
     const [_key] = this.serializeKey(key)
     this.cache.delete(_key)
     this.notify()
   }
 
   // TODO: introduce namespace for the cache
-  serializeKey(key: keyInterface): [string, any, string, string] {
+  serializeKey(key: Key): [string, any, string, string] {
     let args = null
     if (typeof key === 'function') {
       try {
@@ -68,7 +68,7 @@ export default class Cache implements CacheInterface {
     return [key, args, errorKey, isValidatingKey]
   }
 
-  subscribe(listener: cacheListener) {
+  subscribe(listener: CacheListener) {
     if (typeof listener !== 'function') {
       throw new Error('Expected the listener to be a function.')
     }

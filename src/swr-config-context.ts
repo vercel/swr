@@ -1,8 +1,8 @@
 import { createContext } from 'react'
 
-import { ConfigInterface } from './types'
+import { SWRConfiguration } from './types'
 
-const SWRConfigContext = createContext<Partial<ConfigInterface>>({})
+const SWRConfigContext = createContext<SWRConfiguration>({})
 SWRConfigContext.displayName = 'SWRConfigContext'
 
 export default SWRConfigContext
