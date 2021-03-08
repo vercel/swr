@@ -4,49 +4,36 @@ import defaultConfig, { cache } from './config'
 import SWRConfigContext from './swr-config-context'
 import useSWR from './use-swr'
 
-import { keyType, fetcherFn, ConfigInterface, responseInterface } from './types'
+import {
+  ValueKey,
+  Fetcher,
+  SWRInfiniteConfiguration,
+  SWRInfiniteResponse
+} from './types'
 
 type KeyLoader<Data = any> = (
   index: number,
   previousPageData: Data | null
-) => keyType
-type SWRInfiniteConfigInterface<Data = any, Error = any> = ConfigInterface<
-  Data[],
-  Error,
-  fetcherFn<Data[]>
-> & {
-  initialSize?: number
-  revalidateAll?: boolean
-  persistSize?: boolean
-}
-type SWRInfiniteResponseInterface<Data = any, Error = any> = responseInterface<
-  Data[],
-  Error
-> & {
-  size: number
-  setSize: (
-    size: number | ((size: number) => number)
-  ) => Promise<Data[] | undefined>
-}
+) => ValueKey
 
 function useSWRInfinite<Data = any, Error = any>(
   getKey: KeyLoader<Data>
-): SWRInfiniteResponseInterface<Data, Error>
+): SWRInfiniteResponse<Data, Error>
 function useSWRInfinite<Data = any, Error = any>(
   getKey: KeyLoader<Data>,
-  config?: Partial<SWRInfiniteConfigInterface<Data, Error>>
-): SWRInfiniteResponseInterface<Data, Error>
+  config?: Partial<SWRInfiniteConfiguration<Data, Error>>
+): SWRInfiniteResponse<Data, Error>
 function useSWRInfinite<Data = any, Error = any>(
   getKey: KeyLoader<Data>,
-  fn?: fetcherFn<Data>,
-  config?: Partial<SWRInfiniteConfigInterface<Data, Error>>
-): SWRInfiniteResponseInterface<Data, Error>
+  fn?: Fetcher<Data>,
+  config?: Partial<SWRInfiniteConfiguration<Data, Error>>
+): SWRInfiniteResponse<Data, Error>
 function useSWRInfinite<Data = any, Error = any>(
   getKey: KeyLoader<Data>,
   ...options: any[]
-): SWRInfiniteResponseInterface<Data, Error> {
-  let _fn: fetcherFn<Data> | undefined,
-    _config: Partial<SWRInfiniteConfigInterface<Data, Error>> = {}
+): SWRInfiniteResponse<Data, Error> {
+  let _fn: Fetcher<Data> | undefined,
+    _config: Partial<SWRInfiniteConfiguration<Data, Error>> = {}
 
   if (options.length > 1) {
     _fn = options[0]
@@ -59,7 +46,7 @@ function useSWRInfinite<Data = any, Error = any>(
     }
   }
 
-  const config: SWRInfiniteConfigInterface<Data, Error> = Object.assign(
+  const config: SWRInfiniteConfiguration<Data, Error> = Object.assign(
     {},
     defaultConfig,
     useContext(SWRConfigContext),
@@ -241,11 +228,7 @@ function useSWRInfinite<Data = any, Error = any>(
       enumerable: true
     }
   })
-  return swrInfinite as SWRInfiniteResponseInterface<Data, Error>
+  return swrInfinite as SWRInfiniteResponse<Data, Error>
 }
 
-export {
-  useSWRInfinite,
-  SWRInfiniteConfigInterface,
-  SWRInfiniteResponseInterface
-}
+export { useSWRInfinite }

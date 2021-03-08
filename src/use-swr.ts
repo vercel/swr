@@ -12,16 +12,17 @@ import {
 import defaultConfig, { cache } from './config'
 import SWRConfigContext from './swr-config-context'
 import {
-  actionType,
-  broadcastStateInterface,
-  ConfigInterface,
-  fetcherFn,
-  keyInterface,
-  mutateInterface,
-  responseInterface,
-  RevalidateOptionInterface,
-  triggerInterface,
-  updaterInterface
+  Action,
+  Broadcaster,
+  Configuration,
+  SWRConfiguration,
+  Fetcher,
+  Key,
+  Mutator,
+  SWRResponse,
+  RevalidatorOptions,
+  Trigger,
+  Updater
 } from './types'
 
 const IS_SERVER =
@@ -73,7 +74,7 @@ if (!IS_SERVER) {
   }
 }
 
-const trigger: triggerInterface = (_key, shouldRevalidate = true) => {
+const trigger: Trigger = (_key, shouldRevalidate = true) => {
   // we are ignoring the second argument which correspond to the arguments
   // the fetcher will receive when key is an array
   const [key, , keyErr, keyValidating] = cache.serializeKey(_key)
@@ -103,12 +104,7 @@ const trigger: triggerInterface = (_key, shouldRevalidate = true) => {
   return Promise.resolve(cache.get(key))
 }
 
-const broadcastState: broadcastStateInterface = (
-  key,
-  data,
-  error,
-  isValidating
-) => {
+const broadcastState: Broadcaster = (key, data, error, isValidating) => {
   const updaters = CACHE_REVALIDATORS[key]
   if (key && updaters) {
     for (let i = 0; i < updaters.length; ++i) {
@@ -117,11 +113,7 @@ const broadcastState: broadcastStateInterface = (
   }
 }
 
-const mutate: mutateInterface = async (
-  _key,
-  _data,
-  shouldRevalidate = true
-) => {
+const mutate: Mutator = async (_key, _data, shouldRevalidate = true) => {
   const [key, , keyErr] = cache.serializeKey(_key)
   if (!key) return
 
@@ -212,26 +204,24 @@ const mutate: mutateInterface = async (
   return data
 }
 
+function useSWR<Data = any, Error = any>(key: Key): SWRResponse<Data, Error>
 function useSWR<Data = any, Error = any>(
-  key: keyInterface
-): responseInterface<Data, Error>
+  key: Key,
+  config?: SWRConfiguration<Data, Error>
+): SWRResponse<Data, Error>
 function useSWR<Data = any, Error = any>(
-  key: keyInterface,
-  config?: Partial<ConfigInterface<Data, Error>>
-): responseInterface<Data, Error>
-function useSWR<Data = any, Error = any>(
-  key: keyInterface,
+  key: Key,
   // `null` is used for a hack to manage shared state with SWR
   // https://github.com/vercel/swr/pull/918
-  fn?: fetcherFn<Data> | null,
-  config?: Partial<ConfigInterface<Data, Error>>
-): responseInterface<Data, Error>
+  fn?: Fetcher<Data> | null,
+  config?: SWRConfiguration<Data, Error>
+): SWRResponse<Data, Error>
 function useSWR<Data = any, Error = any>(
-  _key: keyInterface,
+  _key: Key,
   ...options: any[]
-): responseInterface<Data, Error> {
-  let _fn: fetcherFn<Data> | undefined,
-    _config: Partial<ConfigInterface<Data, Error>> = {}
+): SWRResponse<Data, Error> {
+  let _fn: Fetcher<Data> | undefined,
+    _config: SWRConfiguration<Data, Error> = {}
   if (options.length > 1) {
     _fn = options[0]
     _config = options[1]
@@ -249,12 +239,12 @@ function useSWR<Data = any, Error = any>(
   // `keyErr` is the cache key for error objects
   const [key, fnArgs, keyErr, keyValidating] = cache.serializeKey(_key)
 
-  const config: ConfigInterface<Data, Error> = Object.assign(
+  const config = Object.assign(
     {},
     defaultConfig,
     useContext(SWRConfigContext),
     _config
-  )
+  ) as Configuration<Data, Error>
 
   const configRef = useRef(config)
   useIsomorphicLayoutEffect(() => {
@@ -302,7 +292,7 @@ function useSWR<Data = any, Error = any>(
 
   const [, rerender] = useState(null)
   let dispatch = useCallback(
-    (payload: actionType<Data, Error>) => {
+    (payload: Action<Data, Error>) => {
       let shouldUpdateState = false
       for (let k in payload) {
         if (stateRef.current[k] === payload[k]) {
@@ -345,7 +335,7 @@ function useSWR<Data = any, Error = any>(
     [key]
   )
 
-  const boundMutate: responseInterface<Data, Error>['mutate'] = useCallback(
+  const boundMutate: SWRResponse<Data, Error>['mutate'] = useCallback(
     (data, shouldRevalidate) => {
       return mutate(keyRef.current, data, shouldRevalidate)
     },
@@ -376,9 +366,7 @@ function useSWR<Data = any, Error = any>(
 
   // start a revalidation
   const revalidate = useCallback(
-    async (
-      revalidateOpts: RevalidateOptionInterface = {}
-    ): Promise<boolean> => {
+    async (revalidateOpts: RevalidatorOptions = {}): Promise<boolean> => {
       if (!key || !fn) return false
       if (unmountedRef.current) return false
       if (configRef.current.isPaused()) return false
@@ -479,7 +467,7 @@ function useSWR<Data = any, Error = any>(
         cache.set(keyValidating, false)
 
         // new state for the reducer
-        const newState: actionType<Data, Error> = {
+        const newState: Action<Data, Error> = {
           isValidating: false
         }
 
@@ -616,7 +604,7 @@ function useSWR<Data = any, Error = any>(
     }
 
     // register global cache update listener
-    const onUpdate: updaterInterface<Data, Error> = (
+    const onUpdate: Updater<Data, Error> = (
       shouldRevalidate = true,
       updatedData,
       updatedError,
@@ -624,7 +612,7 @@ function useSWR<Data = any, Error = any>(
       dedupe = true
     ) => {
       // update hook state
-      const newState: actionType<Data, Error> = {}
+      const newState: Action<Data, Error> = {}
       let needUpdate = false
 
       if (
@@ -770,7 +758,7 @@ function useSWR<Data = any, Error = any>(
     // revalidate will be deprecated in the 1.x release
     // because mutate() covers the same use case of revalidate().
     // This remains only for backward compatibility
-    const state = { revalidate, mutate: boundMutate } as responseInterface<
+    const state = { revalidate, mutate: boundMutate } as SWRResponse<
       Data,
       Error
     >
