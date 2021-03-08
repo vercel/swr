@@ -345,7 +345,11 @@ describe('useSWR', () => {
 
     // a request is still in flight
     await act(() => sleep(10))
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"loading"`)
+    // while validating, SWR returns the initialData
+    // https://github.com/vercel/swr/pull/961/files#r588928241
+    expect(container.firstChild.textContent).toMatchInlineSnapshot(
+      `"hello, Initial"`
+    )
 
     // render with data the fetcher returns
     await screen.findByText('hello, initial-data-with-initial-data-update')
