@@ -1,12 +1,9 @@
-// Internal types
-
 export type Fetcher<Data> = (...args: any) => Data | Promise<Data>
-
-export type Configuration<
+export interface Configuration<
   Data = any,
   Error = any,
   Fn extends Fetcher<Data> = Fetcher<Data>
-> = {
+> {
   errorRetryInterval: number
   errorRetryCount?: number
   loadingTimeout: number
@@ -26,19 +23,26 @@ export type Configuration<
   isOnline: () => boolean
   isDocumentVisible: () => boolean
   isPaused: () => boolean
-  onLoadingSlow: (key: string, config: Configuration<Data, Error>) => void
+  onLoadingSlow: (
+    key: string,
+    config: Readonly<Required<Configuration<Data, Error>>>
+  ) => void
   onSuccess: (
     data: Data,
     key: string,
-    config: Configuration<Data, Error>
+    config: Readonly<Required<Configuration<Data, Error>>>
   ) => void
-  onError: (err: Error, key: string, config: Configuration<Data, Error>) => void
+  onError: (
+    err: Error,
+    key: string,
+    config: Readonly<Required<Configuration<Data, Error>>>
+  ) => void
   onErrorRetry: (
     err: Error,
     key: string,
-    config: Configuration<Data, Error>,
+    config: Readonly<Required<Configuration<Data, Error>>>,
     revalidate: Revalidator,
-    revalidateOpts: RevalidatorOptions
+    revalidateOpts: Required<RevalidatorOptions>
   ) => void
   registerOnFocus?: (cb: () => void) => void
   registerOnReconnect?: (cb: () => void) => void
@@ -57,7 +61,7 @@ export type Updater<Data = any, Error = any> = (
 ) => boolean | Promise<boolean>
 export type Trigger = (key: Key, shouldRevalidate?: boolean) => Promise<any>
 
-type MutatorCallback<Data = any> = (
+export type MutatorCallback<Data = any> = (
   currentValue: undefined | Data
 ) => Promise<undefined | Data> | undefined | Data
 
@@ -116,7 +120,7 @@ export type responseInterface<Data, Error> = {
   ) => Promise<Data | undefined>
   isValidating: boolean
 }
-export type SWRResponse<Data, Error> = {
+export interface SWRResponse<Data, Error> {
   data?: Data
   error?: Error
   revalidate: () => Promise<boolean>
@@ -159,10 +163,8 @@ export type SWRInfiniteResponseInterface<Data = any, Error = any> = SWRResponse<
     size: number | ((size: number) => number)
   ) => Promise<Data[] | undefined>
 }
-export type SWRInfiniteResponse<Data = any, Error = any> = SWRResponse<
-  Data[],
-  Error
-> & {
+export interface SWRInfiniteResponse<Data = any, Error = any>
+  extends SWRResponse<Data[], Error> {
   size: number
   setSize: (
     size: number | ((size: number) => number)

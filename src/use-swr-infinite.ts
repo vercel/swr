@@ -1,3 +1,4 @@
+// TODO: use @ts-expect-error
 import { useContext, useRef, useState, useEffect, useCallback } from 'react'
 
 import defaultConfig, { cache } from './config'
@@ -8,7 +9,8 @@ import {
   ValueKey,
   Fetcher,
   SWRInfiniteConfiguration,
-  SWRInfiniteResponse
+  SWRInfiniteResponse,
+  MutatorCallback
 } from './types'
 
 type KeyLoader<Data = any> = (
@@ -17,50 +19,43 @@ type KeyLoader<Data = any> = (
 ) => ValueKey
 
 function useSWRInfinite<Data = any, Error = any>(
-  getKey: KeyLoader<Data>
-): SWRInfiniteResponse<Data, Error>
-function useSWRInfinite<Data = any, Error = any>(
-  getKey: KeyLoader<Data>,
-  config?: Partial<SWRInfiniteConfiguration<Data, Error>>
-): SWRInfiniteResponse<Data, Error>
-function useSWRInfinite<Data = any, Error = any>(
-  getKey: KeyLoader<Data>,
-  fn?: Fetcher<Data>,
-  config?: Partial<SWRInfiniteConfiguration<Data, Error>>
-): SWRInfiniteResponse<Data, Error>
-function useSWRInfinite<Data = any, Error = any>(
-  getKey: KeyLoader<Data>,
-  ...options: any[]
+  ...args:
+    | readonly [KeyLoader<Data>]
+    | readonly [KeyLoader<Data>, Fetcher<Data>]
+    | readonly [KeyLoader<Data>, SWRInfiniteConfiguration<Data, Error>]
+    | readonly [
+        KeyLoader<Data>,
+        Fetcher<Data>,
+        SWRInfiniteConfiguration<Data, Error>
+      ]
 ): SWRInfiniteResponse<Data, Error> {
-  let _fn: Fetcher<Data> | undefined,
-    _config: Partial<SWRInfiniteConfiguration<Data, Error>> = {}
+  const getKey = args[0]
 
-  if (options.length > 1) {
-    _fn = options[0]
-    _config = options[1]
-  } else {
-    if (typeof options[0] === 'function') {
-      _fn = options[0]
-    } else if (typeof options[0] === 'object') {
-      _config = options[0]
-    }
-  }
-
-  const config: SWRInfiniteConfiguration<Data, Error> = Object.assign(
+  const config = Object.assign(
     {},
     defaultConfig,
     useContext(SWRConfigContext),
-    _config
+    args.length > 2
+      ? args[2]
+      : args.length === 2 && typeof args[1] === 'object'
+      ? args[1]
+      : {}
   )
-  let {
+  // in typescript args.length > 2 is not same as args.lenth === 3
+  // we do a safe type assertion here
+  // args.length === 3
+  const fn = (args.length > 2
+    ? args[1]
+    : args.length === 2 && typeof args[1] === 'function'
+    ? args[1]
+    : config.fetcher) as Fetcher<Data>
+
+  const {
     initialSize = 1,
     revalidateAll = false,
     persistSize = false,
-    fetcher: defaultFetcher,
     ...extraConfig
   } = config
-
-  const fn = typeof _fn !== 'undefined' ? _fn : defaultFetcher
 
   // get the serialized key of the first page
   let firstPageKey: string | null = null
@@ -172,7 +167,7 @@ function useSWRInfinite<Data = any, Error = any>(
   }, [swr.data])
 
   const mutate = useCallback(
-    (data, shouldRevalidate = true) => {
+    (data: MutatorCallback, shouldRevalidate = true) => {
       if (shouldRevalidate && typeof data !== 'undefined') {
         // we only revalidate the pages that are changed
         const originalData = dataRef.current
@@ -228,7 +223,7 @@ function useSWRInfinite<Data = any, Error = any>(
       enumerable: true
     }
   })
-  return swrInfinite as SWRInfiniteResponse<Data, Error>
+  return (swrInfinite as unknown) as SWRInfiniteResponse<Data, Error>
 }
 
 export { useSWRInfinite }
