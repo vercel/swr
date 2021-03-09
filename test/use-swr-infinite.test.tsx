@@ -547,7 +547,7 @@ describe('useSWRInfinite', () => {
               </li>
             ))}
           </ul>
-          <button onClick={() => setSize(size + 1)}>click</button>
+          <button onClick={() => setSize(size + 1)}>{props.label}:click</button>
         </>
       )
     }
@@ -566,7 +566,7 @@ describe('useSWRInfinite', () => {
     await screen.findByText('A:page-1-2')
     await screen.findByText('B:page-1-2')
 
-    fireEvent.click(screen.getByText('click'))
+    fireEvent.click(screen.getByText('A:click'))
 
     // render responses for page=2
     await screen.findByText('A:page-2-2')

@@ -1,5 +1,5 @@
 // TODO: use @ts-expect-error
-import { useContext, useRef, useState, useEffect, useCallback } from 'react'
+import { useContext, useRef, useEffect, useCallback } from 'react'
 
 import defaultConfig, { cache } from './config'
 import SWRConfigContext from './swr-config-context'
@@ -69,8 +69,6 @@ function useSWRInfinite<Data = any, Error = any>(
     // not ready
   }
 
-  const [, rerender] = useState<boolean>(false)
-
   // we use cache to pass extra info (context) to fetcher so it can be globally shared
   // here we get the key of the fetcher context cache
   let contextCacheKey: string | null = null
@@ -80,19 +78,22 @@ function useSWRInfinite<Data = any, Error = any>(
 
   // page count is cached as well, so when navigating the list can be restored
   let pageCountCacheKey: string | null = null
-  let cachedPageSize
   if (firstPageKey) {
     pageCountCacheKey = 'size@' + firstPageKey
-    cachedPageSize = cache.get(pageCountCacheKey)
   }
-  const pageCountRef = useRef<number>(cachedPageSize || initialSize)
   const didMountRef = useRef<boolean>(false)
+
+  const resolvePageCount = useCallback(
+    () => cache.get(pageCountCacheKey) || initialSize,
+    [pageCountCacheKey, initialSize]
+  )
 
   // every time the key changes, we reset the page size if it's not persisted
   useEffect(() => {
     if (didMountRef.current) {
       if (!persistSize) {
-        pageCountRef.current = initialSize
+        cache.set(pageCountCacheKey, initialSize)
+        swr.mutate()
       }
     } else {
       didMountRef.current = true
@@ -107,16 +108,17 @@ function useSWRInfinite<Data = any, Error = any>(
 
   // actual swr of all pages
   const swr = useSWR<Data[], Error>(
-    firstPageKey ? ['many', firstPageKey, pageCountRef.current] : null,
+    firstPageKey ? ['many', firstPageKey] : null,
     async () => {
       // get the revalidate context
       const { originalData, force } = cache.get(contextCacheKey) || {}
+      const pageCount = resolvePageCount()
 
       // return an array of page data
       const data: Data[] = []
 
       let previousPageData = null
-      for (let i = 0; i < pageCountRef.current; ++i) {
+      for (let i = 0; i < pageCount; ++i) {
         const [pageKey, pageArgs] = cache.serializeKey(
           getKey(i, previousPageData)
         )
@@ -191,22 +193,20 @@ function useSWRInfinite<Data = any, Error = any>(
   )
 
   // extend the SWR API
-  const size = pageCountRef.current
   const setSize = useCallback(
     arg => {
       if (typeof arg === 'function') {
-        pageCountRef.current = arg(pageCountRef.current)
+        cache.set(pageCountCacheKey, arg(resolvePageCount()))
       } else if (typeof arg === 'number') {
-        pageCountRef.current = arg
+        cache.set(pageCountCacheKey, arg)
       }
-      cache.set(pageCountCacheKey, pageCountRef.current)
-      rerender(v => !v)
+      swr.mutate()
     },
-    [pageCountCacheKey]
+    [pageCountCacheKey, resolvePageCount]
   )
 
   // Use getter functions to avoid unnecessary re-renders caused by triggering all the getters of the returned swr object
-  const swrInfinite = { size, setSize, mutate }
+  const swrInfinite = { size: resolvePageCount(), setSize, mutate }
   Object.defineProperties(swrInfinite, {
     error: {
       get: () => swr.error,
