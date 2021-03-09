@@ -1,7 +1,7 @@
 import { Cache as CacheType, Key, CacheListener } from './types'
 import hash from './libs/hash'
 
-export default class Cache implements CacheInterface {
+export default class Cache implements CacheType {
   private cache: Map<string, any>
   private subs: CacheListener[]
 
