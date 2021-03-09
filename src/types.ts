@@ -41,8 +41,8 @@ export interface Configuration<
     err: Error,
     key: string,
     config: Readonly<Required<Configuration<Data, Error>>>,
-    revalidate: revalidateType,
-    revalidateOpts: Required<RevalidateOptionInterface>
+    revalidate: Revalidator,
+    revalidateOpts: Required<RevalidatorOptions>
   ) => void
   registerOnFocus?: (cb: () => void) => void
   registerOnReconnect?: (cb: () => void) => void
