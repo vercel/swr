@@ -232,9 +232,9 @@ function useSWR<Data = any, Error = any>(
     ? args[1]
     : args.length === 2 && typeof args[1] === 'function'
     ? args[1]
-    : /** 
-          pass fn as null will disable revalidate 
-          https://paco.sh/blog/shared-hook-state-with-swr 
+    : /**
+          pass fn as null will disable revalidate
+          https://paco.sh/blog/shared-hook-state-with-swr
         */
     args[1] === null
     ? args[1]
@@ -558,6 +558,7 @@ function useSWR<Data = any, Error = any>(
     // after `key` updates, we need to mark it as mounted
     unmountedRef.current = false
 
+    const isUpdating = initialMountedRef.current
     initialMountedRef.current = true
 
     // after the component is mounted (hydrated),
@@ -579,7 +580,10 @@ function useSWR<Data = any, Error = any>(
     const softRevalidate = () => revalidate({ dedupe: true })
 
     // trigger a revalidation
-    if (willRevalidateOnMount()) {
+    if (
+      isUpdating ||
+      willRevalidateOnMount()
+    ) {
       if (typeof latestKeyedData !== 'undefined' && !IS_SERVER) {
         // delay revalidate if there's cache
         // to not block the rendering
