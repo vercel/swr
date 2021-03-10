@@ -87,14 +87,16 @@ function useSWRInfinite<Data = any, Error = any>(
     () => cache.get(pageCountCacheKey) || initialSize,
     [pageCountCacheKey, initialSize]
   )
+  const lastPageCountRef = useRef<number>(resolvePageCount())
 
   // every time the key changes, we reset the page size if it's not persisted
   useEffect(() => {
     if (didMountRef.current) {
-      if (!persistSize) {
-        cache.set(pageCountCacheKey, initialSize)
-        swr.mutate()
-      }
+      cache.set(
+        pageCountCacheKey,
+        persistSize ? lastPageCountRef.current : initialSize
+      )
+      swr.mutate()
     } else {
       didMountRef.current = true
     }
@@ -197,8 +199,10 @@ function useSWRInfinite<Data = any, Error = any>(
     arg => {
       if (typeof arg === 'function') {
         cache.set(pageCountCacheKey, arg(resolvePageCount()))
+        lastPageCountRef.current = arg(resolvePageCount())
       } else if (typeof arg === 'number') {
         cache.set(pageCountCacheKey, arg)
+        lastPageCountRef.current = arg
       }
       swr.mutate()
     },
