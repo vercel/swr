@@ -1,5 +1,5 @@
 // TODO: use @ts-expect-error
-import { useContext, useRef, useEffect, useCallback } from 'react'
+import { useContext, useRef, useState, useEffect, useCallback } from 'react'
 
 import defaultConfig, { cache } from './config'
 import SWRConfigContext from './swr-config-context'
@@ -67,6 +67,8 @@ function useSWRInfinite<Data = any, Error = any>(
   } catch (err) {
     // not ready
   }
+
+  const [, rerender] = useState<boolean>(false)
 
   // we use cache to pass extra info (context) to fetcher so it can be globally shared
   // here we get the key of the fetcher context cache
@@ -187,6 +189,7 @@ function useSWRInfinite<Data = any, Error = any>(
         cache.set(pageCountCacheKey, arg)
         lastPageCountRef.current = arg
       }
+      rerender(v => !v)
       return mutate(v => v)
     },
     [pageCountCacheKey, resolvePageCount, mutate]
