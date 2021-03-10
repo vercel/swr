@@ -86,10 +86,8 @@ function useSWRInfinite<Data = any, Error = any>(
     () => cache.get(pageCountCacheKey) || initialSize,
     [pageCountCacheKey, initialSize]
   )
-  // this is used to support the persistSize option
+  // keep the last page count to restore it with the persistSize option
   const lastPageCountRef = useRef<number>(resolvePageCount())
-  // this is used to return the last fetched data while revalidating
-  const lastFetchedDataRef = useRef<Data[]>()
 
   // keep the data inside a ref
   const dataRef = useRef<Data[]>()
@@ -145,7 +143,6 @@ function useSWRInfinite<Data = any, Error = any>(
 
         data.push(pageData)
         previousPageData = pageData
-        lastFetchedDataRef.current = data
       }
 
       // once we executed the data fetching based on the context, clear the context
