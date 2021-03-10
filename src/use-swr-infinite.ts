@@ -55,8 +55,7 @@ function useSWRInfinite<Data = any, Error = any>(
 
   const {
     initialSize = 1,
-    // should revalidate pages when a refresh timer is invoked
-    revalidateAll = !!config.refreshInterval,
+    revalidateAll = false,
     persistSize = false,
     ...extraConfig
   } = config
@@ -87,26 +86,13 @@ function useSWRInfinite<Data = any, Error = any>(
     () => cache.get(pageCountCacheKey) || initialSize,
     [pageCountCacheKey, initialSize]
   )
+  // this is used to support the persistSize option
   const lastPageCountRef = useRef<number>(resolvePageCount())
-
-  // every time the key changes, we reset the page size if it's not persisted
-  useEffect(() => {
-    if (didMountRef.current) {
-      cache.set(
-        pageCountCacheKey,
-        persistSize ? lastPageCountRef.current : initialSize
-      )
-      swr.mutate()
-    } else {
-      didMountRef.current = true
-    }
-    // initialSize isn't allowed to change during the lifecycle
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [firstPageKey])
+  // this is used to return the last fetched data while revalidating
+  const lastFetchedDataRef = useRef<Data[]>()
 
   // keep the data inside a ref
   const dataRef = useRef<Data[]>()
-  const lastFetchedDataRef = useRef<Data[]>()
 
   // actual swr of all pages
   const swr = useSWR<Data[], Error>(
@@ -137,11 +123,15 @@ function useSWRInfinite<Data = any, Error = any>(
         // - `revalidateAll` is enabled
         // - `mutate()` called
         // - the cache is missing
+        // - it's the first page and it's not the first render
         // - cache has changed
         const shouldFetchPage =
           revalidateAll ||
           force ||
           typeof pageData === 'undefined' ||
+          (typeof force === 'undefined' &&
+            i === 0 &&
+            typeof dataRef.current !== 'undefined') ||
           (originalData && !config.compare(originalData[i], pageData))
 
         if (shouldFetchPage) {
@@ -164,11 +154,7 @@ function useSWRInfinite<Data = any, Error = any>(
       // return the data
       return data
     },
-    // do not pass initialData for updating to revalidate
-    {
-      ...extraConfig,
-      initialData: didMountRef.current ? undefined : extraConfig.initialData
-    }
+    extraConfig
   )
 
   // update dataRef
@@ -209,6 +195,21 @@ function useSWRInfinite<Data = any, Error = any>(
     [pageCountCacheKey, resolvePageCount, mutate]
   )
 
+  // every time the key changes, we reset the page size if it's not persisted
+  useEffect(() => {
+    if (!didMountRef.current) {
+      didMountRef.current = true
+      return
+    }
+    cache.set(
+      pageCountCacheKey,
+      persistSize ? lastPageCountRef.current : initialSize
+    )
+    mutate(v => v)
+    // initialSize isn't allowed to change during the lifecycle
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [firstPageKey])
+
   // Use getter functions to avoid unnecessary re-renders caused by triggering all the getters of the returned swr object
   const swrInfinite = { size: resolvePageCount(), setSize, mutate }
   Object.defineProperties(swrInfinite, {
@@ -217,9 +218,7 @@ function useSWRInfinite<Data = any, Error = any>(
       enumerable: true
     },
     data: {
-      get: () =>
-        // return the last data when revalidating
-        swr.data !== undefined ? swr.data : lastFetchedDataRef.current,
+      get: () => swr.data,
       enumerable: true
     },
     // revalidate will be deprecated in the 1.x release
