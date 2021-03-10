@@ -67,9 +67,6 @@
     "ts-jest": "25.5.1",
     "typescript": "3.6.4"
   },
-  "dependencies": {
-    "dequal": "2.0.2"
-  },
   "peerDependencies": {
     "react": "^16.11.0 || ^17.0.0"
   }
