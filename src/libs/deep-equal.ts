@@ -1,6 +1,11 @@
+/**
+ * deep equal lite version from dequal
+ * https://github.com/lukeed/dequal/blob/master/license
+ */
+
 const has = Object.prototype.hasOwnProperty
 
-export default function deeEqual(foo: any, bar: any) {
+export default function deepEqual(foo: any, bar: any) {
   let ctor, len
   if (foo === bar) return true
 
@@ -10,7 +15,7 @@ export default function deeEqual(foo: any, bar: any) {
 
     if (ctor === Array) {
       if ((len = foo.length) === bar.length) {
-        while (len && deeEqual(foo[len], bar[len])) {
+        while (len && deepEqual(foo[len], bar[len])) {
           len--
         }
       }
@@ -21,7 +26,7 @@ export default function deeEqual(foo: any, bar: any) {
       len = 0
       for (ctor in foo) {
         if (has.call(foo, ctor) && ++len && !has.call(bar, ctor)) return false
-        if (!(ctor in bar) || !deeEqual(foo[ctor], bar[ctor])) return false
+        if (!(ctor in bar) || !deepEqual(foo[ctor], bar[ctor])) return false
       }
       return Object.keys(bar).length === len
     }
