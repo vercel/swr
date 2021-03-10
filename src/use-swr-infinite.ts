@@ -206,7 +206,7 @@ function useSWRInfinite<Data = any, Error = any>(
       }
       return mutate(v => v)
     },
-    [pageCountCacheKey, resolvePageCount]
+    [pageCountCacheKey, resolvePageCount, mutate]
   )
 
   // Use getter functions to avoid unnecessary re-renders caused by triggering all the getters of the returned swr object
