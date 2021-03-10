@@ -580,10 +580,7 @@ function useSWR<Data = any, Error = any>(
     const softRevalidate = () => revalidate({ dedupe: true })
 
     // trigger a revalidation
-    if (
-      isUpdating ||
-      willRevalidateOnMount()
-    ) {
+    if (isUpdating || willRevalidateOnMount()) {
       if (typeof latestKeyedData !== 'undefined' && !IS_SERVER) {
         // delay revalidate if there's cache
         // to not block the rendering
@@ -761,6 +758,18 @@ function useSWR<Data = any, Error = any>(
     }
   }
 
+  if (!config.compare(stateRef.current.data, initialData)) {
+    dispatch({
+      data: initialData
+    })
+  }
+
+  if (stateRef.current.error !== initialError) {
+    dispatch({
+      error: initialError
+    })
+  }
+
   // define returned state
   // can be memorized since the state is a ref
   const memoizedState = useMemo(() => {
@@ -781,7 +790,7 @@ function useSWR<Data = any, Error = any>(
           if (config.suspense) {
             return latestError
           }
-          return keyRef.current === key ? stateRef.current.error : initialError
+          return stateRef.current.error
         },
         enumerable: true
       },
@@ -791,7 +800,7 @@ function useSWR<Data = any, Error = any>(
           if (config.suspense) {
             return latestData
           }
-          return keyRef.current === key ? stateRef.current.data : initialData
+          return stateRef.current.data
         },
         enumerable: true
       },
@@ -812,16 +821,7 @@ function useSWR<Data = any, Error = any>(
     // `initialData` and `initialError` are not initial values
     // because they are changed during the lifecycle
     // so we should add them in the deps array.
-  }, [
-    revalidate,
-    initialData,
-    initialError,
-    boundMutate,
-    key,
-    config.suspense,
-    latestError,
-    latestData
-  ])
+  }, [revalidate, boundMutate, key, config.suspense, latestError, latestData])
   return memoizedState
 }
 
