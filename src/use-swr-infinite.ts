@@ -204,7 +204,7 @@ function useSWRInfinite<Data = any, Error = any>(
         cache.set(pageCountCacheKey, arg)
         lastPageCountRef.current = arg
       }
-      swr.mutate()
+      return mutate(v => v)
     },
     [pageCountCacheKey, resolvePageCount]
   )
