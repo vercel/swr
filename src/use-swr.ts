@@ -290,34 +290,6 @@ function useSWR<Data = any, Error = any>(
 
   const rerender = useState<unknown>(null)[1]
 
-  let dispatch = useCallback(
-    (payload: Action<Data, Error>) => {
-      let shouldUpdateState = false
-      for (let k in payload) {
-        // @ts-ignore
-        if (stateRef.current[k] === payload[k]) {
-          continue
-        }
-        // @ts-ignore
-        stateRef.current[k] = payload[k]
-        // @ts-ignore
-        if (stateDependencies.current[k]) {
-          shouldUpdateState = true
-        }
-      }
-
-      if (shouldUpdateState) {
-        // if component is unmounted, should skip rerender
-        // if component is not mounted, should skip rerender
-        if (unmountedRef.current || !initialMountedRef.current) return
-        rerender({})
-      }
-    },
-    // config.suspense isn't allowed to change during the lifecycle
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
-  )
-
   // error ref inside revalidate (is last request errored?)
   const unmountedRef = useRef(false)
   const keyRef = useRef(key)
@@ -326,15 +298,43 @@ function useSWR<Data = any, Error = any>(
   const initialMountedRef = useRef(false)
 
   // do unmount check for callbacks
-  const eventsCallback = useCallback(
-    (event, ...params) => {
+  const safeCallback = useCallback(
+    (callback: () => void) => {
       if (unmountedRef.current) return
       if (!initialMountedRef.current) return
       if (key !== keyRef.current) return
-      // @ts-ignore
-      configRef.current[event](...params)
+      callback()
     },
     [key]
+  )
+
+  let dispatch = useCallback(
+    (payload: Action<Data, Error>) =>
+      safeCallback(() => {
+        let shouldUpdateState = false
+        for (let k in payload) {
+          // @ts-ignore
+          if (stateRef.current[k] === payload[k]) {
+            continue
+          }
+          // @ts-ignore
+          stateRef.current[k] = payload[k]
+          // @ts-ignore
+          if (stateDependencies.current[k]) {
+            shouldUpdateState = true
+          }
+        }
+
+        if (shouldUpdateState) {
+          // if component is unmounted, should skip rerender
+          // if component is not mounted, should skip rerender
+          //if (unmountedRef.current || !initialMountedRef.current) return
+          rerender({})
+        }
+      }),
+    // config.suspense isn't allowed to change during the lifecycle
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [safeCallback]
   )
 
   const boundMutate: SWRResponse<Data, Error>['mutate'] = useCallback(
@@ -400,7 +400,7 @@ function useSWR<Data = any, Error = any>(
           )
         }
 
-        let newData
+        let newData: Data
         let startAt
 
         if (shouldDeduping) {
@@ -413,7 +413,8 @@ function useSWR<Data = any, Error = any>(
           // we trigger the loading slow event.
           if (config.loadingTimeout && !cache.get(key)) {
             setTimeout(() => {
-              if (loading) eventsCallback('onLoadingSlow', key, config)
+              if (loading)
+                safeCallback(() => configRef.current.onLoadingSlow(key, config))
             }, config.loadingTimeout)
           }
 
@@ -434,7 +435,7 @@ function useSWR<Data = any, Error = any>(
 
           // trigger the success event,
           // only do this for the original request.
-          eventsCallback('onSuccess', newData, key, config)
+          safeCallback(() => configRef.current.onSuccess(newData, key, config))
         }
 
         // if there're other ongoing request(s), started after the current one,
@@ -525,13 +526,15 @@ function useSWR<Data = any, Error = any>(
         }
 
         // events and retry
-        eventsCallback('onError', err, key, config)
+        safeCallback(() => configRef.current.onError(err, key, config))
         if (config.shouldRetryOnError) {
           // when retrying, we always enable deduping
-          eventsCallback('onErrorRetry', err, key, config, revalidate, {
-            retryCount: retryCount + 1,
-            dedupe: true
-          })
+          safeCallback(() =>
+            configRef.current.onErrorRetry(err, key, config, revalidate, {
+              retryCount: retryCount + 1,
+              dedupe: true
+            })
+          )
         }
       }
 
@@ -663,9 +666,6 @@ function useSWR<Data = any, Error = any>(
     addRevalidator(CACHE_REVALIDATORS, onUpdate)
 
     return () => {
-      // cleanup
-      dispatch = () => null
-
       // mark it as unmounted
       unmountedRef.current = true
 
