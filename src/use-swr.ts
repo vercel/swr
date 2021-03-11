@@ -305,6 +305,8 @@ function useSWR<Data = any, Error = any>(
   const initialMountedRef = useRef(false)
 
   // do unmount check for callbacks
+  // do mounted check in suspense mode
+  // if key changed during the revalidation, old dispatch and config callback should not take effect.
   const safeCallback = useCallback(
     (callback: () => void) => {
       if (unmountedRef.current) return
@@ -642,16 +644,11 @@ function useSWR<Data = any, Error = any>(
       updatedIsValidating,
       dedupe = true
     ) => {
-      // update hook state
-      const validData = () =>
-        typeof updatedData !== 'undefined' &&
-        !config.compare(stateRef.current.data, updatedData)
-
       dispatch({
         error: updatedError,
         isValidating: updatedIsValidating,
         // if data is undefined we should not update stateRef.current.data
-        ...(validData() && {
+        ...(typeof updatedData !== 'undefined' && {
           data: updatedData
         })
       })
