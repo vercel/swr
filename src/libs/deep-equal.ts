@@ -15,9 +15,7 @@ export default function deepEqual(foo: any, bar: any) {
 
     if (ctor === Array) {
       if ((len = foo.length) === bar.length) {
-        while (len && deepEqual(foo[len], bar[len])) {
-          len--
-        }
+        while (len-- && deepEqual(foo[len], bar[len]));
       }
       return len === -1
     }
