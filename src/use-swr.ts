@@ -312,17 +312,32 @@ function useSWR<Data = any, Error = any>(
     (payload: Action<Data, Error>) =>
       safeCallback(() => {
         let shouldUpdateState = false
-        for (let k in payload) {
-          // @ts-ignore
-          if (stateRef.current[k] === payload[k]) {
-            continue
-          }
-          // @ts-ignore
-          stateRef.current[k] = payload[k]
-          // @ts-ignore
-          if (stateDependencies.current[k]) {
-            shouldUpdateState = true
-          }
+        const { data, error, isValidating } = payload
+        const keys = Object.keys(payload)
+        if (
+          keys.includes('data') &&
+          !config.compare(stateRef.current.data, data)
+        ) {
+          stateRef.current.data = data
+          shouldUpdateState =
+            shouldUpdateState || stateDependencies.current.data
+        }
+
+        // always update error
+        // because it can be `undefined`
+        if (stateRef.current.error !== error) {
+          stateRef.current.error = error
+          shouldUpdateState =
+            shouldUpdateState || stateDependencies.current.error
+        }
+
+        if (
+          typeof isValidating !== 'undefined' &&
+          stateRef.current.isValidating !== isValidating
+        ) {
+          stateRef.current.isValidating = isValidating
+          shouldUpdateState =
+            shouldUpdateState || stateDependencies.current.isValidating
         }
 
         if (shouldUpdateState) {
@@ -386,10 +401,10 @@ function useSWR<Data = any, Error = any>(
 
       // start fetching
       try {
+        cache.set(keyValidating, true)
         dispatch({
           isValidating: true
         })
-        cache.set(keyValidating, true)
         if (!shouldDeduping) {
           // also update other hooks
           broadcastState(
@@ -475,28 +490,20 @@ function useSWR<Data = any, Error = any>(
         cache.set(keyErr, undefined)
         cache.set(keyValidating, false)
 
-        // new state for the reducer
-        const newState: Action<Data, Error> = {
-          isValidating: false
-        }
-
-        if (typeof stateRef.current.error !== 'undefined') {
-          // we don't have an error
-          newState.error = undefined
-        }
         if (!config.compare(stateRef.current.data, newData)) {
-          // deep compare to avoid extra re-render
-          // data changed
-          newState.data = newData
           cache.set(key, newData)
         }
 
         // merge the new state
-        dispatch(newState)
+        dispatch({
+          data: newData,
+          error: undefined,
+          isValidating: false
+        })
 
         if (!shouldDeduping) {
           // also update other hooks
-          broadcastState(key, newData, newState.error, false)
+          broadcastState(key, newData, undefined, false)
         }
       } catch (err) {
         delete CONCURRENT_PROMISES[key]
@@ -512,17 +519,16 @@ function useSWR<Data = any, Error = any>(
 
         // get a new error
         // don't use deep equal for errors
-        if (stateRef.current.error !== err) {
-          // we keep the stale data
-          dispatch({
-            isValidating: false,
-            error: err
-          })
 
-          if (!shouldDeduping) {
-            // also broadcast to update other hooks
-            broadcastState(key, undefined, err, false)
-          }
+        // we keep the stale data
+        dispatch({
+          isValidating: false,
+          error: err
+        })
+
+        if (!shouldDeduping) {
+          // also broadcast to update other hooks
+          broadcastState(key, undefined, err, false)
         }
 
         // events and retry
@@ -621,35 +627,18 @@ function useSWR<Data = any, Error = any>(
       dedupe = true
     ) => {
       // update hook state
-      const newState: Action<Data, Error> = {}
-      let needUpdate = false
-
-      if (
+      const validData = () =>
         typeof updatedData !== 'undefined' &&
         !config.compare(stateRef.current.data, updatedData)
-      ) {
-        newState.data = updatedData
-        needUpdate = true
-      }
 
-      // always update error
-      // because it can be `undefined`
-      if (stateRef.current.error !== updatedError) {
-        newState.error = updatedError
-        needUpdate = true
-      }
-
-      if (
-        typeof updatedIsValidating !== 'undefined' &&
-        stateRef.current.isValidating !== updatedIsValidating
-      ) {
-        newState.isValidating = updatedIsValidating
-        needUpdate = true
-      }
-
-      if (needUpdate) {
-        dispatch(newState)
-      }
+      dispatch({
+        error: updatedError,
+        isValidating: updatedIsValidating,
+        // if data is undefined we should not update the current stateRef
+        ...(validData() && {
+          data: updatedData
+        })
+      })
 
       if (shouldRevalidate) {
         if (dedupe) {
