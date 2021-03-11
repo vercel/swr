@@ -1,4 +1,4 @@
-import { dequal } from 'dequal/lite'
+import deepEqual from './libs/deep-equal'
 import { Configuration, RevalidatorOptions, Revalidator } from './types'
 import Cache from './cache'
 import webPreset from './libs/web-preset'
@@ -64,7 +64,7 @@ const defaultConfig = {
   refreshWhenOffline: false,
   shouldRetryOnError: true,
   suspense: false,
-  compare: dequal,
+  compare: deepEqual,
 
   isPaused: () => false,
   ...webPreset
