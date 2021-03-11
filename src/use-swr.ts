@@ -311,8 +311,24 @@ function useSWR<Data = any, Error = any>(
     },
     [key]
   )
-
-  let dispatch = useCallback(
+  /**
+   * @param playload when you want to change stateRef, you should pass value explicitly
+   * @example
+   * ```js
+   * dispatch({
+   *   isValidating: false
+   *   data: newData // set data to newData
+   *   error: undefined // set error to undefined
+   * })
+   *
+   * dispatch({
+   *   isValidating: false
+   *   data: undefined // set data to undefined
+   *   error: Error // set error to Error
+   * })
+   * ```
+   */
+  const dispatch = useCallback(
     (payload: Action<Data, Error>) =>
       safeCallback(() => {
         let shouldUpdateState = false
@@ -516,10 +532,9 @@ function useSWR<Data = any, Error = any>(
           return false
         }
 
-        cache.set(keyErr, err)
-
         // get a new error
         // don't use deep equal for errors
+        cache.set(keyErr, err)
 
         // we keep the stale data
         dispatch({
@@ -574,7 +589,6 @@ function useSWR<Data = any, Error = any>(
     // after the component is mounted (hydrated),
     // we need to update the data from the cache
     // and trigger a revalidation
-
     const latestKeyedData = resolveData()
 
     // update the state if the key changed (not the inital render) or cache updated
@@ -633,7 +647,7 @@ function useSWR<Data = any, Error = any>(
       dispatch({
         error: updatedError,
         isValidating: updatedIsValidating,
-        // if data is undefined we should not update the current stateRef
+        // if data is undefined we should not update stateRef.current.data
         ...(validData() && {
           data: updatedData
         })
@@ -746,6 +760,7 @@ function useSWR<Data = any, Error = any>(
     }
   }
 
+  // after mounted, if stateRef does not sync with cache, we should update the stateRef and schedule another update with React
   dispatch({
     data: initialData,
     error: initialError
