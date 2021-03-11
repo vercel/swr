@@ -338,11 +338,7 @@ function useSWR<Data = any, Error = any>(
       safeCallback(() => {
         let shouldUpdateState = false
         const { data, error, isValidating } = payload
-        const keys = Object.keys(payload)
-        if (
-          keys.includes('data') &&
-          !config.compare(stateRef.current.data, data)
-        ) {
+        if ('data' in payload && !config.compare(stateRef.current.data, data)) {
           stateRef.current.data = data
           shouldUpdateState =
             shouldUpdateState || stateDependencies.current.data
@@ -350,7 +346,7 @@ function useSWR<Data = any, Error = any>(
 
         // always update error
         // because it can be `undefined`
-        if (stateRef.current.error !== error) {
+        if ('error' in payload && stateRef.current.error !== error) {
           stateRef.current.error = error
           shouldUpdateState =
             shouldUpdateState || stateDependencies.current.error
