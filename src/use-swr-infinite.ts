@@ -3,7 +3,7 @@ import { useContext, useRef, useState, useEffect, useCallback } from 'react'
 
 import defaultConfig, { cache } from './config'
 import SWRConfigContext from './swr-config-context'
-import useSWR from './use-swr'
+import useSWR, { useIsomorphicLayoutEffect } from './use-swr'
 
 import {
   ValueKey,
@@ -93,6 +93,20 @@ function useSWRInfinite<Data = any, Error = any>(
 
   // keep the data inside a ref
   const dataRef = useRef<Data[]>()
+
+  // every time the key changes, we reset the page size if it's not persisted
+  useIsomorphicLayoutEffect(() => {
+    if (!didMountRef.current) {
+      didMountRef.current = true
+      return
+    }
+    cache.set(
+      pageCountCacheKey,
+      persistSize ? lastPageCountRef.current : initialSize
+    )
+    // initialSize isn't allowed to change during the lifecycle
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [firstPageKey])
 
   // actual swr of all pages
   const swr = useSWR<Data[], Error>(
@@ -194,21 +208,6 @@ function useSWRInfinite<Data = any, Error = any>(
     },
     [pageCountCacheKey, resolvePageCount, mutate]
   )
-
-  // every time the key changes, we reset the page size if it's not persisted
-  useEffect(() => {
-    if (!didMountRef.current) {
-      didMountRef.current = true
-      return
-    }
-    cache.set(
-      pageCountCacheKey,
-      persistSize ? lastPageCountRef.current : initialSize
-    )
-    mutate(v => v)
-    // initialSize isn't allowed to change during the lifecycle
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [firstPageKey])
 
   // Use getter functions to avoid unnecessary re-renders caused by triggering all the getters of the returned swr object
   const swrInfinite = { size: resolvePageCount(), setSize, mutate }

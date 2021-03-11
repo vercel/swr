@@ -828,5 +828,5 @@ function useSWR<Data = any, Error = any>(
 
 const SWRConfig = SWRConfigContext.Provider
 
-export { trigger, mutate, SWRConfig }
+export { trigger, mutate, SWRConfig, useIsomorphicLayoutEffect }
 export default useSWR
