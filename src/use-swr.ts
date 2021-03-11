@@ -345,9 +345,6 @@ function useSWR<Data = any, Error = any>(
         }
 
         if (shouldUpdateState) {
-          // if component is unmounted, should skip rerender
-          // if component is not mounted, should skip rerender
-          //if (unmountedRef.current || !initialMountedRef.current) return
           rerender({})
         }
       }),
@@ -578,16 +575,14 @@ function useSWR<Data = any, Error = any>(
     // we need to update the data from the cache
     // and trigger a revalidation
 
-    const currentHookData = stateRef.current.data
     const latestKeyedData = resolveData()
 
     // update the state if the key changed (not the inital render) or cache updated
     if (keyRef.current !== key) {
       keyRef.current = key
     }
-    if (!config.compare(currentHookData, latestKeyedData)) {
-      dispatch({ data: latestKeyedData })
-    }
+
+    dispatch({ data: latestKeyedData })
 
     // revalidate with deduping
     const softRevalidate = () => revalidate({ dedupe: true })
@@ -751,17 +746,10 @@ function useSWR<Data = any, Error = any>(
     }
   }
 
-  if (!config.compare(stateRef.current.data, initialData)) {
-    dispatch({
-      data: initialData
-    })
-  }
-
-  if (stateRef.current.error !== initialError) {
-    dispatch({
-      error: initialError
-    })
-  }
+  dispatch({
+    data: initialData,
+    error: initialError
+  })
 
   // define returned state
   // can be memorized since the state is a ref
