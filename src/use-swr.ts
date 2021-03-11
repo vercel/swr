@@ -2,8 +2,6 @@
 import {
   useCallback,
   useContext,
-  useEffect,
-  useLayoutEffect,
   useState,
   useRef,
   useMemo,
@@ -25,21 +23,6 @@ import {
   SWRConfiguration
 } from './types'
 
-const IS_SERVER =
-  typeof window === 'undefined' ||
-  // @ts-ignore
-  !!(typeof Deno !== 'undefined' && Deno && Deno.version && Deno.version.deno)
-
-// polyfill for requestAnimationFrame
-const rAF = IS_SERVER
-  ? null
-  : window['requestAnimationFrame'] || (f => setTimeout(f, 1))
-
-// React currently throws a warning when using useLayoutEffect on the server.
-// To get around it, we can conditionally useEffect on the server (no-op) and
-// useLayoutEffect in the browser.
-const useIsomorphicLayoutEffect = IS_SERVER ? useEffect : useLayoutEffect
-
 type Revalidator = (...args: any[]) => void
 
 // global state managers
@@ -57,22 +40,30 @@ const now = (() => {
   return () => ++ts
 })()
 
+const {
+  isOnline,
+  isDocumentVisible,
+  registerOnFocus,
+  registerOnReconnect,
+  IS_SERVER
+} = defaultConfig
+
 // setup DOM events listeners for `focus` and `reconnect` actions
 if (!IS_SERVER) {
   const revalidate = (revalidators: Record<string, Revalidator[]>) => {
-    if (!defaultConfig.isDocumentVisible() || !defaultConfig.isOnline()) return
+    if (!isDocumentVisible() || !isOnline()) return
 
     for (const key in revalidators) {
       if (revalidators[key][0]) revalidators[key][0]()
     }
   }
 
-  if (typeof defaultConfig.registerOnFocus === 'function') {
-    defaultConfig.registerOnFocus(() => revalidate(FOCUS_REVALIDATORS))
+  if (typeof registerOnFocus === 'function') {
+    registerOnFocus(() => revalidate(FOCUS_REVALIDATORS))
   }
 
-  if (typeof defaultConfig.registerOnReconnect === 'function') {
-    defaultConfig.registerOnReconnect(() => revalidate(RECONNECT_REVALIDATORS))
+  if (typeof registerOnReconnect === 'function') {
+    registerOnReconnect(() => revalidate(RECONNECT_REVALIDATORS))
   }
 }
 
@@ -228,6 +219,8 @@ function useSWR<Data = any, Error = any>(
       ? args[1]
       : {}
   )
+
+  const { rAF, useIsomorphicLayoutEffect } = config
 
   // in typescript args.length > 2 is not same as args.lenth === 3
   // we do a safe type assertion here
@@ -828,5 +821,5 @@ function useSWR<Data = any, Error = any>(
 
 const SWRConfig = SWRConfigContext.Provider
 
-export { trigger, mutate, SWRConfig, useIsomorphicLayoutEffect }
+export { trigger, mutate, SWRConfig }
 export default useSWR
