@@ -1,5 +1,5 @@
 // TODO: use @ts-expect-error
-import { useContext, useRef, useState, useEffect, useCallback } from 'react'
+import { useContext, useRef, useState, useCallback } from 'react'
 
 import defaultConfig, { cache } from './config'
 import SWRConfigContext from './swr-config-context'
@@ -77,19 +77,19 @@ function useSWRInfinite<Data = any, Error = any>(
     contextCacheKey = 'context@' + firstPageKey
   }
 
-  // page count is cached as well, so when navigating the list can be restored
-  let pageCountCacheKey: string | null = null
+  // page size is also cached to share the page data between hooks having the same key
+  let pageSizeCacheKey: string | null = null
   if (firstPageKey) {
-    pageCountCacheKey = 'size@' + firstPageKey
+    pageSizeCacheKey = 'size@' + firstPageKey
   }
   const didMountRef = useRef<boolean>(false)
 
-  const resolvePageCount = useCallback(
-    () => cache.get(pageCountCacheKey) || initialSize,
-    [pageCountCacheKey, initialSize]
-  )
-  // keep the last page count to restore it with the persistSize option
-  const lastPageCountRef = useRef<number>(resolvePageCount())
+  const resolvePageSize = useCallback((): number => {
+    const cachedPageSize = cache.get(pageSizeCacheKey)
+    return typeof cachedPageSize !== 'undefined' ? cachedPageSize : initialSize
+  }, [pageSizeCacheKey, initialSize])
+  // keep the last page size to restore it with the persistSize option
+  const lastPageSizeRef = useRef<number>(resolvePageSize())
 
   // keep the data inside a ref
   const dataRef = useRef<Data[]>()
@@ -100,9 +100,10 @@ function useSWRInfinite<Data = any, Error = any>(
       didMountRef.current = true
       return
     }
+    // If the key has been changed, we keep the current page size if persistSize is enabled
     cache.set(
-      pageCountCacheKey,
-      persistSize ? lastPageCountRef.current : initialSize
+      pageSizeCacheKey,
+      persistSize ? lastPageSizeRef.current : initialSize
     )
     // initialSize isn't allowed to change during the lifecycle
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -114,13 +115,13 @@ function useSWRInfinite<Data = any, Error = any>(
     async () => {
       // get the revalidate context
       const { originalData, force } = cache.get(contextCacheKey) || {}
-      const pageCount = resolvePageCount()
 
       // return an array of page data
       const data: Data[] = []
 
+      const pageSize = resolvePageSize()
       let previousPageData = null
-      for (let i = 0; i < pageCount; ++i) {
+      for (let i = 0; i < pageSize; ++i) {
         const [pageKey, pageArgs] = cache.serializeKey(
           getKey(i, previousPageData)
         )
@@ -171,7 +172,7 @@ function useSWRInfinite<Data = any, Error = any>(
   )
 
   // update dataRef
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     dataRef.current = swr.data
   }, [swr.data])
 
@@ -195,22 +196,25 @@ function useSWRInfinite<Data = any, Error = any>(
 
   // extend the SWR API
   const setSize = useCallback(
-    arg => {
+    (arg: number | ((size: number) => number)) => {
+      let size
       if (typeof arg === 'function') {
-        cache.set(pageCountCacheKey, arg(resolvePageCount()))
-        lastPageCountRef.current = arg(resolvePageCount())
+        size = arg(resolvePageSize())
       } else if (typeof arg === 'number') {
-        cache.set(pageCountCacheKey, arg)
-        lastPageCountRef.current = arg
+        size = arg
+      }
+      if (typeof size === 'number') {
+        cache.set(pageSizeCacheKey, size)
+        lastPageSizeRef.current = size
       }
       rerender(v => !v)
       return mutate(v => v)
     },
-    [pageCountCacheKey, resolvePageCount, mutate]
+    [pageSizeCacheKey, resolvePageSize, mutate]
   )
 
   // Use getter functions to avoid unnecessary re-renders caused by triggering all the getters of the returned swr object
-  const swrInfinite = { size: resolvePageCount(), setSize, mutate }
+  const swrInfinite = { size: resolvePageSize(), setSize, mutate }
   Object.defineProperties(swrInfinite, {
     error: {
       get: () => swr.error,
