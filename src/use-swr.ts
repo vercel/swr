@@ -210,8 +210,12 @@ function useSWR<Data = any, Error = any>(
   ...args:
     | readonly [Key]
     | readonly [Key, Fetcher<Data> | null]
-    | readonly [Key, SWRConfiguration<Data, Error>]
-    | readonly [Key, Fetcher<Data> | null, SWRConfiguration<Data, Error>]
+    | readonly [Key, SWRConfiguration<Data, Error> | undefined]
+    | readonly [
+        Key,
+        Fetcher<Data> | null,
+        SWRConfiguration<Data, Error> | undefined
+      ]
 ): SWRResponse<Data, Error> {
   const _key = args[0]
   const config = Object.assign(
