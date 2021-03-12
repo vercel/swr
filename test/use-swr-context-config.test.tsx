@@ -1,15 +1,12 @@
-import { act, render } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 import React from 'react'
 import useSWR, { mutate } from '../src'
-import { sleep } from './utils'
+import { createResponse } from './utils'
 
 describe('useSWR - context configs', () => {
   it('mutate before mount should not block rerender', async () => {
-    const prefetch = () => Promise.resolve('prefetch-data')
-    const fetcher = () =>
-      new Promise(resolve => {
-        setTimeout(() => resolve('data'), 100)
-      })
+    const prefetch = () => createResponse('prefetch-data')
+    const fetcher = () => createResponse('data')
     await act(() => mutate('prefetch', prefetch))
 
     function Page() {
@@ -17,13 +14,11 @@ describe('useSWR - context configs', () => {
       return <div>{data}</div>
     }
 
-    const { container } = render(<Page />)
+    render(<Page />)
+    // render with the prefetched data
+    screen.getByText('prefetch-data')
 
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"prefetch-data"`
-    )
-
-    await act(() => sleep(150))
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data"`)
+    // render the fetched data
+    await screen.findByText('data')
   })
 })
