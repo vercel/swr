@@ -92,9 +92,6 @@ function useSWRInfinite<Data = any, Error = any>(
   // keep the last page size to restore it with the persistSize option
   const lastPageSizeRef = useRef<number>(resolvePageSize())
 
-  // keep the data inside a ref
-  const dataRef = useRef<Data[]>()
-
   // every time the key changes, we reset the page size if it's not persisted
   useIsomorphicLayoutEffect(() => {
     if (!didMountRef.current) {
@@ -109,6 +106,9 @@ function useSWRInfinite<Data = any, Error = any>(
     // initialSize isn't allowed to change during the lifecycle
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [firstPageKey])
+
+  // keep the data inside a ref
+  const dataRef = useRef<Data[]>()
 
   // actual swr of all pages
   const swr = useSWR<Data[], Error>(
