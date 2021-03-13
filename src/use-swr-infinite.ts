@@ -69,19 +69,19 @@ function useSWRInfinite<Data = any, Error = any>(
     // not ready
   }
 
-  const [, rerender] = useState<boolean>(false)
+  const rerender = useState({})[1]
 
   // we use cache to pass extra info (context) to fetcher so it can be globally shared
   // here we get the key of the fetcher context cache
   let contextCacheKey: string | null = null
   if (firstPageKey) {
-    contextCacheKey = 'context@' + firstPageKey
+    contextCacheKey = 'ctx@' + firstPageKey
   }
 
   // page size is also cached to share the page data between hooks having the same key
   let pageSizeCacheKey: string | null = null
   if (firstPageKey) {
-    pageSizeCacheKey = 'size@' + firstPageKey
+    pageSizeCacheKey = 'len@' + firstPageKey
   }
   const didMountRef = useRef<boolean>(false)
 
@@ -112,10 +112,10 @@ function useSWRInfinite<Data = any, Error = any>(
 
   // actual swr of all pages
   const swr = useSWR<Data[], Error>(
-    firstPageKey ? ['many', firstPageKey] : null,
+    firstPageKey ? ['inf', firstPageKey] : null,
     async () => {
       // get the revalidate context
-      const { originalData, force } = cache.get(contextCacheKey) || {}
+      const { data: originalData, force } = cache.get(contextCacheKey) || {}
 
       // return an array of page data
       const data: Data[] = []
@@ -182,7 +182,7 @@ function useSWRInfinite<Data = any, Error = any>(
       if (shouldRevalidate && typeof data !== 'undefined') {
         // we only revalidate the pages that are changed
         const originalData = dataRef.current
-        cache.set(contextCacheKey, { originalData, force: false })
+        cache.set(contextCacheKey, { data: originalData, force: false })
       } else if (shouldRevalidate) {
         // calling `mutate()`, we revalidate all pages
         cache.set(contextCacheKey, { force: true })
@@ -208,7 +208,7 @@ function useSWRInfinite<Data = any, Error = any>(
         cache.set(pageSizeCacheKey, size)
         lastPageSizeRef.current = size
       }
-      rerender(v => !v)
+      rerender({})
       return mutate(v => v)
     },
     [pageSizeCacheKey, resolvePageSize, mutate]
