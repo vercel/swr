@@ -2,8 +2,9 @@
 import { useContext, useRef, useState, useCallback } from 'react'
 
 import defaultConfig, { cache } from './config'
+import { useIsomorphicLayoutEffect } from './env'
 import SWRConfigContext from './swr-config-context'
-import useSWR, { useIsomorphicLayoutEffect } from './use-swr'
+import useSWR from './use-swr'
 
 import {
   ValueKey,
