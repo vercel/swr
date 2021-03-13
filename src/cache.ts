@@ -2,42 +2,42 @@ import { Cache as CacheType, Key, CacheListener } from './types'
 import hash from './libs/hash'
 
 export default class Cache implements CacheType {
-  private __cache: Map<string, any>
-  private __listeners: CacheListener[]
+  private cache: Map<string, any>
+  private subs: CacheListener[]
 
   constructor(initialData: any = {}) {
-    this.__cache = new Map(Object.entries(initialData))
-    this.__listeners = []
+    this.cache = new Map(Object.entries(initialData))
+    this.subs = []
   }
 
   get(key: Key): any {
     const [_key] = this.serializeKey(key)
-    return this.__cache.get(_key)
+    return this.cache.get(_key)
   }
 
   set(key: Key, value: any): any {
     const [_key] = this.serializeKey(key)
-    this.__cache.set(_key, value)
+    this.cache.set(_key, value)
     this.notify()
   }
 
   keys() {
-    return Array.from(this.__cache.keys())
+    return Array.from(this.cache.keys())
   }
 
   has(key: Key) {
     const [_key] = this.serializeKey(key)
-    return this.__cache.has(_key)
+    return this.cache.has(_key)
   }
 
   clear() {
-    this.__cache.clear()
+    this.cache.clear()
     this.notify()
   }
 
   delete(key: Key) {
     const [_key] = this.serializeKey(key)
-    this.__cache.delete(_key)
+    this.cache.delete(_key)
     this.notify()
   }
 
@@ -74,22 +74,22 @@ export default class Cache implements CacheType {
     }
 
     let isSubscribed = true
-    this.__listeners.push(listener)
+    this.subs.push(listener)
 
     return () => {
       if (!isSubscribed) return
       isSubscribed = false
-      const index = this.__listeners.indexOf(listener)
+      const index = this.subs.indexOf(listener)
       if (index > -1) {
-        this.__listeners[index] = this.__listeners[this.__listeners.length - 1]
-        this.__listeners.length--
+        this.subs[index] = this.subs[this.subs.length - 1]
+        this.subs.length--
       }
     }
   }
 
   // Notify Cache subscribers about a change in the cache
   private notify() {
-    for (let listener of this.__listeners) {
+    for (let listener of this.subs) {
       listener()
     }
   }

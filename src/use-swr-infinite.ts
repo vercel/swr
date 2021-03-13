@@ -68,20 +68,20 @@ function useSWRInfinite<Data = any, Error = any>(
     // not ready
   }
 
-  const [, rerender] = useState<boolean>(false)
+  const rerender = useState({})[1]
 
   // we use cache to pass extra info (context) to fetcher so it can be globally shared
   // here we get the key of the fetcher context cache
   let contextCacheKey: string | null = null
   if (firstPageKey) {
-    contextCacheKey = 'context@' + firstPageKey
+    contextCacheKey = 'ctx@' + firstPageKey
   }
 
   // page count is cached as well, so when navigating the list can be restored
   let pageCountCacheKey: string | null = null
   let cachedPageSize
   if (firstPageKey) {
-    pageCountCacheKey = 'size@' + firstPageKey
+    pageCountCacheKey = 'len@' + firstPageKey
     cachedPageSize = cache.get(pageCountCacheKey)
   }
   const pageCountRef = useRef<number>(cachedPageSize || initialSize)
@@ -105,10 +105,10 @@ function useSWRInfinite<Data = any, Error = any>(
 
   // actual swr of all pages
   const swr = useSWR<Data[], Error>(
-    firstPageKey ? ['many', firstPageKey] : null,
+    firstPageKey ? ['inf', firstPageKey] : null,
     async () => {
       // get the revalidate context
-      const { originalData, force } = cache.get(contextCacheKey) || {}
+      const { data: originalData, force } = cache.get(contextCacheKey) || {}
 
       // return an array of page data
       const data: Data[] = []
@@ -174,7 +174,7 @@ function useSWRInfinite<Data = any, Error = any>(
       if (shouldRevalidate && typeof data !== 'undefined') {
         // we only revalidate the pages that are changed
         const originalData = dataRef.current
-        cache.set(contextCacheKey, { originalData, force: false })
+        cache.set(contextCacheKey, { data: originalData, force: false })
       } else if (shouldRevalidate) {
         // calling `mutate()`, we revalidate all pages
         cache.set(contextCacheKey, { force: true })
@@ -197,7 +197,7 @@ function useSWRInfinite<Data = any, Error = any>(
         pageCountRef.current = arg
       }
       cache.set(pageCountCacheKey, pageCountRef.current)
-      rerender(v => !v)
+      rerender({})
       return mutate(v => v)
     },
     [mutate, pageCountCacheKey]
