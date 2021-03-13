@@ -1,24 +1,21 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import React, { useEffect, useState } from 'react'
 import useSWR, { mutate } from '../src'
-import { sleep } from './utils'
+import { sleep, createResponse } from './utils'
 
 describe('useSWR - error', () => {
   it('should handle errors', async () => {
     function Page() {
-      const { data, error } = useSWR(
-        'error-1',
-        () =>
-          new Promise((_, rej) =>
-            setTimeout(() => rej(new Error('error!')), 200)
-          )
+      const { data, error } = useSWR('error-1', () =>
+        createResponse(new Error('error!'))
       )
       if (error) return <div>{error.message}</div>
       return <div>hello, {data}</div>
     }
-    const { container } = render(<Page />)
 
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
+    render(<Page />)
+    screen.getByText('hello,')
+
     // mount
     await screen.findByText('error!')
   })
@@ -28,18 +25,16 @@ describe('useSWR - error', () => {
     function Page() {
       const { data, error } = useSWR(
         'error-2',
-        () =>
-          new Promise((_, rej) =>
-            setTimeout(() => rej(new Error('error!')), 200)
-          ),
+        () => createResponse(new Error('error!')),
         { onError: (_, key) => (erroredSWR = key) }
       )
       if (error) return <div>{error.message}</div>
       return <div>hello, {data}</div>
     }
-    const { container } = render(<Page />)
 
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
+    render(<Page />)
+    screen.getByText('hello,')
+
     // mount
     await screen.findByText('error!')
     expect(erroredSWR).toEqual('error-2')
@@ -50,14 +45,10 @@ describe('useSWR - error', () => {
     function Page() {
       const { data, error } = useSWR(
         'error-3',
-        () => {
-          return new Promise((_, rej) =>
-            setTimeout(() => rej(new Error('error: ' + count++)), 100)
-          )
-        },
+        () => createResponse(new Error('error: ' + count++), { delay: 100 }),
         {
           onErrorRetry: (_, __, ___, revalidate, revalidateOpts) => {
-            setTimeout(() => revalidate(revalidateOpts), 100)
+            setTimeout(() => revalidate(revalidateOpts), 50)
           },
           dedupingInterval: 0
         }
@@ -65,15 +56,18 @@ describe('useSWR - error', () => {
       if (error) return <div>{error.message}</div>
       return <div>hello, {data}</div>
     }
-    const { container } = render(<Page />)
 
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
+    render(<Page />)
+    screen.getByText('hello,')
+
     // mount
     await screen.findByText('error: 0')
-    await act(() => sleep(210)) // retry
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"error: 1"`)
-    await act(() => sleep(210)) // retry
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"error: 2"`)
+
+    await act(() => sleep(200)) // retry
+    screen.getByText('error: 1')
+
+    await act(() => sleep(200)) // retry
+    screen.getByText('error: 2')
   })
 
   it('should trigger the onLoadingSlow and onSuccess event', async () => {
@@ -82,7 +76,7 @@ describe('useSWR - error', () => {
     function Page() {
       const { data } = useSWR(
         'error-4',
-        () => new Promise(res => setTimeout(() => res('SWR'), 200)),
+        () => createResponse('SWR', { delay: 200 }),
         {
           onLoadingSlow: key => (loadingSlow = key),
           onSuccess: (_, key) => (success = key),
@@ -91,29 +85,25 @@ describe('useSWR - error', () => {
       )
       return <div>hello, {data}</div>
     }
-    const { container } = render(<Page />)
 
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
+    render(<Page />)
+    screen.getByText('hello,')
     expect(loadingSlow).toEqual(null)
-    await act(() => sleep(110)) // slow
+
+    await act(() => sleep(150)) // trigger onLoadingSlow event
     expect(loadingSlow).toEqual('error-4')
     expect(success).toEqual(null)
-    await act(() => sleep(100)) // finish
+
+    await act(() => sleep(150)) // finish the request
     expect(success).toEqual('error-4')
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"hello, SWR"`
-    )
+    screen.getByText('hello, SWR')
   })
   it('should trigger limited error retries if errorRetryCount exists', async () => {
     let count = 0
     function Page() {
       const { data, error } = useSWR(
         'error-5',
-        () => {
-          return new Promise((_, rej) =>
-            setTimeout(() => rej(new Error('error: ' + count++)), 100)
-          )
-        },
+        () => createResponse(new Error('error: ' + count++)),
         {
           errorRetryCount: 1,
           errorRetryInterval: 50,
@@ -123,36 +113,33 @@ describe('useSWR - error', () => {
       if (error) return <div>{error.message}</div>
       return <div>hello, {data}</div>
     }
-    const { container } = render(<Page />)
 
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
+    render(<Page />)
+    screen.getByText('hello,')
+
     // mount
     await screen.findByText('error: 0')
 
-    await act(() => sleep(210)) // retry
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"error: 1"`)
-    await act(() => sleep(210)) // retry
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"error: 1"`)
+    await screen.findByText('error: 1') // retry
+
+    await act(() => sleep(200)) // a retry request won't happen because retryCount is over
+    screen.getByText('error: 1')
   })
 
   it('should not trigger the onLoadingSlow and onSuccess event after component unmount', async () => {
     let loadingSlow = null,
       success = null
     function Page() {
-      const { data } = useSWR(
-        'error-6',
-        () => new Promise(res => setTimeout(() => res('SWR'), 200)),
-        {
-          onLoadingSlow: key => {
-            loadingSlow = key
-          },
-          onSuccess: (_, key) => {
-            success = key
-          },
-          loadingTimeout: 100
-        }
-      )
-      return <div>{data}</div>
+      const { data } = useSWR('error-6', () => createResponse('SWR'), {
+        onLoadingSlow: key => {
+          loadingSlow = key
+        },
+        onSuccess: (_, key) => {
+          success = key
+        },
+        loadingTimeout: 100
+      })
+      return <div>hello, {data}</div>
     }
 
     function App() {
@@ -164,15 +151,13 @@ describe('useSWR - error', () => {
       )
     }
 
-    const { container } = render(<App />)
-
+    render(<App />)
+    screen.getByText('hello,')
     expect(loadingSlow).toEqual(null)
     expect(success).toEqual(null)
 
-    await act(async () => sleep(10))
-    fireEvent.click(container.firstElementChild)
+    fireEvent.click(screen.getByText('hello,'))
     await act(async () => sleep(200))
-
     expect(success).toEqual(null)
     expect(loadingSlow).toEqual(null)
   })
@@ -183,10 +168,7 @@ describe('useSWR - error', () => {
     function Page() {
       const { data } = useSWR(
         'error-7',
-        () =>
-          new Promise((_, rej) =>
-            setTimeout(() => rej(new Error('error!')), 200)
-          ),
+        () => createResponse(new Error('error!')),
         {
           onError: (_, key) => {
             failed = key
@@ -197,7 +179,7 @@ describe('useSWR - error', () => {
           dedupingInterval: 0
         }
       )
-      return <div>{data}</div>
+      return <div>hello, {data}</div>
     }
 
     function App() {
@@ -209,15 +191,13 @@ describe('useSWR - error', () => {
       )
     }
 
-    const { container } = render(<App />)
-
+    render(<App />)
+    screen.getByText('hello,')
     expect(retry).toEqual(null)
     expect(failed).toEqual(null)
 
-    await act(async () => sleep(10))
-    fireEvent.click(container.firstElementChild)
+    fireEvent.click(screen.getByText('hello,'))
     await act(async () => sleep(200))
-
     expect(retry).toEqual(null)
     expect(failed).toEqual(null)
   })
@@ -227,11 +207,7 @@ describe('useSWR - error', () => {
     function Page() {
       const { data, error } = useSWR(
         'error-8',
-        () => {
-          return new Promise((_, rej) =>
-            setTimeout(() => rej(new Error('error: ' + count++)), 100)
-          )
-        },
+        () => createResponse(new Error('error: ' + count++)),
         {
           errorRetryCount: 0,
           errorRetryInterval: 50,
@@ -241,30 +217,26 @@ describe('useSWR - error', () => {
       if (error) return <div>{error.message}</div>
       return <div>hello, {data}</div>
     }
-    const { container } = render(<Page />)
 
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
+    render(<Page />)
+    screen.getByText('hello,')
+
     // mount
     await screen.findByText('error: 0')
-    await act(() => sleep(210)) // retry
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"error: 0"`)
+
+    await act(() => sleep(210)) // retry is never happen
+    screen.getByText('error: 0')
   })
 
   it('should not clear error during revalidating until fetcher is finished successfully', async () => {
     const errors = []
     const key = 'error-9'
     function Page() {
-      const { error } = useSWR(
-        key,
-        () => {
-          return new Promise((_, rej) => rej(new Error('error')))
-        },
-        {
-          errorRetryCount: 0,
-          errorRetryInterval: 0,
-          dedupingInterval: 0
-        }
-      )
+      const { error } = useSWR(key, () => createResponse(new Error('error')), {
+        errorRetryCount: 0,
+        errorRetryInterval: 0,
+        dedupingInterval: 0
+      })
       useEffect(() => {
         errors.push(error ? error.message : null)
       }, [error])
@@ -277,9 +249,7 @@ describe('useSWR - error', () => {
     // mount
     await screen.findByText('hello, error')
 
-    await act(() => {
-      return mutate(key, undefined, true)
-    })
+    await act(() => mutate(key, undefined, true))
     // initial -> first error -> mutate -> receive another error
     // error won't be cleared during revalidation
     expect(errors).toEqual([null, 'error', 'error'])
