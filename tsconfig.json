@@ -3,9 +3,7 @@
     "declaration": true,
     "esModuleInterop": true,
     "jsx": "react",
-    "lib": [
-      "esnext", "dom"
-    ],
+    "lib": ["esnext", "dom"],
     "module": "commonjs",
     "moduleResolution": "node",
     "noFallthroughCasesInSwitch": true,
@@ -13,24 +11,16 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "outDir": "./dist",
-    "types": [
-      "node", "jest"
-    ],
+    "types": ["node", "jest"],
     "rootDir": "src",
+    "strict": true,
     "target": "es5",
-    "typeRoots": [
-      "./types",
-      "./node_modules/@types"
-    ]
+    "typeRoots": ["./types", "./node_modules/@types"]
   },
   "include": ["src/**/*"],
   "watchOptions": {
-    // Use native file system events for files and directories
     "watchFile": "useFsEvents",
     "watchDirectory": "useFsEvents",
-
-    // Poll files for updates more frequently
-    // when they're updated a lot.
     "fallbackPolling": "dynamicPriority"
   }
 }

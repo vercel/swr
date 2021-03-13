@@ -1,6 +1,6 @@
 {
   "name": "swr",
-  "version": "0.4.2",
+  "version": "0.5.1",
   "description": "React Hooks library for remote data fetching",
   "main": "./dist/index.js",
   "module": "./esm/index.js",
@@ -66,9 +66,6 @@
     "react-dom": "16.11.0",
     "ts-jest": "25.5.1",
     "typescript": "3.6.4"
-  },
-  "dependencies": {
-    "dequal": "2.0.2"
   },
   "peerDependencies": {
     "react": "^16.11.0 || ^17.0.0"

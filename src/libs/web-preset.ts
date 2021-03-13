@@ -19,7 +19,7 @@ const isDocumentVisible = () => {
   return true
 }
 
-const fetcher = url => fetch(url).then(res => res.json())
+const fetcher = (url: string) => fetch(url).then(res => res.json())
 
 const registerOnFocus = (cb: () => void) => {
   if (
