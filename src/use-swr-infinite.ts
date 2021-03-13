@@ -3,7 +3,7 @@ import { useContext, useRef, useState, useCallback } from 'react'
 
 import defaultConfig, { cache } from './config'
 import SWRConfigContext from './swr-config-context'
-import useSWR from './use-swr'
+import useSWR, { useIsomorphicLayoutEffect } from './use-swr'
 
 import {
   ValueKey,
@@ -57,7 +57,6 @@ function useSWRInfinite<Data = any, Error = any>(
     initialSize = 1,
     revalidateAll = false,
     persistSize = false,
-    useIsomorphicLayoutEffect,
     ...extraConfig
   } = config
 

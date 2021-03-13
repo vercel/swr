@@ -1,5 +1,3 @@
-import { useEffect, useLayoutEffect } from 'react'
-
 /**
  * Due to bug https://bugs.chromium.org/p/chromium/issues/detail?id=678075,
  * it's not reliable to detect if the browser is currently online or offline
@@ -53,28 +51,10 @@ const registerOnReconnect = (cb: () => void) => {
   }
 }
 
-const IS_SERVER =
-  typeof window === 'undefined' ||
-  // @ts-ignore
-  !!(typeof Deno !== 'undefined' && Deno && Deno.version && Deno.version.deno)
-
-// polyfill for requestAnimationFrame
-const rAF = IS_SERVER
-  ? null
-  : window['requestAnimationFrame'] || (f => setTimeout(f, 1))
-
-// React currently throws a warning when using useLayoutEffect on the server.
-// To get around it, we can conditionally useEffect on the server (no-op) and
-// useLayoutEffect in the browser.
-const useIsomorphicLayoutEffect = IS_SERVER ? useEffect : useLayoutEffect
-
 export default {
   isOnline,
   isDocumentVisible,
   fetcher,
   registerOnFocus,
-  registerOnReconnect,
-  rAF,
-  useIsomorphicLayoutEffect,
-  IS_SERVER
+  registerOnReconnect
 }
