@@ -6,7 +6,7 @@ import { sleep } from './utils'
 describe('useSWR - configs', () => {
   it('should read the config fallback from the context', async () => {
     let value = 0
-    const INTERVAL = 50
+    const INTERVAL = 100
     const fetcher = () => value++
 
     function Section() {
