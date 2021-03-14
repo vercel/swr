@@ -129,7 +129,7 @@ describe('useSWR - config callbacks', () => {
   })
 
   it('should trigger the onLoadingSlow and onSuccess event with the lastest version of the callbacks', async () => {
-    const LOADING_TIMEOUT = 5
+    const LOADING_TIMEOUT = 100
     let state = null
     let count = 0
 
