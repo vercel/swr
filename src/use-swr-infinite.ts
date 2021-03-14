@@ -1,7 +1,8 @@
 // TODO: use @ts-expect-error
-import { useContext, useRef, useState, useEffect, useCallback } from 'react'
+import { useContext, useRef, useState, useCallback } from 'react'
 
 import defaultConfig, { cache } from './config'
+import { useIsomorphicLayoutEffect } from './env'
 import SWRConfigContext from './swr-config-context'
 import useSWR from './use-swr'
 
@@ -68,34 +69,40 @@ function useSWRInfinite<Data = any, Error = any>(
     // not ready
   }
 
-  const [, rerender] = useState<boolean>(false)
+  const rerender = useState({})[1]
 
   // we use cache to pass extra info (context) to fetcher so it can be globally shared
   // here we get the key of the fetcher context cache
   let contextCacheKey: string | null = null
   if (firstPageKey) {
-    contextCacheKey = 'context@' + firstPageKey
+    contextCacheKey = 'ctx@' + firstPageKey
   }
 
-  // page count is cached as well, so when navigating the list can be restored
-  let pageCountCacheKey: string | null = null
-  let cachedPageSize
+  // page size is also cached to share the page data between hooks having the same key
+  let pageSizeCacheKey: string | null = null
   if (firstPageKey) {
-    pageCountCacheKey = 'size@' + firstPageKey
-    cachedPageSize = cache.get(pageCountCacheKey)
+    pageSizeCacheKey = 'len@' + firstPageKey
   }
-  const pageCountRef = useRef<number>(cachedPageSize || initialSize)
   const didMountRef = useRef<boolean>(false)
 
+  const resolvePageSize = useCallback((): number => {
+    const cachedPageSize = cache.get(pageSizeCacheKey)
+    return typeof cachedPageSize !== 'undefined' ? cachedPageSize : initialSize
+  }, [pageSizeCacheKey, initialSize])
+  // keep the last page size to restore it with the persistSize option
+  const lastPageSizeRef = useRef<number>(resolvePageSize())
+
   // every time the key changes, we reset the page size if it's not persisted
-  useEffect(() => {
-    if (didMountRef.current) {
-      if (!persistSize) {
-        pageCountRef.current = initialSize
-      }
-    } else {
+  useIsomorphicLayoutEffect(() => {
+    if (!didMountRef.current) {
       didMountRef.current = true
+      return
     }
+    // If the key has been changed, we keep the current page size if persistSize is enabled
+    cache.set(
+      pageSizeCacheKey,
+      persistSize ? lastPageSizeRef.current : initialSize
+    )
     // initialSize isn't allowed to change during the lifecycle
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [firstPageKey])
@@ -105,16 +112,17 @@ function useSWRInfinite<Data = any, Error = any>(
 
   // actual swr of all pages
   const swr = useSWR<Data[], Error>(
-    firstPageKey ? ['many', firstPageKey] : null,
+    firstPageKey ? ['inf', firstPageKey] : null,
     async () => {
       // get the revalidate context
-      const { originalData, force } = cache.get(contextCacheKey) || {}
+      const { data: originalData, force } = cache.get(contextCacheKey) || {}
 
       // return an array of page data
       const data: Data[] = []
 
+      const pageSize = resolvePageSize()
       let previousPageData = null
-      for (let i = 0; i < pageCountRef.current; ++i) {
+      for (let i = 0; i < pageSize; ++i) {
         const [pageKey, pageArgs] = cache.serializeKey(
           getKey(i, previousPageData)
         )
@@ -165,7 +173,7 @@ function useSWRInfinite<Data = any, Error = any>(
   )
 
   // update dataRef
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     dataRef.current = swr.data
   }, [swr.data])
 
@@ -174,7 +182,7 @@ function useSWRInfinite<Data = any, Error = any>(
       if (shouldRevalidate && typeof data !== 'undefined') {
         // we only revalidate the pages that are changed
         const originalData = dataRef.current
-        cache.set(contextCacheKey, { originalData, force: false })
+        cache.set(contextCacheKey, { data: originalData, force: false })
       } else if (shouldRevalidate) {
         // calling `mutate()`, we revalidate all pages
         cache.set(contextCacheKey, { force: true })
@@ -188,23 +196,26 @@ function useSWRInfinite<Data = any, Error = any>(
   )
 
   // extend the SWR API
-  const size = pageCountRef.current
   const setSize = useCallback(
-    arg => {
+    (arg: number | ((size: number) => number)) => {
+      let size
       if (typeof arg === 'function') {
-        pageCountRef.current = arg(pageCountRef.current)
+        size = arg(resolvePageSize())
       } else if (typeof arg === 'number') {
-        pageCountRef.current = arg
+        size = arg
       }
-      cache.set(pageCountCacheKey, pageCountRef.current)
-      rerender(v => !v)
+      if (typeof size === 'number') {
+        cache.set(pageSizeCacheKey, size)
+        lastPageSizeRef.current = size
+      }
+      rerender({})
       return mutate(v => v)
     },
-    [mutate, pageCountCacheKey]
+    [pageSizeCacheKey, resolvePageSize, mutate]
   )
 
   // Use getter functions to avoid unnecessary re-renders caused by triggering all the getters of the returned swr object
-  const swrInfinite = { size, setSize, mutate }
+  const swrInfinite = { size: resolvePageSize(), setSize, mutate }
   Object.defineProperties(swrInfinite, {
     error: {
       get: () => swr.error,

@@ -7,7 +7,7 @@ import defaultConfig from '../src/config'
 describe('useSWR - configs', () => {
   it('should read the config fallback from the context', async () => {
     let value = 0
-    const INTERVAL = 10
+    const INTERVAL = 100
     const fetcher = () => value++
 
     function Section() {
