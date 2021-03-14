@@ -19,10 +19,10 @@ describe('useSWR - focus', () => {
       })
       return <div>data: {data}</div>
     }
-    const { container } = render(<Page />)
 
+    render(<Page />)
     // hydration
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
+    screen.getByText('data:')
     // mount
     await screen.findByText('data: 0')
 
@@ -43,10 +43,11 @@ describe('useSWR - focus', () => {
       })
       return <div>data: {data}</div>
     }
-    const { container } = render(<Page />)
 
+    render(<Page />)
     // hydration
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
+    screen.getByText('data:')
+
     // mount
     await screen.findByText('data: 0')
 
@@ -54,7 +55,7 @@ describe('useSWR - focus', () => {
     // trigger revalidation
     await focusWindow()
     // should not be revalidated
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
+    screen.getByText('data: 0')
   })
   it('revalidateOnFocus shoule be stateful', async () => {
     let value = 0
@@ -68,10 +69,11 @@ describe('useSWR - focus', () => {
       })
       return <div onClick={() => toggle(s => !s)}>data: {data}</div>
     }
-    const { container } = render(<Page />)
 
+    render(<Page />)
     // hydration
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
+    screen.getByText('data:')
+
     // mount
     await screen.findByText('data: 0')
 
@@ -79,10 +81,10 @@ describe('useSWR - focus', () => {
     // trigger revalidation
     await focusWindow()
     // data should not change
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
+    screen.getByText('data: 0')
 
     // change revalidateOnFocus to true
-    fireEvent.click(container.firstElementChild)
+    fireEvent.click(screen.getByText('data: 0'))
     // trigger revalidation
     await focusWindow()
     // data should update
@@ -96,11 +98,11 @@ describe('useSWR - focus', () => {
 
     await waitForNextTick()
     // change revalidateOnFocus to false
-    fireEvent.click(container.firstElementChild)
+    fireEvent.click(screen.getByText('data: 2'))
     // trigger revalidation
     await focusWindow()
     // data should not change
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 2"`)
+    screen.getByText('data: 2')
   })
 
   it('focusThrottleInterval should work', async () => {
@@ -118,10 +120,11 @@ describe('useSWR - focus', () => {
       )
       return <div>data: {data}</div>
     }
-    const { container } = render(<Page />)
 
+    render(<Page />)
     // hydration
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
+    screen.getByText('data:')
+
     // mount
     await screen.findByText('data: 0')
 
@@ -157,10 +160,11 @@ describe('useSWR - focus', () => {
       )
       return <div onClick={() => setInterval(s => s + 100)}>data: {data}</div>
     }
-    const { container } = render(<Page />)
 
+    render(<Page />)
     // hydration
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
+    screen.getByText('data:')
+
     // mount
     await screen.findByText('data: 0')
 
@@ -175,7 +179,7 @@ describe('useSWR - focus', () => {
 
     await waitForNextTick()
     // increase focusThrottleInterval
-    fireEvent.click(container.firstElementChild)
+    fireEvent.click(screen.getByText('data: 2'))
     // wait for throttle interval
     await act(() => sleep(100))
     // trigger revalidation
