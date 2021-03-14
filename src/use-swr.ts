@@ -584,10 +584,7 @@ function useSWR<Data = any, Error = any>(
     const softRevalidate = () => revalidate({ dedupe: true })
 
     // trigger a revalidation
-    if (
-      isUpdating ||
-      willRevalidateOnMount()
-    ) {
+    if (isUpdating || willRevalidateOnMount()) {
       if (typeof latestKeyedData !== 'undefined' && !IS_SERVER) {
         // delay revalidate if there's cache
         // to not block the rendering
@@ -829,7 +826,12 @@ function useSWR<Data = any, Error = any>(
   return memoizedState
 }
 
-const SWRConfig = SWRConfigContext.Provider
+Object.defineProperty(SWRConfigContext.Provider, 'default', {
+  value: defaultConfig
+})
+const SWRConfig = SWRConfigContext.Provider as typeof SWRConfigContext.Provider & {
+  default: SWRConfiguration
+}
 
 export { trigger, mutate, SWRConfig }
 export default useSWR

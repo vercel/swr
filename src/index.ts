@@ -7,7 +7,7 @@ export * from './use-swr'
 export { useSWRInfinite } from './use-swr-infinite'
 
 // Cache related, to be replaced by the new APIs
-export { default as defaultSWRConfig, cache } from './config'
+export { cache } from './config'
 
 // Types
 export {
