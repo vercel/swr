@@ -211,7 +211,9 @@ function useSWRInfinite<Data = any, Error = any>(
       rerender({})
       return mutate(v => v)
     },
-    [pageSizeCacheKey, resolvePageSize, mutate]
+    // immutability of rerender is guaranteed by React, but react-hooks/exhaustive-deps doesn't recognize it
+    // from `rerender = useState({})[1], so we put rerender here
+    [pageSizeCacheKey, resolvePageSize, mutate, rerender]
   )
 
   // Use getter functions to avoid unnecessary re-renders caused by triggering all the getters of the returned swr object
