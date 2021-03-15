@@ -324,7 +324,6 @@ function useSWR<Data = any, Error = any>(
           shouldUpdateState =
             shouldUpdateState || stateDependencies.current.data
         }
-
         // always update error
         // because it can be `undefined`
         if ('error' in payload && stateRef.current.error !== error) {
@@ -563,24 +562,23 @@ function useSWR<Data = any, Error = any>(
     const isUpdating = initialMountedRef.current
     initialMountedRef.current = true
 
+    keyRef.current = key
+
     // after the component is mounted (hydrated),
     // we need to update the data from the cache
     // and trigger a revalidation
-    const latestKeyedData = resolveData()
-
-    // update the state if the key changed (not the inital render) or cache updated
-    if (keyRef.current !== key) {
-      keyRef.current = key
-    }
-
-    dispatch({ data: latestKeyedData })
+    dispatch({
+      data: initialData,
+      error: initialError,
+      isValidating: initialIsValidating
+    })
 
     // revalidate with deduping
     const softRevalidate = () => revalidate({ dedupe: true })
 
     // trigger a revalidation
     if (isUpdating || willRevalidateOnMount()) {
-      if (typeof latestKeyedData !== 'undefined' && !IS_SERVER) {
+      if (typeof initialData !== 'undefined' && !IS_SERVER) {
         // delay revalidate if there's cache
         // to not block the rendering
 
@@ -758,7 +756,7 @@ function useSWR<Data = any, Error = any>(
           if (config.suspense) {
             return latestError
           }
-          return stateRef.current.error
+          return key ? stateRef.current.error : initialError
         },
         enumerable: true
       },
@@ -768,7 +766,7 @@ function useSWR<Data = any, Error = any>(
           if (config.suspense) {
             return latestData
           }
-          return stateRef.current.data
+          return key ? stateRef.current.data : initialData
         },
         enumerable: true
       },
@@ -789,7 +787,16 @@ function useSWR<Data = any, Error = any>(
     // `initialData` and `initialError` are not initial values
     // because they are changed during the lifecycle
     // so we should add them in the deps array.
-  }, [revalidate, boundMutate, key, config.suspense, latestError, latestData])
+  }, [
+    revalidate,
+    boundMutate,
+    key,
+    config.suspense,
+    latestError,
+    latestData,
+    initialData,
+    initialError
+  ])
   return memoizedState
 }
 
