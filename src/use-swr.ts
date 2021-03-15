@@ -2,8 +2,6 @@
 import {
   useCallback,
   useContext,
-  useEffect,
-  useLayoutEffect,
   useState,
   useRef,
   useMemo,
@@ -11,6 +9,7 @@ import {
 } from 'react'
 
 import defaultConfig, { cache } from './config'
+import { IS_SERVER, rAF, useIsomorphicLayoutEffect } from './env'
 import SWRConfigContext from './swr-config-context'
 import {
   Action,
@@ -24,21 +23,6 @@ import {
   Updater,
   SWRConfiguration
 } from './types'
-
-const IS_SERVER =
-  typeof window === 'undefined' ||
-  // @ts-ignore
-  !!(typeof Deno !== 'undefined' && Deno && Deno.version && Deno.version.deno)
-
-// polyfill for requestAnimationFrame
-const rAF = IS_SERVER
-  ? null
-  : window['requestAnimationFrame'] || (f => setTimeout(f, 1))
-
-// React currently throws a warning when using useLayoutEffect on the server.
-// To get around it, we can conditionally useEffect on the server (no-op) and
-// useLayoutEffect in the browser.
-const useIsomorphicLayoutEffect = IS_SERVER ? useEffect : useLayoutEffect
 
 type Revalidator = (...args: any[]) => void
 
@@ -292,7 +276,7 @@ function useSWR<Data = any, Error = any>(
   // display the data label in the React DevTools next to SWR hooks
   useDebugValue(stateRef.current.data)
 
-  const rerender = useState<unknown>(null)[1]
+  const rerender = useState<unknown>({})[1]
 
   let dispatch = useCallback(
     (payload: Action<Data, Error>) => {
@@ -352,26 +336,21 @@ function useSWR<Data = any, Error = any>(
     revalidators: Record<string, Revalidator[]>,
     callback: Revalidator
   ) => {
-    if (!callback) return
     if (!revalidators[key]) {
       revalidators[key] = [callback]
     } else {
       revalidators[key].push(callback)
     }
-  }
 
-  const removeRevalidator = (
-    revlidators: Record<string, Revalidator[]>,
-    callback: Revalidator
-  ) => {
-    if (revlidators[key]) {
-      const revalidators = revlidators[key]
-      const index = revalidators.indexOf(callback)
+    return () => {
+      const keyedRevalidators = revalidators[key]
+      const index = keyedRevalidators.indexOf(callback)
+
       if (index >= 0) {
-        // 10x faster than splice
-        // https://jsperf.com/array-remove-by-index
-        revalidators[index] = revalidators[revalidators.length - 1]
-        revalidators.pop()
+        // O(1): faster than splice
+        keyedRevalidators[index] =
+          keyedRevalidators[keyedRevalidators.length - 1]
+        keyedRevalidators.pop()
       }
     }
   }
@@ -573,9 +552,8 @@ function useSWR<Data = any, Error = any>(
     const latestKeyedData = resolveData()
 
     // update the state if the key changed (not the inital render) or cache updated
-    if (keyRef.current !== key) {
-      keyRef.current = key
-    }
+    keyRef.current = key
+
     if (!config.compare(currentHookData, latestKeyedData)) {
       dispatch({ data: latestKeyedData })
     }
@@ -662,9 +640,9 @@ function useSWR<Data = any, Error = any>(
       return false
     }
 
-    addRevalidator(FOCUS_REVALIDATORS, onFocus)
-    addRevalidator(RECONNECT_REVALIDATORS, onReconnect)
-    addRevalidator(CACHE_REVALIDATORS, onUpdate)
+    const unsubFocus = addRevalidator(FOCUS_REVALIDATORS, onFocus)
+    const unsubReconnect = addRevalidator(RECONNECT_REVALIDATORS, onReconnect)
+    const unsubUpdate = addRevalidator(CACHE_REVALIDATORS, onUpdate)
 
     return () => {
       // cleanup
@@ -673,9 +651,9 @@ function useSWR<Data = any, Error = any>(
       // mark it as unmounted
       unmountedRef.current = true
 
-      removeRevalidator(FOCUS_REVALIDATORS, onFocus)
-      removeRevalidator(RECONNECT_REVALIDATORS, onReconnect)
-      removeRevalidator(CACHE_REVALIDATORS, onUpdate)
+      unsubFocus()
+      unsubReconnect()
+      unsubUpdate()
     }
   }, [key, revalidate])
 

@@ -160,7 +160,7 @@ describe('useSWR - config callbacks', () => {
     expect(state).toEqual(null)
 
     // should trigger a loading slow event
-    await act(() => sleep(LOADING_TIMEOUT))
+    await act(() => sleep(LOADING_TIMEOUT * 1.5))
     screen.getByText('hello, , a')
     expect(state).toEqual('a')
 

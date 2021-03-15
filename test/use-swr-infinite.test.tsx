@@ -514,4 +514,62 @@ describe('useSWRInfinite', () => {
     await screen.findByText('page-1-1, page-1-2, page-2-1, page-2-2')
     expect(requests).toEqual(['/api?page=1', '/api?page=2'])
   })
+
+  it('should share data between multiple hooks have the same key', async () => {
+    const dummyResponses = {
+      '/api?page=1': ['page-1-1', 'page-1-2'],
+      '/api?page=2': ['page-2-1', 'page-2-2']
+    }
+    const useCustomSWRInfinite = () => {
+      const { data, setSize, size } = useSWRInfinite<string[], string>(
+        index => {
+          return [`page-test-11`, `/api?page=${index + 1}`]
+        },
+        async (_, index) => {
+          return dummyResponses[index]
+        }
+      )
+      return {
+        data: data ? [].concat(...data) : [],
+        setSize,
+        size
+      }
+    }
+
+    const Component = (props: { label: string }) => {
+      const { data, size, setSize } = useCustomSWRInfinite()
+      return (
+        <>
+          <ul>
+            {data.map(value => (
+              <li key={value}>
+                {props.label}:{value}
+              </li>
+            ))}
+          </ul>
+          <button onClick={() => setSize(size + 1)}>{props.label}:click</button>
+        </>
+      )
+    }
+
+    function Page() {
+      return (
+        <div>
+          <Component label="A" />
+          <Component label="B" />
+        </div>
+      )
+    }
+    render(<Page />)
+
+    // render responses for page=1
+    await screen.findByText('A:page-1-2')
+    await screen.findByText('B:page-1-2')
+
+    fireEvent.click(screen.getByText('A:click'))
+
+    // render responses for page=2
+    await screen.findByText('A:page-2-2')
+    await screen.findByText('B:page-2-2')
+  })
 })
