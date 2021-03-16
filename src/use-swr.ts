@@ -804,7 +804,12 @@ function useSWR<Data = any, Error = any>(
   return memoizedState
 }
 
-const SWRConfig = SWRConfigContext.Provider
+Object.defineProperty(SWRConfigContext.Provider, 'default', {
+  value: defaultConfig
+})
+const SWRConfig = SWRConfigContext.Provider as typeof SWRConfigContext.Provider & {
+  default: SWRConfiguration
+}
 
 export { trigger, mutate, SWRConfig }
 export default useSWR
