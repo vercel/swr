@@ -24,10 +24,9 @@ describe('useSWR - loading', () => {
     await act(() => sleep(110))
     expect(container.textContent).toMatchInlineSnapshot(`"hello, data, ready"`)
     //    data       isValidating
-    // -> undefined, false
     // -> undefined, true
     // -> data,      false
-    expect(renderCount).toEqual(3)
+    expect(renderCount).toEqual(2)
   })
 
   it('should avoid extra rerenders', async () => {

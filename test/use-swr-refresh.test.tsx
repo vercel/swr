@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import React, { useState } from 'react'
-import useSWR from '../src'
+import useSWR, { cache } from '../src'
 import { sleep } from './utils'
 
 describe('useSWR - refresh', () => {
@@ -201,15 +201,16 @@ describe('useSWR - refresh', () => {
     )
   })
 
-  it('should allow use custom isEqual method', async () => {
+  it('should allow use custom compare method', async () => {
     let count = 0
+    const key = 'dynamic-11'
     const fetcher = jest.fn(() => ({
       timestamp: ++count,
       version: '1.0'
     }))
     function Page() {
-      const { data, mutate: change } = useSWR('dynamic-11', fetcher, {
-        compare: function isEqual(a, b) {
+      const { data, mutate: change } = useSWR(key, fetcher, {
+        compare: function compare(a, b) {
           if (a === b) {
             return true
           }
@@ -244,6 +245,9 @@ describe('useSWR - refresh', () => {
       timestamp: 2,
       version: '1.0'
     })
+
+    const cachedData = cache.get(key)
+    expect(cachedData.timestamp.toString()).toEqual('1')
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"1"`)
   })
 
