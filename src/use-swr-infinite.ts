@@ -7,17 +7,12 @@ import SWRConfigContext from './swr-config-context'
 import useSWR from './use-swr'
 
 import {
-  ValueKey,
+  KeyLoader,
   Fetcher,
   SWRInfiniteConfiguration,
   SWRInfiniteResponse,
   MutatorCallback
 } from './types'
-
-type KeyLoader<Data = any> = (
-  index: number,
-  previousPageData: Data | null
-) => ValueKey
 
 function useSWRInfinite<Data = any, Error = any>(
   ...args:
