@@ -7,9 +7,6 @@ import { cache } from './config'
 // `useSWRInfinite`
 export { useSWRInfinite } from './use-swr-infinite'
 
-/**
- * @deprecated exposed `cache` will be removed
- */
 export { cache }
 
 // Custom cache

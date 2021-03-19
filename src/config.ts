@@ -3,7 +3,10 @@ import { Configuration, RevalidatorOptions, Revalidator } from './types'
 import Cache from './cache'
 import webPreset from './libs/web-preset'
 
-// cache
+// global cache
+/**
+ * @deprecated exposed `cache` will be removed
+ */
 const cache = new Cache()
 
 // error retry
