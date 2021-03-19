@@ -567,7 +567,7 @@ function useSWR<Data = any, Error = any>(
         // delay revalidate if there's cache
         // to not block the rendering
 
-        //@ts-ignore it's safe to use requestAnimationFrame in browser
+        // @ts-ignore it's safe to use requestAnimationFrame in browser
         rAF(softRevalidate)
       } else {
         softRevalidate()

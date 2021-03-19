@@ -8,7 +8,9 @@ export const IS_SERVER =
 // polyfill for requestAnimationFrame
 export const rAF = IS_SERVER
   ? null
-  : window['requestAnimationFrame'] || (f => setTimeout(f, 1))
+  : window['requestAnimationFrame']
+  ? (f: FrameRequestCallback) => window['requestAnimationFrame'](f)
+  : (f: (...args: any[]) => void) => setTimeout(f, 1)
 
 // React currently throws a warning when using useLayoutEffect on the server.
 // To get around it, we can conditionally useEffect on the server (no-op) and
