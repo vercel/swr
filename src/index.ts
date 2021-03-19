@@ -17,6 +17,7 @@ export {
   Revalidator,
   RevalidatorOptions,
   Key,
+  KeyLoader,
   SWRResponse,
   Cache,
   // Legacy, for backwards compatibility
