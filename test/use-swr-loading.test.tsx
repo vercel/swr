@@ -1,15 +1,15 @@
-import { act, render } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 import React from 'react'
 import useSWR from '../src'
-import { sleep } from './utils'
+import { createResponse, sleep } from './utils'
 
 describe('useSWR - loading', () => {
-  const loadData = () => new Promise(res => setTimeout(() => res('data'), 100))
-
   it('should return loading state', async () => {
     let renderCount = 0
     function Page() {
-      const { data, isValidating } = useSWR('is-validating-1', loadData)
+      const { data, isValidating } = useSWR('is-validating-1', () =>
+        createResponse('data')
+      )
       renderCount++
       return (
         <div>
@@ -18,11 +18,10 @@ describe('useSWR - loading', () => {
       )
     }
 
-    const { container } = render(<Page />)
-    expect(container.textContent).toMatchInlineSnapshot(`"hello, , loading"`)
+    render(<Page />)
+    screen.getByText('hello, , loading')
 
-    await act(() => sleep(110))
-    expect(container.textContent).toMatchInlineSnapshot(`"hello, data, ready"`)
+    await screen.findByText('hello, data, ready')
     //    data       isValidating
     // -> undefined, true
     // -> data,      false
@@ -33,17 +32,14 @@ describe('useSWR - loading', () => {
     let renderCount = 0
     function Page() {
       // we never access `isValidating`, so it will not trigger rerendering
-      const { data } = useSWR('is-validating-2', loadData)
+      const { data } = useSWR('is-validating-2', () => createResponse('data'))
       renderCount++
       return <div>hello, {data}</div>
     }
 
-    const { container } = render(<Page />)
+    render(<Page />)
 
-    await act(() => sleep(110))
-
-    expect(container.textContent).toMatchInlineSnapshot(`"hello, data"`)
-
+    await screen.findByText('hello, data')
     //    data
     // -> undefined
     // -> data
@@ -53,25 +49,22 @@ describe('useSWR - loading', () => {
   it('should avoid extra rerenders while fetching', async () => {
     let renderCount = 0,
       dataLoaded = false
-    const loadDataWithLog = () =>
-      new Promise(res =>
-        setTimeout(() => {
-          dataLoaded = true
-          res('data')
-        }, 100)
-      )
 
     function Page() {
       // we never access anything
-      useSWR('is-validating-3', loadDataWithLog)
+      useSWR('is-validating-3', async () => {
+        const res = await createResponse('data')
+        dataLoaded = true
+        return res
+      })
       renderCount++
       return <div>hello</div>
     }
 
-    const { container } = render(<Page />)
-    expect(container.textContent).toMatchInlineSnapshot(`"hello"`)
+    render(<Page />)
+    screen.getByText('hello')
 
-    await act(() => sleep(110)) // wait
+    await act(() => sleep(100)) // wait
     // it doesn't re-render, but fetch was triggered
     expect(renderCount).toEqual(1)
     expect(dataLoaded).toEqual(true)
