@@ -35,8 +35,8 @@ describe('useSWR - refresh', () => {
 
     function Page() {
       const { data } = useSWR('dynamic-2', () => count++, {
-        refreshInterval: 200,
-        dedupingInterval: 300
+        refreshInterval: 100,
+        dedupingInterval: 150
       })
       return <div>count: {data}</div>
     }
@@ -48,26 +48,26 @@ describe('useSWR - refresh', () => {
     // mount
     await screen.findByText('count: 0')
 
-    await act(() => sleep(210)) // no update (deduped)
+    await act(() => sleep(110)) // no update (deduped)
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 0"`)
-    await act(() => sleep(200)) // update
+    await act(() => sleep(100)) // update
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 1"`)
-    await act(() => sleep(200)) // no update (deduped)
+    await act(() => sleep(100)) // no update (deduped)
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 1"`)
-    await act(() => sleep(200)) // update
+    await act(() => sleep(100)) // update
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 2"`)
   })
 
   it('should update data upon interval changes', async () => {
     let count = 0
     function Page() {
-      const [int, setInt] = React.useState(200)
+      const [int, setInt] = React.useState(100)
       const { data } = useSWR('/api', () => count++, {
         refreshInterval: int,
-        dedupingInterval: 100
+        dedupingInterval: 50
       })
       return (
-        <div onClick={() => setInt(num => (num < 400 ? num + 100 : 0))}>
+        <div onClick={() => setInt(num => (num < 200 ? num + 50 : 0))}>
           count: {data}
         </div>
       )
@@ -78,39 +78,39 @@ describe('useSWR - refresh', () => {
     // mount
     await screen.findByText('count: 0')
 
-    await act(() => sleep(210))
+    await act(() => sleep(110))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 1"`)
-    await act(() => sleep(50))
+    await act(() => sleep(25))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 1"`)
-    await act(() => sleep(150))
+    await act(() => sleep(75))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 2"`)
     fireEvent.click(container.firstElementChild)
 
-    await act(() => sleep(200))
+    await act(() => sleep(100))
 
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 2"`)
 
-    await act(() => sleep(110))
+    await act(() => sleep(60))
 
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 3"`)
 
-    await act(() => sleep(310))
+    await act(() => sleep(160))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 4"`)
     fireEvent.click(container.firstElementChild)
     await act(() => {
-      // it will clear 300ms timer and setup a new 400ms timer
-      return sleep(300)
+      // it will clear 150ms timer and setup a new 200ms timer
+      return sleep(150)
     })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 4"`)
-    await act(() => sleep(110))
+    await act(() => sleep(60))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 5"`)
     fireEvent.click(container.firstElementChild)
     await act(() => {
-      // it will clear 400ms timer and stop
-      return sleep(110)
+      // it will clear 200ms timer and stop
+      return sleep(60)
     })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 5"`)
-    await act(() => sleep(110))
+    await act(() => sleep(60))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 5"`)
   })
 
@@ -124,8 +124,8 @@ describe('useSWR - refresh', () => {
         '/interval-changes-during-revalidate',
         () => count++,
         {
-          refreshInterval: shouldPoll ? 200 : 0,
-          dedupingInterval: 100,
+          refreshInterval: shouldPoll ? 100 : 0,
+          dedupingInterval: 50,
           onSuccess() {
             setFlag(value => value + 1)
           }
@@ -144,23 +144,23 @@ describe('useSWR - refresh', () => {
 
     await screen.findByText('count: 0 1')
 
-    await act(() => sleep(200))
+    await act(() => sleep(100))
 
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"count: 1 2"`
     )
 
-    await act(() => sleep(200))
+    await act(() => sleep(100))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"count: 1 2"`
     )
 
-    await act(() => sleep(200))
+    await act(() => sleep(100))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"count: 1 2"`
     )
 
-    await act(() => sleep(200))
+    await act(() => sleep(100))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"count: 1 2"`
     )
@@ -168,33 +168,33 @@ describe('useSWR - refresh', () => {
     fireEvent.click(container.firstElementChild)
 
     await act(() => {
-      // it will setup a new 200ms timer
-      return sleep(100)
+      // it will setup a new 100ms timer
+      return sleep(50)
     })
 
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"count: 1 0"`
     )
 
-    await act(() => sleep(100))
+    await act(() => sleep(50))
 
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"count: 2 1"`
     )
 
-    await act(() => sleep(200))
+    await act(() => sleep(100))
 
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"count: 3 2"`
     )
 
-    await act(() => sleep(200))
+    await act(() => sleep(100))
 
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"count: 3 2"`
     )
 
-    await act(() => sleep(200))
+    await act(() => sleep(100))
 
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"count: 3 2"`
@@ -301,7 +301,7 @@ describe('useSWR - refresh', () => {
 
   it('the previous interval timer should not call onSuccess callback if key changes too fast', async () => {
     const fetcherWithToken = jest.fn(async token => {
-      await sleep(200)
+      await sleep(100)
       return token
     })
     const onSuccess = jest.fn((data, key) => {
@@ -310,8 +310,8 @@ describe('useSWR - refresh', () => {
     function Page() {
       const [count, setCount] = useState(0)
       const { data } = useSWR(`${count.toString()}-hash`, fetcherWithToken, {
-        refreshInterval: 100,
-        dedupingInterval: 50,
+        refreshInterval: 50,
+        dedupingInterval: 25,
         onSuccess
       })
       return (
@@ -323,20 +323,20 @@ describe('useSWR - refresh', () => {
     const { container } = render(<Page />)
 
     // initial revalidate
-    await act(() => sleep(200))
+    await act(() => sleep(100))
     expect(fetcherWithToken).toBeCalledTimes(1)
     expect(onSuccess).toBeCalledTimes(1)
     expect(onSuccess).toHaveLastReturnedWith(`0-hash 0-hash`)
     // first refresh
-    await act(() => sleep(100))
+    await act(() => sleep(50))
     expect(fetcherWithToken).toBeCalledTimes(2)
     expect(fetcherWithToken).toHaveBeenLastCalledWith('0-hash')
-    await act(() => sleep(200))
+    await act(() => sleep(100))
     expect(onSuccess).toBeCalledTimes(2)
     expect(onSuccess).toHaveLastReturnedWith(`0-hash 0-hash`)
 
     // second refresh start
-    await act(() => sleep(100))
+    await act(() => sleep(50))
     expect(fetcherWithToken).toBeCalledTimes(3)
     expect(fetcherWithToken).toHaveBeenLastCalledWith('0-hash')
     // change the key during revalidation
@@ -344,10 +344,10 @@ describe('useSWR - refresh', () => {
     fireEvent.click(container.firstElementChild)
 
     // first refresh with new key 1
-    await act(() => sleep(100))
+    await act(() => sleep(50))
     expect(fetcherWithToken).toBeCalledTimes(4)
     expect(fetcherWithToken).toHaveBeenLastCalledWith('1-hash')
-    await act(() => sleep(210))
+    await act(() => sleep(110))
     expect(onSuccess).toBeCalledTimes(3)
     expect(onSuccess).toHaveLastReturnedWith(`1-hash 1-hash`)
 

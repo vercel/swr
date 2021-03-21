@@ -77,7 +77,7 @@ export type Broadcaster<Data = any, Error = any> = (
   isValidating?: boolean
 ) => void
 
-export type Action<Data, Error> = {
+export type State<Data, Error> = {
   data?: Data
   error?: Error
   isValidating?: boolean

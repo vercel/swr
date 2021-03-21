@@ -163,4 +163,29 @@ describe('useSWR - key', () => {
     await act(() => sleep(10))
     screen.getByText('false')
   })
+
+  it('should keep data in sync when key updates', async () => {
+    const fetcher = () => createResponse('test', { delay: 100 })
+    const values = []
+
+    function Page() {
+      const [key, setKey] = useState(null)
+
+      const { data: v1 } = useSWR(key, fetcher)
+      const { data: v2 } = useSWR(key, fetcher)
+
+      values.push([v1, v2])
+
+      return <button onClick={() => setKey('key-sync')}>update key</button>
+    }
+
+    render(<Page />)
+    screen.getByText('update key')
+
+    fireEvent.click(screen.getByText('update key'))
+    await act(() => sleep(120))
+
+    // All values should equal because they're sharing the same key
+    expect(values.some(([a, b]) => a !== b)).toBeFalsy()
+  })
 })
