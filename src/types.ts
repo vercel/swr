@@ -123,6 +123,9 @@ export type responseInterface<Data, Error> = {
 export interface SWRResponse<Data, Error> {
   data?: Data
   error?: Error
+  /**
+   * @deprecated `revalidate` is deprecated, please use `mutate()` for the same purpose.
+   */
   revalidate: () => Promise<boolean>
   mutate: (
     data?: Data | Promise<Data> | MutatorCallback<Data>,
