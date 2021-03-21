@@ -577,7 +577,7 @@ function useSWR<Data = any, Error = any>(
         // delay revalidate if there's cache
         // to not block the rendering
 
-        //@ts-ignore it's safe to use requestAnimationFrame in browser
+        // @ts-ignore it's safe to use requestAnimationFrame in browser
         rAF(softRevalidate)
       } else {
         softRevalidate()
@@ -779,7 +779,12 @@ function useSWR<Data = any, Error = any>(
   return state
 }
 
-const SWRConfig = SWRConfigContext.Provider
+Object.defineProperty(SWRConfigContext.Provider, 'default', {
+  value: defaultConfig
+})
+const SWRConfig = SWRConfigContext.Provider as typeof SWRConfigContext.Provider & {
+  default: SWRConfiguration
+}
 
 export { trigger, mutate, SWRConfig }
 export default useSWR

@@ -134,6 +134,11 @@ export interface SWRResponse<Data, Error> {
   isValidating: boolean
 }
 
+export type KeyLoader<Data = any> = (
+  index: number,
+  previousPageData: Data | null
+) => ValueKey
+
 /**
  * @deprecated `SWRInfiniteConfigInterface` will be renamed to `SWRInfiniteConfiguration`.
  */
