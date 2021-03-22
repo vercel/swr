@@ -1,7 +1,7 @@
-import { act, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import React, { ReactNode, Suspense, useEffect, useState } from 'react'
 import useSWR, { mutate } from '../src'
-import { sleep } from './utils'
+import { createResponse, sleep } from './utils'
 
 class ErrorBoundary extends React.Component<{ fallback: ReactNode }> {
   state = { hasError: false }
@@ -190,6 +190,35 @@ describe('useSWR - suspense', () => {
     // fixes https://github.com/zeit/swr/issues/57
     // 'suspense-7' -> undefined -> 'suspense-8'
     expect(renderedResults).toEqual(['suspense-7', 'suspense-8'])
+  })
+
+  it('should render correctly when key changes (but with same response data)', async () => {
+    // https://github.com/vercel/swr/issues/1056
+    const renderedResults = []
+    function Section() {
+      const [key, setKey] = useState(1)
+      const { data } = useSWR(`foo?a=${key}`, () => createResponse('123'), {
+        suspense: true
+      })
+      if (`${data},${key}` !== renderedResults[renderedResults.length - 1]) {
+        renderedResults.push(`${data},${key}`)
+      }
+      return <div onClick={() => setKey(v => v + 1)}>{`${data},${key}`}</div>
+    }
+
+    render(
+      <Suspense fallback={<div>fallback</div>}>
+        <Section />
+      </Suspense>
+    )
+
+    await screen.findByText('123,1')
+
+    fireEvent.click(screen.getByText('123,1'))
+
+    await screen.findByText('123,2')
+
+    expect(renderedResults).toEqual(['123,1', '123,2'])
   })
 
   it('should render initial data if set', async () => {
