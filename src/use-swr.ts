@@ -470,9 +470,11 @@ function useSWR<Data = any, Error = any>(
           // deep compare to avoid extra re-render
           // data changed
           newState.data = newData
-          cache.set(key, newData)
         }
 
+        if (!config.compare(cache.get(key), newData)) {
+          cache.set(key, newData)
+        }
         // merge the new state
         dispatch(newState)
 
