@@ -101,7 +101,7 @@ const broadcastState: Broadcaster = (key, data, error, isValidating) => {
 
 async function mutate<Data = any>(
   _key: Key,
-  _data?: Data | Promise<Data> | MutatorCallback<Data>,
+  _data?: Data | Promise<Data | undefined> | MutatorCallback<Data>,
   shouldRevalidate = true
 ): Promise<Data | undefined> {
   const [key, , keyErr] = cache.serializeKey(_key)
@@ -124,7 +124,7 @@ async function mutate<Data = any>(
   if (_data && typeof _data === 'function') {
     // `_data` is a function, call it passing current cache value
     try {
-      _data = _data(cache.get(key))
+      _data = (_data as MutatorCallback<Data>)(cache.get(key))
     } catch (err) {
       // if `_data` function throws an error synchronously, it shouldn't be cached
       _data = undefined
@@ -132,7 +132,7 @@ async function mutate<Data = any>(
     }
   }
 
-  if (_data && typeof _data.then === 'function') {
+  if (_data && typeof (_data as Promise<Data>).then === 'function') {
     // `_data` is a promise
     isAsyncMutation = true
     try {
