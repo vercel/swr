@@ -103,7 +103,7 @@ async function mutate<Data = any>(
   _key: Key,
   _data?: Data | Promise<Data> | MutatorCallback<Data>,
   shouldRevalidate = true
-) {
+): Promise<Data | undefined> {
   const [key, , keyErr] = cache.serializeKey(_key)
   if (!key) return
 
