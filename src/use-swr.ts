@@ -16,7 +16,7 @@ import {
   Broadcaster,
   Fetcher,
   Key,
-  Mutator,
+  MutatorCallback,
   SWRResponse,
   RevalidatorOptions,
   Trigger,
@@ -99,7 +99,11 @@ const broadcastState: Broadcaster = (key, data, error, isValidating) => {
   }
 }
 
-const mutate: Mutator = async (_key, _data, shouldRevalidate = true) => {
+async function mutate<Data = any>(
+  _key: Key,
+  _data?: Data | Promise<Data> | MutatorCallback<Data>,
+  shouldRevalidate = true
+) {
   const [key, , keyErr] = cache.serializeKey(_key)
   if (!key) return
 
