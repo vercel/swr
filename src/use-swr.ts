@@ -105,7 +105,7 @@ async function mutate<Data = any>(
   shouldRevalidate = true
 ): Promise<Data | undefined> {
   const [key, , keyErr] = cache.serializeKey(_key)
-  if (!key) return
+  if (!key) return Promise.resolve(undefined)
 
   // if there is no new data to update, let's just revalidate the key
   if (typeof _data === 'undefined') return trigger(_key, shouldRevalidate)
