@@ -23,10 +23,10 @@ describe('useSWR - offline', () => {
       })
       return <div>data: {data}</div>
     }
-    const { container } = render(<Page />)
 
+    render(<Page />)
     // hydration
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
+    screen.getByText('data:')
     // mount
     await screen.findByText('data: 0')
 
@@ -38,7 +38,7 @@ describe('useSWR - offline', () => {
     await focusWindow()
 
     // should not be revalidated
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
+    screen.getByText('data: 0')
   })
 
   it('should revalidate immediately when becoming online', async () => {
@@ -50,10 +50,10 @@ describe('useSWR - offline', () => {
       })
       return <div>data: {data}</div>
     }
-    const { container } = render(<Page />)
 
+    render(<Page />)
     // hydration
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
+    screen.getByText('data:')
     // mount
     await screen.findByText('data: 0')
 
@@ -62,6 +62,6 @@ describe('useSWR - offline', () => {
     await dispatchWindowEvent('online')
 
     // should be revalidated
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
+    await screen.findByText('data: 1')
   })
 })

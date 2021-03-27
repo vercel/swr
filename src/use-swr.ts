@@ -429,9 +429,15 @@ function useSWR<Data = any, Error = any>(
           newState.error = undefined
         }
 
+        // Deep compare with latest state to avoid extra re-renders.
+        // For local state, compare and assign.
         if (!config.compare(stateRef.current.data, newData)) {
-          cache.set(key, newData)
           newState.data = newData
+        }
+        // For global state, it's possible that the key has changed.
+        // https://github.com/vercel/swr/pull/1058
+        if (!config.compare(cache.get(key), newData)) {
+          cache.set(key, newData)
         }
 
         // merge the new state
