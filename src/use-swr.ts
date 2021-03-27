@@ -16,7 +16,7 @@ import {
   Broadcaster,
   Fetcher,
   Key,
-  Mutator,
+  MutatorCallback,
   SWRResponse,
   RevalidatorOptions,
   Trigger,
@@ -99,9 +99,13 @@ const broadcastState: Broadcaster = (key, data, error, isValidating) => {
   }
 }
 
-const mutate: Mutator = async (_key, _data, shouldRevalidate = true) => {
+async function mutate<Data = any>(
+  _key: Key,
+  _data?: Data | Promise<Data | undefined> | MutatorCallback<Data>,
+  shouldRevalidate = true
+): Promise<Data | undefined> {
   const [key, , keyErr] = cache.serializeKey(_key)
-  if (!key) return
+  if (!key) return undefined
 
   // if there is no new data to update, let's just revalidate the key
   if (typeof _data === 'undefined') return trigger(_key, shouldRevalidate)
@@ -120,7 +124,7 @@ const mutate: Mutator = async (_key, _data, shouldRevalidate = true) => {
   if (_data && typeof _data === 'function') {
     // `_data` is a function, call it passing current cache value
     try {
-      _data = _data(cache.get(key))
+      _data = (_data as MutatorCallback<Data>)(cache.get(key))
     } catch (err) {
       // if `_data` function throws an error synchronously, it shouldn't be cached
       _data = undefined
@@ -128,7 +132,7 @@ const mutate: Mutator = async (_key, _data, shouldRevalidate = true) => {
     }
   }
 
-  if (_data && typeof _data.then === 'function') {
+  if (_data && typeof (_data as Promise<Data>).then === 'function') {
     // `_data` is a promise
     isAsyncMutation = true
     try {
