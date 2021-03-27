@@ -1,3 +1,8 @@
+// This file includes some basic test cases for React Concurrent Mode.
+// Due to the nature of global cache, the current SWR implementation will not
+// be perfectly consistent in Concurrent Mode in every intermediate state.
+// Only eventual consistency is guaranteed.
+
 import { screen, fireEvent } from '@testing-library/react'
 import { createResponse, sleep } from './utils'
 

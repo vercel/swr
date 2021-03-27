@@ -264,43 +264,35 @@ function useSWR<Data = any, Error = any>(
   const unmountedRef = useRef(false)
   const keyRef = useRef(key)
 
-  // A revalidation must be triggered when mounted if:
-  // - `revalidateOnMount` is explicitly set to `true`.
-  // - There is no `initialData`, and `revalidateOnMount` is not set to `false`.
-  const shouldRevalidateOnMount = () => {
-    return (
-      config.revalidateOnMount ||
-      (config.initialData === undefined &&
-        config.revalidateOnMount !== false &&
-        !config.suspense)
-    )
-  }
-
   // Get the current state that SWR should return.
   const resolveData = () => {
     const cachedData = cache.get(key)
     return cachedData === undefined ? config.initialData : cachedData
   }
-  const resolveError = () => {
-    return cache.get(keyErr)
+  const data = resolveData()
+  const error = cache.get(keyErr)
+
+  // A revalidation must be triggered when mounted if:
+  // - `revalidateOnMount` is explicitly set to `true`.
+  // - Suspense mode and there's stale data for the inital render.
+  // - Not suspense mode and there is no `initialData`.
+  const shouldRevalidateOnMount = () => {
+    if (config.revalidateOnMount !== undefined) return config.revalidateOnMount
+
+    return config.suspense
+      ? !initialMountedRef.current && data !== undefined
+      : config.initialData === undefined
   }
+
+  // Resolve the current validating state.
   const resolveValidating = () => {
     if (!key) return false
     if (cache.get(keyValidating)) return true
-    // If it's the first mount and it should revalidate on mount, revalidate.
-    // If in suspense mode and it's the first mount, do not revalidate.
-    return (
-      !initialMountedRef.current &&
-      shouldRevalidateOnMount() &&
-      !config.suspense
-    )
+
+    // If it's not mounted yet and it should revalidate on mount, revalidate.
+    return !initialMountedRef.current && shouldRevalidateOnMount()
   }
-
-  const data = resolveData()
-  const error = resolveError()
   const isValidating = resolveValidating()
-
-  console.log(key, data, error, isValidating, shouldRevalidateOnMount())
 
   // do unmount check for callbacks
   // if key changed during the revalidation, old dispatch and config callback should not take effect.
@@ -313,7 +305,7 @@ function useSWR<Data = any, Error = any>(
     [key]
   )
 
-  let [stateRef, stateDependenciesRef, setState] = useStateWithDeps<
+  const [stateRef, stateDependenciesRef, setState] = useStateWithDeps<
     Data,
     Error
   >(
@@ -322,13 +314,11 @@ function useSWR<Data = any, Error = any>(
       error,
       isValidating
     },
-    cb => {
-      if (unmountedRef.current) return
-      cb()
-    }
+    unmountedRef
   )
 
-  // start a revalidation
+  // The revalidation function is a carefully crafted wrapper of the original
+  // `fetcher`, to correctly handle the many edge cases.
   const revalidate = useCallback(
     async (revalidateOpts: RevalidatorOptions = {}): Promise<boolean> => {
       if (!key || !fn) return false
@@ -507,7 +497,7 @@ function useSWR<Data = any, Error = any>(
     [key]
   )
 
-  // After mounted or key changed
+  // After mounted or key changed.
   useIsomorphicLayoutEffect(() => {
     if (!key) return undefined
 
@@ -516,7 +506,6 @@ function useSWR<Data = any, Error = any>(
 
     // Mark the component as mounted and update corresponding refs.
     unmountedRef.current = false
-    initialMountedRef.current = true
     keyRef.current = key
 
     // When `key` updates, reset the state to the initial value
@@ -591,6 +580,9 @@ function useSWR<Data = any, Error = any>(
     const unsubReconn = addRevalidator(RECONNECT_REVALIDATORS, key, onReconnect)
     const unsubUpdate = addRevalidator(CACHE_REVALIDATORS, key, onUpdate)
 
+    // Finally, the component is mounted.
+    initialMountedRef.current = true
+
     return () => {
       // mark it as unmounted
       unmountedRef.current = true
@@ -664,26 +656,24 @@ function useSWR<Data = any, Error = any>(
     revalidate,
     mutate: boundMutate
   } as SWRResponse<Data, Error>
-  const depsRef = stateDependenciesRef.current
-
   Object.defineProperties(state, {
     data: {
       get: function() {
-        depsRef.data = true
+        stateDependenciesRef.current.data = true
         return data
       },
       enumerable: true
     },
     error: {
       get: function() {
-        depsRef.error = true
+        stateDependenciesRef.current.error = true
         return error
       },
       enumerable: true
     },
     isValidating: {
       get: function() {
-        depsRef.isValidating = true
+        stateDependenciesRef.current.isValidating = true
         return isValidating
       },
       enumerable: true

@@ -11,7 +11,7 @@ type StateDeps = Record<StateKeys, boolean>
  */
 export default function useStateWithDeps<Data, Error, S = State<Data, Error>>(
   state: S,
-  safeCallback: (callback: () => void) => void
+  unmountedRef: MutableRefObject<boolean>
 ): [
   MutableRefObject<S>,
   MutableRefObject<Record<StateKeys, boolean>>,
@@ -35,16 +35,16 @@ export default function useStateWithDeps<Data, Error, S = State<Data, Error>>(
   })
 
   /**
-   * @param payload when you want to change stateRef, you should pass value explicitly
+   * @param payload To change stateRef, pass the values explicitly to setState:
    * @example
    * ```js
-   * dispatchState({
+   * setState({
    *   isValidating: false
    *   data: newData // set data to newData
    *   error: undefined // set error to undefined
    * })
    *
-   * dispatchState({
+   * setState({
    *   isValidating: false
    *   data: undefined // set data to undefined
    *   error: err // set error to err
@@ -74,8 +74,8 @@ export default function useStateWithDeps<Data, Error, S = State<Data, Error>>(
         }
       }
 
-      if (shouldRerender) {
-        safeCallback(() => rerender({}))
+      if (shouldRerender && !unmountedRef.current) {
+        rerender({})
       }
     },
     // config.suspense isn't allowed to change during the lifecycle
