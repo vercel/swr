@@ -25,22 +25,22 @@ export interface Configuration<
   isPaused: () => boolean
   onLoadingSlow: (
     key: string,
-    config: Readonly<Required<Configuration<Data, Error>>>
+    config: Readonly<Configuration<Data, Error>>
   ) => void
   onSuccess: (
     data: Data,
     key: string,
-    config: Readonly<Required<Configuration<Data, Error>>>
+    config: Readonly<Configuration<Data, Error>>
   ) => void
   onError: (
     err: Error,
     key: string,
-    config: Readonly<Required<Configuration<Data, Error>>>
+    config: Readonly<Configuration<Data, Error>>
   ) => void
   onErrorRetry: (
     err: Error,
     key: string,
-    config: Readonly<Required<Configuration<Data, Error>>>,
+    config: Readonly<Configuration<Data, Error>>,
     revalidate: Revalidator,
     revalidateOpts: Required<RevalidatorOptions>
   ) => void
@@ -65,11 +65,6 @@ export type MutatorCallback<Data = any> = (
   currentValue: undefined | Data
 ) => Promise<undefined | Data> | undefined | Data
 
-export type Mutator<Data = any> = (
-  key: Key,
-  data?: Data | Promise<Data> | MutatorCallback<Data>,
-  shouldRevalidate?: boolean
-) => Promise<Data | undefined>
 export type Broadcaster<Data = any, Error = any> = (
   key: string,
   data: Data,
@@ -77,7 +72,7 @@ export type Broadcaster<Data = any, Error = any> = (
   isValidating?: boolean
 ) => void
 
-export type Action<Data, Error> = {
+export type State<Data, Error> = {
   data?: Data
   error?: Error
   isValidating?: boolean
@@ -123,6 +118,9 @@ export type responseInterface<Data, Error> = {
 export interface SWRResponse<Data, Error> {
   data?: Data
   error?: Error
+  /**
+   * @deprecated `revalidate` is deprecated, please use `mutate()` for the same purpose.
+   */
   revalidate: () => Promise<boolean>
   mutate: (
     data?: Data | Promise<Data> | MutatorCallback<Data>,
@@ -130,6 +128,11 @@ export interface SWRResponse<Data, Error> {
   ) => Promise<Data | undefined>
   isValidating: boolean
 }
+
+export type KeyLoader<Data = any> = (
+  index: number,
+  previousPageData: Data | null
+) => ValueKey
 
 /**
  * @deprecated `SWRInfiniteConfigInterface` will be renamed to `SWRInfiniteConfiguration`.
