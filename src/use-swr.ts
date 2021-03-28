@@ -3,7 +3,7 @@ import { useCallback, useContext, useRef, useDebugValue } from 'react'
 
 import defaultConfig, { cache } from './config'
 import { IS_SERVER, rAF, useIsomorphicLayoutEffect } from './env'
-import SWRConfigContext from './swr-config-context'
+import SWRConfigContext from './config-context'
 import useStateWithDeps from './state'
 
 import {
@@ -242,10 +242,8 @@ function useSWR<Data = any, Error = any>(
     ? args[1]
     : args.length === 2 && typeof args[1] === 'function'
     ? args[1]
-    : /**
-     * Pass fn as null will disable revalidate
-     * https://paco.sh/blog/shared-hook-state-with-swr
-     */
+    : // Pass fn as null will disable revalidate
+    // https://paco.sh/blog/shared-hook-state-with-swr
     args[1] === null
     ? args[1]
     : config.fetcher) as Fetcher<Data> | null
