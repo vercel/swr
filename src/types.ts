@@ -65,11 +65,6 @@ export type MutatorCallback<Data = any> = (
   currentValue: undefined | Data
 ) => Promise<undefined | Data> | undefined | Data
 
-export type Mutator<Data = any> = (
-  key: Key,
-  data?: Data | Promise<Data> | MutatorCallback<Data>,
-  shouldRevalidate?: boolean
-) => Promise<Data | undefined>
 export type Broadcaster<Data = any, Error = any> = (
   key: string,
   data: Data,
