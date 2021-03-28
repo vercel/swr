@@ -23,6 +23,7 @@ describe('useSWR - suspense', () => {
     jest.clearAllMocks()
     jest.restoreAllMocks()
   })
+
   it('should render fallback', async () => {
     function Section() {
       const { data } = useSWR(
@@ -243,6 +244,7 @@ describe('useSWR - suspense', () => {
       `"hello, Initial"`
     )
   })
+
   it('should avoid unnecessary re-renders', async () => {
     let renderCount = 0
     let startRenderCount = 0
