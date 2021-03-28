@@ -13,7 +13,7 @@
   "homepage": "https://swr.vercel.app",
   "license": "MIT",
   "scripts": {
-    "build": "bunchee src/index.ts -m",
+    "build": "bunchee src/index.ts -m --no-sourcemap",
     "watch": "bunchee src/index.ts --watch",
     "prepublishOnly": "rm -rf dist && yarn build",
     "types:check": "tsc --noEmit",
