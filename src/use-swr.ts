@@ -300,6 +300,7 @@ function useSWR<Data = any, Error = any>(
     (callback: () => void) => {
       if (unmountedRef.current) return
       if (key !== keyRef.current) return
+      if (!initialMountedRef.current) return
       callback()
     },
     [key]
