@@ -3,22 +3,19 @@
   "version": "0.5.4",
   "description": "React Hooks library for remote data fetching",
   "main": "./dist/index.js",
-  "module": "./esm/index.js",
-  "react-native": "./esm/index.js",
-  "types": "./dist/index.d.ts",
+  "module": "./dist/index.esm.js",
+  "react-native": "./dist/index.esm.js",
+  "types": "./dist/types/index.d.ts",
   "files": [
-    "dist/**",
-    "esm/**"
+    "dist/**"
   ],
   "repository": "vercel/swr",
   "homepage": "https://swr.vercel.app",
   "license": "MIT",
   "scripts": {
-    "build": "npm run build:esm && npm run build:cjs",
-    "build:cjs": "ncc build src/index.ts -o dist -m -e react",
-    "build:esm": "tsc --module ES6 --outDir esm",
-    "watch": "tsc --watch",
-    "watch:esm": "tsc --module ES6 --outDir esm --target esnext --watch",
+    "build": "bunchee src/index.ts -m",
+    "watch": "bunchee src/index.ts --watch",
+    "prepublishOnly": "rm -rf dist && yarn build",
     "types:check": "tsc --noEmit",
     "format": "prettier --write \"{src,test,examples}/**/*.{ts,tsx}\"",
     "lint": "eslint \"{src,test,examples}/**/*.{ts,tsx}\"",
@@ -27,18 +24,18 @@
     "register": "yarn link && cd node_modules/react && yarn link",
     "prepare:vite": "git clone https://github.com/promer94/vite-swr playground/vite-swr && cd playground/vite-swr && yarn && yarn link react && yarn link swr",
     "prepare:next": "git clone https://github.com/promer94/next-swr playground/next-swr && cd playground/next-swr && yarn && yarn link react && yarn link swr",
-    "dev:vite": "concurrently \"yarn watch:esm\" \"cd playground/vite-swr && yarn dev\"",
-    "dev:next": "concurrently \"yarn watch:esm\" \"cd playground/next-swr && yarn dev\""
+    "dev:vite": "concurrently \"yarn watch\" \"cd playground/vite-swr && yarn dev\"",
+    "dev:next": "concurrently \"yarn watch\" \"cd playground/next-swr && yarn dev\""
   },
   "husky": {
     "hooks": {
-      "pre-commit": "npm run types:check && lint-staged"
+      "pre-commit": "yarn types:check && lint-staged"
     }
   },
   "lint-staged": {
     "*.{ts,tsx}": [
-      "npm run lint:fix",
-      "npm run format",
+      "yarn lint:fix",
+      "yarn format",
       "git add"
     ]
   },
@@ -50,7 +47,7 @@
     "@types/react": "16.9.11",
     "@typescript-eslint/eslint-plugin": "2.5.0",
     "@typescript-eslint/parser": "2.5.0",
-    "@zeit/ncc": "0.20.5",
+    "bunchee": "1.5.1",
     "concurrently": "6.0.0",
     "eslint": "6.6.0",
     "eslint-config-prettier": "6.5.0",
@@ -67,7 +64,7 @@
     "react-dom-experimental": "npm:react-dom@experimental",
     "react-experimental": "npm:react@experimental",
     "ts-jest": "25.5.1",
-    "typescript": "3.6.4"
+    "typescript": "3.7.7"
   },
   "peerDependencies": {
     "react": "^16.11.0 || ^17.0.0"
