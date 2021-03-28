@@ -1,10 +1,11 @@
 // TODO: use @ts-expect-error
-import { useCallback, useContext, useRef, useDebugValue } from 'react'
+import { useCallback, useRef, useDebugValue } from 'react'
 
 import defaultConfig, { cache } from './config'
 import { IS_SERVER, rAF, useIsomorphicLayoutEffect } from './env'
-import SWRConfigContext from './swr-config-context'
+import SWRConfigContext from './config-context'
 import useStateWithDeps from './state'
+import useArgs from './resolve-args'
 
 import {
   State,
@@ -223,32 +224,9 @@ function useSWR<Data = any, Error = any>(
         SWRConfiguration<Data, Error> | undefined
       ]
 ): SWRResponse<Data, Error> {
-  // Resolve arguments
-  const _key = args[0]
-  const config = Object.assign(
-    {},
-    defaultConfig,
-    useContext(SWRConfigContext),
-    args.length > 2
-      ? args[2]
-      : args.length === 2 && typeof args[1] === 'object'
-      ? args[1]
-      : {}
+  const [_key, config, fn] = useArgs<Key, SWRConfiguration<Data, Error>, Data>(
+    args
   )
-
-  // In TypeScript `args.length > 2` is not same as `args.lenth === 3`.
-  // We do a safe type assertion here.
-  const fn = (args.length > 2
-    ? args[1]
-    : args.length === 2 && typeof args[1] === 'function'
-    ? args[1]
-    : /**
-     * Pass fn as null will disable revalidate
-     * https://paco.sh/blog/shared-hook-state-with-swr
-     */
-    args[1] === null
-    ? args[1]
-    : config.fetcher) as Fetcher<Data> | null
 
   // `key` is the identifier of the SWR `data` state.
   // `keyErr` and `keyValidating` are indentifiers of `error` and `isValidating`

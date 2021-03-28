@@ -1,9 +1,9 @@
 // TODO: use @ts-expect-error
-import { useContext, useRef, useState, useCallback } from 'react'
+import { useRef, useState, useCallback } from 'react'
 
-import defaultConfig, { cache } from './config'
+import { cache } from './config'
 import { useIsomorphicLayoutEffect } from './env'
-import SWRConfigContext from './swr-config-context'
+import useArgs from './resolve-args'
 import useSWR from './use-swr'
 
 import {
@@ -17,37 +17,22 @@ import {
 function useSWRInfinite<Data = any, Error = any>(
   ...args:
     | readonly [KeyLoader<Data>]
-    | readonly [KeyLoader<Data>, Fetcher<Data>]
+    | readonly [KeyLoader<Data>, Fetcher<Data> | null]
     | readonly [
         KeyLoader<Data>,
         SWRInfiniteConfiguration<Data, Error> | undefined
       ]
     | readonly [
         KeyLoader<Data>,
-        Fetcher<Data>,
+        Fetcher<Data> | null,
         SWRInfiniteConfiguration<Data, Error> | undefined
       ]
 ): SWRInfiniteResponse<Data, Error> {
-  const getKey = args[0]
-
-  const config = Object.assign(
-    {},
-    defaultConfig,
-    useContext(SWRConfigContext),
-    args.length > 2
-      ? args[2]
-      : args.length === 2 && typeof args[1] === 'object'
-      ? args[1]
-      : {}
-  )
-  // in typescript args.length > 2 is not same as args.lenth === 3
-  // we do a safe type assertion here
-  // args.length === 3
-  const fn = (args.length > 2
-    ? args[1]
-    : args.length === 2 && typeof args[1] === 'function'
-    ? args[1]
-    : config.fetcher) as Fetcher<Data>
+  const [getKey, config, fn] = useArgs<
+    KeyLoader<Data>,
+    SWRInfiniteConfiguration<Data, Error>,
+    Data
+  >(args)
 
   const {
     initialSize = 1,
@@ -145,7 +130,7 @@ function useSWRInfinite<Data = any, Error = any>(
             typeof dataRef.current !== 'undefined') ||
           (originalData && !config.compare(originalData[i], pageData))
 
-        if (shouldFetchPage) {
+        if (fn && shouldFetchPage) {
           if (pageArgs !== null) {
             pageData = await fn(...pageArgs)
           } else {
