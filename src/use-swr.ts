@@ -112,7 +112,6 @@ async function mutate<Data = any>(
 
   // track timestamps before await asynchronously
   const beforeMutationTs = MUTATION_TS[key]
-  const beforeConcurrentPromisesTs = CONCURRENT_PROMISES_TS[key]
 
   let data: any, error: unknown
   let isAsyncMutation = false
@@ -142,10 +141,7 @@ async function mutate<Data = any>(
 
   const shouldAbort = (): boolean | void => {
     // check if other mutations have occurred since we've started this mutation
-    if (
-      beforeMutationTs !== MUTATION_TS[key] ||
-      beforeConcurrentPromisesTs !== CONCURRENT_PROMISES_TS[key]
-    ) {
+    if (beforeMutationTs !== MUTATION_TS[key]) {
       if (error) throw error
       return true
     }
@@ -389,7 +385,7 @@ function useSWR<Data = any, Error = any>(
         // we have to ignore the revalidation result (res) because it's no longer fresh.
         // meanwhile, a new revalidation should be triggered when the mutation ends.
         if (
-          MUTATION_TS[key] &&
+          MUTATION_TS[key] !== undefined &&
           // case 1
           (startAt <= MUTATION_TS[key] ||
             // case 2
