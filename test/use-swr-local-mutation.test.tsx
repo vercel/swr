@@ -506,4 +506,141 @@ describe('useSWR - local mutation', () => {
     expect(mutationRecivedValues).toEqual([0, 1])
     expect(renderRecivedValues).toEqual([undefined, 0, 1, 2])
   })
+
+  it('async mutation case 1 (startAt <= MUTATION_TS[key])', async () => {
+    let result = 0
+    const fetcher = jest.fn(createResponse)
+    function Component() {
+      const { data, mutate: boundMutate } = useSWR(
+        'mutate-7',
+        () =>
+          fetcher(0, {
+            delay: 300
+          }),
+        {
+          dedupingInterval: 200
+        }
+      )
+      return (
+        <div
+          onClick={() => {
+            boundMutate(async () => {
+              result += 1
+              return createResponse(result, {
+                delay: 100
+              })
+            }, false)
+          }}
+        >
+          {data !== undefined ? `data: ${data.toString()}` : 'loading'}
+        </div>
+      )
+    }
+
+    render(<Component />)
+    screen.getByText('loading')
+
+    await act(() => sleep(50))
+
+    fireEvent.click(screen.getByText('loading'))
+
+    await act(() => sleep(100))
+    // mutate success
+    await screen.findByText('data: 1')
+
+    await act(() => sleep(150))
+    // fetcher result should be ignored
+    expect(fetcher).toBeCalledTimes(1)
+    await screen.findByText('data: 1')
+  })
+
+  it('async mutation case 2 (startAt <= MUTATION_END_TS[key])', async () => {
+    let result = 0
+    const fetcher = jest.fn(createResponse)
+    function Component() {
+      const [key, setKey] = useState(null)
+      const { data } = useSWR(
+        key,
+        () =>
+          fetcher(0, {
+            delay: 400
+          }),
+        {
+          dedupingInterval: 200
+        }
+      )
+      useEffect(() => {
+        mutate(
+          'mutate-8',
+          async () => {
+            result += 1
+            return createResponse(result, {
+              delay: 200
+            })
+          },
+          false
+        )
+        setKey('mutate-8')
+      }, [])
+      return (
+        <div>{data !== undefined ? `data: ${data.toString()}` : 'loading'}</div>
+      )
+    }
+
+    render(<Component />)
+    screen.getByText('loading')
+
+    // mutate success
+    await act(() => sleep(200))
+    fireEvent.click(screen.getByText('data: 1'))
+
+    // fetcher result should be ignored
+    await act(() => sleep(200))
+    expect(fetcher).toBeCalledTimes(1)
+    await screen.findByText('data: 1')
+  })
+
+  it('async mutation case 3 (MUTATION_END_TS[key] === 0)', async () => {
+    let result = 0
+    const fetcher = jest.fn(createResponse)
+    function Component() {
+      const [key, setKey] = useState(null)
+      const { data } = useSWR(
+        key,
+        () =>
+          fetcher(0, {
+            delay: 100
+          }),
+        {
+          dedupingInterval: 200
+        }
+      )
+      useEffect(() => {
+        setKey('mutate-9')
+        mutate(
+          'mutate-9',
+          async () => {
+            result += 1
+            return createResponse(result, { delay: 200 })
+          },
+          false
+        )
+      }, [])
+      return (
+        <div>{data !== undefined ? `data: ${data.toString()}` : 'loading'}</div>
+      )
+    }
+
+    render(<Component />)
+    screen.getByText('loading')
+
+    // fetcher result should be ignored
+    await act(() => sleep(100))
+    expect(fetcher).toBeCalledTimes(1)
+    screen.getByText('loading')
+
+    // mutate success
+    await act(() => sleep(100))
+    await screen.findByText('data: 1')
+  })
 })
