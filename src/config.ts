@@ -1,4 +1,4 @@
-import deepEqual from './libs/deep-equal'
+import deepEqual from 'dequal/lite'
 import { Configuration, RevalidatorOptions, Revalidator } from './types'
 import Cache from './cache'
 import webPreset from './libs/web-preset'
