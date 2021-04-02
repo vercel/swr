@@ -118,4 +118,27 @@ describe('useSWR - revalidate', () => {
     await act(() => sleep(100))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"false"`)
   })
+
+  it('should respect sequences of revalidation calls although in dedupingInterval', async () => {
+    let count = 0
+    function Page() {
+      const { data, revalidate } = useSWR(
+        'respect sequences of revalidation calls although in dedupingInterval',
+        async () => {
+          const currCount = ++count
+          await sleep(currCount === 1 ? 60 : 0)
+          return currCount
+        },
+        {
+          dedupingInterval: 30
+        }
+      )
+      return <div onClick={() => revalidate()}>count: {data}</div>
+    }
+    const { container } = render(<Page />)
+    await act(() => sleep(10))
+    fireEvent.click(container.firstElementChild)
+    await act(() => sleep(60))
+    expect(container.firstChild.textContent).toMatchInlineSnapshot('"count: 2"')
+  })
 })
