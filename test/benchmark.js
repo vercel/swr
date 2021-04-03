@@ -10,6 +10,11 @@
 //
 //   react-benchmark test/benchmark.js
 //
+// You can also use this command to debug with Chrome DevTools even further
+// (remember to format `dist/index.js` first):
+//
+// . react-benchmark test/benchmark.js -td
+//
 
 import React from 'react'
 import useSWR from '../dist/index.js'
@@ -19,7 +24,7 @@ const fetcher = key =>
 
 function Component({ index }) {
   const { data } = useSWR('key-' + ~~(index % 50), fetcher)
-  return data
+  return data || 'loading...'
 }
 
 export default function() {
