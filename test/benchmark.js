@@ -29,7 +29,8 @@ export default function() {
   }
 
   return React.createElement(
-    React.Fragment,
+    'div',
+    {},
     arr.map(index => React.createElement(Component, { index, key: index }))
   )
 }
