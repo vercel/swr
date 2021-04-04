@@ -326,7 +326,7 @@ function useSWR<Data = any, Error = any>(
         }
 
         let newData: Data
-        let startAt
+        let startAt: number
 
         if (shouldDeduping) {
           // there's already an ongoing request,
@@ -354,8 +354,11 @@ function useSWR<Data = any, Error = any>(
           newData = await CONCURRENT_PROMISES[key]
 
           setTimeout(() => {
-            delete CONCURRENT_PROMISES[key]
-            delete CONCURRENT_PROMISES_TS[key]
+            // CONCURRENT_PROMISES_TS[key] maybe be `undefined` or a number
+            if (CONCURRENT_PROMISES_TS[key] === startAt) {
+              delete CONCURRENT_PROMISES[key]
+              delete CONCURRENT_PROMISES_TS[key]
+            }
           }, config.dedupingInterval)
 
           // trigger the success event,
@@ -368,7 +371,8 @@ function useSWR<Data = any, Error = any>(
         //   req1------------------>res1        (current one)
         //        req2---------------->res2
         // the request that fired later will always be kept.
-        if (CONCURRENT_PROMISES_TS[key] > startAt) {
+        // CONCURRENT_PROMISES_TS[key] maybe be `undefined` or a number
+        if (CONCURRENT_PROMISES_TS[key] !== startAt) {
           return false
         }
 
