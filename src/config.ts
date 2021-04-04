@@ -1,13 +1,10 @@
 import { dequal } from 'dequal/lite'
-import { Configuration, RevalidatorOptions, Revalidator } from './types'
-import Cache from './cache'
-import webPreset from './libs/web-preset'
 
-// global cache
-/**
- * @deprecated exposed `cache` will be removed
- */
-const cache = new Cache()
+import { defaultCache } from './cache'
+import webPreset from './libs/web-preset'
+import { Configuration, RevalidatorOptions, Revalidator } from './types'
+
+const fetcher = (url: string) => fetch(url).then(res => res.json())
 
 // error retry
 function onErrorRetry(
@@ -17,7 +14,7 @@ function onErrorRetry(
   revalidate: Revalidator,
   opts: Required<RevalidatorOptions>
 ): void {
-  if (!config.isDocumentVisible()) {
+  if (!webPreset.isDocumentVisible()) {
     // if it's hidden, stop
     // it will auto revalidate when focus
     return
@@ -68,10 +65,10 @@ const defaultConfig = {
   shouldRetryOnError: true,
   suspense: false,
   compare: dequal,
+  fetcher,
 
   isPaused: () => false,
-  ...webPreset
+  cache: defaultCache
 } as const
 
-export { cache }
 export default defaultConfig

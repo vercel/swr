@@ -1,12 +1,14 @@
 // TODO: use @ts-expect-error
 import { useCallback, useRef, useDebugValue } from 'react'
 
-import defaultConfig, { cache as globalCache } from './config'
+import defaultConfig from './config'
+import webPreset from './libs/web-preset'
+import { getCacheFactory } from './cache'
 import { IS_SERVER, rAF, useIsomorphicLayoutEffect } from './env'
+import { serialize } from './libs/serialize'
 import SWRConfigContext from './config-context'
 import useStateWithDeps from './state'
 import useArgs from './resolve-args'
-import { serializeKey } from './cache'
 import {
   State,
   Broadcaster,
@@ -15,9 +17,9 @@ import {
   MutatorCallback,
   SWRResponse,
   RevalidatorOptions,
-  Trigger,
   Updater,
-  SWRConfiguration
+  SWRConfiguration,
+  Cache
 } from './types'
 
 type Revalidator = (...args: any[]) => void
@@ -40,27 +42,29 @@ const now = (() => {
 // Setup DOM events listeners for `focus` and `reconnect` actions
 if (!IS_SERVER) {
   const revalidate = (revalidators: Record<string, Revalidator[]>) => {
-    if (!defaultConfig.isDocumentVisible() || !defaultConfig.isOnline()) return
+    if (!webPreset.isDocumentVisible() || !webPreset.isOnline()) return
 
     for (const key in revalidators) {
       if (revalidators[key][0]) revalidators[key][0]()
     }
   }
+  webPreset.registerOnFocus(() => revalidate(FOCUS_REVALIDATORS))
+  webPreset.registerOnReconnect(() => revalidate(RECONNECT_REVALIDATORS))
+}
 
-  if (typeof defaultConfig.registerOnFocus === 'function') {
-    defaultConfig.registerOnFocus(() => revalidate(FOCUS_REVALIDATORS))
-  }
-
-  if (typeof defaultConfig.registerOnReconnect === 'function') {
-    defaultConfig.registerOnReconnect(() => revalidate(RECONNECT_REVALIDATORS))
+const broadcastState: Broadcaster = (key, data, error, isValidating) => {
+  const updaters = CACHE_REVALIDATORS[key]
+  if (key && updaters) {
+    for (let i = 0; i < updaters.length; ++i) {
+      updaters[i](false, data, error, isValidating)
+    }
   }
 }
 
-const trigger: Trigger = (_key, shouldRevalidate = true) => {
-  const cache = globalCache
+const internalTrigger = (cache: Cache, _key: Key, shouldRevalidate = true) => {
   // we are ignoring the second argument which correspond to the arguments
   // the fetcher will receive when key is an array
-  const [key, , keyErr, keyValidating] = serializeKey(_key)
+  const [key, , keyErr, keyValidating] = serialize(_key)
   if (!key) return Promise.resolve()
 
   const updaters = CACHE_REVALIDATORS[key]
@@ -87,26 +91,18 @@ const trigger: Trigger = (_key, shouldRevalidate = true) => {
   return Promise.resolve(cache.get(key))
 }
 
-const broadcastState: Broadcaster = (key, data, error, isValidating) => {
-  const updaters = CACHE_REVALIDATORS[key]
-  if (key && updaters) {
-    for (let i = 0; i < updaters.length; ++i) {
-      updaters[i](false, data, error, isValidating)
-    }
-  }
-}
-
-async function mutate<Data = any>(
+async function internalMutate<Data = any>(
+  cache: Cache,
   _key: Key,
   _data?: Data | Promise<Data | undefined> | MutatorCallback<Data>,
   shouldRevalidate = true
 ): Promise<Data | undefined> {
-  const cache = globalCache
-  const [key, , keyErr] = serializeKey(_key)
+  const [key, , keyErr] = serialize(_key)
   if (!key) return undefined
 
   // if there is no new data to update, let's just revalidate the key
-  if (typeof _data === 'undefined') return trigger(_key, shouldRevalidate)
+  if (typeof _data === 'undefined')
+    return internalTrigger(cache, _key, shouldRevalidate)
 
   // update global timestamps
   MUTATION_TS[key] = now() - 1
@@ -222,24 +218,21 @@ function useSWR<Data = any, Error = any>(
         SWRConfiguration<Data, Error> | undefined
       ]
 ): SWRResponse<Data, Error> {
-  const [_key, fn, config, context] = useArgs<
-    Key,
-    SWRConfiguration<Data, Error>,
-    Data
-  >(args)
+  const [_key, fn, config] = useArgs<Key, SWRConfiguration<Data, Error>, Data>(
+    args
+  )
+  const cache = config.cache
 
   // `key` is the identifier of the SWR `data` state.
   // `keyErr` and `keyValidating` are indentifiers of `error` and `isValidating`
   // which are derived from `key`.
   // `fnArgs` is a list of arguments for `fn`.
-  const [key, fnArgs, keyErr, keyValidating] = serializeKey(_key)
+  const [key, fnArgs, keyErr, keyValidating] = serialize(_key)
 
   const configRef = useRef(config)
   useIsomorphicLayoutEffect(() => {
     configRef.current = config
   })
-
-  const cache = context.provider || globalCache
 
   // If it's the first render of this hook.
   const initialMountedRef = useRef(false)
@@ -595,8 +588,8 @@ function useSWR<Data = any, Error = any>(
       if (
         !stateRef.current.error &&
         (configRef.current.refreshWhenHidden ||
-          configRef.current.isDocumentVisible()) &&
-        (configRef.current.refreshWhenOffline || configRef.current.isOnline())
+          webPreset.isDocumentVisible()) &&
+        (configRef.current.refreshWhenOffline || webPreset.isOnline())
       ) {
         // only revalidate when the page is visible
         // if API request errored, we stop polling in this round
@@ -638,7 +631,7 @@ function useSWR<Data = any, Error = any>(
   // `mutate`, but bound to the current key.
   const boundMutate: SWRResponse<Data, Error>['mutate'] = useCallback(
     (newData, shouldRevalidate) => {
-      return mutate(keyRef.current, newData, shouldRevalidate)
+      return internalMutate(cache, keyRef.current, newData, shouldRevalidate)
     },
     []
   )
@@ -684,9 +677,10 @@ function useSWR<Data = any, Error = any>(
 Object.defineProperty(SWRConfigContext.Provider, 'default', {
   value: defaultConfig
 })
-const SWRConfig = SWRConfigContext.Provider as typeof SWRConfigContext.Provider & {
+
+export const SWRConfig = SWRConfigContext.Provider as typeof SWRConfigContext.Provider & {
   default: SWRConfiguration
 }
-
-export { trigger, mutate, SWRConfig }
+export const mutate = internalMutate.bind(null, defaultConfig.cache)
+export const createCache = getCacheFactory(internalMutate)
 export default useSWR

@@ -19,8 +19,6 @@ const isDocumentVisible = () => {
   return true
 }
 
-const fetcher = (url: string) => fetch(url).then(res => res.json())
-
 const registerOnFocus = (cb: () => void) => {
   if (
     typeof window !== 'undefined' &&
@@ -54,7 +52,6 @@ const registerOnReconnect = (cb: () => void) => {
 export default {
   isOnline,
   isDocumentVisible,
-  fetcher,
   registerOnFocus,
   registerOnReconnect
 }

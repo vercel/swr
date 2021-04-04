@@ -1,8 +1,8 @@
 // TODO: use @ts-expect-error
 import { useRef, useState, useCallback } from 'react'
 
-import { cache } from './config'
 import { useIsomorphicLayoutEffect } from './env'
+import { serialize } from './libs/serialize'
 import useArgs from './resolve-args'
 import useSWR from './use-swr'
 
@@ -33,6 +33,7 @@ function useSWRInfinite<Data = any, Error = any>(
     SWRInfiniteConfiguration<Data, Error>,
     Data
   >(args)
+  const cache = config.cache
 
   const {
     initialSize = 1,
@@ -44,7 +45,7 @@ function useSWRInfinite<Data = any, Error = any>(
   // get the serialized key of the first page
   let firstPageKey: string | null = null
   try {
-    ;[firstPageKey] = cache.serializeKey(getKey(0, null))
+    ;[firstPageKey] = serialize(getKey(0, null))
   } catch (err) {
     // not ready
   }
@@ -103,9 +104,7 @@ function useSWRInfinite<Data = any, Error = any>(
       const pageSize = resolvePageSize()
       let previousPageData = null
       for (let i = 0; i < pageSize; ++i) {
-        const [pageKey, pageArgs] = cache.serializeKey(
-          getKey(i, previousPageData)
-        )
+        const [pageKey, pageArgs] = serialize(getKey(i, previousPageData))
 
         if (!pageKey) {
           // pageKey is falsy, stop fetching next pages

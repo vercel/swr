@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import React, { useState } from 'react'
-import useSWR, { createProvider, SWRConfig } from '../src'
+import useSWR, { createCache, SWRConfig } from '../src'
 import { sleep } from './utils'
 
 describe('useSWR - refresh', () => {
@@ -228,9 +228,9 @@ describe('useSWR - refresh', () => {
     }
 
     const customCache = new Map()
-    const { provider } = createProvider(customCache)
+    const { cache } = createCache(customCache)
     const { container } = render(
-      <SWRConfig value={{ provider }}>
+      <SWRConfig value={{ cache }}>
         <Page />
       </SWRConfig>
     )

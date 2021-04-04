@@ -3,7 +3,7 @@ import { useContext } from 'react'
 import defaultConfig from './config'
 import SWRConfigContext from './config-context'
 
-import { Fetcher, SWRContext } from './types'
+import { Fetcher } from './types'
 
 // Resolve arguments for SWR hooks.
 // This function itself is a hook because it uses `useContext` inside.
@@ -13,17 +13,11 @@ export default function useArgs<KeyType, ConfigType, Data>(
     | readonly [KeyType, Fetcher<Data> | null]
     | readonly [KeyType, ConfigType | undefined]
     | readonly [KeyType, Fetcher<Data> | null, ConfigType | undefined]
-): [
-  KeyType,
-  Fetcher<Data> | null,
-  (typeof defaultConfig) & ConfigType,
-  SWRContext
-] {
-  const context = useContext(SWRConfigContext)
+): [KeyType, Fetcher<Data> | null, (typeof defaultConfig) & ConfigType] {
   const config = Object.assign(
     {},
     defaultConfig,
-    context,
+    useContext(SWRConfigContext),
     args.length > 2
       ? args[2]
       : args.length === 2 && typeof args[1] === 'object'
@@ -43,5 +37,5 @@ export default function useArgs<KeyType, ConfigType, Data>(
     ? args[1]
     : config.fetcher) as Fetcher<Data> | null
 
-  return [args[0], fn, config, context]
+  return [args[0], fn, config]
 }
