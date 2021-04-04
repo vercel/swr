@@ -2,6 +2,7 @@ import { dequal } from 'dequal/lite'
 import { Configuration, RevalidatorOptions, Revalidator } from './types'
 import Cache from './cache'
 import webPreset from './libs/web-preset'
+import { slowConnection } from './env'
 
 // cache
 const cache = new Cache()
@@ -34,16 +35,6 @@ function onErrorRetry(
   setTimeout(revalidate, timeout, opts)
 }
 
-// client side: need to adjust the config
-// based on the browser status
-// slow connection (<= 70Kbps)
-const slowConnection =
-  typeof window !== 'undefined' &&
-  // @ts-ignore
-  navigator['connection'] &&
-  // @ts-ignore
-  ['slow-2g', '2g'].indexOf(navigator['connection'].effectiveType) !== -1
-
 // config
 const defaultConfig = {
   // events
@@ -52,10 +43,10 @@ const defaultConfig = {
   onError: () => {},
   onErrorRetry,
 
-  errorRetryInterval: (slowConnection ? 10 : 5) * 1000,
+  errorRetryInterval: slowConnection ? 10 * 1000 : 5 * 1000,
   focusThrottleInterval: 5 * 1000,
   dedupingInterval: 2 * 1000,
-  loadingTimeout: (slowConnection ? 5 : 3) * 1000,
+  loadingTimeout: slowConnection ? 5 * 1000 : 3 * 1000,
 
   refreshInterval: 0,
   revalidateOnFocus: true,

@@ -37,6 +37,9 @@ const now = (() => {
   return () => ++ts
 })()
 
+// Timeout
+const timeout = setTimeout
+
 // Setup DOM events listeners for `focus` and `reconnect` actions
 if (!IS_SERVER) {
   const revalidate = (revalidators: Record<string, Revalidator[]>) => {
@@ -231,15 +234,13 @@ function useSWR<Data = any, Error = any>(
   const [key, fnArgs, keyErr, keyValidating] = cache.serializeKey(_key)
 
   const configRef = useRef(config)
-  useIsomorphicLayoutEffect(() => {
-    configRef.current = config
-  })
+  configRef.current = config
 
   // If it's the first render of this hook.
   const initialMountedRef = useRef(false)
-
-  // error ref inside revalidate (is last request errored?)
   const unmountedRef = useRef(false)
+
+  // The ref to trace the current key.
   const keyRef = useRef(key)
 
   // Get the current state that SWR should return.
@@ -337,7 +338,7 @@ function useSWR<Data = any, Error = any>(
           // if no cache being rendered currently (it shows a blank page),
           // we trigger the loading slow event.
           if (config.loadingTimeout && !cache.get(key)) {
-            setTimeout(() => {
+            timeout(() => {
               if (loading)
                 safeCallback(() => configRef.current.onLoadingSlow(key, config))
             }, config.loadingTimeout)
@@ -353,7 +354,7 @@ function useSWR<Data = any, Error = any>(
 
           newData = await CONCURRENT_PROMISES[key]
 
-          setTimeout(() => {
+          timeout(() => {
             // CONCURRENT_PROMISES_TS[key] maybe be `undefined` or a number
             if (CONCURRENT_PROMISES_TS[key] === startAt) {
               delete CONCURRENT_PROMISES[key]
@@ -428,7 +429,7 @@ function useSWR<Data = any, Error = any>(
 
         if (!shouldDeduping) {
           // also update other hooks
-          broadcastState(key, newData, newState.error, false)
+          broadcastState(key, newData, undefined, false)
         }
       } catch (err) {
         delete CONCURRENT_PROMISES[key]
@@ -492,6 +493,7 @@ function useSWR<Data = any, Error = any>(
 
     // Not the inital render.
     const keyChanged = initialMountedRef.current
+    const softRevalidate = () => revalidate({ dedupe: true })
 
     // Mark the component as mounted and update corresponding refs.
     unmountedRef.current = false
@@ -507,8 +509,6 @@ function useSWR<Data = any, Error = any>(
       })
     }
 
-    const softRevalidate = () => revalidate({ dedupe: true })
-
     // Trigger a revalidation.
     if (keyChanged || shouldRevalidateOnMount()) {
       if (data !== undefined && !IS_SERVER) {
@@ -522,16 +522,12 @@ function useSWR<Data = any, Error = any>(
     }
 
     // Add event listeners
-
     let pending = false
     const onFocus = () => {
       if (pending || !configRef.current.revalidateOnFocus) return
       pending = true
       softRevalidate()
-      setTimeout(
-        () => (pending = false),
-        configRef.current.focusThrottleInterval
-      )
+      timeout(() => (pending = false), configRef.current.focusThrottleInterval)
     }
 
     const onReconnect = () => {
@@ -584,31 +580,40 @@ function useSWR<Data = any, Error = any>(
 
   // Polling
   useIsomorphicLayoutEffect(() => {
-    let timer: any = null
+    let timer: any = 0
+
+    const nextTick = () => {
+      const currentConfig = configRef.current
+      if (currentConfig.refreshInterval) {
+        timer = timeout(tick, currentConfig.refreshInterval)
+      }
+    }
+
     const tick = async () => {
+      const currentConfig = configRef.current
+
       if (
         !stateRef.current.error &&
-        (configRef.current.refreshWhenHidden ||
-          configRef.current.isDocumentVisible()) &&
-        (configRef.current.refreshWhenOffline || configRef.current.isOnline())
+        (currentConfig.refreshWhenHidden ||
+          currentConfig.isDocumentVisible()) &&
+        (currentConfig.refreshWhenOffline || currentConfig.isOnline())
       ) {
         // only revalidate when the page is visible
         // if API request errored, we stop polling in this round
         // and let the error retry function handle it
         await revalidate({ dedupe: true })
       }
+
       // Read the latest refreshInterval
-      if (configRef.current.refreshInterval && timer) {
-        timer = setTimeout(tick, configRef.current.refreshInterval)
-      }
+      if (timer) nextTick()
     }
-    if (configRef.current.refreshInterval) {
-      timer = setTimeout(tick, configRef.current.refreshInterval)
-    }
+
+    nextTick()
+
     return () => {
       if (timer) {
         clearTimeout(timer)
-        timer = null
+        timer = 0
       }
     }
   }, [
@@ -645,24 +650,25 @@ function useSWR<Data = any, Error = any>(
     revalidate,
     mutate: boundMutate
   } as SWRResponse<Data, Error>
+  const currentStateDependencies = stateDependenciesRef.current
   Object.defineProperties(state, {
     data: {
       get: function() {
-        stateDependenciesRef.current.data = true
+        currentStateDependencies.data = true
         return data
       },
       enumerable: true
     },
     error: {
       get: function() {
-        stateDependenciesRef.current.error = true
+        currentStateDependencies.error = true
         return error
       },
       enumerable: true
     },
     isValidating: {
       get: function() {
-        stateDependenciesRef.current.isValidating = true
+        currentStateDependencies.isValidating = true
         return isValidating
       },
       enumerable: true

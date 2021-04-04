@@ -1,3 +1,6 @@
+const HAS_WINDOW = typeof window !== 'undefined'
+const HAS_DOCUMENT = typeof document !== 'undefined'
+
 /**
  * Due to bug https://bugs.chromium.org/p/chromium/issues/detail?id=678075,
  * it's not reliable to detect if the browser is currently online or offline
@@ -9,10 +12,7 @@ let online = true
 const isOnline = () => online
 
 const isDocumentVisible = () => {
-  if (
-    typeof document !== 'undefined' &&
-    document.visibilityState !== undefined
-  ) {
+  if (HAS_DOCUMENT && document.visibilityState !== undefined) {
     return document.visibilityState !== 'hidden'
   }
   // always assume it's visible
@@ -23,9 +23,9 @@ const fetcher = (url: string) => fetch(url).then(res => res.json())
 
 const registerOnFocus = (cb: () => void) => {
   if (
-    typeof window !== 'undefined' &&
+    HAS_WINDOW &&
     window.addEventListener !== undefined &&
-    typeof document !== 'undefined' &&
+    HAS_DOCUMENT &&
     document.addEventListener !== undefined
   ) {
     // focus revalidate
@@ -35,7 +35,7 @@ const registerOnFocus = (cb: () => void) => {
 }
 
 const registerOnReconnect = (cb: () => void) => {
-  if (typeof window !== 'undefined' && window.addEventListener !== undefined) {
+  if (HAS_WINDOW && window.addEventListener !== undefined) {
     // reconnect revalidate
     window.addEventListener(
       'online',

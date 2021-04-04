@@ -12,10 +12,6 @@ export default function hash(args: any[]): string {
   if (!args.length) return ''
   let key = 'arg'
   for (let i = 0; i < args.length; ++i) {
-    if (args[i] === null) {
-      key += '@null'
-      continue
-    }
     let _hash
     if (typeof args[i] !== 'object' && typeof args[i] !== 'function') {
       // need to consider the case that args[i] is a string:
@@ -29,6 +25,8 @@ export default function hash(args: any[]): string {
       } else {
         _hash = String(args[i])
       }
+    } else if (args[i] === null) {
+      _hash = '@nil'
     } else {
       if (!table.has(args[i])) {
         _hash = counter

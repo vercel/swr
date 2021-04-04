@@ -16,3 +16,13 @@ export const rAF = IS_SERVER
 // To get around it, we can conditionally useEffect on the server (no-op) and
 // useLayoutEffect in the browser.
 export const useIsomorphicLayoutEffect = IS_SERVER ? useEffect : useLayoutEffect
+
+// client side: need to adjust the config
+// based on the browser status
+// slow connection (<= 70Kbps)
+export const slowConnection =
+  !IS_SERVER &&
+  // @ts-ignore
+  navigator['connection'] &&
+  // @ts-ignore
+  ['slow-2g', '2g'].indexOf(navigator['connection'].effectiveType) !== -1
