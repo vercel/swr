@@ -159,6 +159,9 @@ function useSWRInfinite<Data = any, Error = any>(
 
   const mutate = useCallback(
     (data: MutatorCallback, shouldRevalidate = true) => {
+      // It is possible that the key is still falsy.
+      if (!contextCacheKey) return undefined
+
       if (shouldRevalidate && typeof data !== 'undefined') {
         // we only revalidate the pages that are changed
         const originalData = dataRef.current
@@ -178,6 +181,9 @@ function useSWRInfinite<Data = any, Error = any>(
   // extend the SWR API
   const setSize = useCallback(
     (arg: number | ((size: number) => number)) => {
+      // It is possible that the key is still falsy.
+      if (!pageSizeCacheKey) return undefined
+
       let size
       if (typeof arg === 'function') {
         size = arg(resolvePageSize())
