@@ -44,7 +44,7 @@ function useSWRInfinite<Data = any, Error = any>(
   // get the serialized key of the first page
   let firstPageKey: string | null = null
   try {
-    ;[firstPageKey] = cache.serializeKey(getKey(0, null))
+    ;[firstPageKey] = cache.serializeKey(getKey ? getKey(0, null) : null)
   } catch (err) {
     // not ready
   }
@@ -104,7 +104,7 @@ function useSWRInfinite<Data = any, Error = any>(
       let previousPageData = null
       for (let i = 0; i < pageSize; ++i) {
         const [pageKey, pageArgs] = cache.serializeKey(
-          getKey(i, previousPageData)
+          getKey ? getKey(i, previousPageData) : null
         )
 
         if (!pageKey) {
@@ -159,6 +159,9 @@ function useSWRInfinite<Data = any, Error = any>(
 
   const mutate = useCallback(
     (data: MutatorCallback, shouldRevalidate = true) => {
+      // It is possible that the key is still falsy.
+      if (!contextCacheKey) return undefined
+
       if (shouldRevalidate && typeof data !== 'undefined') {
         // we only revalidate the pages that are changed
         const originalData = dataRef.current
@@ -178,6 +181,9 @@ function useSWRInfinite<Data = any, Error = any>(
   // extend the SWR API
   const setSize = useCallback(
     (arg: number | ((size: number) => number)) => {
+      // It is possible that the key is still falsy.
+      if (!pageSizeCacheKey) return undefined
+
       let size
       if (typeof arg === 'function') {
         size = arg(resolvePageSize())
