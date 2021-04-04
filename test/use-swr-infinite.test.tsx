@@ -543,4 +543,15 @@ describe('useSWRInfinite', () => {
     await screen.findByText('A:page-2-2')
     await screen.findByText('B:page-2-2')
   })
+
+  it.only('should support null as getKey', async () => {
+    function Page() {
+      const { data } = useSWRInfinite<string, string>(null, () => 'data')
+      return <div>data:{data}</div>
+    }
+
+    render(<Page />)
+    screen.getByText('data:')
+    await screen.findByText('data:')
+  })
 })
