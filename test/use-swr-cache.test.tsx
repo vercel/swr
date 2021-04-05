@@ -55,4 +55,24 @@ describe('useSWR - cache', () => {
     await screen.findByText('updated value')
     expect(renderedValues.length).toBe(2)
   })
+
+  it('should correctly mutate the cached value', async () => {
+    const key = createKey()
+
+    function Page() {
+      const { data } = useSWR(key, null)
+      return <div>{data}</div>
+    }
+
+    const customCache = new Map([[key, 'cached value']])
+    const { cache, mutate } = createCache(customCache)
+    render(
+      <SWRConfig value={{ cache }}>
+        <Page />
+      </SWRConfig>
+    )
+    screen.getByText('cached value')
+    await act(() => mutate(key, 'mutated value', false))
+    await screen.findByText('mutated value')
+  })
 })
