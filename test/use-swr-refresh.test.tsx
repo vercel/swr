@@ -3,7 +3,20 @@ import React, { useState } from 'react'
 import useSWR, { cache } from '../src'
 import { sleep } from './utils'
 
+const advanceTimers = async (ms: number) => jest.advanceTimersByTime(ms)
+
+// This test heavily depends on timers, and it takes long time and makes tests flaky.
+// So we use fake timers Jest provides
 describe('useSWR - refresh', () => {
+  beforeAll(() => {
+    jest.useFakeTimers()
+  })
+  afterAll(() => {
+    jest.useRealTimers()
+  })
+  afterEach(() => {
+    jest.clearAllTimers()
+  })
   it('should rerender automatically on interval', async () => {
     let count = 0
 
@@ -22,11 +35,11 @@ describe('useSWR - refresh', () => {
     // mount
     await screen.findByText('count: 0')
 
-    await act(() => sleep(210)) // update
+    await act(() => advanceTimers(200)) // update
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 1"`)
-    await act(() => sleep(50)) // no update
+    await act(() => advanceTimers(50)) // no update
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 1"`)
-    await act(() => sleep(150)) // update
+    await act(() => advanceTimers(150)) // update
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 2"`)
   })
 
@@ -36,25 +49,28 @@ describe('useSWR - refresh', () => {
     function Page() {
       const { data } = useSWR('dynamic-2', () => count++, {
         refreshInterval: 100,
-        dedupingInterval: 150
+        dedupingInterval: 500
       })
       return <div>count: {data}</div>
     }
+
     const { container } = render(<Page />)
 
     // hydration
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: "`)
 
     // mount
-    await screen.findByText('count: 0')
+    // await screen.findByText('count: 0')
 
-    await act(() => sleep(110)) // no update (deduped)
+    await act(() => advanceTimers(100)) // no update (deduped)
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 0"`)
-    await act(() => sleep(100)) // update
+    await act(() => advanceTimers(400)) // exceed dudupingInterval
+    await act(() => advanceTimers(100)) // update
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 1"`)
-    await act(() => sleep(100)) // no update (deduped)
+    await act(() => advanceTimers(100)) // no update (deduped)
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 1"`)
-    await act(() => sleep(100)) // update
+    await act(() => advanceTimers(400)) // exceed dudupingInterval
+    await act(() => advanceTimers(100)) // update
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 2"`)
   })
 
@@ -78,39 +94,39 @@ describe('useSWR - refresh', () => {
     // mount
     await screen.findByText('count: 0')
 
-    await act(() => sleep(110))
+    await act(() => advanceTimers(100))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 1"`)
-    await act(() => sleep(25))
+    await act(() => advanceTimers(50))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 1"`)
-    await act(() => sleep(75))
+    await act(() => advanceTimers(50))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 2"`)
     fireEvent.click(container.firstElementChild)
 
-    await act(() => sleep(100))
+    await act(() => advanceTimers(100))
 
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 2"`)
 
-    await act(() => sleep(60))
+    await act(() => advanceTimers(50))
 
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 3"`)
 
-    await act(() => sleep(160))
+    await act(() => advanceTimers(150))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 4"`)
     fireEvent.click(container.firstElementChild)
     await act(() => {
       // it will clear 150ms timer and setup a new 200ms timer
-      return sleep(150)
+      return advanceTimers(150)
     })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 4"`)
-    await act(() => sleep(60))
+    await act(() => advanceTimers(50))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 5"`)
     fireEvent.click(container.firstElementChild)
     await act(() => {
       // it will clear 200ms timer and stop
-      return sleep(60)
+      return advanceTimers(50)
     })
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 5"`)
-    await act(() => sleep(60))
+    await act(() => advanceTimers(50))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 5"`)
   })
 
@@ -144,23 +160,23 @@ describe('useSWR - refresh', () => {
 
     await screen.findByText('count: 0 1')
 
-    await act(() => sleep(100))
+    await act(() => advanceTimers(100))
 
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"count: 1 2"`
     )
 
-    await act(() => sleep(100))
+    await act(() => advanceTimers(100))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"count: 1 2"`
     )
 
-    await act(() => sleep(100))
+    await act(() => advanceTimers(100))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"count: 1 2"`
     )
 
-    await act(() => sleep(100))
+    await act(() => advanceTimers(100))
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"count: 1 2"`
     )
@@ -169,32 +185,32 @@ describe('useSWR - refresh', () => {
 
     await act(() => {
       // it will setup a new 100ms timer
-      return sleep(50)
+      return advanceTimers(50)
     })
 
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"count: 1 0"`
     )
 
-    await act(() => sleep(50))
+    await act(() => advanceTimers(50))
 
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"count: 2 1"`
     )
 
-    await act(() => sleep(100))
+    await act(() => advanceTimers(100))
 
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"count: 3 2"`
     )
 
-    await act(() => sleep(100))
+    await act(() => advanceTimers(100))
 
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"count: 3 2"`
     )
 
-    await act(() => sleep(100))
+    await act(() => advanceTimers(100))
 
     expect(container.firstChild.textContent).toMatchInlineSnapshot(
       `"count: 3 2"`
@@ -239,7 +255,7 @@ describe('useSWR - refresh', () => {
     })
 
     fireEvent.click(container.firstElementChild)
-    await act(() => sleep(1))
+    await act(() => advanceTimers(1))
     expect(fetcher).toBeCalledTimes(2)
     expect(fetcher).toReturnWith({
       timestamp: 2,
@@ -271,17 +287,17 @@ describe('useSWR - refresh', () => {
     const { container } = render(<Page />)
 
     // initial revalidate
-    await act(() => sleep(200))
+    await act(() => advanceTimers(200))
     expect(fetcherWithToken).toBeCalledTimes(1)
 
     // first refresh
-    await act(() => sleep(100))
+    await act(() => advanceTimers(100))
     expect(fetcherWithToken).toBeCalledTimes(2)
     expect(fetcherWithToken).toHaveBeenLastCalledWith('0')
-    await act(() => sleep(200))
+    await act(() => advanceTimers(200))
 
     // second refresh start
-    await act(() => sleep(100))
+    await act(() => advanceTimers(100))
     expect(fetcherWithToken).toBeCalledTimes(3)
     expect(fetcherWithToken).toHaveBeenLastCalledWith('0')
     // change the key during revalidation
@@ -289,12 +305,13 @@ describe('useSWR - refresh', () => {
     fireEvent.click(container.firstElementChild)
 
     // first refresh with new key 1
-    await act(() => sleep(100))
+    await act(() => advanceTimers(100))
     expect(fetcherWithToken).toBeCalledTimes(4)
     expect(fetcherWithToken).toHaveBeenLastCalledWith('1')
-    await act(() => sleep(210))
+    await act(() => advanceTimers(200))
 
     // second refresh with new key 1
+    await act(() => advanceTimers(100))
     expect(fetcherWithToken).toBeCalledTimes(5)
     expect(fetcherWithToken).toHaveBeenLastCalledWith('1')
   })
@@ -323,20 +340,20 @@ describe('useSWR - refresh', () => {
     const { container } = render(<Page />)
 
     // initial revalidate
-    await act(() => sleep(100))
+    await act(() => advanceTimers(100))
     expect(fetcherWithToken).toBeCalledTimes(1)
     expect(onSuccess).toBeCalledTimes(1)
     expect(onSuccess).toHaveLastReturnedWith(`0-hash 0-hash`)
     // first refresh
-    await act(() => sleep(50))
+    await act(() => advanceTimers(50))
     expect(fetcherWithToken).toBeCalledTimes(2)
     expect(fetcherWithToken).toHaveBeenLastCalledWith('0-hash')
-    await act(() => sleep(100))
+    await act(() => advanceTimers(100))
     expect(onSuccess).toBeCalledTimes(2)
     expect(onSuccess).toHaveLastReturnedWith(`0-hash 0-hash`)
 
     // second refresh start
-    await act(() => sleep(50))
+    await act(() => advanceTimers(50))
     expect(fetcherWithToken).toBeCalledTimes(3)
     expect(fetcherWithToken).toHaveBeenLastCalledWith('0-hash')
     // change the key during revalidation
@@ -344,14 +361,15 @@ describe('useSWR - refresh', () => {
     fireEvent.click(container.firstElementChild)
 
     // first refresh with new key 1
-    await act(() => sleep(50))
+    await act(() => advanceTimers(50))
     expect(fetcherWithToken).toBeCalledTimes(4)
     expect(fetcherWithToken).toHaveBeenLastCalledWith('1-hash')
-    await act(() => sleep(110))
+    await act(() => advanceTimers(100))
     expect(onSuccess).toBeCalledTimes(3)
     expect(onSuccess).toHaveLastReturnedWith(`1-hash 1-hash`)
 
     // second refresh with new key 1
+    await act(() => advanceTimers(50))
     expect(fetcherWithToken).toBeCalledTimes(5)
     expect(fetcherWithToken).toHaveBeenLastCalledWith('1-hash')
   })
