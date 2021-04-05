@@ -27,20 +27,21 @@ describe('useSWR - refresh', () => {
       })
       return <div>count: {data}</div>
     }
-    const { container } = render(<Page />)
+
+    render(<Page />)
 
     // hydration
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: "`)
+    screen.getByText('count:')
 
     // mount
     await screen.findByText('count: 0')
 
     await act(() => advanceTimers(200)) // update
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 1"`)
+    screen.getByText('count: 1')
     await act(() => advanceTimers(50)) // no update
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 1"`)
+    screen.getByText('count: 1')
     await act(() => advanceTimers(150)) // update
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 2"`)
+    screen.getByText('count: 2')
   })
 
   it('should dedupe requests combined with intervals', async () => {
@@ -54,24 +55,24 @@ describe('useSWR - refresh', () => {
       return <div>count: {data}</div>
     }
 
-    const { container } = render(<Page />)
+    render(<Page />)
 
     // hydration
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: "`)
+    screen.getByText('count:')
 
     // mount
-    // await screen.findByText('count: 0')
+    await screen.findByText('count: 0')
 
     await act(() => advanceTimers(100)) // no update (deduped)
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 0"`)
+    screen.getByText('count: 0')
     await act(() => advanceTimers(400)) // exceed dudupingInterval
     await act(() => advanceTimers(100)) // update
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 1"`)
+    screen.getByText('count: 1')
     await act(() => advanceTimers(100)) // no update (deduped)
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 1"`)
+    screen.getByText('count: 1')
     await act(() => advanceTimers(400)) // exceed dudupingInterval
     await act(() => advanceTimers(100)) // update
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 2"`)
+    screen.getByText('count: 2')
   })
 
   it('should update data upon interval changes', async () => {
@@ -88,46 +89,47 @@ describe('useSWR - refresh', () => {
         </div>
       )
     }
-    const { container } = render(<Page />)
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: "`)
+
+    render(<Page />)
+    screen.getByText('count:')
 
     // mount
     await screen.findByText('count: 0')
 
     await act(() => advanceTimers(100))
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 1"`)
+    screen.getByText('count: 1')
     await act(() => advanceTimers(50))
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 1"`)
+    screen.getByText('count: 1')
     await act(() => advanceTimers(50))
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 2"`)
-    fireEvent.click(container.firstElementChild)
+    screen.getByText('count: 2')
+    fireEvent.click(screen.getByText('count: 2'))
 
     await act(() => advanceTimers(100))
 
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 2"`)
+    screen.getByText('count: 2')
 
     await act(() => advanceTimers(50))
 
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 3"`)
+    screen.getByText('count: 3')
 
     await act(() => advanceTimers(150))
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 4"`)
-    fireEvent.click(container.firstElementChild)
+    screen.getByText('count: 4')
+    fireEvent.click(screen.getByText('count: 4'))
     await act(() => {
       // it will clear 150ms timer and setup a new 200ms timer
       return advanceTimers(150)
     })
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 4"`)
+    screen.getByText('count: 4')
     await act(() => advanceTimers(50))
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 5"`)
-    fireEvent.click(container.firstElementChild)
+    screen.getByText('count: 5')
+    fireEvent.click(screen.getByText('count: 5'))
     await act(() => {
       // it will clear 200ms timer and stop
       return advanceTimers(50)
     })
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 5"`)
+    screen.getByText('count: 5')
     await act(() => advanceTimers(50))
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"count: 5"`)
+    screen.getByText('count: 5')
   })
 
   it('should update data upon interval changes -- changes happened during revalidate', async () => {
@@ -153,68 +155,49 @@ describe('useSWR - refresh', () => {
         </div>
       )
     }
-    const { container } = render(<Page />)
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"count:  0"`
-    )
+
+    render(<Page />)
+    screen.getByText('count: 0')
 
     await screen.findByText('count: 0 1')
 
     await act(() => advanceTimers(100))
 
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"count: 1 2"`
-    )
+    screen.getByText('count: 1 2')
 
     await act(() => advanceTimers(100))
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"count: 1 2"`
-    )
+    screen.getByText('count: 1 2')
 
     await act(() => advanceTimers(100))
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"count: 1 2"`
-    )
+    screen.getByText('count: 1 2')
 
     await act(() => advanceTimers(100))
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"count: 1 2"`
-    )
+    screen.getByText('count: 1 2')
 
-    fireEvent.click(container.firstElementChild)
+    fireEvent.click(screen.getByText('count: 1 2'))
 
     await act(() => {
       // it will setup a new 100ms timer
       return advanceTimers(50)
     })
 
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"count: 1 0"`
-    )
+    screen.getByText('count: 1 0')
 
     await act(() => advanceTimers(50))
 
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"count: 2 1"`
-    )
+    screen.getByText('count: 2 1')
 
     await act(() => advanceTimers(100))
 
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"count: 3 2"`
-    )
+    screen.getByText('count: 3 2')
 
     await act(() => advanceTimers(100))
 
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"count: 3 2"`
-    )
+    screen.getByText('count: 3 2')
 
     await act(() => advanceTimers(100))
 
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"count: 3 2"`
-    )
+    screen.getByText('count: 3 2')
   })
 
   it('should allow use custom compare method', async () => {
@@ -243,9 +226,9 @@ describe('useSWR - refresh', () => {
       return <button onClick={() => change()}>{data.timestamp}</button>
     }
 
-    const { container } = render(<Page />)
+    render(<Page />)
 
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"loading"`)
+    screen.getByText('loading')
 
     await screen.findByText('1')
     expect(fetcher).toBeCalledTimes(1)
@@ -254,7 +237,7 @@ describe('useSWR - refresh', () => {
       version: '1.0'
     })
 
-    fireEvent.click(container.firstElementChild)
+    fireEvent.click(screen.getByText('1'))
     await act(() => advanceTimers(1))
     expect(fetcher).toBeCalledTimes(2)
     expect(fetcher).toReturnWith({
@@ -264,7 +247,7 @@ describe('useSWR - refresh', () => {
 
     const cachedData = cache.get(key)
     expect(cachedData.timestamp.toString()).toEqual('1')
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"1"`)
+    screen.getByText('1')
   })
 
   it('should not let the previous interval timer to set new timer if key changes too fast', async () => {
@@ -284,7 +267,8 @@ describe('useSWR - refresh', () => {
         >{`click me ${data}`}</button>
       )
     }
-    const { container } = render(<Page />)
+
+    render(<Page />)
 
     // initial revalidate
     await act(() => advanceTimers(200))
@@ -302,7 +286,7 @@ describe('useSWR - refresh', () => {
     expect(fetcherWithToken).toHaveBeenLastCalledWith('0')
     // change the key during revalidation
     // The second refresh will not start a new timer
-    fireEvent.click(container.firstElementChild)
+    fireEvent.click(screen.getByText('click me 0'))
 
     // first refresh with new key 1
     await act(() => advanceTimers(100))
@@ -337,7 +321,8 @@ describe('useSWR - refresh', () => {
         >{`click me ${data}`}</button>
       )
     }
-    const { container } = render(<Page />)
+
+    render(<Page />)
 
     // initial revalidate
     await act(() => advanceTimers(100))
@@ -358,7 +343,7 @@ describe('useSWR - refresh', () => {
     expect(fetcherWithToken).toHaveBeenLastCalledWith('0-hash')
     // change the key during revalidation
     // The second refresh will not start a new timer
-    fireEvent.click(container.firstElementChild)
+    fireEvent.click(screen.getByText('click me 0-hash'))
 
     // first refresh with new key 1
     await act(() => advanceTimers(50))
