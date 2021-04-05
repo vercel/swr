@@ -3,19 +3,17 @@ import React, { useState } from 'react'
 import useSWR, { cache } from '../src'
 import { sleep } from './utils'
 
+// This has to be an async function to wait a microtask to flush updates
 const advanceTimers = async (ms: number) => jest.advanceTimersByTime(ms)
 
-// This test heavily depends on timers, and it takes long time and makes tests flaky.
-// So we use fake timers Jest provides
+// This test heavily depends on setInterval/setTimeout timers, which makes tests slower and flaky.
+// So we use Jest's fake timers
 describe('useSWR - refresh', () => {
-  beforeAll(() => {
+  beforeEach(() => {
     jest.useFakeTimers()
   })
-  afterAll(() => {
-    jest.useRealTimers()
-  })
   afterEach(() => {
-    jest.clearAllTimers()
+    jest.useRealTimers()
   })
   it('should rerender automatically on interval', async () => {
     let count = 0
@@ -65,12 +63,12 @@ describe('useSWR - refresh', () => {
 
     await act(() => advanceTimers(100)) // no update (deduped)
     screen.getByText('count: 0')
-    await act(() => advanceTimers(400)) // exceed dudupingInterval
+    await act(() => advanceTimers(400)) // reach dudupingInterval
     await act(() => advanceTimers(100)) // update
     screen.getByText('count: 1')
     await act(() => advanceTimers(100)) // no update (deduped)
     screen.getByText('count: 1')
-    await act(() => advanceTimers(400)) // exceed dudupingInterval
+    await act(() => advanceTimers(400)) // reach dudupingInterval
     await act(() => advanceTimers(100)) // update
     screen.getByText('count: 2')
   })
