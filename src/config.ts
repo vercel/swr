@@ -1,6 +1,6 @@
 import { dequal } from 'dequal/lite'
 
-import { defaultCache } from './cache'
+import { wrapCache } from './cache'
 import webPreset from './libs/web-preset'
 import { Configuration, RevalidatorOptions, Revalidator } from './types'
 
@@ -68,7 +68,7 @@ const defaultConfig = {
   fetcher,
 
   isPaused: () => false,
-  cache: defaultCache
+  cache: wrapCache(new Map())
 } as const
 
 export default defaultConfig

@@ -214,9 +214,3 @@ export interface Cache {
   set(key: Key, value: any): any
   delete(key: Key): void
 }
-
-export interface Provider {
-  get(key: Key): any
-  set(key: Key, value: any): any
-  delete(key: Key): void
-}

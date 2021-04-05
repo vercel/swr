@@ -3,7 +3,7 @@ import { useCallback, useRef, useDebugValue } from 'react'
 
 import defaultConfig from './config'
 import webPreset from './libs/web-preset'
-import { getCacheFactory } from './cache'
+import { wrapCache } from './cache'
 import { IS_SERVER, rAF, useIsomorphicLayoutEffect } from './env'
 import { serialize } from './libs/serialize'
 import SWRConfigContext from './config-context'
@@ -19,7 +19,8 @@ import {
   RevalidatorOptions,
   Updater,
   SWRConfiguration,
-  Cache
+  Cache,
+  ScopedMutator
 } from './types'
 
 type Revalidator = (...args: any[]) => void
@@ -681,6 +682,21 @@ Object.defineProperty(SWRConfigContext.Provider, 'default', {
 export const SWRConfig = SWRConfigContext.Provider as typeof SWRConfigContext.Provider & {
   default: SWRConfiguration
 }
-export const mutate = internalMutate.bind(null, defaultConfig.cache)
-export const createCache = getCacheFactory(internalMutate)
+export const mutate = internalMutate.bind(
+  null,
+  defaultConfig.cache
+) as ScopedMutator<any>
+export function createCache<Data>(
+  provider: Cache
+): {
+  cache: Cache
+  mutate: ScopedMutator<Data>
+} {
+  const cache = wrapCache(provider)
+  return {
+    cache,
+    mutate: internalMutate.bind(null, cache) as ScopedMutator<Data>
+  }
+}
+
 export default useSWR
