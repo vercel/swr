@@ -1,82 +1,58 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import React, { useState } from 'react'
 import useSWR, { createCache, SWRConfig } from '../src'
-import { sleep } from './utils'
-
-// describe('useSWR - cache', () => {
-//   it('should not react to direct cache updates but mutate', async () => {
-//     cache.set('cache-1', 'custom cache message')
-
-//     function Page() {
-//       const { data } = useSWR('cache-1', () => 'random message', {
-//         suspense: true
-//       })
-//       return <div>{data}</div>
-//     }
-
-//     // render using custom cache
-//     render(
-//       <React.Suspense fallback={null}>
-//         <Page />
-//       </React.Suspense>
-//     )
-
-//     // content should come from custom cache
-//     await screen.findByText('custom cache message')
-
-//     // content should be updated with fetcher results
-//     await screen.findByText('random message')
-//     const value = 'a different message'
-//     act(() => {
-//       cache.set('cache-1', value)
-//     })
-//     await act(async () => mutate('cache-1', value, false))
-
-//     // content should be updated from new cache value, after mutate without revalidate
-//     await screen.findByText('a different message')
-//     act(() => {
-//       cache.delete('cache-1')
-//     })
-//     await act(() => mutate('cache-1'))
-
-//     // content should go back to be the fetched value
-//     await screen.findByText('random message')
-//   })
-// })
+import { sleep, createKey } from './utils'
 
 describe('useSWR - cache', () => {
-  it('should be able to get cache changes through cache.set', async () => {
-    const getKey = _key => 'custom-cache-1' + _key
+  it('should be able to update the cache', async () => {
     const fetcher = _key => 'res:' + _key
-    const key1 = getKey(1)
-    const key2 = getKey(2)
+    const keys = [createKey(), createKey()]
 
     function Section() {
-      const [index, setIndex] = useState(1)
-      const { data } = useSWR(getKey(index), fetcher)
+      const [index, setIndex] = useState(0)
+      const { data } = useSWR(keys[index], fetcher)
 
-      return <div onClick={() => setIndex(2)}>{data}</div>
+      return <div onClick={() => setIndex(1)}>{data}</div>
     }
 
     const customCache = new Map()
     const { cache } = createCache(customCache)
-    function Page() {
-      return (
-        <SWRConfig value={{ cache }}>
-          <Section />
-        </SWRConfig>
-      )
-    }
+    const { container } = render(
+      <SWRConfig value={{ cache }}>
+        <Section />
+      </SWRConfig>
+    )
+    await screen.findByText(fetcher(keys[0]))
 
-    const { container } = render(<Page />)
-    await screen.findByText(fetcher(key1))
-
-    expect(customCache.get(key2)).toBe(undefined)
+    expect(customCache.get(keys[1])).toBe(undefined)
     fireEvent.click(container.firstElementChild)
     await act(() => sleep(10))
-    // await act(async () => await mutate(key2, fetcher(key2)))
 
-    expect(customCache.get(key1)).toBe(fetcher(key1))
-    expect(customCache.get(key2)).toBe(fetcher(key2))
+    expect(customCache.get(keys[0])).toBe(fetcher(keys[0]))
+    expect(customCache.get(keys[1])).toBe(fetcher(keys[1]))
+  })
+
+  it('should be able to read from the initial cache with updates', async () => {
+    const key = createKey()
+    const renderedValues = []
+    const fetcher = () =>
+      new Promise(res => setTimeout(res, 100, 'updated value'))
+
+    function Page() {
+      const { data } = useSWR(key, fetcher)
+      renderedValues.push(data)
+      return <div>{data}</div>
+    }
+
+    const customCache = new Map([[key, 'cached value']])
+    const { cache } = createCache(customCache)
+    render(
+      <SWRConfig value={{ cache }}>
+        <Page />
+      </SWRConfig>
+    )
+    screen.getByText('cached value')
+    await screen.findByText('updated value')
+    expect(renderedValues.length).toBe(2)
   })
 })
