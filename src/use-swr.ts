@@ -692,7 +692,7 @@ export function createCache<Data>(
   cache: Cache
   mutate: ScopedMutator<Data>
 } {
-  const cache = wrapCache(provider)
+  const cache = wrapCache<Data>(provider)
   return {
     cache,
     mutate: internalMutate.bind(null, cache) as ScopedMutator<Data>

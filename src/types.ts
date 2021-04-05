@@ -208,8 +208,8 @@ export type Revalidator = (
   revalidateOpts: RevalidatorOptions
 ) => Promise<boolean>
 
-export interface Cache {
-  get(key: Key): any
-  set(key: Key, value: any): any
+export interface Cache<Data = any> {
+  get(key: Key): Data | null | undefined
+  set(key: Key, value: Data): void
   delete(key: Key): void
 }
