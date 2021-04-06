@@ -434,6 +434,7 @@ describe('useSWR - local mutation', () => {
     const [keyData, , keyErr] = cache.serializeKey(key)
     let cacheError = cache.get(keyErr)
     expect(cacheError.message).toMatchInlineSnapshot(`"${message}"`)
+
     // if mutate throws an error synchronously, the cache shouldn't be updated
     expect(cache.get(keyData)).toBe(value)
 
