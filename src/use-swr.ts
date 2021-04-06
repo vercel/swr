@@ -150,7 +150,7 @@ async function mutate<Data = any>(
   // if there's a race we don't update cache or broadcast change, just return the data
   if (shouldAbort()) return data
 
-  if (typeof data !== 'undefined') {
+  if (data !== undefined) {
     // update cached data
     cache.set(key, data)
   }
