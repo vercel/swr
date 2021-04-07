@@ -26,24 +26,20 @@ describe('useSWR - suspense', () => {
 
   it('should render fallback', async () => {
     function Section() {
-      const { data } = useSWR(
-        'suspense-1',
-        () => new Promise(res => setTimeout(() => res('SWR'), 100)),
-        {
-          suspense: true
-        }
-      )
+      const { data } = useSWR('suspense-1', () => createResponse('SWR'), {
+        suspense: true
+      })
       return <div>{data}</div>
     }
-    const { container } = render(
+
+    render(
       <Suspense fallback={<div>fallback</div>}>
         <Section />
       </Suspense>
     )
 
     // hydration
-    expect(container.textContent).toMatchInlineSnapshot(`"fallback"`)
-    await act(() => sleep(110)) // update
+    screen.getByText('fallback')
     await screen.findByText('SWR')
   })
 
@@ -51,32 +47,33 @@ describe('useSWR - suspense', () => {
     function Section() {
       const { data: v1 } = useSWR<number>(
         'suspense-2',
-        () => new Promise(res => setTimeout(() => res(1), 100)),
+        () => createResponse(1, { delay: 50 }),
         {
           suspense: true
         }
       )
       const { data: v2 } = useSWR<number>(
         'suspense-3',
-        () => new Promise(res => setTimeout(() => res(2), 100)),
+        () => createResponse(2, { delay: 50 }),
         {
           suspense: true
         }
       )
       return <div>{v1 + v2}</div>
     }
-    const { container } = render(
+
+    render(
       <Suspense fallback={<div>fallback</div>}>
         <Section />
       </Suspense>
     )
 
     // hydration
-    expect(container.textContent).toMatchInlineSnapshot(`"fallback"`)
-    await act(() => new Promise(res => setTimeout(res, 150))) // still suspending
-    expect(container.textContent).toMatchInlineSnapshot(`"fallback"`)
-    await act(() => new Promise(res => setTimeout(res, 100))) // should recover
-    expect(container.textContent).toMatchInlineSnapshot(`"3"`)
+    screen.getByText('fallback')
+    await act(() => sleep(70))
+    screen.getByText('fallback')
+    await act(() => sleep(70))
+    screen.getByText('3')
   })
 
   it('should work for non-promises', async () => {
@@ -100,16 +97,16 @@ describe('useSWR - suspense', () => {
     function Section() {
       const { data } = useSWR(
         'suspense-5',
-        () =>
-          new Promise((_, reject) => setTimeout(() => reject('error'), 100)),
+        () => createResponse(new Error('error')),
         {
           suspense: true
         }
       )
       return <div>{data}</div>
     }
+
     // https://reactjs.org/docs/concurrent-mode-suspense.html#handling-errors
-    const { container } = render(
+    render(
       <ErrorBoundary fallback={<div>error boundary</div>}>
         <Suspense fallback={<div>fallback</div>}>
           <Section />
@@ -118,9 +115,8 @@ describe('useSWR - suspense', () => {
     )
 
     // hydration
-    expect(container.textContent).toMatchInlineSnapshot(`"fallback"`)
-    await act(() => sleep(150)) // still suspending
-    expect(container.textContent).toMatchInlineSnapshot(`"error boundary"`)
+    screen.getByText('fallback')
+    await screen.findByText('error boundary')
     // 1 for js-dom 1 for react-error-boundray
     expect(console.error).toHaveBeenCalledTimes(2)
   })
@@ -132,41 +128,35 @@ describe('useSWR - suspense', () => {
       const { data, error } = useSWR(
         // this value is cached
         'suspense-6',
-        () =>
-          new Promise((_, reject) => setTimeout(() => reject('error'), 100)),
+        () => createResponse(new Error('error')),
         {
           suspense: true
         }
       )
       return (
         <div>
-          {data}, {error}
+          {data}, {error ? error.message : null}
         </div>
       )
     }
 
-    const { container } = render(
+    render(
       <Suspense fallback={<div>fallback</div>}>
         <Section />
       </Suspense>
     )
 
-    expect(container.textContent).toMatchInlineSnapshot(`"hello, "`) // directly from cache
-    await act(() => sleep(150)) // still suspending
-    expect(container.textContent).toMatchInlineSnapshot(`"hello, error"`) // get error with cache
+    screen.getByText('hello,') // directly from cache
+    await screen.findByText('hello, error') // get error with cache
   })
 
   it('should pause when key changes', async () => {
     const renderedResults = []
     function Section() {
       const [key, setKey] = useState('suspense-7')
-      const { data } = useSWR(
-        key,
-        k => new Promise(res => setTimeout(() => res(k), 50)),
-        {
-          suspense: true
-        }
-      )
+      const { data } = useSWR(key, k => createResponse(k), {
+        suspense: true
+      })
 
       useEffect(() => {
         if (data === 'suspense-7') {
@@ -233,16 +223,14 @@ describe('useSWR - suspense', () => {
       return <div>hello, {data}</div>
     }
 
-    const { container } = render(
+    render(
       <Suspense fallback={<div>fallback</div>}>
         <Page />
       </Suspense>
     )
 
     expect(fetcher).not.toBeCalled()
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"hello, Initial"`
-    )
+    screen.getByText('hello, Initial')
   })
 
   it('should avoid unnecessary re-renders', async () => {
@@ -250,26 +238,23 @@ describe('useSWR - suspense', () => {
     let startRenderCount = 0
     function Section() {
       ++startRenderCount
-      const { data } = useSWR(
-        'suspense-10',
-        () => new Promise(res => setTimeout(() => res('SWR'), 100)),
-        {
-          suspense: true
-        }
-      )
+      const { data } = useSWR('suspense-10', () => createResponse('SWR'), {
+        suspense: true
+      })
       ++renderCount
       return <div>{data}</div>
     }
-    const { container } = render(
+
+    render(
       <Suspense fallback={<div>fallback</div>}>
         <Section />
       </Suspense>
     )
 
     // hydration
-    expect(container.textContent).toMatchInlineSnapshot(`"fallback"`)
+    screen.getByText('fallback')
     await screen.findByText('SWR')
-    await act(() => sleep(100)) // wait a moment to observe unnecessary renders
+    await act(() => sleep(50)) // wait a moment to observe unnecessary renders
     expect(startRenderCount).toBe(2) // fallback + data
     expect(renderCount).toBe(1) // data
   })
