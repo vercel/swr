@@ -69,11 +69,13 @@ export type MutatorCallback<Data = any> = (
 ) => Promise<undefined | Data> | undefined | Data
 
 export type Broadcaster<Data = any, Error = any> = (
+  cache: Cache,
   key: string,
   data: Data,
   error?: Error,
-  isValidating?: boolean
-) => void
+  isValidating?: boolean,
+  shouldRevalidate?: boolean
+) => Promise<Data>
 
 export type State<Data, Error> = {
   data?: Data
