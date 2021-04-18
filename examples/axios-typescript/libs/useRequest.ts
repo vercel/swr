@@ -1,11 +1,11 @@
-import useSWR, { ConfigInterface, responseInterface } from 'swr'
+import useSWR, { SWRConfiguration, SWRResponse } from 'swr'
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios'
 
 export type GetRequest = AxiosRequestConfig | null
 
 interface Return<Data, Error>
   extends Pick<
-    responseInterface<AxiosResponse<Data>, AxiosError<Error>>,
+    SWRResponse<AxiosResponse<Data>, AxiosError<Error>>,
     'isValidating' | 'revalidate' | 'error' | 'mutate'
   > {
   data: Data | undefined
@@ -14,7 +14,7 @@ interface Return<Data, Error>
 
 export interface Config<Data = unknown, Error = unknown>
   extends Omit<
-    ConfigInterface<AxiosResponse<Data>, AxiosError<Error>>,
+    SWRConfiguration<AxiosResponse<Data>, AxiosError<Error>>,
     'initialData'
   > {
   initialData?: Data
