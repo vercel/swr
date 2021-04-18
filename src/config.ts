@@ -42,7 +42,9 @@ const slowConnection =
   // @ts-ignore
   navigator['connection'] &&
   // @ts-ignore
-  ['slow-2g', '2g'].indexOf(navigator['connection'].effectiveType) !== -1
+  (['slow-2g', '2g'].indexOf(navigator['connection'].effectiveType) !== -1 ||
+    // @ts-ignore
+    navigator['connection'].saveData)
 
 // config
 const defaultConfig = {
