@@ -64,7 +64,7 @@ const trigger: Trigger = (_key, shouldRevalidate = true) => {
 
   const updaters = CACHE_REVALIDATORS[key]
 
-  if (key && updaters) {
+  if (key && updaters && updaters.length) {
     const currentData = cache.get(key)
     const currentError = cache.get(keyErr)
     const currentIsValidating = cache.get(keyValidating)
@@ -82,6 +82,11 @@ const trigger: Trigger = (_key, shouldRevalidate = true) => {
     }
     // return new updated value
     return Promise.all(promises).then(() => cache.get(key))
+  } else if (shouldRevalidate) {
+    // `updaters` would trigger revalidate if `updaters.length > 0`.
+    // So only clear promise of revalidate if `!updaters.length && shouldRevalidate`
+    delete CONCURRENT_PROMISES[key]
+    delete CONCURRENT_PROMISES_TS[key]
   }
   return Promise.resolve(cache.get(key))
 }
@@ -182,7 +187,7 @@ async function mutate<Data = any>(
     })
   } else if (shouldRevalidate) {
     // `updaters` would trigger revalidate if `updaters.length > 0`.
-    // So clear promise of revalidate if `!updaters.length && shouldRevalidate`
+    // So only clear promise of revalidate if `!updaters.length && shouldRevalidate`
     delete CONCURRENT_PROMISES[key]
     delete CONCURRENT_PROMISES_TS[key]
   }
