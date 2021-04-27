@@ -64,7 +64,7 @@ const trigger: Trigger = (_key, shouldRevalidate = true) => {
 
   const updaters = CACHE_REVALIDATORS[key]
 
-  if (key && updaters) {
+  if (updaters) {
     const currentData = cache.get(key)
     const currentError = cache.get(keyErr)
     const currentIsValidating = cache.get(keyValidating)
