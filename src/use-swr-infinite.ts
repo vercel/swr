@@ -69,7 +69,7 @@ function useSWRInfinite<Data = any, Error = any>(
   const resolvePageSize = useCallback((): number => {
     const cachedPageSize = cache.get(pageSizeCacheKey)
     return typeof cachedPageSize !== 'undefined' ? cachedPageSize : initialSize
-  }, [pageSizeCacheKey, initialSize])
+  }, [pageSizeCacheKey, initialSize, cache])
   // keep the last page size to restore it with the persistSize option
   const lastPageSizeRef = useRef<number>(resolvePageSize())
 
@@ -204,7 +204,7 @@ function useSWRInfinite<Data = any, Error = any>(
     },
     // immutability of rerender is guaranteed by React, but react-hooks/exhaustive-deps doesn't recognize it
     // from `rerender = useState({})[1], so we put rerender here
-    [pageSizeCacheKey, resolvePageSize, mutate, rerender]
+    [pageSizeCacheKey, resolvePageSize, mutate, rerender, cache]
   )
 
   // Use getter functions to avoid unnecessary re-renders caused by triggering all the getters of the returned swr object

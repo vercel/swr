@@ -74,12 +74,8 @@ const broadcastState: Broadcaster = (
 ) => {
   const [, , CACHE_REVALIDATORS] = getGlobalState(cache)
   const updaters = CACHE_REVALIDATORS[key]
-
+  const promises = []
   if (updaters) {
-    const currentData = cache.get(key)
-    const currentError = cache.get(keyErr)
-    const currentIsValidating = cache.get(keyValidating)
-    const promises = []
     for (let i = 0; i < updaters.length; ++i) {
       promises.push(
         updaters[i](shouldRevalidate, data, error, isValidating, i > 0)
@@ -645,7 +641,7 @@ function useSWR<Data = any, Error = any>(
     (newData, shouldRevalidate) => {
       return internalMutate(cache, keyRef.current, newData, shouldRevalidate)
     },
-    []
+    [cache]
   )
 
   // Define the SWR state.
