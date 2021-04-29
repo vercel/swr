@@ -74,8 +74,12 @@ const broadcastState: Broadcaster = (
 ) => {
   const [, , CACHE_REVALIDATORS] = getGlobalState(cache)
   const updaters = CACHE_REVALIDATORS[key]
-  const promises = []
+
   if (updaters) {
+    const currentData = cache.get(key)
+    const currentError = cache.get(keyErr)
+    const currentIsValidating = cache.get(keyValidating)
+    const promises = []
     for (let i = 0; i < updaters.length; ++i) {
       promises.push(
         updaters[i](shouldRevalidate, data, error, isValidating, i > 0)
@@ -152,8 +156,8 @@ async function internalMutate<Data = any>(
   // If there's a race we don't update cache or broadcast change, just return the data
   if (shouldAbort()) return data
 
-  if (typeof data !== 'undefined') {
-    // Update cached data
+  if (data !== undefined) {
+    // update cached data
     cache.set(key, data)
   }
   // Always update or reset the error
