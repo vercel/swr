@@ -75,4 +75,36 @@ describe('useSWR - cache', () => {
     await act(() => mutate(key, 'mutated value', false))
     await screen.findByText('mutated value')
   })
+
+  it('should support multi-level cache', async () => {
+    const key = createKey()
+    const customCache1 = new Map([[key, '1']])
+    const { cache: cache1 } = createCache(customCache1)
+    const customCache2 = new Map([[key, '2']])
+    const { cache: cache2 } = createCache(customCache2)
+
+    // Nested components with the same cache key can get different values.
+    function Foo() {
+      const { data } = useSWR(key, null)
+      return <>{data}</>
+    }
+    function Page() {
+      const { data } = useSWR(key, null)
+      return (
+        <div>
+          {data}:
+          <SWRConfig value={{ cache: cache2 }}>
+            <Foo />
+          </SWRConfig>
+        </div>
+      )
+    }
+
+    render(
+      <SWRConfig value={{ cache: cache1 }}>
+        <Page />
+      </SWRConfig>
+    )
+    screen.getByText('1:2')
+  })
 })

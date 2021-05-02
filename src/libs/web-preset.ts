@@ -10,9 +10,11 @@ const isOnline = () => online
 
 // For node and React Native, `window.addEventListener` doesn't exist.
 const addWindowEventListener =
-  typeof window !== 'undefined' ? window.addEventListener : null
+  typeof window !== 'undefined' ? window.addEventListener.bind(window) : null
 const addDocumentEventListener =
-  typeof document !== 'undefined' ? document.addEventListener : null
+  typeof document !== 'undefined'
+    ? document.addEventListener.bind(document)
+    : null
 
 const isDocumentVisible = () => {
   if (addDocumentEventListener && document.visibilityState !== undefined) {
