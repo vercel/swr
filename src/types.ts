@@ -19,9 +19,8 @@ export interface Configuration<
   suspense: boolean
   fetcher: Fn
   initialData?: Data
+  cache: Cache
 
-  isOnline: () => boolean
-  isDocumentVisible: () => boolean
   isPaused: () => boolean
   onLoadingSlow: (
     key: string,
@@ -44,10 +43,15 @@ export interface Configuration<
     revalidate: Revalidator,
     revalidateOpts: Required<RevalidatorOptions>
   ) => void
-  registerOnFocus?: (cb: () => void) => void
-  registerOnReconnect?: (cb: () => void) => void
 
   compare: (a: Data | undefined, b: Data | undefined) => boolean
+}
+
+export interface Preset {
+  isOnline: () => boolean
+  isDocumentVisible: () => boolean
+  registerOnFocus?: (cb: () => void) => void
+  registerOnReconnect?: (cb: () => void) => void
 }
 
 export type ValueKey = string | any[] | null
@@ -59,18 +63,19 @@ export type Updater<Data = any, Error = any> = (
   shouldDedupe?: boolean,
   dedupe?: boolean
 ) => boolean | Promise<boolean>
-export type Trigger = (key: Key, shouldRevalidate?: boolean) => Promise<any>
 
 export type MutatorCallback<Data = any> = (
   currentValue: undefined | Data
 ) => Promise<undefined | Data> | undefined | Data
 
 export type Broadcaster<Data = any, Error = any> = (
+  cache: Cache,
   key: string,
   data: Data,
   error?: Error,
-  isValidating?: boolean
-) => void
+  isValidating?: boolean,
+  shouldRevalidate?: boolean
+) => Promise<Data>
 
 export type State<Data, Error> = {
   data?: Data
@@ -78,7 +83,23 @@ export type State<Data, Error> = {
   isValidating?: boolean
 }
 
-export type CacheListener = () => void
+export type Mutator<Data = any> = (
+  cache: Cache,
+  key: Key,
+  data?: Data | Promise<Data> | MutatorCallback<Data>,
+  shouldRevalidate?: boolean
+) => Promise<Data | undefined>
+
+export type ScopedMutator<Data> = (
+  key: Key,
+  data?: Data | Promise<Data> | MutatorCallback<Data>,
+  shouldRevalidate?: boolean
+) => Promise<Data | undefined>
+
+export type KeyedMutator<Data> = (
+  data?: Data | Promise<Data> | MutatorCallback<Data>,
+  shouldRevalidate?: boolean
+) => Promise<Data | undefined>
 
 // Public types
 
@@ -109,10 +130,7 @@ export type responseInterface<Data, Error> = {
   data?: Data
   error?: Error
   revalidate: () => Promise<boolean>
-  mutate: (
-    data?: Data | Promise<Data> | MutatorCallback<Data>,
-    shouldRevalidate?: boolean
-  ) => Promise<Data | undefined>
+  mutate: KeyedMutator<Data>
   isValidating: boolean
 }
 export interface SWRResponse<Data, Error> {
@@ -122,10 +140,7 @@ export interface SWRResponse<Data, Error> {
    * @deprecated `revalidate` is deprecated, please use `mutate()` for the same purpose.
    */
   revalidate: () => Promise<boolean>
-  mutate: (
-    data?: Data | Promise<Data> | MutatorCallback<Data>,
-    shouldRevalidate?: boolean
-  ) => Promise<Data | undefined>
+  mutate: KeyedMutator<Data>
   isValidating: boolean
 }
 
@@ -195,26 +210,8 @@ export type Revalidator = (
   revalidateOpts: RevalidatorOptions
 ) => Promise<boolean>
 
-/**
- * @deprecated `CacheInterface` will be renamed to `Cache`.
- */
-export interface CacheInterface {
-  get(key: Key): any
-  set(key: Key, value: any): any
-  keys(): string[]
-  has(key: Key): boolean
+export interface Cache<Data = any> {
+  get(key: Key): Data | null | undefined
+  set(key: Key, value: Data): void
   delete(key: Key): void
-  clear(): void
-  serializeKey(key: Key): [string, any, string, string]
-  subscribe(listener: CacheListener): () => void
-}
-export interface Cache {
-  get(key: Key): any
-  set(key: Key, value: any): any
-  keys(): string[]
-  has(key: Key): boolean
-  delete(key: Key): void
-  clear(): void
-  serializeKey(key: Key): [string, any, string, string]
-  subscribe(listener: CacheListener): () => void
 }

@@ -1,11 +1,12 @@
 import { dequal } from 'dequal/lite'
-import { Configuration, RevalidatorOptions, Revalidator } from './types'
-import Cache from './cache'
+
+import { wrapCache } from './cache'
 import webPreset from './libs/web-preset'
 import { slowConnection } from './env'
+import { Configuration, RevalidatorOptions, Revalidator } from './types'
 
-// cache
-const cache = new Cache()
+const fetcher = (url: string) => fetch(url).then(res => res.json())
+const noop = () => {}
 
 // error retry
 function onErrorRetry(
@@ -15,7 +16,7 @@ function onErrorRetry(
   revalidate: Revalidator,
   opts: Required<RevalidatorOptions>
 ): void {
-  if (!config.isDocumentVisible()) {
+  if (!webPreset.isDocumentVisible()) {
     // if it's hidden, stop
     // it will auto revalidate when focus
     return
@@ -38,28 +39,34 @@ function onErrorRetry(
 // config
 const defaultConfig = {
   // events
-  onLoadingSlow: () => {},
-  onSuccess: () => {},
-  onError: () => {},
+  onLoadingSlow: noop,
+  onSuccess: noop,
+  onError: noop,
   onErrorRetry,
 
-  errorRetryInterval: slowConnection ? 10 * 1000 : 5 * 1000,
-  focusThrottleInterval: 5 * 1000,
-  dedupingInterval: 2 * 1000,
-  loadingTimeout: slowConnection ? 5 * 1000 : 3 * 1000,
-
-  refreshInterval: 0,
+  // switches
   revalidateOnFocus: true,
   revalidateOnReconnect: true,
   refreshWhenHidden: false,
   refreshWhenOffline: false,
   shouldRetryOnError: true,
   suspense: false,
-  compare: dequal,
 
+  // timeouts
+  errorRetryInterval: slowConnection ? 10000 : 5000,
+  focusThrottleInterval: 5 * 1000,
+  dedupingInterval: 2 * 1000,
+  loadingTimeout: slowConnection ? 5000 : 3000,
+  refreshInterval: 0,
+
+  // providers
+  fetcher,
+  compare: dequal,
   isPaused: () => false,
+  cache: wrapCache(new Map()),
+
+  // presets
   ...webPreset
 } as const
 
-export { cache }
 export default defaultConfig

@@ -15,3 +15,5 @@ export const createResponse = <T = any>(
       }
     }, delay)
   )
+
+export const createKey = () => 'swr-key-' + ~~(Math.random() * 1e7)

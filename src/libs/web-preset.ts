@@ -1,6 +1,3 @@
-const HAS_WINDOW = typeof window !== 'undefined'
-const HAS_DOCUMENT = typeof document !== 'undefined'
-
 /**
  * Due to bug https://bugs.chromium.org/p/chromium/issues/detail?id=678075,
  * it's not reliable to detect if the browser is currently online or offline
@@ -11,50 +8,46 @@ const HAS_DOCUMENT = typeof document !== 'undefined'
 let online = true
 const isOnline = () => online
 
+// For node and React Native, `window.addEventListener` doesn't exist.
+const addWindowEventListener =
+  typeof window !== 'undefined' ? window.addEventListener.bind(window) : null
+const addDocumentEventListener =
+  typeof document !== 'undefined'
+    ? document.addEventListener.bind(document)
+    : null
+
 const isDocumentVisible = () => {
-  if (HAS_DOCUMENT && document.visibilityState !== undefined) {
+  if (addDocumentEventListener && document.visibilityState !== undefined) {
     return document.visibilityState !== 'hidden'
   }
   // always assume it's visible
   return true
 }
 
-const fetcher = (url: string) => fetch(url).then(res => res.json())
-
 const registerOnFocus = (cb: () => void) => {
-  if (
-    HAS_WINDOW &&
-    window.addEventListener !== undefined &&
-    HAS_DOCUMENT &&
-    document.addEventListener !== undefined
-  ) {
+  if (addWindowEventListener && addDocumentEventListener) {
     // focus revalidate
-    document.addEventListener('visibilitychange', () => cb(), false)
-    window.addEventListener('focus', () => cb(), false)
+    addDocumentEventListener('visibilitychange', () => cb())
+    addWindowEventListener('focus', () => cb())
   }
 }
 
 const registerOnReconnect = (cb: () => void) => {
-  if (HAS_WINDOW && window.addEventListener !== undefined) {
+  if (addWindowEventListener) {
     // reconnect revalidate
-    window.addEventListener(
-      'online',
-      () => {
-        online = true
-        cb()
-      },
-      false
-    )
+    addWindowEventListener('online', () => {
+      online = true
+      cb()
+    })
 
     // nothing to revalidate, just update the status
-    window.addEventListener('offline', () => (online = false), false)
+    addWindowEventListener('offline', () => (online = false))
   }
 }
 
 export default {
   isOnline,
   isDocumentVisible,
-  fetcher,
   registerOnFocus,
   registerOnReconnect
 }
