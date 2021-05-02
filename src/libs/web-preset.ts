@@ -55,4 +55,4 @@ export default {
   isDocumentVisible,
   registerOnFocus,
   registerOnReconnect
-}
+} as const

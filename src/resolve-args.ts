@@ -14,16 +14,15 @@ export default function useArgs<KeyType, ConfigType, Data>(
     | readonly [KeyType, ConfigType | undefined]
     | readonly [KeyType, Fetcher<Data> | null, ConfigType | undefined]
 ): [KeyType, Fetcher<Data> | null, (typeof defaultConfig) & ConfigType] {
-  const config = Object.assign(
-    {},
-    defaultConfig,
-    useContext(SWRConfigContext),
-    args.length > 2
+  const config = {
+    ...defaultConfig,
+    ...useContext(SWRConfigContext),
+    ...(args.length > 2
       ? args[2]
       : args.length === 2 && typeof args[1] === 'object'
       ? args[1]
-      : {}
-  ) as (typeof defaultConfig) & ConfigType
+      : {})
+  } as (typeof defaultConfig) & ConfigType
 
   // In TypeScript `args.length > 2` is not same as `args.lenth === 3`.
   // We do a safe type assertion here.
