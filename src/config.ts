@@ -16,7 +16,7 @@ function onErrorRetry(
   revalidate: Revalidator,
   opts: Required<RevalidatorOptions>
 ): void {
-  if (!webPreset.isDocumentVisible()) {
+  if (!webPreset.isVisible()) {
     // if it's hidden, stop
     // it will auto revalidate when focus
     return

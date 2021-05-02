@@ -52,7 +52,7 @@ if (!IS_SERVER) {
     defaultConfig.cache
   )
   const revalidate = (revalidators: Record<string, Revalidator[]>) => {
-    if (!defaultConfig.isDocumentVisible() || !defaultConfig.isOnline()) return
+    if (!defaultConfig.isVisible() || !defaultConfig.isOnline()) return
 
     for (const key in revalidators) {
       if (revalidators[key][0]) revalidators[key][0]()
@@ -601,8 +601,7 @@ function useSWR<Data = any, Error = any>(
 
       if (
         !stateRef.current.error &&
-        (currentConfig.refreshWhenHidden ||
-          currentConfig.isDocumentVisible()) &&
+        (currentConfig.refreshWhenHidden || currentConfig.isVisible()) &&
         (currentConfig.refreshWhenOffline || currentConfig.isOnline())
       ) {
         // only revalidate when the page is visible

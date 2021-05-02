@@ -49,7 +49,7 @@ export interface Configuration<
 
 export interface Preset {
   isOnline: () => boolean
-  isDocumentVisible: () => boolean
+  isVisible: () => boolean
   registerOnFocus?: (cb: () => void) => void
   registerOnReconnect?: (cb: () => void) => void
 }
