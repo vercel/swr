@@ -641,7 +641,9 @@ function useSWR<Data = any, Error = any>(
     (newData, shouldRevalidate) => {
       return internalMutate(cache, keyRef.current, newData, shouldRevalidate)
     },
-    [cache]
+    // `cache` isn't allowed to change during the lifecycle
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
   )
 
   // Define the SWR state.
