@@ -239,7 +239,9 @@ function useSWR<Data = any, Error = any>(
   const [key, fnArgs, keyErr, keyValidating] = serialize(_key)
 
   const configRef = useRef(config)
-  configRef.current = config
+  useIsomorphicLayoutEffect(() => {
+    configRef.current = config
+  })
 
   // If it's the first render of this hook.
   const initialMountedRef = useRef(false)
