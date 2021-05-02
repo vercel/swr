@@ -591,7 +591,7 @@ function useSWR<Data = any, Error = any>(
   useIsomorphicLayoutEffect(() => {
     let timer: any = null
     const tick = async () => {
-      const cfg = configRef.current
+      let cfg = configRef.current
       if (
         !stateRef.current.error &&
         (cfg.refreshWhenHidden || cfg.isDocumentVisible()) &&
@@ -602,11 +602,15 @@ function useSWR<Data = any, Error = any>(
         // and let the error retry function handle it
         await revalidate({ dedupe: true })
       }
+
+      // Re-assign because it's possible that the config has updated.
+      cfg = configRef.current
       // Read the latest refreshInterval
-      if (configRef.current.refreshInterval && timer) {
-        timer = setTimeout(tick, configRef.current.refreshInterval)
+      if (cfg.refreshInterval && timer) {
+        timer = setTimeout(tick, cfg.refreshInterval)
       }
     }
+
     if (configRef.current.refreshInterval) {
       timer = setTimeout(tick, configRef.current.refreshInterval)
     }
