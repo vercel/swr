@@ -47,9 +47,6 @@ const now = (() => {
   return () => ++ts
 })()
 
-// Timeout
-const timeout = setTimeout
-
 // Setup DOM events listeners for `focus` and `reconnect` actions
 if (!IS_SERVER) {
   const [FOCUS_REVALIDATORS, RECONNECT_REVALIDATORS] = getGlobalState(
@@ -346,7 +343,7 @@ function useSWR<Data = any, Error = any>(
           // if no cache being rendered currently (it shows a blank page),
           // we trigger the loading slow event.
           if (config.loadingTimeout && !cache.get(key)) {
-            timeout(() => {
+            setTimeout(() => {
               if (loading)
                 safeCallback(() => configRef.current.onLoadingSlow(key, config))
             }, config.loadingTimeout)
@@ -362,7 +359,7 @@ function useSWR<Data = any, Error = any>(
 
           newData = await CONCURRENT_PROMISES[key]
 
-          timeout(() => {
+          setTimeout(() => {
             // CONCURRENT_PROMISES_TS[key] maybe be `undefined` or a number
             if (CONCURRENT_PROMISES_TS[key] === startAt) {
               delete CONCURRENT_PROMISES[key]
@@ -535,7 +532,10 @@ function useSWR<Data = any, Error = any>(
       if (pending || !configRef.current.revalidateOnFocus) return
       pending = true
       softRevalidate()
-      timeout(() => (pending = false), configRef.current.focusThrottleInterval)
+      setTimeout(
+        () => (pending = false),
+        configRef.current.focusThrottleInterval
+      )
     }
 
     const onReconnect = () => {
@@ -590,14 +590,14 @@ function useSWR<Data = any, Error = any>(
   useIsomorphicLayoutEffect(() => {
     let timer: any = 0
 
-    const nextTick = () => {
+    function nextTick() {
       const currentConfig = configRef.current
       if (currentConfig.refreshInterval) {
-        timer = timeout(tick, currentConfig.refreshInterval)
+        timer = setTimeout(tick, currentConfig.refreshInterval)
       }
     }
 
-    const tick = async () => {
+    async function tick() {
       const currentConfig = configRef.current
 
       if (
