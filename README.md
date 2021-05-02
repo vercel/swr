@@ -418,11 +418,13 @@ function Profile() {
       <h1>My name is {data.name}.</h1>
       <button onClick={async () => {
         const newName = data.name.toUpperCase()
+        // update the local data immediately
+        mutate({ ...data, name: newName }, false)
         // send a request to the API to update the data
         await requestUpdateUsername(newName)
-        // update the local data immediately and revalidate (refetch)
+        // revalidate (refetch)
         // NOTE: key is not required when using useSWR's mutate as it's pre-bound
-        mutate({ ...data, name: newName })
+        mutate()
       }}>Uppercase my name!</button>
     </div>
   )
