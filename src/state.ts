@@ -1,5 +1,6 @@
 import { useRef, useCallback, useState, MutableRefObject } from 'react'
 
+import { useIsomorphicLayoutEffect } from './env'
 import { State } from './types'
 
 type StateKeys = keyof State<any, any>
@@ -19,7 +20,9 @@ export default function useStateWithDeps<Data, Error, S = State<Data, Error>>(
   const rerender = useState<object>({})[1]
 
   const stateRef = useRef(state)
-  stateRef.current = state
+  useIsomorphicLayoutEffect(() => {
+    stateRef.current = state
+  })
 
   // If a state property (data, error or isValidating) is accessed by the render
   // function, we mark the property as a dependency so if it is updated again
