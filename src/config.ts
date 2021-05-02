@@ -5,6 +5,7 @@ import webPreset from './libs/web-preset'
 import { Configuration, RevalidatorOptions, Revalidator } from './types'
 
 const fetcher = (url: string) => fetch(url).then(res => res.json())
+const noop = () => {}
 
 // error retry
 function onErrorRetry(
@@ -49,28 +50,34 @@ const slowConnection =
 // config
 const defaultConfig = {
   // events
-  onLoadingSlow: () => {},
-  onSuccess: () => {},
-  onError: () => {},
+  onLoadingSlow: noop,
+  onSuccess: noop,
+  onError: noop,
   onErrorRetry,
 
-  errorRetryInterval: (slowConnection ? 10 : 5) * 1000,
-  focusThrottleInterval: 5 * 1000,
-  dedupingInterval: 2 * 1000,
-  loadingTimeout: (slowConnection ? 5 : 3) * 1000,
-
-  refreshInterval: 0,
+  // switches
   revalidateOnFocus: true,
   revalidateOnReconnect: true,
   refreshWhenHidden: false,
   refreshWhenOffline: false,
   shouldRetryOnError: true,
   suspense: false,
-  compare: dequal,
-  fetcher,
 
+  // timeouts
+  errorRetryInterval: (slowConnection ? 10 : 5) * 1000,
+  focusThrottleInterval: 5 * 1000,
+  dedupingInterval: 2 * 1000,
+  loadingTimeout: (slowConnection ? 5 : 3) * 1000,
+  refreshInterval: 0,
+
+  // providers
+  fetcher,
+  compare: dequal,
   isPaused: () => false,
-  cache: wrapCache(new Map())
+  cache: wrapCache(new Map()),
+
+  // presets
+  ...webPreset
 } as const
 
 export default defaultConfig

@@ -2,7 +2,6 @@
 import { useCallback, useRef, useDebugValue } from 'react'
 
 import defaultConfig from './config'
-import webPreset from './libs/web-preset'
 import { wrapCache } from './cache'
 import { IS_SERVER, rAF, useIsomorphicLayoutEffect } from './env'
 import { serialize } from './libs/serialize'
@@ -54,14 +53,14 @@ if (!IS_SERVER) {
     defaultConfig.cache
   )
   const revalidate = (revalidators: Record<string, Revalidator[]>) => {
-    if (!webPreset.isDocumentVisible() || !webPreset.isOnline()) return
+    if (!defaultConfig.isDocumentVisible() || !defaultConfig.isOnline()) return
 
     for (const key in revalidators) {
       if (revalidators[key][0]) revalidators[key][0]()
     }
   }
-  webPreset.registerOnFocus(() => revalidate(FOCUS_REVALIDATORS))
-  webPreset.registerOnReconnect(() => revalidate(RECONNECT_REVALIDATORS))
+  defaultConfig.registerOnFocus(() => revalidate(FOCUS_REVALIDATORS))
+  defaultConfig.registerOnReconnect(() => revalidate(RECONNECT_REVALIDATORS))
 }
 
 const broadcastState: Broadcaster = (
@@ -593,11 +592,11 @@ function useSWR<Data = any, Error = any>(
   useIsomorphicLayoutEffect(() => {
     let timer: any = null
     const tick = async () => {
+      const cfg = configRef.current
       if (
         !stateRef.current.error &&
-        (configRef.current.refreshWhenHidden ||
-          webPreset.isDocumentVisible()) &&
-        (configRef.current.refreshWhenOffline || webPreset.isOnline())
+        (cfg.refreshWhenHidden || cfg.isDocumentVisible()) &&
+        (cfg.refreshWhenOffline || cfg.isOnline())
       ) {
         // only revalidate when the page is visible
         // if API request errored, we stop polling in this round
