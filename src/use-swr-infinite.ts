@@ -1,8 +1,8 @@
 // TODO: use @ts-expect-error
 import { useRef, useState, useCallback } from 'react'
 
-import { cache } from './config'
 import { useIsomorphicLayoutEffect } from './env'
+import { serialize } from './libs/serialize'
 import useArgs from './resolve-args'
 import useSWR from './use-swr'
 
@@ -28,11 +28,12 @@ function useSWRInfinite<Data = any, Error = any>(
         SWRInfiniteConfiguration<Data, Error> | undefined
       ]
 ): SWRInfiniteResponse<Data, Error> {
-  const [getKey, config, fn] = useArgs<
+  const [getKey, fn, config] = useArgs<
     KeyLoader<Data>,
     SWRInfiniteConfiguration<Data, Error>,
     Data
   >(args)
+  const cache = config.cache
 
   const {
     initialSize = 1,
@@ -44,7 +45,7 @@ function useSWRInfinite<Data = any, Error = any>(
   // get the serialized key of the first page
   let firstPageKey: string | null = null
   try {
-    ;[firstPageKey] = cache.serializeKey(getKey ? getKey(0, null) : null)
+    ;[firstPageKey] = serialize(getKey ? getKey(0, null) : null)
   } catch (err) {
     // not ready
   }
@@ -68,6 +69,9 @@ function useSWRInfinite<Data = any, Error = any>(
   const resolvePageSize = useCallback((): number => {
     const cachedPageSize = cache.get(pageSizeCacheKey)
     return typeof cachedPageSize !== 'undefined' ? cachedPageSize : initialSize
+
+    // `cache` isn't allowed to change during the lifecycle
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageSizeCacheKey, initialSize])
   // keep the last page size to restore it with the persistSize option
   const lastPageSizeRef = useRef<number>(resolvePageSize())
@@ -107,7 +111,7 @@ function useSWRInfinite<Data = any, Error = any>(
       const pageSize = resolvePageSize()
       let previousPageData = null
       for (let i = 0; i < pageSize; ++i) {
-        const [pageKey, pageArgs] = cache.serializeKey(
+        const [pageKey, pageArgs] = serialize(
           getKey ? getKey(i, previousPageData) : null
         )
 
@@ -201,9 +205,9 @@ function useSWRInfinite<Data = any, Error = any>(
       rerender({})
       return mutate(v => v)
     },
-    // immutability of rerender is guaranteed by React, but react-hooks/exhaustive-deps doesn't recognize it
-    // from `rerender = useState({})[1], so we put rerender here
-    [pageSizeCacheKey, resolvePageSize, mutate, rerender]
+    // `cache` and `rerender` isn't allowed to change during the lifecycle
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [pageSizeCacheKey, resolvePageSize, mutate]
   )
 
   // Use getter functions to avoid unnecessary re-renders caused by triggering all the getters of the returned swr object

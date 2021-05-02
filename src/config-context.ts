@@ -3,6 +3,6 @@ import { createContext } from 'react'
 import { SWRConfiguration } from './types'
 
 const SWRConfigContext = createContext<SWRConfiguration>({})
-SWRConfigContext.displayName = 'SWRConfigContext'
+SWRConfigContext.displayName = 'SWRConfig'
 
 export default SWRConfigContext

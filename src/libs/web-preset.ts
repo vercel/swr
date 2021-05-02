@@ -8,53 +8,46 @@
 let online = true
 const isOnline = () => online
 
+// For node and React Native, `window.addEventListener` doesn't exist.
+const addWindowEventListener =
+  typeof window !== 'undefined' ? window.addEventListener.bind(window) : null
+const addDocumentEventListener =
+  typeof document !== 'undefined'
+    ? document.addEventListener.bind(document)
+    : null
+
 const isDocumentVisible = () => {
-  if (
-    typeof document !== 'undefined' &&
-    document.visibilityState !== undefined
-  ) {
+  if (addDocumentEventListener && document.visibilityState !== undefined) {
     return document.visibilityState !== 'hidden'
   }
   // always assume it's visible
   return true
 }
 
-const fetcher = (url: string) => fetch(url).then(res => res.json())
-
 const registerOnFocus = (cb: () => void) => {
-  if (
-    typeof window !== 'undefined' &&
-    window.addEventListener !== undefined &&
-    typeof document !== 'undefined' &&
-    document.addEventListener !== undefined
-  ) {
+  if (addWindowEventListener && addDocumentEventListener) {
     // focus revalidate
-    document.addEventListener('visibilitychange', () => cb(), false)
-    window.addEventListener('focus', () => cb(), false)
+    addDocumentEventListener('visibilitychange', () => cb())
+    addWindowEventListener('focus', () => cb())
   }
 }
 
 const registerOnReconnect = (cb: () => void) => {
-  if (typeof window !== 'undefined' && window.addEventListener !== undefined) {
+  if (addWindowEventListener) {
     // reconnect revalidate
-    window.addEventListener(
-      'online',
-      () => {
-        online = true
-        cb()
-      },
-      false
-    )
+    addWindowEventListener('online', () => {
+      online = true
+      cb()
+    })
 
     // nothing to revalidate, just update the status
-    window.addEventListener('offline', () => (online = false), false)
+    addWindowEventListener('offline', () => (online = false))
   }
 }
 
 export default {
   isOnline,
   isDocumentVisible,
-  fetcher,
   registerOnFocus,
   registerOnReconnect
 }

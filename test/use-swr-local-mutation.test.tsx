@@ -1,6 +1,7 @@
 import { act, render, screen, fireEvent } from '@testing-library/react'
 import React, { useEffect, useState } from 'react'
-import useSWR, { mutate, cache } from '../src'
+import useSWR, { mutate, createCache, SWRConfig } from '../src'
+import { serialize } from '../src/libs/serialize'
 import { createResponse, sleep } from './utils'
 
 const waitForNextTick = () => act(() => sleep(1))
@@ -201,19 +202,38 @@ describe('useSWR - local mutation', () => {
   })
 
   it('should call function as data passing current cached value', async () => {
+    function Page() {
+      const { data } = useSWR('dynamic-14', null)
+      return <div>data: {data}</div>
+    }
+
     // prefill cache with data
-    cache.set('dynamic-15', 'cached data')
+    const { cache, mutate: globalMutate } = createCache(
+      new Map([['dynamic-15', 'cached data']])
+    )
+    render(
+      <SWRConfig
+        value={{
+          cache
+        }}
+      >
+        <Page />
+      </SWRConfig>
+    )
+
     const callback = jest.fn()
-    await mutate('dynamic-15', callback)
+    await globalMutate('dynamic-15', callback)
     expect(callback).toHaveBeenCalledWith('cached data')
   })
 
   it('should call function with undefined if key not cached', async () => {
+    const { cache, mutate: globalMutate } = createCache(new Map())
+
     const increment = jest.fn(currentValue =>
       currentValue == null ? undefined : currentValue + 1
     )
 
-    await mutate('dynamic-15.1', increment, false)
+    await globalMutate('dynamic-15.1', increment, false)
 
     expect(increment).toHaveBeenCalledTimes(1)
     expect(increment).toHaveBeenLastCalledWith(undefined)
@@ -221,7 +241,7 @@ describe('useSWR - local mutation', () => {
 
     cache.set('dynamic-15.1', 42)
 
-    await mutate('dynamic-15.1', increment, false)
+    await globalMutate('dynamic-15.1', increment, false)
 
     expect(increment).toHaveBeenCalledTimes(2)
     expect(increment).toHaveBeenLastCalledWith(42)
@@ -411,14 +431,24 @@ describe('useSWR - local mutation', () => {
       return <div>{error ? error.message : `data: ${data}`}</div>
     }
 
-    render(<Page />)
+    // prefill cache with data
+    const { cache, mutate: globalMutate } = createCache(new Map())
+    render(
+      <SWRConfig
+        value={{
+          cache
+        }}
+      >
+        <Page />
+      </SWRConfig>
+    )
 
     //mount
     await screen.findByText('data: 0')
     await act(async () => {
       // mutate error will be thrown, add try catch to avoid crashing
       try {
-        await mutate(
+        await globalMutate(
           key,
           () => {
             throw new Error(message)
@@ -431,7 +461,7 @@ describe('useSWR - local mutation', () => {
     })
 
     screen.getByText(message)
-    const [keyData, , keyErr] = cache.serializeKey(key)
+    const [keyData, , keyErr] = serialize(key)
     let cacheError = cache.get(keyErr)
     expect(cacheError.message).toMatchInlineSnapshot(`"${message}"`)
 
@@ -439,7 +469,7 @@ describe('useSWR - local mutation', () => {
     expect(cache.get(keyData)).toBe(value)
 
     // if mutate succeed, error should be cleared
-    await act(() => mutate(key, value, false))
+    await act(() => globalMutate(key, value, false))
     cacheError = cache.get(keyErr)
     expect(cacheError).toMatchInlineSnapshot(`undefined`)
   })

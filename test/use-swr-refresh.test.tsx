@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import React, { useState } from 'react'
-import useSWR, { cache } from '../src'
+import useSWR, { createCache, SWRConfig } from '../src'
 import { sleep } from './utils'
 
 // This has to be an async function to wait a microtask to flush updates
@@ -224,7 +224,13 @@ describe('useSWR - refresh', () => {
       return <button onClick={() => change()}>{data.timestamp}</button>
     }
 
-    render(<Page />)
+    const customCache = new Map()
+    const { cache } = createCache(customCache)
+    render(
+      <SWRConfig value={{ cache }}>
+        <Page />
+      </SWRConfig>
+    )
 
     screen.getByText('loading')
 
@@ -243,7 +249,7 @@ describe('useSWR - refresh', () => {
       version: '1.0'
     })
 
-    const cachedData = cache.get(key)
+    const cachedData = customCache.get(key)
     expect(cachedData.timestamp.toString()).toEqual('1')
     screen.getByText('1')
   })

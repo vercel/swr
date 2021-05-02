@@ -13,7 +13,7 @@ export default function useArgs<KeyType, ConfigType, Data>(
     | readonly [KeyType, Fetcher<Data> | null]
     | readonly [KeyType, ConfigType | undefined]
     | readonly [KeyType, Fetcher<Data> | null, ConfigType | undefined]
-): [KeyType, (typeof defaultConfig) & ConfigType, Fetcher<Data> | null] {
+): [KeyType, Fetcher<Data> | null, (typeof defaultConfig) & ConfigType] {
   const config = Object.assign(
     {},
     defaultConfig,
@@ -37,5 +37,5 @@ export default function useArgs<KeyType, ConfigType, Data>(
     ? args[1]
     : config.fetcher) as Fetcher<Data> | null
 
-  return [args[0], config, fn]
+  return [args[0], fn, config]
 }

@@ -6,9 +6,6 @@ export * from './use-swr'
 // `useSWRInfinite`
 export { useSWRInfinite } from './use-swr-infinite'
 
-// Cache related, to be replaced by the new APIs
-export { cache } from './config'
-
 // Types
 export {
   SWRConfiguration,
@@ -27,6 +24,5 @@ export {
   revalidateType,
   RevalidateOptionInterface,
   keyInterface,
-  responseInterface,
-  CacheInterface
+  responseInterface
 } from './types'
