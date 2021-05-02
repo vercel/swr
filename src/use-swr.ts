@@ -527,8 +527,7 @@ function useSWR<Data = any, Error = any>(
       }
     }
 
-    // Add event listeners
-
+    // Add event listeners.
     let pending = false
     const onFocus = () => {
       if (pending || !configRef.current.revalidateOnFocus) return
@@ -546,7 +545,7 @@ function useSWR<Data = any, Error = any>(
       }
     }
 
-    // register global cache update listener
+    // Register global cache update listener.
     const onUpdate: Updater<Data, Error> = (
       shouldRevalidate = true,
       updatedData,
