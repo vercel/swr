@@ -5,11 +5,15 @@ export const IS_SERVER =
   // @ts-ignore
   !!(typeof Deno !== 'undefined' && Deno && Deno.version && Deno.version.deno)
 
+const __requestAnimationFrame = !IS_SERVER
+  ? window['requestAnimationFrame']
+  : null
+
 // polyfill for requestAnimationFrame
 export const rAF = IS_SERVER
   ? null
-  : window['requestAnimationFrame']
-  ? (f: FrameRequestCallback) => window['requestAnimationFrame'](f)
+  : __requestAnimationFrame
+  ? (f: FrameRequestCallback) => __requestAnimationFrame(f)
   : (f: (...args: any[]) => void) => setTimeout(f, 1)
 
 // React currently throws a warning when using useLayoutEffect on the server.

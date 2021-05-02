@@ -18,11 +18,7 @@ export default function useStateWithDeps<Data, Error, S = State<Data, Error>>(
   (payload: S) => void
 ] {
   const rerender = useState<object>({})[1]
-
   const stateRef = useRef(state)
-  useIsomorphicLayoutEffect(() => {
-    stateRef.current = state
-  })
 
   // If a state property (data, error or isValidating) is accessed by the render
   // function, we mark the property as a dependency so if it is updated again
@@ -83,6 +79,11 @@ export default function useStateWithDeps<Data, Error, S = State<Data, Error>>(
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   )
+
+  // Always update the state reference.
+  useIsomorphicLayoutEffect(() => {
+    stateRef.current = state
+  })
 
   return [stateRef, stateDependenciesRef, setState]
 }
