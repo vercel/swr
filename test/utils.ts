@@ -2,7 +2,10 @@ export function sleep(time: number) {
   return new Promise(resolve => setTimeout(resolve, time))
 }
 
-export const createResponse = (response: any, { delay } = { delay: 10 }) =>
+export const createResponse = <T = any>(
+  response: T,
+  { delay } = { delay: 10 }
+): Promise<T> =>
   new Promise((resolve, reject) =>
     setTimeout(() => {
       if (response instanceof Error) {
@@ -12,3 +15,5 @@ export const createResponse = (response: any, { delay } = { delay: 10 }) =>
       }
     }, delay)
   )
+
+export const createKey = () => 'swr-key-' + ~~(Math.random() * 1e7)

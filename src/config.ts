@@ -1,24 +1,21 @@
 import { dequal } from 'dequal/lite'
-import {
-  ConfigInterface,
-  RevalidateOptionInterface,
-  revalidateType
-} from './types'
-import Cache from './cache'
-import webPreset from './libs/web-preset'
 
-// cache
-const cache = new Cache()
+import { wrapCache } from './cache'
+import webPreset from './libs/web-preset'
+import { Configuration, RevalidatorOptions, Revalidator } from './types'
+
+const fetcher = (url: string) => fetch(url).then(res => res.json())
+const noop = () => {}
 
 // error retry
 function onErrorRetry(
-  _,
-  __,
-  config: ConfigInterface,
-  revalidate: revalidateType,
-  opts: RevalidateOptionInterface
+  _: unknown,
+  __: string,
+  config: Readonly<Required<Configuration>>,
+  revalidate: Revalidator,
+  opts: Required<RevalidatorOptions>
 ): void {
-  if (!config.isDocumentVisible()) {
+  if (!webPreset.isDocumentVisible()) {
     // if it's hidden, stop
     // it will auto revalidate when focus
     return
@@ -32,7 +29,7 @@ function onErrorRetry(
   }
 
   // exponential backoff
-  const count = Math.min(opts.retryCount || 0, 8)
+  const count = Math.min(opts.retryCount, 8)
   const timeout =
     ~~((Math.random() + 0.5) * (1 << count)) * config.errorRetryInterval
   setTimeout(revalidate, timeout, opts)
@@ -43,36 +40,44 @@ function onErrorRetry(
 // slow connection (<= 70Kbps)
 const slowConnection =
   typeof window !== 'undefined' &&
+  // @ts-ignore
   navigator['connection'] &&
-  ['slow-2g', '2g'].indexOf(navigator['connection'].effectiveType) !== -1
+  // @ts-ignore
+  (['slow-2g', '2g'].indexOf(navigator['connection'].effectiveType) !== -1 ||
+    // @ts-ignore
+    navigator['connection'].saveData)
 
 // config
-const defaultConfig: ConfigInterface = Object.assign(
-  {
-    // events
-    onLoadingSlow: () => {},
-    onSuccess: () => {},
-    onError: () => {},
-    onErrorRetry,
+const defaultConfig = {
+  // events
+  onLoadingSlow: noop,
+  onSuccess: noop,
+  onError: noop,
+  onErrorRetry,
 
-    errorRetryInterval: (slowConnection ? 10 : 5) * 1000,
-    focusThrottleInterval: 5 * 1000,
-    dedupingInterval: 2 * 1000,
-    loadingTimeout: (slowConnection ? 5 : 3) * 1000,
+  // switches
+  revalidateOnFocus: true,
+  revalidateOnReconnect: true,
+  refreshWhenHidden: false,
+  refreshWhenOffline: false,
+  shouldRetryOnError: true,
+  suspense: false,
 
-    refreshInterval: 0,
-    revalidateOnFocus: true,
-    revalidateOnReconnect: true,
-    refreshWhenHidden: false,
-    refreshWhenOffline: false,
-    shouldRetryOnError: true,
-    suspense: false,
-    compare: dequal,
+  // timeouts
+  errorRetryInterval: (slowConnection ? 10 : 5) * 1000,
+  focusThrottleInterval: 5 * 1000,
+  dedupingInterval: 2 * 1000,
+  loadingTimeout: (slowConnection ? 5 : 3) * 1000,
+  refreshInterval: 0,
 
-    isPaused: () => false
-  },
-  webPreset
-)
+  // providers
+  fetcher,
+  compare: dequal,
+  isPaused: () => false,
+  cache: wrapCache(new Map()),
 
-export { cache }
+  // presets
+  ...webPreset
+} as const
+
 export default defaultConfig
