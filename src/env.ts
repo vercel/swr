@@ -3,7 +3,7 @@ import { useEffect, useLayoutEffect } from 'react'
 export const IS_SERVER =
   typeof window === 'undefined' ||
   // @ts-ignore
-  !!(typeof Deno !== 'undefined' && Deno && Deno.version && Deno.version.deno)
+  !!(typeof Deno !== 'undefined' && Deno.version && Deno.version.deno)
 
 const __requestAnimationFrame = !IS_SERVER
   ? window['requestAnimationFrame']

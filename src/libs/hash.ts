@@ -13,20 +13,17 @@ export default function hash(args: any[]): string {
   let key = 'arg'
   for (let i = 0; i < args.length; ++i) {
     let _hash
-    if (typeof args[i] !== 'object' && typeof args[i] !== 'function') {
+    if (
+      args[i] === null ||
+      (typeof args[i] !== 'object' && typeof args[i] !== 'function')
+    ) {
       // need to consider the case that args[i] is a string:
-      // args[i]        _hash
       // "undefined" -> '"undefined"'
       // undefined   -> 'undefined'
       // 123         -> '123'
       // "null"      -> '"null"'
-      if (typeof args[i] === 'string') {
-        _hash = '"' + args[i] + '"'
-      } else {
-        _hash = String(args[i])
-      }
-    } else if (args[i] === null) {
-      _hash = '@nil'
+      // null        -> 'null'
+      _hash = JSON.stringify(args[i])
     } else {
       if (!table.has(args[i])) {
         _hash = counter

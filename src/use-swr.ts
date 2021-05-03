@@ -689,13 +689,13 @@ function useSWR<Data = any, Error = any>(
   return state
 }
 
-Object.defineProperty(SWRConfigContext.Provider, 'default', {
-  value: defaultConfig
-})
-
 export const SWRConfig = SWRConfigContext.Provider as typeof SWRConfigContext.Provider & {
   default: SWRConfiguration
 }
+Object.defineProperty(SWRConfig, 'default', {
+  value: defaultConfig
+})
+
 export const mutate = internalMutate.bind(
   null,
   defaultConfig.cache
