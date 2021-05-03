@@ -34,13 +34,12 @@ function useSWRInfinite<Data = any, Error = any>(
     SWRInfiniteConfiguration<Data, Error>,
     Data
   >(args)
-  const cache = config.cache
 
   const {
+    cache,
     initialSize = 1,
     revalidateAll = false,
-    persistSize = false,
-    ...extraConfig
+    persistSize = false
   } = config
 
   // get the serialized key of the first page
@@ -69,7 +68,7 @@ function useSWRInfinite<Data = any, Error = any>(
 
   const resolvePageSize = useCallback((): number => {
     const cachedPageSize = cache.get(pageSizeCacheKey)
-    return !isUndefined(cachedPageSize) ? cachedPageSize : initialSize
+    return isUndefined(cachedPageSize) ? initialSize : cachedPageSize
 
     // `cache` isn't allowed to change during the lifecycle
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -156,7 +155,7 @@ function useSWRInfinite<Data = any, Error = any>(
       // return the data
       return data
     },
-    extraConfig
+    config
   )
 
   // update dataRef
