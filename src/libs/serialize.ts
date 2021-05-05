@@ -17,7 +17,7 @@ export function serialize(key: Key): [string, any, string, string] {
     args = key
     key = hash(key)
   } else {
-    // convert null to ''
+    // convert falsy values to ''
     key = String(key || '')
   }
 

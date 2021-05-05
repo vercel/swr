@@ -304,7 +304,7 @@ describe('useSWR - refresh', () => {
     expect(fetcherWithToken).toHaveBeenLastCalledWith('1')
   })
 
-  it('the previous interval timer should not call onSuccess callback if key changes too fast', async () => {
+  it('should not call onSuccess from the previous interval if key has changed', async () => {
     const fetcherWithToken = jest.fn(async token => {
       await sleep(100)
       return token
