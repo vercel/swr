@@ -18,7 +18,7 @@ const addDocumentEventListener =
     ? document.addEventListener.bind(document)
     : null
 
-const isVisible = () => {
+const isDocumentVisible = () => {
   if (addDocumentEventListener) {
     const visibilityState = document.visibilityState
     if (!isUndefined(visibilityState)) {
@@ -52,7 +52,7 @@ const registerOnReconnect = (cb: () => void) => {
 
 export default {
   isOnline,
-  isVisible,
+  isDocumentVisible,
   registerOnFocus,
   registerOnReconnect
 } as const
