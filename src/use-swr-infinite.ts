@@ -3,6 +3,7 @@ import { useRef, useState, useCallback } from 'react'
 
 import { useIsomorphicLayoutEffect } from './env'
 import { serialize } from './libs/serialize'
+import { isUndefined, UNDEFINED } from './libs/helper'
 import useArgs from './resolve-args'
 import useSWR from './use-swr'
 
@@ -33,13 +34,12 @@ function useSWRInfinite<Data = any, Error = any>(
     SWRInfiniteConfiguration<Data, Error>,
     Data
   >(args)
-  const cache = config.cache
 
   const {
+    cache,
     initialSize = 1,
     revalidateAll = false,
-    persistSize = false,
-    ...extraConfig
+    persistSize = false
   } = config
 
   // get the serialized key of the first page
@@ -68,7 +68,7 @@ function useSWRInfinite<Data = any, Error = any>(
 
   const resolvePageSize = useCallback((): number => {
     const cachedPageSize = cache.get(pageSizeCacheKey)
-    return typeof cachedPageSize !== 'undefined' ? cachedPageSize : initialSize
+    return isUndefined(cachedPageSize) ? initialSize : cachedPageSize
 
     // `cache` isn't allowed to change during the lifecycle
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -132,10 +132,8 @@ function useSWRInfinite<Data = any, Error = any>(
         const shouldFetchPage =
           revalidateAll ||
           force ||
-          typeof pageData === 'undefined' ||
-          (typeof force === 'undefined' &&
-            i === 0 &&
-            typeof dataRef.current !== 'undefined') ||
+          isUndefined(pageData) ||
+          (isUndefined(force) && i === 0 && !isUndefined(dataRef.current)) ||
           (originalData && !config.compare(originalData[i], pageData))
 
         if (fn && shouldFetchPage) {
@@ -157,7 +155,7 @@ function useSWRInfinite<Data = any, Error = any>(
       // return the data
       return data
     },
-    extraConfig
+    config
   )
 
   // update dataRef
@@ -168,9 +166,9 @@ function useSWRInfinite<Data = any, Error = any>(
   const mutate = useCallback(
     (data: MutatorCallback, shouldRevalidate = true) => {
       // It is possible that the key is still falsy.
-      if (!contextCacheKey) return undefined
+      if (!contextCacheKey) return UNDEFINED
 
-      if (shouldRevalidate && typeof data !== 'undefined') {
+      if (shouldRevalidate && !isUndefined(data)) {
         // we only revalidate the pages that are changed
         const originalData = dataRef.current
         cache.set(contextCacheKey, { data: originalData, force: false })
@@ -190,7 +188,7 @@ function useSWRInfinite<Data = any, Error = any>(
   const setSize = useCallback(
     (arg: number | ((size: number) => number)) => {
       // It is possible that the key is still falsy.
-      if (!pageSizeCacheKey) return undefined
+      if (!pageSizeCacheKey) return UNDEFINED
 
       let size
       if (typeof arg === 'function') {

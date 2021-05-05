@@ -18,11 +18,7 @@ export default function useStateWithDeps<Data, Error, S = State<Data, Error>>(
   (payload: S) => void
 ] {
   const rerender = useState<object>({})[1]
-
   const stateRef = useRef(state)
-  useIsomorphicLayoutEffect(() => {
-    stateRef.current = state
-  })
 
   // If a state property (data, error or isValidating) is accessed by the render
   // function, we mark the property as a dependency so if it is updated again
@@ -55,17 +51,18 @@ export default function useStateWithDeps<Data, Error, S = State<Data, Error>>(
     (payload: S) => {
       let shouldRerender = false
 
+      const currentState = stateRef.current
       for (const _ of Object.keys(payload)) {
         // Type casting to work around the `for...in` loop
         // https://github.com/Microsoft/TypeScript/issues/3500
         const k = _ as keyof S & StateKeys
 
         // If the property hasn't changed, skip
-        if (stateRef.current[k] === payload[k]) {
+        if (currentState[k] === payload[k]) {
           continue
         }
 
-        stateRef.current[k] = payload[k]
+        currentState[k] = payload[k]
 
         // If the property is accessed by the component, a rerender should be
         // triggered.
@@ -82,6 +79,11 @@ export default function useStateWithDeps<Data, Error, S = State<Data, Error>>(
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   )
+
+  // Always update the state reference.
+  useIsomorphicLayoutEffect(() => {
+    stateRef.current = state
+  })
 
   return [stateRef, stateDependenciesRef, setState]
 }

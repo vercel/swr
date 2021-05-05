@@ -1,3 +1,5 @@
+import { isUndefined } from './helper'
+
 /**
  * Due to bug https://bugs.chromium.org/p/chromium/issues/detail?id=678075,
  * it's not reliable to detect if the browser is currently online or offline
@@ -17,8 +19,11 @@ const addDocumentEventListener =
     : null
 
 const isDocumentVisible = () => {
-  if (addDocumentEventListener && document.visibilityState !== undefined) {
-    return document.visibilityState !== 'hidden'
+  if (addDocumentEventListener) {
+    const visibilityState = document.visibilityState
+    if (!isUndefined(visibilityState)) {
+      return visibilityState !== 'hidden'
+    }
   }
   // always assume it's visible
   return true
@@ -50,4 +55,4 @@ export default {
   isDocumentVisible,
   registerOnFocus,
   registerOnReconnect
-}
+} as const
