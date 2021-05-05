@@ -20,6 +20,7 @@ export interface Configuration<
   fetcher: Fn
   initialData?: Data
   cache: Cache
+  middlewares?: Middleware[]
 
   isPaused: () => boolean
   onLoadingSlow: (
@@ -53,6 +54,8 @@ export interface Preset {
   registerOnFocus?: (cb: () => void) => void
   registerOnReconnect?: (cb: () => void) => void
 }
+
+export type Middleware = any
 
 export type ValueKey = string | any[] | null
 
