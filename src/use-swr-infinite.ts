@@ -1,6 +1,7 @@
 // TODO: use @ts-expect-error
 import { useRef, useState, useCallback } from 'react'
 
+import defaultConfig from './config'
 import { useIsomorphicLayoutEffect } from './env'
 import { serialize } from './libs/serialize'
 import { isUndefined, UNDEFINED } from './libs/helper'
@@ -15,26 +16,11 @@ import {
   MutatorCallback
 } from './types'
 
-function useSWRInfinite<Data = any, Error = any>(
-  ...args:
-    | readonly [KeyLoader<Data>]
-    | readonly [KeyLoader<Data>, Fetcher<Data> | null]
-    | readonly [
-        KeyLoader<Data>,
-        SWRInfiniteConfiguration<Data, Error> | undefined
-      ]
-    | readonly [
-        KeyLoader<Data>,
-        Fetcher<Data> | null,
-        SWRInfiniteConfiguration<Data, Error> | undefined
-      ]
+function useSWRInfiniteHandler<Data = any, Error = any>(
+  getKey: KeyLoader<Data>,
+  fn: Fetcher<Data> | null,
+  config: typeof defaultConfig & SWRInfiniteConfiguration<Data, Error>
 ): SWRInfiniteResponse<Data, Error> {
-  const [getKey, fn, config] = useArgs<
-    KeyLoader<Data>,
-    SWRInfiniteConfiguration<Data, Error>,
-    Data
-  >(args)
-
   const {
     cache,
     initialSize = 1,
@@ -234,4 +220,26 @@ function useSWRInfinite<Data = any, Error = any>(
   return (swrInfinite as unknown) as SWRInfiniteResponse<Data, Error>
 }
 
-export { useSWRInfinite }
+function useSWRInfinite<Data = any, Error = any>(
+  ...args:
+    | readonly [KeyLoader<Data>]
+    | readonly [KeyLoader<Data>, Fetcher<Data> | null]
+    | readonly [
+        KeyLoader<Data>,
+        SWRInfiniteConfiguration<Data, Error> | undefined
+      ]
+    | readonly [
+        KeyLoader<Data>,
+        Fetcher<Data> | null,
+        SWRInfiniteConfiguration<Data, Error> | undefined
+      ]
+): SWRInfiniteResponse<Data, Error> {
+  const [getKey, fn, config] = useArgs<
+    KeyLoader<Data>,
+    SWRInfiniteConfiguration<Data, Error>,
+    Data
+  >(args)
+  return useSWRInfiniteHandler<Data, Error>(getKey, fn, config)
+}
+
+export default useSWRInfinite

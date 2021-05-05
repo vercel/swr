@@ -203,20 +203,11 @@ const addRevalidator = (
   }
 }
 
-function useSWR<Data = any, Error = any>(
-  ...args:
-    | readonly [Key]
-    | readonly [Key, Fetcher<Data> | null]
-    | readonly [Key, SWRConfiguration<Data, Error> | undefined]
-    | readonly [
-        Key,
-        Fetcher<Data> | null,
-        SWRConfiguration<Data, Error> | undefined
-      ]
+function useSWRHandler<Data = any, Error = any>(
+  _key: Key,
+  fn: Fetcher<Data> | null,
+  config: typeof defaultConfig & SWRConfiguration<Data, Error>
 ): SWRResponse<Data, Error> {
-  const [_key, fn, config] = useArgs<Key, SWRConfiguration<Data, Error>, Data>(
-    args
-  )
   const {
     cache,
     compare,
@@ -712,6 +703,23 @@ export function createCache<Data>(
     cache,
     mutate: internalMutate.bind(null, cache) as ScopedMutator<Data>
   }
+}
+
+function useSWR<Data = any, Error = any>(
+  ...args:
+    | readonly [Key]
+    | readonly [Key, Fetcher<Data> | null]
+    | readonly [Key, SWRConfiguration<Data, Error> | undefined]
+    | readonly [
+        Key,
+        Fetcher<Data> | null,
+        SWRConfiguration<Data, Error> | undefined
+      ]
+): SWRResponse<Data, Error> {
+  const [_key, fn, config] = useArgs<Key, SWRConfiguration<Data, Error>, Data>(
+    args
+  )
+  return useSWRHandler<Data, Error>(_key, fn, config)
 }
 
 export default useSWR

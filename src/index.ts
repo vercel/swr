@@ -4,7 +4,7 @@ export default useSWR
 export * from './use-swr'
 
 // `useSWRInfinite`
-export { useSWRInfinite } from './use-swr-infinite'
+export { default as useSWRInfinite } from './use-swr-infinite'
 
 // Types
 export {
