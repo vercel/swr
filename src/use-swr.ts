@@ -107,7 +107,7 @@ async function internalMutate<Data = any>(
   }
 
   // update global timestamps
-  MUTATION_TS[key] = now() - 1
+  MUTATION_TS[key] = now()
   MUTATION_END_TS[key] = 0
 
   // track timestamps before await asynchronously
@@ -158,7 +158,7 @@ async function internalMutate<Data = any>(
   cache.set(keyErr, error)
 
   // Reset the timestamp to mark the mutation has ended
-  MUTATION_END_TS[key] = now() - 1
+  MUTATION_END_TS[key] = now()
 
   if (!isAsyncMutation) {
     // We skip broadcasting if there's another mutation happened synchronously
