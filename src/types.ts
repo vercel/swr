@@ -14,9 +14,9 @@ export interface Configuration<
   refreshWhenOffline: boolean
   revalidateOnFocus: boolean
   revalidateOnReconnect: boolean
+  revalidateWhenStale: boolean
   shouldRetryOnError: boolean
   suspense: boolean
-  immutable?: boolean
   initialData?: Data
   fetcher: Fn
   cache: Cache
@@ -47,7 +47,7 @@ export interface Configuration<
   compare: (a: Data | undefined, b: Data | undefined) => boolean
 
   /**
-   * @deprecated `revalidateOnMount` will be removed. Please considering using the `immutable` option.
+   * @deprecated `revalidateOnMount` will be removed. Please considering using the `revalidateWhenStale` option.
    */
   revalidateOnMount?: boolean
 }

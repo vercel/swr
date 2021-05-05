@@ -253,15 +253,15 @@ function useSWR<Data = any, Error = any>(
   // A revalidation must be triggered when mounted if:
   // - `revalidateOnMount` is explicitly set to `true`.
   // - Suspense mode and there's stale data for the inital render.
-  // - Not suspense mode and there is no `initialData` and `immutable` is disabled.
-  // - Immutable mode and `data` is not defined.
+  // - Not suspense mode and there is no `initialData` and `revalidateWhenStale` is enabled.
+  // - `revalidateWhenStale` is enabled but `data` is not defined.
   const shouldRevalidateOnMount = () => {
     if (!isUndefined(config.revalidateOnMount)) return config.revalidateOnMount
 
     return config.suspense
       ? !initialMountedRef.current && !isUndefined(data)
       : isUndefined(config.initialData) &&
-          (!config.immutable || isUndefined(data))
+          (config.revalidateWhenStale || isUndefined(data))
   }
 
   // Resolve the current validating state.

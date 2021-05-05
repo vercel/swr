@@ -47,6 +47,7 @@ const defaultConfig = {
   // switches
   revalidateOnFocus: true,
   revalidateOnReconnect: true,
+  revalidateWhenStale: true,
   refreshWhenHidden: false,
   refreshWhenOffline: false,
   shouldRetryOnError: true,
