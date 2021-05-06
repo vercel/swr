@@ -16,11 +16,11 @@ import {
   MutatorCallback
 } from './types'
 
-function useSWRInfiniteHandler<Data = any, Error = any>(
-  getKey: KeyLoader<Data>,
-  fn: Fetcher<Data> | null,
-  config: typeof defaultConfig & SWRInfiniteConfiguration<Data, Error>
-): SWRInfiniteResponse<Data, Error> {
+function useSWRInfiniteHandler<Data = any, Error = any>([getKey, fn, config]: [
+  KeyLoader<Data>,
+  Fetcher<Data> | null,
+  typeof defaultConfig & SWRInfiniteConfiguration<Data, Error>
+]): SWRInfiniteResponse<Data, Error> {
   const {
     cache,
     initialSize = 1,
@@ -234,12 +234,9 @@ function useSWRInfinite<Data = any, Error = any>(
         SWRInfiniteConfiguration<Data, Error> | undefined
       ]
 ): SWRInfiniteResponse<Data, Error> {
-  const [getKey, fn, config] = useArgs<
-    KeyLoader<Data>,
-    SWRInfiniteConfiguration<Data, Error>,
-    Data
-  >(args)
-  return useSWRInfiniteHandler<Data, Error>(getKey, fn, config)
+  return useSWRInfiniteHandler<Data, Error>(
+    useArgs<KeyLoader<Data>, SWRInfiniteConfiguration<Data, Error>, Data>(args)
+  )
 }
 
 export default useSWRInfinite
