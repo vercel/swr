@@ -17,6 +17,7 @@ export {
   KeyLoader,
   SWRResponse,
   Cache,
+  Middleware,
   // Legacy, for backwards compatibility
   ConfigInterface,
   SWRInfiniteConfigInterface,

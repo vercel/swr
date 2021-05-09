@@ -3,11 +3,11 @@ import { useContext } from 'react'
 import defaultConfig from './config'
 import SWRConfigContext from './config-context'
 
-import { Fetcher } from './types'
+import { Fetcher, SWRConfiguration } from './types'
 
 // Resolve arguments for SWR hooks.
 // This function itself is a hook because it uses `useContext` inside.
-function useArgs<KeyType, ConfigType, Data>(
+function useArgs<KeyType, Data, ConfigType>(
   args:
     | readonly [KeyType]
     | readonly [KeyType, Fetcher<Data> | null]
@@ -43,7 +43,16 @@ function useArgs<KeyType, ConfigType, Data>(
 // the types here.
 export default function withArgs<SWRType>(hook: any) {
   return (((...args: any) => {
-    const [key, fn, config] = useArgs(args)
+    const [key, fn, config] = useArgs<any, any, SWRConfiguration>(args)
+
+    // Apply middlewares to the hook.
+    const { middlewares } = config
+    if (middlewares) {
+      for (let i = middlewares.length - 1; i >= 0; i--) {
+        hook = middlewares[i](hook)
+      }
+    }
+
     return hook(key, fn, config)
   }) as unknown) as SWRType
 }

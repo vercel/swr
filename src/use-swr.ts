@@ -20,7 +20,8 @@ import {
   Updater,
   SWRConfiguration,
   Cache,
-  ScopedMutator
+  ScopedMutator,
+  SWRHook
 } from './types'
 
 type Revalidator = (...args: any[]) => void
@@ -705,17 +706,5 @@ export function createCache<Data>(
     mutate: internalMutate.bind(null, cache) as ScopedMutator<Data>
   }
 }
-
-type SWRHook = <Data = any, Error = any>(
-  ...args:
-    | readonly [Key]
-    | readonly [Key, Fetcher<Data> | null]
-    | readonly [Key, SWRConfiguration<Data, Error> | undefined]
-    | readonly [
-        Key,
-        Fetcher<Data> | null,
-        SWRConfiguration<Data, Error> | undefined
-      ]
-) => SWRResponse<Data, Error>
 
 export default withArgs<SWRHook>(useSWRHandler)

@@ -48,6 +48,18 @@ export interface Configuration<
   compare: (a: Data | undefined, b: Data | undefined) => boolean
 }
 
+export type SWRHook = <Data = any, Error = any>(
+  ...args:
+    | readonly [Key]
+    | readonly [Key, Fetcher<Data> | null]
+    | readonly [Key, SWRConfiguration<Data, Error> | undefined]
+    | readonly [
+        Key,
+        Fetcher<Data> | null,
+        SWRConfiguration<Data, Error> | undefined
+      ]
+) => SWRResponse<Data, Error>
+
 export interface Preset {
   isOnline: () => boolean
   isDocumentVisible: () => boolean
@@ -55,7 +67,7 @@ export interface Preset {
   registerOnReconnect?: (cb: () => void) => void
 }
 
-export type Middleware = any
+export type Middleware = (useSWRNext: SWRHook) => SWRHook
 
 export type ValueKey = string | any[] | null
 
