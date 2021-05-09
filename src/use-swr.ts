@@ -203,11 +203,11 @@ const addRevalidator = (
   }
 }
 
-function useSWR<Data = any, Error = any>([_key, fn, config]: [
-  Key,
-  Fetcher<Data> | null,
-  typeof defaultConfig & SWRConfiguration<Data, Error>
-]): SWRResponse<Data, Error> {
+export function useSWRHandler<Data = any, Error = any>(
+  _key: Key,
+  fn: Fetcher<Data> | null,
+  config: typeof defaultConfig & SWRConfiguration<Data, Error>
+): SWRResponse<Data, Error> {
   const {
     cache,
     compare,
@@ -718,4 +718,4 @@ type SWRHook = <Data = any, Error = any>(
       ]
 ) => SWRResponse<Data, Error>
 
-export default withArgs<SWRHook>(useSWR)
+export default withArgs<SWRHook>(useSWRHandler)

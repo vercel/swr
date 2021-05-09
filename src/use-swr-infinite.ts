@@ -6,7 +6,7 @@ import { useIsomorphicLayoutEffect } from './env'
 import { serialize } from './libs/serialize'
 import { isUndefined, UNDEFINED } from './libs/helper'
 import withArgs from './resolve-args'
-import useSWR from './use-swr'
+import { useSWRHandler } from './use-swr'
 
 import {
   KeyLoader,
@@ -16,11 +16,11 @@ import {
   MutatorCallback
 } from './types'
 
-function useSWRInfinite<Data = any, Error = any>([getKey, fn, config]: [
-  KeyLoader<Data>,
-  Fetcher<Data> | null,
-  typeof defaultConfig & SWRInfiniteConfiguration<Data, Error>
-]): SWRInfiniteResponse<Data, Error> {
+function useSWRInfiniteHandler<Data = any, Error = any>(
+  getKey: KeyLoader<Data>,
+  fn: Fetcher<Data> | null,
+  config: typeof defaultConfig & SWRInfiniteConfiguration<Data, Error>
+): SWRInfiniteResponse<Data, Error> {
   const {
     cache,
     initialSize = 1,
@@ -85,7 +85,7 @@ function useSWRInfinite<Data = any, Error = any>([getKey, fn, config]: [
   const dataRef = useRef<Data[]>()
 
   // actual swr of all pages
-  const swr = useSWR<Data[], Error>(
+  const swr = useSWRHandler<Data[], Error>(
     firstPageKey ? ['inf', firstPageKey] : null,
     async () => {
       // get the revalidate context
@@ -235,4 +235,4 @@ type SWRInfiniteHook = <Data = any, Error = any>(
       ]
 ) => SWRInfiniteResponse<Data, Error>
 
-export default withArgs<SWRInfiniteHook>(useSWRInfinite)
+export default withArgs<SWRInfiniteHook>(useSWRInfiniteHandler)

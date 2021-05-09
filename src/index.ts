@@ -1,7 +1,7 @@
 // `useSWR` and related APIs
 import { default as useSWR } from './use-swr'
+export { SWRConfig, mutate, createCache } from './use-swr'
 export default useSWR
-export * from './use-swr'
 
 // `useSWRInfinite`
 export { default as useSWRInfinite } from './use-swr-infinite'
