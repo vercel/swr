@@ -39,6 +39,8 @@ function useArgs<KeyType, ConfigType, Data>(
   return [args[0], fn, config]
 }
 
+// It's tricky to pass generic types as parameters, so we just directly override
+// the types here.
 export default function withArgs<SWRType>(hook: any) {
   return (((...args: any) => hook(useArgs(args))) as unknown) as SWRType
 }
