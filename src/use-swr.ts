@@ -700,7 +700,8 @@ Object.defineProperty(SWRConfig, 'default', {
 export const mutate = internalMutate.bind(
   null,
   defaultConfig.cache
-) as ScopedMutator<any>
+) as ScopedMutator
+
 export function createCache<Data>(
   provider: Cache
 ): {
@@ -713,5 +714,4 @@ export function createCache<Data>(
     mutate: internalMutate.bind(null, cache) as ScopedMutator<Data>
   }
 }
-
 export default useSWR

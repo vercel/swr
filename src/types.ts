@@ -90,11 +90,20 @@ export type Mutator<Data = any> = (
   shouldRevalidate?: boolean
 ) => Promise<Data | undefined>
 
-export type ScopedMutator<Data> = (
-  key: Key,
-  data?: Data | Promise<Data> | MutatorCallback<Data>,
-  shouldRevalidate?: boolean
-) => Promise<Data | undefined>
+export interface ScopedMutator<Data = any> {
+  /** This is used for bound mutator */
+  (
+    key: Key,
+    data?: Data | Promise<Data> | MutatorCallback<Data>,
+    shouldRevalidate?: boolean
+  ): Promise<Data | undefined>
+  /** This is used for global mutator */
+  <T = any>(
+    key: Key,
+    data?: T | Promise<T> | MutatorCallback<T>,
+    shouldRevalidate?: boolean
+  ): Promise<T | undefined>
+}
 
 export type KeyedMutator<Data> = (
   data?: Data | Promise<Data> | MutatorCallback<Data>,
