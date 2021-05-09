@@ -8,7 +8,7 @@ import { serialize } from './libs/serialize'
 import { isUndefined, UNDEFINED } from './libs/helper'
 import SWRConfigContext from './config-context'
 import useStateWithDeps from './state'
-import useArgs from './resolve-args'
+import withArgs from './resolve-args'
 import {
   State,
   Broadcaster,
@@ -203,7 +203,7 @@ const addRevalidator = (
   }
 }
 
-function useSWRHandler<Data = any, Error = any>([_key, fn, config]: [
+function useSWR<Data = any, Error = any>([_key, fn, config]: [
   Key,
   Fetcher<Data> | null,
   typeof defaultConfig & SWRConfiguration<Data, Error>
@@ -691,7 +691,8 @@ Object.defineProperty(SWRConfig, 'default', {
 export const mutate = internalMutate.bind(
   null,
   defaultConfig.cache
-) as ScopedMutator<any>
+) as ScopedMutator
+
 export function createCache<Data>(
   provider: Cache
 ): {
@@ -705,7 +706,7 @@ export function createCache<Data>(
   }
 }
 
-function useSWR<Data = any, Error = any>(
+type SWRHook = <Data = any, Error = any>(
   ...args:
     | readonly [Key]
     | readonly [Key, Fetcher<Data> | null]
@@ -715,10 +716,6 @@ function useSWR<Data = any, Error = any>(
         Fetcher<Data> | null,
         SWRConfiguration<Data, Error> | undefined
       ]
-): SWRResponse<Data, Error> {
-  return useSWRHandler<Data, Error>(
-    useArgs<Key, SWRConfiguration<Data, Error>, Data>(args)
-  )
-}
+) => SWRResponse<Data, Error>
 
-export default useSWR
+export default withArgs<SWRHook>(useSWR)

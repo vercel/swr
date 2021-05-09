@@ -7,7 +7,7 @@ import { Fetcher } from './types'
 
 // Resolve arguments for SWR hooks.
 // This function itself is a hook because it uses `useContext` inside.
-export default function useArgs<KeyType, ConfigType, Data>(
+function useArgs<KeyType, ConfigType, Data>(
   args:
     | readonly [KeyType]
     | readonly [KeyType, Fetcher<Data> | null]
@@ -37,4 +37,8 @@ export default function useArgs<KeyType, ConfigType, Data>(
     : config.fetcher) as Fetcher<Data> | null
 
   return [args[0], fn, config]
+}
+
+export default function withArgs<SWRType>(hook: any) {
+  return (((...args: any) => hook(useArgs(args))) as unknown) as SWRType
 }

@@ -5,7 +5,7 @@ import defaultConfig from './config'
 import { useIsomorphicLayoutEffect } from './env'
 import { serialize } from './libs/serialize'
 import { isUndefined, UNDEFINED } from './libs/helper'
-import useArgs from './resolve-args'
+import withArgs from './resolve-args'
 import useSWR from './use-swr'
 
 import {
@@ -16,7 +16,7 @@ import {
   MutatorCallback
 } from './types'
 
-function useSWRInfiniteHandler<Data = any, Error = any>([getKey, fn, config]: [
+function useSWRInfinite<Data = any, Error = any>([getKey, fn, config]: [
   KeyLoader<Data>,
   Fetcher<Data> | null,
   typeof defaultConfig & SWRInfiniteConfiguration<Data, Error>
@@ -220,7 +220,7 @@ function useSWRInfiniteHandler<Data = any, Error = any>([getKey, fn, config]: [
   return (swrInfinite as unknown) as SWRInfiniteResponse<Data, Error>
 }
 
-function useSWRInfinite<Data = any, Error = any>(
+type SWRInfiniteHook = <Data = any, Error = any>(
   ...args:
     | readonly [KeyLoader<Data>]
     | readonly [KeyLoader<Data>, Fetcher<Data> | null]
@@ -233,10 +233,6 @@ function useSWRInfinite<Data = any, Error = any>(
         Fetcher<Data> | null,
         SWRInfiniteConfiguration<Data, Error> | undefined
       ]
-): SWRInfiniteResponse<Data, Error> {
-  return useSWRInfiniteHandler<Data, Error>(
-    useArgs<KeyLoader<Data>, SWRInfiniteConfiguration<Data, Error>, Data>(args)
-  )
-}
+) => SWRInfiniteResponse<Data, Error>
 
-export default useSWRInfinite
+export default withArgs<SWRInfiniteHook>(useSWRInfinite)
