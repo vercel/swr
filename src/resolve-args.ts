@@ -46,13 +46,14 @@ export default function withArgs<SWRType>(hook: any) {
     const [key, fn, config] = useArgs<any, any, SWRConfiguration>(args)
 
     // Apply middlewares to the hook.
+    let next = hook
     const { middlewares } = config
     if (middlewares) {
-      for (let i = middlewares.length - 1; i >= 0; i--) {
-        hook = middlewares[i](hook)
+      for (let i = middlewares.length; --i >= 0; ) {
+        next = middlewares[i](next)
       }
     }
 
-    return hook(key, fn, config)
+    return next(key, fn, config)
   }) as unknown) as SWRType
 }
