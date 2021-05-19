@@ -20,7 +20,8 @@ import {
   Updater,
   SWRConfiguration,
   Cache,
-  ScopedMutator
+  ScopedMutator,
+  MutatorKey
 } from './types'
 
 type Revalidator = (...args: any[]) => void
@@ -85,10 +86,28 @@ const broadcastState: Broadcaster = (
 
 async function internalMutate<Data = any>(
   cache: Cache,
-  _key: Key,
+  _key: MutatorKey,
   _data?: Data | Promise<Data | undefined> | MutatorCallback<Data>,
   shouldRevalidate = true
-): Promise<Data | undefined> {
+): Promise<Data | undefined | (Data | undefined)[]> {
+  if (_key instanceof RegExp) {
+    const regex = _key
+    let mutates: Promise<Data | undefined>[] = []
+    for (let cacheKey of cache.keys()) {
+      if (!regex.test(cacheKey)) {
+        continue
+      }
+      const _result = internalMutate(
+        cache,
+        cacheKey,
+        _data,
+        shouldRevalidate
+      ) as Promise<Data | undefined>
+      mutates.push(_result)
+    }
+    return Promise.all(mutates)
+  }
+
   const [key, , keyErr] = serialize(_key)
   if (!key) return UNDEFINED
 
@@ -644,7 +663,12 @@ function useSWR<Data = any, Error = any>(
   // `mutate`, but bound to the current key.
   const boundMutate: SWRResponse<Data, Error>['mutate'] = useCallback(
     (newData, shouldRevalidate) => {
-      return internalMutate(cache, keyRef.current, newData, shouldRevalidate)
+      return internalMutate(
+        cache,
+        keyRef.current,
+        newData,
+        shouldRevalidate
+      ) as Promise<Data | undefined>
     },
     // `cache` isn't allowed to change during the lifecycle
     // eslint-disable-next-line react-hooks/exhaustive-deps

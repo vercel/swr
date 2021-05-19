@@ -674,4 +674,40 @@ describe('useSWR - local mutation', () => {
     await act(() => sleep(100))
     await screen.findByText('data: 1')
   })
+
+  it('should trigger multiple revalidation with regex', async () => {
+    let value1 = 0
+    let value2 = 0
+
+    function Page() {
+      const { data: data1 } = useSWR('data-1', () => value1++, {
+        dedupingInterval: 0
+      })
+      const { data: data2 } = useSWR('data-2', () => value2++, {
+        dedupingInterval: 0
+      })
+      return (
+        <div>
+          <div>data1: {data1}</div>
+          <div>data2: {data2}</div>
+        </div>
+      )
+    }
+
+    render(<Page />)
+    // hydration
+    screen.getByText('data1:')
+    screen.getByText('data2:')
+
+    // mount
+    await screen.findByText('data1: 0')
+    await screen.findByText('data2: 0')
+
+    act(() => {
+      // mutate and revalidate
+      mutate(/data-*/)
+    })
+    await screen.findByText('data1: 1')
+    await screen.findByText('data2: 1')
+  })
 })

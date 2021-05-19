@@ -85,7 +85,7 @@ export type State<Data, Error> = {
 
 export type Mutator<Data = any> = (
   cache: Cache,
-  key: Key,
+  key: MutatorKey,
   data?: Data | Promise<Data> | MutatorCallback<Data>,
   shouldRevalidate?: boolean
 ) => Promise<Data | undefined>
@@ -93,7 +93,7 @@ export type Mutator<Data = any> = (
 export interface ScopedMutator<Data = any> {
   /** This is used for bound mutator */
   (
-    key: Key,
+    key: MutatorKey,
     data?: Data | Promise<Data> | MutatorCallback<Data>,
     shouldRevalidate?: boolean
   ): Promise<Data | undefined>
@@ -102,7 +102,7 @@ export interface ScopedMutator<Data = any> {
     key: Key,
     data?: T | Promise<T> | MutatorCallback<T>,
     shouldRevalidate?: boolean
-  ): Promise<T | undefined>
+  ): Promise<T | undefined | (T | undefined)[]>
 }
 
 export type KeyedMutator<Data> = (
@@ -131,6 +131,7 @@ export type SWRConfiguration<
  */
 export type keyInterface = ValueKey | (() => ValueKey)
 export type Key = ValueKey | (() => ValueKey)
+export type MutatorKey = Key | RegExp
 
 /**
  * @deprecated `responseInterface` will be renamed to `SWRResponse`.
@@ -222,5 +223,6 @@ export type Revalidator = (
 export interface Cache<Data = any> {
   get(key: Key): Data | null | undefined
   set(key: Key, value: Data): void
+  keys(): IterableIterator<string>
   delete(key: Key): void
 }
