@@ -306,7 +306,7 @@ function useSWR<Data = any, Error = any>(
       const { retryCount = 0, dedupe = false } = revalidateOpts
 
       let loading = true
-      let shouldDeduping = !isUndefined(CONCURRENT_PROMISES[key]) && dedupe
+      const shouldDeduping = !isUndefined(CONCURRENT_PROMISES[key]) && dedupe
 
       // start fetching
       try {

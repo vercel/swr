@@ -45,7 +45,7 @@ function useSWRInfinite<Data = any, Error = any>(
   // get the serialized key of the first page
   let firstPageKey: string | null = null
   try {
-    ;[firstPageKey] = serialize(getKey ? getKey(0, null) : null)
+    firstPageKey = serialize(getKey ? getKey(0, null) : null)[0]
   } catch (err) {
     // not ready
   }

@@ -186,14 +186,14 @@ export type SWRInfiniteResponseInterface<Data = any, Error = any> = SWRResponse<
 > & {
   size: number
   setSize: (
-    size: number | ((size: number) => number)
+    size: number | ((_size: number) => number)
   ) => Promise<Data[] | undefined>
 }
 export interface SWRInfiniteResponse<Data = any, Error = any>
   extends SWRResponse<Data[], Error> {
   size: number
   setSize: (
-    size: number | ((size: number) => number)
+    size: number | ((_size: number) => number)
   ) => Promise<Data[] | undefined>
 }
 
