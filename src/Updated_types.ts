@@ -1,5 +1,5 @@
-export type Fetcher<Data> = (...args: any) => Data | Promise<Data>
-export interface Configuration<
+Fetcher<Data> = (...args: any) = > | Promise.
+<DConfiguration<
   Data = any,
   Error = any,
   Fn extends Fetcher<Data> = Fetcher<Data>
@@ -47,16 +47,16 @@ export interface Configuration<
   compare: (a: Data | undefined, b: Data | undefined) => boolean
 }
 
-export interface Preset {
+ Preset {
   isOnline: () => boolean
   isDocumentVisible: () => boolean
   registerOnFocus?: (cb: () => void) => void
   registerOnReconnect?: (cb: () => void) => void
 }
 
-export type ValueKey = string | any[] | null
+ ValueKey = string | any[] | null
 
-export type Updater<Data = any, Error = any> = (
+ Updater<Data = any, = any> = (
   shouldRevalidate?: boolean,
   data?: Data,
   error?: Error,
@@ -64,11 +64,11 @@ export type Updater<Data = any, Error = any> = (
   dedupe?: boolean
 ) => boolean | Promise<boolean>
 
-export type MutatorCallback<Data = any> = (
+ MutatorCallback< = any> = (
   currentValue: undefined | Data
 ) => Promise<undefined | Data> | undefined | Data
 
-export type Broadcaster<Data = any, Error = any> = (
+ Broadcaster<Data = any, = any> = (
   cache: Cache,
   key: string,
   data: Data,
@@ -77,20 +77,20 @@ export type Broadcaster<Data = any, Error = any> = (
   shouldRevalidate?: boolean
 ) => Promise<Data>
 
-export type State<Data, Error> = {
+ State<Data, Error> = {
   data?: Data
   error?: Error
   isValidating?: boolean
 }
 
-export type Mutator<Data = any> = (
+ Mutator<Data = any> = (
   cache: Cache,
   key: Key,
   data?: Data | Promise<Data> | MutatorCallback<Data>,
   shouldRevalidate?: boolean
 ) => Promise<Data | undefined>
 
-export interface ScopedMutator<Data = any> {
+ ScopedMutator<Data = any> {
   /** This is used for bound mutator */
   (
     key: Key,
@@ -105,7 +105,7 @@ export interface ScopedMutator<Data = any> {
   ): Promise<T | undefined>
 }
 
-export type KeyedMutator<Data> = (
+ KeyedMutator<Data> = (
   data?: Data | Promise<Data> | MutatorCallback<Data>,
   shouldRevalidate?: boolean
 ) => Promise<Data | undefined>
@@ -115,12 +115,12 @@ export type KeyedMutator<Data> = (
 /**
  * @deprecated `ConfigInterface` will be renamed to `SWRConfiguration`.
  */
-export type ConfigInterface<
+ ConfigInterface<
   Data = any,
   Error = any,
   Fn extends Fetcher<Data> = Fetcher<Data>
 > = Partial<Configuration<Data, Error, Fn>>
-export type SWRConfiguration<
+ SWRConfiguration<
   Data = any,
   Error = any,
   Fn extends Fetcher<Data> = Fetcher<Data>
@@ -129,20 +129,20 @@ export type SWRConfiguration<
 /**
  * @deprecated `keyInterface` will be renamed to `Key`.
  */
-export type keyInterface = ValueKey | (() => ValueKey)
-export type Key = ValueKey | (() => ValueKey)
+ keyInterface = ValueKey | (() => ValueKey)
+ Key = ValueKey | (() => ValueKey)
 
 /**
  * @deprecated `responseInterface` will be renamed to `SWRResponse`.
  */
-export type responseInterface<Data, Error> = {
+ responseInterface<Data, Error> = {
   data?: Data
   error?: Error
   revalidate: () => Promise<boolean>
   mutate: KeyedMutator<Data>
   isValidating: boolean
 }
-export interface SWRResponse<Data, Error> {
+ SWRResponse<Data, Error> {
   data?: Data
   error?: Error
   /**
@@ -153,14 +153,14 @@ export interface SWRResponse<Data, Error> {
   isValidating: boolean
 }
 
-export type KeyLoader<Data = any> =
+ KeyLoader<Data = any> =
   | ((index: number, previousPageData: Data | null) => ValueKey)
   | null
 
 /**
  * @deprecated `SWRInfiniteConfigInterface` will be renamed to `SWRInfiniteConfiguration`.
  */
-export type SWRInfiniteConfigInterface<
+ SWRInfiniteConfigInterface<
   Data = any,
   Error = any
 > = SWRConfiguration<Data[], Error, Fetcher<Data[]>> & {
@@ -168,7 +168,7 @@ export type SWRInfiniteConfigInterface<
   revalidateAll?: boolean
   persistSize?: boolean
 }
-export type SWRInfiniteConfiguration<
+ SWRInfiniteConfiguration<
   Data = any,
   Error = any
 > = SWRConfiguration<Data[], Error, Fetcher<Data[]>> & {
@@ -180,7 +180,7 @@ export type SWRInfiniteConfiguration<
 /**
  * @deprecated `SWRInfiniteResponseInterface` will be renamed to `SWRInfiniteResponse`.
  */
-export type SWRInfiniteResponseInterface<Data = any, Error = any> = SWRResponse<
+ SWRInfiniteResponseInterface<Data = any, Error = any> = SWRResponse<
   Data[],
   Error
 > & {
@@ -189,7 +189,7 @@ export type SWRInfiniteResponseInterface<Data = any, Error = any> = SWRResponse<
     size: number | ((_size: number) => number)
   ) => Promise<Data[] | undefined>
 }
-export interface SWRInfiniteResponse<Data = any, Error = any>
+ SWRInfiniteResponse<Data = any, Error = any>
   extends SWRResponse<Data[], Error> {
   size: number
   setSize: (
@@ -200,11 +200,11 @@ export interface SWRInfiniteResponse<Data = any, Error = any>
 /**
  * @deprecated `RevalidateOptionInterface` will be renamed to `RevalidatorOptions`.
  */
-export interface RevalidateOptionInterface {
+ RevalidateOptionInterface {
   retryCount?: number
   dedupe?: boolean
 }
-export interface RevalidatorOptions {
+ RevalidatorOptions {
   retryCount?: number
   dedupe?: boolean
 }
@@ -212,14 +212,14 @@ export interface RevalidatorOptions {
 /**
  * @deprecated `revalidateType` will be renamed to `Revalidator`.
  */
-export type revalidateType = (
+ revalidateType = (
   revalidateOpts: RevalidatorOptions
 ) => Promise<boolean>
-export type Revalidator = (
+ Revalidator = (
   revalidateOpts: RevalidatorOptions
 ) => Promise<boolean>
 
-export interface Cache<Data = any> {
+ Cache<Data = any> {
   get(key: Key): Data | null | undefined
   set(key: Key, value: Data): void
   delete(key: Key): void
