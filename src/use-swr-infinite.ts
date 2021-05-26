@@ -100,7 +100,7 @@ function useSWRInfinite<Data = any, Error = any>(
 
   // actual swr of all pages
   const swr = useSWR<Data[], Error>(
-    firstPageKey ? ['$inf', firstPageKey] : null,
+    firstPageKey ? 'inf@' + firstPageKey : null,
     async () => {
       // get the revalidate context
       const { data: originalData, force } = cache.get(contextCacheKey) || {}
