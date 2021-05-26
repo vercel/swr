@@ -1,24 +1,8 @@
 {
+  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "declaration": true,
-    "esModuleInterop": true,
-    "jsx": "react",
-    "lib": ["esnext", "dom"],
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitReturns": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "outDir": "./dist",
-    "types": ["node", "jest"],
-    "target": "es5",
-    "typeRoots": ["./types", "./node_modules/@types"]
+    "rootDir": ".",
+    "strict": false
   },
-  "include": ["src/**/*", "./jest-setup.ts"],
-  "watchOptions": {
-    "watchFile": "useFsEvents",
-    "watchDirectory": "useFsEvents",
-    "fallbackPolling": "dynamicPriority"
-  }
+  "include": ["test/**/*", "./jest-setup.ts"]
 }
