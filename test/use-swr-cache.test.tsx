@@ -1,6 +1,10 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import React, { useState } from 'react'
-import useSWR, { createCache, SWRConfig } from '../src'
+import useSWR, {
+  createCache,
+  mutate as importedMutate,
+  SWRConfig
+} from '../src'
 import { sleep, createKey } from './utils'
 
 describe('useSWR - cache', () => {
@@ -72,7 +76,29 @@ describe('useSWR - cache', () => {
       </SWRConfig>
     )
     screen.getByText('cached value')
-    await act(() => mutate(key, 'mutated value', false))
+    await act(() => mutate(key, () => Promise.resolve('mutated value'), false))
+    await screen.findByText('mutated value')
+  })
+
+  it('should correctly mutate the cached value with global mutate function', async () => {
+    const key = createKey()
+
+    function Page() {
+      const { data } = useSWR(key, null)
+      return <div>{data}</div>
+    }
+
+    const customCache = new Map([[key, 'cached value']])
+    const { cache } = createCache(customCache)
+    render(
+      <SWRConfig value={{ cache }}>
+        <Page />
+      </SWRConfig>
+    )
+    screen.getByText('cached value')
+    await act(() =>
+      importedMutate(key, () => Promise.resolve('mutated value'), false)
+    )
     await screen.findByText('mutated value')
   })
 
