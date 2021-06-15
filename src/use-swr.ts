@@ -447,7 +447,6 @@ function useSWR<Data = any, Error = any>(
 
         if (stateRef.current.error !== err) {
           // we keep the stale data
-          // cache.set(keyValidating, false)
           setState({
             isValidating: false,
             error: err
