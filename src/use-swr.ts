@@ -434,6 +434,7 @@ function useSWR<Data = any, Error = any>(
         delete CONCURRENT_PROMISES[key]
         delete CONCURRENT_PROMISES_TS[key]
         if (configRef.current.isPaused()) {
+          cache.set(keyValidating, false)
           setState({
             isValidating: false
           })
@@ -446,6 +447,7 @@ function useSWR<Data = any, Error = any>(
 
         if (stateRef.current.error !== err) {
           // we keep the stale data
+          // cache.set(keyValidating, false)
           setState({
             isValidating: false,
             error: err
@@ -458,6 +460,7 @@ function useSWR<Data = any, Error = any>(
 
         // events and retry
         safeCallback(() => configRef.current.onError(err, key, config))
+
         if (config.shouldRetryOnError) {
           // when retrying, we always enable deduping
           safeCallback(() =>
@@ -466,6 +469,17 @@ function useSWR<Data = any, Error = any>(
               dedupe: true
             })
           )
+
+          // The default exponential backoff expands to count 8
+          const { errorRetryCount = 8 } = configRef.current
+
+          if (errorRetryCount === retryCount) {
+            cache.set(keyValidating, false)
+            setState({ isValidating: false, error: err })
+          }
+        } else {
+          cache.set(keyValidating, false)
+          setState({ isValidating: false, error: err })
         }
       }
 
@@ -659,7 +673,9 @@ function useSWR<Data = any, Error = any>(
     revalidate,
     mutate: boundMutate
   } as SWRResponse<Data, Error>
+
   const currentStateDependencies = stateDependenciesRef.current
+
   Object.defineProperties(state, {
     data: {
       get: function() {
@@ -679,6 +695,26 @@ function useSWR<Data = any, Error = any>(
       get: function() {
         currentStateDependencies.isValidating = true
         return isValidating
+      },
+      enumerable: true
+    },
+    status: {
+      get: function() {
+        currentStateDependencies.data = true
+        currentStateDependencies.error = true
+        currentStateDependencies.isValidating = true
+
+        switch (true) {
+          case isUndefined(data) && isUndefined(error):
+            return 'loading'
+          case isUndefined(data) && !isUndefined(error):
+            return 'error'
+          case isValidating:
+            return 'validating'
+          case data:
+          default:
+            return 'stale'
+        }
       },
       enumerable: true
     }

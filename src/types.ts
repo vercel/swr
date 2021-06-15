@@ -151,6 +151,7 @@ export interface SWRResponse<Data, Error> {
   revalidate: () => Promise<boolean>
   mutate: KeyedMutator<Data>
   isValidating: boolean
+  status: 'loading' | 'validating' | 'error' | 'stale'
 }
 
 export type KeyLoader<Data = any> =
