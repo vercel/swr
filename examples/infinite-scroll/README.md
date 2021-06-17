@@ -12,7 +12,7 @@ Download the example:
 
 ```bash
 curl https://codeload.github.com/vercel/swr/tar.gz/master | tar -xz --strip=2 swr-master/examples/infinite-scroll
-cd basic
+cd infinite-scroll
 ```
 
 Install it and run:
