@@ -2,6 +2,7 @@ import { useContext } from 'react'
 
 import defaultConfig from './config'
 import { SWRConfigContext } from './config-context'
+import mergeConfig from './libs/merge-config'
 
 import { Fetcher, SWRConfiguration } from './types'
 
@@ -23,18 +24,12 @@ function useArgs<KeyType, Data>(
     : args.length === 2 && typeof args[1] === 'object'
     ? args[1]
     : {}) as (typeof defaultConfig) & SWRConfiguration
-  const config = {
-    ...fallbackConfig,
-    ...currentConfig
-  }
 
-  // Extend `middlewares`.
-  if (fallbackConfig.middlewares) {
-    config.middlewares = [
-      ...fallbackConfig.middlewares,
-      ...(currentConfig.middlewares || [])
-    ]
-  }
+  // Merge configs.
+  const config = mergeConfig(
+    fallbackConfig,
+    currentConfig
+  ) as (typeof defaultConfig) & SWRConfiguration
 
   // In TypeScript `args.length > 2` is not same as `args.lenth === 3`.
   // We do a safe type assertion here.

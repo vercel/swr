@@ -1,5 +1,6 @@
 import { createContext, createElement, useContext, FC } from 'react'
 
+import mergeConfig from './libs/merge-config'
 import { SWRConfiguration } from './types'
 
 export const SWRConfigContext = createContext<SWRConfiguration>({})
@@ -7,18 +8,8 @@ export const SWRConfigContext = createContext<SWRConfiguration>({})
 const SWRConfig: FC<{
   value: SWRConfiguration
 }> = ({ children, value }) => {
-  // Extend middlewares of parent config context.
-  const parentConfigContext = useContext(SWRConfigContext)
-  if (parentConfigContext && parentConfigContext.middlewares) {
-    value = {
-      ...value,
-      middlewares: [
-        ...parentConfigContext.middlewares,
-        ...(value.middlewares || [])
-      ]
-    }
-  }
-
+  // Extend parent context values and middlewares.
+  value = mergeConfig(useContext(SWRConfigContext) || {}, value)
   return createElement(SWRConfigContext.Provider, { value }, children)
 }
 
