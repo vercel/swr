@@ -6,7 +6,7 @@ import { wrapCache } from './cache'
 import { IS_SERVER, rAF, useIsomorphicLayoutEffect } from './env'
 import { serialize } from './libs/serialize'
 import { isUndefined, UNDEFINED } from './libs/helper'
-import SWRConfigContext from './config-context'
+import ConfigProvider from './config-context'
 import useStateWithDeps from './state'
 import withArgs from './resolve-args'
 import {
@@ -682,7 +682,7 @@ export function useSWRHandler<Data = any, Error = any>(
   return state
 }
 
-export const SWRConfig = SWRConfigContext.Provider as typeof SWRConfigContext.Provider & {
+export const SWRConfig = ConfigProvider as typeof ConfigProvider & {
   default: SWRConfiguration
 }
 Object.defineProperty(SWRConfig, 'default', {

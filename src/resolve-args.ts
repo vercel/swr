@@ -1,28 +1,40 @@
 import { useContext } from 'react'
 
 import defaultConfig from './config'
-import SWRConfigContext from './config-context'
+import { SWRConfigContext } from './config-context'
 
 import { Fetcher, SWRConfiguration } from './types'
 
 // Resolve arguments for SWR hooks.
 // This function itself is a hook because it uses `useContext` inside.
-function useArgs<KeyType, Data, ConfigType>(
+function useArgs<KeyType, Data>(
   args:
     | readonly [KeyType]
     | readonly [KeyType, Fetcher<Data> | null]
-    | readonly [KeyType, ConfigType | undefined]
-    | readonly [KeyType, Fetcher<Data> | null, ConfigType | undefined]
-): [KeyType, Fetcher<Data> | null, (typeof defaultConfig) & ConfigType] {
-  const config = {
+    | readonly [KeyType, SWRConfiguration | undefined]
+    | readonly [KeyType, Fetcher<Data> | null, SWRConfiguration | undefined]
+): [KeyType, Fetcher<Data> | null, (typeof defaultConfig) & SWRConfiguration] {
+  const fallbackConfig = {
     ...defaultConfig,
-    ...useContext(SWRConfigContext),
-    ...(args.length > 2
-      ? args[2]
-      : args.length === 2 && typeof args[1] === 'object'
-      ? args[1]
-      : {})
-  } as (typeof defaultConfig) & ConfigType
+    ...useContext(SWRConfigContext)
+  }
+  const currentConfig = (args.length > 2
+    ? args[2]
+    : args.length === 2 && typeof args[1] === 'object'
+    ? args[1]
+    : {}) as (typeof defaultConfig) & SWRConfiguration
+  const config = {
+    ...fallbackConfig,
+    ...currentConfig
+  }
+
+  // Extend `middlewares`.
+  if (fallbackConfig.middlewares) {
+    config.middlewares = [
+      ...fallbackConfig.middlewares,
+      ...(currentConfig.middlewares || [])
+    ]
+  }
 
   // In TypeScript `args.length > 2` is not same as `args.lenth === 3`.
   // We do a safe type assertion here.
@@ -43,13 +55,13 @@ function useArgs<KeyType, Data, ConfigType>(
 // the types here.
 export default function withArgs<SWRType>(hook: any) {
   return (((...args: any) => {
-    const [key, fn, config] = useArgs<any, any, SWRConfiguration>(args)
+    const [key, fn, config] = useArgs<any, any>(args)
 
     // Apply middlewares to the hook.
     let next = hook
     const { middlewares } = config
     if (middlewares) {
-      for (let i = middlewares.length; --i >= 0; ) {
+      for (let i = 0; i < middlewares.length; i++) {
         next = middlewares[i](next)
       }
     }

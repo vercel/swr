@@ -1,17 +1,18 @@
 import { act, render, screen } from '@testing-library/react'
 import React, { useState, useEffect, useRef } from 'react'
 import useSWR, { SWRConfig } from '../src'
-import { createResponse, sleep } from './utils'
+import { createResponse, sleep, createKey } from './utils'
 
 describe('useSWR - middlewares', () => {
   it('should use middlewares', async () => {
+    const key = createKey()
     const mockConsoleLog = jest.fn(s => s)
-    const loggerMiddleware = useSWRNext => (key, fn, config) => {
-      mockConsoleLog(key)
-      return useSWRNext(key, fn, config)
+    const loggerMiddleware = useSWRNext => (k, fn, config) => {
+      mockConsoleLog(k)
+      return useSWRNext(k, fn, config)
     }
     function Page() {
-      const { data } = useSWR('middlewares-1', () => createResponse('data'), {
+      const { data } = useSWR(key, () => createResponse('data'), {
         middlewares: [loggerMiddleware]
       })
       return <div>hello, {data}</div>
@@ -20,19 +21,42 @@ describe('useSWR - middlewares', () => {
     render(<Page />)
     screen.getByText('hello,')
     await screen.findByText('hello, data')
-    expect(mockConsoleLog.mock.calls[0][0]).toBe('middlewares-1')
+    expect(mockConsoleLog.mock.calls[0][0]).toBe(key)
+    // Initial render and data ready.
+    expect(mockConsoleLog.mock.calls.length).toBe(2)
+  })
+
+  it('should pass original keys to middlewares', async () => {
+    const key = createKey()
+    const mockConsoleLog = jest.fn(s => s)
+    const loggerMiddleware = useSWRNext => (k, fn, config) => {
+      mockConsoleLog(k)
+      return useSWRNext(k, fn, config)
+    }
+    function Page() {
+      const { data } = useSWR([key, 1, 2, 3], () => createResponse('data'), {
+        middlewares: [loggerMiddleware]
+      })
+      return <div>hello, {data}</div>
+    }
+
+    render(<Page />)
+    screen.getByText('hello,')
+    await screen.findByText('hello, data')
+    expect(mockConsoleLog.mock.calls[0][0]).toEqual([key, 1, 2, 3])
     // Initial render and data ready.
     expect(mockConsoleLog.mock.calls.length).toBe(2)
   })
 
   it('should support middlewares in context', async () => {
+    const key = createKey()
     const mockConsoleLog = jest.fn(s => s)
-    const loggerMiddleware = useSWRNext => (key, fn, config) => {
-      mockConsoleLog(key)
-      return useSWRNext(key, fn, config)
+    const loggerMiddleware = useSWRNext => (k, fn, config) => {
+      mockConsoleLog(k)
+      return useSWRNext(k, fn, config)
     }
     function Page() {
-      const { data } = useSWR('middlewares-2', () => createResponse('data'))
+      const { data } = useSWR(key, () => createResponse('data'))
       return <div>hello, {data}</div>
     }
 
@@ -43,14 +67,48 @@ describe('useSWR - middlewares', () => {
     )
     screen.getByText('hello,')
     await screen.findByText('hello, data')
-    expect(mockConsoleLog.mock.calls[0][0]).toBe('middlewares-2')
+    expect(mockConsoleLog.mock.calls[0][0]).toBe(key)
     expect(mockConsoleLog.mock.calls.length).toBe(2)
   })
 
+  it('should support extending middlewares via context and per-hook config', async () => {
+    const key = createKey()
+    const mockConsoleLog = jest.fn((_, s) => s)
+    const createLoggerMiddleware = id => useSWRNext => (k, fn, config) => {
+      mockConsoleLog(id, k)
+      return useSWRNext(k, fn, config)
+    }
+    function Page() {
+      const { data } = useSWR(key, () => createResponse('data'), {
+        middlewares: [createLoggerMiddleware(0)]
+      })
+      return <div>hello, {data}</div>
+    }
+
+    render(
+      <SWRConfig value={{ middlewares: [createLoggerMiddleware(2)] }}>
+        <SWRConfig value={{ middlewares: [createLoggerMiddleware(1)] }}>
+          <Page />
+        </SWRConfig>
+      </SWRConfig>
+    )
+    screen.getByText('hello,')
+    await screen.findByText('hello, data')
+    expect(mockConsoleLog.mock.calls.map(call => call[0])).toEqual([
+      0,
+      1,
+      2,
+      0,
+      1,
+      2
+    ])
+  })
+
   it('should support react hooks inside middlewares', async () => {
-    const lazyMiddleware = useSWRNext => (key, fn, config) => {
+    const key = createKey()
+    const lazyMiddleware = useSWRNext => (k, fn, config) => {
       const dataRef = useRef(undefined)
-      const res = useSWRNext(key, fn, config)
+      const res = useSWRNext(k, fn, config)
       if (res.data) {
         dataRef.current = res.data
         return res
@@ -60,8 +118,9 @@ describe('useSWR - middlewares', () => {
     }
     function Page() {
       const [mounted, setMounted] = useState(false)
-      const key = `middlewares-4-${mounted ? '1' : '0'}`
-      const { data } = useSWR(key, k => createResponse(k, { delay: 100 }))
+      const { data } = useSWR(`${key}-${mounted ? '1' : '0'}`, k =>
+        createResponse(k, { delay: 100 })
+      )
       useEffect(() => {
         setTimeout(() => setMounted(true), 200)
       }, [])
@@ -76,10 +135,10 @@ describe('useSWR - middlewares', () => {
 
     screen.getByText('data:') // undefined, time=0
     await act(() => sleep(150))
-    screen.getByText('data:middlewares-4-0') // 0, time=150
+    screen.getByText(`data:${key}-0`) // 0, time=150
     await act(() => sleep(100))
-    screen.getByText('data:middlewares-4-0') // still holding the previous value, even if the key has changed
+    screen.getByText(`data:${key}-0`) // still holding the previous value, even if the key has changed
     await act(() => sleep(100))
-    screen.getByText('data:middlewares-4-1') // 1, time=350
+    screen.getByText(`data:${key}-1`) // 1, time=350
   })
 })
