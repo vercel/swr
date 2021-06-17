@@ -17,7 +17,7 @@ export default function useStateWithDeps<Data, Error, S = State<Data, Error>>(
   MutableRefObject<Record<StateKeys, boolean>>,
   (payload: S) => void
 ] {
-  const rerender = useState<object>({})[1]
+  const rerender = useState<Record<string, unknown>>({})[1]
   const stateRef = useRef(state)
 
   // If a state property (data, error or isValidating) is accessed by the render

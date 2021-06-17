@@ -46,7 +46,7 @@ export default function App() {
       <input
         value={val}
         onChange={(e) => setVal(e.target.value)}
-        placeholder="facebook/reect"
+        placeholder="facebook/react"
       />
       <button
         onClick={() => {
