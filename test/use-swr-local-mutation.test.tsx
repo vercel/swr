@@ -498,7 +498,7 @@ describe('useSWR - local mutation', () => {
     await act(() => sleep(50))
 
     // check all `setSize`s are referential equal.
-    for (let ref of refs) {
+    for (const ref of refs) {
       expect(ref).toEqual(refs[0])
     }
   })

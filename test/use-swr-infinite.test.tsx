@@ -45,7 +45,7 @@ describe('useSWRInfinite', () => {
 
   it('should support mutate and initialSize', async () => {
     // mock api
-    let pageData = ['apple', 'banana', 'pineapple']
+    const pageData = ['apple', 'banana', 'pineapple']
 
     function Page() {
       const { data, mutate: boundMutate } = useSWRInfinite<string, string>(
@@ -399,7 +399,7 @@ describe('useSWRInfinite', () => {
     await screen.findByText('data:page 0, page 1,')
 
     // check all `setSize`s are referential equal.
-    for (let setSize of setters) {
+    for (const setSize of setters) {
       expect(setSize).toEqual(setters[0])
     }
   })
@@ -450,7 +450,7 @@ describe('useSWRInfinite', () => {
       '/api?page=1': ['page-1-1', 'page-1-2'],
       '/api?page=2': ['page-2-1', 'page-2-2']
     }
-    let requests = []
+    const requests = []
 
     function Page() {
       const { data, size, setSize } = useSWRInfinite<string[], string>(
