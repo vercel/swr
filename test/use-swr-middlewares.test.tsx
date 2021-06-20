@@ -1,13 +1,13 @@
 import { act, render, screen } from '@testing-library/react'
 import React, { useState, useEffect, useRef } from 'react'
-import useSWR, { SWRConfig } from '../src'
+import useSWR, { Middleware, SWRConfig } from '../src'
 import { createResponse, sleep, createKey } from './utils'
 
 describe('useSWR - middlewares', () => {
   it('should use middlewares', async () => {
     const key = createKey()
     const mockConsoleLog = jest.fn(s => s)
-    const loggerMiddleware = useSWRNext => (k, fn, config) => {
+    const loggerMiddleware: Middleware = useSWRNext => (k, fn, config) => {
       mockConsoleLog(k)
       return useSWRNext(k, fn, config)
     }
@@ -29,7 +29,7 @@ describe('useSWR - middlewares', () => {
   it('should pass original keys to middlewares', async () => {
     const key = createKey()
     const mockConsoleLog = jest.fn(s => s)
-    const loggerMiddleware = useSWRNext => (k, fn, config) => {
+    const loggerMiddleware: Middleware = useSWRNext => (k, fn, config) => {
       mockConsoleLog(k)
       return useSWRNext(k, fn, config)
     }
@@ -51,7 +51,7 @@ describe('useSWR - middlewares', () => {
   it('should support middlewares in context', async () => {
     const key = createKey()
     const mockConsoleLog = jest.fn(s => s)
-    const loggerMiddleware = useSWRNext => (k, fn, config) => {
+    const loggerMiddleware: Middleware = useSWRNext => (k, fn, config) => {
       mockConsoleLog(k)
       return useSWRNext(k, fn, config)
     }
@@ -74,7 +74,7 @@ describe('useSWR - middlewares', () => {
   it('should support extending middlewares via context and per-hook config', async () => {
     const key = createKey()
     const mockConsoleLog = jest.fn((_, s) => s)
-    const createLoggerMiddleware = id => useSWRNext => (k, fn, config) => {
+    const createLoggerMiddleware = (id: number): Middleware => useSWRNext => (k, fn, config) => {
       mockConsoleLog(id, k)
       return useSWRNext(k, fn, config)
     }
@@ -106,7 +106,7 @@ describe('useSWR - middlewares', () => {
 
   it('should support react hooks inside middlewares', async () => {
     const key = createKey()
-    const lazyMiddleware = useSWRNext => (k, fn, config) => {
+    const lazyMiddleware: Middleware = useSWRNext => (k, fn, config) => {
       const dataRef = useRef(undefined)
       const res = useSWRNext(k, fn, config)
       if (res.data) {
