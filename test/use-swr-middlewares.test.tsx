@@ -74,7 +74,11 @@ describe('useSWR - middlewares', () => {
   it('should support extending middlewares via context and per-hook config', async () => {
     const key = createKey()
     const mockConsoleLog = jest.fn((_, s) => s)
-    const createLoggerMiddleware = (id: number): Middleware => useSWRNext => (k, fn, config) => {
+    const createLoggerMiddleware = (id: number): Middleware => useSWRNext => (
+      k,
+      fn,
+      config
+    ) => {
       mockConsoleLog(id, k)
       return useSWRNext(k, fn, config)
     }
@@ -140,5 +144,28 @@ describe('useSWR - middlewares', () => {
     screen.getByText(`data:${key}-0`) // still holding the previous value, even if the key has changed
     await act(() => sleep(100))
     screen.getByText(`data:${key}-1`) // 1, time=350
+  })
+
+  it('should pass modified keys to the next middlewares and useSWR', async () => {
+    const key = createKey()
+    const createDecoratingKeyMiddleware = (
+      c: string
+    ): Middleware => useSWRNext => (k, fn, config) => {
+      return useSWRNext(`${c}${k}${c}`, fn, config)
+    }
+
+    function Page() {
+      const { data } = useSWR(key, k => createResponse(k), {
+        middlewares: [
+          createDecoratingKeyMiddleware('!'),
+          createDecoratingKeyMiddleware('#')
+        ]
+      })
+      return <div>hello, {data}</div>
+    }
+
+    render(<Page />)
+    screen.getByText('hello,')
+    await screen.findByText(`hello, !#${key}#!`)
   })
 })
