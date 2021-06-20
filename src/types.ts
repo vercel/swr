@@ -67,7 +67,14 @@ export interface Preset {
   registerOnReconnect?: (cb: () => void) => void
 }
 
-export type Middleware = (useSWRNext: SWRHook) => SWRHook
+// Middlewares guarantee that a SWRHook receives a key, fetcher, and config as the argument
+type SWRHookWithdMiddleware = <Data = any, Error = any>(
+  key: Key,
+  fetcher: Fetcher<Data> | null,
+  config: SWRConfiguration<Data, Error> | undefined
+) => SWRResponse<Data, Error>
+
+export type Middleware = (useSWRNext: SWRHook) => SWRHookWithdMiddleware
 
 export type ValueKey = string | any[] | null
 
