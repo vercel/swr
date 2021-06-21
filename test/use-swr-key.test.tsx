@@ -60,7 +60,7 @@ describe('useSWR - key', () => {
     await act(() => sleep(100))
     screen.getByText('data:') // undefined, time=250
     await act(() => sleep(100))
-    screen.getByText('data:key-1') // 1, time=550
+    screen.getByText('data:key-1') // 1, time=350
   })
 
   it('should return undefined after key change when fetcher is synchronized', async () => {

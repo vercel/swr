@@ -20,6 +20,7 @@ export interface Configuration<
   initialData?: Data
   fetcher: Fn
   cache: Cache
+  middlewares?: Middleware[]
 
   isPaused: () => boolean
   onLoadingSlow: (
@@ -52,12 +53,33 @@ export interface Configuration<
   revalidateOnMount?: boolean
 }
 
+export type SWRHook = <Data = any, Error = any>(
+  ...args:
+    | readonly [Key]
+    | readonly [Key, Fetcher<Data> | null]
+    | readonly [Key, SWRConfiguration<Data, Error> | undefined]
+    | readonly [
+        Key,
+        Fetcher<Data> | null,
+        SWRConfiguration<Data, Error> | undefined
+      ]
+) => SWRResponse<Data, Error>
+
 export interface Preset {
   isOnline: () => boolean
   isDocumentVisible: () => boolean
   registerOnFocus?: (cb: () => void) => void
   registerOnReconnect?: (cb: () => void) => void
 }
+
+// Middlewares guarantee that a SWRHook receives a key, fetcher, and config as the argument
+type SWRHookWithdMiddleware = <Data = any, Error = any>(
+  key: Key,
+  fetcher: Fetcher<Data> | null,
+  config: SWRConfiguration<Data, Error> | undefined
+) => SWRResponse<Data, Error>
+
+export type Middleware = (useSWRNext: SWRHook) => SWRHookWithdMiddleware
 
 export type ValueKey = string | any[] | null
 

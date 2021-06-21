@@ -1,11 +1,12 @@
 // TODO: use @ts-expect-error
 import { useRef, useState, useCallback } from 'react'
 
+import defaultConfig from './config'
 import { useIsomorphicLayoutEffect } from './env'
 import { serialize } from './libs/serialize'
 import { isUndefined, UNDEFINED } from './libs/helper'
-import useArgs from './resolve-args'
-import useSWR from './use-swr'
+import withArgs from './resolve-args'
+import { useSWRHandler } from './use-swr'
 
 import {
   KeyLoader,
@@ -15,26 +16,11 @@ import {
   MutatorCallback
 } from './types'
 
-function useSWRInfinite<Data = any, Error = any>(
-  ...args:
-    | readonly [KeyLoader<Data>]
-    | readonly [KeyLoader<Data>, Fetcher<Data> | null]
-    | readonly [
-        KeyLoader<Data>,
-        SWRInfiniteConfiguration<Data, Error> | undefined
-      ]
-    | readonly [
-        KeyLoader<Data>,
-        Fetcher<Data> | null,
-        SWRInfiniteConfiguration<Data, Error> | undefined
-      ]
+function useSWRInfiniteHandler<Data = any, Error = any>(
+  getKey: KeyLoader<Data>,
+  fn: Fetcher<Data> | null,
+  config: typeof defaultConfig & SWRInfiniteConfiguration<Data, Error>
 ): SWRInfiniteResponse<Data, Error> {
-  const [getKey, fn, config] = useArgs<
-    KeyLoader<Data>,
-    SWRInfiniteConfiguration<Data, Error>,
-    Data
-  >(args)
-
   const {
     cache,
     initialSize = 1,
@@ -99,7 +85,7 @@ function useSWRInfinite<Data = any, Error = any>(
   const dataRef = useRef<Data[]>()
 
   // actual swr of all pages
-  const swr = useSWR<Data[], Error>(
+  const swr = useSWRHandler<Data[], Error>(
     firstPageKey ? ['inf', firstPageKey] : null,
     async () => {
       // get the revalidate context
@@ -234,4 +220,19 @@ function useSWRInfinite<Data = any, Error = any>(
   return (swrInfinite as unknown) as SWRInfiniteResponse<Data, Error>
 }
 
-export { useSWRInfinite }
+type SWRInfiniteHook = <Data = any, Error = any>(
+  ...args:
+    | readonly [KeyLoader<Data>]
+    | readonly [KeyLoader<Data>, Fetcher<Data> | null]
+    | readonly [
+        KeyLoader<Data>,
+        SWRInfiniteConfiguration<Data, Error> | undefined
+      ]
+    | readonly [
+        KeyLoader<Data>,
+        Fetcher<Data> | null,
+        SWRInfiniteConfiguration<Data, Error> | undefined
+      ]
+) => SWRInfiniteResponse<Data, Error>
+
+export default withArgs<SWRInfiniteHook>(useSWRInfiniteHandler)

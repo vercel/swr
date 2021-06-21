@@ -12,7 +12,7 @@ const noop = () => {}
 function onErrorRetry(
   _: unknown,
   __: string,
-  config: Readonly<Required<Configuration>>,
+  config: Readonly<Configuration>,
   revalidate: Revalidator,
   opts: Required<RevalidatorOptions>
 ): void {
