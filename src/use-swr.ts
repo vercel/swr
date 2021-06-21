@@ -6,9 +6,9 @@ import { wrapCache } from './cache'
 import { IS_SERVER, rAF, useIsomorphicLayoutEffect } from './env'
 import { serialize } from './libs/serialize'
 import { isUndefined, UNDEFINED } from './libs/helper'
-import SWRConfigContext from './config-context'
+import ConfigProvider from './config-context'
 import useStateWithDeps from './state'
-import useArgs from './resolve-args'
+import withArgs from './resolve-args'
 import {
   State,
   Broadcaster,
@@ -20,7 +20,8 @@ import {
   Updater,
   SWRConfiguration,
   Cache,
-  ScopedMutator
+  ScopedMutator,
+  SWRHook
 } from './types'
 
 type Revalidator = (...args: any[]) => void
@@ -203,21 +204,21 @@ const addRevalidator = (
   }
 }
 
-function useSWR<Data = any, Error = any>(
-  ...args:
-    | readonly [Key]
-    | readonly [Key, Fetcher<Data> | null]
-    | readonly [Key, SWRConfiguration<Data, Error> | undefined]
-    | readonly [
-        Key,
-        Fetcher<Data> | null,
-        SWRConfiguration<Data, Error> | undefined
-      ]
+export function useSWRHandler<Data = any, Error = any>(
+  _key: Key,
+  fn: Fetcher<Data> | null,
+  config: typeof defaultConfig & SWRConfiguration<Data, Error>
 ): SWRResponse<Data, Error> {
-  const [_key, fn, config] = useArgs<Key, SWRConfiguration<Data, Error>, Data>(
-    args
-  )
-  const cache = config.cache
+  const {
+    cache,
+    compare,
+    initialData,
+    suspense,
+    revalidateOnMount,
+    refreshInterval,
+    refreshWhenHidden,
+    refreshWhenOffline
+  } = config
   const [
     FOCUS_REVALIDATORS,
     RECONNECT_REVALIDATORS,
@@ -245,7 +246,7 @@ function useSWR<Data = any, Error = any>(
   // Get the current state that SWR should return.
   const resolveData = () => {
     const cachedData = cache.get(key)
-    return isUndefined(cachedData) ? config.initialData : cachedData
+    return isUndefined(cachedData) ? initialData : cachedData
   }
   const data = resolveData()
   const error = cache.get(keyErr)
@@ -255,11 +256,11 @@ function useSWR<Data = any, Error = any>(
   // - Suspense mode and there's stale data for the inital render.
   // - Not suspense mode and there is no `initialData`.
   const shouldRevalidateOnMount = () => {
-    if (!isUndefined(config.revalidateOnMount)) return config.revalidateOnMount
+    if (!isUndefined(revalidateOnMount)) return revalidateOnMount
 
-    return config.suspense
+    return suspense
       ? !initialMountedRef.current && !isUndefined(data)
-      : isUndefined(config.initialData)
+      : isUndefined(initialData)
   }
 
   // Resolve the current validating state.
@@ -414,12 +415,12 @@ function useSWR<Data = any, Error = any>(
 
         // Deep compare with latest state to avoid extra re-renders.
         // For local state, compare and assign.
-        if (!config.compare(stateRef.current.data, newData)) {
+        if (!compare(stateRef.current.data, newData)) {
           newState.data = newData
         }
         // For global state, it's possible that the key has changed.
         // https://github.com/vercel/swr/pull/1058
-        if (!config.compare(cache.get(key), newData)) {
+        if (!compare(cache.get(key), newData)) {
           cache.set(key, newData)
         }
 
@@ -555,7 +556,7 @@ function useSWR<Data = any, Error = any>(
         error: updatedError,
         isValidating: updatedIsValidating,
         // if data is undefined we should not update stateRef.current.data
-        ...(!config.compare(updatedData, stateRef.current.data)
+        ...(!compare(updatedData, stateRef.current.data)
           ? {
               data: updatedData
             }
@@ -590,20 +591,16 @@ function useSWR<Data = any, Error = any>(
     let timer: any = 0
 
     function nextTick() {
-      const currentConfig = configRef.current
-      if (currentConfig.refreshInterval) {
-        timer = setTimeout(tick, currentConfig.refreshInterval)
+      if (refreshInterval) {
+        timer = setTimeout(tick, refreshInterval)
       }
     }
 
     async function tick() {
-      const currentConfig = configRef.current
-
       if (
         !stateRef.current.error &&
-        (currentConfig.refreshWhenHidden ||
-          currentConfig.isDocumentVisible()) &&
-        (currentConfig.refreshWhenOffline || currentConfig.isOnline())
+        (refreshWhenHidden || config.isDocumentVisible()) &&
+        (refreshWhenOffline || config.isOnline())
       ) {
         // only revalidate when the page is visible
         // if API request errored, we stop polling in this round
@@ -623,18 +620,13 @@ function useSWR<Data = any, Error = any>(
         timer = 0
       }
     }
-  }, [
-    config.refreshInterval,
-    config.refreshWhenHidden,
-    config.refreshWhenOffline,
-    revalidate
-  ])
+  }, [refreshInterval, refreshWhenHidden, refreshWhenOffline, revalidate])
 
   // In Suspense mode, we can't return the empty `data` state.
   // If there is `error`, the `error` needs to be thrown to the error boundary.
   // If there is no `error`, the `revalidation` promise needs to be thrown to
   // the suspense boundary.
-  if (config.suspense && isUndefined(data)) {
+  if (suspense && isUndefined(data)) {
     if (isUndefined(error)) {
       throw revalidate({ dedupe: true })
     }
@@ -690,7 +682,7 @@ function useSWR<Data = any, Error = any>(
   return state
 }
 
-export const SWRConfig = SWRConfigContext.Provider as typeof SWRConfigContext.Provider & {
+export const SWRConfig = ConfigProvider as typeof ConfigProvider & {
   default: SWRConfiguration
 }
 Object.defineProperty(SWRConfig, 'default', {
@@ -714,4 +706,5 @@ export function createCache<Data>(
     mutate: internalMutate.bind(null, cache) as ScopedMutator<Data>
   }
 }
-export default useSWR
+
+export default withArgs<SWRHook>(useSWRHandler)
