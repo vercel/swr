@@ -1,4 +1,3 @@
-// TODO: use @ts-expect-error
 import { useRef, useState, useCallback } from 'react'
 
 import defaultConfig from './config'

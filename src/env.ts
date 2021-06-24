@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect } from 'react'
 
 export const IS_SERVER =
   typeof window === 'undefined' ||
-  // @ts-ignore
+  // @ts-expect-error
   !!(typeof Deno !== 'undefined' && Deno.version && Deno.version.deno)
 
 const __requestAnimationFrame = !IS_SERVER
@@ -26,7 +26,7 @@ export const useIsomorphicLayoutEffect = IS_SERVER ? useEffect : useLayoutEffect
 // slow connection (<= 70Kbps)
 export const slowConnection =
   !IS_SERVER &&
-  // @ts-ignore
+  // @ts-expect-error
   navigator['connection'] &&
-  // @ts-ignore
+  // @ts-expect-error
   ['slow-2g', '2g'].indexOf(navigator['connection'].effectiveType) !== -1
