@@ -26,7 +26,7 @@ export const useIsomorphicLayoutEffect = IS_SERVER ? useEffect : useLayoutEffect
 // slow connection (<= 70Kbps)
 export const slowConnection =
   !IS_SERVER &&
-  // @ts-expect-error
+  // @ts-ignore
   navigator['connection'] &&
-  // @ts-expect-error
+  // @ts-ignore
   ['slow-2g', '2g'].indexOf(navigator['connection'].effectiveType) !== -1
