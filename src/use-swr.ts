@@ -521,7 +521,6 @@ export function useSWRHandler<Data = any, Error = any>(
       } else {
         // Delay the revalidate if we have data to return so we won't block
         // rendering.
-        // @ts-ignore it's safe to use requestAnimationFrame in browser
         rAF(softRevalidate)
       }
     }
