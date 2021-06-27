@@ -710,4 +710,4 @@ export function createCache<Data>(
   }
 }
 
-export default withArgs<SWRHook>(useSWRHandler)
+export default withArgs<SWRHook>(useSWRHandler, [])

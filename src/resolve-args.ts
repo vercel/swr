@@ -4,7 +4,7 @@ import defaultConfig from './config'
 import { SWRConfigContext } from './config-context'
 import mergeConfig from './libs/merge-config'
 
-import { Fetcher, SWRConfiguration } from './types'
+import { Fetcher, Middleware, SWRConfiguration } from './types'
 
 // Resolve arguments for SWR hooks.
 // This function itself is a hook because it uses `useContext` inside.
@@ -48,17 +48,18 @@ function useArgs<KeyType, Data>(
 
 // It's tricky to pass generic types as parameters, so we just directly override
 // the types here.
-export default function withArgs<SWRType>(hook: any) {
+export default function withArgs<SWRType>(
+  hook: any,
+  extraMiddlewares: Middleware[]
+) {
   return (((...args: any) => {
     const [key, fn, config] = useArgs<any, any>(args)
 
     // Apply middlewares to the hook.
     let next = hook
-    const { middlewares } = config
-    if (middlewares) {
-      for (let i = 0; i < middlewares.length; i++) {
-        next = middlewares[i](next)
-      }
+    const middlewares = (config.middlewares || []).concat(extraMiddlewares)
+    for (let i = 0; i < middlewares.length; i++) {
+      next = middlewares[i](next)
     }
 
     return next(key, fn, config)
