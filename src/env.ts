@@ -10,9 +10,7 @@ const __requestAnimationFrame = !IS_SERVER
   : null
 
 // polyfill for requestAnimationFrame
-export const rAF = IS_SERVER
-  ? null
-  : __requestAnimationFrame
+export const rAF = __requestAnimationFrame
   ? (f: FrameRequestCallback) => __requestAnimationFrame(f)
   : (f: (...args: any[]) => void) => setTimeout(f, 1)
 
