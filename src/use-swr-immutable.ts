@@ -1,5 +1,17 @@
 import { useSWRHandler } from './use-swr'
-import { SWRHook } from './types'
+import { Middleware, SWRHook } from './types'
 import withArgs from './resolve-args'
 
-export default withArgs<SWRHook>(useSWRHandler, [])
+const immutableMiddleware: Middleware = useSWRNext => (
+  key,
+  fetcher,
+  config
+) => {
+  // Always override all revalidate options.
+  config.revalidateOnFocus = false
+  config.revalidateWhenStale = false
+  config.revalidateOnReconnect = false
+  return useSWRNext(key, fetcher, config)
+}
+
+export default withArgs<SWRHook>(useSWRHandler, [immutableMiddleware])

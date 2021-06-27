@@ -76,7 +76,7 @@ export interface Preset {
 type SWRHookWithdMiddleware = <Data = any, Error = any>(
   key: Key,
   fetcher: Fetcher<Data> | null,
-  config: SWRConfiguration<Data, Error> | undefined
+  config: SWRConfiguration<Data, Error>
 ) => SWRResponse<Data, Error>
 
 export type Middleware = (useSWRNext: SWRHook) => SWRHookWithdMiddleware
