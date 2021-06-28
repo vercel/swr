@@ -7,11 +7,18 @@
   "exports": {
     ".": {
       "import": "./dist/index.esm.js",
-      "require": "./dist/index.js"
+      "require": "./dist/index.js",
+      "types": "./dist/types/src/index.d.ts"
     },
     "./infinite": {
       "import": "./dist/infinite.esm.js",
-      "require": "./dist/infinite.js"
+      "require": "./dist/infinite.js",
+      "types": "./dist/types/infinite/index.d.ts"
+    },
+    "./immutable": {
+      "import": "./dist/immutable.esm.js",
+      "require": "./dist/immutable.js",
+      "types": "./dist/types/immutable/index.d.ts"
     }
   },
   "react-native": "./dist/index.esm.js",
