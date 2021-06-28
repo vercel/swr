@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect } from 'react'
 
 export const IS_SERVER =
   typeof window === 'undefined' ||
-  // @ts-ignore
+  // @ts-expect-error
   !!(typeof Deno !== 'undefined' && Deno.version && Deno.version.deno)
 
 const __requestAnimationFrame = !IS_SERVER
@@ -10,9 +10,7 @@ const __requestAnimationFrame = !IS_SERVER
   : null
 
 // polyfill for requestAnimationFrame
-export const rAF = IS_SERVER
-  ? null
-  : __requestAnimationFrame
+export const rAF = __requestAnimationFrame
   ? (f: FrameRequestCallback) => __requestAnimationFrame(f)
   : (f: (...args: any[]) => void) => setTimeout(f, 1)
 
@@ -21,12 +19,14 @@ export const rAF = IS_SERVER
 // useLayoutEffect in the browser.
 export const useIsomorphicLayoutEffect = IS_SERVER ? useEffect : useLayoutEffect
 
+// This assignment is to extend the Navigator type to use effectiveType
+const __navigator: Navigator & {
+  connection?: { effectiveType: string }
+} = navigator
 // client side: need to adjust the config
 // based on the browser status
 // slow connection (<= 70Kbps)
 export const slowConnection =
   !IS_SERVER &&
-  // @ts-ignore
-  navigator['connection'] &&
-  // @ts-ignore
-  ['slow-2g', '2g'].indexOf(navigator['connection'].effectiveType) !== -1
+  typeof __navigator.connection !== 'undefined' &&
+  ['slow-2g', '2g'].indexOf(__navigator['connection'].effectiveType) !== -1
