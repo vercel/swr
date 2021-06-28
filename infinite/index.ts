@@ -2,6 +2,8 @@
 // hook where `key` and return type are not like the normal `useSWR` types.
 
 import { useRef, useState, useCallback } from 'react'
+
+// @ts-ignore
 import useSWR from 'swr'
 
 import defaultConfig from '../src/utils/config'
