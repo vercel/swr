@@ -5,12 +5,6 @@ export { SWRConfig, mutate, createCache } from './use-swr'
 import useSWR from './use-swr'
 export default useSWR
 
-// useSWRInfinite
-export { default as useSWRInfinite } from './use-swr-infinite'
-
-// useSWRImmutable
-export { default as useSWRImmutable } from './use-swr-immutable'
-
 // Types
 export {
   SWRConfiguration,

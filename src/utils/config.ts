@@ -1,10 +1,10 @@
 import { dequal } from 'dequal/lite'
 
 import { wrapCache } from './cache'
-import webPreset from './libs/web-preset'
+import webPreset from './web-preset'
 import { slowConnection } from './env'
-import { Configuration, RevalidatorOptions, Revalidator } from './types'
-import { UNDEFINED } from './libs/helper'
+import { Configuration, RevalidatorOptions, Revalidator } from '../types'
+import { UNDEFINED } from './helper'
 
 const fetcher = (url: string) => fetch(url).then(res => res.json())
 const noop = () => {}

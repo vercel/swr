@@ -1,0 +1,10 @@
+{
+  "name": "swr-infinite",
+  "version": "0.0.1",
+  "main": "../dist/infinite.js",
+  "module": "../dist/infinite.esm.js",
+  "peerDependencies": {
+    "swr": "^1.0.0",
+    "react": "^16.11.0 || ^17.0.0"
+  }
+}

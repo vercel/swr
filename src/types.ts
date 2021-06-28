@@ -56,7 +56,6 @@ export interface Configuration<
 export type SWRHook = <Data = any, Error = any>(
   ...args:
     | readonly [Key]
-    | readonly [Key, Fetcher<Data> | null]
     | readonly [Key, SWRConfiguration<Data, Error> | undefined]
     | readonly [
         Key,

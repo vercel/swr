@@ -1,7 +1,7 @@
 import { useRef, useCallback, useState, MutableRefObject } from 'react'
 
 import { useIsomorphicLayoutEffect } from './env'
-import { State } from './types'
+import { State } from '../types'
 
 type StateKeys = keyof State<any, any>
 type StateDeps = Record<StateKeys, boolean>

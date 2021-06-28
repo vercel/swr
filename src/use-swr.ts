@@ -1,14 +1,14 @@
 // TODO: use @ts-expect-error
 import { useCallback, useRef, useDebugValue } from 'react'
 
-import defaultConfig from './config'
-import { wrapCache } from './cache'
-import { IS_SERVER, rAF, useIsomorphicLayoutEffect } from './env'
-import { serialize } from './libs/serialize'
-import { isUndefined, UNDEFINED } from './libs/helper'
-import ConfigProvider from './config-context'
-import useStateWithDeps from './state'
-import withArgs from './resolve-args'
+import defaultConfig from './utils/config'
+import { wrapCache } from './utils/cache'
+import { IS_SERVER, rAF, useIsomorphicLayoutEffect } from './utils/env'
+import { serialize } from './utils/serialize'
+import { isUndefined, UNDEFINED } from './utils/helper'
+import ConfigProvider from './utils/config-context'
+import useStateWithDeps from './utils/state'
+import withArgs from './utils/resolve-args'
 import {
   State,
   Broadcaster,
@@ -710,4 +710,4 @@ export function createCache<Data>(
   }
 }
 
-export default withArgs<SWRHook>(useSWRHandler, [])
+export default withArgs<SWRHook>(useSWRHandler)

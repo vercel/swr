@@ -8,6 +8,10 @@
     ".": {
       "import": "./dist/index.esm.js",
       "require": "./dist/index.js"
+    },
+    "./infinite": {
+      "import": "./dist/infinite.esm.js",
+      "require": "./dist/infinite.js"
     }
   },
   "react-native": "./dist/index.esm.js",
@@ -21,6 +25,7 @@
   "scripts": {
     "build": "bunchee src/index.ts -m --no-sourcemap",
     "watch": "bunchee src/index.ts --watch",
+    "build:infinite": "bunchee index.ts --cwd infinite -m --no-sourcemap",
     "prepublishOnly": "rm -rf dist && yarn build",
     "types:check": "tsc --noEmit",
     "format": "prettier --write \"{src,test,examples}/**/*.{ts,tsx}\"",
