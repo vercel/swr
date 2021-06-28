@@ -8,7 +8,7 @@ import defaultConfig from '../src/utils/config'
 import { useIsomorphicLayoutEffect } from '../src/utils/env'
 import { serialize } from '../src/utils/serialize'
 import { isUndefined, UNDEFINED } from '../src/utils/helper'
-import { withMiddleware } from '../src/utils/resolve-args'
+import { withMiddleware } from '../src/utils/with-middleware'
 
 import {
   KeyLoader,

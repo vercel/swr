@@ -1,5 +1,5 @@
 import useSWR from 'swr'
-import { withMiddleware } from '../src/utils/resolve-args'
+import { withMiddleware } from '../src/utils/with-middleware'
 import { Middleware, SWRHook } from '../src/types'
 
 export const immutable: Middleware = useSWRNext => (key, fetcher, config) => {

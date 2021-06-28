@@ -3,36 +3,7 @@ import { useContext } from 'react'
 import defaultConfig from './config'
 import { SWRConfigContext } from './config-context'
 import mergeConfig from './merge-config'
-
-import { Key, Fetcher, Middleware, SWRConfiguration, SWRHook } from '../types'
-
-function normalize<KeyType = Key, Data = any>(
-  args:
-    | readonly [KeyType]
-    | readonly [KeyType, SWRConfiguration | undefined]
-    | readonly [KeyType, Fetcher<Data> | null, SWRConfiguration | undefined]
-): [KeyType, Fetcher<Data> | null, Partial<SWRConfiguration<Data>>] {
-  return typeof args[1] === 'function'
-    ? [args[0], args[1], args[2] || {}]
-    : [args[0], null, (typeof args[1] === 'object' ? args[1] : args[2]) || {}]
-}
-
-// Create a custom hook with a middleware
-export function withMiddleware(
-  useSWR: SWRHook,
-  middleware: Middleware
-): SWRHook {
-  return <Data = any, Error = any>(
-    ...args:
-      | readonly [Key]
-      | readonly [Key, SWRConfiguration | undefined]
-      | readonly [Key, Fetcher<Data> | null, SWRConfiguration | undefined]
-  ) => {
-    const [key, fn, config] = normalize(args)
-    config.middlewares = (config.middlewares || []).concat(middleware)
-    return useSWR<Data, Error>(key, fn, config)
-  }
-}
+import { normalize } from './normalize-args'
 
 // It's tricky to pass generic types as parameters, so we just directly override
 // the types here.
