@@ -10,6 +10,7 @@ export function withMiddleware(
   return <Data = any, Error = any>(
     ...args:
       | readonly [Key]
+      | readonly [Key, Fetcher<Data> | null]
       | readonly [Key, SWRConfiguration | undefined]
       | readonly [Key, Fetcher<Data> | null, SWRConfiguration | undefined]
   ) => {

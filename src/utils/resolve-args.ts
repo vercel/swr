@@ -29,6 +29,6 @@ export default function withArgs<SWRType>(hook: any) {
       }
     }
 
-    return next(key, fn, config)
+    return next(key, fn || config.fetcher, config)
   }) as unknown) as SWRType
 }

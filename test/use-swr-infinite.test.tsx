@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { render, fireEvent, act, screen } from '@testing-library/react'
 import { mutate } from '../src'
-import useSWRInfinite from '../src/hooks/use-swr-infinite'
+import useSWRInfinite from '../infinite'
 import { sleep, createResponse } from './utils'
 
 describe('useSWRInfinite', () => {
