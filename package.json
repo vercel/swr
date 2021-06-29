@@ -8,23 +8,27 @@
     ".": {
       "import": "./dist/index.esm.js",
       "require": "./dist/index.js",
-      "types": "./dist/types/src/index.d.ts"
+      "types": "./dist/index.d.ts"
     },
     "./infinite": {
-      "import": "./dist/infinite.esm.js",
-      "require": "./dist/infinite.js",
-      "types": "./dist/types/infinite/index.d.ts"
+      "import": "./infinite/dist/index.esm.js",
+      "require": "./infinite/dist/index.js",
+      "types": "./infinite/dist/infinite/index.d.ts"
     },
     "./immutable": {
-      "import": "./dist/immutable.esm.js",
-      "require": "./dist/immutable.js",
-      "types": "./dist/types/immutable/index.d.ts"
+      "import": "./immutable/dist/index.esm.js",
+      "require": "./immutable/dist/index.js",
+      "types": "./immutable/dist/immutable/index.d.ts"
     }
   },
   "react-native": "./dist/index.esm.js",
-  "types": "./dist/types/index.d.ts",
+  "types": "./dist/index.d.ts",
   "files": [
-    "dist/**"
+    "dist/**",
+    "infinite/dist/**",
+    "immutable/dist/**",
+    "infinite/package.json",
+    "immutable/package.json"
   ],
   "repository": "vercel/swr",
   "homepage": "https://swr.vercel.app",
