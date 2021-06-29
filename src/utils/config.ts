@@ -18,22 +18,20 @@ function onErrorRetry(
   opts: Required<RevalidatorOptions>
 ): void {
   if (!webPreset.isDocumentVisible()) {
-    // if it's hidden, stop
-    // it will auto revalidate when focus
+    // If it's hidden, stop. It will auto revalidate when refocusing.
     return
   }
 
-  if (
-    config.errorRetryCount !== UNDEFINED &&
-    opts.retryCount > config.errorRetryCount
-  ) {
+  const maxRetryCount = config.errorRetryCount
+  const currentRetryCount = opts.retryCount
+  if (maxRetryCount !== UNDEFINED && currentRetryCount > maxRetryCount) {
     return
   }
 
-  // exponential backoff
-  const count = Math.min(opts.retryCount, 8)
+  // Exponential backoff
   const timeout =
-    ~~((Math.random() + 0.5) * (1 << count)) * config.errorRetryInterval
+    ~~((Math.random() + 0.5) * (1 << Math.min(currentRetryCount, 8))) *
+    config.errorRetryInterval
   setTimeout(revalidate, timeout, opts)
 }
 

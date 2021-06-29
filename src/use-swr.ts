@@ -306,7 +306,7 @@ export function useSWRHandler<Data = any, Error = any>(
       if (!key || !fn) return false
       if (unmountedRef.current) return false
       if (configRef.current.isPaused()) return false
-      const { retryCount = 0, dedupe = false } = revalidateOpts
+      const { retryCount, dedupe } = revalidateOpts
 
       let loading = true
       const shouldDeduping = !isUndefined(CONCURRENT_PROMISES[key]) && dedupe
@@ -465,7 +465,7 @@ export function useSWRHandler<Data = any, Error = any>(
           // when retrying, we always enable deduping
           safeCallback(() =>
             configRef.current.onErrorRetry(err, key, config, revalidate, {
-              retryCount: retryCount + 1,
+              retryCount: (retryCount || 0) + 1,
               dedupe: true
             })
           )
