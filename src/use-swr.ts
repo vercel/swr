@@ -180,6 +180,8 @@ async function internalMutate<Data = any>(
   })
 }
 
+// Add a callback function to a list of keyed revalidation functions and returns
+// the unregister function.
 const addRevalidator = (
   revalidators: Record<string, Revalidator[]>,
   key: string,

@@ -47,10 +47,7 @@ const defaultConfig = {
   revalidateOnFocus: true,
   revalidateOnReconnect: true,
   revalidateWhenStale: true,
-  refreshWhenHidden: false,
-  refreshWhenOffline: false,
   shouldRetryOnError: true,
-  suspense: false,
 
   // timeouts
   errorRetryInterval: slowConnection ? 10000 : 5000,

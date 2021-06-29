@@ -10,13 +10,13 @@ export interface Configuration<
   focusThrottleInterval: number
   dedupingInterval: number
   refreshInterval: number
-  refreshWhenHidden: boolean
-  refreshWhenOffline: boolean
+  refreshWhenHidden?: boolean
+  refreshWhenOffline?: boolean
   revalidateOnFocus: boolean
   revalidateOnReconnect: boolean
   revalidateWhenStale: boolean
   shouldRetryOnError: boolean
-  suspense: boolean
+  suspense?: boolean
   initialData?: Data
   fetcher: Fn
   cache: Cache
