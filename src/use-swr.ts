@@ -28,7 +28,6 @@ type Revalidator = (...args: any[]) => void
 
 // Generate strictly increasing timestamps.
 let __timestamp = 0
-const now = () => ++__timestamp
 
 // Global state used to deduplicate requests and store listeners
 const SWRGlobalState = new WeakMap<Cache, any>()
@@ -108,7 +107,7 @@ async function internalMutate<Data = any>(
   }
 
   // update global timestamps
-  MUTATION_TS[key] = now()
+  MUTATION_TS[key] = ++__timestamp
   MUTATION_END_TS[key] = 0
 
   // track timestamps before await asynchronously
@@ -159,7 +158,7 @@ async function internalMutate<Data = any>(
   cache.set(keyErr, error)
 
   // Reset the timestamp to mark the mutation has ended
-  MUTATION_END_TS[key] = now()
+  MUTATION_END_TS[key] = ++__timestamp
 
   if (!isAsyncMutation) {
     // We skip broadcasting if there's another mutation happened synchronously
@@ -352,7 +351,7 @@ export function useSWRHandler<Data = any, Error = any>(
             CONCURRENT_PROMISES[key] = fn(key)
           }
 
-          CONCURRENT_PROMISES_TS[key] = startAt = now()
+          CONCURRENT_PROMISES_TS[key] = startAt = ++__timestamp
 
           newData = await CONCURRENT_PROMISES[key]
 
@@ -645,51 +644,51 @@ export function useSWRHandler<Data = any, Error = any>(
     []
   )
 
+  // Display debug info in React DevTools.
+  useDebugValue(data)
+
+  const currentStateDependencies = stateDependenciesRef.current
+
   // Define the SWR state.
   // `revalidate` will be deprecated in the 1.x release
   // because `mutate()` covers the same use case of `revalidate()`.
   // This remains only for backward compatibility
-  const state = {
-    revalidate,
-    mutate: boundMutate
-  } as SWRResponse<Data, Error>
-  const currentStateDependencies = stateDependenciesRef.current
-  Object.defineProperties(state, {
-    data: {
-      get: function() {
-        currentStateDependencies.data = true
-        return data
-      },
-      enumerable: true
+  return Object.defineProperties(
+    {
+      revalidate,
+      mutate: boundMutate
     },
-    error: {
-      get: function() {
-        currentStateDependencies.error = true
-        return error
+    {
+      data: {
+        get: function() {
+          currentStateDependencies.data = true
+          return data
+        },
+        enumerable: true
       },
-      enumerable: true
-    },
-    isValidating: {
-      get: function() {
-        currentStateDependencies.isValidating = true
-        return isValidating
+      error: {
+        get: function() {
+          currentStateDependencies.error = true
+          return error
+        },
+        enumerable: true
       },
-      enumerable: true
+      isValidating: {
+        get: function() {
+          currentStateDependencies.isValidating = true
+          return isValidating
+        },
+        enumerable: true
+      }
     }
-  })
-
-  // Display debug info in React DevTools.
-  useDebugValue(data)
-
-  return state
+  ) as SWRResponse<Data, Error>
 }
 
-export const SWRConfig = ConfigProvider as typeof ConfigProvider & {
+export const SWRConfig = Object.defineProperty(ConfigProvider, 'default', {
+  value: defaultConfig
+}) as typeof ConfigProvider & {
   default: SWRConfiguration
 }
-Object.defineProperty(SWRConfig, 'default', {
-  value: defaultConfig
-})
 
 export const mutate = internalMutate.bind(
   null,

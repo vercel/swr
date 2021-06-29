@@ -34,8 +34,8 @@ const isDocumentVisible = () => {
 const registerOnFocus = (cb: () => void) => {
   if (addWindowEventListener && addDocumentEventListener) {
     // focus revalidate
-    addDocumentEventListener('visibilitychange', () => cb())
-    addWindowEventListener('focus', () => cb())
+    addDocumentEventListener('visibilitychange', cb)
+    addWindowEventListener('focus', cb)
   }
 }
 

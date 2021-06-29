@@ -200,30 +200,32 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
     [pageSizeCacheKey, resolvePageSize, mutate]
   )
 
-  // Use getter functions to avoid unnecessary re-renders caused by triggering all the getters of the returned swr object
-  const swrInfinite = { size: resolvePageSize(), setSize, mutate }
-  Object.defineProperties(swrInfinite, {
-    error: {
-      get: () => swr.error,
-      enumerable: true
-    },
-    data: {
-      get: () => swr.data,
-      enumerable: true
-    },
-    // revalidate will be deprecated in the 1.x release
-    // because mutate() covers the same use case of revalidate().
-    // This remains only for backward compatibility
-    revalidate: {
-      get: () => swr.revalidate,
-      enumerable: true
-    },
-    isValidating: {
-      get: () => swr.isValidating,
-      enumerable: true
+  // Use getter functions to avoid unnecessary re-renders caused by triggering
+  // all the getters of the returned swr object.
+  return Object.defineProperties(
+    { size: resolvePageSize(), setSize, mutate },
+    {
+      error: {
+        get: () => swr.error,
+        enumerable: true
+      },
+      data: {
+        get: () => swr.data,
+        enumerable: true
+      },
+      // revalidate will be deprecated in the 1.x release
+      // because mutate() covers the same use case of revalidate().
+      // This remains only for backward compatibility
+      revalidate: {
+        get: () => swr.revalidate,
+        enumerable: true
+      },
+      isValidating: {
+        get: () => swr.isValidating,
+        enumerable: true
+      }
     }
-  })
-  return (swrInfinite as unknown) as SWRInfiniteResponse<Data, Error>
+  ) as SWRInfiniteResponse<Data, Error>
 }) as unknown) as Middleware
 
 type SWRInfiniteHook = <Data = any, Error = any>(
