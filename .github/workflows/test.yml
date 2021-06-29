@@ -9,18 +9,18 @@ on:
 
 jobs:
   test:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Use Node.js
-      uses: actions/setup-node@v1
-      with:
-        node-version: '14.x'
-    - run: yarn install
-    - run: yarn types:check
-    - run: yarn lint
-    - run: yarn test
-      env:
-        CI: true
+      - uses: actions/checkout@v2
+      - name: Use Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: '14.x'
+      - run: yarn install
+      - run: yarn types:check
+      - run: yarn lint
+      - run: yarn build:core
+      - run: yarn test
+        env:
+          CI: true
