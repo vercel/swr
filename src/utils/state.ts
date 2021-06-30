@@ -57,17 +57,16 @@ export default function useStateWithDeps<Data, Error, S = State<Data, Error>>(
         // https://github.com/Microsoft/TypeScript/issues/3500
         const k = _ as keyof S & StateKeys
 
-        // If the property hasn't changed, skip
-        if (currentState[k] === payload[k]) {
-          continue
-        }
+        // If the property has changed, update the state and mark rerender as
+        // needed.
+        if (currentState[k] !== payload[k]) {
+          currentState[k] = payload[k]
 
-        currentState[k] = payload[k]
-
-        // If the property is accessed by the component, a rerender should be
-        // triggered.
-        if (stateDependenciesRef.current[k]) {
-          shouldRerender = true
+          // If the property is accessed by the component, a rerender should be
+          // triggered.
+          if (stateDependenciesRef.current[k]) {
+            shouldRerender = true
+          }
         }
       }
 

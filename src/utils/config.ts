@@ -35,7 +35,7 @@ function onErrorRetry(
   setTimeout(revalidate, timeout, opts)
 }
 
-// config
+// Default config
 const defaultConfig = {
   // events
   onLoadingSlow: noop,
@@ -54,7 +54,6 @@ const defaultConfig = {
   focusThrottleInterval: 5 * 1000,
   dedupingInterval: 2 * 1000,
   loadingTimeout: slowConnection ? 5000 : 3000,
-  refreshInterval: 0,
 
   // providers
   fetcher,

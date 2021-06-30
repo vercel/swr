@@ -9,7 +9,7 @@ export interface Configuration<
   loadingTimeout: number
   focusThrottleInterval: number
   dedupingInterval: number
-  refreshInterval: number
+  refreshInterval?: number
   refreshWhenHidden?: boolean
   refreshWhenOffline?: boolean
   revalidateOnFocus: boolean

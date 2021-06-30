@@ -304,9 +304,10 @@ export function useSWRHandler<Data = any, Error = any>(
   // `fetcher`, to correctly handle the many edge cases.
   const revalidate = useCallback(
     async (revalidateOpts: RevalidatorOptions = {}): Promise<boolean> => {
-      if (!key || !fn) return false
-      if (unmountedRef.current) return false
-      if (configRef.current.isPaused()) return false
+      if (!key || !fn || unmountedRef.current || configRef.current.isPaused()) {
+        return false
+      }
+
       const { retryCount, dedupe } = revalidateOpts
 
       let loading = true
@@ -333,12 +334,12 @@ export function useSWRHandler<Data = any, Error = any>(
         let startAt: number
 
         if (shouldDeduping) {
-          // there's already an ongoing request,
-          // this one needs to be deduplicated.
+          // There's already an ongoing request, this one needs to be
+          // deduplicated.
           startAt = CONCURRENT_PROMISES_TS[key]
           newData = await CONCURRENT_PROMISES[key]
         } else {
-          // if no cache being rendered currently (it shows a blank page),
+          // If no cache being rendered currently (it shows a blank page),
           // we trigger the loading slow event.
           if (config.loadingTimeout && !cache.get(key)) {
             setTimeout(() => {
@@ -460,17 +461,17 @@ export function useSWRHandler<Data = any, Error = any>(
           }
         }
 
-        // events and retry
-        safeCallback(() => configRef.current.onError(err, key, config))
-        if (config.shouldRetryOnError) {
-          // when retrying, we always enable deduping
-          safeCallback(() =>
+        // Error event and retry logic.
+        safeCallback(() => {
+          configRef.current.onError(err, key, config)
+          if (config.shouldRetryOnError) {
+            // When retrying, dedupe is always enabled
             configRef.current.onErrorRetry(err, key, config, revalidate, {
               retryCount: (retryCount || 0) + 1,
               dedupe: true
             })
-          )
-        }
+          }
+        })
       }
 
       loading = false
@@ -532,13 +533,14 @@ export function useSWRHandler<Data = any, Error = any>(
     // Add event listeners.
     let pending = false
     const onFocus = () => {
-      if (pending || !configRef.current.revalidateOnFocus) return
-      pending = true
-      softRevalidate()
-      setTimeout(
-        () => (pending = false),
-        configRef.current.focusThrottleInterval
-      )
+      if (configRef.current.revalidateOnFocus && !pending) {
+        pending = true
+        softRevalidate()
+        setTimeout(
+          () => (pending = false),
+          configRef.current.focusThrottleInterval
+        )
+      }
     }
 
     const onReconnect = () => {
@@ -580,7 +582,7 @@ export function useSWRHandler<Data = any, Error = any>(
     initialMountedRef.current = true
 
     return () => {
-      // mark it as unmounted
+      // Mark it as unmounted.
       unmountedRef.current = true
 
       unsubFocus()
@@ -630,10 +632,7 @@ export function useSWRHandler<Data = any, Error = any>(
   // If there is no `error`, the `revalidation` promise needs to be thrown to
   // the suspense boundary.
   if (suspense && isUndefined(data)) {
-    if (isUndefined(error)) {
-      throw revalidate({ dedupe: true })
-    }
-    throw error
+    throw isUndefined(error) ? revalidate({ dedupe: true }) : error
   }
 
   // `mutate`, but bound to the current key.
