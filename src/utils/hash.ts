@@ -19,7 +19,6 @@ export default function hash(args: any[]): string {
     if (arg === null || (argType !== 'object' && argType !== 'function')) {
       // need to consider the case that `arg` is a string:
       // "undefined" -> '"undefined"'
-      // undefined   -> 'undefined'
       // 123         -> '123'
       // "null"      -> '"null"'
       // null        -> 'null'
