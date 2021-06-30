@@ -301,10 +301,11 @@ export function useSWRHandler<Data = any, Error = any>(
       let loading = true
       const shouldDeduping = !isUndefined(CONCURRENT_PROMISES[key]) && dedupe
 
-      // If key has changed during the revalidation, or the component has
-      // been unmounted, the old dispatch and old event callbacks should not
-      // take any effect.
-      const isCallbackSafe =
+      // Do unmount check for callbacks:
+      // If key has changed during the revalidation, or the component has been
+      // unmounted, old dispatch and old event callbacks should not take any
+      // effect.
+      const isCallbackSafe = () =>
         !unmountedRef.current &&
         key === keyRef.current &&
         initialMountedRef.current
@@ -339,7 +340,7 @@ export function useSWRHandler<Data = any, Error = any>(
           // we trigger the loading slow event.
           if (config.loadingTimeout && !cache.get(key)) {
             setTimeout(() => {
-              if (loading && isCallbackSafe)
+              if (loading && isCallbackSafe())
                 configRef.current.onLoadingSlow(key, config)
             }, config.loadingTimeout)
           }
@@ -364,9 +365,8 @@ export function useSWRHandler<Data = any, Error = any>(
 
           // trigger the success event,
           // only do this for the original request.
-          if (isCallbackSafe) {
+          if (isCallbackSafe())
             configRef.current.onSuccess(newData, key, config)
-          }
         }
 
         // if there're other ongoing request(s), started after the current one,
@@ -460,7 +460,7 @@ export function useSWRHandler<Data = any, Error = any>(
         }
 
         // Error event and retry logic.
-        if (isCallbackSafe) {
+        if (isCallbackSafe()) {
           configRef.current.onError(err, key, config)
           if (config.shouldRetryOnError) {
             // When retrying, dedupe is always enabled
