@@ -7,7 +7,7 @@ import { Configuration, RevalidatorOptions, Revalidator } from '../types'
 import { UNDEFINED } from './helper'
 
 const fetcher = (url: string) => fetch(url).then(res => res.json())
-const noop = () => false
+const noop = () => {}
 
 // error retry
 function onErrorRetry(
@@ -59,7 +59,7 @@ const defaultConfig = {
   // providers
   fetcher,
   compare: dequal,
-  isPaused: noop,
+  isPaused: () => false,
   cache: wrapCache(new Map()),
 
   // presets
