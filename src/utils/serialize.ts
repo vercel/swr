@@ -21,8 +21,8 @@ export function serialize(key: Key): [string, any, string, string] {
     key = String(key || '')
   }
 
-  const errorKey = key ? 'err@' + key : ''
-  const isValidatingKey = key ? 'req@' + key : ''
+  const errorKey = key ? '$err$' + key : ''
+  const isValidatingKey = key ? '$req$' + key : ''
 
   return [key, args, errorKey, isValidatingKey]
 }
