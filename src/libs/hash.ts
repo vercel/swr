@@ -32,7 +32,7 @@ export default function hash(args: any[]): string {
         _hash = table.get(args[i])
       }
     }
-    key += '@' + _hash
+    key += '$' + _hash
   }
   return key
 }

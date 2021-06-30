@@ -41,13 +41,13 @@ function useSWRInfiniteHandler<Data = any, Error = any>(
   // here we get the key of the fetcher context cache
   let contextCacheKey: string | null = null
   if (firstPageKey) {
-    contextCacheKey = 'ctx@' + firstPageKey
+    contextCacheKey = '$ctx$' + firstPageKey
   }
 
   // page size is also cached to share the page data between hooks having the same key
   let pageSizeCacheKey: string | null = null
   if (firstPageKey) {
-    pageSizeCacheKey = 'len@' + firstPageKey
+    pageSizeCacheKey = '$len$' + firstPageKey
   }
   const didMountRef = useRef<boolean>(false)
 
@@ -85,7 +85,7 @@ function useSWRInfiniteHandler<Data = any, Error = any>(
 
   // actual swr of all pages
   const swr = useSWRHandler<Data[], Error>(
-    firstPageKey ? ['inf', firstPageKey] : null,
+    firstPageKey ? '$inf$' + firstPageKey : null,
     async () => {
       // get the revalidate context
       const { data: originalData, force } = cache.get(contextCacheKey) || {}
