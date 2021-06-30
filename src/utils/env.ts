@@ -19,14 +19,17 @@ export const rAF = __requestAnimationFrame
 // useLayoutEffect in the browser.
 export const useIsomorphicLayoutEffect = IS_SERVER ? useEffect : useLayoutEffect
 
-// This assignment is to extend the Navigator type to use effectiveType
-const __navigator: Navigator & {
-  connection?: { effectiveType: string }
-} = navigator
-// client side: need to adjust the config
-// based on the browser status
-// slow connection (<= 70Kbps)
+// This assignment is to extend the Navigator type to use effectiveType.
+const navigatorConnection = (navigator as Navigator & {
+  connection?: {
+    effectiveType: string
+    saveData: boolean
+  }
+}).connection
+
+// Adjust the config based on slow connection status (<= 70Kbps).
 export const slowConnection =
   !IS_SERVER &&
-  typeof __navigator.connection !== 'undefined' &&
-  ['slow-2g', '2g'].indexOf(__navigator['connection'].effectiveType) !== -1
+  navigatorConnection &&
+  (['slow-2g', '2g'].includes(navigatorConnection.effectiveType) ||
+    navigatorConnection.saveData)

@@ -276,18 +276,6 @@ export function useSWRHandler<Data = any, Error = any>(
   }
   const isValidating = resolveValidating()
 
-  // do unmount check for callbacks
-  // if key changed during the revalidation, old dispatch and config callback should not take effect.
-  const safeCallback = useCallback(
-    (callback: () => void) => {
-      if (unmountedRef.current) return
-      if (key !== keyRef.current) return
-      if (!initialMountedRef.current) return
-      callback()
-    },
-    [key]
-  )
-
   const [stateRef, stateDependenciesRef, setState] = useStateWithDeps<
     Data,
     Error
@@ -312,6 +300,14 @@ export function useSWRHandler<Data = any, Error = any>(
 
       let loading = true
       const shouldDeduping = !isUndefined(CONCURRENT_PROMISES[key]) && dedupe
+
+      // If key has changed during the revalidation, or the component has
+      // been unmounted, the old dispatch and old event callbacks should not
+      // take any effect.
+      const isCallbackSafe =
+        !unmountedRef.current &&
+        key === keyRef.current &&
+        initialMountedRef.current
 
       // start fetching
       try {
@@ -343,8 +339,8 @@ export function useSWRHandler<Data = any, Error = any>(
           // we trigger the loading slow event.
           if (config.loadingTimeout && !cache.get(key)) {
             setTimeout(() => {
-              if (loading)
-                safeCallback(() => configRef.current.onLoadingSlow(key, config))
+              if (loading && isCallbackSafe)
+                configRef.current.onLoadingSlow(key, config)
             }, config.loadingTimeout)
           }
 
@@ -368,7 +364,9 @@ export function useSWRHandler<Data = any, Error = any>(
 
           // trigger the success event,
           // only do this for the original request.
-          safeCallback(() => configRef.current.onSuccess(newData, key, config))
+          if (isCallbackSafe) {
+            configRef.current.onSuccess(newData, key, config)
+          }
         }
 
         // if there're other ongoing request(s), started after the current one,
@@ -462,7 +460,7 @@ export function useSWRHandler<Data = any, Error = any>(
         }
 
         // Error event and retry logic.
-        safeCallback(() => {
+        if (isCallbackSafe) {
           configRef.current.onError(err, key, config)
           if (config.shouldRetryOnError) {
             // When retrying, dedupe is always enabled
@@ -471,7 +469,7 @@ export function useSWRHandler<Data = any, Error = any>(
               dedupe: true
             })
           }
-        })
+        }
       }
 
       loading = false
