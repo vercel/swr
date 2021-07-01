@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { render, fireEvent, act, screen } from '@testing-library/react'
+
 import { mutate } from 'swr'
-import useSWRInfinite from 'swr/infinite'
+import useSWRInfinite, { mutateInfinite } from 'swr/infinite'
 import { sleep, createResponse } from './utils'
 
 describe('useSWRInfinite', () => {
@@ -571,5 +572,28 @@ describe('useSWRInfinite', () => {
     // load next page
     fireEvent.click(screen.getByText('data:'))
     await screen.findByText('data:')
+  })
+  it('should mutate a cache with mumutateInfinite', async () => {
+    let count = 0
+    function Page() {
+      const { data } = useSWRInfinite<string, string>(
+        index => `page-test-12-${index}`,
+        key => createResponse(`${key}:${++count}`)
+      )
+      return <div>data:{data}</div>
+    }
+
+    render(<Page />)
+    screen.getByText('data:')
+
+    await screen.findByText('data:page-test-12-0:1')
+
+    await act(() => mutateInfinite(index => `page-test-12-${index}`))
+    await screen.findByText('data:page-test-12-0:2')
+
+    await act(() =>
+      mutateInfinite(index => `page-test-12-${index}`, 'local-mutation')
+    )
+    await screen.findByText('data:local-mutation')
   })
 })
