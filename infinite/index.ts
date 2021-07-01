@@ -3,8 +3,7 @@
 
 import { useRef, useState, useCallback } from 'react'
 
-// @ts-ignore
-import useSWR from 'swr'
+import useSWR from '../src/use-swr'
 
 import defaultConfig from '../src/utils/config'
 import { useIsomorphicLayoutEffect } from '../src/utils/env'

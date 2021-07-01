@@ -1,5 +1,4 @@
-// @ts-ignore
-import useSWR from 'swr'
+import useSWR from '../src/use-swr'
 
 import { withMiddleware } from '../src/utils/with-middleware'
 import { Middleware, SWRHook } from '../src/types'
