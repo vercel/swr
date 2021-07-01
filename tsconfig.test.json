@@ -4,5 +4,8 @@
     "rootDir": ".",
     "strict": false
   },
-  "include": ["test/**/*", "./jest-setup.ts"]
+  "include": [
+    "./test", 
+    "./jest-setup.ts"
+  ]
 }
