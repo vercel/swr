@@ -5,7 +5,6 @@
     "strict": false
   },
   "include": [
-    "./src", 
     "./test", 
     "./jest-setup.ts"
   ]
