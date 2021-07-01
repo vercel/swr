@@ -12,8 +12,7 @@ const isOnline = () => online
 
 // For node and React Native, `window.addEventListener` doesn't exist.
 const addWindowEventListener =
-  typeof window !== 'undefined' &&
-  typeof window.addEventListener !== 'undefined'
+  typeof window !== 'undefined' && !isUndefined(window.addEventListener)
     ? window.addEventListener.bind(window)
     : null
 const addDocumentEventListener =
@@ -35,8 +34,8 @@ const isDocumentVisible = () => {
 const registerOnFocus = (cb: () => void) => {
   if (addWindowEventListener && addDocumentEventListener) {
     // focus revalidate
-    addDocumentEventListener('visibilitychange', () => cb())
-    addWindowEventListener('focus', () => cb())
+    addDocumentEventListener('visibilitychange', cb)
+    addWindowEventListener('focus', cb)
   }
 }
 

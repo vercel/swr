@@ -1,10 +1,9 @@
-// `useSWR` and related APIs
-import { default as useSWR } from './use-swr'
+// Core APIs
 export { SWRConfig, mutate, createCache } from './use-swr'
-export default useSWR
 
-// `useSWRInfinite`
-export { default as useSWRInfinite } from './use-swr-infinite'
+// useSWR
+import useSWR from './use-swr'
+export default useSWR
 
 // Types
 export {

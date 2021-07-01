@@ -2,7 +2,6 @@ import hash from './hash'
 import { Key } from '../types'
 
 export function serialize(key: Key): [string, any, string, string] {
-  let args = null
   if (typeof key === 'function') {
     try {
       key = key()
@@ -12,13 +11,16 @@ export function serialize(key: Key): [string, any, string, string] {
     }
   }
 
+  let args
   if (Array.isArray(key)) {
     // args array
     args = key
     key = hash(key)
   } else {
-    // convert falsy values to ''
+    // Convert falsy values to ''.
     key = String(key || '')
+    // The only argument is the key.
+    args = [key]
   }
 
   const errorKey = key ? '$err$' + key : ''

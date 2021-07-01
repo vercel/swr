@@ -1,9 +1,10 @@
 import { dequal } from 'dequal/lite'
 
 import { wrapCache } from './cache'
-import webPreset from './libs/web-preset'
+import webPreset from './web-preset'
 import { slowConnection } from './env'
-import { Configuration, RevalidatorOptions, Revalidator } from './types'
+import { Configuration, RevalidatorOptions, Revalidator } from '../types'
+import { UNDEFINED } from './helper'
 
 const fetcher = (url: string) => fetch(url).then(res => res.json())
 const noop = () => {}
@@ -17,26 +18,24 @@ function onErrorRetry(
   opts: Required<RevalidatorOptions>
 ): void {
   if (!webPreset.isDocumentVisible()) {
-    // if it's hidden, stop
-    // it will auto revalidate when focus
+    // If it's hidden, stop. It will auto revalidate when refocusing.
     return
   }
 
-  if (
-    typeof config.errorRetryCount === 'number' &&
-    opts.retryCount > config.errorRetryCount
-  ) {
+  const maxRetryCount = config.errorRetryCount
+  const currentRetryCount = opts.retryCount
+  if (maxRetryCount !== UNDEFINED && currentRetryCount > maxRetryCount) {
     return
   }
 
-  // exponential backoff
-  const count = Math.min(opts.retryCount, 8)
+  // Exponential backoff
   const timeout =
-    ~~((Math.random() + 0.5) * (1 << count)) * config.errorRetryInterval
+    ~~((Math.random() + 0.5) * (1 << Math.min(currentRetryCount, 8))) *
+    config.errorRetryInterval
   setTimeout(revalidate, timeout, opts)
 }
 
-// config
+// Default config
 const defaultConfig = {
   // events
   onLoadingSlow: noop,
@@ -47,17 +46,14 @@ const defaultConfig = {
   // switches
   revalidateOnFocus: true,
   revalidateOnReconnect: true,
-  refreshWhenHidden: false,
-  refreshWhenOffline: false,
+  revalidateWhenStale: true,
   shouldRetryOnError: true,
-  suspense: false,
 
   // timeouts
   errorRetryInterval: slowConnection ? 10000 : 5000,
   focusThrottleInterval: 5 * 1000,
   dedupingInterval: 2 * 1000,
   loadingTimeout: slowConnection ? 5000 : 3000,
-  refreshInterval: 0,
 
   // providers
   fetcher,

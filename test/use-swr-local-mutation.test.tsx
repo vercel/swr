@@ -1,7 +1,7 @@
 import { act, render, screen, fireEvent } from '@testing-library/react'
 import React, { useEffect, useState } from 'react'
 import useSWR, { mutate, createCache, SWRConfig } from '../src'
-import { serialize } from '../src/libs/serialize'
+import { serialize } from '../src/utils/serialize'
 import { createResponse, sleep } from './utils'
 
 const waitForNextTick = () => act(() => sleep(1))

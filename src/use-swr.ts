@@ -1,14 +1,14 @@
 // TODO: use @ts-expect-error
 import { useCallback, useRef, useDebugValue } from 'react'
 
-import defaultConfig from './config'
-import { wrapCache } from './cache'
-import { IS_SERVER, rAF, useIsomorphicLayoutEffect } from './env'
-import { serialize } from './libs/serialize'
-import { isUndefined, UNDEFINED } from './libs/helper'
-import ConfigProvider from './config-context'
-import useStateWithDeps from './state'
-import withArgs from './resolve-args'
+import defaultConfig from './utils/config'
+import { wrapCache } from './utils/cache'
+import { IS_SERVER, rAF, useIsomorphicLayoutEffect } from './utils/env'
+import { serialize } from './utils/serialize'
+import { isUndefined, UNDEFINED } from './utils/helper'
+import ConfigProvider from './utils/config-context'
+import useStateWithDeps from './utils/state'
+import withArgs from './utils/resolve-args'
 import {
   State,
   Broadcaster,
@@ -28,7 +28,6 @@ type Revalidator = (...args: any[]) => void
 
 // Generate strictly increasing timestamps.
 let __timestamp = 0
-const now = () => ++__timestamp
 
 // Global state used to deduplicate requests and store listeners
 const SWRGlobalState = new WeakMap<Cache, any>()
@@ -108,7 +107,7 @@ async function internalMutate<Data = any>(
   }
 
   // update global timestamps
-  MUTATION_TS[key] = now()
+  MUTATION_TS[key] = ++__timestamp
   MUTATION_END_TS[key] = 0
 
   // track timestamps before await asynchronously
@@ -159,7 +158,7 @@ async function internalMutate<Data = any>(
   cache.set(keyErr, error)
 
   // Reset the timestamp to mark the mutation has ended
-  MUTATION_END_TS[key] = now()
+  MUTATION_END_TS[key] = ++__timestamp
 
   if (!isAsyncMutation) {
     // We skip broadcasting if there's another mutation happened synchronously
@@ -181,6 +180,8 @@ async function internalMutate<Data = any>(
   })
 }
 
+// Add a callback function to a list of keyed revalidation functions and returns
+// the unregister function.
 const addRevalidator = (
   revalidators: Record<string, Revalidator[]>,
   key: string,
@@ -215,6 +216,7 @@ export function useSWRHandler<Data = any, Error = any>(
     initialData,
     suspense,
     revalidateOnMount,
+    revalidateWhenStale,
     refreshInterval,
     refreshWhenHidden,
     refreshWhenOffline
@@ -254,13 +256,14 @@ export function useSWRHandler<Data = any, Error = any>(
   // A revalidation must be triggered when mounted if:
   // - `revalidateOnMount` is explicitly set to `true`.
   // - Suspense mode and there's stale data for the inital render.
-  // - Not suspense mode and there is no `initialData`.
+  // - Not suspense mode and there is no `initialData` and `revalidateWhenStale` is enabled.
+  // - `revalidateWhenStale` is enabled but `data` is not defined.
   const shouldRevalidateOnMount = () => {
     if (!isUndefined(revalidateOnMount)) return revalidateOnMount
 
     return suspense
       ? !initialMountedRef.current && !isUndefined(data)
-      : isUndefined(initialData)
+      : isUndefined(initialData) && (revalidateWhenStale || isUndefined(data))
   }
 
   // Resolve the current validating state.
@@ -272,18 +275,6 @@ export function useSWRHandler<Data = any, Error = any>(
     return !initialMountedRef.current && shouldRevalidateOnMount()
   }
   const isValidating = resolveValidating()
-
-  // do unmount check for callbacks
-  // if key changed during the revalidation, old dispatch and config callback should not take effect.
-  const safeCallback = useCallback(
-    (callback: () => void) => {
-      if (unmountedRef.current) return
-      if (key !== keyRef.current) return
-      if (!initialMountedRef.current) return
-      callback()
-    },
-    [key]
-  )
 
   const [stateRef, stateDependenciesRef, setState] = useStateWithDeps<
     Data,
@@ -301,13 +292,23 @@ export function useSWRHandler<Data = any, Error = any>(
   // `fetcher`, to correctly handle the many edge cases.
   const revalidate = useCallback(
     async (revalidateOpts: RevalidatorOptions = {}): Promise<boolean> => {
-      if (!key || !fn) return false
-      if (unmountedRef.current) return false
-      if (configRef.current.isPaused()) return false
-      const { retryCount = 0, dedupe = false } = revalidateOpts
+      if (!key || !fn || unmountedRef.current || configRef.current.isPaused()) {
+        return false
+      }
+
+      const { retryCount, dedupe } = revalidateOpts
 
       let loading = true
       const shouldDeduping = !isUndefined(CONCURRENT_PROMISES[key]) && dedupe
+
+      // Do unmount check for callbacks:
+      // If key has changed during the revalidation, or the component has been
+      // unmounted, old dispatch and old event callbacks should not take any
+      // effect.
+      const isCallbackSafe = () =>
+        !unmountedRef.current &&
+        key === keyRef.current &&
+        initialMountedRef.current
 
       // start fetching
       try {
@@ -330,27 +331,22 @@ export function useSWRHandler<Data = any, Error = any>(
         let startAt: number
 
         if (shouldDeduping) {
-          // there's already an ongoing request,
-          // this one needs to be deduplicated.
+          // There's already an ongoing request, this one needs to be
+          // deduplicated.
           startAt = CONCURRENT_PROMISES_TS[key]
           newData = await CONCURRENT_PROMISES[key]
         } else {
-          // if no cache being rendered currently (it shows a blank page),
+          // If no cache being rendered currently (it shows a blank page),
           // we trigger the loading slow event.
           if (config.loadingTimeout && !cache.get(key)) {
             setTimeout(() => {
-              if (loading)
-                safeCallback(() => configRef.current.onLoadingSlow(key, config))
+              if (loading && isCallbackSafe())
+                configRef.current.onLoadingSlow(key, config)
             }, config.loadingTimeout)
           }
 
-          if (fnArgs !== null) {
-            CONCURRENT_PROMISES[key] = fn(...fnArgs)
-          } else {
-            CONCURRENT_PROMISES[key] = fn(key)
-          }
-
-          CONCURRENT_PROMISES_TS[key] = startAt = now()
+          CONCURRENT_PROMISES[key] = fn(...fnArgs)
+          CONCURRENT_PROMISES_TS[key] = startAt = ++__timestamp
 
           newData = await CONCURRENT_PROMISES[key]
 
@@ -364,7 +360,8 @@ export function useSWRHandler<Data = any, Error = any>(
 
           // trigger the success event,
           // only do this for the original request.
-          safeCallback(() => configRef.current.onSuccess(newData, key, config))
+          if (isCallbackSafe())
+            configRef.current.onSuccess(newData, key, config)
         }
 
         // if there're other ongoing request(s), started after the current one,
@@ -457,16 +454,16 @@ export function useSWRHandler<Data = any, Error = any>(
           }
         }
 
-        // events and retry
-        safeCallback(() => configRef.current.onError(err, key, config))
-        if (config.shouldRetryOnError) {
-          // when retrying, we always enable deduping
-          safeCallback(() =>
+        // Error event and retry logic.
+        if (isCallbackSafe()) {
+          configRef.current.onError(err, key, config)
+          if (config.shouldRetryOnError) {
+            // When retrying, dedupe is always enabled
             configRef.current.onErrorRetry(err, key, config, revalidate, {
-              retryCount: retryCount + 1,
+              retryCount: (retryCount || 0) + 1,
               dedupe: true
             })
-          )
+          }
         }
       }
 
@@ -517,6 +514,7 @@ export function useSWRHandler<Data = any, Error = any>(
     // Trigger a revalidation.
     if (keyChanged || shouldRevalidateOnMount()) {
       if (isUndefined(data) || IS_SERVER) {
+        // Revalidate immediately.
         softRevalidate()
       } else {
         // Delay the revalidate if we have data to return so we won't block
@@ -528,13 +526,14 @@ export function useSWRHandler<Data = any, Error = any>(
     // Add event listeners.
     let pending = false
     const onFocus = () => {
-      if (pending || !configRef.current.revalidateOnFocus) return
-      pending = true
-      softRevalidate()
-      setTimeout(
-        () => (pending = false),
-        configRef.current.focusThrottleInterval
-      )
+      if (configRef.current.revalidateOnFocus && !pending) {
+        pending = true
+        softRevalidate()
+        setTimeout(
+          () => (pending = false),
+          configRef.current.focusThrottleInterval
+        )
+      }
     }
 
     const onReconnect = () => {
@@ -576,7 +575,7 @@ export function useSWRHandler<Data = any, Error = any>(
     initialMountedRef.current = true
 
     return () => {
-      // mark it as unmounted
+      // Mark it as unmounted.
       unmountedRef.current = true
 
       unsubFocus()
@@ -626,10 +625,7 @@ export function useSWRHandler<Data = any, Error = any>(
   // If there is no `error`, the `revalidation` promise needs to be thrown to
   // the suspense boundary.
   if (suspense && isUndefined(data)) {
-    if (isUndefined(error)) {
-      throw revalidate({ dedupe: true })
-    }
-    throw error
+    throw isUndefined(error) ? revalidate({ dedupe: true }) : error
   }
 
   // `mutate`, but bound to the current key.
@@ -642,51 +638,51 @@ export function useSWRHandler<Data = any, Error = any>(
     []
   )
 
+  // Display debug info in React DevTools.
+  useDebugValue(data)
+
+  const currentStateDependencies = stateDependenciesRef.current
+
   // Define the SWR state.
   // `revalidate` will be deprecated in the 1.x release
   // because `mutate()` covers the same use case of `revalidate()`.
   // This remains only for backward compatibility
-  const state = {
-    revalidate,
-    mutate: boundMutate
-  } as SWRResponse<Data, Error>
-  const currentStateDependencies = stateDependenciesRef.current
-  Object.defineProperties(state, {
-    data: {
-      get: function() {
-        currentStateDependencies.data = true
-        return data
-      },
-      enumerable: true
+  return Object.defineProperties(
+    {
+      revalidate,
+      mutate: boundMutate
     },
-    error: {
-      get: function() {
-        currentStateDependencies.error = true
-        return error
+    {
+      data: {
+        get: function() {
+          currentStateDependencies.data = true
+          return data
+        },
+        enumerable: true
       },
-      enumerable: true
-    },
-    isValidating: {
-      get: function() {
-        currentStateDependencies.isValidating = true
-        return isValidating
+      error: {
+        get: function() {
+          currentStateDependencies.error = true
+          return error
+        },
+        enumerable: true
       },
-      enumerable: true
+      isValidating: {
+        get: function() {
+          currentStateDependencies.isValidating = true
+          return isValidating
+        },
+        enumerable: true
+      }
     }
-  })
-
-  // Display debug info in React DevTools.
-  useDebugValue(data)
-
-  return state
+  ) as SWRResponse<Data, Error>
 }
 
-export const SWRConfig = ConfigProvider as typeof ConfigProvider & {
+export const SWRConfig = Object.defineProperty(ConfigProvider, 'default', {
+  value: defaultConfig
+}) as typeof ConfigProvider & {
   default: SWRConfiguration
 }
-Object.defineProperty(SWRConfig, 'default', {
-  value: defaultConfig
-})
 
 export const mutate = internalMutate.bind(
   null,

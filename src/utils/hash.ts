@@ -12,24 +12,23 @@ export default function hash(args: any[]): string {
   if (!args.length) return ''
   let key = 'arg'
   for (let i = 0; i < args.length; ++i) {
+    const arg = args[i]
+    const argType = typeof arg
+
     let _hash
-    if (
-      args[i] === null ||
-      (typeof args[i] !== 'object' && typeof args[i] !== 'function')
-    ) {
-      // need to consider the case that args[i] is a string:
+    if (arg === null || (argType !== 'object' && argType !== 'function')) {
+      // need to consider the case that `arg` is a string:
       // "undefined" -> '"undefined"'
-      // undefined   -> 'undefined'
       // 123         -> '123'
       // "null"      -> '"null"'
       // null        -> 'null'
-      _hash = JSON.stringify(args[i])
+      _hash = JSON.stringify(arg)
     } else {
-      if (!table.has(args[i])) {
+      if (!table.has(arg)) {
         _hash = counter
-        table.set(args[i], counter++)
+        table.set(arg, counter++)
       } else {
-        _hash = table.get(args[i])
+        _hash = table.get(arg)
       }
     }
     key += '$' + _hash

@@ -357,7 +357,6 @@ describe('useSWR', () => {
     render(<Page />)
     screen.getByText('hello,')
     expect(fetcher).toBeCalled()
-
     await screen.findByText('hello, SWR')
   })
 

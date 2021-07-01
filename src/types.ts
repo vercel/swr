@@ -9,16 +9,16 @@ export interface Configuration<
   loadingTimeout: number
   focusThrottleInterval: number
   dedupingInterval: number
-  refreshInterval: number
-  refreshWhenHidden: boolean
-  refreshWhenOffline: boolean
+  refreshInterval?: number
+  refreshWhenHidden?: boolean
+  refreshWhenOffline?: boolean
   revalidateOnFocus: boolean
-  revalidateOnMount?: boolean
   revalidateOnReconnect: boolean
+  revalidateWhenStale: boolean
   shouldRetryOnError: boolean
-  suspense: boolean
-  fetcher: Fn
+  suspense?: boolean
   initialData?: Data
+  fetcher: Fn
   cache: Cache
   middlewares?: Middleware[]
 
@@ -46,6 +46,11 @@ export interface Configuration<
   ) => void
 
   compare: (a: Data | undefined, b: Data | undefined) => boolean
+
+  /**
+   * @deprecated `revalidateOnMount` will be removed. Please considering using the `revalidateWhenStale` option.
+   */
+  revalidateOnMount?: boolean
 }
 
 export type SWRHook = <Data = any, Error = any>(
@@ -71,7 +76,7 @@ export interface Preset {
 type SWRHookWithdMiddleware = <Data = any, Error = any>(
   key: Key,
   fetcher: Fetcher<Data> | null,
-  config: SWRConfiguration<Data, Error> | undefined
+  config: SWRConfiguration<Data, Error>
 ) => SWRResponse<Data, Error>
 
 export type Middleware = (useSWRNext: SWRHook) => SWRHookWithdMiddleware

@@ -7,25 +7,43 @@
   "exports": {
     ".": {
       "import": "./dist/index.esm.js",
-      "require": "./dist/index.js"
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./infinite": {
+      "import": "./infinite/dist/index.esm.js",
+      "require": "./infinite/dist/index.js",
+      "types": "./infinite/dist/infinite/index.d.ts"
+    },
+    "./immutable": {
+      "import": "./immutable/dist/index.esm.js",
+      "require": "./immutable/dist/index.js",
+      "types": "./immutable/dist/immutable/index.d.ts"
     }
   },
   "react-native": "./dist/index.esm.js",
-  "types": "./dist/types/index.d.ts",
+  "types": "./dist/index.d.ts",
   "files": [
-    "dist/**"
+    "dist/**",
+    "infinite/dist/**",
+    "immutable/dist/**",
+    "infinite/package.json",
+    "immutable/package.json"
   ],
   "repository": "vercel/swr",
   "homepage": "https://swr.vercel.app",
   "license": "MIT",
   "scripts": {
-    "build": "bunchee src/index.ts -m --no-sourcemap",
+    "build": "yarn build:core && yarn build:infinite && yarn build:immutable",
     "watch": "bunchee src/index.ts --watch",
+    "build:core": "bunchee src/index.ts -m --no-sourcemap",
+    "build:infinite": "bunchee index.ts --cwd infinite -m --no-sourcemap",
+    "build:immutable": "bunchee index.ts --cwd immutable -m --no-sourcemap",
     "prepublishOnly": "rm -rf dist && yarn build",
     "types:check": "tsc --noEmit",
-    "format": "prettier --write \"{src,test,examples}/**/*.{ts,tsx}\"",
-    "lint": "eslint \"{src,test,examples}/**/*.{ts,tsx}\"",
-    "lint:fix": "eslint \"{src,test,examples}/**/*.{ts,tsx}\" --fix",
+    "format": "prettier --write \"{src,infinite,immutable,test,examples}/**/*.{ts,tsx}\"",
+    "lint": "eslint \"{src,infinite,immutable,test,examples}/**/*.{ts,tsx}\"",
+    "lint:fix": "eslint \"{src,infinite,immutable,test,examples}/**/*.{ts,tsx}\" --fix",
     "test": "jest",
     "register": "yarn link && cd node_modules/react && yarn link",
     "prepare:vite": "git clone https://github.com/promer94/vite-swr playground/vite-swr && cd playground/vite-swr && yarn && yarn link react && yarn link swr",

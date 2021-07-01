@@ -1,25 +1,32 @@
+// We have to several type castings here because `useSWRInfinite` is a special
+// hook where `key` and return type are not like the normal `useSWR` types.
+
 import { useRef, useState, useCallback } from 'react'
 
-import defaultConfig from './config'
-import { useIsomorphicLayoutEffect } from './env'
-import { serialize } from './libs/serialize'
-import { isUndefined, UNDEFINED } from './libs/helper'
-import withArgs from './resolve-args'
-import { useSWRHandler } from './use-swr'
+// @ts-ignore
+import useSWR from 'swr'
+
+import defaultConfig from '../src/utils/config'
+import { useIsomorphicLayoutEffect } from '../src/utils/env'
+import { serialize } from '../src/utils/serialize'
+import { isUndefined, UNDEFINED } from '../src/utils/helper'
+import { withMiddleware } from '../src/utils/with-middleware'
 
 import {
   KeyLoader,
   Fetcher,
+  SWRHook,
   SWRInfiniteConfiguration,
   SWRInfiniteResponse,
-  MutatorCallback
-} from './types'
+  MutatorCallback,
+  Middleware
+} from '../src/types'
 
-function useSWRInfiniteHandler<Data = any, Error = any>(
+export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
   getKey: KeyLoader<Data>,
   fn: Fetcher<Data> | null,
   config: typeof defaultConfig & SWRInfiniteConfiguration<Data, Error>
-): SWRInfiniteResponse<Data, Error> {
+): SWRInfiniteResponse<Data, Error> => {
   const {
     cache,
     initialSize = 1,
@@ -84,7 +91,7 @@ function useSWRInfiniteHandler<Data = any, Error = any>(
   const dataRef = useRef<Data[]>()
 
   // actual swr of all pages
-  const swr = useSWRHandler<Data[], Error>(
+  const swr = useSWRNext<Data[], Error>(
     firstPageKey ? '$inf$' + firstPageKey : null,
     async () => {
       // get the revalidate context
@@ -193,31 +200,33 @@ function useSWRInfiniteHandler<Data = any, Error = any>(
     [pageSizeCacheKey, resolvePageSize, mutate]
   )
 
-  // Use getter functions to avoid unnecessary re-renders caused by triggering all the getters of the returned swr object
-  const swrInfinite = { size: resolvePageSize(), setSize, mutate }
-  Object.defineProperties(swrInfinite, {
-    error: {
-      get: () => swr.error,
-      enumerable: true
-    },
-    data: {
-      get: () => swr.data,
-      enumerable: true
-    },
-    // revalidate will be deprecated in the 1.x release
-    // because mutate() covers the same use case of revalidate().
-    // This remains only for backward compatibility
-    revalidate: {
-      get: () => swr.revalidate,
-      enumerable: true
-    },
-    isValidating: {
-      get: () => swr.isValidating,
-      enumerable: true
+  // Use getter functions to avoid unnecessary re-renders caused by triggering
+  // all the getters of the returned swr object.
+  return Object.defineProperties(
+    { size: resolvePageSize(), setSize, mutate },
+    {
+      error: {
+        get: () => swr.error,
+        enumerable: true
+      },
+      data: {
+        get: () => swr.data,
+        enumerable: true
+      },
+      // revalidate will be deprecated in the 1.x release
+      // because mutate() covers the same use case of revalidate().
+      // This remains only for backward compatibility
+      revalidate: {
+        get: () => swr.revalidate,
+        enumerable: true
+      },
+      isValidating: {
+        get: () => swr.isValidating,
+        enumerable: true
+      }
     }
-  })
-  return (swrInfinite as unknown) as SWRInfiniteResponse<Data, Error>
-}
+  ) as SWRInfiniteResponse<Data, Error>
+}) as unknown) as Middleware
 
 type SWRInfiniteHook = <Data = any, Error = any>(
   ...args:
@@ -234,4 +243,4 @@ type SWRInfiniteHook = <Data = any, Error = any>(
       ]
 ) => SWRInfiniteResponse<Data, Error>
 
-export default withArgs<SWRInfiniteHook>(useSWRInfiniteHandler)
+export default withMiddleware(useSWR, infinite) as SWRInfiniteHook
