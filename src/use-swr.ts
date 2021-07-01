@@ -345,12 +345,7 @@ export function useSWRHandler<Data = any, Error = any>(
             }, config.loadingTimeout)
           }
 
-          if (fnArgs !== null) {
-            CONCURRENT_PROMISES[key] = fn(...fnArgs)
-          } else {
-            CONCURRENT_PROMISES[key] = fn(key)
-          }
-
+          CONCURRENT_PROMISES[key] = fn(...fnArgs)
           CONCURRENT_PROMISES_TS[key] = startAt = ++__timestamp
 
           newData = await CONCURRENT_PROMISES[key]
