@@ -9,10 +9,10 @@ const advanceTimers = async (ms: number) => jest.advanceTimersByTime(ms)
 // This test heavily depends on setInterval/setTimeout timers, which makes tests slower and flaky.
 // So we use Jest's fake timers
 describe('useSWR - refresh', () => {
-  beforeEach(() => {
+  beforeAll(() => {
     jest.useFakeTimers()
   })
-  afterEach(() => {
+  afterAll(() => {
     jest.useRealTimers()
   })
   it('should rerender automatically on interval', async () => {
