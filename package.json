@@ -85,8 +85,8 @@
     "prettier": "1.18.2",
     "react": "17.0.1",
     "react-dom": "17.0.1",
-    "react-dom-experimental": "npm:react-dom@experimental",
-    "react-experimental": "npm:react@experimental",
+    "react-dom-experimental": "npm:react-dom@alpha",
+    "react-experimental": "npm:react@alpha",
     "ts-jest": "25.5.1",
     "typescript": "3.9.10"
   },
