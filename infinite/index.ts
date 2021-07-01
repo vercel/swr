@@ -3,6 +3,7 @@
 
 import { useRef, useState, useCallback } from 'react'
 import useSWR, {
+  mutate as globalMutate,
   SWRConfig,
   KeyLoader,
   Fetcher,
@@ -15,6 +16,24 @@ import { serialize } from '../src/utils/serialize'
 import { isUndefined, UNDEFINED } from '../src/utils/helper'
 import { withMiddleware } from '../src/utils/with-middleware'
 import { SWRInfiniteConfiguration, SWRInfiniteResponse } from './types'
+
+const getFirstPageKey = (getKey: KeyLoader<any>) => {
+  return serialize(getKey ? getKey(0, null) : null)[0]
+}
+
+const INFINITE_PREFIX = '$inf$'
+
+export const mutateInfinite = <Data = any>(
+  getKey: KeyLoader<Data>,
+  data?: Data | Promise<Data> | MutatorCallback<Data>,
+  shouldRevalidate?: boolean
+) => {
+  return globalMutate(
+    INFINITE_PREFIX + getFirstPageKey(getKey),
+    data,
+    shouldRevalidate
+  )
+}
 
 export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
   getKey: KeyLoader<Data>,
@@ -31,7 +50,7 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
   // get the serialized key of the first page
   let firstPageKey: string | null = null
   try {
-    firstPageKey = serialize(getKey ? getKey(0, null) : null)[0]
+    firstPageKey = getFirstPageKey(getKey)
   } catch (err) {
     // not ready
   }
@@ -86,7 +105,7 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
 
   // actual swr of all pages
   const swr = useSWRNext<Data[], Error>(
-    firstPageKey ? '$inf$' + firstPageKey : null,
+    firstPageKey ? INFINITE_PREFIX + firstPageKey : null,
     async () => {
       // get the revalidate context
       const { data: originalData, force } = cache.get(contextCacheKey) || {}
