@@ -592,7 +592,7 @@ describe('useSWRInfinite', () => {
     await screen.findByText('data:page-test-12-0:2')
 
     await act(() =>
-      mutateInfinite(index => `page-test-12-${index}`, 'local-mutation')
+      mutateInfinite(index => `page-test-12-${index}`, 'local-mutation', false)
     )
     await screen.findByText('data:local-mutation')
   })
