@@ -5391,14 +5391,14 @@ randombytes@^2.1.0:
   dependencies:
     safe-buffer "^5.1.0"
 
-"react-dom-experimental@npm:react-dom@experimental":
-  version "0.0.0-experimental-7d06b80af"
-  resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-0.0.0-experimental-7d06b80af.tgz#a61a2e4463a37703a6bf0a204310f0bf7e040e18"
-  integrity sha512-iI7GbXqDJVNN8RBY3f1WYMKKhBKya8q9yQ7CK/TmYIv+cvZps8+Up4DcKnH7pNDmQRK8hmBT0PChRAfbLRnn0A==
+"react-dom-experimental@npm:react-dom@alpha":
+  version "18.0.0-alpha-3e8c86c1c-20210630"
+  resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-18.0.0-alpha-3e8c86c1c-20210630.tgz#50dbbfc96ca2a629ec038abc1a78e98deab2b9df"
+  integrity sha512-QdoSnGuUUg65nzuPfDkvZrrBEVpI3HaF/DHXvlt+XtvTP3yk28e3gHN0fqaqxVJCVNuc5KKWAceQvATPI/wcxQ==
   dependencies:
     loose-envify "^1.1.0"
     object-assign "^4.1.1"
-    scheduler "0.0.0-experimental-7d06b80af"
+    scheduler "0.21.0-alpha-3e8c86c1c-20210630"
 
 react-dom@17.0.1:
   version "17.0.1"
@@ -5409,10 +5409,10 @@ react-dom@17.0.1:
     object-assign "^4.1.1"
     scheduler "^0.20.1"
 
-"react-experimental@npm:react@experimental":
-  version "0.0.0-experimental-7d06b80af"
-  resolved "https://registry.yarnpkg.com/react/-/react-0.0.0-experimental-7d06b80af.tgz#c32103deafbf00205f707c9d92c087adbcbfc19b"
-  integrity sha512-NgOfYj+Pflocms/wd+MoVQWuA1epleBvAx4ElrSXDmt4CgqAzYYdFhjsovl7jvUBaU7Vn5Pb1qhocCWyaUQNgw==
+"react-experimental@npm:react@alpha":
+  version "18.0.0-alpha-3e8c86c1c-20210630"
+  resolved "https://registry.yarnpkg.com/react/-/react-18.0.0-alpha-3e8c86c1c-20210630.tgz#a977421357ce8c4689dbdc14ae1e9c2b1790ad7b"
+  integrity sha512-YJ8oE+K5q5jODuPJMEDTnk280UpMlxSMq0eC8bbLQPxtIRVQJosFSjfLRCmD1FmEfrSsMloBtbOL8RgaI8PRvA==
   dependencies:
     loose-envify "^1.1.0"
     object-assign "^4.1.1"
@@ -5855,10 +5855,10 @@ saxes@^3.1.9:
   dependencies:
     xmlchars "^2.1.1"
 
-scheduler@0.0.0-experimental-7d06b80af:
-  version "0.0.0-experimental-7d06b80af"
-  resolved "https://registry.yarnpkg.com/scheduler/-/scheduler-0.0.0-experimental-7d06b80af.tgz#dc4d56ba912eb55197481783409a95edef9b323e"
-  integrity sha512-KPMZqd8Un0TZF3tyG3WJCAAAklj0pF86wQh/m1V3C2WYsHSkH2FoGrMmF8au4JvohpFK9026SYIiVwgCgzxPrw==
+scheduler@0.21.0-alpha-3e8c86c1c-20210630:
+  version "0.21.0-alpha-3e8c86c1c-20210630"
+  resolved "https://registry.yarnpkg.com/scheduler/-/scheduler-0.21.0-alpha-3e8c86c1c-20210630.tgz#086579b2cfb92949e42f3444d5c6ee784b81a0e8"
+  integrity sha512-8VVWsxkJxrJLj13vATi3OtXQVABbv85LVqqS1KSeaU1uppJTMNuuwiUnrbaBySmAahmgoRx96AQTC/y9ptofPw==
   dependencies:
     loose-envify "^1.1.0"
     object-assign "^4.1.1"

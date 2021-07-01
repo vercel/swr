@@ -1,12 +1,12 @@
 // This file includes some basic test cases for React Concurrent Mode.
 // Due to the nature of global cache, the current SWR implementation will not
-// be perfectly consistent in Concurrent Mode in every intermediate state.
+// be perfectly consistent in Concurrent rendering in every intermediate state.
 // Only eventual consistency is guaranteed.
 
 import { screen, fireEvent } from '@testing-library/react'
 import { createResponse, sleep } from './utils'
 
-describe('useSWR - concurrent mode', () => {
+describe('useSWR - concurrent rendering', () => {
   let React, ReactDOM, act, useSWR
 
   beforeEach(() => {
@@ -23,10 +23,10 @@ describe('useSWR - concurrent mode', () => {
     useSWR = require('../src').default
   })
 
-  it('should fetch data in concurrent mode', async () => {
+  it('should fetch data in concurrent rendering', async () => {
     const root = document.createElement('div')
     document.body.appendChild(root)
-    const reactRoot = ReactDOM.unstable_createRoot(root)
+    const reactRoot = ReactDOM.createRoot(root)
 
     function Page() {
       const { data } = useSWR(
@@ -51,7 +51,7 @@ describe('useSWR - concurrent mode', () => {
   it('should pause when changing the key inside a transition', async () => {
     const root = document.createElement('div')
     document.body.appendChild(root)
-    const reactRoot = ReactDOM.unstable_createRoot(root)
+    const reactRoot = ReactDOM.createRoot(root)
 
     const fetcher = (k: string) => createResponse(k, { delay: 100 })
     // eslint-disable-next-line react/prop-types
@@ -64,7 +64,7 @@ describe('useSWR - concurrent mode', () => {
       return <>data:{data}</>
     }
     function Page() {
-      const [startTransition, isPending] = React.unstable_useTransition()
+      const [isPending, startTransition] = React.useTransition()
       const [key, setKey] = React.useState('concurrent-2')
 
       return (
