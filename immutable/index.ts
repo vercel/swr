@@ -2,7 +2,7 @@
 import useSWR from 'swr'
 
 import { withMiddleware } from '../src/utils/with-middleware'
-import { Middleware, SWRHook } from '../src/types'
+import { Middleware } from '../src/types'
 
 export const immutable: Middleware = useSWRNext => (key, fetcher, config) => {
   // Always override all revalidate options.
@@ -12,4 +12,4 @@ export const immutable: Middleware = useSWRNext => (key, fetcher, config) => {
   return useSWRNext(key, fetcher, config)
 }
 
-export default withMiddleware(useSWR as SWRHook, immutable)
+export default withMiddleware(useSWR, immutable)
