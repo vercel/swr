@@ -35,7 +35,10 @@
   "license": "MIT",
   "scripts": {
     "build": "yarn build:core && yarn build:infinite && yarn build:immutable",
-    "watch": "bunchee src/index.ts --watch",
+    "watch": "concurrently \"yarn watch:core\" \"yarn watch:infinite\" \"yarn watch:immutable\"",
+    "watch:core": "bunchee src/index.ts --watch",
+    "watch:infinite": "bunchee index.ts --cwd infinite --watch",
+    "watch:immutable": "bunchee index.ts --cwd immutable --watch",
     "build:core": "bunchee src/index.ts -m --no-sourcemap",
     "build:infinite": "bunchee index.ts --cwd infinite -m --no-sourcemap",
     "build:immutable": "bunchee index.ts --cwd immutable -m --no-sourcemap",
