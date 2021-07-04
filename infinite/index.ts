@@ -2,8 +2,6 @@
 // hook where `key` and return type are not like the normal `useSWR` types.
 
 import { useRef, useState, useCallback } from 'react'
-
-// @ts-ignore
 import useSWR from 'swr'
 
 import defaultConfig from '../src/utils/config'
@@ -20,7 +18,7 @@ import {
   SWRInfiniteResponse,
   MutatorCallback,
   Middleware
-} from '../src/types'
+} from 'swr'
 
 export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
   getKey: KeyLoader<Data>,
