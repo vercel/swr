@@ -1,6 +1,6 @@
 import { act, render, screen, fireEvent } from '@testing-library/react'
 import React, { useEffect, useState } from 'react'
-import useSWR, { mutate, createCache, SWRConfig } from '../src'
+import useSWR, { mutate, createCache, SWRConfig } from 'swr'
 import { serialize } from '../src/utils/serialize'
 import { createResponse, sleep } from './utils'
 

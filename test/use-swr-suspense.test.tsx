@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import React, { ReactNode, Suspense, useEffect, useState } from 'react'
-import useSWR, { mutate } from '../src'
+import useSWR, { mutate } from 'swr'
 import { createResponse, sleep } from './utils'
 
 class ErrorBoundary extends React.Component<{ fallback: ReactNode }> {

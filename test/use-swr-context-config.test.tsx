@@ -1,6 +1,6 @@
 import { act, render, screen } from '@testing-library/react'
 import React from 'react'
-import useSWR, { mutate } from '../src'
+import useSWR, { mutate } from 'swr'
 import { createResponse } from './utils'
 
 describe('useSWR - context configs', () => {
