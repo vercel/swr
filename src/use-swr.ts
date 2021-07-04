@@ -18,6 +18,7 @@ import {
   SWRResponse,
   RevalidatorOptions,
   Updater,
+  Configuration,
   SWRConfiguration,
   Cache,
   ScopedMutator,
@@ -681,7 +682,7 @@ export function useSWRHandler<Data = any, Error = any>(
 export const SWRConfig = Object.defineProperty(ConfigProvider, 'default', {
   value: defaultConfig
 }) as typeof ConfigProvider & {
-  default: SWRConfiguration
+  default: Configuration
 }
 
 export const mutate = internalMutate.bind(

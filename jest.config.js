@@ -5,8 +5,7 @@ module.exports = {
   modulePathIgnorePatterns: ['<rootDir>/examples/'],
   setupFilesAfterEnv: ['<rootDir>/jest-setup.ts'],
   moduleNameMapper: {
-    '^swr$': '<rootDir>/src',
-    '^@swr-internal/(.*)': '<rootDir>/src/$1'
+    '^swr$': '<rootDir>/src'
   },
   globals: {
     'ts-jest': {

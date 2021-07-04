@@ -2,9 +2,8 @@
 // hook where `key` and return type are not like the normal `useSWR` types.
 
 import { useRef, useState, useCallback } from 'react'
-import useSWR from 'swr'
+import useSWR, { SWRConfig } from 'swr'
 
-import defaultConfig from '../src/utils/config'
 import { useIsomorphicLayoutEffect } from '../src/utils/env'
 import { serialize } from '../src/utils/serialize'
 import { isUndefined, UNDEFINED } from '../src/utils/helper'
@@ -23,7 +22,7 @@ import {
 export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
   getKey: KeyLoader<Data>,
   fn: Fetcher<Data> | null,
-  config: typeof defaultConfig & SWRInfiniteConfiguration<Data, Error>
+  config: typeof SWRConfig.default & SWRInfiniteConfiguration<Data, Error>
 ): SWRInfiniteResponse<Data, Error> => {
   const {
     cache,
