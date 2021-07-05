@@ -255,7 +255,7 @@ export function useSWRHandler<Data = any, Error = any>(
 
   // A revalidation must be triggered when mounted if:
   // - `revalidateOnMount` is explicitly set to `true`.
-  // - Suspense mode and there's stale data for the inital render.
+  // - Suspense mode and there's stale data for the initial render.
   // - Not suspense mode and there is no `initialData` and `revalidateWhenStale` is enabled.
   // - `revalidateWhenStale` is enabled but `data` is not defined.
   const shouldRevalidateOnMount = () => {
@@ -493,7 +493,7 @@ export function useSWRHandler<Data = any, Error = any>(
   useIsomorphicLayoutEffect(() => {
     if (!key) return UNDEFINED
 
-    // Not the inital render.
+    // Not the initial render.
     const keyChanged = initialMountedRef.current
     const softRevalidate = () => revalidate({ dedupe: true })
 
