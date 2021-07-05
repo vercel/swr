@@ -232,7 +232,7 @@ export function useSWRHandler<Data = any, Error = any>(
   ] = getGlobalState(cache)
 
   // `key` is the identifier of the SWR `data` state.
-  // `keyErr` and `keyValidating` are indentifiers of `error` and `isValidating`
+  // `keyErr` and `keyValidating` are identifiers of `error` and `isValidating`
   // which are derived from `key`.
   // `fnArgs` is a list of arguments for `fn`.
   const [key, fnArgs, keyErr, keyValidating] = serialize(_key)
