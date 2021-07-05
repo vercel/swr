@@ -1,6 +1,6 @@
 import { normalize } from './normalize-args'
 
-import { Key, Fetcher, Middleware, SWRConfiguration, SWRHook } from '../types'
+import { Key, Fetcher, Middleware, SWRConfiguration, SWRHook } from 'swr'
 
 // Create a custom hook with a middleware
 export function withMiddleware(

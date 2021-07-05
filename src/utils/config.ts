@@ -3,7 +3,8 @@ import { dequal } from 'dequal/lite'
 import { wrapCache } from './cache'
 import webPreset from './web-preset'
 import { slowConnection } from './env'
-import { Configuration, RevalidatorOptions, Revalidator } from '../types'
+import { RevalidatorOptions, Revalidator } from 'swr'
+import { Configuration } from '../types'
 import { UNDEFINED } from './helper'
 
 const fetcher = (url: string) => fetch(url).then(res => res.json())

@@ -1,4 +1,4 @@
-import { Cache } from '../types'
+import { Cache } from 'swr'
 
 export function wrapCache<Data = any>(provider: Cache<Data>): Cache {
   // We might want to inject an extra layer on top of `provider` in the future,
