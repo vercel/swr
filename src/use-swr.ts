@@ -1,6 +1,4 @@
-// TODO: use @ts-expect-error
 import { useCallback, useRef, useDebugValue } from 'react'
-
 import defaultConfig from './utils/config'
 import { wrapCache } from './utils/cache'
 import { IS_SERVER, rAF, useIsomorphicLayoutEffect } from './utils/env'
