@@ -71,13 +71,13 @@ export type SWRHook = <Data = any, Error = any>(
 ) => SWRResponse<Data, Error>
 
 // Middlewares guarantee that a SWRHook receives a key, fetcher, and config as the argument
-type SWRHookWithdMiddleware = <Data = any, Error = any>(
+type SWRHookWithMiddleware = <Data = any, Error = any>(
   key: Key,
   fetcher: Fetcher<Data> | null,
   config: SWRConfiguration<Data, Error>
 ) => SWRResponse<Data, Error>
 
-export type Middleware = (useSWRNext: SWRHook) => SWRHookWithdMiddleware
+export type Middleware = (useSWRNext: SWRHook) => SWRHookWithMiddleware
 
 export type ValueKey = string | any[] | null
 
