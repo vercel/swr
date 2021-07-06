@@ -5,8 +5,7 @@
     "strict": false
   },
   "include": [
-    "..",
-    "./test", 
-    "./jest-setup.ts"
+    ".", 
+    "../jest-setup.ts"
   ]
 }

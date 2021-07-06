@@ -1,7 +1,7 @@
 import { createContext, createElement, useContext, FC } from 'react'
 
 import mergeConfig from './merge-config'
-import { SWRConfiguration } from 'swr'
+import { SWRConfiguration } from '../types'
 
 export const SWRConfigContext = createContext<SWRConfiguration>({})
 

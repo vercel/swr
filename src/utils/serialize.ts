@@ -1,5 +1,5 @@
 import hash from './hash'
-import { Key } from 'swr'
+import { Key } from '../types'
 
 export function serialize(key: Key): [string, any, string, string] {
   if (typeof key === 'function') {

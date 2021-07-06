@@ -1,4 +1,4 @@
-import { Key, Fetcher, SWRConfiguration } from 'swr'
+import { Key, Fetcher, SWRConfiguration } from '../types'
 
 export function normalize<KeyType = Key, Data = any>(
   args:
