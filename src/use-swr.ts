@@ -683,6 +683,8 @@ export const SWRConfig = Object.defineProperty(ConfigProvider, 'default', {
   default: Configuration
 }
 
+export const mutateCustomCache = internalMutate
+
 export const mutate = internalMutate.bind(
   null,
   defaultConfig.cache
