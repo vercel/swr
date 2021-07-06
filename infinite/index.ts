@@ -3,7 +3,7 @@
 
 import { useRef, useState, useCallback } from 'react'
 import useSWR, {
-  mutate as globalMutate,
+  mutateCustomCache,
   SWRConfig,
   KeyLoader,
   Fetcher,
@@ -11,6 +11,7 @@ import useSWR, {
   MutatorCallback,
   Middleware
 } from 'swr'
+import defaultConfig from '../src/utils/config'
 import { useIsomorphicLayoutEffect } from '../src/utils/env'
 import { serialize } from '../src/utils/serialize'
 import { isUndefined, UNDEFINED } from '../src/utils/helper'
@@ -26,9 +27,11 @@ const INFINITE_PREFIX = '$inf$'
 export const mutateInfinite = <Data = any>(
   getKey: KeyLoader<Data>,
   data?: Data | Promise<Data> | MutatorCallback<Data>,
-  shouldRevalidate?: boolean
+  shouldRevalidate?: boolean,
+  cache = defaultConfig.cache
 ) => {
-  return globalMutate(
+  return mutateCustomCache(
+    cache,
     INFINITE_PREFIX + getFirstPageKey(getKey),
     data,
     shouldRevalidate
