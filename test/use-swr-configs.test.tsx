@@ -1,6 +1,6 @@
 import { act, render, screen, fireEvent } from '@testing-library/react'
 import React, { useEffect, useState } from 'react'
-import useSWR, { mutate, SWRConfig } from '../src'
+import useSWR, { mutate, SWRConfig } from 'swr'
 import { sleep } from './utils'
 
 describe('useSWR - configs', () => {

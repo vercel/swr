@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import React, { useState } from 'react'
-import useSWR, { createCache, SWRConfig } from '../src'
+import useSWR, { createCache, SWRConfig } from 'swr'
 import { sleep, createKey } from './utils'
 
 describe('useSWR - cache', () => {

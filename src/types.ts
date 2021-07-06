@@ -47,6 +47,11 @@ export interface Configuration<
 
   compare: (a: Data | undefined, b: Data | undefined) => boolean
 
+  isOnline: () => boolean
+  isDocumentVisible: () => boolean
+  registerOnFocus: (cb: () => void) => void
+  registerOnReconnect: (cb: () => void) => void
+
   /**
    * @deprecated `revalidateOnMount` will be removed. Please considering using the `revalidateWhenStale` option.
    */
@@ -64,13 +69,6 @@ export type SWRHook = <Data = any, Error = any>(
         SWRConfiguration<Data, Error> | undefined
       ]
 ) => SWRResponse<Data, Error>
-
-export interface Preset {
-  isOnline: () => boolean
-  isDocumentVisible: () => boolean
-  registerOnFocus?: (cb: () => void) => void
-  registerOnReconnect?: (cb: () => void) => void
-}
 
 // Middlewares guarantee that a SWRHook receives a key, fetcher, and config as the argument
 type SWRHookWithMiddleware = <Data = any, Error = any>(

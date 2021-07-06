@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import React from 'react'
-import useSWR from '../src'
+import useSWR from 'swr'
 import { sleep } from './utils'
 
 const waitForNextTick = () => act(() => sleep(1))

@@ -20,7 +20,7 @@ describe('useSWR - concurrent rendering', () => {
     React = require('react')
     ReactDOM = require('react-dom')
     act = require('react-dom/test-utils').act
-    useSWR = require('../src').default
+    useSWR = require('swr').default
   })
 
   it('should fetch data in concurrent rendering', async () => {
