@@ -238,3 +238,4 @@ type SWRInfiniteHook = <Data = any, Error = any>(
 ) => SWRInfiniteResponse<Data, Error>
 
 export default withMiddleware(useSWR, infinite) as SWRInfiniteHook
+export { SWRInfiniteConfiguration, SWRInfiniteResponse }

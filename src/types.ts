@@ -183,6 +183,52 @@ export type KeyLoader<Data = any> =
   | null
 
 /**
+ * @deprecated `SWRInfiniteConfigInterface` will be renamed to `SWRInfiniteConfiguration`.
+ */
+export type SWRInfiniteConfigInterface<
+  Data = any,
+  Error = any
+> = SWRConfiguration<Data[], Error, Fetcher<Data[]>> & {
+  initialSize?: number
+  revalidateAll?: boolean
+  persistSize?: boolean
+}
+/**
+ * @deprecated `SWRInfiniteConfiguration` will be moved to `swr/infinite`.
+ */
+export type SWRInfiniteConfiguration<
+  Data = any,
+  Error = any
+> = SWRConfiguration<Data[], Error, Fetcher<Data[]>> & {
+  initialSize?: number
+  revalidateAll?: boolean
+  persistSize?: boolean
+}
+
+/**
+ * @deprecated `SWRInfiniteResponseInterface` will be renamed to `SWRInfiniteResponse` in `swr/infinite`.
+ */
+export type SWRInfiniteResponseInterface<Data = any, Error = any> = SWRResponse<
+  Data[],
+  Error
+> & {
+  size: number
+  setSize: (
+    size: number | ((_size: number) => number)
+  ) => Promise<Data[] | undefined>
+}
+/**
+ * @deprecated `SWRInfiniteResponse` will be moved to `swr/infinite`.
+ */
+export interface SWRInfiniteResponse<Data = any, Error = any>
+  extends SWRResponse<Data[], Error> {
+  size: number
+  setSize: (
+    size: number | ((_size: number) => number)
+  ) => Promise<Data[] | undefined>
+}
+
+/**
  * @deprecated `RevalidateOptionInterface` will be renamed to `RevalidatorOptions`.
  */
 export interface RevalidateOptionInterface {

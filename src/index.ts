@@ -8,6 +8,8 @@ export default useSWR
 // Types
 export {
   SWRConfiguration,
+  SWRInfiniteConfiguration,
+  SWRInfiniteResponse,
   Revalidator,
   RevalidatorOptions,
   Key,
@@ -20,6 +22,8 @@ export {
   Middleware,
   // Legacy, for backwards compatibility
   ConfigInterface,
+  SWRInfiniteConfigInterface,
+  SWRInfiniteResponseInterface,
   revalidateType,
   RevalidateOptionInterface,
   keyInterface,
