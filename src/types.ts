@@ -137,36 +137,14 @@ export type KeyedMutator<Data> = (
 
 // Public types
 
-/**
- * @deprecated `ConfigInterface` will be renamed to `SWRConfiguration`.
- */
-export type ConfigInterface<
-  Data = any,
-  Error = any,
-  Fn extends Fetcher<Data> = Fetcher<Data>
-> = Partial<Configuration<Data, Error, Fn>>
 export type SWRConfiguration<
   Data = any,
   Error = any,
   Fn extends Fetcher<Data> = Fetcher<Data>
 > = Partial<Configuration<Data, Error, Fn>>
 
-/**
- * @deprecated `keyInterface` will be renamed to `Key`.
- */
-export type keyInterface = ValueKey | (() => ValueKey)
 export type Key = ValueKey | (() => ValueKey)
 
-/**
- * @deprecated `responseInterface` will be renamed to `SWRResponse`.
- */
-export type responseInterface<Data, Error> = {
-  data?: Data
-  error?: Error
-  revalidate: () => Promise<boolean>
-  mutate: KeyedMutator<Data>
-  isValidating: boolean
-}
 export interface SWRResponse<Data, Error> {
   data?: Data
   error?: Error
@@ -181,71 +159,11 @@ export interface SWRResponse<Data, Error> {
 export type KeyLoader<Data = any> =
   | ((index: number, previousPageData: Data | null) => ValueKey)
   | null
-
-/**
- * @deprecated `SWRInfiniteConfigInterface` will be renamed to `SWRInfiniteConfiguration`.
- */
-export type SWRInfiniteConfigInterface<
-  Data = any,
-  Error = any
-> = SWRConfiguration<Data[], Error, Fetcher<Data[]>> & {
-  initialSize?: number
-  revalidateAll?: boolean
-  persistSize?: boolean
-}
-/**
- * @deprecated `SWRInfiniteConfiguration` will be moved to `swr/infinite`.
- */
-export type SWRInfiniteConfiguration<
-  Data = any,
-  Error = any
-> = SWRConfiguration<Data[], Error, Fetcher<Data[]>> & {
-  initialSize?: number
-  revalidateAll?: boolean
-  persistSize?: boolean
-}
-
-/**
- * @deprecated `SWRInfiniteResponseInterface` will be renamed to `SWRInfiniteResponse` in `swr/infinite`.
- */
-export type SWRInfiniteResponseInterface<Data = any, Error = any> = SWRResponse<
-  Data[],
-  Error
-> & {
-  size: number
-  setSize: (
-    size: number | ((_size: number) => number)
-  ) => Promise<Data[] | undefined>
-}
-/**
- * @deprecated `SWRInfiniteResponse` will be moved to `swr/infinite`.
- */
-export interface SWRInfiniteResponse<Data = any, Error = any>
-  extends SWRResponse<Data[], Error> {
-  size: number
-  setSize: (
-    size: number | ((_size: number) => number)
-  ) => Promise<Data[] | undefined>
-}
-
-/**
- * @deprecated `RevalidateOptionInterface` will be renamed to `RevalidatorOptions`.
- */
-export interface RevalidateOptionInterface {
-  retryCount?: number
-  dedupe?: boolean
-}
 export interface RevalidatorOptions {
   retryCount?: number
   dedupe?: boolean
 }
 
-/**
- * @deprecated `revalidateType` will be renamed to `Revalidator`.
- */
-export type revalidateType = (
-  revalidateOpts: RevalidatorOptions
-) => Promise<boolean>
 export type Revalidator = (
   revalidateOpts: RevalidatorOptions
 ) => Promise<boolean>
