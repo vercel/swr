@@ -1,7 +1,7 @@
 import { render, screen, act, fireEvent } from '@testing-library/react'
 import React, { useState } from 'react'
-import useSWR from '../src'
-import useSWRImmutable from '../immutable'
+import useSWR from 'swr'
+import useSWRImmutable from 'swr/immutable'
 import { sleep, createKey } from './utils'
 
 const waitForNextTick = () => act(() => sleep(1))

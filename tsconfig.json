@@ -15,6 +15,12 @@
     "rootDir": "src",
     "strict": true,
     "target": "es5",
+    "baseUrl": ".",
+    "paths": {
+      "swr": ["./src/index.ts"],
+      "swr/infinite": ["./infinite/index.ts"],
+      "swr/immutable": ["./immutable/index.ts"]
+    },
     "typeRoots": ["./src/types", "./node_modules/@types"]
   },
   "include": ["src"],

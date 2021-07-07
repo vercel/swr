@@ -1,6 +1,6 @@
 {
   "name": "swr",
-  "version": "1.0.0-beta.7",
+  "version": "1.0.0-beta.8",
   "description": "React Hooks library for remote data fetching",
   "main": "./dist/index.js",
   "module": "./dist/index.esm.js",
@@ -41,6 +41,7 @@
   "homepage": "https://swr.vercel.app",
   "license": "MIT",
   "scripts": {
+    "clean": "rm -rf dist infinite/dist immutable/dist passive/dist",
     "build": "yarn build:core && yarn build:infinite && yarn build:immutable && yarn build:passive",
     "watch": "concurrently \"yarn watch:core\" \"yarn watch:infinite\" \"yarn watch:immutable\" \"yarn watch:passive\"",
     "watch:core": "bunchee src/index.ts --watch",
@@ -51,7 +52,7 @@
     "build:infinite": "bunchee index.ts --cwd infinite -m --no-sourcemap",
     "build:immutable": "bunchee index.ts --cwd immutable -m --no-sourcemap",
     "build:passive": "bunchee index.ts --cwd passive -m --no-sourcemap",
-    "prepublishOnly": "rm -rf dist infinite/dist immutable/dist passive/dist && yarn build",
+    "prepublishOnly": "yarn clean && yarn build",
     "types:check": "tsc --noEmit",
     "format": "prettier --write \"{src,infinite,immutable,passive,test,examples}/**/*.{ts,tsx}\"",
     "lint": "eslint \"{src,infinite,immutable,passive,test,examples}/**/*.{ts,tsx}\"",

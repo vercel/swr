@@ -16,6 +16,9 @@ export {
   KeyLoader,
   SWRResponse,
   Cache,
+  SWRHook,
+  Fetcher,
+  MutatorCallback,
   Middleware,
   // Legacy, for backwards compatibility
   ConfigInterface,

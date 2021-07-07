@@ -1,6 +1,6 @@
 import { act, render, screen } from '@testing-library/react'
 import React, { useState, useEffect, useRef } from 'react'
-import useSWR, { Middleware, SWRConfig } from '../src'
+import useSWR, { Middleware, SWRConfig } from 'swr'
 import { createResponse, sleep, createKey } from './utils'
 
 describe('useSWR - middlewares', () => {

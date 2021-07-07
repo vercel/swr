@@ -8,7 +8,7 @@
       "experimentalObjectRestSpread": true
     },
     "allowImportExportEverywhere": true,
-    "project": ["**/tsconfig.json", "tsconfig.test.json"]
+    "project": ["**/tsconfig.json"]
   },
   "plugins": ["@typescript-eslint", "react-hooks"],
   "extends": [

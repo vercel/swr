@@ -36,7 +36,7 @@ function onErrorRetry(
 }
 
 // Default config
-const defaultConfig = {
+const defaultConfig: Configuration = {
   // events
   onLoadingSlow: noop,
   onSuccess: noop,

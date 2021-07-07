@@ -47,6 +47,11 @@ export interface Configuration<
 
   compare: (a: Data | undefined, b: Data | undefined) => boolean
 
+  isOnline: () => boolean
+  isDocumentVisible: () => boolean
+  registerOnFocus: (cb: () => void) => void
+  registerOnReconnect: (cb: () => void) => void
+
   /**
    * @deprecated `revalidateOnMount` will be removed. Please considering using the `revalidateWhenStale` option.
    */
@@ -65,21 +70,14 @@ export type SWRHook = <Data = any, Error = any>(
       ]
 ) => SWRResponse<Data, Error>
 
-export interface Preset {
-  isOnline: () => boolean
-  isDocumentVisible: () => boolean
-  registerOnFocus?: (cb: () => void) => void
-  registerOnReconnect?: (cb: () => void) => void
-}
-
 // Middlewares guarantee that a SWRHook receives a key, fetcher, and config as the argument
-type SWRHookWithdMiddleware = <Data = any, Error = any>(
+type SWRHookWithMiddleware = <Data = any, Error = any>(
   key: Key,
   fetcher: Fetcher<Data> | null,
   config: SWRConfiguration<Data, Error>
 ) => SWRResponse<Data, Error>
 
-export type Middleware = (useSWRNext: SWRHook) => SWRHookWithdMiddleware
+export type Middleware = (useSWRNext: SWRHook) => SWRHookWithMiddleware
 
 export type ValueKey = string | any[] | null
 
@@ -195,6 +193,9 @@ export type SWRInfiniteConfigInterface<
   revalidateAll?: boolean
   persistSize?: boolean
 }
+/**
+ * @deprecated `SWRInfiniteConfiguration` will be moved to `swr/infinite`.
+ */
 export type SWRInfiniteConfiguration<
   Data = any,
   Error = any
@@ -205,7 +206,7 @@ export type SWRInfiniteConfiguration<
 }
 
 /**
- * @deprecated `SWRInfiniteResponseInterface` will be renamed to `SWRInfiniteResponse`.
+ * @deprecated `SWRInfiniteResponseInterface` will be renamed to `SWRInfiniteResponse` in `swr/infinite`.
  */
 export type SWRInfiniteResponseInterface<Data = any, Error = any> = SWRResponse<
   Data[],
@@ -216,6 +217,9 @@ export type SWRInfiniteResponseInterface<Data = any, Error = any> = SWRResponse<
     size: number | ((_size: number) => number)
   ) => Promise<Data[] | undefined>
 }
+/**
+ * @deprecated `SWRInfiniteResponse` will be moved to `swr/infinite`.
+ */
 export interface SWRInfiniteResponse<Data = any, Error = any>
   extends SWRResponse<Data[], Error> {
   size: number

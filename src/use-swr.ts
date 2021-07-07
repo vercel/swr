@@ -1,6 +1,4 @@
-// TODO: use @ts-expect-error
 import { useCallback, useRef, useDebugValue } from 'react'
-
 import defaultConfig from './utils/config'
 import { wrapCache } from './utils/cache'
 import { IS_SERVER, rAF, useIsomorphicLayoutEffect } from './utils/env'
@@ -18,6 +16,7 @@ import {
   SWRResponse,
   RevalidatorOptions,
   Updater,
+  Configuration,
   SWRConfiguration,
   Cache,
   ScopedMutator,
@@ -232,7 +231,7 @@ export function useSWRHandler<Data = any, Error = any>(
   ] = getGlobalState(cache)
 
   // `key` is the identifier of the SWR `data` state.
-  // `keyErr` and `keyValidating` are indentifiers of `error` and `isValidating`
+  // `keyErr` and `keyValidating` are identifiers of `error` and `isValidating`
   // which are derived from `key`.
   // `fnArgs` is a list of arguments for `fn`.
   const [key, fnArgs, keyErr, keyValidating] = serialize(_key)
@@ -255,7 +254,7 @@ export function useSWRHandler<Data = any, Error = any>(
 
   // A revalidation must be triggered when mounted if:
   // - `revalidateOnMount` is explicitly set to `true`.
-  // - Suspense mode and there's stale data for the inital render.
+  // - Suspense mode and there's stale data for the initial render.
   // - Not suspense mode and there is no `initialData` and `revalidateWhenStale` is enabled.
   // - `revalidateWhenStale` is enabled but `data` is not defined.
   const shouldRevalidateOnMount = () => {
@@ -493,7 +492,7 @@ export function useSWRHandler<Data = any, Error = any>(
   useIsomorphicLayoutEffect(() => {
     if (!key) return UNDEFINED
 
-    // Not the inital render.
+    // Not the initial render.
     const keyChanged = initialMountedRef.current
     const softRevalidate = () => revalidate({ dedupe: true })
 
@@ -681,7 +680,7 @@ export function useSWRHandler<Data = any, Error = any>(
 export const SWRConfig = Object.defineProperty(ConfigProvider, 'default', {
   value: defaultConfig
 }) as typeof ConfigProvider & {
-  default: SWRConfiguration
+  default: Configuration
 }
 
 export const mutate = internalMutate.bind(

@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import React, { useEffect, useState } from 'react'
-import useSWR, { mutate } from '../src'
+import useSWR, { mutate } from 'swr'
 import { sleep, createResponse } from './utils'
 
 describe('useSWR - error', () => {
