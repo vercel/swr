@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import React, { useState } from 'react'
-import useSWR from 'swr'
+import useSWR, { createCache } from 'swr'
 import { sleep } from './utils'
 
 const waitForNextTick = () => act(() => sleep(1))
@@ -199,5 +199,31 @@ describe('useSWR - focus', () => {
     // trigger revalidation
     await focusWindow()
     await screen.findByText('data: 5')
+  })
+
+  it('should revalidate on focus even with custom cache', async () => {
+    let value = 0
+    const { cache } = createCache(new Map())
+
+    function Page() {
+      const { data } = useSWR('revalidaOnFocus + cache', () => value++, {
+        cache,
+        revalidateOnFocus: true,
+        dedupingInterval: 0
+      })
+      return <div>data: {data}</div>
+    }
+
+    render(<Page />)
+    // hydration
+    screen.getByText('data:')
+    // mount
+    await screen.findByText('data: 0')
+
+    await waitForNextTick()
+    // trigger revalidation
+    await focusWindow()
+
+    await screen.findByText('data: 1')
   })
 })

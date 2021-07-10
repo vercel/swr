@@ -45,21 +45,30 @@ const getGlobalState = (cache: Cache) => {
   ]
 }
 
-// Setup DOM events listeners for `focus` and `reconnect` actions
-if (!IS_SERVER) {
+function attachGlobalEvents(config: Configuration) {
   const [FOCUS_REVALIDATORS, RECONNECT_REVALIDATORS] = getGlobalState(
-    defaultConfig.cache
+    config.cache
   )
   const revalidate = (revalidators: Record<string, Revalidator[]>) => {
-    if (!defaultConfig.isDocumentVisible() || !defaultConfig.isOnline()) return
+    if (!config.isDocumentVisible() || !config.isOnline()) return
 
     for (const key in revalidators) {
       if (revalidators[key][0]) revalidators[key][0]()
     }
   }
-  defaultConfig.registerOnFocus(() => revalidate(FOCUS_REVALIDATORS))
-  defaultConfig.registerOnReconnect(() => revalidate(RECONNECT_REVALIDATORS))
+  const onFocus = () => revalidate(FOCUS_REVALIDATORS)
+  const onReconnect = () => revalidate(RECONNECT_REVALIDATORS)
+  const dettachOnFoucs = config.attachOnFocus(onFocus)
+  const dettachOnReconnect = config.attachOnReconnect(onReconnect)
+
+  return () => {
+    dettachOnFoucs()
+    dettachOnReconnect()
+  }
 }
+
+// Setup DOM events listeners for `focus` and `reconnect` actions
+if (!IS_SERVER) attachGlobalEvents(defaultConfig)
 
 const broadcastState: Broadcaster = (
   cache: Cache,
@@ -487,6 +496,10 @@ export function useSWRHandler<Data = any, Error = any>(
   useIsomorphicLayoutEffect(() => {
     configRef.current = config
   })
+
+  useIsomorphicLayoutEffect(() => {
+    return attachGlobalEvents(configRef.current)
+  }, [configRef.current.cache])
 
   // After mounted or key changed.
   useIsomorphicLayoutEffect(() => {

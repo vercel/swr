@@ -9,52 +9,62 @@ import { isUndefined } from './helper'
  */
 let online = true
 const isOnline = () => online
+const createNoop = (ret?: any) => () => ret
+const add = 'addEventListener'
+const remove = 'removeEventListener'
 
-// For node and React Native, `window.addEventListener` doesn't exist.
-const addWindowEventListener =
-  typeof window !== 'undefined' && !isUndefined(window.addEventListener)
-    ? window.addEventListener.bind(window)
-    : null
-const addDocumentEventListener =
-  typeof document !== 'undefined'
-    ? document.addEventListener.bind(document)
-    : null
+type EventAction = 'addEventListener' | 'removeEventListener'
+
+const hasWindow = typeof window !== 'undefined'
+const hasDocument = typeof document !== 'undefined'
+
+// For node and React Native, `add/removeEventListener` doesn't exist on window.
+const windowEventListener = (action: EventAction) =>
+  hasWindow && !isUndefined(window[action])
+    ? window[action].bind(window)
+    : createNoop()
+const documentEventListener = (action: EventAction) =>
+  hasDocument ? document[action].bind(document) : createNoop()
 
 const isDocumentVisible = () => {
-  if (addDocumentEventListener) {
-    const visibilityState = document.visibilityState
-    if (!isUndefined(visibilityState)) {
-      return visibilityState !== 'hidden'
-    }
+  const visibilityState = hasDocument && document.visibilityState
+  if (!isUndefined(visibilityState)) {
+    return visibilityState !== 'hidden'
   }
-  // always assume it's visible
   return true
 }
 
-const registerOnFocus = (cb: () => void) => {
-  if (addWindowEventListener && addDocumentEventListener) {
-    // focus revalidate
-    addDocumentEventListener('visibilitychange', cb)
-    addWindowEventListener('focus', cb)
+const attachOnFocus = (cb: () => void) => {
+  // focus revalidate
+  documentEventListener(add)('visibilitychange', cb)
+  windowEventListener(add)('focus', cb)
+  return () => {
+    documentEventListener(remove)('visibilitychange', cb)
+    windowEventListener(remove)('focus', cb)
   }
 }
 
-const registerOnReconnect = (cb: () => void) => {
-  if (addWindowEventListener) {
-    // reconnect revalidate
-    addWindowEventListener('online', () => {
-      online = true
-      cb()
-    })
+const attachOnReconnect = (cb: () => void) => {
+  const onOnline = () => {
+    ;(online = true) && cb()
+  }
+  const onOffline = () => {
+    online = false
+  }
+  // reconnect revalidate
+  windowEventListener(add)('online', onOnline)
+  // nothing to revalidate, just update the status
+  windowEventListener(add)('offline', onOffline)
 
-    // nothing to revalidate, just update the status
-    addWindowEventListener('offline', () => (online = false))
+  return () => {
+    windowEventListener(remove)('online', onOnline)
+    windowEventListener(remove)('offline', onOffline)
   }
 }
 
 export default {
   isOnline,
   isDocumentVisible,
-  registerOnFocus,
-  registerOnReconnect
+  attachOnFocus,
+  attachOnReconnect
 } as const
