@@ -46,7 +46,8 @@ const attachOnFocus = (cb: () => void) => {
 
 const attachOnReconnect = (cb: () => void) => {
   const onOnline = () => {
-    ;(online = true) && cb()
+    online = true
+    cb()
   }
   const onOffline = () => {
     online = false
