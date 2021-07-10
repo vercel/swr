@@ -49,8 +49,8 @@ export interface Configuration<
 
   isOnline: () => boolean
   isDocumentVisible: () => boolean
-  attachOnFocus: (cb: () => void) => () => void
-  attachOnReconnect: (cb: () => void) => () => void
+  setupOnFocus: (cb: () => void) => () => void
+  setupOnReconnect: (cb: () => void) => () => void
 
   /**
    * @deprecated `revalidateOnMount` will be removed. Please considering using the `revalidateWhenStale` option.

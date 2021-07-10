@@ -34,7 +34,7 @@ const isDocumentVisible = () => {
   return true
 }
 
-const attachOnFocus = (cb: () => void) => {
+const setupOnFocus = (cb: () => void) => {
   // focus revalidate
   documentEventListener(add)('visibilitychange', cb)
   windowEventListener(add)('focus', cb)
@@ -44,7 +44,7 @@ const attachOnFocus = (cb: () => void) => {
   }
 }
 
-const attachOnReconnect = (cb: () => void) => {
+const setupOnReconnect = (cb: () => void) => {
   const onOnline = () => {
     online = true
     cb()
@@ -66,6 +66,6 @@ const attachOnReconnect = (cb: () => void) => {
 export default {
   isOnline,
   isDocumentVisible,
-  attachOnFocus,
-  attachOnReconnect
+  setupOnFocus,
+  setupOnReconnect
 } as const

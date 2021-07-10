@@ -58,8 +58,8 @@ function attachGlobalEvents(config: Configuration) {
   }
   const onFocus = () => revalidate(FOCUS_REVALIDATORS)
   const onReconnect = () => revalidate(RECONNECT_REVALIDATORS)
-  const dettachOnFoucs = config.attachOnFocus(onFocus)
-  const dettachOnReconnect = config.attachOnReconnect(onReconnect)
+  const dettachOnFoucs = config.setupOnFocus(onFocus)
+  const dettachOnReconnect = config.setupOnReconnect(onReconnect)
 
   return () => {
     dettachOnFoucs()
