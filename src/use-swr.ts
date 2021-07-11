@@ -45,7 +45,7 @@ const getGlobalState = (cache: Cache) => {
   ]
 }
 
-function attachGlobalEvents(config: Configuration) {
+function setupGlobalEvents(config: Configuration) {
   const [FOCUS_REVALIDATORS, RECONNECT_REVALIDATORS] = getGlobalState(
     config.cache
   )
@@ -58,17 +58,17 @@ function attachGlobalEvents(config: Configuration) {
   }
   const onFocus = () => revalidate(FOCUS_REVALIDATORS)
   const onReconnect = () => revalidate(RECONNECT_REVALIDATORS)
-  const dettachOnFoucs = config.setupOnFocus(onFocus)
-  const dettachOnReconnect = config.setupOnReconnect(onReconnect)
+  const teardownOnFoucs = config.setupOnFocus(onFocus)
+  const teardownOnReconnect = config.setupOnReconnect(onReconnect)
 
   return () => {
-    dettachOnFoucs()
-    dettachOnReconnect()
+    teardownOnFoucs()
+    teardownOnReconnect()
   }
 }
 
 // Setup DOM events listeners for `focus` and `reconnect` actions
-if (!IS_SERVER) attachGlobalEvents(defaultConfig)
+if (!IS_SERVER) setupGlobalEvents(defaultConfig)
 
 const broadcastState: Broadcaster = (
   cache: Cache,
@@ -498,7 +498,7 @@ export function useSWRHandler<Data = any, Error = any>(
   })
 
   useIsomorphicLayoutEffect(() => {
-    return attachGlobalEvents(configRef.current)
+    return setupGlobalEvents(configRef.current)
   }, [configRef.current.cache])
 
   // After mounted or key changed.

@@ -206,7 +206,7 @@ describe('useSWR - focus', () => {
     const { cache } = createCache(new Map())
 
     function Page() {
-      const { data } = useSWR('revalidaOnFocus + cache', () => value++, {
+      const { data } = useSWR('revalidateOnFocus + cache', () => value++, {
         cache,
         revalidateOnFocus: true,
         dedupingInterval: 0
@@ -214,16 +214,12 @@ describe('useSWR - focus', () => {
       return <div>data: {data}</div>
     }
 
+    // reuse default test case
     render(<Page />)
-    // hydration
     screen.getByText('data:')
-    // mount
     await screen.findByText('data: 0')
-
     await waitForNextTick()
-    // trigger revalidation
     await focusWindow()
-
     await screen.findByText('data: 1')
   })
 })
