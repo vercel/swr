@@ -602,7 +602,7 @@ describe('useSWRInfinite', () => {
     await screen.findByText('data:local-mutation')
   })
 
-  xit('should be able to use getInfinitePageKey with a custom cache', async () => {
+  it('should be able to use getInfinitePageKey with a custom cache', async () => {
     const key = 'page-test-13;'
     const customCache1 = new Map([[key, 'initial-cache']])
     const { cache, mutate: mutateCustomCache } = createCache(customCache1)
@@ -624,7 +624,7 @@ describe('useSWRInfinite', () => {
     await screen.findByText('data:initial-cache')
 
     await act(() => mutateCustomCache(getInfinitePageKey(() => key)))
-    await screen.findByText('data:initial-cache')
+    await screen.findByText('data:response data')
 
     await act(() =>
       mutateCustomCache(getInfinitePageKey(() => key), 'local-mutation', false)
