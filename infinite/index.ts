@@ -3,7 +3,6 @@
 
 import { useRef, useState, useCallback } from 'react'
 import useSWR, {
-  mutateCustomCache,
   SWRConfig,
   KeyLoader,
   Fetcher,
@@ -11,12 +10,13 @@ import useSWR, {
   MutatorCallback,
   Middleware
 } from 'swr'
-import defaultConfig from '../src/utils/config'
 import { useIsomorphicLayoutEffect } from '../src/utils/env'
 import { serialize } from '../src/utils/serialize'
 import { isUndefined, UNDEFINED } from '../src/utils/helper'
 import { withMiddleware } from '../src/utils/with-middleware'
 import { SWRInfiniteConfiguration, SWRInfiniteResponse } from './types'
+
+const INFINITE_PREFIX = '$inf$'
 
 const getFirstPageKey = (getKey: KeyLoader<any>) => {
   return serialize(getKey ? getKey(0, null) : null)[0]
@@ -24,22 +24,6 @@ const getFirstPageKey = (getKey: KeyLoader<any>) => {
 
 export const getInfinitePageKey = (getKey: KeyLoader<any>) => {
   return INFINITE_PREFIX + getFirstPageKey(getKey)
-}
-
-const INFINITE_PREFIX = '$inf$'
-
-export const mutateInfinite = <Data = any>(
-  getKey: KeyLoader<Data>,
-  data?: Data | Promise<Data> | MutatorCallback<Data>,
-  shouldRevalidate?: boolean,
-  cache = defaultConfig.cache
-) => {
-  return mutateCustomCache(
-    cache,
-    INFINITE_PREFIX + getFirstPageKey(getKey),
-    data,
-    shouldRevalidate
-  )
 }
 
 export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (

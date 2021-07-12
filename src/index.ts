@@ -1,5 +1,5 @@
 // Core APIs
-export { SWRConfig, mutate, createCache, mutateCustomCache } from './use-swr'
+export { SWRConfig, mutate, createCache } from './use-swr'
 
 // useSWR
 import useSWR from './use-swr'
