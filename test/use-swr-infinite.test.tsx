@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { render, fireEvent, act, screen } from '@testing-library/react'
 import { mutate, createCache, SWRConfig } from 'swr'
-import useSWRInfinite, { getInfinitePageKey } from 'swr/infinite'
+import useSWRInfinite, { getInfiniteKey } from 'swr/infinite'
 import { sleep, createResponse } from './utils'
 
 describe('useSWRInfinite', () => {
@@ -572,7 +572,7 @@ describe('useSWRInfinite', () => {
     fireEvent.click(screen.getByText('data:'))
     await screen.findByText('data:')
   })
-  it('should mutate a cache with getInfinitePageKey', async () => {
+  it('should mutate a cache with getInfiniteKey', async () => {
     let count = 0
     function Page() {
       const { data } = useSWRInfinite<string, string>(
@@ -587,14 +587,12 @@ describe('useSWRInfinite', () => {
 
     await screen.findByText('data:page-test-12-0:1')
 
-    await act(() =>
-      mutate(getInfinitePageKey(index => `page-test-12-${index}`))
-    )
+    await act(() => mutate(getInfiniteKey(index => `page-test-12-${index}`)))
     await screen.findByText('data:page-test-12-0:2')
 
     await act(() =>
       mutate(
-        getInfinitePageKey(index => `page-test-12-${index}`),
+        getInfiniteKey(index => `page-test-12-${index}`),
         'local-mutation',
         false
       )
@@ -602,7 +600,7 @@ describe('useSWRInfinite', () => {
     await screen.findByText('data:local-mutation')
   })
 
-  it('should be able to use getInfinitePageKey with a custom cache', async () => {
+  it('should be able to use getInfiniteKey with a custom cache', async () => {
     const key = 'page-test-13;'
     const customCache1 = new Map([[key, 'initial-cache']])
     const { cache, mutate: mutateCustomCache } = createCache(customCache1)
@@ -623,11 +621,11 @@ describe('useSWRInfinite', () => {
 
     await screen.findByText('data:initial-cache')
 
-    await act(() => mutateCustomCache(getInfinitePageKey(() => key)))
+    await act(() => mutateCustomCache(getInfiniteKey(() => key)))
     await screen.findByText('data:response data')
 
     await act(() =>
-      mutateCustomCache(getInfinitePageKey(() => key), 'local-mutation', false)
+      mutateCustomCache(getInfiniteKey(() => key), 'local-mutation', false)
     )
     await screen.findByText('data:local-mutation')
   })
