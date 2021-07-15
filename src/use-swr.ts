@@ -49,17 +49,16 @@ const getGlobalState = (cache: Cache) => {
 
 function setupGlobalEvents(cache: Cache, _provider: Partial<Provider> = {}) {
   if (IS_SERVER) return
-  const provider = { ..._provider, ...defaultProvider } as Provider
+  const provider = { ...defaultProvider, ..._provider }
   const [FOCUS_REVALIDATORS, RECONNECT_REVALIDATORS] = getGlobalState(cache)
   const revalidate = (revalidators: Record<string, Revalidator[]>) => {
     for (const key in revalidators) {
       if (revalidators[key][0]) revalidators[key][0]()
     }
   }
-  const onFocus = () => revalidate(FOCUS_REVALIDATORS)
-  const onReconnect = () => revalidate(RECONNECT_REVALIDATORS)
-  provider.setupOnFocus(onFocus)
-  provider.setupOnReconnect(onReconnect)
+
+  provider.setupOnFocus(() => revalidate(FOCUS_REVALIDATORS))
+  provider.setupOnReconnect(() => revalidate(RECONNECT_REVALIDATORS))
 }
 
 // Setup DOM events listeners for `focus` and `reconnect` actions
