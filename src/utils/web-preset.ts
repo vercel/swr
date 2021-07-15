@@ -1,3 +1,4 @@
+import { Provider } from '../types'
 import { isUndefined } from './helper'
 
 /**
@@ -63,9 +64,12 @@ const setupOnReconnect = (cb: () => void) => {
   }
 }
 
-export default {
+export const preset = {
   isOnline,
-  isDocumentVisible,
+  isDocumentVisible
+} as const
+
+export const provider: Provider = {
   setupOnFocus,
   setupOnReconnect
-} as const
+}

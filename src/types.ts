@@ -56,7 +56,7 @@ export interface Configuration<
   revalidateOnMount?: boolean
 }
 
-export type Preset = {
+export type Provider = {
   setupOnFocus: (cb: () => void) => () => void
   setupOnReconnect: (cb: () => void) => () => void
 }

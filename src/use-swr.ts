@@ -1,5 +1,6 @@
 import { useCallback, useRef, useDebugValue } from 'react'
 import defaultConfig from './utils/config'
+import { provider as defaultProvider } from './utils/web-preset'
 import { wrapCache } from './utils/cache'
 import { IS_SERVER, rAF, useIsomorphicLayoutEffect } from './utils/env'
 import { serialize } from './utils/serialize'
@@ -21,7 +22,7 @@ import {
   Cache,
   ScopedMutator,
   SWRHook,
-  Preset
+  Provider
 } from './types'
 
 type Revalidator = (...args: any[]) => void
@@ -46,12 +47,9 @@ const getGlobalState = (cache: Cache) => {
   ]
 }
 
-function setupGlobalEvents(cache: Cache, options: Partial<Preset> = {}) {
+function setupGlobalEvents(cache: Cache, _provider: Partial<Provider> = {}) {
   if (IS_SERVER) return
-
-  const setupOnFocus = options.setupOnFocus || defaultConfig.setupOnFocus
-  const setupOnReconnect =
-    options.setupOnReconnect || defaultConfig.setupOnReconnect
+  const provider = { ..._provider, ...defaultProvider } as Provider
   const [FOCUS_REVALIDATORS, RECONNECT_REVALIDATORS] = getGlobalState(cache)
   const revalidate = (revalidators: Record<string, Revalidator[]>) => {
     for (const key in revalidators) {
@@ -60,8 +58,8 @@ function setupGlobalEvents(cache: Cache, options: Partial<Preset> = {}) {
   }
   const onFocus = () => revalidate(FOCUS_REVALIDATORS)
   const onReconnect = () => revalidate(RECONNECT_REVALIDATORS)
-  setupOnFocus(onFocus)
-  setupOnReconnect(onReconnect)
+  provider.setupOnFocus(onFocus)
+  provider.setupOnReconnect(onReconnect)
 }
 
 // Setup DOM events listeners for `focus` and `reconnect` actions

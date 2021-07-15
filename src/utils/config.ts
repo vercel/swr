@@ -1,14 +1,9 @@
 import { dequal } from 'dequal/lite'
 
 import { wrapCache } from './cache'
-import webPreset from './web-preset'
+import { preset } from './web-preset'
 import { slowConnection } from './env'
-import {
-  Configuration,
-  RevalidatorOptions,
-  Revalidator,
-  Preset
-} from '../types'
+import { Configuration, RevalidatorOptions, Revalidator } from '../types'
 import { UNDEFINED } from './helper'
 
 const fetcher = (url: string) => fetch(url).then(res => res.json())
@@ -22,7 +17,7 @@ function onErrorRetry(
   revalidate: Revalidator,
   opts: Required<RevalidatorOptions>
 ): void {
-  if (!webPreset.isDocumentVisible()) {
+  if (!preset.isDocumentVisible()) {
     // If it's hidden, stop. It will auto revalidate when refocusing.
     return
   }
@@ -41,7 +36,7 @@ function onErrorRetry(
 }
 
 // Default config
-const defaultConfig: Configuration & Preset = {
+const defaultConfig: Configuration = {
   // events
   onLoadingSlow: noop,
   onSuccess: noop,
@@ -66,8 +61,8 @@ const defaultConfig: Configuration & Preset = {
   isPaused: () => false,
   cache: wrapCache(new Map()),
 
-  // presets
-  ...webPreset
+  // use web preset by default
+  ...preset
 } as const
 
 export default defaultConfig
