@@ -20,7 +20,8 @@ import {
   SWRConfiguration,
   Cache,
   ScopedMutator,
-  SWRHook
+  SWRHook,
+  Preset
 } from './types'
 
 type Revalidator = (...args: any[]) => void
@@ -45,30 +46,26 @@ const getGlobalState = (cache: Cache) => {
   ]
 }
 
-function setupGlobalEvents(config: Configuration) {
-  const [FOCUS_REVALIDATORS, RECONNECT_REVALIDATORS] = getGlobalState(
-    config.cache
-  )
-  const revalidate = (revalidators: Record<string, Revalidator[]>) => {
-    if (!config.isDocumentVisible() || !config.isOnline()) return
+function setupGlobalEvents(cache: Cache, options: Partial<Preset> = {}) {
+  if (IS_SERVER) return
 
+  const setupOnFocus = options.setupOnFocus || defaultConfig.setupOnFocus
+  const setupOnReconnect =
+    options.setupOnReconnect || defaultConfig.setupOnReconnect
+  const [FOCUS_REVALIDATORS, RECONNECT_REVALIDATORS] = getGlobalState(cache)
+  const revalidate = (revalidators: Record<string, Revalidator[]>) => {
     for (const key in revalidators) {
       if (revalidators[key][0]) revalidators[key][0]()
     }
   }
   const onFocus = () => revalidate(FOCUS_REVALIDATORS)
   const onReconnect = () => revalidate(RECONNECT_REVALIDATORS)
-  const teardownOnFoucs = config.setupOnFocus(onFocus)
-  const teardownOnReconnect = config.setupOnReconnect(onReconnect)
-
-  return () => {
-    teardownOnFoucs()
-    teardownOnReconnect()
-  }
+  setupOnFocus(onFocus)
+  setupOnReconnect(onReconnect)
 }
 
 // Setup DOM events listeners for `focus` and `reconnect` actions
-if (!IS_SERVER) setupGlobalEvents(defaultConfig)
+setupGlobalEvents(defaultConfig.cache)
 
 const broadcastState: Broadcaster = (
   cache: Cache,
@@ -497,10 +494,6 @@ export function useSWRHandler<Data = any, Error = any>(
     configRef.current = config
   })
 
-  useIsomorphicLayoutEffect(() => {
-    return setupGlobalEvents(configRef.current)
-  }, [configRef.current.cache])
-
   // After mounted or key changed.
   useIsomorphicLayoutEffect(() => {
     if (!key) return UNDEFINED
@@ -535,10 +528,13 @@ export function useSWRHandler<Data = any, Error = any>(
       }
     }
 
+    const isVisible = () =>
+      configRef.current.isDocumentVisible() && configRef.current.isOnline()
+
     // Add event listeners.
     let pending = false
     const onFocus = () => {
-      if (configRef.current.revalidateOnFocus && !pending) {
+      if (configRef.current.revalidateOnFocus && !pending && isVisible()) {
         pending = true
         softRevalidate()
         setTimeout(
@@ -549,7 +545,7 @@ export function useSWRHandler<Data = any, Error = any>(
     }
 
     const onReconnect = () => {
-      if (configRef.current.revalidateOnReconnect) {
+      if (configRef.current.revalidateOnReconnect && isVisible()) {
         softRevalidate()
       }
     }
@@ -708,6 +704,7 @@ export function createCache<Data>(
   mutate: ScopedMutator<Data>
 } {
   const cache = wrapCache<Data>(provider)
+  setupGlobalEvents(cache)
   return {
     cache,
     mutate: internalMutate.bind(null, cache) as ScopedMutator<Data>
