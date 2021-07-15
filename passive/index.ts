@@ -1,18 +1,16 @@
 // @ts-ignore
-import useSWR from 'swr'
-import { useCallback } from 'react'
-
-import { withMiddleware } from '../src/utils/with-middleware'
-import { serialize } from '../src/utils/serialize'
-
-import {
+import useSWR, {
   Middleware,
   SWRHook,
   Key,
   Fetcher,
   SWRConfiguration,
   SWRResponse
-} from '../src/types'
+} from 'swr'
+import { useCallback } from 'react'
+
+import { withMiddleware } from '../src/utils/with-middleware'
+import { serialize } from '../src/utils/serialize'
 
 export const passive = ((<Data, Error>(useSWRNext: SWRHook) => (
   key: Key,
