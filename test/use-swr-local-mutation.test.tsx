@@ -2,9 +2,7 @@ import { act, render, screen, fireEvent } from '@testing-library/react'
 import React, { useEffect, useState } from 'react'
 import useSWR, { mutate, createCache, SWRConfig } from 'swr'
 import { serialize } from '../src/utils/serialize'
-import { createResponse, sleep } from './utils'
-
-const waitForNextTick = () => act(() => sleep(1))
+import { createResponse, sleep, nextTick as waitForNextTick } from './utils'
 
 describe('useSWR - local mutation', () => {
   it('should trigger revalidation programmatically', async () => {

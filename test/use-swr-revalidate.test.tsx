@@ -1,9 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import React from 'react'
 import useSWR from 'swr'
-import { createResponse, sleep } from './utils'
-
-const waitForNextTick = () => act(() => sleep(1))
+import { createResponse, sleep, nextTick as waitForNextTick } from './utils'
 
 describe('useSWR - revalidate', () => {
   it('should rerender after triggering revalidation', async () => {
