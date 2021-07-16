@@ -696,7 +696,7 @@ export const mutate = internalMutate.bind(
 
 export function createCache<Data>(
   provider: Cache,
-  options?: ProviderOptions
+  options?: Partial<ProviderOptions>
 ): {
   cache: Cache
   mutate: ScopedMutator<Data>

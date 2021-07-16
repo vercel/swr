@@ -57,7 +57,8 @@ describe('useSWR - focus', () => {
     // should not be revalidated
     screen.getByText('data: 0')
   })
-  it('revalidateOnFocus shoule be stateful', async () => {
+
+  it('revalidateOnFocus should be stateful', async () => {
     let value = 0
 
     function Page() {
