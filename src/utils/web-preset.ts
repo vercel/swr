@@ -1,4 +1,4 @@
-import { Provider } from '../types'
+import { ProviderOptions } from '../types'
 import { isUndefined } from './helper'
 
 /**
@@ -10,22 +10,16 @@ import { isUndefined } from './helper'
  */
 let online = true
 const isOnline = () => online
-const createNoop = (ret?: any) => () => ret
-const add = 'addEventListener'
-const remove = 'removeEventListener'
-
-type EventAction = 'addEventListener' | 'removeEventListener'
+const noop = () => {}
+const ADD = 'addEventListener'
 
 const hasWindow = typeof window !== 'undefined'
 const hasDocument = typeof document !== 'undefined'
 
 // For node and React Native, `add/removeEventListener` doesn't exist on window.
-const windowEventListener = (action: EventAction) =>
-  hasWindow && !isUndefined(window[action])
-    ? window[action].bind(window)
-    : createNoop()
-const documentEventListener = (action: EventAction) =>
-  hasDocument ? document[action].bind(document) : createNoop()
+const onWindowEvent =
+  hasWindow && !isUndefined(window[ADD]) ? window[ADD].bind(window) : noop
+const onDocumentEvent = hasDocument ? document[ADD].bind(document) : noop
 
 const isDocumentVisible = () => {
   const visibilityState = hasDocument && document.visibilityState
@@ -37,31 +31,20 @@ const isDocumentVisible = () => {
 
 const setupOnFocus = (cb: () => void) => {
   // focus revalidate
-  documentEventListener(add)('visibilitychange', cb)
-  windowEventListener(add)('focus', cb)
-  return () => {
-    documentEventListener(remove)('visibilitychange', cb)
-    windowEventListener(remove)('focus', cb)
-  }
+  onDocumentEvent('visibilitychange', cb)
+  onWindowEvent('focus', cb)
 }
 
 const setupOnReconnect = (cb: () => void) => {
-  const onOnline = () => {
+  // reconnect revalidate
+  onWindowEvent('online', () => {
     online = true
     cb()
-  }
-  const onOffline = () => {
-    online = false
-  }
-  // reconnect revalidate
-  windowEventListener(add)('online', onOnline)
+  })
   // nothing to revalidate, just update the status
-  windowEventListener(add)('offline', onOffline)
-
-  return () => {
-    windowEventListener(remove)('online', onOnline)
-    windowEventListener(remove)('offline', onOffline)
-  }
+  onWindowEvent('offline', () => {
+    online = false
+  })
 }
 
 export const preset = {
@@ -69,7 +52,7 @@ export const preset = {
   isDocumentVisible
 } as const
 
-export const provider: Provider = {
+export const provider: ProviderOptions = {
   setupOnFocus,
   setupOnReconnect
 }

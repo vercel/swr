@@ -56,9 +56,9 @@ export interface Configuration<
   revalidateOnMount?: boolean
 }
 
-export type Provider = {
-  setupOnFocus: (cb: () => void) => () => void
-  setupOnReconnect: (cb: () => void) => () => void
+export type ProviderOptions = {
+  setupOnFocus: (cb: () => void) => void
+  setupOnReconnect: (cb: () => void) => void
 }
 
 export type SWRHook = <Data = any, Error = any>(

@@ -22,7 +22,7 @@ import {
   Cache,
   ScopedMutator,
   SWRHook,
-  Provider
+  ProviderOptions
 } from './types'
 
 type Revalidator = (...args: any[]) => void
@@ -47,9 +47,9 @@ const getGlobalState = (cache: Cache) => {
   ]
 }
 
-function setupGlobalEvents(cache: Cache, _provider: Partial<Provider> = {}) {
+function setupGlobalEvents(cache: Cache, _opts: Partial<ProviderOptions> = {}) {
   if (IS_SERVER) return
-  const provider = { ...defaultProvider, ..._provider }
+  const opts = { ...defaultProvider, ..._opts }
   const [FOCUS_REVALIDATORS, RECONNECT_REVALIDATORS] = getGlobalState(cache)
   const revalidate = (revalidators: Record<string, Revalidator[]>) => {
     for (const key in revalidators) {
@@ -57,8 +57,8 @@ function setupGlobalEvents(cache: Cache, _provider: Partial<Provider> = {}) {
     }
   }
 
-  provider.setupOnFocus(() => revalidate(FOCUS_REVALIDATORS))
-  provider.setupOnReconnect(() => revalidate(RECONNECT_REVALIDATORS))
+  opts.setupOnFocus(() => revalidate(FOCUS_REVALIDATORS))
+  opts.setupOnReconnect(() => revalidate(RECONNECT_REVALIDATORS))
 }
 
 // Setup DOM events listeners for `focus` and `reconnect` actions
@@ -695,13 +695,14 @@ export const mutate = internalMutate.bind(
 ) as ScopedMutator
 
 export function createCache<Data>(
-  provider: Cache
+  provider: Cache,
+  options?: ProviderOptions
 ): {
   cache: Cache
   mutate: ScopedMutator<Data>
 } {
   const cache = wrapCache<Data>(provider)
-  setupGlobalEvents(cache)
+  setupGlobalEvents(cache, options)
   return {
     cache,
     mutate: internalMutate.bind(null, cache) as ScopedMutator<Data>
