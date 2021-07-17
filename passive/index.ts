@@ -37,8 +37,9 @@ export const passive = ((<Data, Error>(useSWRNext: SWRHook) => (
   // Method to trigger the request manually.
   const trigger = useCallback(
     (...extraArgs) => {
-      // Should we throw here as it's not ready to mutate?
-      if (!keyStr || !fetcher) return
+      // If it's not ready to fetch, we throw an error.
+      if (!keyStr) throw new Error('Empty SWR key.')
+      if (!fetcher) throw new Error('Missing SWR fetcher.')
 
       // Mutate the SWR data and return the result.
       return swr.mutate(fetcher(...args, ...extraArgs), false)
