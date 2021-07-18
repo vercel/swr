@@ -1,9 +1,6 @@
 import { useEffect, useLayoutEffect } from 'react'
 
-export const IS_SERVER =
-  typeof window === 'undefined' ||
-  // @ts-expect-error
-  !!(typeof Deno !== 'undefined' && Deno.version && Deno.version.deno)
+export const IS_SERVER = typeof window === 'undefined' || 'Deno' in window
 
 const __requestAnimationFrame = !IS_SERVER
   ? window['requestAnimationFrame']
