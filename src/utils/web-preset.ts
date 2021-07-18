@@ -10,16 +10,14 @@ import { isUndefined } from './helper'
  */
 let online = true
 const isOnline = () => online
-const noop = () => {}
-const ADD = 'addEventListener'
-
 const hasWindow = typeof window !== 'undefined'
 const hasDocument = typeof document !== 'undefined'
+const add = 'addEventListener'
+function noop() {}
 
 // For node and React Native, `add/removeEventListener` doesn't exist on window.
-const onWindowEvent =
-  hasWindow && !isUndefined(window[ADD]) ? window[ADD].bind(window) : noop
-const onDocumentEvent = hasDocument ? document[ADD].bind(document) : noop
+const onWindowEvent = hasWindow && window[add] ? window[add] : noop
+const onDocumentEvent = hasDocument ? document[add] : noop
 
 const isDocumentVisible = () => {
   const visibilityState = hasDocument && document.visibilityState
