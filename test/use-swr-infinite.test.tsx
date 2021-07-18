@@ -629,4 +629,25 @@ describe('useSWRInfinite', () => {
     )
     await screen.findByText('data:local-mutation')
   })
+
+  it('should correctly set size when key is null', async () => {
+    const loggedValues = []
+
+    function Page() {
+      const { size, setSize } = useSWRInfinite<string, string>(
+        () => null,
+        () => ''
+      )
+      loggedValues.push(size)
+      return <button onClick={() => setSize(1)}>set size</button>
+    }
+
+    render(<Page />)
+
+    await screen.findByText('set size')
+    fireEvent.click(screen.getByText('set size'))
+    await act(() => sleep(1))
+
+    expect(loggedValues).toEqual([1])
+  })
 })
