@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { render, fireEvent, act, screen } from '@testing-library/react'
 import { mutate, createCache, SWRConfig } from 'swr'
 import useSWRInfinite, { getInfiniteKey } from 'swr/infinite'
-import { sleep, createResponse } from './utils'
+import { sleep, createKey, createResponse } from './utils'
 
 describe('useSWRInfinite', () => {
   it('should render the first page component', async () => {
@@ -154,9 +154,11 @@ describe('useSWRInfinite', () => {
 
   it('should skip fetching existing pages when loading more', async () => {
     let requests = 0
+    const key = createKey()
+
     function Page() {
       const { data, size, setSize } = useSWRInfinite<string, string>(
-        index => [`pagetest-4`, index],
+        index => [key, index],
         (_, index) => {
           requests++
           return createResponse(`page ${index}, `)
@@ -185,13 +187,13 @@ describe('useSWRInfinite', () => {
     fireEvent.click(screen.getByText('data:page 0,'))
 
     await screen.findByText('data:page 0, page 1,') // mounted
-    expect(requests).toEqual(2)
+    expect(requests).toEqual(3) // revalidate page 1, load page 2
 
     // load next page
     fireEvent.click(screen.getByText('data:page 0, page 1,'))
 
     await screen.findByText('data:page 0, page 1, page 2,') // mounted
-    expect(requests).toEqual(3)
+    expect(requests).toEqual(5) // revalidate page 1, load page 3
   })
 
   it('should cache page count', async () => {
@@ -572,6 +574,7 @@ describe('useSWRInfinite', () => {
     fireEvent.click(screen.getByText('data:'))
     await screen.findByText('data:')
   })
+
   it('should mutate a cache with getInfiniteKey', async () => {
     let count = 0
     function Page() {
@@ -649,5 +652,43 @@ describe('useSWRInfinite', () => {
     await act(() => sleep(1))
 
     expect(loggedValues).toEqual([1])
+  })
+
+  // https://github.com/vercel/swr/issues/908
+  it('should revalidate first page after mutating', async () => {
+    let renderedData
+    const key = createKey()
+    let v = 'old'
+
+    function Page() {
+      const { data, size, mutate: boundMutate } = useSWRInfinite<
+        string,
+        string
+      >(i => [key, i], () => v)
+      renderedData = data
+
+      return (
+        <div>
+          <button
+            onClick={() => {
+              v = 'new'
+              boundMutate([v])
+            }}
+          >
+            mutate
+          </button>
+          <p>size=${size}</p>
+        </div>
+      )
+    }
+
+    render(<Page />)
+
+    await screen.findByText('mutate')
+    await act(() => sleep(1))
+    expect(renderedData).toEqual(['old'])
+    fireEvent.click(screen.getByText('mutate'))
+    await act(() => sleep(1))
+    expect(renderedData).toEqual(['new'])
   })
 })

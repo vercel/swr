@@ -105,6 +105,7 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
       const data: Data[] = []
 
       const pageSize = resolvePageSize()
+
       let previousPageData = null
       for (let i = 0; i < pageSize; ++i) {
         const [pageKey, pageArgs] = serialize(
@@ -129,15 +130,11 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
           revalidateAll ||
           force ||
           isUndefined(pageData) ||
-          (isUndefined(force) && i === 0 && !isUndefined(dataRef.current)) ||
+          (i === 0 && !isUndefined(dataRef.current)) ||
           (originalData && !config.compare(originalData[i], pageData))
 
         if (fn && shouldFetchPage) {
-          if (pageArgs !== null) {
-            pageData = await fn(...pageArgs)
-          } else {
-            pageData = await fn(pageKey)
-          }
+          pageData = await fn(...pageArgs)
           cache.set(pageKey, pageData)
         }
 
