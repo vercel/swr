@@ -36,7 +36,9 @@ export const subscribe = (<Data, Error>(useSWRNext: SWRHook) => (
         await mutate(() => {
           throw err
         }, false)
-      } catch (_) {}
+      } catch (_) {
+        /* eslint-disable-line no-empty */
+      }
     }
 
     if (subscriptions.get(key) === 1) {
