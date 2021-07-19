@@ -1,9 +1,7 @@
 import { act, render, screen, fireEvent } from '@testing-library/react'
 import React, { useState, useEffect } from 'react'
 import useSWR from 'swr'
-import { createResponse, sleep } from './utils'
-
-const waitForNextTick = () => act(() => sleep(1))
+import { createResponse, sleep, nextTick as waitForNextTick } from './utils'
 
 describe('useSWR', () => {
   it('should return `undefined` on hydration then return data', async () => {

@@ -2,13 +2,9 @@ import { render, screen, act, fireEvent } from '@testing-library/react'
 import React, { useState } from 'react'
 import useSWR from 'swr'
 import useSWRImmutable from 'swr/immutable'
-import { sleep, createKey } from './utils'
+import { sleep, createKey, nextTick as waitForNextTick, focusOn } from './utils'
 
-const waitForNextTick = () => act(() => sleep(1))
-const focusWindow = () =>
-  act(async () => {
-    fireEvent.focus(window)
-  })
+const focusWindow = () => focusOn(window)
 
 describe('useSWR - immutable', () => {
   it('should revalidate on mount', async () => {

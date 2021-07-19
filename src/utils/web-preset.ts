@@ -1,3 +1,4 @@
+import { ProviderOptions } from '../types'
 import { isUndefined } from './helper'
 
 /**
@@ -9,52 +10,47 @@ import { isUndefined } from './helper'
  */
 let online = true
 const isOnline = () => online
+const hasWindow = typeof window !== 'undefined'
+const hasDocument = typeof document !== 'undefined'
+const add = 'addEventListener'
+function noop() {}
 
-// For node and React Native, `window.addEventListener` doesn't exist.
-const addWindowEventListener =
-  typeof window !== 'undefined' && !isUndefined(window.addEventListener)
-    ? window.addEventListener.bind(window)
-    : null
-const addDocumentEventListener =
-  typeof document !== 'undefined'
-    ? document.addEventListener.bind(document)
-    : null
+// For node and React Native, `add/removeEventListener` doesn't exist on window.
+const onWindowEvent = hasWindow && window[add] ? window[add] : noop
+const onDocumentEvent = hasDocument ? document[add] : noop
 
 const isDocumentVisible = () => {
-  if (addDocumentEventListener) {
-    const visibilityState = document.visibilityState
-    if (!isUndefined(visibilityState)) {
-      return visibilityState !== 'hidden'
-    }
+  const visibilityState = hasDocument && document.visibilityState
+  if (!isUndefined(visibilityState)) {
+    return visibilityState !== 'hidden'
   }
-  // always assume it's visible
   return true
 }
 
-const registerOnFocus = (cb: () => void) => {
-  if (addWindowEventListener && addDocumentEventListener) {
-    // focus revalidate
-    addDocumentEventListener('visibilitychange', cb)
-    addWindowEventListener('focus', cb)
-  }
+const setupOnFocus = (cb: () => void) => {
+  // focus revalidate
+  onDocumentEvent('visibilitychange', cb)
+  onWindowEvent('focus', cb)
 }
 
-const registerOnReconnect = (cb: () => void) => {
-  if (addWindowEventListener) {
-    // reconnect revalidate
-    addWindowEventListener('online', () => {
-      online = true
-      cb()
-    })
-
-    // nothing to revalidate, just update the status
-    addWindowEventListener('offline', () => (online = false))
-  }
+const setupOnReconnect = (cb: () => void) => {
+  // reconnect revalidate
+  onWindowEvent('online', () => {
+    online = true
+    cb()
+  })
+  // nothing to revalidate, just update the status
+  onWindowEvent('offline', () => {
+    online = false
+  })
 }
 
-export default {
+export const preset = {
   isOnline,
-  isDocumentVisible,
-  registerOnFocus,
-  registerOnReconnect
+  isDocumentVisible
 } as const
+
+export const provider: ProviderOptions = {
+  setupOnFocus,
+  setupOnReconnect
+}

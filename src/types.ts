@@ -49,13 +49,16 @@ export interface Configuration<
 
   isOnline: () => boolean
   isDocumentVisible: () => boolean
-  registerOnFocus: (cb: () => void) => void
-  registerOnReconnect: (cb: () => void) => void
 
   /**
    * @deprecated `revalidateOnMount` will be removed. Please considering using the `revalidateWhenStale` option.
    */
   revalidateOnMount?: boolean
+}
+
+export type ProviderOptions = {
+  setupOnFocus: (cb: () => void) => void
+  setupOnReconnect: (cb: () => void) => void
 }
 
 export type SWRHook = <Data = any, Error = any>(
