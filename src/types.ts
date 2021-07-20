@@ -168,7 +168,7 @@ export interface RevalidatorOptions {
 }
 
 export type Revalidator = (
-  revalidateOpts: RevalidatorOptions
+  revalidateOpts?: RevalidatorOptions
 ) => Promise<boolean>
 
 export interface Cache<Data = any> {
