@@ -73,14 +73,11 @@ async function internalMutate<Data = any>(
     )
   }
 
-  // update global timestamps
-  MUTATION_TS[key] = ++__timestamp
-  MUTATION_END_TS[key] = 0
-
-  // track timestamps before await asynchronously
-  const beforeMutationTs = MUTATION_TS[key]
-
   let data: any, error: unknown
+
+  // Update global timestamps.
+  const beforeMutationTs = (MUTATION_TS[key] = ++__timestamp)
+  MUTATION_END_TS[key] = 0
 
   if (typeof _data === 'function') {
     // `_data` is a function, call it passing current cache value.
