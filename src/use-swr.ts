@@ -1,5 +1,6 @@
 import { useCallback, useRef, useDebugValue } from 'react'
 import defaultConfig from './utils/config'
+import { provider as defaultProvider } from './utils/web-preset'
 import { wrapCache } from './utils/cache'
 import { IS_SERVER, rAF, useIsomorphicLayoutEffect } from './utils/env'
 import { serialize } from './utils/serialize'
@@ -20,7 +21,8 @@ import {
   SWRConfiguration,
   Cache,
   ScopedMutator,
-  SWRHook
+  SWRHook,
+  ProviderOptions
 } from './types'
 
 type Revalidator = (...args: any[]) => void
@@ -45,21 +47,22 @@ const getGlobalState = (cache: Cache) => {
   ]
 }
 
-// Setup DOM events listeners for `focus` and `reconnect` actions
-if (!IS_SERVER) {
-  const [FOCUS_REVALIDATORS, RECONNECT_REVALIDATORS] = getGlobalState(
-    defaultConfig.cache
-  )
+function setupGlobalEvents(cache: Cache, _opts: Partial<ProviderOptions> = {}) {
+  if (IS_SERVER) return
+  const opts = { ...defaultProvider, ..._opts }
+  const [FOCUS_REVALIDATORS, RECONNECT_REVALIDATORS] = getGlobalState(cache)
   const revalidate = (revalidators: Record<string, Revalidator[]>) => {
-    if (!defaultConfig.isDocumentVisible() || !defaultConfig.isOnline()) return
-
     for (const key in revalidators) {
       if (revalidators[key][0]) revalidators[key][0]()
     }
   }
-  defaultConfig.registerOnFocus(() => revalidate(FOCUS_REVALIDATORS))
-  defaultConfig.registerOnReconnect(() => revalidate(RECONNECT_REVALIDATORS))
+
+  opts.setupOnFocus(() => revalidate(FOCUS_REVALIDATORS))
+  opts.setupOnReconnect(() => revalidate(RECONNECT_REVALIDATORS))
 }
+
+// Setup DOM events listeners for `focus` and `reconnect` actions
+setupGlobalEvents(defaultConfig.cache)
 
 const broadcastState: Broadcaster = (
   cache: Cache,
@@ -522,10 +525,13 @@ export function useSWRHandler<Data = any, Error = any>(
       }
     }
 
+    const isVisible = () =>
+      configRef.current.isDocumentVisible() && configRef.current.isOnline()
+
     // Add event listeners.
     let pending = false
     const onFocus = () => {
-      if (configRef.current.revalidateOnFocus && !pending) {
+      if (configRef.current.revalidateOnFocus && !pending && isVisible()) {
         pending = true
         softRevalidate()
         setTimeout(
@@ -536,7 +542,7 @@ export function useSWRHandler<Data = any, Error = any>(
     }
 
     const onReconnect = () => {
-      if (configRef.current.revalidateOnReconnect) {
+      if (configRef.current.revalidateOnReconnect && isVisible()) {
         softRevalidate()
       }
     }
@@ -689,12 +695,14 @@ export const mutate = internalMutate.bind(
 ) as ScopedMutator
 
 export function createCache<Data>(
-  provider: Cache
+  provider: Cache,
+  options?: Partial<ProviderOptions>
 ): {
   cache: Cache
   mutate: ScopedMutator<Data>
 } {
   const cache = wrapCache<Data>(provider)
+  setupGlobalEvents(cache, options)
   return {
     cache,
     mutate: internalMutate.bind(null, cache) as ScopedMutator<Data>

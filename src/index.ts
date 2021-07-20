@@ -8,8 +8,6 @@ export default useSWR
 // Types
 export {
   SWRConfiguration,
-  SWRInfiniteConfiguration,
-  SWRInfiniteResponse,
   Revalidator,
   RevalidatorOptions,
   Key,
@@ -19,13 +17,5 @@ export {
   SWRHook,
   Fetcher,
   MutatorCallback,
-  Middleware,
-  // Legacy, for backwards compatibility
-  ConfigInterface,
-  SWRInfiniteConfigInterface,
-  SWRInfiniteResponseInterface,
-  revalidateType,
-  RevalidateOptionInterface,
-  keyInterface,
-  responseInterface
+  Middleware
 } from './types'

@@ -1,13 +1,9 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 import React from 'react'
 import useSWR from 'swr'
-import { sleep } from './utils'
+import { nextTick as waitForNextTick, focusOn } from './utils'
 
-const waitForNextTick = () => act(() => sleep(1))
-const focusWindow = () =>
-  act(async () => {
-    fireEvent.focus(window)
-  })
+const focusWindow = () => focusOn(window)
 const dispatchWindowEvent = event =>
   act(async () => {
     window.dispatchEvent(new Event(event))

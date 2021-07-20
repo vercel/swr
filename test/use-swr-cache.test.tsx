@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import React, { useState } from 'react'
 import useSWR, { createCache, SWRConfig } from 'swr'
-import { sleep, createKey } from './utils'
+import { sleep, createKey, nextTick, focusOn } from './utils'
 
 describe('useSWR - cache', () => {
   it('should be able to update the cache', async () => {
@@ -136,5 +136,69 @@ describe('useSWR - cache', () => {
 
     render(<Page />)
     screen.getByText('1:2')
+  })
+
+  it('should honor createCache provider options', async () => {
+    const key = createKey()
+    const provider = new Map([[key, 0]])
+    const { cache } = createCache(provider, {
+      setupOnFocus() {
+        /* do nothing */
+      },
+      setupOnReconnect() {
+        /* do nothing */
+      }
+    })
+    let value = 1
+    function Foo() {
+      const { data } = useSWR(key, () => value++, {
+        dedupingInterval: 0
+      })
+      return <>{String(data)}</>
+    }
+    function Page() {
+      return (
+        <SWRConfig value={{ cache }}>
+          <Foo />
+        </SWRConfig>
+      )
+    }
+    render(<Page />)
+    screen.getByText('0')
+
+    // mount
+    await screen.findByText('1')
+    await nextTick()
+    // try to trigger revalidation, but shouldn't work
+    await focusOn(window)
+    // revalidateOnFocus won't work
+    screen.getByText('1')
+  })
+
+  it('should work with revalidateOnFocus', async () => {
+    const key = createKey()
+    const provider = new Map()
+    const { cache } = createCache(provider)
+    let value = 0
+    function Foo() {
+      const { data } = useSWR(key, () => value++, {
+        dedupingInterval: 0
+      })
+      return <>{String(data)}</>
+    }
+    function Page() {
+      return (
+        <SWRConfig value={{ cache }}>
+          <Foo />
+        </SWRConfig>
+      )
+    }
+    render(<Page />)
+    screen.getByText('undefined')
+
+    await screen.findByText('0')
+    await nextTick()
+    await focusOn(window)
+    screen.getByText('1')
   })
 })

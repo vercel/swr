@@ -16,6 +16,16 @@ import { isUndefined, UNDEFINED } from '../src/utils/helper'
 import { withMiddleware } from '../src/utils/with-middleware'
 import { SWRInfiniteConfiguration, SWRInfiniteResponse } from './types'
 
+const INFINITE_PREFIX = '$inf$'
+
+const getFirstPageKey = (getKey: KeyLoader<any>) => {
+  return serialize(getKey ? getKey(0, null) : null)[0]
+}
+
+export const getInfiniteKey = (getKey: KeyLoader<any>) => {
+  return INFINITE_PREFIX + getFirstPageKey(getKey)
+}
+
 export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
   getKey: KeyLoader<Data>,
   fn: Fetcher<Data> | null,
@@ -31,7 +41,7 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
   // get the serialized key of the first page
   let firstPageKey: string | null = null
   try {
-    firstPageKey = serialize(getKey ? getKey(0, null) : null)[0]
+    firstPageKey = getFirstPageKey(getKey)
   } catch (err) {
     // not ready
   }
@@ -86,7 +96,7 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
 
   // actual swr of all pages
   const swr = useSWRNext<Data[], Error>(
-    firstPageKey ? '$inf$' + firstPageKey : null,
+    firstPageKey ? INFINITE_PREFIX + firstPageKey : null,
     async () => {
       // get the revalidate context
       const { data: originalData, force } = cache.get(contextCacheKey) || {}
@@ -95,6 +105,7 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
       const data: Data[] = []
 
       const pageSize = resolvePageSize()
+
       let previousPageData = null
       for (let i = 0; i < pageSize; ++i) {
         const [pageKey, pageArgs] = serialize(
@@ -119,15 +130,11 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
           revalidateAll ||
           force ||
           isUndefined(pageData) ||
-          (isUndefined(force) && i === 0 && !isUndefined(dataRef.current)) ||
+          (i === 0 && !isUndefined(dataRef.current)) ||
           (originalData && !config.compare(originalData[i], pageData))
 
         if (fn && shouldFetchPage) {
-          if (pageArgs !== null) {
-            pageData = await fn(...pageArgs)
-          } else {
-            pageData = await fn(pageKey)
-          }
+          pageData = await fn(...pageArgs)
           cache.set(pageKey, pageData)
         }
 

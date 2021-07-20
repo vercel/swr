@@ -1,7 +1,7 @@
 import { dequal } from 'dequal/lite'
 
 import { wrapCache } from './cache'
-import webPreset from './web-preset'
+import { preset } from './web-preset'
 import { slowConnection } from './env'
 import { Configuration, RevalidatorOptions, Revalidator } from '../types'
 import { UNDEFINED } from './helper'
@@ -17,7 +17,7 @@ function onErrorRetry(
   revalidate: Revalidator,
   opts: Required<RevalidatorOptions>
 ): void {
-  if (!webPreset.isDocumentVisible()) {
+  if (!preset.isDocumentVisible()) {
     // If it's hidden, stop. It will auto revalidate when refocusing.
     return
   }
@@ -61,8 +61,8 @@ const defaultConfig: Configuration = {
   isPaused: () => false,
   cache: wrapCache(new Map()),
 
-  // presets
-  ...webPreset
+  // use web preset by default
+  ...preset
 } as const
 
 export default defaultConfig
