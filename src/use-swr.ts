@@ -81,10 +81,9 @@ async function internalMutate<Data = any>(
   const beforeMutationTs = MUTATION_TS[key]
 
   let data: any, error: unknown
-  let isAsyncMutation = false
 
   if (typeof _data === 'function') {
-    // `_data` is a function, call it passing current cache value
+    // `_data` is a function, call it passing current cache value.
     try {
       _data = (_data as MutatorCallback<Data>)(cache.get(key))
     } catch (err) {
@@ -95,8 +94,7 @@ async function internalMutate<Data = any>(
   }
 
   if (_data && typeof (_data as Promise<Data>).then === 'function') {
-    // `_data` is a promise
-    isAsyncMutation = true
+    // `_data` is a promise/thenable, resolve the final data.
     try {
       data = await _data
     } catch (err) {
@@ -106,31 +104,24 @@ async function internalMutate<Data = any>(
     data = _data
   }
 
-  const shouldAbort = (): boolean | void => {
-    // check if other mutations have occurred since we've started this mutation
-    if (beforeMutationTs !== MUTATION_TS[key]) {
-      if (error) throw error
-      return true
-    }
-  }
+  // Check if other mutations have occurred since we've started this mutation.
+  const shouldAbort = beforeMutationTs !== MUTATION_TS[key]
 
-  // If there's a race we don't update cache or broadcast change, just return the data
-  if (shouldAbort()) return data
+  // If there's a race we don't update cache or broadcast change, just return the data.
+  if (shouldAbort) {
+    if (error) throw error
+    return data
+  }
 
   if (!isUndefined(data)) {
     // update cached data
     cache.set(key, data)
   }
-  // Always update or reset the error
+  // Always update or reset the error.
   cache.set(keyErr, error)
 
   // Reset the timestamp to mark the mutation has ended
   MUTATION_END_TS[key] = ++__timestamp
-
-  if (!isAsyncMutation) {
-    // We skip broadcasting if there's another mutation happened synchronously
-    if (shouldAbort()) return data
-  }
 
   // Update existing SWR Hooks' internal states:
   return broadcastState(
