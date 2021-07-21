@@ -488,15 +488,16 @@ export const useSWRHandler = <Data = any, Error = any>(
       configRef.current.isDocumentVisible() && configRef.current.isOnline()
 
     // Add event listeners.
-    let pending = false
+    let nextFocusRevalidatedAt = 0
     const onFocus = () => {
-      if (configRef.current.revalidateOnFocus && !pending && isActive()) {
-        pending = true
+      const now = Date.now()
+      if (
+        configRef.current.revalidateOnFocus &&
+        now > nextFocusRevalidatedAt &&
+        isActive()
+      ) {
+        nextFocusRevalidatedAt = now + configRef.current.focusThrottleInterval
         softRevalidate()
-        setTimeout(
-          () => (pending = false),
-          configRef.current.focusThrottleInterval
-        )
       }
     }
 
