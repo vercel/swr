@@ -1,6 +1,6 @@
 import { useCallback, useRef, useDebugValue } from 'react'
 import defaultConfig from './utils/config'
-import { wrapCache, SWRGlobalState } from './utils/cache'
+import { wrapCache, SWRGlobalState, GlobalState } from './utils/cache'
 import { IS_SERVER, rAF, useIsomorphicLayoutEffect } from './utils/env'
 import { serialize } from './utils/serialize'
 import { isUndefined, UNDEFINED } from './utils/helper'
@@ -21,10 +21,9 @@ import {
   Cache,
   ScopedMutator,
   SWRHook,
+  Revalidator,
   ProviderOptions
 } from './types'
-
-type Revalidator = (...args: any[]) => void
 
 // Generate strictly increasing timestamps.
 let __timestamp = 0
@@ -37,7 +36,7 @@ const broadcastState: Broadcaster = (
   isValidating,
   shouldRevalidate = false
 ) => {
-  const [, , CACHE_REVALIDATORS] = SWRGlobalState.get(cache)!
+  const [, , CACHE_REVALIDATORS] = SWRGlobalState.get(cache) as GlobalState
   const updaters = CACHE_REVALIDATORS[key]
   const promises = []
   if (updaters) {
@@ -59,7 +58,9 @@ async function internalMutate<Data = any>(
   const [key, , keyErr] = serialize(_key)
   if (!key) return UNDEFINED
 
-  const [, , , MUTATION_TS, MUTATION_END_TS] = SWRGlobalState.get(cache)!
+  const [, , , MUTATION_TS, MUTATION_END_TS] = SWRGlobalState.get(
+    cache
+  ) as GlobalState
 
   // if there is no new data to update, let's just revalidate the key
   if (isUndefined(_data)) {
@@ -138,9 +139,9 @@ async function internalMutate<Data = any>(
 // Add a callback function to a list of keyed revalidation functions and returns
 // the unregister function.
 const addRevalidator = (
-  revalidators: Record<string, Revalidator[]>,
+  revalidators: Record<string, (Revalidator | Updater<any>)[]>,
   key: string,
-  callback: Revalidator
+  callback: Revalidator | Updater<any>
 ) => {
   if (!revalidators[key]) {
     revalidators[key] = [callback]
@@ -185,7 +186,7 @@ export function useSWRHandler<Data = any, Error = any>(
     MUTATION_END_TS,
     CONCURRENT_PROMISES,
     CONCURRENT_PROMISES_TS
-  ] = SWRGlobalState.get(cache)!
+  ] = SWRGlobalState.get(cache) as GlobalState
 
   // `key` is the identifier of the SWR `data` state.
   // `keyErr` and `keyValidating` are identifiers of `error` and `isValidating`
@@ -498,7 +499,7 @@ export function useSWRHandler<Data = any, Error = any>(
       }
     }
 
-    const onReconnect = () => {
+    const onReconnect: Revalidator = () => {
       if (configRef.current.revalidateOnReconnect && isActive()) {
         softRevalidate()
       }
