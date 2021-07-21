@@ -12,11 +12,7 @@ type StateDeps = Record<StateKeys, boolean>
 export default function useStateWithDeps<Data, Error, S = State<Data, Error>>(
   state: S,
   unmountedRef: MutableRefObject<boolean>
-): [
-  MutableRefObject<S>,
-  MutableRefObject<Record<StateKeys, boolean>>,
-  (payload: S) => void
-] {
+): [MutableRefObject<S>, Record<StateKeys, boolean>, (payload: S) => void] {
   const rerender = useState<Record<string, unknown>>({})[1]
   const stateRef = useRef(state)
 
@@ -84,5 +80,5 @@ export default function useStateWithDeps<Data, Error, S = State<Data, Error>>(
     stateRef.current = state
   })
 
-  return [stateRef, stateDependenciesRef, setState]
+  return [stateRef, stateDependenciesRef.current, setState]
 }
