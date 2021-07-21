@@ -49,12 +49,12 @@ const broadcastState: Broadcaster = (
   return Promise.all(promises).then(() => cache.get(key))
 }
 
-async function internalMutate<Data = any>(
+const internalMutate = async <Data>(
   cache: Cache,
   _key: Key,
   _data?: Data | Promise<Data | undefined> | MutatorCallback<Data>,
   shouldRevalidate = true
-): Promise<Data | undefined> {
+) => {
   const [key, , keyErr] = serialize(_key)
   if (!key) return UNDEFINED
 
@@ -91,24 +91,25 @@ async function internalMutate<Data = any>(
     }
   }
 
+  // `_data` is a promise/thenable, resolve the final data first.
   if (_data && typeof (_data as Promise<Data>).then === 'function') {
-    // `_data` is a promise/thenable, resolve the final data.
+    // This means that the mutation is async, we need to check timestamps to
+    // avoid race conditions.
     try {
       data = await _data
     } catch (err) {
       error = err
     }
+
+    // Check if other mutations have occurred since we've started this mutation.
+    // If there's a race we don't update cache or broadcast the change,
+    // just return the data.
+    if (beforeMutationTs !== MUTATION_TS[key]) {
+      if (error) throw error
+      return data
+    }
   } else {
     data = _data
-  }
-
-  // Check if other mutations have occurred since we've started this mutation.
-  const shouldAbort = beforeMutationTs !== MUTATION_TS[key]
-
-  // If there's a race we don't update cache or broadcast change, just return the data.
-  if (shouldAbort) {
-    if (error) throw error
-    return data
   }
 
   if (!isUndefined(data)) {
@@ -161,11 +162,11 @@ const addRevalidator = (
   }
 }
 
-export function useSWRHandler<Data = any, Error = any>(
+export const useSWRHandler = <Data = any, Error = any>(
   _key: Key,
   fn: Fetcher<Data> | null,
   config: typeof defaultConfig & SWRConfiguration<Data, Error>
-): SWRResponse<Data, Error> {
+) => {
   const {
     cache,
     compare,
@@ -551,29 +552,31 @@ export function useSWRHandler<Data = any, Error = any>(
   useIsomorphicLayoutEffect(() => {
     let timer: any = 0
 
-    function nextTick() {
-      if (refreshInterval) {
-        timer = setTimeout(tick, refreshInterval)
+    function next(force?: boolean) {
+      // We only start next interval if `refreshInterval` is not 0, and:
+      // - `force` is true, which is the start of polling
+      // - or `timer` is not 0, which means the effect wasn't canceled
+      if (refreshInterval && (timer || force)) {
+        timer = setTimeout(execute, refreshInterval)
       }
     }
 
-    async function tick() {
+    function execute() {
+      // Check if it's OK to execute:
+      // Only revalidate when the page is visible, online and not errored.
       if (
         !stateRef.current.error &&
         (refreshWhenHidden || config.isDocumentVisible()) &&
         (refreshWhenOffline || config.isOnline())
       ) {
-        // only revalidate when the page is visible
-        // if API request errored, we stop polling in this round
-        // and let the error retry function handle it
-        await revalidate({ dedupe: true })
+        revalidate({ dedupe: true }).then(_ => next())
+      } else {
+        // Schedule next interval to check again.
+        next()
       }
-
-      // Read the latest refreshInterval
-      if (timer) nextTick()
     }
 
-    nextTick()
+    next(true)
 
     return () => {
       if (timer) {
@@ -640,13 +643,10 @@ export const mutate = internalMutate.bind(
   defaultConfig.cache
 ) as ScopedMutator
 
-export function createCache<Data>(
+export const createCache = <Data = any>(
   provider: Cache,
   options?: Partial<ProviderOptions>
-): {
-  cache: Cache
-  mutate: ScopedMutator<Data>
-} {
+) => {
   const cache = wrapCache<Data>(provider, options)
   return {
     cache,
