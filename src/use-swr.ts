@@ -458,32 +458,6 @@ export const useSWRHandler = <Data = any, Error = any>(
     const keyChanged = initialMountedRef.current
     const softRevalidate = () => revalidate({ dedupe: true })
 
-    // Mark the component as mounted and update corresponding refs.
-    unmountedRef.current = false
-    keyRef.current = key
-
-    // When `key` updates, reset the state to the initial value
-    // and trigger a rerender if necessary.
-    if (keyChanged) {
-      setState({
-        data,
-        error,
-        isValidating
-      })
-    }
-
-    // Trigger a revalidation.
-    if (keyChanged || shouldRevalidateOnMount()) {
-      if (isUndefined(data) || IS_SERVER) {
-        // Revalidate immediately.
-        softRevalidate()
-      } else {
-        // Delay the revalidate if we have data to return so we won't block
-        // rendering.
-        rAF(softRevalidate)
-      }
-    }
-
     const isActive = () =>
       configRef.current.isDocumentVisible() && configRef.current.isOnline()
 
@@ -535,6 +509,32 @@ export const useSWRHandler = <Data = any, Error = any>(
     const unsubFocus = addRevalidator(FOCUS_REVALIDATORS, key, onFocus)
     const unsubReconn = addRevalidator(RECONNECT_REVALIDATORS, key, onReconnect)
     const unsubUpdate = addRevalidator(CACHE_REVALIDATORS, key, onUpdate)
+
+    // Mark the component as mounted and update corresponding refs.
+    unmountedRef.current = false
+    keyRef.current = key
+
+    // When `key` updates, reset the state to the initial value
+    // and trigger a rerender if necessary.
+    if (keyChanged) {
+      setState({
+        data,
+        error,
+        isValidating
+      })
+    }
+
+    // Trigger a revalidation.
+    if (keyChanged || shouldRevalidateOnMount()) {
+      if (isUndefined(data) || IS_SERVER) {
+        // Revalidate immediately.
+        softRevalidate()
+      } else {
+        // Delay the revalidate if we have data to return so we won't block
+        // rendering.
+        rAF(softRevalidate)
+      }
+    }
 
     // Finally, the component is mounted.
     initialMountedRef.current = true
