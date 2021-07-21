@@ -6,7 +6,6 @@ import { slowConnection } from './env'
 import { Configuration, RevalidatorOptions, Revalidator } from '../types'
 import { UNDEFINED } from './helper'
 
-const fetcher = (url: string) => fetch(url).then(res => res.json())
 const noop = () => {}
 
 // error retry
@@ -56,7 +55,6 @@ const defaultConfig: Configuration = {
   loadingTimeout: slowConnection ? 5000 : 3000,
 
   // providers
-  fetcher,
   compare: dequal,
   isPaused: () => false,
   cache: wrapCache(new Map()),
