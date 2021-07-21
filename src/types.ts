@@ -18,7 +18,7 @@ export interface Configuration<
   shouldRetryOnError: boolean
   suspense?: boolean
   initialData?: Data
-  fetcher: Fn
+  fetcher?: Fn
   cache: Cache
   middlewares?: Middleware[]
 

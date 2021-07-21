@@ -357,27 +357,4 @@ describe('useSWR', () => {
     expect(fetcher).toBeCalled()
     await screen.findByText('hello, SWR')
   })
-
-  it('should use fetch api as default fetcher', async () => {
-    const users = [{ name: 'bob' }, { name: 'sue' }]
-    global['fetch'] = () => Promise.resolve()
-    const mockFetch = body =>
-      Promise.resolve({ json: () => Promise.resolve(body) } as any)
-    const fn = jest
-      .spyOn(window, 'fetch')
-      .mockImplementation(() => mockFetch(users))
-
-    function Users() {
-      const { data } = useSWR('http://localhost:3000/api/users')
-
-      return <div>hello, {data && data.map(u => u.name).join(' and ')}</div>
-    }
-
-    render(<Users />)
-    screen.getByText('hello,')
-    expect(fn).toBeCalled()
-
-    await screen.findByText('hello, bob and sue')
-    delete global['fetch']
-  })
 })
