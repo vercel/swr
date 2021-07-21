@@ -2,7 +2,7 @@ import { act, render, screen, fireEvent } from '@testing-library/react'
 import React, { useEffect, useState } from 'react'
 import useSWR, { mutate, createCache, SWRConfig } from 'swr'
 import { serialize } from '../src/utils/serialize'
-import { createResponse, sleep, nextTick as waitForNextTick } from './utils'
+import { createResponse, sleep, nextTick } from './utils'
 
 describe('useSWR - local mutation', () => {
   it('should trigger revalidation programmatically', async () => {
@@ -27,6 +27,33 @@ describe('useSWR - local mutation', () => {
       mutate('dynamic-7')
     })
     await screen.findByText('data: 1')
+  })
+
+  it('should share local state when no fetcher is specified', async () => {
+    const useSharedState = (key, initialData) => {
+      const { data: state, mutate: setState } = useSWR(key, { initialData })
+      return [state, setState]
+    }
+
+    function Page() {
+      const [name, setName] = useSharedState('name', 'huozhi')
+      const [job, setJob] = useSharedState('job', 'gardener')
+
+      return (
+        <span
+          onClick={() => {
+            setName('@huozhi')
+            setJob('chef')
+          }}
+        >
+          {name}:{job}
+        </span>
+      )
+    }
+    render(<Page />)
+    const root = screen.getByText('huozhi:gardener')
+    fireEvent.click(root)
+    await screen.findByText('@huozhi:chef')
   })
 
   it('should trigger revalidation programmatically within a dedupingInterval', async () => {
@@ -144,7 +171,7 @@ describe('useSWR - local mutation', () => {
     //mount
     await screen.findByText('data: 0')
 
-    await waitForNextTick()
+    await nextTick()
     await act(() => {
       // mutate and revalidate
       return mutate('mutate-promise', createResponse(999), false)
@@ -167,7 +194,7 @@ describe('useSWR - local mutation', () => {
     //mount
     await screen.findByText('data: 0')
 
-    await waitForNextTick()
+    await nextTick()
     await act(() => {
       // mutate and revalidate
       return mutate('mutate-async-fn', async () => createResponse(999), false)
