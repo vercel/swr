@@ -48,7 +48,7 @@ export interface Configuration<
   compare: (a: Data | undefined, b: Data | undefined) => boolean
 
   isOnline: () => boolean
-  isDocumentVisible: () => boolean
+  isVisible: () => boolean
 
   /**
    * @deprecated `revalidateOnMount` will be removed. Please considering using the `revalidateWhenStale` option.

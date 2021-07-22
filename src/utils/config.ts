@@ -16,7 +16,7 @@ function onErrorRetry(
   revalidate: Revalidator,
   opts: Required<RevalidatorOptions>
 ): void {
-  if (!preset.isDocumentVisible()) {
+  if (!preset.isVisible()) {
     // If it's hidden, stop. It will auto revalidate when refocusing.
     return
   }

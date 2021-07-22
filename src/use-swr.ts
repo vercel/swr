@@ -484,7 +484,7 @@ export function useSWRHandler<Data = any, Error = any>(
     }
 
     const isActive = () =>
-      configRef.current.isDocumentVisible() && configRef.current.isOnline()
+      configRef.current.isVisible() && configRef.current.isOnline()
 
     // Add event listeners.
     let pending = false
@@ -560,7 +560,7 @@ export function useSWRHandler<Data = any, Error = any>(
     async function tick() {
       if (
         !stateRef.current.error &&
-        (refreshWhenHidden || config.isDocumentVisible()) &&
+        (refreshWhenHidden || config.isVisible()) &&
         (refreshWhenOffline || config.isOnline())
       ) {
         // only revalidate when the page is visible
