@@ -207,19 +207,6 @@ describe('useSWR - cache', () => {
   })
 
   it('should clear cache between tests', async () => {
-    const key = createKey()
-    const { cache } = createCache(provider)
-    function Page() {
-      const { data } = useSWR(
-        key,
-        () => {
-          return Array.from(provider.values()).length
-        },
-        { cache }
-      )
-      return <div>{data ? 'non-empty' : 'empty'}</div>
-    }
-    render(<Page />)
-    screen.getByText('empty')
+    expect(provider.size).toBe(0)
   })
 })
