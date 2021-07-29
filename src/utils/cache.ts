@@ -36,7 +36,7 @@ function setupGlobalEvents(cache: Cache, options: ProviderOptions) {
 export function wrapCache<Data = any>(
   provider: Cache<Data>,
   options?: Partial<ProviderOptions>
-): Cache {
+): Cache<Data> {
   // Initialize global state for the specific data storage that will be used to
   // deduplicate requests and store listeners.
   SWRGlobalState.set(provider, [{}, {}, {}, {}, {}, {}, {}])
