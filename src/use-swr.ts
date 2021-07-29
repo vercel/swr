@@ -551,13 +551,13 @@ export const useSWRHandler = <Data = any, Error = any>(
 
   // Polling
   useIsomorphicLayoutEffect(() => {
-    let timer: any = 0
+    let timer: any
 
-    function next(force?: boolean) {
+    function next() {
       // We only start next interval if `refreshInterval` is not 0, and:
       // - `force` is true, which is the start of polling
       // - or `timer` is not 0, which means the effect wasn't canceled
-      if (refreshInterval && (timer || force)) {
+      if (refreshInterval && timer !== -1) {
         timer = setTimeout(execute, refreshInterval)
       }
     }
@@ -570,19 +570,19 @@ export const useSWRHandler = <Data = any, Error = any>(
         (refreshWhenHidden || config.isDocumentVisible()) &&
         (refreshWhenOffline || config.isOnline())
       ) {
-        revalidate({ dedupe: true }).then(_ => next())
+        revalidate({ dedupe: true }).then(() => next())
       } else {
         // Schedule next interval to check again.
         next()
       }
     }
 
-    next(true)
+    next()
 
     return () => {
       if (timer) {
         clearTimeout(timer)
-        timer = 0
+        timer = -1
       }
     }
   }, [refreshInterval, refreshWhenHidden, refreshWhenOffline, revalidate])
