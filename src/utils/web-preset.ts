@@ -19,7 +19,7 @@ const onWindowEvent =
   hasWindow && window[ADD_EVENT_LISTENER] ? window[ADD_EVENT_LISTENER] : noop
 const onDocumentEvent = hasDocument ? document[ADD_EVENT_LISTENER] : noop
 
-const isDocumentVisible = () => {
+const isVisible = () => {
   const visibilityState = hasDocument && document.visibilityState
   if (!isUndefined(visibilityState)) {
     return visibilityState !== 'hidden'
@@ -47,7 +47,7 @@ const setupOnReconnect = (cb: () => void) => {
 
 export const preset = {
   isOnline,
-  isDocumentVisible
+  isVisible
 } as const
 
 export const provider: ProviderOptions = {

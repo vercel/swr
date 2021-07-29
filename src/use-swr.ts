@@ -459,7 +459,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     const softRevalidate = () => revalidate({ dedupe: true })
 
     const isActive = () =>
-      configRef.current.isDocumentVisible() && configRef.current.isOnline()
+      configRef.current.isVisible() && configRef.current.isOnline()
 
     // Add event listeners.
     let nextFocusRevalidatedAt = 0
@@ -567,7 +567,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       // Only revalidate when the page is visible, online and not errored.
       if (
         !stateRef.current.error &&
-        (refreshWhenHidden || config.isDocumentVisible()) &&
+        (refreshWhenHidden || config.isVisible()) &&
         (refreshWhenOffline || config.isOnline())
       ) {
         revalidate({ dedupe: true }).then(() => next())
