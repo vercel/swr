@@ -9,5 +9,5 @@ export function normalize<KeyType = Key, Data = any>(
 ): [KeyType, Fetcher<Data> | null, Partial<SWRConfiguration<Data>>] {
   return typeof args[1] === 'function'
     ? [args[0], args[1], args[2] || {}]
-    : [args[0], null, (typeof args[1] === 'object' ? args[1] : args[2]) || {}]
+    : [args[0], null, (args[1] === null ? args[2] : args[1]) || {}]
 }
