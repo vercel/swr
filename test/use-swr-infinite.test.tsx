@@ -187,13 +187,19 @@ describe('useSWRInfinite', () => {
     fireEvent.click(screen.getByText('data:page 0,'))
 
     await screen.findByText('data:page 0, page 1,') // mounted
-    expect(requests).toEqual(3) // revalidate page 1, load page 2
+    expect(requests).toEqual(3) // revalidate page 0, load page 1
 
     // load next page
     fireEvent.click(screen.getByText('data:page 0, page 1,'))
 
     await screen.findByText('data:page 0, page 1, page 2,') // mounted
-    expect(requests).toEqual(5) // revalidate page 1, load page 3
+    expect(requests).toEqual(5) // revalidate page 0, load page 2
+
+    // load next page
+    fireEvent.click(screen.getByText('data:page 0, page 1, page 2,'))
+
+    await screen.findByText('data:page 0, page 1, page 2, page 3,') // mounted
+    expect(requests).toEqual(7) // revalidate page 0, load page 3
   })
 
   it('should cache page count', async () => {
