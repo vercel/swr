@@ -4,6 +4,12 @@ import useSWR, { createCache, SWRConfig } from 'swr'
 import { sleep, createKey, nextTick, focusOn } from './utils'
 
 describe('useSWR - cache', () => {
+  let provider
+
+  beforeEach(() => {
+    provider = new Map()
+  })
+
   it('should be able to update the cache', async () => {
     const fetcher = _key => 'res:' + _key
     const keys = [createKey(), createKey()]
@@ -15,8 +21,7 @@ describe('useSWR - cache', () => {
       return <div onClick={() => setIndex(1)}>{data}</div>
     }
 
-    const customCache = new Map()
-    const { cache } = createCache(customCache)
+    const { cache } = createCache(provider)
     const { container } = render(
       <SWRConfig value={{ cache }}>
         <Section />
@@ -24,12 +29,12 @@ describe('useSWR - cache', () => {
     )
     await screen.findByText(fetcher(keys[0]))
 
-    expect(customCache.get(keys[1])).toBe(undefined)
+    expect(provider.get(keys[1])).toBe(undefined)
     fireEvent.click(container.firstElementChild)
     await act(() => sleep(10))
 
-    expect(customCache.get(keys[0])).toBe(fetcher(keys[0]))
-    expect(customCache.get(keys[1])).toBe(fetcher(keys[1]))
+    expect(provider.get(keys[0])).toBe(fetcher(keys[0]))
+    expect(provider.get(keys[1])).toBe(fetcher(keys[1]))
   })
 
   it('should be able to read from the initial cache with updates', async () => {
@@ -44,8 +49,8 @@ describe('useSWR - cache', () => {
       return <div>{data}</div>
     }
 
-    const customCache = new Map([[key, 'cached value']])
-    const { cache } = createCache(customCache)
+    provider = new Map([[key, 'cached value']])
+    const { cache } = createCache(provider)
     render(
       <SWRConfig value={{ cache }}>
         <Page />
@@ -64,8 +69,8 @@ describe('useSWR - cache', () => {
       return <div>{data}</div>
     }
 
-    const customCache = new Map([[key, 'cached value']])
-    const { cache, mutate } = createCache(customCache)
+    provider = new Map([[key, 'cached value']])
+    const { cache, mutate } = createCache(provider)
     render(
       <SWRConfig value={{ cache }}>
         <Page />
@@ -78,10 +83,10 @@ describe('useSWR - cache', () => {
 
   it('should support multi-level cache', async () => {
     const key = createKey()
-    const customCache1 = new Map([[key, '1']])
-    const { cache: cache1 } = createCache(customCache1)
-    const customCache2 = new Map([[key, '2']])
-    const { cache: cache2 } = createCache(customCache2)
+    const provider1 = new Map([[key, '1']])
+    const { cache: cache1 } = createCache(provider1)
+    const provider2 = new Map([[key, '2']])
+    const { cache: cache2 } = createCache(provider2)
 
     // Nested components with the same cache key can get different values.
     function Foo() {
@@ -110,10 +115,10 @@ describe('useSWR - cache', () => {
 
   it('should support isolated cache', async () => {
     const key = createKey()
-    const customCache1 = new Map([[key, '1']])
-    const { cache: cache1 } = createCache(customCache1)
-    const customCache2 = new Map([[key, '2']])
-    const { cache: cache2 } = createCache(customCache2)
+    const provider1 = new Map([[key, '1']])
+    const { cache: cache1 } = createCache(provider1)
+    const provider2 = new Map([[key, '2']])
+    const { cache: cache2 } = createCache(provider2)
 
     // Nested components with the same cache key can get different values.
     function Foo() {
@@ -140,7 +145,7 @@ describe('useSWR - cache', () => {
 
   it('should honor createCache provider options', async () => {
     const key = createKey()
-    const provider = new Map([[key, 0]])
+    provider = new Map([[key, 0]])
     const { cache } = createCache(provider, {
       setupOnFocus() {
         /* do nothing */
@@ -177,7 +182,6 @@ describe('useSWR - cache', () => {
 
   it('should work with revalidateOnFocus', async () => {
     const key = createKey()
-    const provider = new Map()
     const { cache } = createCache(provider)
     let value = 0
     function Foo() {
@@ -200,5 +204,9 @@ describe('useSWR - cache', () => {
     await nextTick()
     await focusOn(window)
     screen.getByText('1')
+  })
+
+  it('should clear cache between tests', async () => {
+    expect(provider.size).toBe(0)
   })
 })
