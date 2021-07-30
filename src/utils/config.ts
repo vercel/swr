@@ -4,9 +4,7 @@ import { wrapCache } from './cache'
 import { preset } from './web-preset'
 import { slowConnection } from './env'
 import { Configuration, RevalidatorOptions, Revalidator } from '../types'
-import { UNDEFINED } from './helper'
-
-const noop = () => {}
+import { UNDEFINED, noop } from './helper'
 
 // error retry
 function onErrorRetry(

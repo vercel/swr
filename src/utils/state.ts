@@ -48,9 +48,7 @@ export default function useStateWithDeps<Data, Error, S = State<Data, Error>>(
       let shouldRerender = false
 
       const currentState = stateRef.current
-      for (const _ of Object.keys(payload)) {
-        // Type casting to work around the `for...in` loop
-        // https://github.com/Microsoft/TypeScript/issues/3500
+      for (const _ in payload) {
         const k = _ as keyof S & StateKeys
 
         // If the property has changed, update the state and mark rerender as
