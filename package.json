@@ -5,6 +5,7 @@
   "main": "./dist/index.js",
   "module": "./dist/index.esm.js",
   "exports": {
+    "./package.json": "./package.json",
     ".": {
       "import": "./dist/index.esm.js",
       "require": "./dist/index.js",
