@@ -609,8 +609,37 @@ describe('useSWRInfinite', () => {
     await screen.findByText('data:local-mutation')
   })
 
+  it('should mutate a cache with getInfiniteKey based on a current data', async () => {
+    const getKey = index => [`pagetest-13`, index]
+    function Comp() {
+      const { data, size, setSize } = useSWRInfinite<string, string>(
+        getKey,
+        (_, index) => createResponse(`page ${index}, `)
+      )
+      useEffect(() => {
+        setSize(size + 1)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, [])
+      return <div>data:{data}</div>
+    }
+
+    render(<Comp />)
+
+    screen.getByText('data:')
+    await screen.findByText('data:page 0, page 1,')
+
+    await act(() =>
+      mutate(
+        getInfiniteKey(getKey),
+        data => data.map(value => `(edited)${value}`),
+        false
+      )
+    )
+    await screen.findByText('data:(edited)page 0, (edited)page 1,')
+  })
+
   it('should be able to use getInfiniteKey with a custom cache', async () => {
-    const key = 'page-test-13;'
+    const key = 'page-test-14;'
     const customCache1 = new Map([[key, 'initial-cache']])
     const { cache, mutate: mutateCustomCache } = createCache(customCache1)
     function Page() {
