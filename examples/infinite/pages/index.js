@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useSWRInfinite } from 'swr'
+import useSWRInfinite from 'swr/infinite'
 
 import fetch from '../libs/fetch'
 
