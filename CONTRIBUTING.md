@@ -20,28 +20,37 @@ If possible, you can add other additional context like how this feature can be i
 
 ## Open a PR for Bugfix or Feature
 
-### Local Development
+### Local Development with Examples
 
-To develop SWR locally, you can use the Vite SWR playground to play with the source code inside the browser. You can follow these steps:
+To run SWR locally, you can start it with any example in `examples` folder. You need to setup the example and run command in the root directory for overriding SWR and its dependencies to local assets.
 
-```bash
-yarn install
-yarn register
+First of all, build SWR assets
+
+```sh
+# or `yarn watch`
 yarn build
-yarn prepare:vite
-yarn dev:vite
 ```
 
-To test SSR related features, you need to use the Next.js SWR playground instead:
+Install dependency of the target example, for instance `examples/basic`:
 
-```bash
-yarn install
-yarn register
-yarn build
-yarn prepare:next
-yarn dev:next
+```sh
+cd examples/basic && yarn
 ```
 
+After setup, back to the root directory and run:
+
+```sh
+# by default it will run next dev for the example
+yarn dev-next basic
+```
+
+All examples are built with Next.js, so Next.js commands are all supported:
+
+```sh
+# if you want to build and start
+yarn dev-next basic build
+yarn dev-next basic start
+```
 ## Update Documentation
 
 To update the [SWR Documentation](https://swr.vercel.app), you can contribute to the [website repository](https://github.com/vercel/swr-site). 
