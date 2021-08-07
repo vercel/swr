@@ -76,7 +76,7 @@
     "@types/react": "16.9.11",
     "@typescript-eslint/eslint-plugin": "4.24.0",
     "@typescript-eslint/parser": "4.24.0",
-    "bunchee": "1.6.2",
+    "bunchee": "1.7.0",
     "concurrently": "6.0.0",
     "eslint": "6.6.0",
     "eslint-config-prettier": "6.5.0",
