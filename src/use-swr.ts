@@ -598,13 +598,8 @@ export const useSWRHandler = <Data = any, Error = any>(
     throw isUndefined(error) ? revalidate({ dedupe: true }) : error
   }
 
-  // Define the SWR state.
-  // `revalidate` will be deprecated in the 1.x release
-  // because `mutate()` covers the same use case of `revalidate()`.
-  // This remains only for backward compatibility
   return Object.defineProperties(
     {
-      revalidate,
       mutate: boundMutate
     },
     {

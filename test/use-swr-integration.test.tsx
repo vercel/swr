@@ -187,22 +187,18 @@ describe('useSWR', () => {
 
   it('should broadcast isValidating', async () => {
     function useBroadcast3() {
-      const { isValidating, revalidate } = useSWR(
-        'broadcast-3',
-        () => sleep(100),
-        {
-          // need to turn of deduping otherwise
-          // revalidating will be ignored
-          dedupingInterval: 10
-        }
-      )
-      return { isValidating, revalidate }
+      const { isValidating, mutate } = useSWR('broadcast-3', () => sleep(100), {
+        // need to turn of deduping otherwise
+        // revalidating will be ignored
+        dedupingInterval: 10
+      })
+      return { isValidating, mutate }
     }
     function Initiator() {
-      const { isValidating, revalidate } = useBroadcast3()
+      const { isValidating, mutate } = useBroadcast3()
       useEffect(() => {
         const timeout = setTimeout(() => {
-          revalidate()
+          mutate()
         }, 200)
         return () => clearTimeout(timeout)
         // the revalidate function is always the same reference because the key of the useSWR is static (broadcast-3)

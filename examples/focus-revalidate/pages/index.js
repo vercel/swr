@@ -5,7 +5,7 @@ import { login, logout } from '../libs/auth'
 import useSWR from 'swr'
 
 export default () => {
-  const { data, revalidate } = useSWR('/api/user', fetch)
+  const { data, mutate } = useSWR('/api/user', fetch)
 
   if (!data) return <h1>loading...</h1>
   if (data.loggedIn) {
@@ -14,7 +14,7 @@ export default () => {
       <img src={data.avatar} width={80} />
       <Button onClick={() => {
         logout()
-        revalidate() // after logging in/out, we revalidate the SWR
+        mutate() // after logging in/out, we mutate the SWR
       }}>Logout</Button>
     </div>
   } else {
@@ -22,7 +22,7 @@ export default () => {
       <h1>Please login</h1>
       <Button onClick={() => {
         login()
-        revalidate()
+        mutate()
       }}>Login</Button>
     </div>
   }

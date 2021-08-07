@@ -151,10 +151,6 @@ export type Key = ValueKey | (() => ValueKey)
 export interface SWRResponse<Data, Error> {
   data?: Data
   error?: Error
-  /**
-   * @deprecated `revalidate` is deprecated, please use `mutate()` for the same purpose.
-   */
-  revalidate: () => Promise<boolean>
   mutate: KeyedMutator<Data>
   isValidating: boolean
 }
