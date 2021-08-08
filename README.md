@@ -73,12 +73,6 @@ library to handle that part.
 
 <br/>
 
-## Documentation and Examples
-
-Check out [swr.vercel.app](https://swr.vercel.app) for documentation and examples!
-
-<br/>
-
 ## Authors
 
 - Shu Ding ([@shuding\_](https://twitter.com/shuding_)) – [Vercel](https://vercel.com)
@@ -86,7 +80,7 @@ Check out [swr.vercel.app](https://swr.vercel.app) for documentation and example
 - Joe Haddad ([@timer150](https://twitter.com/timer150)) - [Vercel](https://vercel.com)
 - Paco Coursey ([@pacocoursey](https://twitter.com/pacocoursey)) - [Vercel](https://vercel.com)
 
-Thanks to Ryan Chen for providing the awesome `swr` npm package name!
+Thanks to Ryan Chen for donating the `swr` npm package!
 
 <br/>
 

@@ -1,4 +1,2 @@
-dist/**/*
-esm/**/*
+dist/
 node_modules
-playground

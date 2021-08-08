@@ -1,7 +1,7 @@
-import { act, render, screen } from '@testing-library/react'
-import React, { useEffect } from 'react'
-import useSWR from '../src'
-import { sleep } from './utils'
+import { act, render, screen, fireEvent } from '@testing-library/react'
+import React, { useState, useEffect } from 'react'
+import useSWR from 'swr'
+import { createResponse, sleep, nextTick as waitForNextTick } from './utils'
 
 describe('useSWR', () => {
   it('should return `undefined` on hydration then return data', async () => {
@@ -9,10 +9,10 @@ describe('useSWR', () => {
       const { data } = useSWR('constant-2', () => 'SWR')
       return <div>hello, {data}</div>
     }
-    const { container } = render(<Page />)
 
+    render(<Page />)
     // hydration
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
+    screen.getByText('hello,')
 
     // mounted
     await screen.findByText('hello, SWR')
@@ -23,29 +23,24 @@ describe('useSWR', () => {
       const { data } = useSWR(() => 'constant-2', () => 'SWR')
       return <div>hello, {data}</div>
     }
-    const { container } = render(<Page />)
 
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"hello, SWR"`
-    )
+    render(<Page />)
+    screen.getByText('hello, SWR')
   })
 
   it('should allow async fetcher functions', async () => {
-    const fetcher = jest.fn(
-      () => new Promise(res => setTimeout(() => res('SWR'), 200))
-    )
+    const fetcher = jest.fn(() => createResponse('SWR'))
     function Page() {
       const { data } = useSWR('constant-3', fetcher)
       return <div>hello, {data}</div>
     }
-    const { container } = render(<Page />)
 
+    render(<Page />)
     // hydration
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
+    screen.getByText('hello,')
 
-    await act(() => sleep(210))
-    expect(fetcher).toBeCalledTimes(1)
     await screen.findByText('hello, SWR')
+    expect(fetcher).toBeCalledTimes(1)
   })
 
   it('should not call fetch function when revalidateOnMount is false', async () => {
@@ -75,20 +70,15 @@ describe('useSWR', () => {
       return <div>hello, {data}</div>
     }
 
-    const { container } = render(<Page />)
-
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"hello, gab"`
-    )
+    render(<Page />)
+    screen.getByText('hello, gab')
 
     await screen.findByText('hello, SWR')
     expect(fetch).toHaveBeenCalled()
   })
 
   it('should dedupe requests by default', async () => {
-    const fetcher = jest.fn(
-      () => new Promise(res => setTimeout(() => res('SWR'), 200))
-    )
+    const fetcher = jest.fn(() => createResponse('SWR'))
 
     function Page() {
       const { data: v1 } = useSWR('constant-4', fetcher)
@@ -99,36 +89,27 @@ describe('useSWR', () => {
         </div>
       )
     }
-    const { container } = render(<Page />)
 
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`", "`)
+    render(<Page />)
+    screen.getByText(',')
 
-    await act(() => sleep(210))
-
+    await screen.findByText('SWR, SWR')
     expect(fetcher).toBeCalledTimes(1)
-
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"SWR, SWR"`)
   })
 
   it('should trigger the onSuccess event', async () => {
     let SWRData = null
     function Page() {
-      const { data } = useSWR(
-        'constant-5',
-        () => new Promise(res => setTimeout(() => res('SWR'), 200)),
-        { onSuccess: _data => (SWRData = _data) }
-      )
+      const { data } = useSWR('constant-5', () => createResponse('SWR'), {
+        onSuccess: _data => (SWRData = _data)
+      })
       return <div>hello, {data}</div>
     }
-    const { container } = render(<Page />)
 
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
+    render(<Page />)
+    screen.getByText('hello,')
 
-    await act(() => sleep(210))
-
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"hello, SWR"`
-    )
+    await screen.findByText('hello, SWR')
     expect(SWRData).toEqual('SWR')
   })
 
@@ -151,13 +132,17 @@ describe('useSWR', () => {
         </>
       )
     }
-    const { container } = render(<Page />)
-    await act(() => sleep(10))
-    expect(container.textContent).toMatchInlineSnapshot(`"0 0 0"`)
+
+    render(<Page />)
+
+    await act(() => sleep(50))
+    screen.getByText('0 0 0')
+
     await act(() => sleep(100))
-    expect(container.textContent).toMatchInlineSnapshot(`"1 1 1"`)
+    screen.getByText('1 1 1')
+
     await act(() => sleep(100))
-    expect(container.textContent).toMatchInlineSnapshot(`"2 2 2"`)
+    screen.getByText('2 2 2')
   })
 
   it('should broadcast error', async () => {
@@ -187,13 +172,17 @@ describe('useSWR', () => {
         </>
       )
     }
-    const { container } = render(<Page />)
-    await act(() => sleep(10))
-    expect(container.textContent).toMatchInlineSnapshot(`"0 0 0"`)
+
+    render(<Page />)
+
+    await act(() => sleep(50))
+    screen.getByText('0 0 0')
+
     await act(() => sleep(100))
-    expect(container.textContent).toMatchInlineSnapshot(`"1 1 1"`)
+    screen.getByText('1 1 1')
+
     await act(() => sleep(100))
-    expect(container.textContent).toMatchInlineSnapshot(`"err err err"`)
+    screen.getByText('err err err')
   })
 
   it('should broadcast isValidating', async () => {
@@ -232,14 +221,18 @@ describe('useSWR', () => {
         </>
       )
     }
-    const { container } = render(<Page />)
-    expect(container.textContent).toMatchInlineSnapshot(`"true true true"`)
+
+    render(<Page />)
+    screen.getByText('true true true')
+
+    await act(() => sleep(150))
+    screen.getByText('false false false')
+
     await act(() => sleep(100))
-    expect(container.textContent).toMatchInlineSnapshot(`"false false false"`)
+    screen.getByText('true true true')
+
     await act(() => sleep(100))
-    expect(container.textContent).toMatchInlineSnapshot(`"true true true"`)
-    await act(() => sleep(100))
-    expect(container.textContent).toMatchInlineSnapshot(`"false false false"`)
+    screen.getByText('false false false')
   })
 
   it('should accept object args', async () => {
@@ -303,12 +296,49 @@ describe('useSWR', () => {
       return <div>hello, {data}</div>
     }
 
-    const { container } = render(<Page />)
+    render(<Page />)
 
+    await screen.findByText('hello, Initial')
     expect(fetcher).not.toBeCalled()
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"hello, Initial"`
-    )
+  })
+
+  it('should revalidate even if initialData is provided', async () => {
+    const fetcher = key => createResponse(key, { delay: 50 })
+
+    function Page() {
+      const [key, setKey] = useState('initial-data-with-initial-data')
+      const { data } = useSWR(key, fetcher, {
+        initialData: 'Initial'
+      })
+      return (
+        <div onClick={() => setKey('initial-data-with-initial-data-update')}>
+          {data ? `hello, ${data}` : 'loading'}
+        </div>
+      )
+    }
+
+    render(<Page />)
+
+    // render with the initial data
+    await screen.findByText('hello, Initial')
+
+    await waitForNextTick()
+    fireEvent.focus(window)
+
+    await screen.findByText('hello, initial-data-with-initial-data')
+
+    // change the key
+    await waitForNextTick()
+    fireEvent.click(screen.getByText('hello, initial-data-with-initial-data'))
+
+    // a request is still in flight
+    await act(() => sleep(10))
+    // while validating, SWR returns the initialData
+    // https://github.com/vercel/swr/pull/961/files#r588928241
+    screen.getByText('hello, Initial')
+
+    // render with data the fetcher returns
+    await screen.findByText('hello, initial-data-with-initial-data-update')
   })
 
   it('should set config as second parameter', async () => {
@@ -322,35 +352,9 @@ describe('useSWR', () => {
       return <div>hello, {data}</div>
     }
 
-    const { container } = render(<Page />)
-
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
+    render(<Page />)
+    screen.getByText('hello,')
     expect(fetcher).toBeCalled()
-
     await screen.findByText('hello, SWR')
-  })
-
-  it('should use fetch api as default fetcher', async () => {
-    const users = [{ name: 'bob' }, { name: 'sue' }]
-    global['fetch'] = () => Promise.resolve()
-    const mockFetch = body =>
-      Promise.resolve({ json: () => Promise.resolve(body) } as any)
-    const fn = jest
-      .spyOn(window, 'fetch')
-      .mockImplementation(() => mockFetch(users))
-
-    function Users() {
-      const { data } = useSWR('http://localhost:3000/api/users')
-
-      return <div>hello, {data && data.map(u => u.name).join(' and ')}</div>
-    }
-
-    const { container } = render(<Users />)
-
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"hello, "`)
-    expect(fn).toBeCalled()
-
-    await screen.findByText('hello, bob and sue')
-    delete global['fetch']
   })
 })

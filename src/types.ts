@@ -1,114 +1,178 @@
-export type fetcherFn<Data> = (...args: any) => Data | Promise<Data>
-export interface ConfigInterface<
+export type Fetcher<Data> = (...args: any) => Data | Promise<Data>
+export interface Configuration<
   Data = any,
   Error = any,
-  Fn extends fetcherFn<Data> = fetcherFn<Data>
+  Fn extends Fetcher<Data> = Fetcher<Data>
 > {
   errorRetryInterval: number
   errorRetryCount?: number
   loadingTimeout: number
   focusThrottleInterval: number
   dedupingInterval: number
-  refreshInterval: number
-  refreshWhenHidden: boolean
-  refreshWhenOffline: boolean
+  refreshInterval?: number
+  refreshWhenHidden?: boolean
+  refreshWhenOffline?: boolean
   revalidateOnFocus: boolean
-  revalidateOnMount?: boolean
   revalidateOnReconnect: boolean
+  revalidateWhenStale: boolean
   shouldRetryOnError: boolean
-  fetcher: Fn
-  suspense: boolean
+  suspense?: boolean
   initialData?: Data
+  fetcher?: Fn
+  cache: Cache
+  middlewares?: Middleware[]
 
-  isOnline: () => boolean
-  isDocumentVisible: () => boolean
   isPaused: () => boolean
-  onLoadingSlow: (key: string, config: ConfigInterface<Data, Error>) => void
+  onLoadingSlow: (
+    key: string,
+    config: Readonly<Configuration<Data, Error>>
+  ) => void
   onSuccess: (
     data: Data,
     key: string,
-    config: ConfigInterface<Data, Error>
+    config: Readonly<Configuration<Data, Error>>
   ) => void
   onError: (
     err: Error,
     key: string,
-    config: ConfigInterface<Data, Error>
+    config: Readonly<Configuration<Data, Error>>
   ) => void
   onErrorRetry: (
     err: Error,
     key: string,
-    config: ConfigInterface<Data, Error>,
-    revalidate: revalidateType,
-    revalidateOpts: RevalidateOptionInterface
+    config: Readonly<Configuration<Data, Error>>,
+    revalidate: Revalidator,
+    revalidateOpts: Required<RevalidatorOptions>
   ) => void
-  registerOnFocus?: (cb: () => void) => void
-  registerOnReconnect?: (cb: () => void) => void
 
   compare: (a: Data | undefined, b: Data | undefined) => boolean
+
+  isOnline: () => boolean
+  isVisible: () => boolean
+
+  /**
+   * @deprecated `revalidateOnMount` will be removed. Please considering using the `revalidateWhenStale` option.
+   */
+  revalidateOnMount?: boolean
 }
 
-export interface RevalidateOptionInterface {
-  retryCount?: number
-  dedupe?: boolean
+export type ProviderOptions = {
+  setupOnFocus: (cb: () => void) => void
+  setupOnReconnect: (cb: () => void) => void
 }
 
-export type keyType = string | any[] | null
-type keyFunction = () => keyType
-export type keyInterface = keyFunction | keyType
-export type updaterInterface<Data = any, Error = any> = (
+export type SWRHook = <Data = any, Error = any>(
+  ...args:
+    | readonly [Key]
+    | readonly [Key, Fetcher<Data> | null]
+    | readonly [Key, SWRConfiguration<Data, Error> | undefined]
+    | readonly [
+        Key,
+        Fetcher<Data> | null,
+        SWRConfiguration<Data, Error> | undefined
+      ]
+) => SWRResponse<Data, Error>
+
+// Middlewares guarantee that a SWRHook receives a key, fetcher, and config as the argument
+type SWRHookWithMiddleware = <Data = any, Error = any>(
+  key: Key,
+  fetcher: Fetcher<Data> | null,
+  config: SWRConfiguration<Data, Error>
+) => SWRResponse<Data, Error>
+
+export type Middleware = (useSWRNext: SWRHook) => SWRHookWithMiddleware
+
+export type ValueKey = string | any[] | null
+
+export type Updater<Data = any, Error = any> = (
   shouldRevalidate?: boolean,
   data?: Data,
   error?: Error,
   shouldDedupe?: boolean,
   dedupe?: boolean
 ) => boolean | Promise<boolean>
-export type triggerInterface = (
-  key: keyInterface,
-  shouldRevalidate?: boolean
-) => Promise<any>
-export type mutateCallback<Data = any> = (
+
+export type MutatorCallback<Data = any> = (
   currentValue: undefined | Data
 ) => Promise<undefined | Data> | undefined | Data
-export type mutateInterface<Data = any> = (
-  key: keyInterface,
-  data?: Data | Promise<Data> | mutateCallback<Data>,
-  shouldRevalidate?: boolean
-) => Promise<Data | undefined>
-export type broadcastStateInterface<Data = any, Error = any> = (
+
+export type Broadcaster<Data = any, Error = any> = (
+  cache: Cache,
   key: string,
   data: Data,
   error?: Error,
-  isValidating?: boolean
-) => void
-export type responseInterface<Data, Error> = {
+  isValidating?: boolean,
+  shouldRevalidate?: boolean
+) => Promise<Data>
+
+export type State<Data, Error> = {
   data?: Data
   error?: Error
-  revalidate: () => Promise<boolean>
-  mutate: (
-    data?: Data | Promise<Data> | mutateCallback<Data>,
+  isValidating?: boolean
+}
+
+export type Mutator<Data = any> = (
+  cache: Cache,
+  key: Key,
+  data?: Data | Promise<Data> | MutatorCallback<Data>,
+  shouldRevalidate?: boolean
+) => Promise<Data | undefined>
+
+export interface ScopedMutator<Data = any> {
+  /** This is used for bound mutator */
+  (
+    key: Key,
+    data?: Data | Promise<Data> | MutatorCallback<Data>,
     shouldRevalidate?: boolean
-  ) => Promise<Data | undefined>
+  ): Promise<Data | undefined>
+  /** This is used for global mutator */
+  <T = any>(
+    key: Key,
+    data?: T | Promise<T> | MutatorCallback<T>,
+    shouldRevalidate?: boolean
+  ): Promise<T | undefined>
+}
+
+export type KeyedMutator<Data> = (
+  data?: Data | Promise<Data> | MutatorCallback<Data>,
+  shouldRevalidate?: boolean
+) => Promise<Data | undefined>
+
+// Public types
+
+export type SWRConfiguration<
+  Data = any,
+  Error = any,
+  Fn extends Fetcher<Data> = Fetcher<Data>
+> = Partial<Configuration<Data, Error, Fn>>
+
+export type Key = ValueKey | (() => ValueKey)
+
+export interface SWRResponse<Data, Error> {
+  data?: Data
+  error?: Error
+  /**
+   * @deprecated `revalidate` is deprecated, please use `mutate()` for the same purpose.
+   */
+  revalidate: () => Promise<boolean>
+  mutate: KeyedMutator<Data>
   isValidating: boolean
 }
-export type revalidateType = (
-  revalidateOpts: RevalidateOptionInterface
-) => Promise<boolean>
 
-export type actionType<Data, Error> = {
-  data?: Data
-  error?: Error
-  isValidating?: boolean
+export type KeyLoader<Data = any> =
+  | ((index: number, previousPageData: Data | null) => ValueKey)
+  | null
+export interface RevalidatorOptions {
+  retryCount?: number
+  dedupe?: boolean
 }
 
-export interface CacheInterface {
-  get(key: keyInterface): any
-  set(key: keyInterface, value: any): any
-  keys(): string[]
-  has(key: keyInterface): boolean
-  delete(key: keyInterface): void
-  clear(): void
-  serializeKey(key: keyInterface): [string, any, string, string]
-  subscribe(listener: cacheListener): () => void
-}
+export type Revalidator = (
+  revalidateOpts?: RevalidatorOptions
+) => Promise<boolean> | void
 
-export type cacheListener = () => void
+export interface Cache<Data = any> {
+  get(key: Key): Data | null | undefined
+  set(key: Key, value: Data): void
+  delete(key: Key): void
+}

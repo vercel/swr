@@ -1,13 +1,9 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import React, { useState } from 'react'
-import useSWR from '../src'
-import { sleep } from './utils'
+import useSWR, { createCache } from 'swr'
+import { sleep, nextTick as waitForNextTick, focusOn } from './utils'
 
-const waitForNextTick = () => act(() => sleep(1))
-const focusWindow = () =>
-  act(async () => {
-    fireEvent.focus(window)
-  })
+const focusWindow = () => focusOn(window)
 
 describe('useSWR - focus', () => {
   it('should revalidate on focus by default', async () => {
@@ -19,10 +15,10 @@ describe('useSWR - focus', () => {
       })
       return <div>data: {data}</div>
     }
-    const { container } = render(<Page />)
 
+    render(<Page />)
     // hydration
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
+    screen.getByText('data:')
     // mount
     await screen.findByText('data: 0')
 
@@ -43,10 +39,11 @@ describe('useSWR - focus', () => {
       })
       return <div>data: {data}</div>
     }
-    const { container } = render(<Page />)
 
+    render(<Page />)
     // hydration
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
+    screen.getByText('data:')
+
     // mount
     await screen.findByText('data: 0')
 
@@ -54,9 +51,10 @@ describe('useSWR - focus', () => {
     // trigger revalidation
     await focusWindow()
     // should not be revalidated
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
+    screen.getByText('data: 0')
   })
-  it('revalidateOnFocus shoule be stateful', async () => {
+
+  it('revalidateOnFocus should be stateful', async () => {
     let value = 0
 
     function Page() {
@@ -68,10 +66,11 @@ describe('useSWR - focus', () => {
       })
       return <div onClick={() => toggle(s => !s)}>data: {data}</div>
     }
-    const { container } = render(<Page />)
 
+    render(<Page />)
     // hydration
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
+    screen.getByText('data:')
+
     // mount
     await screen.findByText('data: 0')
 
@@ -79,10 +78,10 @@ describe('useSWR - focus', () => {
     // trigger revalidation
     await focusWindow()
     // data should not change
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 0"`)
+    screen.getByText('data: 0')
 
     // change revalidateOnFocus to true
-    fireEvent.click(container.firstElementChild)
+    fireEvent.click(screen.getByText('data: 0'))
     // trigger revalidation
     await focusWindow()
     // data should update
@@ -96,11 +95,11 @@ describe('useSWR - focus', () => {
 
     await waitForNextTick()
     // change revalidateOnFocus to false
-    fireEvent.click(container.firstElementChild)
+    fireEvent.click(screen.getByText('data: 2'))
     // trigger revalidation
     await focusWindow()
     // data should not change
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 2"`)
+    screen.getByText('data: 2')
   })
 
   it('focusThrottleInterval should work', async () => {
@@ -118,10 +117,11 @@ describe('useSWR - focus', () => {
       )
       return <div>data: {data}</div>
     }
-    const { container } = render(<Page />)
 
+    render(<Page />)
     // hydration
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
+    screen.getByText('data:')
+
     // mount
     await screen.findByText('data: 0')
 
@@ -157,10 +157,11 @@ describe('useSWR - focus', () => {
       )
       return <div onClick={() => setInterval(s => s + 100)}>data: {data}</div>
     }
-    const { container } = render(<Page />)
 
+    render(<Page />)
     // hydration
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
+    screen.getByText('data:')
+
     // mount
     await screen.findByText('data: 0')
 
@@ -175,7 +176,7 @@ describe('useSWR - focus', () => {
 
     await waitForNextTick()
     // increase focusThrottleInterval
-    fireEvent.click(container.firstElementChild)
+    fireEvent.click(screen.getByText('data: 2'))
     // wait for throttle interval
     await act(() => sleep(100))
     // trigger revalidation
@@ -195,5 +196,27 @@ describe('useSWR - focus', () => {
     // trigger revalidation
     await focusWindow()
     await screen.findByText('data: 5')
+  })
+
+  it('should revalidate on focus even with custom cache', async () => {
+    let value = 0
+    const { cache } = createCache(new Map())
+
+    function Page() {
+      const { data } = useSWR('revalidateOnFocus + cache', () => value++, {
+        cache,
+        revalidateOnFocus: true,
+        dedupingInterval: 0
+      })
+      return <div>data: {data}</div>
+    }
+
+    // reuse default test case
+    render(<Page />)
+    screen.getByText('data:')
+    await screen.findByText('data: 0')
+    await waitForNextTick()
+    await focusWindow()
+    await screen.findByText('data: 1')
   })
 })
