@@ -12,30 +12,30 @@ import { useCallback } from 'react'
 import { withMiddleware } from '../src/utils/with-middleware'
 import { serialize } from '../src/utils/serialize'
 
-export const passive = ((<Data, Error>(useSWRNext: SWRHook) => (
+export const trigger = ((<Data, Error>(useSWRNext: SWRHook) => (
   key: Key,
   fetcher: Fetcher<Data>,
   config: SWRConfiguration<Data, Error>
-): SWRPassiveResponse<Data, Error> => {
+): SWRTriggerResponse<Data, Error> => {
   // Disable all revalidate options.
   config.revalidateOnFocus = false
   config.revalidateWhenStale = false
   config.revalidateOnReconnect = false
 
-  // Disable options that are imcompatible with passive mode.
+  // Disable options that are imcompatible with trigger mode.
   config.suspense = false
   config.shouldRetryOnError = false
   config.refreshInterval = 0
   config.loadingTimeout = 0
 
   // Disable fetcher.
-  const swr = useSWRNext(key, null, config) as SWRPassiveResponse
+  const swr = useSWRNext(key, null, config) as SWRTriggerResponse
 
   // Serialize the key and get args.
   const [keyStr, args] = serialize(key)
 
   // Method to trigger the request manually.
-  const trigger = useCallback(
+  swr.trigger = useCallback(
     (...extraArgs) => {
       // If it's not ready to fetch, we throw an error.
       if (!keyStr) throw new Error('Empty SWR key.')
@@ -51,15 +51,14 @@ export const passive = ((<Data, Error>(useSWRNext: SWRHook) => (
     [keyStr]
   )
 
-  swr.trigger = trigger
   return swr
 }) as unknown) as Middleware
 
-type SWRPassiveResponse<Data = any, Error = any> = SWRResponse<Data, Error> & {
+type SWRTriggerResponse<Data = any, Error = any> = SWRResponse<Data, Error> & {
   trigger: (...extraArguments: any[]) => ReturnType<Fetcher<Data>> | undefined
 }
 
-type SWRPassiveHook = <Data = any, Error = any>(
+type SWRTriggerHook = <Data = any, Error = any>(
   ...args:
     | readonly [Key]
     | readonly [Key, Fetcher<Data> | null]
@@ -69,6 +68,6 @@ type SWRPassiveHook = <Data = any, Error = any>(
         Fetcher<Data> | null,
         SWRConfiguration<Data, Error> | undefined
       ]
-) => SWRPassiveResponse<Data, Error>
+) => SWRTriggerResponse<Data, Error>
 
-export default withMiddleware(useSWR, passive) as SWRPassiveHook
+export default withMiddleware(useSWR, trigger) as SWRTriggerHook

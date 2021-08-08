@@ -20,10 +20,10 @@
       "require": "./immutable/dist/index.js",
       "types": "./immutable/dist/immutable/index.d.ts"
     },
-    "./passive": {
-      "import": "./passive/dist/index.esm.js",
-      "require": "./passive/dist/index.js",
-      "types": "./passive/dist/passive/index.d.ts"
+    "./trigger": {
+      "import": "./trigger/dist/index.esm.js",
+      "require": "./trigger/dist/index.js",
+      "types": "./trigger/dist/trigger/index.d.ts"
     }
   },
   "react-native": "./dist/index.esm.js",
@@ -32,31 +32,31 @@
     "dist/**",
     "infinite/dist/**",
     "immutable/dist/**",
-    "passive/dist/**",
+    "trigger/dist/**",
     "infinite/package.json",
     "immutable/package.json",
-    "passive/package.json"
+    "trigger/package.json"
   ],
   "repository": "vercel/swr",
   "homepage": "https://swr.vercel.app",
   "license": "MIT",
   "scripts": {
-    "clean": "rm -rf dist infinite/dist immutable/dist passive/dist",
-    "build": "yarn build:core && yarn build:infinite && yarn build:immutable && yarn build:passive",
-    "watch": "concurrently \"yarn watch:core\" \"yarn watch:infinite\" \"yarn watch:immutable\" \"yarn watch:passive\"",
+    "clean": "rm -rf dist infinite/dist immutable/dist trigger/dist",
+    "build": "yarn build:core && yarn build:infinite && yarn build:immutable && yarn build:trigger",
+    "watch": "concurrently \"yarn watch:core\" \"yarn watch:infinite\" \"yarn watch:immutable\" \"yarn watch:trigger\"",
     "watch:core": "bunchee src/index.ts --watch",
     "watch:infinite": "bunchee index.ts --cwd infinite --watch",
     "watch:immutable": "bunchee index.ts --cwd immutable --watch",
-    "watch:passive": "bunchee index.ts --cwd passive --watch",
+    "watch:trigger": "bunchee index.ts --cwd trigger --watch",
     "build:core": "bunchee src/index.ts -m --no-sourcemap",
     "build:infinite": "bunchee index.ts --cwd infinite -m --no-sourcemap",
     "build:immutable": "bunchee index.ts --cwd immutable -m --no-sourcemap",
-    "build:passive": "bunchee index.ts --cwd passive -m --no-sourcemap",
+    "build:trigger": "bunchee index.ts --cwd trigger -m --no-sourcemap",
     "prepublishOnly": "yarn clean && yarn build",
     "types:check": "tsc --noEmit",
-    "format": "prettier --write \"{src,infinite,immutable,passive,test,examples}/**/*.{ts,tsx}\"",
-    "lint": "eslint \"{src,infinite,immutable,passive,test,examples}/**/*.{ts,tsx}\"",
-    "lint:fix": "eslint \"{src,infinite,immutable,passive,test,examples}/**/*.{ts,tsx}\" --fix",
+    "format": "prettier --write \"{src,infinite,immutable,trigger,test,examples}/**/*.{ts,tsx}\"",
+    "lint": "eslint \"{src,infinite,immutable,trigger,test,examples}/**/*.{ts,tsx}\"",
+    "lint:fix": "eslint \"{src,infinite,immutable,trigger,test,examples}/**/*.{ts,tsx}\" --fix",
     "test": "jest",
     "register": "yarn link && cd node_modules/react && yarn link",
     "prepare:vite": "git clone https://github.com/promer94/vite-swr playground/vite-swr && cd playground/vite-swr && yarn && yarn link react && yarn link swr",
