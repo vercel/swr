@@ -27,6 +27,7 @@ export const trigger = ((<Data, Error>(useSWRNext: SWRHook) => (
   config.shouldRetryOnError = false
   config.refreshInterval = 0
   config.loadingTimeout = 0
+  config.fetcher = undefined
 
   // Disable fetcher.
   const swr = useSWRNext(key, null, config) as SWRTriggerResponse
