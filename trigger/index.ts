@@ -17,7 +17,7 @@ export const trigger = ((<Data, Error>(useSWRNext: SWRHook) => (
   fetcher: Fetcher<Data>,
   config: SWRConfiguration<Data, Error>
 ): SWRTriggerResponse<Data, Error> => {
-  // Disable all revalidate options.
+  // Disable all revalidations.
   config.revalidateOnFocus = false
   config.revalidateWhenStale = false
   config.revalidateOnReconnect = false
