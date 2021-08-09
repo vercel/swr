@@ -216,13 +216,6 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
         get: () => swr.data,
         enumerable: true
       },
-      // revalidate will be deprecated in the 1.x release
-      // because mutate() covers the same use case of revalidate().
-      // This remains only for backward compatibility
-      revalidate: {
-        get: () => swr.revalidate,
-        enumerable: true
-      },
       isValidating: {
         get: () => swr.isValidating,
         enumerable: true
