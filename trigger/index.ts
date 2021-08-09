@@ -29,6 +29,9 @@ export const trigger = ((<Data, Error>(useSWRNext: SWRHook) => (
   config.loadingTimeout = 0
   config.fetcher = undefined
 
+  // Extract callbacks.
+  const { onSuccess, onError } = config
+
   // Disable fetcher.
   const swr = useSWRNext(key, null, config) as SWRTriggerResponse
 
@@ -43,7 +46,18 @@ export const trigger = ((<Data, Error>(useSWRNext: SWRHook) => (
       if (!fetcher) throw new Error('Missing SWR fetcher.')
 
       // Mutate the SWR data and return the result.
-      return swr.mutate(fetcher(...args, ...extraArgs), false)
+      return swr.mutate(
+        Promise.resolve(fetcher(...args, ...extraArgs))
+          .then(data => {
+            if (onSuccess) onSuccess(data, keyStr, config)
+            return data
+          })
+          .catch(error => {
+            if (onError) onError(error, keyStr, config)
+            throw error
+          }),
+        false
+      )
 
       // `keyStr` is the serialized version of `args`, no need to put `args` here.
       // `fetcher` isn't considered as a dependency as well for now.

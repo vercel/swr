@@ -10,7 +10,7 @@ import { UNDEFINED, noop } from './helper'
 function onErrorRetry(
   _: unknown,
   __: string,
-  config: Readonly<Configuration>,
+  config: Readonly<Partial<Configuration>>,
   revalidate: Revalidator,
   opts: Required<RevalidatorOptions>
 ): void {
@@ -28,7 +28,7 @@ function onErrorRetry(
   // Exponential backoff
   const timeout =
     ~~((Math.random() + 0.5) * (1 << Math.min(currentRetryCount, 8))) *
-    config.errorRetryInterval
+    config.errorRetryInterval!
   setTimeout(revalidate, timeout, opts)
 }
 

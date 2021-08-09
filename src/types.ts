@@ -25,22 +25,22 @@ export interface Configuration<
   isPaused: () => boolean
   onLoadingSlow: (
     key: string,
-    config: Readonly<Configuration<Data, Error>>
+    config: Readonly<Partial<Configuration<Data, Error>>>
   ) => void
   onSuccess: (
     data: Data,
     key: string,
-    config: Readonly<Configuration<Data, Error>>
+    config: Readonly<Partial<Configuration<Data, Error>>>
   ) => void
   onError: (
     err: Error,
     key: string,
-    config: Readonly<Configuration<Data, Error>>
+    config: Readonly<Partial<Configuration<Data, Error>>>
   ) => void
   onErrorRetry: (
     err: Error,
     key: string,
-    config: Readonly<Configuration<Data, Error>>,
+    config: Readonly<Partial<Configuration<Data, Error>>>,
     revalidate: Revalidator,
     revalidateOpts: Required<RevalidatorOptions>
   ) => void
