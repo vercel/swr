@@ -113,7 +113,7 @@ const { data, error, isValidating, mutate } = useSWR(key, fetcher, options)
 #### Options
 
 - `suspense = false`: enable React Suspense mode [(details)](#suspense-mode)
-- `fetcher = window.fetch`: the default fetcher function
+- `fetcher`: the function to retrieve the remote data source
 - `initialData`: initial data to be returned (note: This is per-hook)
 - `revalidateOnMount`: enable or disable automatic revalidation when component is mounted (by default revalidation occurs on mount when initialData is not set, use this flag to force behavior)
 - `revalidateOnFocus = true`: auto revalidate when window gets focused

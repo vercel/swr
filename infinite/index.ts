@@ -48,14 +48,15 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
 
   const rerender = useState({})[1]
 
-  // we use cache to pass extra info (context) to fetcher so it can be globally shared
-  // here we get the key of the fetcher context cache
+  // We use cache to pass extra info (context) to fetcher so it can be globally
+  // shared. The key of the context data is based on the first page key.
   let contextCacheKey: string | null = null
   if (firstPageKey) {
     contextCacheKey = '$ctx$' + firstPageKey
   }
 
-  // page size is also cached to share the page data between hooks having the same key
+  // Page size is also cached to share the page data between hooks with the
+  // same key.
   let pageSizeCacheKey: string | null = null
   if (firstPageKey) {
     pageSizeCacheKey = '$len$' + firstPageKey
@@ -99,7 +100,8 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
     firstPageKey ? INFINITE_PREFIX + firstPageKey : null,
     async () => {
       // get the revalidate context
-      const { data: originalData, force } = cache.get(contextCacheKey) || {}
+      const [forceRevalidateAll, originalData] =
+        cache.get(contextCacheKey) || []
 
       // return an array of page data
       const data: Data[] = []
@@ -113,24 +115,24 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
         )
 
         if (!pageKey) {
-          // pageKey is falsy, stop fetching next pages
+          // `pageKey` is falsy, stop fetching new pages.
           break
         }
 
-        // get the current page cache
+        // Get the cached page data.
         let pageData = cache.get(pageKey)
 
         // should fetch (or revalidate) if:
         // - `revalidateAll` is enabled
         // - `mutate()` called
         // - the cache is missing
-        // - it's the first page and it's not the first render
+        // - it's the first page and it's not the initial render
         // - cache has changed
         const shouldFetchPage =
           revalidateAll ||
-          force ||
+          forceRevalidateAll ||
           isUndefined(pageData) ||
-          (i === 0 && !isUndefined(dataRef.current)) ||
+          (!i && !isUndefined(dataRef.current)) ||
           (originalData && !config.compare(originalData[i], pageData))
 
         if (fn && shouldFetchPage) {
@@ -162,12 +164,12 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
       if (!contextCacheKey) return UNDEFINED
 
       if (shouldRevalidate && !isUndefined(data)) {
-        // we only revalidate the pages that are changed
+        // We only revalidate the pages that are changed
         const originalData = dataRef.current
-        cache.set(contextCacheKey, { data: originalData, force: false })
+        cache.set(contextCacheKey, [false, originalData])
       } else if (shouldRevalidate) {
-        // calling `mutate()`, we revalidate all pages
-        cache.set(contextCacheKey, { force: true })
+        // Calling `mutate()`, we revalidate all pages
+        cache.set(contextCacheKey, [true])
       }
 
       return swr.mutate(data, shouldRevalidate)

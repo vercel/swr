@@ -20,7 +20,7 @@ jobs:
       - run: yarn install
       - run: yarn types:check
       - run: yarn lint
-      - run: yarn build:core
+      - run: yarn build
       - run: yarn test
         env:
           CI: true

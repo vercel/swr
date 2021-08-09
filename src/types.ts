@@ -18,7 +18,7 @@ export interface Configuration<
   shouldRetryOnError: boolean
   suspense?: boolean
   initialData?: Data
-  fetcher: Fn
+  fetcher?: Fn
   cache: Cache
   middlewares?: Middleware[]
 
@@ -48,7 +48,7 @@ export interface Configuration<
   compare: (a: Data | undefined, b: Data | undefined) => boolean
 
   isOnline: () => boolean
-  isDocumentVisible: () => boolean
+  isVisible: () => boolean
 
   /**
    * @deprecated `revalidateOnMount` will be removed. Please considering using the `revalidateWhenStale` option.
@@ -168,8 +168,8 @@ export interface RevalidatorOptions {
 }
 
 export type Revalidator = (
-  revalidateOpts: RevalidatorOptions
-) => Promise<boolean>
+  revalidateOpts?: RevalidatorOptions
+) => Promise<boolean> | void
 
 export interface Cache<Data = any> {
   get(key: Key): Data | null | undefined

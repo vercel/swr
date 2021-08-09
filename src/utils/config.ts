@@ -4,10 +4,7 @@ import { wrapCache } from './cache'
 import { preset } from './web-preset'
 import { slowConnection } from './env'
 import { Configuration, RevalidatorOptions, Revalidator } from '../types'
-import { UNDEFINED } from './helper'
-
-const fetcher = (url: string) => fetch(url).then(res => res.json())
-const noop = () => {}
+import { UNDEFINED, noop } from './helper'
 
 // error retry
 function onErrorRetry(
@@ -17,7 +14,7 @@ function onErrorRetry(
   revalidate: Revalidator,
   opts: Required<RevalidatorOptions>
 ): void {
-  if (!preset.isDocumentVisible()) {
+  if (!preset.isVisible()) {
     // If it's hidden, stop. It will auto revalidate when refocusing.
     return
   }
@@ -56,7 +53,6 @@ const defaultConfig: Configuration = {
   loadingTimeout: slowConnection ? 5000 : 3000,
 
   // providers
-  fetcher,
   compare: dequal,
   isPaused: () => false,
   cache: wrapCache(new Map()),

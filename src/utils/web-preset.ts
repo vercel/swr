@@ -1,5 +1,5 @@
 import { ProviderOptions } from '../types'
-import { isUndefined } from './helper'
+import { isUndefined, noop } from './helper'
 
 /**
  * Due to bug https://bugs.chromium.org/p/chromium/issues/detail?id=678075,
@@ -12,14 +12,14 @@ let online = true
 const isOnline = () => online
 const hasWindow = typeof window !== 'undefined'
 const hasDocument = typeof document !== 'undefined'
-const add = 'addEventListener'
-function noop() {}
+const ADD_EVENT_LISTENER = 'addEventListener'
 
 // For node and React Native, `add/removeEventListener` doesn't exist on window.
-const onWindowEvent = hasWindow && window[add] ? window[add] : noop
-const onDocumentEvent = hasDocument ? document[add] : noop
+const onWindowEvent =
+  hasWindow && window[ADD_EVENT_LISTENER] ? window[ADD_EVENT_LISTENER] : noop
+const onDocumentEvent = hasDocument ? document[ADD_EVENT_LISTENER] : noop
 
-const isDocumentVisible = () => {
+const isVisible = () => {
   const visibilityState = hasDocument && document.visibilityState
   if (!isUndefined(visibilityState)) {
     return visibilityState !== 'hidden'
@@ -47,7 +47,7 @@ const setupOnReconnect = (cb: () => void) => {
 
 export const preset = {
   isOnline,
-  isDocumentVisible
+  isVisible
 } as const
 
 export const provider: ProviderOptions = {
