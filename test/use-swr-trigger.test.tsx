@@ -76,4 +76,46 @@ describe('useSWR - trigger', () => {
 
     expect(onSuccess).toHaveBeenCalled()
   })
+
+  it('should call `onError` event', async () => {
+    const key = createKey()
+    const onError = jest.fn()
+    const onCatchError = jest.fn()
+
+    function Page() {
+      const { data, error, trigger } = useSWRTrigger(
+        key,
+        async () => {
+          await sleep(10)
+          throw new Error('error!')
+        },
+        {
+          onError
+        }
+      )
+      return (
+        <button
+          onClick={async () => {
+            try {
+              await trigger()
+            } catch (e) {
+              onCatchError(e)
+            }
+          }}
+        >
+          {data || (error ? error.message : 'pending')}
+        </button>
+      )
+    }
+
+    render(<Page />)
+
+    // mount
+    await screen.findByText('pending')
+    fireEvent.click(screen.getByText('pending'))
+
+    await screen.findByText('error!')
+    expect(onError).toHaveBeenCalled()
+    expect(onCatchError).toHaveBeenCalled()
+  })
 })
