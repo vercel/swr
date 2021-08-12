@@ -110,7 +110,7 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
 
       let previousPageData = null
       for (let i = 0; i < pageSize; ++i) {
-        const [pageKey, pageArgs] = serialize(
+        const [pageKey, pageArgs] = serializeKey(
           getKey ? getKey(i, previousPageData) : null
         )
 
