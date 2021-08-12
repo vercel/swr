@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { render, fireEvent, act, screen } from '@testing-library/react'
 import { mutate, createCache, SWRConfig } from 'swr'
-import useSWRInfinite, { getInfiniteKey } from 'swr/infinite'
+import useSWRInfinite, { serialize } from 'swr/infinite'
 import { sleep, createKey, createResponse } from './utils'
 
 describe('useSWRInfinite', () => {
@@ -581,7 +581,7 @@ describe('useSWRInfinite', () => {
     await screen.findByText('data:')
   })
 
-  it('should mutate a cache with getInfiniteKey', async () => {
+  it('should mutate a cache with `serialize`', async () => {
     let count = 0
     function Page() {
       const { data } = useSWRInfinite<string, string>(
@@ -596,12 +596,12 @@ describe('useSWRInfinite', () => {
 
     await screen.findByText('data:page-test-12-0:1')
 
-    await act(() => mutate(getInfiniteKey(index => `page-test-12-${index}`)))
+    await act(() => mutate(serialize(index => `page-test-12-${index}`)))
     await screen.findByText('data:page-test-12-0:2')
 
     await act(() =>
       mutate(
-        getInfiniteKey(index => `page-test-12-${index}`),
+        serialize(index => `page-test-12-${index}`),
         'local-mutation',
         false
       )
@@ -609,7 +609,7 @@ describe('useSWRInfinite', () => {
     await screen.findByText('data:local-mutation')
   })
 
-  it('should mutate a cache with getInfiniteKey based on a current data', async () => {
+  it('should mutate a cache with `serialize` based on a current data', async () => {
     const getKey = index => [`pagetest-13`, index]
     function Comp() {
       const { data, size, setSize } = useSWRInfinite<string, string>(
@@ -630,7 +630,7 @@ describe('useSWRInfinite', () => {
 
     await act(() =>
       mutate(
-        getInfiniteKey(getKey),
+        serialize(getKey),
         data => data.map(value => `(edited)${value}`),
         false
       )
@@ -638,7 +638,7 @@ describe('useSWRInfinite', () => {
     await screen.findByText('data:(edited)page 0, (edited)page 1,')
   })
 
-  it('should be able to use getInfiniteKey with a custom cache', async () => {
+  it('should be able to use `serialize` with a custom cache', async () => {
     const key = 'page-test-14;'
     const customCache1 = new Map([[key, 'initial-cache']])
     const { cache, mutate: mutateCustomCache } = createCache(customCache1)
@@ -659,11 +659,11 @@ describe('useSWRInfinite', () => {
 
     await screen.findByText('data:initial-cache')
 
-    await act(() => mutateCustomCache(getInfiniteKey(() => key)))
+    await act(() => mutateCustomCache(serialize(() => key)))
     await screen.findByText('data:response data')
 
     await act(() =>
-      mutateCustomCache(getInfiniteKey(() => key), 'local-mutation', false)
+      mutateCustomCache(serialize(() => key), 'local-mutation', false)
     )
     await screen.findByText('data:local-mutation')
   })

@@ -11,7 +11,7 @@ import useSWR, {
   Middleware
 } from 'swr'
 import { useIsomorphicLayoutEffect } from '../src/utils/env'
-import { serialize } from '../src/utils/serialize'
+import { serialize as serializeKey } from '../src/utils/serialize'
 import { isUndefined, UNDEFINED } from '../src/utils/helper'
 import { withMiddleware } from '../src/utils/with-middleware'
 import { SWRInfiniteConfiguration, SWRInfiniteResponse } from './types'
@@ -19,10 +19,10 @@ import { SWRInfiniteConfiguration, SWRInfiniteResponse } from './types'
 const INFINITE_PREFIX = '$inf$'
 
 const getFirstPageKey = (getKey: KeyLoader<any>) => {
-  return serialize(getKey ? getKey(0, null) : null)[0]
+  return serializeKey(getKey ? getKey(0, null) : null)[0]
 }
 
-export const getInfiniteKey = (getKey: KeyLoader<any>) => {
+export const serialize = (getKey: KeyLoader<any>) => {
   return INFINITE_PREFIX + getFirstPageKey(getKey)
 }
 
