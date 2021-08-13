@@ -127,13 +127,15 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
         // - `mutate()` called
         // - the cache is missing
         // - it's the first page and it's not the initial render
-        // - cache has changed
+        // - cache for that page has changed
         const shouldFetchPage =
           revalidateAll ||
           forceRevalidateAll ||
           isUndefined(pageData) ||
           (!i && !isUndefined(dataRef.current)) ||
-          (originalData && !config.compare(originalData[i], pageData))
+          (originalData &&
+            !isUndefined(originalData[i]) &&
+            !config.compare(originalData[i], pageData))
 
         if (fn && shouldFetchPage) {
           pageData = await fn(...pageArgs)
