@@ -727,7 +727,7 @@ describe('useSWRInfinite', () => {
     expect(renderedData).toEqual(['new'])
   })
 
-  it('should reuse cached value', async () => {
+  it('should reuse cached value for new pages', async () => {
     const key = createKey()
     const customCache = new Map([[key + '-1', 'cached value']])
     const { cache } = createCache(customCache)
