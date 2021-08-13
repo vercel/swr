@@ -726,4 +726,31 @@ describe('useSWRInfinite', () => {
     await act(() => sleep(1))
     expect(renderedData).toEqual(['new'])
   })
+
+  it('should reuse cached value for new pages', async () => {
+    const key = createKey()
+    const customCache = new Map([[key + '-1', 'cached value']])
+    const { cache } = createCache(customCache)
+
+    function Page() {
+      const { data, setSize } = useSWRInfinite<string, string>(
+        index => key + '-' + index,
+        () => createResponse('response value')
+      )
+      return (
+        <div onClick={() => setSize(2)}>data:{data ? data.join(',') : ''}</div>
+      )
+    }
+
+    render(
+      <SWRConfig value={{ cache }}>
+        <Page />
+      </SWRConfig>
+    )
+
+    screen.getByText('data:')
+    await screen.findByText('data:response value')
+    fireEvent.click(screen.getByText('data:response value'))
+    await screen.findByText('data:response value,cached value')
+  })
 })
