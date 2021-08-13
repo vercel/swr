@@ -93,7 +93,7 @@ export type Updater<Data = any, Error = any> = (
 ) => boolean | Promise<boolean>
 
 export type MutatorCallback<Data = any> = (
-  currentValue: undefined | Data
+  currentValue?: Data
 ) => Promise<undefined | Data> | undefined | Data
 
 export type Broadcaster<Data = any, Error = any> = (
