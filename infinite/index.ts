@@ -95,7 +95,7 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
   // keep the data inside a ref
   const dataRef = useRef<Data[]>()
 
-  // actual swr of all pages
+  // Actual SWR hook to load all pages in one fetcher.
   const swr = useSWRNext<Data[], Error>(
     firstPageKey ? INFINITE_PREFIX + firstPageKey : null,
     async () => {
@@ -181,7 +181,36 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
     [contextCacheKey]
   )
 
-  // extend the SWR API
+  // Function to load pages data from the cache based on the page size.
+  const resolvePagesFromCache = (): Data[] | undefined => {
+    // return an array of page data
+    const data: Data[] = []
+
+    const pageSize = resolvePageSize()
+
+    let previousPageData = null
+    for (let i = 0; i < pageSize; ++i) {
+      const [pageKey] = serialize(getKey ? getKey(i, previousPageData) : null)
+
+      if (!pageKey) {
+        // `pageKey` is falsy, stop fetching new pages.
+        return undefined
+      }
+
+      // Get the cached page data.
+      const pageData = cache.get(pageKey)
+
+      if (isUndefined(pageData)) return undefined
+
+      data.push(pageData)
+      previousPageData = pageData
+    }
+
+    // return the data
+    return data
+  }
+
+  // Extend the SWR API
   const setSize = useCallback(
     (arg: number | ((size: number) => number)) => {
       // It is possible that the key is still falsy.
@@ -198,7 +227,7 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
         lastPageSizeRef.current = size
       }
       rerender({})
-      return mutate(v => v)
+      return mutate(v => resolvePagesFromCache() || v)
     },
     // `cache` and `rerender` isn't allowed to change during the lifecycle
     // eslint-disable-next-line react-hooks/exhaustive-deps
