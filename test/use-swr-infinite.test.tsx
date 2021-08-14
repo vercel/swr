@@ -754,7 +754,7 @@ describe('useSWRInfinite', () => {
     await screen.findByText('data:response value,cached value')
   })
 
-  it.only('should return cached value ASAP when updating size and revalidate in the background', async () => {
+  it('should return cached value ASAP when updating size and revalidate in the background', async () => {
     const key = createKey()
     const getData = jest.fn(v => v)
 
@@ -790,5 +790,32 @@ describe('useSWRInfinite', () => {
     // Revalidate
     await act(() => sleep(30))
     expect(getData).toHaveBeenCalledTimes(2)
+  })
+
+  it('should block on fetching new uncached pages when updating size', async () => {
+    const key = createKey()
+    const getData = jest.fn(v => v)
+
+    function Page() {
+      const { data, setSize } = useSWRInfinite<string, string>(
+        index => key + '-' + index,
+        () => sleep(30).then(() => getData('response value'))
+      )
+      return (
+        <div onClick={() => setSize(2)}>data:{data ? data.join(',') : ''}</div>
+      )
+    }
+
+    render(<Page />)
+
+    screen.getByText('data:')
+    await screen.findByText('data:response value')
+    expect(getData).toHaveBeenCalledTimes(1)
+
+    fireEvent.click(screen.getByText('data:response value'))
+
+    // Fetch new page and revalidate the first page.
+    await screen.findByText('data:response value,response value')
+    expect(getData).toHaveBeenCalledTimes(3)
   })
 })
