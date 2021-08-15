@@ -161,7 +161,10 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
   }, [swr.data])
 
   const mutate = useCallback(
-    (data: MutatorCallback, shouldRevalidate = true) => {
+    (
+      data: Data[] | Promise<Data[]> | MutatorCallback<Data[]>,
+      shouldRevalidate = true
+    ) => {
       // It is possible that the key is still falsy.
       if (!contextCacheKey) return UNDEFINED
 
@@ -182,25 +185,17 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
   )
 
   // Function to load pages data from the cache based on the page size.
-  const resolvePagesFromCache = (): Data[] | undefined => {
+  const resolvePagesFromCache = (pageSize: number): Data[] => {
     // return an array of page data
     const data: Data[] = []
-
-    const pageSize = resolvePageSize()
 
     let previousPageData = null
     for (let i = 0; i < pageSize; ++i) {
       const [pageKey] = serialize(getKey ? getKey(i, previousPageData) : null)
 
-      if (!pageKey) {
-        // `pageKey` is falsy, stop fetching new pages.
-        return undefined
-      }
-
-      // Get the cached page data.
-      const pageData = cache.get(pageKey)
-
-      if (isUndefined(pageData)) return undefined
+      // Get the cached page data. Skip if we can't get it from the cache.
+      const pageData = pageKey ? cache.get(pageKey) : UNDEFINED
+      if (isUndefined(pageData)) break
 
       data.push(pageData)
       previousPageData = pageData
@@ -222,12 +217,12 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
       } else if (typeof arg === 'number') {
         size = arg
       }
-      if (typeof size === 'number') {
-        cache.set(pageSizeCacheKey, size)
-        lastPageSizeRef.current = size
-      }
+      if (typeof size !== 'number') return UNDEFINED
+
+      cache.set(pageSizeCacheKey, size)
+      lastPageSizeRef.current = size
       rerender({})
-      return mutate(v => resolvePagesFromCache() || v)
+      return mutate(resolvePagesFromCache(size))
     },
     // `cache` and `rerender` isn't allowed to change during the lifecycle
     // eslint-disable-next-line react-hooks/exhaustive-deps
