@@ -13,6 +13,7 @@ export interface Configuration<
   refreshWhenHidden?: boolean
   refreshWhenOffline?: boolean
   revalidateOnFocus: boolean
+  revalidateOnMount?: boolean
   revalidateOnReconnect: boolean
   revalidateWhenStale: boolean
   shouldRetryOnError: boolean
@@ -49,11 +50,6 @@ export interface Configuration<
 
   isOnline: () => boolean
   isVisible: () => boolean
-
-  /**
-   * @deprecated `revalidateOnMount` will be removed. Please considering using the `revalidateWhenStale` option.
-   */
-  revalidateOnMount?: boolean
 }
 
 export type ProviderOptions = {

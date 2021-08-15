@@ -7,17 +7,17 @@ import useSWR, {
   SWRConfiguration,
   SWRResponse
 } from 'swr'
-import { useCallback } from 'react'
+import { useCallback, useRef } from 'react'
 
 import { withMiddleware } from '../src/utils/with-middleware'
-import { serialize } from '../src/utils/serialize'
 
 export const trigger = ((<Data, Error>(useSWRNext: SWRHook) => (
   key: Key,
   fetcher: Fetcher<Data>,
   config: SWRConfiguration<Data, Error>
 ): SWRTriggerResponse<Data, Error> => {
-  // Disable all revalidations.
+  // Disable all automatic revalidations.
+  config.revalidateOnMount = false
   config.revalidateOnFocus = false
   config.revalidateWhenStale = false
   config.revalidateOnReconnect = false
@@ -27,43 +27,27 @@ export const trigger = ((<Data, Error>(useSWRNext: SWRHook) => (
   config.shouldRetryOnError = false
   config.refreshInterval = 0
   config.loadingTimeout = 0
-  config.fetcher = undefined
+
+  // Use a ref to keep extra args.
+  const extraArgsRef = useRef<any[]>([])
 
   // Extract callbacks.
-  const { onSuccess, onError } = config
-
-  // Disable fetcher.
-  const swr = useSWRNext(key, null, config) as SWRTriggerResponse
-
-  // Serialize the key and get args.
-  const [keyStr, args] = serialize(key)
+  const swr = useSWRNext(
+    key,
+    (...args) => fetcher(...args, ...extraArgsRef.current),
+    config
+  ) as SWRTriggerResponse
 
   // Method to trigger the request manually.
   swr.trigger = useCallback(
     (...extraArgs) => {
-      // If it's not ready to fetch, we throw an error.
-      if (!keyStr) throw new Error('Empty SWR key.')
-      if (!fetcher) throw new Error('Missing SWR fetcher.')
+      // Assign extra arguments to the ref, so the fetcher can access them later.
+      extraArgsRef.current = extraArgs
 
       // Mutate the SWR data and return the result.
-      return swr.mutate(
-        Promise.resolve(fetcher(...args, ...extraArgs))
-          .then(data => {
-            if (onSuccess) onSuccess(data, keyStr, config)
-            return data
-          })
-          .catch(error => {
-            if (onError) onError(error, keyStr, config)
-            throw error
-          }),
-        false
-      )
-
-      // `keyStr` is the serialized version of `args`, no need to put `args` here.
-      // `fetcher` isn't considered as a dependency as well for now.
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+      return swr.mutate()
     },
-    [keyStr]
+    [swr.mutate]
   )
 
   return swr

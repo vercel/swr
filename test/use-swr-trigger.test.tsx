@@ -30,7 +30,7 @@ describe('useSWR - trigger', () => {
     const fetcher = jest.fn(() => 'data')
 
     function Page() {
-      const { data, trigger } = useSWRTrigger(key, fetcher)
+      const { data, trigger } = useSWRTrigger([key, 'arg0'], fetcher)
       return (
         <button onClick={() => trigger('arg1', 'arg2')}>
           {data || 'pending'}
@@ -42,6 +42,7 @@ describe('useSWR - trigger', () => {
 
     // mount
     await screen.findByText('pending')
+    expect(fetcher).not.toHaveBeenCalled()
 
     fireEvent.click(screen.getByText('pending'))
     await waitForNextTick()
@@ -50,7 +51,7 @@ describe('useSWR - trigger', () => {
 
     expect(fetcher).toHaveBeenCalled()
     expect(fetcher.mock.calls.length).toBe(1)
-    expect(fetcher.mock.calls[0]).toEqual([key, 'arg1', 'arg2'])
+    expect(fetcher.mock.calls[0]).toEqual([key, 'arg0', 'arg1', 'arg2'])
   })
 
   it('should call `onSuccess` event', async () => {
@@ -80,7 +81,6 @@ describe('useSWR - trigger', () => {
   it('should call `onError` event', async () => {
     const key = createKey()
     const onError = jest.fn()
-    const onCatchError = jest.fn()
 
     function Page() {
       const { data, error, trigger } = useSWRTrigger(
@@ -94,15 +94,7 @@ describe('useSWR - trigger', () => {
         }
       )
       return (
-        <button
-          onClick={async () => {
-            try {
-              await trigger()
-            } catch (e) {
-              onCatchError(e)
-            }
-          }}
-        >
+        <button onClick={trigger}>
           {data || (error ? error.message : 'pending')}
         </button>
       )
@@ -116,6 +108,73 @@ describe('useSWR - trigger', () => {
 
     await screen.findByText('error!')
     expect(onError).toHaveBeenCalled()
-    expect(onCatchError).toHaveBeenCalled()
+  })
+
+  it('should return `isValidating` state correctly', async () => {
+    const key = createKey()
+
+    function Page() {
+      const { data, trigger, isValidating } = useSWRTrigger(key, async () => {
+        await sleep(10)
+        return 'data'
+      })
+      return (
+        <button onClick={trigger}>
+          state:{(isValidating ? 'pending' : data) || ''}
+        </button>
+      )
+    }
+
+    render(<Page />)
+
+    // mount
+    await screen.findByText('state:')
+    fireEvent.click(screen.getByText('state:'))
+
+    await screen.findByText('state:pending')
+    await screen.findByText('state:data')
+  })
+
+  it('should send `onError` and `onSuccess` events', async () => {
+    const key = createKey()
+    const onSuccess = jest.fn()
+    const onError = jest.fn()
+
+    let arg = false
+
+    function Page() {
+      const { data, error, trigger } = useSWRTrigger(
+        key,
+        async (_, shouldReturnValue) => {
+          await sleep(10)
+          if (shouldReturnValue) return 'data'
+          throw new Error('error')
+        },
+        {
+          onSuccess,
+          onError
+        }
+      )
+      return (
+        <button onClick={() => trigger(arg)}>
+          {data || (error ? error.message : 'pending')}
+        </button>
+      )
+    }
+
+    render(<Page />)
+
+    // mount
+    await screen.findByText('pending')
+    fireEvent.click(screen.getByText('pending'))
+
+    await screen.findByText('error')
+    expect(onError).toHaveBeenCalled()
+    expect(onSuccess).not.toHaveBeenCalled()
+
+    arg = true
+    fireEvent.click(screen.getByText('error'))
+    await screen.findByText('data')
+    expect(onSuccess).toHaveBeenCalled()
   })
 })
