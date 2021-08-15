@@ -177,4 +177,32 @@ describe('useSWR - trigger', () => {
     await screen.findByText('data')
     expect(onSuccess).toHaveBeenCalled()
   })
+
+  it('should not dedupe trigger requests', async () => {
+    const key = createKey()
+    const fn = jest.fn()
+
+    function Page() {
+      const { trigger } = useSWRTrigger(key, async () => {
+        fn()
+        await sleep(10)
+        return 'data'
+      })
+      return <button onClick={trigger}>trigger</button>
+    }
+
+    render(<Page />)
+
+    // mount
+    await screen.findByText('trigger')
+    expect(fn).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByText('trigger'))
+    expect(fn).toHaveBeenCalledTimes(1)
+
+    fireEvent.click(screen.getByText('trigger'))
+    fireEvent.click(screen.getByText('trigger'))
+    fireEvent.click(screen.getByText('trigger'))
+    expect(fn).toHaveBeenCalledTimes(4)
+  })
 })
