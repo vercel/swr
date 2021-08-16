@@ -1,19 +1,18 @@
 import { provider as defaultProvider } from './web-preset'
 import { IS_SERVER } from './env'
 import { UNDEFINED } from './helper'
-import { FOCUS_EVENT, RECONNECT_EVENT } from './revalidate-types'
 
 import {
   Cache,
-  Revalidator,
-  EventRevalidator,
-  Updater,
-  ProviderOptions
+  RevalidateCallback,
+  StateUpdateCallback,
+  ProviderOptions,
+  RevalidateEvent
 } from '../types'
 
 export type GlobalState = [
-  Record<string, EventRevalidator[]>, // EVENT_REVALIDATORS
-  Record<string, (Revalidator | Updater<any>)[]>, // STATE_REVALIDATORS
+  Record<string, RevalidateCallback[]>, // EVENT_REVALIDATORS
+  Record<string, StateUpdateCallback[]>, // STATE_UPDATERS
   Record<string, number>, // MUTATION_TS
   Record<string, number>, // MUTATION_END_TS
   Record<string, any>, // CONCURRENT_PROMISES
@@ -24,8 +23,8 @@ export type GlobalState = [
 export const SWRGlobalState = new WeakMap<Cache, GlobalState>()
 
 function revalidateAllKeys(
-  revalidators: Record<string, EventRevalidator[]>,
-  type: number
+  revalidators: Record<string, RevalidateCallback[]>,
+  type: RevalidateEvent
 ) {
   for (const key in revalidators) {
     if (revalidators[key][0]) revalidators[key][0](type)
@@ -35,10 +34,18 @@ function revalidateAllKeys(
 function setupGlobalEvents(cache: Cache, options: ProviderOptions) {
   const [EVENT_REVALIDATORS] = SWRGlobalState.get(cache) as GlobalState
   options.setupOnFocus(
-    revalidateAllKeys.bind(UNDEFINED, EVENT_REVALIDATORS, FOCUS_EVENT)
+    revalidateAllKeys.bind(
+      UNDEFINED,
+      EVENT_REVALIDATORS,
+      RevalidateEvent.FOCUS_EVENT
+    )
   )
   options.setupOnReconnect(
-    revalidateAllKeys.bind(UNDEFINED, EVENT_REVALIDATORS, RECONNECT_EVENT)
+    revalidateAllKeys.bind(
+      UNDEFINED,
+      EVENT_REVALIDATORS,
+      RevalidateEvent.RECONNECT_EVENT
+    )
   )
 }
 
