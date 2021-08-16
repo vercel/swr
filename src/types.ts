@@ -18,7 +18,7 @@ export interface Configuration<
   revalidateWhenStale: boolean
   shouldRetryOnError: boolean
   suspense?: boolean
-  isolated?: boolean
+  trigger?: boolean
   initialData?: Data
   fetcher?: Fn
   cache: Cache

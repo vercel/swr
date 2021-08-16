@@ -233,6 +233,21 @@ describe('useSWR - trigger', () => {
     await screen.findByText('data:data')
   })
 
+  it('should use the cache from `useSWR`', async () => {
+    const key = createKey()
+
+    function Page() {
+      useSWR(key, () => 'data')
+      const { data } = useSWRTrigger(key, () => 'wrong!')
+      return <div>data:{data || 'none'}</div>
+    }
+
+    render(<Page />)
+
+    // mount
+    await screen.findByText('data:data')
+  })
+
   it('should not trigger request when mutating', async () => {
     const key = createKey()
     const fn = jest.fn(() => 'data')
@@ -280,7 +295,7 @@ describe('useSWR - trigger', () => {
     expect(fn).not.toHaveBeenCalled()
   })
 
-  it.only('should not trigger request when key changes', async () => {
+  it('should not trigger request when key changes', async () => {
     const key = createKey()
     const fn = jest.fn(() => 'data')
 

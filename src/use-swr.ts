@@ -187,8 +187,8 @@ export const useSWRHandler = <Data = any, Error = any>(
     revalidateWhenStale,
     refreshInterval,
     refreshWhenHidden,
-    refreshWhenOffline
-    // isolated
+    refreshWhenOffline,
+    trigger
   } = config
 
   const [
@@ -472,6 +472,25 @@ export const useSWRHandler = <Data = any, Error = any>(
     const isActive = () =>
       configRef.current.isVisible() && configRef.current.isOnline()
 
+    // Expose state updater to global event listeners. So we can update hook's
+    // internal state from the outside.
+    const onStateUpdate: StateUpdateCallback<Data, Error> = (
+      updatedData,
+      updatedError,
+      updatedIsValidating
+    ) => {
+      setState({
+        error: updatedError,
+        isValidating: updatedIsValidating,
+        // if data is undefined we should not update stateRef.current.data
+        ...(!compare(updatedData, stateRef.current.data)
+          ? {
+              data: updatedData
+            }
+          : null)
+      })
+    }
+
     // Expose revalidators to global event listeners. So we can trigger
     // revalidation from the outside.
     let nextFocusRevalidatedAt = 0
@@ -496,40 +515,13 @@ export const useSWRHandler = <Data = any, Error = any>(
       return UNDEFINED
     }
 
-    // Expose state updater to global event listeners. So we can update hook's
-    // internal state from the outside.
-    const onStateUpdate: StateUpdateCallback<Data, Error> = (
-      updatedData,
-      updatedError,
-      updatedIsValidating
-    ) => {
-      setState({
-        error: updatedError,
-        isValidating: updatedIsValidating,
-        // if data is undefined we should not update stateRef.current.data
-        ...(!compare(updatedData, stateRef.current.data)
-          ? {
-              data: updatedData
-            }
-          : null)
-      })
-
-      // // If the hook is marked as isolated, we don't expose the revalidator to any
-      // // global event listener. The revalidator can only be accessed from the
-      // // bound mutate function.
-      // if (isolated) {
-
-      // }
-
-      // if (shouldRevalidate) {
-      //   return dedupe ? false : revalidate()
-      //   // return (dedupe ? softRevalidate : revalidate)()
-      // }
-      // return false
-    }
-
-    const unsubEvents = subscribeCallback(key, EVENT_REVALIDATORS, onRevalidate)
     const unsubUpdate = subscribeCallback(key, STATE_UPDATERS, onStateUpdate)
+
+    // If the hook is under trigger mode, we don't expose the revalidator to any
+    // global event listener. The revalidator can only be accessed from the
+    // bound mutate function.
+    const unsubEvents =
+      !trigger && subscribeCallback(key, EVENT_REVALIDATORS, onRevalidate)
 
     // Mark the component as mounted and update corresponding refs.
     unmountedRef.current = false
@@ -570,8 +562,8 @@ export const useSWRHandler = <Data = any, Error = any>(
       // Mark it as unmounted.
       unmountedRef.current = true
 
-      unsubEvents()
       unsubUpdate()
+      unsubEvents && unsubEvents()
     }
   }, [key, revalidate])
 
