@@ -95,7 +95,7 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
   // keep the data inside a ref
   const dataRef = useRef<Data[]>()
 
-  // actual swr of all pages
+  // Actual SWR hook to load all pages in one fetcher.
   const swr = useSWRNext<Data[], Error>(
     firstPageKey ? INFINITE_PREFIX + firstPageKey : null,
     async () => {
@@ -161,7 +161,10 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
   }, [swr.data])
 
   const mutate = useCallback(
-    (data: MutatorCallback, shouldRevalidate = true) => {
+    (
+      data: Data[] | Promise<Data[]> | MutatorCallback<Data[]>,
+      shouldRevalidate = true
+    ) => {
       // It is possible that the key is still falsy.
       if (!contextCacheKey) return UNDEFINED
 
@@ -181,7 +184,28 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
     [contextCacheKey]
   )
 
-  // extend the SWR API
+  // Function to load pages data from the cache based on the page size.
+  const resolvePagesFromCache = (pageSize: number): Data[] => {
+    // return an array of page data
+    const data: Data[] = []
+
+    let previousPageData = null
+    for (let i = 0; i < pageSize; ++i) {
+      const [pageKey] = serialize(getKey ? getKey(i, previousPageData) : null)
+
+      // Get the cached page data. Skip if we can't get it from the cache.
+      const pageData = pageKey ? cache.get(pageKey) : UNDEFINED
+      if (isUndefined(pageData)) break
+
+      data.push(pageData)
+      previousPageData = pageData
+    }
+
+    // return the data
+    return data
+  }
+
+  // Extend the SWR API
   const setSize = useCallback(
     (arg: number | ((size: number) => number)) => {
       // It is possible that the key is still falsy.
@@ -193,12 +217,12 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
       } else if (typeof arg === 'number') {
         size = arg
       }
-      if (typeof size === 'number') {
-        cache.set(pageSizeCacheKey, size)
-        lastPageSizeRef.current = size
-      }
+      if (typeof size !== 'number') return UNDEFINED
+
+      cache.set(pageSizeCacheKey, size)
+      lastPageSizeRef.current = size
       rerender({})
-      return mutate(v => v)
+      return mutate(resolvePagesFromCache(size))
     },
     // `cache` and `rerender` isn't allowed to change during the lifecycle
     // eslint-disable-next-line react-hooks/exhaustive-deps
