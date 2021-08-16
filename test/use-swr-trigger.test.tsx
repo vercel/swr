@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import React from 'react'
+import useSWR from 'swr'
 import useSWRTrigger from 'swr/trigger'
 import { createKey, sleep } from './utils'
 
@@ -94,7 +95,7 @@ describe('useSWR - trigger', () => {
         }
       )
       return (
-        <button onClick={trigger}>
+        <button onClick={() => trigger()}>
           {data || (error ? error.message : 'pending')}
         </button>
       )
@@ -204,5 +205,103 @@ describe('useSWR - trigger', () => {
     fireEvent.click(screen.getByText('trigger'))
     fireEvent.click(screen.getByText('trigger'))
     expect(fn).toHaveBeenCalledTimes(4)
+  })
+
+  it('should share the cache with `useSWR`', async () => {
+    const key = createKey()
+
+    function Page() {
+      const { data } = useSWR(key)
+      const { trigger } = useSWRTrigger(key, async () => {
+        await sleep(10)
+        return 'data'
+      })
+      return (
+        <div>
+          <button onClick={trigger}>trigger</button>
+          <div>data:{data || 'none'}</div>
+        </div>
+      )
+    }
+
+    render(<Page />)
+
+    // mount
+    await screen.findByText('data:none')
+
+    fireEvent.click(screen.getByText('trigger'))
+    await screen.findByText('data:data')
+  })
+
+  it('should not trigger request when mutating', async () => {
+    const key = createKey()
+    const fn = jest.fn(() => 'data')
+
+    function Page() {
+      const { mutate } = useSWRTrigger(key, fn)
+      return (
+        <div>
+          <button onClick={() => mutate()}>mutate</button>
+        </div>
+      )
+    }
+
+    render(<Page />)
+
+    // mount
+    await screen.findByText('mutate')
+
+    fireEvent.click(screen.getByText('mutate'))
+    expect(fn).not.toHaveBeenCalled()
+  })
+
+  it('should not trigger request when mutating from shared hooks', async () => {
+    const key = createKey()
+    const fn = jest.fn(() => 'data')
+
+    function Page() {
+      useSWRTrigger(key, fn)
+      const { mutate } = useSWR(key)
+      return (
+        <div>
+          <button onClick={() => mutate()}>mutate</button>
+        </div>
+      )
+    }
+
+    render(<Page />)
+
+    // mount
+    await screen.findByText('mutate')
+
+    fireEvent.click(screen.getByText('mutate'))
+
+    await act(() => sleep(100))
+    expect(fn).not.toHaveBeenCalled()
+  })
+
+  it.only('should not trigger request when key changes', async () => {
+    const key = createKey()
+    const fn = jest.fn(() => 'data')
+
+    function Page() {
+      const [k, setK] = React.useState(key)
+      useSWRTrigger(k, fn)
+      return (
+        <div>
+          <button onClick={() => setK(key + '_new')}>update key</button>
+        </div>
+      )
+    }
+
+    render(<Page />)
+
+    // mount
+    await screen.findByText('update key')
+
+    fireEvent.click(screen.getByText('update key'))
+
+    await act(() => sleep(100))
+    expect(fn).not.toHaveBeenCalled()
   })
 })

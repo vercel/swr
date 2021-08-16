@@ -18,6 +18,7 @@ export interface Configuration<
   revalidateWhenStale: boolean
   shouldRetryOnError: boolean
   suspense?: boolean
+  isolated?: boolean
   initialData?: Data
   fetcher?: Fn
   cache: Cache
@@ -166,6 +167,8 @@ export interface RevalidatorOptions {
 export type Revalidator = (
   revalidateOpts?: RevalidatorOptions
 ) => Promise<boolean> | void
+
+export type EventRevalidator = (type: number) => void
 
 export interface Cache<Data = any> {
   get(key: Key): Data | null | undefined

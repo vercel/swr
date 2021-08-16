@@ -16,6 +16,9 @@ export const trigger = ((<Data, Error>(useSWRNext: SWRHook) => (
   fetcher: Fetcher<Data>,
   config: SWRConfiguration<Data, Error>
 ): SWRTriggerResponse<Data, Error> => {
+  // The hook is not shared between different hooks.
+  config.isolated = true
+
   // Disable all automatic revalidations.
   config.revalidateOnMount = false
   config.revalidateOnFocus = false

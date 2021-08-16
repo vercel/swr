@@ -3,10 +3,11 @@ import defaultConfig from './utils/config'
 import { wrapCache, SWRGlobalState, GlobalState } from './utils/cache'
 import { IS_SERVER, rAF, useIsomorphicLayoutEffect } from './utils/env'
 import { serialize } from './utils/serialize'
-import { isUndefined, UNDEFINED } from './utils/helper'
+import { isThenable, isUndefined, UNDEFINED } from './utils/helper'
 import ConfigProvider from './utils/config-context'
 import useStateWithDeps from './utils/state'
 import withArgs from './utils/resolve-args'
+import { FOCUS_EVENT, RECONNECT_EVENT } from './utils/revalidate-types'
 import {
   State,
   Broadcaster,
@@ -22,6 +23,7 @@ import {
   ScopedMutator,
   SWRHook,
   Revalidator,
+  EventRevalidator,
   ProviderOptions
 } from './types'
 
@@ -36,7 +38,7 @@ const broadcastState: Broadcaster = (
   isValidating,
   shouldRevalidate = false
 ) => {
-  const [, , CACHE_REVALIDATORS] = SWRGlobalState.get(cache) as GlobalState
+  const [, CACHE_REVALIDATORS] = SWRGlobalState.get(cache) as GlobalState
   const updaters = CACHE_REVALIDATORS[key]
   const promises = []
   if (updaters) {
@@ -58,7 +60,7 @@ const internalMutate = async <Data>(
   const [key, , keyErr] = serialize(_key)
   if (!key) return UNDEFINED
 
-  const [, , , MUTATION_TS, MUTATION_END_TS] = SWRGlobalState.get(
+  const [, , MUTATION_TS, MUTATION_END_TS] = SWRGlobalState.get(
     cache
   ) as GlobalState
 
@@ -91,8 +93,8 @@ const internalMutate = async <Data>(
     }
   }
 
-  // `_data` is a promise/thenable, resolve the final data first.
-  if (_data && typeof (_data as Promise<Data>).then === 'function') {
+  // `_data` is promise-like/thenable, resolve the final data first.
+  if (isThenable(_data)) {
     // This means that the mutation is async, we need to check timestamps to
     // avoid race conditions.
     try {
@@ -140,9 +142,12 @@ const internalMutate = async <Data>(
 // Add a callback function to a list of keyed revalidation functions and returns
 // the unregister function.
 const addRevalidator = (
-  revalidators: Record<string, (Revalidator | Updater<any>)[]>,
+  revalidators: Record<
+    string,
+    (Revalidator | EventRevalidator | Updater<any>)[]
+  >,
   key: string,
-  callback: Revalidator | Updater<any>
+  callback: Revalidator | EventRevalidator | Updater<any>
 ) => {
   if (!revalidators[key]) {
     revalidators[key] = [callback]
@@ -177,11 +182,11 @@ export const useSWRHandler = <Data = any, Error = any>(
     refreshInterval,
     refreshWhenHidden,
     refreshWhenOffline
+    // isolated
   } = config
 
   const [
-    FOCUS_REVALIDATORS,
-    RECONNECT_REVALIDATORS,
+    EVENT_REVALIDATORS,
     CACHE_REVALIDATORS,
     MUTATION_TS,
     MUTATION_END_TS,
@@ -461,27 +466,26 @@ export const useSWRHandler = <Data = any, Error = any>(
     const isActive = () =>
       configRef.current.isVisible() && configRef.current.isOnline()
 
-    // Add event listeners.
+    // Expose revalidators to global event listeners.
     let nextFocusRevalidatedAt = 0
-    const onFocus = () => {
-      const now = Date.now()
-      if (
-        configRef.current.revalidateOnFocus &&
-        now > nextFocusRevalidatedAt &&
-        isActive()
-      ) {
-        nextFocusRevalidatedAt = now + configRef.current.focusThrottleInterval
-        softRevalidate()
+    const onEvent = (type: number) => {
+      if (type === FOCUS_EVENT) {
+        const now = Date.now()
+        if (
+          configRef.current.revalidateOnFocus &&
+          now > nextFocusRevalidatedAt &&
+          isActive()
+        ) {
+          nextFocusRevalidatedAt = now + configRef.current.focusThrottleInterval
+          softRevalidate()
+        }
+      } else if (type === RECONNECT_EVENT) {
+        if (configRef.current.revalidateOnReconnect && isActive()) {
+          softRevalidate()
+        }
       }
     }
 
-    const onReconnect: Revalidator = () => {
-      if (configRef.current.revalidateOnReconnect && isActive()) {
-        softRevalidate()
-      }
-    }
-
-    // Register global cache update listener.
     const onUpdate: Updater<Data, Error> = (
       shouldRevalidate = true,
       updatedData,
@@ -500,14 +504,20 @@ export const useSWRHandler = <Data = any, Error = any>(
           : null)
       })
 
+      // // If the hook is marked as isolated, we don't expose the revalidator to any
+      // // global event listener. The revalidator can only be accessed from the
+      // // bound mutate function.
+      // if (isolated) {
+
+      // }
+
       if (shouldRevalidate) {
         return (dedupe ? softRevalidate : revalidate)()
       }
       return false
     }
 
-    const unsubFocus = addRevalidator(FOCUS_REVALIDATORS, key, onFocus)
-    const unsubReconn = addRevalidator(RECONNECT_REVALIDATORS, key, onReconnect)
+    const unsubEvents = addRevalidator(EVENT_REVALIDATORS, key, onEvent)
     const unsubUpdate = addRevalidator(CACHE_REVALIDATORS, key, onUpdate)
 
     // Mark the component as mounted and update corresponding refs.
@@ -524,8 +534,14 @@ export const useSWRHandler = <Data = any, Error = any>(
       })
     }
 
-    // Trigger a revalidation.
-    if (keyChanged || shouldRevalidateOnMount()) {
+    // Trigger a revalidation when:
+    // - It's not the initial render (the key has changed), and `revalidateOnMount` is not disabled.
+    // - It's the initial render and the condition of revalidation is met.
+    if (
+      keyChanged
+        ? configRef.current.revalidateOnMount !== false
+        : shouldRevalidateOnMount()
+    ) {
       if (isUndefined(data) || IS_SERVER) {
         // Revalidate immediately.
         softRevalidate()
@@ -543,8 +559,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       // Mark it as unmounted.
       unmountedRef.current = true
 
-      unsubFocus()
-      unsubReconn()
+      unsubEvents()
       unsubUpdate()
     }
   }, [key, revalidate])
