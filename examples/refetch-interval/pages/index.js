@@ -5,7 +5,7 @@ import fetch from '../libs/fetch'
 import useSWR from 'swr'
 
 export default () => {
-  const { data, revalidate } = useSWR('/api/data', fetch, {
+  const { data, mutate } = useSWR('/api/data', fetch, {
     // revalidate the data per second
     refreshInterval: 1000
   })
@@ -21,7 +21,7 @@ export default () => {
         ev.preventDefault()
         setValue('')
         await fetch(`/api/data?add=${value}`)
-        revalidate()
+        mutate()
       }}>
         <input placeholder='enter something' value={value} onChange={ev => setValue(ev.target.value)} />
       </form>
@@ -30,7 +30,7 @@ export default () => {
       </ul>
       <Button onClick={async () => {
         await fetch(`/api/data?clear=1`)
-        revalidate()
+        mutate()
       }}>Clear All</Button>
     </div>
   )

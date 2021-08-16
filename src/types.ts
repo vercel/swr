@@ -82,7 +82,7 @@ export type Middleware = (useSWRNext: SWRHook) => SWRHookWithMiddleware
 export type ValueKey = string | any[] | null
 
 export type MutatorCallback<Data = any> = (
-  currentValue: undefined | Data
+  currentValue?: Data
 ) => Promise<undefined | Data> | undefined | Data
 
 export type Broadcaster<Data = any, Error = any> = (
@@ -140,10 +140,6 @@ export type Key = ValueKey | (() => ValueKey)
 export interface SWRResponse<Data, Error> {
   data?: Data
   error?: Error
-  /**
-   * @deprecated `revalidate` is deprecated, please use `mutate()` for the same purpose.
-   */
-  revalidate: () => Promise<boolean>
   mutate: KeyedMutator<Data>
   isValidating: boolean
 }

@@ -127,13 +127,15 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
         // - `mutate()` called
         // - the cache is missing
         // - it's the first page and it's not the initial render
-        // - cache has changed
+        // - cache for that page has changed
         const shouldFetchPage =
           revalidateAll ||
           forceRevalidateAll ||
           isUndefined(pageData) ||
           (!i && !isUndefined(dataRef.current)) ||
-          (originalData && !config.compare(originalData[i], pageData))
+          (originalData &&
+            !isUndefined(originalData[i]) &&
+            !config.compare(originalData[i], pageData))
 
         if (fn && shouldFetchPage) {
           pageData = await fn(...pageArgs)
@@ -214,13 +216,6 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
       },
       data: {
         get: () => swr.data,
-        enumerable: true
-      },
-      // revalidate will be deprecated in the 1.x release
-      // because mutate() covers the same use case of revalidate().
-      // This remains only for backward compatibility
-      revalidate: {
-        get: () => swr.revalidate,
         enumerable: true
       },
       isValidating: {

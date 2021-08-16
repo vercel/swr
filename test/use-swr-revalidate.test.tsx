@@ -8,8 +8,8 @@ describe('useSWR - revalidate', () => {
     let value = 0
 
     function Page() {
-      const { data, revalidate } = useSWR('dynamic-3', () => value++)
-      return <button onClick={revalidate}>data: {data}</button>
+      const { data, mutate } = useSWR('dynamic-3', () => value++)
+      return <button onClick={() => mutate()}>data: {data}</button>
     }
 
     render(<Page />)
@@ -29,10 +29,10 @@ describe('useSWR - revalidate', () => {
     let value = 0
 
     function Page() {
-      const { data: v1, revalidate } = useSWR('dynamic-4', () => value++)
+      const { data: v1, mutate } = useSWR('dynamic-4', () => value++)
       const { data: v2 } = useSWR('dynamic-4', () => value++)
       return (
-        <button onClick={revalidate}>
+        <button onClick={() => mutate()}>
           {v1}, {v2}
         </button>
       )
@@ -56,11 +56,11 @@ describe('useSWR - revalidate', () => {
     let faster = false
 
     function Page() {
-      const { data, revalidate } = useSWR('race', () =>
+      const { data, mutate } = useSWR('race', () =>
         createResponse(faster ? 1 : 0, { delay: faster ? 50 : 100 })
       )
 
-      return <button onClick={revalidate}>data: {data}</button>
+      return <button onClick={() => mutate()}>data: {data}</button>
     }
 
     render(<Page />)
@@ -83,14 +83,16 @@ describe('useSWR - revalidate', () => {
 
   it('should keep isValidating be true when there are two concurrent requests', async () => {
     function Page() {
-      const { isValidating, revalidate } = useSWR(
+      const { isValidating, mutate } = useSWR(
         'keep isValidating for concurrent requests',
         () => createResponse(null, { delay: 100 }),
         { revalidateOnMount: false }
       )
 
       return (
-        <button onClick={revalidate}>{isValidating ? 'true' : 'false'}</button>
+        <button onClick={() => mutate()}>
+          {isValidating ? 'true' : 'false'}
+        </button>
       )
     }
 
@@ -114,7 +116,7 @@ describe('useSWR - revalidate', () => {
   it('should respect sequences of revalidation calls although in dedupingInterval', async () => {
     let count = 0
     function Page() {
-      const { data, revalidate } = useSWR(
+      const { data, mutate } = useSWR(
         'respect sequences of revalidation calls although in dedupingInterval',
         () => {
           const currCount = ++count
@@ -124,7 +126,7 @@ describe('useSWR - revalidate', () => {
           dedupingInterval: 30
         }
       )
-      return <div onClick={() => revalidate()}>count: {data}</div>
+      return <div onClick={() => mutate()}>count: {data}</div>
     }
 
     render(<Page />)
