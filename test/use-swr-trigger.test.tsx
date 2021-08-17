@@ -291,7 +291,7 @@ describe('useSWR - trigger', () => {
 
     fireEvent.click(screen.getByText('mutate'))
 
-    await act(() => sleep(100))
+    await act(() => sleep(50))
     expect(fn).not.toHaveBeenCalled()
   })
 
@@ -316,7 +316,44 @@ describe('useSWR - trigger', () => {
 
     fireEvent.click(screen.getByText('update key'))
 
-    await act(() => sleep(100))
+    await act(() => sleep(50))
     expect(fn).not.toHaveBeenCalled()
+  })
+
+  it('should prevent race conditions with `useSWR`', async () => {
+    const key = createKey()
+    const logger = jest.fn()
+
+    function Page() {
+      const { data } = useSWR(key, async () => {
+        await sleep(10)
+        return 'foo'
+      })
+      const { trigger } = useSWRTrigger(key, async () => {
+        await sleep(20)
+        return 'bar'
+      })
+
+      logger(data)
+
+      return (
+        <div>
+          <button onClick={trigger}>trigger</button>
+          <div>data:{data || 'none'}</div>
+        </div>
+      )
+    }
+
+    render(<Page />)
+
+    // mount
+    await screen.findByText('data:none')
+
+    fireEvent.click(screen.getByText('trigger'))
+    await act(() => sleep(50))
+    await screen.findByText('data:bar')
+
+    // It should never render `foo`.
+    expect(logger).not.toHaveBeenCalledWith('foo')
   })
 })
