@@ -58,13 +58,12 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "yarn types:check && lint-staged"
+      "pre-commit": "lint-staged"
     }
   },
   "lint-staged": {
     "*.{ts,tsx}": [
-      "yarn lint:fix",
-      "yarn format",
+      "prettier --write",
       "git add"
     ]
   },
