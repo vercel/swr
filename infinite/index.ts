@@ -11,7 +11,7 @@ import useSWR, {
   Middleware
 } from 'swr'
 import { useIsomorphicLayoutEffect } from '../src/utils/env'
-import { serialize as serializeKey } from '../src/utils/serialize'
+import { serialize } from '../src/utils/serialize'
 import { isUndefined, UNDEFINED } from '../src/utils/helper'
 import { withMiddleware } from '../src/utils/with-middleware'
 import { SWRInfiniteConfiguration, SWRInfiniteResponse } from './types'
@@ -19,10 +19,10 @@ import { SWRInfiniteConfiguration, SWRInfiniteResponse } from './types'
 const INFINITE_PREFIX = '$inf$'
 
 const getFirstPageKey = (getKey: KeyLoader<any>) => {
-  return serializeKey(getKey ? getKey(0, null) : null)[0]
+  return serialize(getKey ? getKey(0, null) : null)[0]
 }
 
-export const serialize = (getKey: KeyLoader<any>) => {
+export const unstable_serialize = (getKey: KeyLoader<any>) => {
   return INFINITE_PREFIX + getFirstPageKey(getKey)
 }
 
@@ -110,7 +110,7 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
 
       let previousPageData = null
       for (let i = 0; i < pageSize; ++i) {
-        const [pageKey, pageArgs] = serializeKey(
+        const [pageKey, pageArgs] = serialize(
           getKey ? getKey(i, previousPageData) : null
         )
 
