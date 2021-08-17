@@ -51,10 +51,7 @@
     "lint:fix": "yarn lint --fix",
     "test": "jest",
     "register": "yarn link && cd node_modules/react && yarn link",
-    "prepare:vite": "git clone https://github.com/promer94/vite-swr playground/vite-swr && cd playground/vite-swr && yarn && yarn link react && yarn link swr",
-    "prepare:next": "git clone https://github.com/promer94/next-swr playground/next-swr && cd playground/next-swr && yarn && yarn link react && yarn link swr",
-    "dev:vite": "concurrently \"yarn watch\" \"cd playground/vite-swr && yarn dev\"",
-    "dev:next": "concurrently \"yarn watch\" \"cd playground/next-swr && yarn dev\""
+    "dev-next": "node scripts/dev-next.js"
   },
   "husky": {
     "hooks": {
