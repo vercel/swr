@@ -46,9 +46,9 @@
     "build:immutable": "bunchee index.ts --cwd immutable -m --no-sourcemap",
     "prepublishOnly": "yarn clean && yarn build",
     "types:check": "tsc --noEmit",
-    "format": "prettier --write \"{src,infinite,immutable,test,examples}/**/*.{ts,tsx}\"",
-    "lint": "eslint \"{src,infinite,immutable,test,examples}/**/*.{ts,tsx}\"",
-    "lint:fix": "eslint \"{src,infinite,immutable,test,examples}/**/*.{ts,tsx}\" --fix",
+    "format": "prettier --write ./**/*.{ts,tsx}",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "yarn lint --fix",
     "test": "jest",
     "register": "yarn link && cd node_modules/react && yarn link",
     "prepare:vite": "git clone https://github.com/promer94/vite-swr playground/vite-swr && cd playground/vite-swr && yarn && yarn link react && yarn link swr",
@@ -58,13 +58,14 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "yarn types:check && lint-staged"
+      "pre-commit": "lint-staged",
+      "pre-push": "yarn types:check"
     }
   },
   "lint-staged": {
     "*.{ts,tsx}": [
-      "yarn lint:fix",
-      "yarn format",
+      "eslint --fix",
+      "prettier --write",
       "git add"
     ]
   },
