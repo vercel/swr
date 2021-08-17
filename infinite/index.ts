@@ -22,7 +22,7 @@ const getFirstPageKey = (getKey: KeyLoader<any>) => {
   return serialize(getKey ? getKey(0, null) : null)[0]
 }
 
-export const getInfiniteKey = (getKey: KeyLoader<any>) => {
+export const unstable_serialize = (getKey: KeyLoader<any>) => {
   return INFINITE_PREFIX + getFirstPageKey(getKey)
 }
 
