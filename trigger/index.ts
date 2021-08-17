@@ -10,6 +10,7 @@ import useSWR, {
 import { useCallback, useRef } from 'react'
 
 import { withMiddleware } from '../src/utils/with-middleware'
+import { TriggerSymbol } from '../src/utils/helper'
 
 export const trigger = ((<Data, Error>(useSWRNext: SWRHook) => (
   key: Key,
@@ -48,8 +49,8 @@ export const trigger = ((<Data, Error>(useSWRNext: SWRHook) => (
       // Assign extra arguments to the ref, so the fetcher can access them later.
       extraArgsRef.current = extraArgs
 
-      // Mutate the SWR data and return the result.
-      return swr.mutate()
+      // Trigger a revalidation.
+      return swr.mutate(TriggerSymbol)
     },
     [swr.mutate]
   )

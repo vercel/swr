@@ -3,7 +3,12 @@ import defaultConfig from './utils/config'
 import { wrapCache, SWRGlobalState, GlobalState } from './utils/cache'
 import { IS_SERVER, rAF, useIsomorphicLayoutEffect } from './utils/env'
 import { serialize } from './utils/serialize'
-import { isThenable, isUndefined, UNDEFINED } from './utils/helper'
+import {
+  isThenable,
+  isUndefined,
+  UNDEFINED,
+  TriggerSymbol
+} from './utils/helper'
 import ConfigProvider from './utils/config-context'
 import useStateWithDeps from './utils/state'
 import withArgs from './utils/resolve-args'
@@ -449,6 +454,12 @@ export const useSWRHandler = <Data = any, Error = any>(
   // `mutate`, but bound to the current key.
   const boundMutate: SWRResponse<Data, Error>['mutate'] = useCallback(
     (newData, shouldRevalidate) => {
+      // To add internal options without affecting the API, we use Symbol as the
+      // argument to specialize it.
+      if ((newData as any) === TriggerSymbol) {
+        return revalidate()
+      }
+
       return internalMutate(cache, keyRef.current, newData, shouldRevalidate)
     },
     // `cache` isn't allowed to change during the lifecycle
