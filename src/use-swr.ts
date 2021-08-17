@@ -650,4 +650,6 @@ export const createCache = <Data = any>(
   }
 }
 
+export const unstable_serialize = (key: Key) => serialize(key)[0]
+
 export default withArgs<SWRHook>(useSWRHandler)
