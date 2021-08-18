@@ -21,14 +21,18 @@ function onErrorRetry(
 
   const maxRetryCount = config.errorRetryCount
   const currentRetryCount = opts.retryCount
+
+  // Exponential backoff
+  const timeout =
+    ~~(
+      (Math.random() + 0.5) *
+      (1 << (currentRetryCount < 8 ? currentRetryCount : 8))
+    ) * config.errorRetryInterval
+
   if (maxRetryCount !== UNDEFINED && currentRetryCount > maxRetryCount) {
     return
   }
 
-  // Exponential backoff
-  const timeout =
-    ~~((Math.random() + 0.5) * (1 << Math.min(currentRetryCount, 8))) *
-    config.errorRetryInterval
   setTimeout(revalidate, timeout, opts)
 }
 

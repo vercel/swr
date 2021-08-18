@@ -31,35 +31,33 @@ function revalidateAllKeys(
   }
 }
 
-function setupGlobalEvents(cache: Cache, options: ProviderOptions) {
-  const [EVENT_REVALIDATORS] = SWRGlobalState.get(cache) as GlobalState
-  options.setupOnFocus(
-    revalidateAllKeys.bind(
-      UNDEFINED,
-      EVENT_REVALIDATORS,
-      RevalidateEvent.FOCUS_EVENT
-    )
-  )
-  options.setupOnReconnect(
-    revalidateAllKeys.bind(
-      UNDEFINED,
-      EVENT_REVALIDATORS,
-      RevalidateEvent.RECONNECT_EVENT
-    )
-  )
-}
-
 export function wrapCache<Data = any>(
   provider: Cache<Data>,
   options?: Partial<ProviderOptions>
 ): Cache<Data> {
+  const EVENT_REVALIDATORS = {}
+  const opts = { ...defaultProvider, ...options }
+
   // Initialize global state for the specific data storage that will be used to
   // deduplicate requests and store listeners.
-  SWRGlobalState.set(provider, [{}, {}, {}, {}, {}, {}])
+  SWRGlobalState.set(provider, [EVENT_REVALIDATORS, {}, {}, {}, {}, {}])
 
   // Setup DOM events listeners for `focus` and `reconnect` actions.
   if (!IS_SERVER) {
-    setupGlobalEvents(provider, { ...defaultProvider, ...options })
+    opts.setupOnFocus(
+      revalidateAllKeys.bind(
+        UNDEFINED,
+        EVENT_REVALIDATORS,
+        RevalidateEvent.FOCUS_EVENT
+      )
+    )
+    opts.setupOnReconnect(
+      revalidateAllKeys.bind(
+        UNDEFINED,
+        EVENT_REVALIDATORS,
+        RevalidateEvent.RECONNECT_EVENT
+      )
+    )
   }
 
   // We might want to inject an extra layer on top of `provider` in the future,
