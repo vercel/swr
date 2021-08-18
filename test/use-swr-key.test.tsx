@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import React, { useState, useEffect } from 'react'
-import useSWR from '../src'
+import useSWR from 'swr'
 import { createResponse, sleep } from './utils'
 
 describe('useSWR - key', () => {
@@ -60,7 +60,7 @@ describe('useSWR - key', () => {
     await act(() => sleep(100))
     screen.getByText('data:') // undefined, time=250
     await act(() => sleep(100))
-    screen.getByText('data:key-1') // 1, time=550
+    screen.getByText('data:key-1') // 1, time=350
   })
 
   it('should return undefined after key change when fetcher is synchronized', async () => {

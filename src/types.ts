@@ -9,19 +9,19 @@ export interface Configuration<
   loadingTimeout: number
   focusThrottleInterval: number
   dedupingInterval: number
-  refreshInterval: number
-  refreshWhenHidden: boolean
-  refreshWhenOffline: boolean
+  refreshInterval?: number
+  refreshWhenHidden?: boolean
+  refreshWhenOffline?: boolean
   revalidateOnFocus: boolean
-  revalidateOnMount?: boolean
   revalidateOnReconnect: boolean
+  revalidateWhenStale: boolean
   shouldRetryOnError: boolean
-  suspense: boolean
-  fetcher: Fn
+  suspense?: boolean
   initialData?: Data
+  fetcher?: Fn
+  cache: Cache
+  middlewares?: Middleware[]
 
-  isOnline: () => boolean
-  isDocumentVisible: () => boolean
   isPaused: () => boolean
   onLoadingSlow: (
     key: string,
@@ -44,11 +44,43 @@ export interface Configuration<
     revalidate: Revalidator,
     revalidateOpts: Required<RevalidatorOptions>
   ) => void
-  registerOnFocus?: (cb: () => void) => void
-  registerOnReconnect?: (cb: () => void) => void
 
   compare: (a: Data | undefined, b: Data | undefined) => boolean
+
+  isOnline: () => boolean
+  isVisible: () => boolean
+
+  /**
+   * @deprecated `revalidateOnMount` will be removed. Please considering using the `revalidateWhenStale` option.
+   */
+  revalidateOnMount?: boolean
 }
+
+export type ProviderOptions = {
+  setupOnFocus: (cb: () => void) => void
+  setupOnReconnect: (cb: () => void) => void
+}
+
+export type SWRHook = <Data = any, Error = any>(
+  ...args:
+    | readonly [Key]
+    | readonly [Key, Fetcher<Data> | null]
+    | readonly [Key, SWRConfiguration<Data, Error> | undefined]
+    | readonly [
+        Key,
+        Fetcher<Data> | null,
+        SWRConfiguration<Data, Error> | undefined
+      ]
+) => SWRResponse<Data, Error>
+
+// Middlewares guarantee that a SWRHook receives a key, fetcher, and config as the argument
+type SWRHookWithMiddleware = <Data = any, Error = any>(
+  key: Key,
+  fetcher: Fetcher<Data> | null,
+  config: SWRConfiguration<Data, Error>
+) => SWRResponse<Data, Error>
+
+export type Middleware = (useSWRNext: SWRHook) => SWRHookWithMiddleware
 
 export type ValueKey = string | any[] | null
 
@@ -59,18 +91,19 @@ export type Updater<Data = any, Error = any> = (
   shouldDedupe?: boolean,
   dedupe?: boolean
 ) => boolean | Promise<boolean>
-export type Trigger = (key: Key, shouldRevalidate?: boolean) => Promise<any>
 
 export type MutatorCallback<Data = any> = (
-  currentValue: undefined | Data
+  currentValue?: Data
 ) => Promise<undefined | Data> | undefined | Data
 
 export type Broadcaster<Data = any, Error = any> = (
+  cache: Cache,
   key: string,
   data: Data,
   error?: Error,
-  isValidating?: boolean
-) => void
+  isValidating?: boolean,
+  shouldRevalidate?: boolean
+) => Promise<Data>
 
 export type State<Data, Error> = {
   data?: Data
@@ -78,144 +111,64 @@ export type State<Data, Error> = {
   isValidating?: boolean
 }
 
-export type CacheListener = () => void
+export type Mutator<Data = any> = (
+  cache: Cache,
+  key: Key,
+  data?: Data | Promise<Data> | MutatorCallback<Data>,
+  shouldRevalidate?: boolean
+) => Promise<Data | undefined>
+
+export interface ScopedMutator<Data = any> {
+  /** This is used for bound mutator */
+  (
+    key: Key,
+    data?: Data | Promise<Data> | MutatorCallback<Data>,
+    shouldRevalidate?: boolean
+  ): Promise<Data | undefined>
+  /** This is used for global mutator */
+  <T = any>(
+    key: Key,
+    data?: T | Promise<T> | MutatorCallback<T>,
+    shouldRevalidate?: boolean
+  ): Promise<T | undefined>
+}
+
+export type KeyedMutator<Data> = (
+  data?: Data | Promise<Data> | MutatorCallback<Data>,
+  shouldRevalidate?: boolean
+) => Promise<Data | undefined>
 
 // Public types
 
-/**
- * @deprecated `ConfigInterface` will be renamed to `SWRConfiguration`.
- */
-export type ConfigInterface<
-  Data = any,
-  Error = any,
-  Fn extends Fetcher<Data> = Fetcher<Data>
-> = Partial<Configuration<Data, Error, Fn>>
 export type SWRConfiguration<
   Data = any,
   Error = any,
   Fn extends Fetcher<Data> = Fetcher<Data>
 > = Partial<Configuration<Data, Error, Fn>>
 
-/**
- * @deprecated `keyInterface` will be renamed to `Key`.
- */
-export type keyInterface = ValueKey | (() => ValueKey)
 export type Key = ValueKey | (() => ValueKey)
 
-/**
- * @deprecated `responseInterface` will be renamed to `SWRResponse`.
- */
-export type responseInterface<Data, Error> = {
-  data?: Data
-  error?: Error
-  revalidate: () => Promise<boolean>
-  mutate: (
-    data?: Data | Promise<Data> | MutatorCallback<Data>,
-    shouldRevalidate?: boolean
-  ) => Promise<Data | undefined>
-  isValidating: boolean
-}
 export interface SWRResponse<Data, Error> {
   data?: Data
   error?: Error
-  /**
-   * @deprecated `revalidate` is deprecated, please use `mutate()` for the same purpose.
-   */
-  revalidate: () => Promise<boolean>
-  mutate: (
-    data?: Data | Promise<Data> | MutatorCallback<Data>,
-    shouldRevalidate?: boolean
-  ) => Promise<Data | undefined>
+  mutate: KeyedMutator<Data>
   isValidating: boolean
 }
 
-export type KeyLoader<Data = any> = (
-  index: number,
-  previousPageData: Data | null
-) => ValueKey
-
-/**
- * @deprecated `SWRInfiniteConfigInterface` will be renamed to `SWRInfiniteConfiguration`.
- */
-export type SWRInfiniteConfigInterface<
-  Data = any,
-  Error = any
-> = SWRConfiguration<Data[], Error, Fetcher<Data[]>> & {
-  initialSize?: number
-  revalidateAll?: boolean
-  persistSize?: boolean
-}
-export type SWRInfiniteConfiguration<
-  Data = any,
-  Error = any
-> = SWRConfiguration<Data[], Error, Fetcher<Data[]>> & {
-  initialSize?: number
-  revalidateAll?: boolean
-  persistSize?: boolean
-}
-
-/**
- * @deprecated `SWRInfiniteResponseInterface` will be renamed to `SWRInfiniteResponse`.
- */
-export type SWRInfiniteResponseInterface<Data = any, Error = any> = SWRResponse<
-  Data[],
-  Error
-> & {
-  size: number
-  setSize: (
-    size: number | ((size: number) => number)
-  ) => Promise<Data[] | undefined>
-}
-export interface SWRInfiniteResponse<Data = any, Error = any>
-  extends SWRResponse<Data[], Error> {
-  size: number
-  setSize: (
-    size: number | ((size: number) => number)
-  ) => Promise<Data[] | undefined>
-}
-
-/**
- * @deprecated `RevalidateOptionInterface` will be renamed to `RevalidatorOptions`.
- */
-export interface RevalidateOptionInterface {
-  retryCount?: number
-  dedupe?: boolean
-}
+export type KeyLoader<Data = any> =
+  | ((index: number, previousPageData: Data | null) => ValueKey)
+  | null
 export interface RevalidatorOptions {
   retryCount?: number
   dedupe?: boolean
 }
 
-/**
- * @deprecated `revalidateType` will be renamed to `Revalidator`.
- */
-export type revalidateType = (
-  revalidateOpts: RevalidatorOptions
-) => Promise<boolean>
 export type Revalidator = (
-  revalidateOpts: RevalidatorOptions
-) => Promise<boolean>
+  revalidateOpts?: RevalidatorOptions
+) => Promise<boolean> | void
 
-/**
- * @deprecated `CacheInterface` will be renamed to `Cache`.
- */
-export interface CacheInterface {
-  get(key: Key): any
-  set(key: Key, value: any): any
-  keys(): string[]
-  has(key: Key): boolean
+export interface Cache<Data = any> {
+  get(key: Key): Data | null | undefined
+  set(key: Key, value: Data): void
   delete(key: Key): void
-  clear(): void
-  serializeKey(key: Key): [string, any, string, string]
-  subscribe(listener: CacheListener): () => void
-}
-export interface Cache {
-  get(key: Key): any
-  set(key: Key, value: any): any
-  keys(): string[]
-  has(key: Key): boolean
-  delete(key: Key): void
-  clear(): void
-  serializeKey(key: Key): [string, any, string, string]
-  subscribe(listener: CacheListener): () => void
 }

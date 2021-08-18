@@ -1,4 +1,5 @@
 {
   "buildCommand": "build",
-  "sandboxes": ["swr-basic-p7dg6", "swr-states-4une7", "swr-infinite-jb5bm", "swr-ssr-j9b2y"]
+  "sandboxes": ["swr-basic-p7dg6", "swr-states-4une7", "swr-infinite-jb5bm", "swr-ssr-j9b2y"],
+  "node": "14"
 }

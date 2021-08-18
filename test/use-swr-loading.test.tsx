@@ -1,6 +1,6 @@
 import { act, render, screen } from '@testing-library/react'
 import React from 'react'
-import useSWR from '../src'
+import useSWR from 'swr'
 import { createResponse, sleep } from './utils'
 
 describe('useSWR - loading', () => {

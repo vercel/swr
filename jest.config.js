@@ -1,11 +1,18 @@
 module.exports = {
   preset: 'ts-jest',
+  testEnvironment: 'jsdom',
   testRegex: '/test/.*\\.test\\.tsx$',
   modulePathIgnorePatterns: ['<rootDir>/examples/'],
   setupFilesAfterEnv: ['<rootDir>/jest-setup.ts'],
+  moduleNameMapper: {
+    '^swr$': '<rootDir>/src',
+    '^swr/infinite$': '<rootDir>/infinite/index.ts',
+    '^swr/immutable$': '<rootDir>/immutable/index.ts'
+  },
   globals: {
     'ts-jest': {
-      tsconfig: 'tsconfig.test.json'
+      tsconfig: 'test/tsconfig.json',
+      diagnostics: false,
     }
-  }
+  },
 }

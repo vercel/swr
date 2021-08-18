@@ -1,9 +1,7 @@
 import { act, render, screen, fireEvent } from '@testing-library/react'
 import React, { useState, useEffect } from 'react'
-import useSWR from '../src'
-import { createResponse, sleep } from './utils'
-
-const waitForNextTick = () => act(() => sleep(1))
+import useSWR from 'swr'
+import { createResponse, sleep, nextTick as waitForNextTick } from './utils'
 
 describe('useSWR', () => {
   it('should return `undefined` on hydration then return data', async () => {
@@ -189,22 +187,18 @@ describe('useSWR', () => {
 
   it('should broadcast isValidating', async () => {
     function useBroadcast3() {
-      const { isValidating, revalidate } = useSWR(
-        'broadcast-3',
-        () => sleep(100),
-        {
-          // need to turn of deduping otherwise
-          // revalidating will be ignored
-          dedupingInterval: 10
-        }
-      )
-      return { isValidating, revalidate }
+      const { isValidating, mutate } = useSWR('broadcast-3', () => sleep(100), {
+        // need to turn of deduping otherwise
+        // revalidating will be ignored
+        dedupingInterval: 10
+      })
+      return { isValidating, mutate }
     }
     function Initiator() {
-      const { isValidating, revalidate } = useBroadcast3()
+      const { isValidating, mutate } = useBroadcast3()
       useEffect(() => {
         const timeout = setTimeout(() => {
-          revalidate()
+          mutate()
         }, 200)
         return () => clearTimeout(timeout)
         // the revalidate function is always the same reference because the key of the useSWR is static (broadcast-3)
@@ -357,30 +351,6 @@ describe('useSWR', () => {
     render(<Page />)
     screen.getByText('hello,')
     expect(fetcher).toBeCalled()
-
     await screen.findByText('hello, SWR')
-  })
-
-  it('should use fetch api as default fetcher', async () => {
-    const users = [{ name: 'bob' }, { name: 'sue' }]
-    global['fetch'] = () => Promise.resolve()
-    const mockFetch = body =>
-      Promise.resolve({ json: () => Promise.resolve(body) } as any)
-    const fn = jest
-      .spyOn(window, 'fetch')
-      .mockImplementation(() => mockFetch(users))
-
-    function Users() {
-      const { data } = useSWR('http://localhost:3000/api/users')
-
-      return <div>hello, {data && data.map(u => u.name).join(' and ')}</div>
-    }
-
-    render(<Users />)
-    screen.getByText('hello,')
-    expect(fn).toBeCalled()
-
-    await screen.findByText('hello, bob and sue')
-    delete global['fetch']
   })
 })

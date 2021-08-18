@@ -113,7 +113,7 @@ const { data, error, isValidating, mutate } = useSWR(key, fetcher, options)
 #### Options
 
 - `suspense = false`: enable React Suspense mode [(details)](#suspense-mode)
-- `fetcher = window.fetch`: the default fetcher function
+- `fetcher`: the function to retrieve the remote data source
 - `initialData`: initial data to be returned (note: This is per-hook)
 - `revalidateOnMount`: enable or disable automatic revalidation when component is mounted (by default revalidation occurs on mount when initialData is not set, use this flag to force behavior)
 - `revalidateOnFocus = true`: auto revalidate when window gets focused
@@ -418,11 +418,13 @@ function Profile() {
       <h1>My name is {data.name}.</h1>
       <button onClick={async () => {
         const newName = data.name.toUpperCase()
+        // update the local data immediately
+        mutate({ ...data, name: newName }, false)
         // send a request to the API to update the data
         await requestUpdateUsername(newName)
-        // update the local data immediately and revalidate (refetch)
+        // revalidate (refetch)
         // NOTE: key is not required when using useSWR's mutate as it's pre-bound
-        mutate({ ...data, name: newName })
+        mutate()
       }}>Uppercase my name!</button>
     </div>
   )

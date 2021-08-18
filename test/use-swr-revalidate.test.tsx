@@ -1,144 +1,139 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import React from 'react'
-import useSWR from '../src'
-import { sleep } from './utils'
+import useSWR from 'swr'
+import { createResponse, sleep, nextTick as waitForNextTick } from './utils'
 
 describe('useSWR - revalidate', () => {
   it('should rerender after triggering revalidation', async () => {
     let value = 0
 
     function Page() {
-      const { data, revalidate } = useSWR('dynamic-3', () => value++)
-      return <button onClick={revalidate}>data: {data}</button>
+      const { data, mutate } = useSWR('dynamic-3', () => value++)
+      return <button onClick={() => mutate()}>data: {data}</button>
     }
-    const { container } = render(<Page />)
+
+    render(<Page />)
 
     // hydration
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: "`)
+    screen.getByText('data:')
+
     // mount
     await screen.findByText('data: 0')
-    fireEvent.click(container.firstElementChild)
-    await act(() => {
-      // trigger revalidation
-      return sleep(1)
-    })
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"data: 1"`)
+
+    fireEvent.click(screen.getByText('data: 0'))
+    await waitForNextTick()
+    screen.getByText('data: 1')
   })
 
   it('should revalidate all the hooks with the same key', async () => {
     let value = 0
 
     function Page() {
-      const { data: v1, revalidate } = useSWR('dynamic-4', () => value++)
+      const { data: v1, mutate } = useSWR('dynamic-4', () => value++)
       const { data: v2 } = useSWR('dynamic-4', () => value++)
       return (
-        <button onClick={revalidate}>
+        <button onClick={() => mutate()}>
           {v1}, {v2}
         </button>
       )
     }
-    const { container } = render(<Page />)
+
+    render(<Page />)
 
     // hydration
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`", "`)
+    screen.getByText(',')
+
     // mount
     await screen.findByText('0, 0')
 
-    fireEvent.click(container.firstElementChild)
+    fireEvent.click(screen.getByText('0, 0'))
 
-    await act(() => {
-      // trigger revalidation
-      return sleep(1)
-    })
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"1, 1"`)
+    await waitForNextTick()
+    screen.getByText('1, 1')
   })
 
   it('should respect sequences of revalidation calls (cope with race condition)', async () => {
     let faster = false
 
     function Page() {
-      const { data, revalidate } = useSWR(
-        'race',
-        () =>
-          new Promise(res => {
-            const value = faster ? 1 : 0
-            setTimeout(() => res(value), faster ? 100 : 200)
-          })
+      const { data, mutate } = useSWR('race', () =>
+        createResponse(faster ? 1 : 0, { delay: faster ? 50 : 100 })
       )
 
-      return <button onClick={revalidate}>{data}</button>
+      return <button onClick={() => mutate()}>data: {data}</button>
     }
 
-    const { container } = render(<Page />)
+    render(<Page />)
 
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`""`)
+    // hydration
+    screen.getByText('data:')
 
     // trigger the slower revalidation
     faster = false
-    fireEvent.click(container.firstElementChild)
+    fireEvent.click(screen.getByText('data:'))
 
-    await act(async () => sleep(10))
+    await waitForNextTick()
     // trigger the faster revalidation
     faster = true
-    fireEvent.click(container.firstElementChild)
+    fireEvent.click(screen.getByText('data:'))
 
-    await act(async () => sleep(210))
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"1"`)
+    await act(async () => sleep(150))
+    screen.getByText('data: 1')
   })
 
   it('should keep isValidating be true when there are two concurrent requests', async () => {
     function Page() {
-      const { isValidating, revalidate } = useSWR(
+      const { isValidating, mutate } = useSWR(
         'keep isValidating for concurrent requests',
-        () =>
-          new Promise(res => {
-            setTimeout(res, 200)
-          }),
+        () => createResponse(null, { delay: 100 }),
         { revalidateOnMount: false }
       )
 
       return (
-        <button onClick={revalidate}>{isValidating ? 'true' : 'false'}</button>
+        <button onClick={() => mutate()}>
+          {isValidating ? 'true' : 'false'}
+        </button>
       )
     }
 
-    const { container } = render(<Page />)
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"false"`)
+    render(<Page />)
+    screen.getByText('false')
 
     // trigger the first revalidation
-    fireEvent.click(container.firstElementChild)
-    await act(() => sleep(100))
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"true"`)
+    fireEvent.click(screen.getByText('false'))
+    await act(() => sleep(50))
+    screen.getByText('true')
 
-    fireEvent.click(container.firstElementChild)
-    await act(() => sleep(110))
+    fireEvent.click(screen.getByText('true'))
+    await act(() => sleep(70))
     // first revalidation is over, second revalidation is still in progress
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"true"`)
+    screen.getByText('true')
 
-    await act(() => sleep(100))
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"false"`)
+    await act(() => sleep(70))
+    screen.getByText('false')
   })
 
   it('should respect sequences of revalidation calls although in dedupingInterval', async () => {
     let count = 0
     function Page() {
-      const { data, revalidate } = useSWR(
+      const { data, mutate } = useSWR(
         'respect sequences of revalidation calls although in dedupingInterval',
-        async () => {
+        () => {
           const currCount = ++count
-          await sleep(currCount === 1 ? 60 : 0)
-          return currCount
+          return createResponse(currCount, { delay: currCount === 1 ? 50 : 0 })
         },
         {
           dedupingInterval: 30
         }
       )
-      return <div onClick={() => revalidate()}>count: {data}</div>
+      return <div onClick={() => mutate()}>count: {data}</div>
     }
-    const { container } = render(<Page />)
-    await act(() => sleep(10))
-    fireEvent.click(container.firstElementChild)
-    await act(() => sleep(60))
-    expect(container.firstChild.textContent).toMatchInlineSnapshot('"count: 2"')
+
+    render(<Page />)
+
+    await waitForNextTick()
+    fireEvent.click(screen.getByText('count:'))
+    await act(() => sleep(70))
+    screen.getByText('count: 2')
   })
 })
