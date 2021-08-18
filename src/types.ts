@@ -84,14 +84,6 @@ export type Middleware = (useSWRNext: SWRHook) => SWRHookWithMiddleware
 
 export type ValueKey = string | any[] | null
 
-export type Updater<Data = any, Error = any> = (
-  shouldRevalidate?: boolean,
-  data?: Data,
-  error?: Error,
-  shouldDedupe?: boolean,
-  dedupe?: boolean
-) => boolean | Promise<boolean>
-
 export type MutatorCallback<Data = any> = (
   currentValue?: Data
 ) => Promise<undefined | Data> | undefined | Data
@@ -166,6 +158,27 @@ export interface RevalidatorOptions {
 export type Revalidator = (
   revalidateOpts?: RevalidatorOptions
 ) => Promise<boolean> | void
+
+export const enum RevalidateEvent {
+  FOCUS_EVENT = 0,
+  RECONNECT_EVENT = 1,
+  MUTATE_EVENT = 2
+}
+
+type RevalidateCallbackReturnType = {
+  [RevalidateEvent.FOCUS_EVENT]: void
+  [RevalidateEvent.RECONNECT_EVENT]: void
+  [RevalidateEvent.MUTATE_EVENT]: Promise<boolean>
+}
+export type RevalidateCallback = <K extends RevalidateEvent>(
+  type: K
+) => RevalidateCallbackReturnType[K]
+
+export type StateUpdateCallback<Data = any, Error = any> = (
+  data?: Data,
+  error?: Error,
+  isValidating?: boolean
+) => void
 
 export interface Cache<Data = any> {
   get(key: Key): Data | null | undefined
