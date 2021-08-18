@@ -176,17 +176,21 @@ export const useSWRHandler = <Data = any, Error = any>(
     CONCURRENT_PROMISES_TS
   ] = SWRGlobalState.get(cache) as GlobalState
 
-  // `key` is the identifier of the SWR `data` state.
-  // `keyErr` and `keyValidating` are identifiers of `error` and `isValidating`
-  // which are derived from `key`.
-  // `fnArgs` is a list of arguments for `fn`.
+  // `key` is the identifier of the SWR `data` state, `keyErr` and
+  // `keyValidating` are identifiers of `error` and `isValidating`,
+  // all of them are derived from `_key`.
+  // `fnArgs` is an array of arguments parsed from the key, which will be passed
+  // to the fetcher.
   const [key, fnArgs, keyErr, keyValidating] = serialize(_key)
 
-  // If it's the first render of this hook.
+  // If it's the initial render of this hook.
   const initialMountedRef = useRef(false)
+
+  // If the hook is unmounted already. This will be used to prevent some effects
+  // to be called after unmounting.
   const unmountedRef = useRef(false)
 
-  // The ref to trace the current key.
+  // Refs to keep the key and config.
   const keyRef = useRef(key)
   const configRef = useRef(config)
 
@@ -239,7 +243,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       let startAt: number
       let loading = true
       const { retryCount, dedupe } = revalidateOpts || {}
-      const shouldDeduping = !isUndefined(CONCURRENT_PROMISES[key]) && dedupe
+      const shouldDedupe = !isUndefined(CONCURRENT_PROMISES[key]) && dedupe
 
       // Do unmount check for callbacks:
       // If key has changed during the revalidation, or the component has been
@@ -256,7 +260,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         setState({
           isValidating: true
         })
-        if (!shouldDeduping) {
+        if (!shouldDedupe) {
           // also update other hooks
           broadcastState(
             cache,
@@ -267,7 +271,7 @@ export const useSWRHandler = <Data = any, Error = any>(
           )
         }
 
-        if (shouldDeduping) {
+        if (shouldDedupe) {
           // There's already an ongoing request, this one needs to be
           // deduplicated.
           startAt = CONCURRENT_PROMISES_TS[key]
@@ -362,7 +366,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         // merge the new state
         setState(newState)
 
-        if (!shouldDeduping) {
+        if (!shouldDedupe) {
           // also update other hooks
           broadcastState(cache, key, newData, newState.error, false)
         }
@@ -376,18 +380,16 @@ export const useSWRHandler = <Data = any, Error = any>(
           return false
         }
 
-        // get a new error
-        // don't use deep equal for errors
+        // Get a new error, don't use deep comparison for errors.
         cache.set(keyErr, err)
-
         if (stateRef.current.error !== err) {
-          // we keep the stale data
+          // Keep the stale data but update error.
           setState({
             isValidating: false,
             error: err
           })
-          if (!shouldDeduping) {
-            // also broadcast to update other hooks
+          if (!shouldDedupe) {
+            // Broadcast to update the states of other hooks.
             broadcastState(cache, key, UNDEFINED, err, false)
           }
         }
@@ -422,11 +424,9 @@ export const useSWRHandler = <Data = any, Error = any>(
     [key]
   )
 
-  // `mutate`, but bound to the current key.
+  // Similar to the global mutate, but bound to the current cache and key.
   const boundMutate: SWRResponse<Data, Error>['mutate'] = useCallback(
-    (newData, shouldRevalidate) => {
-      return internalMutate(cache, keyRef.current, newData, shouldRevalidate)
-    },
+    internalMutate.bind(UNDEFINED, cache, keyRef.current),
     // `cache` isn't allowed to change during the lifecycle
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
