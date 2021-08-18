@@ -7,6 +7,7 @@ import { isUndefined, UNDEFINED } from './utils/helper'
 import ConfigProvider from './utils/config-context'
 import useStateWithDeps from './utils/state'
 import withArgs from './utils/resolve-args'
+import { subscribeCallback } from './utils/subscribe-key'
 import {
   State,
   Broadcaster,
@@ -20,11 +21,12 @@ import {
   Cache,
   ScopedMutator,
   SWRHook,
-  RevalidateCallback,
   StateUpdateCallback,
   RevalidateEvent,
   ProviderOptions
 } from './types'
+
+const WITH_DEDUPE = { dedupe: true }
 
 // Generate strictly increasing timestamps.
 let __timestamp = 0
@@ -146,31 +148,6 @@ const internalMutate = async <Data>(
     if (error) throw error
     return res
   })
-}
-
-// Add a callback function to a list of keyed callback functions and return
-// the unsubscribe function.
-const subscribeCallback = (
-  key: string,
-  callbacks: Record<string, (RevalidateCallback | StateUpdateCallback)[]>,
-  callback: RevalidateCallback | StateUpdateCallback
-) => {
-  if (!callbacks[key]) {
-    callbacks[key] = [callback]
-  } else {
-    callbacks[key].push(callback)
-  }
-
-  return () => {
-    const keyedRevalidators = callbacks[key]
-    const index = keyedRevalidators.indexOf(callback)
-
-    if (index >= 0) {
-      // O(1): faster than splice
-      keyedRevalidators[index] = keyedRevalidators[keyedRevalidators.length - 1]
-      keyedRevalidators.pop()
-    }
-  }
 }
 
 export const useSWRHandler = <Data = any, Error = any>(
@@ -466,7 +443,7 @@ export const useSWRHandler = <Data = any, Error = any>(
 
     // Not the initial render.
     const keyChanged = initialMountedRef.current
-    const softRevalidate = () => revalidate({ dedupe: true })
+    const softRevalidate = revalidate.bind(UNDEFINED, WITH_DEDUPE)
 
     const isActive = () =>
       configRef.current.isVisible() && configRef.current.isOnline()
@@ -576,7 +553,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         (refreshWhenHidden || config.isVisible()) &&
         (refreshWhenOffline || config.isOnline())
       ) {
-        revalidate({ dedupe: true }).then(() => next())
+        revalidate(WITH_DEDUPE).then(() => next())
       } else {
         // Schedule next interval to check again.
         next()
@@ -601,7 +578,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   // If there is no `error`, the `revalidation` promise needs to be thrown to
   // the suspense boundary.
   if (suspense && isUndefined(data)) {
-    throw isUndefined(error) ? revalidate({ dedupe: true }) : error
+    throw isUndefined(error) ? revalidate(WITH_DEDUPE) : error
   }
 
   return Object.defineProperties(
