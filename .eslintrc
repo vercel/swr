@@ -33,7 +33,8 @@
   },
   "rules": {
     "func-names": [2, "as-needed"],
-    "no-shadow": 2,
+    "no-shadow": 0,
+    "@typescript-eslint/no-shadow": 2,
     "@typescript-eslint/explicit-function-return-type": 0,
     "@typescript-eslint/no-use-before-define": 0,
     "@typescript-eslint/ban-ts-ignore": 0,
