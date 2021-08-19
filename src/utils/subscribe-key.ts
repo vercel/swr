@@ -1,11 +1,11 @@
-import { RevalidateCallback, StateUpdateCallback } from '../types'
+type Callback = (...args: any[]) => any
 
 // Add a callback function to a list of keyed callback functions and return
 // the unsubscribe function.
 export const subscribeCallback = (
   key: string,
-  callbacks: Record<string, (RevalidateCallback | StateUpdateCallback)[]>,
-  callback: RevalidateCallback | StateUpdateCallback
+  callbacks: Record<string, Callback[]>,
+  callback: Callback
 ) => {
   const keyedRevalidators = callbacks[key] || (callbacks[key] = [])
   keyedRevalidators.push(callback)
