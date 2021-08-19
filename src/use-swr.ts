@@ -214,7 +214,7 @@ export const useSWRHandler = <Data = any, Error = any>(
 
   // Resolve the current validating state.
   const resolveValidating = () => {
-    if (!key) return false
+    if (!key || !fn) return false
     if (cache.get(keyValidating)) return true
 
     // If it's not mounted yet and it should revalidate on mount, revalidate.

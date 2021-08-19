@@ -2,7 +2,7 @@ import { act, render, screen, fireEvent } from '@testing-library/react'
 import React, { useEffect, useState } from 'react'
 import useSWR, { mutate, createCache, SWRConfig } from 'swr'
 import { serialize } from '../src/utils/serialize'
-import { createResponse, sleep, nextTick } from './utils'
+import { createResponse, sleep, nextTick, createKey } from './utils'
 
 describe('useSWR - local mutation', () => {
   it('should trigger revalidation programmatically', async () => {
@@ -698,5 +698,15 @@ describe('useSWR - local mutation', () => {
     // mutate success
     await act(() => sleep(100))
     await screen.findByText('data: 1')
+  })
+
+  it('isValidating should be false when no fetcher is provided', async () => {
+    const key = createKey()
+    function Page() {
+      const { isValidating } = useSWR(key)
+      return <p>{isValidating.toString()}</p>
+    }
+    render(<Page />)
+    screen.getByText('false')
   })
 })
