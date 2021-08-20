@@ -35,7 +35,7 @@
   "homepage": "https://swr.vercel.app",
   "license": "MIT",
   "scripts": {
-    "clean": "rm -rf dist infinite/dist immutable/dist",
+    "clean": "rimraf dist infinite/dist immutable/dist",
     "build": "yarn build:core && yarn build:infinite && yarn build:immutable",
     "watch": "yarn run-p watch:core watch:infinite watch:immutable",
     "watch:core": "bunchee src/index.ts --watch",
@@ -91,6 +91,7 @@
     "react-dom": "17.0.1",
     "react-dom-experimental": "npm:react-dom@alpha",
     "react-experimental": "npm:react@alpha",
+    "rimraf": "3.0.2",
     "ts-jest": "27.0.3",
     "typescript": "3.9.10"
   },
