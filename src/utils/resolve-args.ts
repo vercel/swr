@@ -24,7 +24,7 @@ export default function withArgs<SWRType>(hook: any) {
     let next = hook
     const { middlewares } = config
     if (middlewares) {
-      for (let i = 0; i < middlewares.length; i++) {
+      for (let i = middlewares.length; i-- > 0; ) {
         next = middlewares[i](next)
       }
     }
