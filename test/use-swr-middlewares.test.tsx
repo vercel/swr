@@ -1,6 +1,8 @@
 import { act, render, screen } from '@testing-library/react'
 import React, { useState, useEffect, useRef } from 'react'
 import useSWR, { Middleware, SWRConfig } from 'swr'
+import { withMiddleware } from '../src/utils/with-middleware'
+
 import { createResponse, sleep, createKey } from './utils'
 
 describe('useSWR - middlewares', () => {
@@ -99,12 +101,63 @@ describe('useSWR - middlewares', () => {
     screen.getByText('hello,')
     await screen.findByText('hello, data')
     expect(mockConsoleLog.mock.calls.map(call => call[0])).toEqual([
-      0,
-      1,
       2,
-      0,
       1,
-      2
+      0,
+      2,
+      1,
+      0
+    ])
+  })
+
+  it('should use the correct middleware order in `withMiddleware`', async () => {
+    const key = createKey()
+    const mockConsoleLog = jest.fn((_, s) => s)
+    const createLoggerMiddleware = (id: number): Middleware => useSWRNext => (
+      k,
+      fn,
+      config
+    ) => {
+      mockConsoleLog(id + '-enter', k)
+      const swr = useSWRNext(k, fn, config)
+      mockConsoleLog(id + '-exit', k)
+      return swr
+    }
+
+    const customSWRHook = withMiddleware(useSWR, useSWRNext => (...args) => {
+      mockConsoleLog('0-enter', args[0])
+      const swr = useSWRNext(...args)
+      mockConsoleLog('0-exit', args[0])
+      return swr
+    })
+
+    function Page() {
+      const { data } = customSWRHook(key, () => createResponse('data'), {
+        middlewares: [createLoggerMiddleware(1)]
+      })
+      return <div>hello, {data}</div>
+    }
+
+    render(
+      <SWRConfig value={{ middlewares: [createLoggerMiddleware(2)] }}>
+        <Page />
+      </SWRConfig>
+    )
+    screen.getByText('hello,')
+    await screen.findByText('hello, data')
+    expect(mockConsoleLog.mock.calls.map(call => call[0])).toEqual([
+      '2-enter',
+      '1-enter',
+      '0-enter',
+      '0-exit',
+      '1-exit',
+      '2-exit',
+      '2-enter',
+      '1-enter',
+      '0-enter',
+      '0-exit',
+      '1-exit',
+      '2-exit'
     ])
   })
 
@@ -166,6 +219,6 @@ describe('useSWR - middlewares', () => {
 
     render(<Page />)
     screen.getByText('hello,')
-    await screen.findByText(`hello, !#${key}#!`)
+    await screen.findByText(`hello, #!${key}!#`)
   })
 })
