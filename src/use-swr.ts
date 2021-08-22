@@ -499,27 +499,26 @@ export const SWRConfig = Object.defineProperty(ConfigProvider, 'default', {
 
 export const mutate = defaultProvider.mutate
 
-export const createCache = <Data = any>(
-  provider: Cache,
-  options?: Partial<ProviderOptions>
-) => {
-  return wrapCache<Data>(provider, options)
-}
-
 export const useSWRProvider = <Data = any>(
-  initialize?: (fallback: Cache) => Cache,
+  initialize?: (currentCache: Cache) => Cache,
   options?: Partial<ProviderOptions>
 ) => {
   const cache = useContext(SWRConfigContext).cache || defaultConfig.cache
+
+  // We use a state to keep the cache instance and make sure it's only
+  // initialized once.
   const [newProvider] = useState(
     () => initialize && wrapCache<Data>(initialize(cache), options)
   )
 
-  // If a new cache is created, return the new provider.
-  if (newProvider) return newProvider
-
-  // Return the current cache provider.
-  return { cache, mutate: (SWRGlobalState.get(cache) as GlobalState)[6] }
+  // Return the new provider if it's created, otherwise return the current
+  // provider.
+  return (
+    newProvider || {
+      cache,
+      mutate: (SWRGlobalState.get(cache) as GlobalState)[6]
+    }
+  )
 }
 
 export const unstable_serialize = (key: Key) => serialize(key)[0]

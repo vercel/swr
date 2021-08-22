@@ -1,6 +1,6 @@
 import { act, render, screen, fireEvent } from '@testing-library/react'
 import React, { useEffect, useState } from 'react'
-import useSWR, { mutate, createCache, SWRConfig } from 'swr'
+import useSWR, { mutate, useSWRProvider, SWRConfig } from 'swr'
 import { serialize } from '../src/utils/serialize'
 import { createResponse, sleep, nextTick, createKey } from './utils'
 
@@ -232,19 +232,22 @@ describe('useSWR - local mutation', () => {
       return <div>data: {data}</div>
     }
 
-    // prefill cache with data
-    const { cache, mutate: globalMutate } = createCache(
-      new Map([['dynamic-15', 'cached data']])
-    )
-    render(
-      <SWRConfig
-        value={{
-          cache
-        }}
-      >
-        <Page />
-      </SWRConfig>
-    )
+    let globalMutate
+
+    function App() {
+      // Prefill the cache with data
+      const { cache, mutate: mutate_ } = useSWRProvider(
+        () => new Map([['dynamic-15', 'cached data']])
+      )
+      globalMutate = mutate_
+      return (
+        <SWRConfig value={{ cache }}>
+          <Page />
+        </SWRConfig>
+      )
+    }
+
+    render(<App />)
 
     const callback = jest.fn()
     await globalMutate('dynamic-15', callback)
@@ -252,7 +255,17 @@ describe('useSWR - local mutation', () => {
   })
 
   it('should call function with undefined if key not cached', async () => {
-    const { cache, mutate: globalMutate } = createCache(new Map())
+    let globalCache, globalMutate
+
+    function App() {
+      // Prefill the cache with data
+      const { cache, mutate: mutate_ } = useSWRProvider(() => new Map())
+      globalCache = cache
+      globalMutate = mutate_
+      return null
+    }
+
+    render(<App />)
 
     const increment = jest.fn(currentValue =>
       currentValue == null ? undefined : currentValue + 1
@@ -264,7 +277,7 @@ describe('useSWR - local mutation', () => {
     expect(increment).toHaveBeenLastCalledWith(undefined)
     expect(increment).toHaveLastReturnedWith(undefined)
 
-    cache.set('dynamic-15.1', 42)
+    globalCache.set('dynamic-15.1', 42)
 
     await globalMutate('dynamic-15.1', increment, false)
 
@@ -456,19 +469,22 @@ describe('useSWR - local mutation', () => {
       return <div>{error ? error.message : `data: ${data}`}</div>
     }
 
-    // prefill cache with data
-    const { cache, mutate: globalMutate } = createCache(new Map())
-    render(
-      <SWRConfig
-        value={{
-          cache
-        }}
-      >
-        <Page />
-      </SWRConfig>
-    )
+    let globalCache, globalMutate
 
-    //mount
+    function App() {
+      const { cache, mutate: mutate_ } = useSWRProvider(() => new Map())
+      globalCache = cache
+      globalMutate = mutate_
+      return (
+        <SWRConfig value={{ cache }}>
+          <Page />
+        </SWRConfig>
+      )
+    }
+
+    render(<App />)
+
+    // Mount
     await screen.findByText('data: 0')
     await act(async () => {
       // mutate error will be thrown, add try catch to avoid crashing
@@ -487,15 +503,15 @@ describe('useSWR - local mutation', () => {
 
     screen.getByText(message)
     const [keyData, , keyErr] = serialize(key)
-    let cacheError = cache.get(keyErr)
+    let cacheError = globalCache.get(keyErr)
     expect(cacheError.message).toMatchInlineSnapshot(`"${message}"`)
 
     // if mutate throws an error synchronously, the cache shouldn't be updated
-    expect(cache.get(keyData)).toBe(value)
+    expect(globalCache.get(keyData)).toBe(value)
 
     // if mutate succeed, error should be cleared
     await act(() => globalMutate(key, value, false))
-    cacheError = cache.get(keyErr)
+    cacheError = globalCache.get(keyErr)
     expect(cacheError).toMatchInlineSnapshot(`undefined`)
   })
 

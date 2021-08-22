@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import React, { useState } from 'react'
-import useSWR, { createCache, useSWRProvider, SWRConfig } from 'swr'
+import useSWR, { useSWRProvider, SWRConfig } from 'swr'
 import { sleep, createKey, nextTick, focusOn } from './utils'
 
 describe('useSWR - cache', () => {
@@ -97,10 +97,6 @@ describe('useSWR - cache', () => {
 
   it('should support multi-level cache', async () => {
     const key = createKey()
-    const provider1 = new Map([[key, '1']])
-    const { cache: cache1 } = createCache(provider1)
-    const provider2 = new Map([[key, '2']])
-    const { cache: cache2 } = createCache(provider2)
 
     // Nested components with the same cache key can get different values.
     function Foo() {
@@ -109,30 +105,32 @@ describe('useSWR - cache', () => {
     }
     function Page() {
       const { data } = useSWR(key, null)
+      const { cache } = useSWRProvider(() => new Map([[key, '2']]))
       return (
         <div>
           {data}:
-          <SWRConfig value={{ cache: cache2 }}>
+          <SWRConfig value={{ cache: cache }}>
             <Foo />
           </SWRConfig>
         </div>
       )
     }
 
-    render(
-      <SWRConfig value={{ cache: cache1 }}>
-        <Page />
-      </SWRConfig>
-    )
+    function App() {
+      const { cache } = useSWRProvider(() => new Map([[key, '1']]))
+      return (
+        <SWRConfig value={{ cache }}>
+          <Page />
+        </SWRConfig>
+      )
+    }
+
+    render(<App />)
     screen.getByText('1:2')
   })
 
   it('should support isolated cache', async () => {
     const key = createKey()
-    const provider1 = new Map([[key, '1']])
-    const { cache: cache1 } = createCache(provider1)
-    const provider2 = new Map([[key, '2']])
-    const { cache: cache2 } = createCache(provider2)
 
     // Nested components with the same cache key can get different values.
     function Foo() {
@@ -140,6 +138,8 @@ describe('useSWR - cache', () => {
       return <>{data}</>
     }
     function Page() {
+      const { cache: cache1 } = useSWRProvider(() => new Map([[key, '1']]))
+      const { cache: cache2 } = useSWRProvider(() => new Map([[key, '2']]))
       return (
         <div>
           <SWRConfig value={{ cache: cache1 }}>
@@ -157,17 +157,9 @@ describe('useSWR - cache', () => {
     screen.getByText('1:2')
   })
 
-  it('should honor createCache provider options', async () => {
+  it('should respect provider options', async () => {
     const key = createKey()
-    provider = new Map([[key, 0]])
-    const { cache } = createCache(provider, {
-      setupOnFocus() {
-        /* do nothing */
-      },
-      setupOnReconnect() {
-        /* do nothing */
-      }
-    })
+
     let value = 1
     function Foo() {
       const { data } = useSWR(key, () => value++, {
@@ -176,6 +168,14 @@ describe('useSWR - cache', () => {
       return <>{String(data)}</>
     }
     function Page() {
+      const { cache } = useSWRProvider(() => new Map([[key, 0]]), {
+        setupOnFocus() {
+          /* do nothing */
+        },
+        setupOnReconnect() {
+          /* do nothing */
+        }
+      })
       return (
         <SWRConfig value={{ cache }}>
           <Foo />
@@ -196,7 +196,6 @@ describe('useSWR - cache', () => {
 
   it('should work with revalidateOnFocus', async () => {
     const key = createKey()
-    const { cache } = createCache(provider)
     let value = 0
     function Foo() {
       const { data } = useSWR(key, () => value++, {
@@ -205,6 +204,7 @@ describe('useSWR - cache', () => {
       return <>{String(data)}</>
     }
     function Page() {
+      const { cache } = useSWRProvider(() => provider)
       return (
         <SWRConfig value={{ cache }}>
           <Foo />

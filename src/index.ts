@@ -2,7 +2,6 @@
 export {
   SWRConfig,
   mutate,
-  createCache,
   useSWRProvider,
   unstable_serialize
 } from './use-swr'
