@@ -25,23 +25,27 @@ export function wrapCache<Data = any>(
   provider: Cache<Data>,
   options?: Partial<ProviderOptions>
 ) {
-  const EVENT_REVALIDATORS = {}
   const opts = { ...defaultProvider, ...options }
   const fallbackValues = opts.fallbackValues
 
+  const originalProviderGet = provider.get.bind(provider)
+  // If the provider is already created, duplicate it. This is necessary when
+  // the provider is shared globally, we still need to create a new instance
+  // to correctly scope hook's internal states.
   if (SWRGlobalState.has(provider)) {
-    // If the provider is already created, duplicate it. This is necessary since:
-    // - The provider is shared globally, we need to create a new instance to
-    //   correctly scope hook's internal states.
-    // - The initializer returns the parent provider with some fallback values.
-    provider = { ...provider }
-    if (fallbackValues) {
-      const originalProviderGet = provider.get
-      provider.get = (key: string) => {
-        const value = originalProviderGet(key)
-        if (isUndefined(value)) return fallbackValues[key]
-        return value
-      }
+    provider = {
+      set: provider.set.bind(provider),
+      get: originalProviderGet,
+      delete: provider.delete.bind(provider)
+    }
+  }
+  // If the initializer returns the parent provider with some fallback values,
+  // we need to override its `get` method.
+  if (fallbackValues) {
+    provider.get = (key: string) => {
+      const value = originalProviderGet(key)
+      if (isUndefined(value)) return fallbackValues[key]
+      return value
     }
   }
 
@@ -50,6 +54,7 @@ export function wrapCache<Data = any>(
 
   // Initialize global state for the specific data storage that will be used to
   // deduplicate requests and store listeners.
+  const EVENT_REVALIDATORS = {}
   SWRGlobalState.set(provider, [EVENT_REVALIDATORS, {}, {}, {}, {}, {}, mutate])
 
   // Setup DOM events listeners for `focus` and `reconnect` actions.

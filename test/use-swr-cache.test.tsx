@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import useSWR, { useSWRProvider, SWRConfig } from 'swr'
 import { sleep, createKey, nextTick, focusOn } from './utils'
 
-describe('useSWR - cache', () => {
+describe('useSWR - cache provider', () => {
   let provider
 
   beforeEach(() => {
@@ -218,6 +218,56 @@ describe('useSWR - cache', () => {
     await nextTick()
     await focusOn(window)
     screen.getByText('1')
+  })
+
+  it('should support fallback values', async () => {
+    const key = createKey()
+    function Foo() {
+      const { data } = useSWR(key, async () => {
+        await sleep(10)
+        return 'data'
+      })
+      return <>{String(data)}</>
+    }
+    function Page() {
+      const { cache } = useSWRProvider({
+        fallbackValues: { [key]: 'fallback' }
+      })
+      return (
+        <SWRConfig value={{ cache }}>
+          <Foo />
+        </SWRConfig>
+      )
+    }
+
+    render(<Page />)
+    screen.getByText('fallback') // no `undefined`, directly fallback
+    await screen.findByText('data')
+  })
+
+  it('should support fallback values with custom provider', async () => {
+    const key = createKey()
+    function Foo() {
+      const { data } = useSWR(key, async () => {
+        await sleep(10)
+        return 'data'
+      })
+      return <>{String(data)}</>
+    }
+    function Page() {
+      const { cache } = useSWRProvider(() => provider, {
+        fallbackValues: { [key]: 'fallback' }
+      })
+      return (
+        <SWRConfig value={{ cache }}>
+          <Foo />
+        </SWRConfig>
+      )
+    }
+
+    render(<Page />)
+    screen.getByText('fallback') // no `undefined`, directly fallback
+    await screen.findByText('data')
   })
 
   it('should clear cache between tests', async () => {
