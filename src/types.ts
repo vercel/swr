@@ -57,8 +57,8 @@ export interface Configuration<
 }
 
 export type ProviderOptions = {
-  setupOnFocus: (cb: () => void) => void
-  setupOnReconnect: (cb: () => void) => void
+  initFocus: (cb: () => void) => void
+  initReconnect: (cb: () => void) => void
   fallbackValues?: { [key: string]: any }
 }
 

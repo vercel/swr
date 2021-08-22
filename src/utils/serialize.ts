@@ -1,8 +1,10 @@
 import hash from './hash'
+import { isFunction } from './helper'
+
 import { Key } from '../types'
 
 export function serialize(key: Key): [string, any, string, string] {
-  if (typeof key === 'function') {
+  if (isFunction(key)) {
     try {
       key = key()
     } catch (err) {

@@ -30,6 +30,10 @@ export function wrapCache<Data = any>(
   const fallbackValues = opts.fallbackValues
 
   if (SWRGlobalState.has(provider)) {
+    // If the provider is already created, duplicate it. This is necessary since:
+    // - The provider is shared globally, we need to create a new instance to
+    //   correctly scope hook's internal states.
+    // - The initializer returns the parent provider with some fallback values.
     provider = { ...provider }
     if (fallbackValues) {
       const originalProviderGet = provider.get
@@ -50,14 +54,14 @@ export function wrapCache<Data = any>(
 
   // Setup DOM events listeners for `focus` and `reconnect` actions.
   if (!IS_SERVER) {
-    opts.setupOnFocus(
+    opts.initFocus(
       revalidateAllKeys.bind(
         UNDEFINED,
         EVENT_REVALIDATORS,
         RevalidateEvent.FOCUS_EVENT
       )
     )
-    opts.setupOnReconnect(
+    opts.initReconnect(
       revalidateAllKeys.bind(
         UNDEFINED,
         EVENT_REVALIDATORS,

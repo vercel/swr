@@ -1,5 +1,5 @@
 import { serialize } from './serialize'
-import { isUndefined, UNDEFINED } from './helper'
+import { isUndefined, isFunction, UNDEFINED } from './helper'
 import { SWRGlobalState, GlobalState } from './global-state'
 import { broadcastState } from './broadcast-state'
 import { getTimestamp } from './timestamp'
@@ -37,7 +37,7 @@ export const internalMutate = async <Data>(
   const beforeMutationTs = (MUTATION_TS[key] = getTimestamp())
   MUTATION_END_TS[key] = 0
 
-  if (typeof _data === 'function') {
+  if (isFunction(_data)) {
     // `_data` is a function, call it passing current cache value.
     try {
       _data = (_data as MutatorCallback<Data>)(cache.get(key))
@@ -49,7 +49,7 @@ export const internalMutate = async <Data>(
   }
 
   // `_data` is a promise/thenable, resolve the final data first.
-  if (_data && typeof (_data as Promise<Data>).then === 'function') {
+  if (_data && isFunction((_data as Promise<Data>).then)) {
     // This means that the mutation is async, we need to check timestamps to
     // avoid race conditions.
     try {

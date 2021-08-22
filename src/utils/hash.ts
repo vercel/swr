@@ -1,3 +1,5 @@
+import { isFunction } from './helper'
+
 // use WeakMap to store the object->key mapping
 // so the objects can be garbage collected.
 // WeakMap uses a hashtable under the hood, so the lookup
@@ -16,7 +18,7 @@ export default function hash(args: any[]): string {
     const argType = typeof arg
 
     let _hash
-    if (arg === null || (argType !== 'object' && argType !== 'function')) {
+    if (arg === null || (argType !== 'object' && !isFunction(arg))) {
       // need to consider the case that `arg` is a string:
       // "undefined" -> '"undefined"'
       // 123         -> '123'

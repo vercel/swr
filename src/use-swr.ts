@@ -4,7 +4,7 @@ import { wrapCache } from './utils/cache'
 import { SWRGlobalState, GlobalState } from './utils/global-state'
 import { IS_SERVER, rAF, useIsomorphicLayoutEffect } from './utils/env'
 import { serialize } from './utils/serialize'
-import { isUndefined, UNDEFINED } from './utils/helper'
+import { isUndefined, isFunction, UNDEFINED } from './utils/helper'
 import ConfigProvider, { SWRConfigContext } from './utils/config-context'
 import useStateWithDeps from './utils/state'
 import withArgs from './utils/resolve-args'
@@ -500,7 +500,9 @@ export const SWRConfig = Object.defineProperty(ConfigProvider, 'default', {
 export const mutate = defaultProvider.mutate
 
 export const useSWRProvider = <Data = any>(
-  initialize?: ((currentCache: Cache) => Cache) | Partial<ProviderOptions>,
+  initialize?:
+    | ((currentCache: Readonly<Cache>) => Cache)
+    | Partial<ProviderOptions>,
   options?: Partial<ProviderOptions>
 ) => {
   const cache = useContext(SWRConfigContext).cache || defaultConfig.cache
@@ -508,7 +510,7 @@ export const useSWRProvider = <Data = any>(
   // We use a state to keep the cache instance and make sure it's only
   // initialized once.
   const [newProvider] = useState(() => {
-    if (typeof initialize === 'function')
+    if (isFunction(initialize))
       return wrapCache<Data>(initialize(cache), options)
     else if (initialize) {
       return wrapCache<Data>(cache, initialize)

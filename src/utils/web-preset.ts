@@ -27,13 +27,13 @@ const isVisible = () => {
   return true
 }
 
-const setupOnFocus = (cb: () => void) => {
+const initFocus = (cb: () => void) => {
   // focus revalidate
   onDocumentEvent('visibilitychange', cb)
   onWindowEvent('focus', cb)
 }
 
-const setupOnReconnect = (cb: () => void) => {
+const initReconnect = (cb: () => void) => {
   // reconnect revalidate
   onWindowEvent('online', () => {
     online = true
@@ -51,6 +51,6 @@ export const preset = {
 } as const
 
 export const provider: ProviderOptions = {
-  setupOnFocus,
-  setupOnReconnect
+  initFocus,
+  initReconnect
 }

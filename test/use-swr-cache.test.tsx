@@ -169,10 +169,10 @@ describe('useSWR - cache', () => {
     }
     function Page() {
       const { cache } = useSWRProvider(() => new Map([[key, 0]]), {
-        setupOnFocus() {
+        initFocus() {
           /* do nothing */
         },
-        setupOnReconnect() {
+        initReconnect() {
           /* do nothing */
         }
       })

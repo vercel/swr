@@ -12,7 +12,7 @@ import useSWR, {
 } from 'swr'
 import { useIsomorphicLayoutEffect } from '../src/utils/env'
 import { serialize } from '../src/utils/serialize'
-import { isUndefined, UNDEFINED } from '../src/utils/helper'
+import { isUndefined, isFunction, UNDEFINED } from '../src/utils/helper'
 import { withMiddleware } from '../src/utils/with-middleware'
 import { SWRInfiniteConfiguration, SWRInfiniteResponse } from './types'
 
@@ -212,7 +212,7 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
       if (!pageSizeCacheKey) return UNDEFINED
 
       let size
-      if (typeof arg === 'function') {
+      if (isFunction(arg)) {
         size = arg(resolvePageSize())
       } else if (typeof arg === 'number') {
         size = arg

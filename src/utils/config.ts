@@ -4,7 +4,7 @@ import { wrapCache } from './cache'
 import { preset } from './web-preset'
 import { slowConnection } from './env'
 import { Configuration, RevalidatorOptions, Revalidator } from '../types'
-import { UNDEFINED, noop } from './helper'
+import { isUndefined, noop } from './helper'
 
 // error retry
 function onErrorRetry(
@@ -29,7 +29,7 @@ function onErrorRetry(
       (1 << (currentRetryCount < 8 ? currentRetryCount : 8))
     ) * config.errorRetryInterval
 
-  if (maxRetryCount !== UNDEFINED && currentRetryCount > maxRetryCount) {
+  if (!isUndefined(maxRetryCount) && currentRetryCount > maxRetryCount) {
     return
   }
 
