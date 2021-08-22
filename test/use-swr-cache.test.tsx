@@ -309,6 +309,45 @@ describe('useSWR - cache provider', () => {
     expect(localMutate).toBe(globalMutate)
   })
 
+  it('should be able to extend the parent cache', async () => {
+    let parentCache
+
+    const key = createKey()
+    function Foo() {
+      const { data } = useSWR(key, async () => {
+        await sleep(10)
+        return 'data'
+      })
+      return <>{String(data)}</>
+    }
+    function Page() {
+      const { cache } = useSWRProvider(parentCache_ => {
+        parentCache = parentCache_
+        return {
+          set: (k, v) => parentCache_.set(k, v),
+          get: k => {
+            // We append `-extended` to the value returned by the parent cache.
+            const v = parentCache_.get(k)
+            if (typeof v === 'undefined') return v
+            return v + '-extended'
+          },
+          delete: k => parentCache_.delete(k)
+        }
+      })
+      return (
+        <SWRConfig value={{ cache }}>
+          <Foo />
+        </SWRConfig>
+      )
+    }
+
+    render(<Page />)
+    expect(parentCache).toBe(SWRConfig.default.cache)
+
+    screen.getByText('undefined')
+    await screen.findByText('data-extended')
+  })
+
   it('should clear cache between tests', async () => {
     expect(provider.size).toBe(0)
   })

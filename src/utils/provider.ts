@@ -8,9 +8,7 @@ import { SWRGlobalState, GlobalState } from './global-state'
 import { Cache, ProviderOptions } from '../types'
 
 export const useSWRProvider = <Data = any>(
-  initialize?:
-    | ((currentCache: Readonly<Cache>) => Cache)
-    | Partial<ProviderOptions>,
+  initialize?: ((cache: Readonly<Cache>) => Cache) | Partial<ProviderOptions>,
   options?: Partial<ProviderOptions>
 ) => {
   const cache = useContext(SWRConfigContext).cache || defaultConfig.cache
