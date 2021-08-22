@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import React, { useState } from 'react'
-import useSWR, { createCache, SWRConfig } from 'swr'
+import useSWR, { createCache, useSWRProvider, SWRConfig } from 'swr'
 import { sleep, createKey, nextTick, focusOn } from './utils'
 
 describe('useSWR - cache', () => {
@@ -21,12 +21,16 @@ describe('useSWR - cache', () => {
       return <div onClick={() => setIndex(1)}>{data}</div>
     }
 
-    const { cache } = createCache(provider)
-    const { container } = render(
-      <SWRConfig value={{ cache }}>
-        <Section />
-      </SWRConfig>
-    )
+    function App() {
+      const { cache } = useSWRProvider(() => provider)
+      return (
+        <SWRConfig value={{ cache }}>
+          <Section />
+        </SWRConfig>
+      )
+    }
+
+    const { container } = render(<App />)
     await screen.findByText(fetcher(keys[0]))
 
     expect(provider.get(keys[1])).toBe(undefined)
@@ -49,13 +53,16 @@ describe('useSWR - cache', () => {
       return <div>{data}</div>
     }
 
-    provider = new Map([[key, 'cached value']])
-    const { cache } = createCache(provider)
-    render(
-      <SWRConfig value={{ cache }}>
-        <Page />
-      </SWRConfig>
-    )
+    function App() {
+      const { cache } = useSWRProvider(() => new Map([[key, 'cached value']]))
+      return (
+        <SWRConfig value={{ cache }}>
+          <Page />
+        </SWRConfig>
+      )
+    }
+
+    render(<App />)
     screen.getByText('cached value')
     await screen.findByText('updated value')
     expect(renderedValues.length).toBe(2)
@@ -63,19 +70,26 @@ describe('useSWR - cache', () => {
 
   it('should correctly mutate the cached value', async () => {
     const key = createKey()
+    let mutate
 
     function Page() {
       const { data } = useSWR(key, null)
       return <div>{data}</div>
     }
 
-    provider = new Map([[key, 'cached value']])
-    const { cache, mutate } = createCache(provider)
-    render(
-      <SWRConfig value={{ cache }}>
-        <Page />
-      </SWRConfig>
-    )
+    function App() {
+      const { cache, mutate: mutateWithCache } = useSWRProvider(
+        () => new Map([[key, 'cached value']])
+      )
+      mutate = mutateWithCache
+      return (
+        <SWRConfig value={{ cache }}>
+          <Page />
+        </SWRConfig>
+      )
+    }
+
+    render(<App />)
     screen.getByText('cached value')
     await act(() => mutate(key, 'mutated value', false))
     await screen.findByText('mutated value')

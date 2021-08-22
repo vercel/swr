@@ -1,6 +1,6 @@
 import { useContext } from 'react'
 
-import defaultConfig from './config'
+import { defaultConfig } from './config'
 import { SWRConfigContext } from './config-context'
 import mergeConfig from './merge-config'
 import { normalize } from './normalize-args'

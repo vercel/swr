@@ -36,8 +36,10 @@ function onErrorRetry(
   setTimeout(revalidate, timeout, opts)
 }
 
+export const defaultProvider = wrapCache(new Map())
+
 // Default config
-const defaultConfig: Configuration = {
+export const defaultConfig: Configuration = {
   // events
   onLoadingSlow: noop,
   onSuccess: noop,
@@ -59,10 +61,8 @@ const defaultConfig: Configuration = {
   // providers
   compare: dequal,
   isPaused: () => false,
-  cache: wrapCache(new Map()),
+  cache: defaultProvider.cache,
 
   // use web preset by default
   ...preset
 } as const
-
-export default defaultConfig

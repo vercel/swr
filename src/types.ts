@@ -89,7 +89,7 @@ export type MutatorCallback<Data = any> = (
 ) => Promise<undefined | Data> | undefined | Data
 
 export type Broadcaster<Data = any, Error = any> = (
-  cache: Cache,
+  cache: Cache<Data>,
   key: string,
   data: Data,
   error?: Error,
