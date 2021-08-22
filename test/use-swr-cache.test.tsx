@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import React, { useState } from 'react'
-import useSWR, { useSWRProvider, SWRConfig } from 'swr'
+import useSWR, { useSWRProvider, SWRConfig, mutate as globalMutate } from 'swr'
 import { sleep, createKey, nextTick, focusOn } from './utils'
 
 describe('useSWR - cache provider', () => {
@@ -291,8 +291,22 @@ describe('useSWR - cache provider', () => {
     }
 
     render(<Page />)
-    screen.getByText('cache') // no `undefined`, directly cache
+    screen.getByText('cache') // no `undefined`, directly from cache
     await screen.findByText('data')
+  })
+
+  it('should not return the global cache and mutate by default', async () => {
+    let localCache, localMutate
+    function Page() {
+      const { cache, mutate } = useSWRProvider()
+      localCache = cache
+      localMutate = mutate
+      return <SWRConfig value={{ cache }}>{null}</SWRConfig>
+    }
+
+    render(<Page />)
+    expect(localCache).toBe(SWRConfig.default.cache)
+    expect(localMutate).toBe(globalMutate)
   })
 
   it('should clear cache between tests', async () => {
