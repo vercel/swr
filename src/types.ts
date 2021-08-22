@@ -59,6 +59,7 @@ export interface Configuration<
 export type ProviderOptions = {
   setupOnFocus: (cb: () => void) => void
   setupOnReconnect: (cb: () => void) => void
+  fallbackValues?: { [key: string]: any }
 }
 
 export type SWRHook = <Data = any, Error = any>(

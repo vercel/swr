@@ -1,6 +1,6 @@
 import { provider as defaultProvider } from './web-preset'
 import { IS_SERVER } from './env'
-import { UNDEFINED } from './helper'
+import { UNDEFINED, isUndefined } from './helper'
 import { internalMutate } from './mutate'
 import { SWRGlobalState } from './global-state'
 
@@ -27,6 +27,19 @@ export function wrapCache<Data = any>(
 ) {
   const EVENT_REVALIDATORS = {}
   const opts = { ...defaultProvider, ...options }
+  const fallbackValues = opts.fallbackValues
+
+  if (SWRGlobalState.has(provider)) {
+    provider = { ...provider }
+    if (fallbackValues) {
+      const originalProviderGet = provider.get
+      provider.get = (key: string) => {
+        const value = originalProviderGet(key)
+        if (isUndefined(value)) return fallbackValues[key]
+        return value
+      }
+    }
+  }
 
   // Also create the mutate function that bound to the cache.
   const mutate = internalMutate.bind(UNDEFINED, provider) as ScopedMutator<Data>

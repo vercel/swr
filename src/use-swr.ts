@@ -500,16 +500,21 @@ export const SWRConfig = Object.defineProperty(ConfigProvider, 'default', {
 export const mutate = defaultProvider.mutate
 
 export const useSWRProvider = <Data = any>(
-  initialize?: (currentCache: Cache) => Cache,
+  initialize?: ((currentCache: Cache) => Cache) | Partial<ProviderOptions>,
   options?: Partial<ProviderOptions>
 ) => {
   const cache = useContext(SWRConfigContext).cache || defaultConfig.cache
 
   // We use a state to keep the cache instance and make sure it's only
   // initialized once.
-  const [newProvider] = useState(
-    () => initialize && wrapCache<Data>(initialize(cache), options)
-  )
+  const [newProvider] = useState(() => {
+    if (typeof initialize === 'function')
+      return wrapCache<Data>(initialize(cache), options)
+    else if (initialize) {
+      return wrapCache<Data>(cache, initialize)
+    }
+    return UNDEFINED
+  })
 
   // Return the new provider if it's created, otherwise return the current
   // provider.
