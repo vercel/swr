@@ -507,12 +507,12 @@ export const createCache = <Data = any>(
 }
 
 export const useSWRProvider = <Data = any>(
-  initialize?: () => Cache,
+  initialize?: (fallback: Cache) => Cache,
   options?: Partial<ProviderOptions>
 ) => {
   const cache = useContext(SWRConfigContext).cache || defaultConfig.cache
   const [newProvider] = useState(
-    () => initialize && wrapCache<Data>(initialize(), options)
+    () => initialize && wrapCache<Data>(initialize(cache), options)
   )
 
   // If a new cache is created, return the new provider.
