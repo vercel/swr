@@ -270,6 +270,31 @@ describe('useSWR - cache provider', () => {
     await screen.findByText('data')
   })
 
+  it('should not return the fallback if cached', async () => {
+    const key = createKey()
+    function Foo() {
+      const { data } = useSWR(key, async () => {
+        await sleep(10)
+        return 'data'
+      })
+      return <>{String(data)}</>
+    }
+    function Page() {
+      const { cache } = useSWRProvider(() => new Map([[key, 'cache']]), {
+        fallbackValues: { [key]: 'fallback' }
+      })
+      return (
+        <SWRConfig value={{ cache }}>
+          <Foo />
+        </SWRConfig>
+      )
+    }
+
+    render(<Page />)
+    screen.getByText('cache') // no `undefined`, directly cache
+    await screen.findByText('data')
+  })
+
   it('should clear cache between tests', async () => {
     expect(provider.size).toBe(0)
   })

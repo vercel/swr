@@ -3,12 +3,8 @@ import useSWR from './use-swr'
 export default useSWR
 
 // Core APIs
-export {
-  SWRConfig,
-  mutate,
-  useSWRProvider,
-  unstable_serialize
-} from './use-swr'
+export { SWRConfig, mutate, unstable_serialize } from './use-swr'
+export { useSWRProvider } from './utils/provider'
 
 // Types
 export {

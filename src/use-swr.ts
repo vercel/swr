@@ -1,11 +1,10 @@
-import { useCallback, useRef, useContext, useState, useDebugValue } from 'react'
+import { useCallback, useRef, useDebugValue } from 'react'
 import { defaultConfig, defaultProvider } from './utils/config'
-import { wrapCache } from './utils/cache'
 import { SWRGlobalState, GlobalState } from './utils/global-state'
 import { IS_SERVER, rAF, useIsomorphicLayoutEffect } from './utils/env'
 import { serialize } from './utils/serialize'
-import { isUndefined, isFunction, UNDEFINED } from './utils/helper'
-import ConfigProvider, { SWRConfigContext } from './utils/config-context'
+import { isUndefined, UNDEFINED } from './utils/helper'
+import ConfigProvider from './utils/config-context'
 import useStateWithDeps from './utils/state'
 import withArgs from './utils/resolve-args'
 import { subscribeCallback } from './utils/subscribe-key'
@@ -21,11 +20,9 @@ import {
   RevalidatorOptions,
   Configuration,
   SWRConfiguration,
-  Cache,
   SWRHook,
   StateUpdateCallback,
-  RevalidateEvent,
-  ProviderOptions
+  RevalidateEvent
 } from './types'
 
 const WITH_DEDUPE = { dedupe: true }
@@ -498,35 +495,6 @@ export const SWRConfig = Object.defineProperty(ConfigProvider, 'default', {
 }
 
 export const mutate = defaultProvider.mutate
-
-export const useSWRProvider = <Data = any>(
-  initialize?:
-    | ((currentCache: Readonly<Cache>) => Cache)
-    | Partial<ProviderOptions>,
-  options?: Partial<ProviderOptions>
-) => {
-  const cache = useContext(SWRConfigContext).cache || defaultConfig.cache
-
-  // We use a state to keep the cache instance and make sure it's only
-  // initialized once.
-  const [newProvider] = useState(() => {
-    if (isFunction(initialize))
-      return wrapCache<Data>(initialize(cache), options)
-    else if (initialize) {
-      return wrapCache<Data>(cache, initialize)
-    }
-    return UNDEFINED
-  })
-
-  // Return the new provider if it's created, otherwise return the current
-  // provider.
-  return (
-    newProvider || {
-      cache,
-      mutate: (SWRGlobalState.get(cache) as GlobalState)[6]
-    }
-  )
-}
 
 export const unstable_serialize = (key: Key) => serialize(key)[0]
 
