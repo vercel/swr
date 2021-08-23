@@ -82,25 +82,23 @@ export function wrapCache<Data = any>(
     SWRGlobalState.set(provider, globalState)
   }
 
-  // This is a new provider, we need to initialize it.
-  if (!existingGloablState) {
-    // Setup DOM events listeners for `focus` and `reconnect` actions.
-    if (!IS_SERVER) {
-      opts.initFocus(
-        revalidateAllKeys.bind(
-          UNDEFINED,
-          EVENT_REVALIDATORS,
-          RevalidateEvent.FOCUS_EVENT
-        )
+  // This is a new provider, we need to initialize it and setup DOM events
+  // listeners for `focus` and `reconnect` actions.
+  if (!existingGloablState && !IS_SERVER) {
+    opts.initFocus(
+      revalidateAllKeys.bind(
+        UNDEFINED,
+        EVENT_REVALIDATORS,
+        RevalidateEvent.FOCUS_EVENT
       )
-      opts.initReconnect(
-        revalidateAllKeys.bind(
-          UNDEFINED,
-          EVENT_REVALIDATORS,
-          RevalidateEvent.RECONNECT_EVENT
-        )
+    )
+    opts.initReconnect(
+      revalidateAllKeys.bind(
+        UNDEFINED,
+        EVENT_REVALIDATORS,
+        RevalidateEvent.RECONNECT_EVENT
       )
-    }
+    )
   }
 
   // We might want to inject an extra layer on top of `provider` in the future,

@@ -64,8 +64,8 @@ export interface PublicConfiguration<
 export type FullConfiguration = InternalConfiguration & PublicConfiguration
 
 export type ConfigOptions = {
-  initFocus: (cb: () => void) => void
-  initReconnect: (cb: () => void) => void
+  initFocus: (callback: () => void) => void
+  initReconnect: (callback: () => void) => void
   fallbackValues?: { [key: string]: any }
 }
 
