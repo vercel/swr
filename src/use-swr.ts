@@ -18,7 +18,7 @@ import {
   Key,
   SWRResponse,
   RevalidatorOptions,
-  Configuration,
+  FullConfiguration,
   SWRConfiguration,
   SWRHook,
   StateUpdateCallback,
@@ -491,10 +491,10 @@ export const useSWRHandler = <Data = any, Error = any>(
 export const SWRConfig = Object.defineProperty(ConfigProvider, 'default', {
   value: defaultConfig
 }) as typeof ConfigProvider & {
-  default: Configuration
+  default: FullConfiguration
 }
 
-export const mutate = defaultProvider.mutate
+export const mutate = defaultProvider[1]
 
 export const unstable_serialize = (key: Key) => serialize(key)[0]
 

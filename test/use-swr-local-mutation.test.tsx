@@ -227,21 +227,18 @@ describe('useSWR - local mutation', () => {
   })
 
   it('should call function as data passing current cached value', async () => {
+    let globalMutate
+
     function Page() {
+      globalMutate = useSWRProvider().mutate
       const { data } = useSWR('dynamic-14', null)
       return <div>data: {data}</div>
     }
 
-    let globalMutate
-
     function App() {
       // Prefill the cache with data
-      const { cache, mutate: mutate_ } = useSWRProvider(
-        () => new Map([['dynamic-15', 'cached data']])
-      )
-      globalMutate = mutate_
       return (
-        <SWRConfig value={{ cache }}>
+        <SWRConfig provider={() => new Map([['dynamic-15', 'cached data']])}>
           <Page />
         </SWRConfig>
       )
@@ -258,14 +255,17 @@ describe('useSWR - local mutation', () => {
     let globalCache, globalMutate
 
     function App() {
-      // Prefill the cache with data
-      const { cache, mutate: mutate_ } = useSWRProvider(() => new Map())
+      const { cache, mutate: mutate_ } = useSWRProvider()
       globalCache = cache
       globalMutate = mutate_
       return null
     }
 
-    render(<App />)
+    render(
+      <SWRConfig provider={() => new Map()}>
+        <App />
+      </SWRConfig>
+    )
 
     const increment = jest.fn(currentValue =>
       currentValue == null ? undefined : currentValue + 1
@@ -464,25 +464,21 @@ describe('useSWR - local mutation', () => {
     const value = 0
     const key = 'mutate-4'
     const message = 'mutate-error'
+
+    let globalCache, globalMutate
     function Page() {
+      const { cache, mutate: mutate_ } = useSWRProvider()
+      globalCache = cache
+      globalMutate = mutate_
       const { data, error } = useSWR(key, () => value)
       return <div>{error ? error.message : `data: ${data}`}</div>
     }
 
-    let globalCache, globalMutate
-
-    function App() {
-      const { cache, mutate: mutate_ } = useSWRProvider(() => new Map())
-      globalCache = cache
-      globalMutate = mutate_
-      return (
-        <SWRConfig value={{ cache }}>
-          <Page />
-        </SWRConfig>
-      )
-    }
-
-    render(<App />)
+    render(
+      <SWRConfig provider={() => new Map()}>
+        <Page />
+      </SWRConfig>
+    )
 
     // Mount
     await screen.findByText('data: 0')

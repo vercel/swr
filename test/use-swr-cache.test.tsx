@@ -22,9 +22,8 @@ describe('useSWR - cache provider', () => {
     }
 
     function App() {
-      const { cache } = useSWRProvider(() => provider)
       return (
-        <SWRConfig value={{ cache }}>
+        <SWRConfig provider={() => provider}>
           <Section />
         </SWRConfig>
       )
@@ -54,9 +53,8 @@ describe('useSWR - cache provider', () => {
     }
 
     function App() {
-      const { cache } = useSWRProvider(() => new Map([[key, 'cached value']]))
       return (
-        <SWRConfig value={{ cache }}>
+        <SWRConfig provider={() => new Map([[key, 'cached value']])}>
           <Page />
         </SWRConfig>
       )
@@ -73,17 +71,15 @@ describe('useSWR - cache provider', () => {
     let mutate
 
     function Page() {
+      const { mutate: mutateWithCache } = useSWRProvider()
+      mutate = mutateWithCache
       const { data } = useSWR(key, null)
       return <div>{data}</div>
     }
 
     function App() {
-      const { cache, mutate: mutateWithCache } = useSWRProvider(
-        () => new Map([[key, 'cached value']])
-      )
-      mutate = mutateWithCache
       return (
-        <SWRConfig value={{ cache }}>
+        <SWRConfig provider={() => new Map([[key, 'cached value']])}>
           <Page />
         </SWRConfig>
       )
@@ -105,11 +101,10 @@ describe('useSWR - cache provider', () => {
     }
     function Page() {
       const { data } = useSWR(key, null)
-      const { cache } = useSWRProvider(() => new Map([[key, '2']]))
       return (
         <div>
           {data}:
-          <SWRConfig value={{ cache: cache }}>
+          <SWRConfig provider={() => new Map([[key, '2']])}>
             <Foo />
           </SWRConfig>
         </div>
@@ -117,9 +112,8 @@ describe('useSWR - cache provider', () => {
     }
 
     function App() {
-      const { cache } = useSWRProvider(() => new Map([[key, '1']]))
       return (
-        <SWRConfig value={{ cache }}>
+        <SWRConfig provider={() => new Map([[key, '1']])}>
           <Page />
         </SWRConfig>
       )
@@ -138,15 +132,13 @@ describe('useSWR - cache provider', () => {
       return <>{data}</>
     }
     function Page() {
-      const { cache: cache1 } = useSWRProvider(() => new Map([[key, '1']]))
-      const { cache: cache2 } = useSWRProvider(() => new Map([[key, '2']]))
       return (
         <div>
-          <SWRConfig value={{ cache: cache1 }}>
+          <SWRConfig provider={() => new Map([[key, '1']])}>
             <Foo />
           </SWRConfig>
           :
-          <SWRConfig value={{ cache: cache2 }}>
+          <SWRConfig provider={() => new Map([[key, '2']])}>
             <Foo />
           </SWRConfig>
         </div>
@@ -168,16 +160,18 @@ describe('useSWR - cache provider', () => {
       return <>{String(data)}</>
     }
     function Page() {
-      const { cache } = useSWRProvider(() => new Map([[key, 0]]), {
-        initFocus() {
-          /* do nothing */
-        },
-        initReconnect() {
-          /* do nothing */
-        }
-      })
       return (
-        <SWRConfig value={{ cache }}>
+        <SWRConfig
+          provider={() => new Map([[key, 0]])}
+          options={{
+            initFocus() {
+              /* do nothing */
+            },
+            initReconnect() {
+              /* do nothing */
+            }
+          }}
+        >
           <Foo />
         </SWRConfig>
       )
@@ -204,9 +198,8 @@ describe('useSWR - cache provider', () => {
       return <>{String(data)}</>
     }
     function Page() {
-      const { cache } = useSWRProvider(() => provider)
       return (
-        <SWRConfig value={{ cache }}>
+        <SWRConfig provider={() => provider}>
           <Foo />
         </SWRConfig>
       )
@@ -230,11 +223,12 @@ describe('useSWR - cache provider', () => {
       return <>{String(data)}</>
     }
     function Page() {
-      const { cache } = useSWRProvider({
-        fallbackValues: { [key]: 'fallback' }
-      })
       return (
-        <SWRConfig value={{ cache }}>
+        <SWRConfig
+          options={{
+            fallbackValues: { [key]: 'fallback' }
+          }}
+        >
           <Foo />
         </SWRConfig>
       )
@@ -255,11 +249,13 @@ describe('useSWR - cache provider', () => {
       return <>{String(data)}</>
     }
     function Page() {
-      const { cache } = useSWRProvider(() => provider, {
-        fallbackValues: { [key]: 'fallback' }
-      })
       return (
-        <SWRConfig value={{ cache }}>
+        <SWRConfig
+          provider={() => provider}
+          options={{
+            fallbackValues: { [key]: 'fallback' }
+          }}
+        >
           <Foo />
         </SWRConfig>
       )
@@ -280,11 +276,13 @@ describe('useSWR - cache provider', () => {
       return <>{String(data)}</>
     }
     function Page() {
-      const { cache } = useSWRProvider(() => new Map([[key, 'cache']]), {
-        fallbackValues: { [key]: 'fallback' }
-      })
       return (
-        <SWRConfig value={{ cache }}>
+        <SWRConfig
+          provider={() => new Map([[key, 'cache']])}
+          options={{
+            fallbackValues: { [key]: 'fallback' }
+          }}
+        >
           <Foo />
         </SWRConfig>
       )
@@ -295,13 +293,13 @@ describe('useSWR - cache provider', () => {
     await screen.findByText('data')
   })
 
-  it('should not return the global cache and mutate by default', async () => {
+  it('should return the global cache and mutate by default', async () => {
     let localCache, localMutate
     function Page() {
       const { cache, mutate } = useSWRProvider()
       localCache = cache
       localMutate = mutate
-      return <SWRConfig value={{ cache }}>{null}</SWRConfig>
+      return null
     }
 
     render(<Page />)
@@ -321,21 +319,22 @@ describe('useSWR - cache provider', () => {
       return <>{String(data)}</>
     }
     function Page() {
-      const { cache } = useSWRProvider(parentCache_ => {
-        parentCache = parentCache_
-        return {
-          set: (k, v) => parentCache_.set(k, v),
-          get: k => {
-            // We append `-extended` to the value returned by the parent cache.
-            const v = parentCache_.get(k)
-            if (typeof v === 'undefined') return v
-            return v + '-extended'
-          },
-          delete: k => parentCache_.delete(k)
-        }
-      })
       return (
-        <SWRConfig value={{ cache }}>
+        <SWRConfig
+          provider={parentCache_ => {
+            parentCache = parentCache_
+            return {
+              set: (k, v) => parentCache_.set(k, v),
+              get: k => {
+                // We append `-extended` to the value returned by the parent cache.
+                const v = parentCache_.get(k)
+                if (typeof v === 'undefined') return v
+                return v + '-extended'
+              },
+              delete: k => parentCache_.delete(k)
+            }
+          }}
+        >
           <Foo />
         </SWRConfig>
       )
@@ -346,6 +345,25 @@ describe('useSWR - cache provider', () => {
 
     screen.getByText('undefined')
     await screen.findByText('data-extended')
+  })
+
+  it('should return the cache instance from the useSWRProvider', async () => {
+    const cache = new Map()
+    let cache2
+    function Foo() {
+      cache2 = useSWRProvider().cache
+      return null
+    }
+    function Page() {
+      return (
+        <SWRConfig provider={() => cache}>
+          <Foo />
+        </SWRConfig>
+      )
+    }
+
+    render(<Page />)
+    expect(cache).toBe(cache2)
   })
 
   it('should clear cache between tests', async () => {

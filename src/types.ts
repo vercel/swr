@@ -1,5 +1,11 @@
 export type Fetcher<Data> = (...args: any) => Data | Promise<Data>
-export interface Configuration<
+
+// Configuration types that are only used internally, not exposed to the user.
+export interface InternalConfiguration {
+  cache: Cache
+}
+
+export interface PublicConfiguration<
   Data = any,
   Error = any,
   Fn extends Fetcher<Data> = Fetcher<Data>
@@ -19,28 +25,27 @@ export interface Configuration<
   suspense?: boolean
   initialData?: Data
   fetcher?: Fn
-  cache: Cache
   middlewares?: Middleware[]
 
   isPaused: () => boolean
   onLoadingSlow: (
     key: string,
-    config: Readonly<Configuration<Data, Error>>
+    config: Readonly<PublicConfiguration<Data, Error>>
   ) => void
   onSuccess: (
     data: Data,
     key: string,
-    config: Readonly<Configuration<Data, Error>>
+    config: Readonly<PublicConfiguration<Data, Error>>
   ) => void
   onError: (
     err: Error,
     key: string,
-    config: Readonly<Configuration<Data, Error>>
+    config: Readonly<PublicConfiguration<Data, Error>>
   ) => void
   onErrorRetry: (
     err: Error,
     key: string,
-    config: Readonly<Configuration<Data, Error>>,
+    config: Readonly<PublicConfiguration<Data, Error>>,
     revalidate: Revalidator,
     revalidateOpts: Required<RevalidatorOptions>
   ) => void
@@ -56,7 +61,9 @@ export interface Configuration<
   revalidateOnMount?: boolean
 }
 
-export type ProviderOptions = {
+export type FullConfiguration = InternalConfiguration & PublicConfiguration
+
+export type ConfigOptions = {
   initFocus: (cb: () => void) => void
   initReconnect: (cb: () => void) => void
   fallbackValues?: { [key: string]: any }
@@ -137,7 +144,7 @@ export type SWRConfiguration<
   Data = any,
   Error = any,
   Fn extends Fetcher<Data> = Fetcher<Data>
-> = Partial<Configuration<Data, Error, Fn>>
+> = Partial<PublicConfiguration<Data, Error, Fn>>
 
 export type Key = ValueKey | (() => ValueKey)
 

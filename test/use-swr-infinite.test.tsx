@@ -646,6 +646,7 @@ describe('useSWRInfinite', () => {
     let mutateCustomCache
 
     function Page() {
+      mutateCustomCache = useSWRProvider().mutate
       const { data } = useSWRInfinite<string, string>(
         () => key,
         () => createResponse('response data')
@@ -653,12 +654,8 @@ describe('useSWRInfinite', () => {
       return <div>data:{data}</div>
     }
     function App() {
-      const { cache, mutate: mutate_ } = useSWRProvider(
-        () => new Map([[key, 'initial-cache']])
-      )
-      mutateCustomCache = mutate_
       return (
-        <SWRConfig value={{ cache }}>
+        <SWRConfig provider={() => new Map([[key, 'initial-cache']])}>
           <Page />
         </SWRConfig>
       )
@@ -749,18 +746,12 @@ describe('useSWRInfinite', () => {
         <div onClick={() => setSize(2)}>data:{data ? data.join(',') : ''}</div>
       )
     }
-    function App() {
-      const { cache } = useSWRProvider(
-        () => new Map([[key + '-1', 'cached value']])
-      )
-      return (
-        <SWRConfig value={{ cache }}>
-          <Page />
-        </SWRConfig>
-      )
-    }
 
-    render(<App />)
+    render(
+      <SWRConfig provider={() => new Map([[key + '-1', 'cached value']])}>
+        <Page />
+      </SWRConfig>
+    )
 
     screen.getByText('data:')
     await screen.findByText('data:response value')
@@ -781,18 +772,11 @@ describe('useSWRInfinite', () => {
         <div onClick={() => setSize(2)}>data:{data ? data.join(',') : ''}</div>
       )
     }
-    function App() {
-      const { cache } = useSWRProvider(
-        () => new Map([[key + '-1', 'cached value']])
-      )
-      return (
-        <SWRConfig value={{ cache }}>
-          <Page />
-        </SWRConfig>
-      )
-    }
-
-    render(<App />)
+    render(
+      <SWRConfig provider={() => new Map([[key + '-1', 'cached value']])}>
+        <Page />
+      </SWRConfig>
+    )
 
     screen.getByText('data:')
     await screen.findByText('data:response value')

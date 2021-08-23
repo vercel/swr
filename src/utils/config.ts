@@ -3,14 +3,19 @@ import { dequal } from 'dequal/lite'
 import { wrapCache } from './cache'
 import { preset } from './web-preset'
 import { slowConnection } from './env'
-import { Configuration, RevalidatorOptions, Revalidator } from '../types'
+import {
+  PublicConfiguration,
+  FullConfiguration,
+  RevalidatorOptions,
+  Revalidator
+} from '../types'
 import { isUndefined, noop } from './helper'
 
 // error retry
 function onErrorRetry(
   _: unknown,
   __: string,
-  config: Readonly<Configuration>,
+  config: Readonly<PublicConfiguration>,
   revalidate: Revalidator,
   opts: Required<RevalidatorOptions>
 ): void {
@@ -39,7 +44,7 @@ function onErrorRetry(
 export const defaultProvider = wrapCache(new Map())
 
 // Default config
-export const defaultConfig: Configuration = {
+export const defaultConfig: FullConfiguration = {
   // events
   onLoadingSlow: noop,
   onSuccess: noop,
@@ -61,7 +66,7 @@ export const defaultConfig: Configuration = {
   // providers
   compare: dequal,
   isPaused: () => false,
-  cache: defaultProvider.cache,
+  cache: defaultProvider[0],
 
   // use web preset by default
   ...preset

@@ -1,4 +1,4 @@
-import { provider as defaultProvider } from './web-preset'
+import { defaultConfigOptions } from './web-preset'
 import { IS_SERVER } from './env'
 import { UNDEFINED, isUndefined } from './helper'
 import { internalMutate } from './mutate'
@@ -8,7 +8,7 @@ import {
   Cache,
   ScopedMutator,
   RevalidateCallback,
-  ProviderOptions,
+  ConfigOptions,
   RevalidateEvent
 } from '../types'
 
@@ -23,9 +23,9 @@ function revalidateAllKeys(
 
 export function wrapCache<Data = any>(
   provider: Cache<Data>,
-  options?: Partial<ProviderOptions>
-) {
-  const opts = { ...defaultProvider, ...options }
+  options?: Partial<ConfigOptions>
+): [Cache<Data>, ScopedMutator<Data>] {
+  const opts = { ...defaultConfigOptions, ...options }
   const fallbackValues = opts.fallbackValues
 
   // The global state for a specific provider will be used to deduplicate
@@ -106,8 +106,5 @@ export function wrapCache<Data = any>(
   // We might want to inject an extra layer on top of `provider` in the future,
   // such as key serialization, auto GC, etc.
   // For now, it's just a `Map` interface without any modifications.
-  return {
-    cache: provider,
-    mutate
-  }
+  return [provider, mutate]
 }

@@ -1,10 +1,11 @@
-import { Configuration } from '../types'
+import { FullConfiguration } from '../types'
 
 export default function mergeConfig(
-  a: Partial<Configuration> | null,
-  b: Partial<Configuration> | null
+  a?: Partial<FullConfiguration>,
+  b?: Partial<FullConfiguration>
 ) {
-  const v: Partial<Configuration> = { ...a, ...b }
+  // Need to create a new object to avoid mutating the original here.
+  const v: Partial<FullConfiguration> = { ...a, ...b }
 
   const m1 = a && a.middlewares
   const m2 = b && b.middlewares
