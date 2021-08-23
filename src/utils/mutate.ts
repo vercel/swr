@@ -80,16 +80,16 @@ export const internalMutate = async <Data>(
   MUTATION_END_TS[key] = getTimestamp()
 
   // Update existing SWR Hooks' internal states:
-  return broadcastState(
+  const res = await broadcastState(
     cache,
     key,
     data,
     error,
     UNDEFINED,
     shouldRevalidate
-  ).then(res => {
-    // Throw error or return data
-    if (error) throw error
-    return res
-  })
+  )
+
+  // Throw error or return data
+  if (error) throw error
+  return res
 }

@@ -29,5 +29,5 @@ export const broadcastState: Broadcaster = (
     )
   }
 
-  return Promise.resolve(cache.get(key))
+  return cache.get(key)
 }
