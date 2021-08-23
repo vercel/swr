@@ -131,6 +131,11 @@ export const useSWRHandler = <Data = any, Error = any>(
         key === keyRef.current &&
         initialMountedRef.current
 
+      const cleanupState = () => {
+        delete CONCURRENT_PROMISES[key]
+        delete CONCURRENT_PROMISES_TS[key]
+      }
+
       // start fetching
       try {
         cache.set(keyValidating, true)
@@ -163,7 +168,7 @@ export const useSWRHandler = <Data = any, Error = any>(
             }, config.loadingTimeout)
           }
 
-          CONCURRENT_PROMISES[key] = fn(...fnArgs)
+          CONCURRENT_PROMISES[key] = fn.apply(fn, fnArgs)
           CONCURRENT_PROMISES_TS[key] = startAt = getTimestamp()
 
           newData = await CONCURRENT_PROMISES[key]
@@ -171,8 +176,7 @@ export const useSWRHandler = <Data = any, Error = any>(
           setTimeout(() => {
             // CONCURRENT_PROMISES_TS[key] maybe be `undefined` or a number
             if (CONCURRENT_PROMISES_TS[key] === startAt) {
-              delete CONCURRENT_PROMISES[key]
-              delete CONCURRENT_PROMISES_TS[key]
+              cleanupState()
             }
           }, config.dedupingInterval)
 
@@ -248,8 +252,7 @@ export const useSWRHandler = <Data = any, Error = any>(
           broadcastState(cache, key, newData, newState.error, false)
         }
       } catch (err) {
-        delete CONCURRENT_PROMISES[key]
-        delete CONCURRENT_PROMISES_TS[key]
+        cleanupState()
         if (configRef.current.isPaused()) {
           setState({
             isValidating: false

@@ -163,7 +163,7 @@ describe('useSWR - cache provider', () => {
       return (
         <SWRConfig
           provider={() => new Map([[key, 0]])}
-          options={{
+          providerOptions={{
             initFocus() {
               /* do nothing */
             },
@@ -225,7 +225,7 @@ describe('useSWR - cache provider', () => {
     function Page() {
       return (
         <SWRConfig
-          options={{
+          providerOptions={{
             fallbackValues: { [key]: 'fallback' }
           }}
         >
@@ -252,7 +252,7 @@ describe('useSWR - cache provider', () => {
       return (
         <SWRConfig
           provider={() => provider}
-          options={{
+          providerOptions={{
             fallbackValues: { [key]: 'fallback' }
           }}
         >
@@ -279,7 +279,7 @@ describe('useSWR - cache provider', () => {
       return (
         <SWRConfig
           provider={() => new Map([[key, 'cache']])}
-          options={{
+          providerOptions={{
             fallbackValues: { [key]: 'fallback' }
           }}
         >
