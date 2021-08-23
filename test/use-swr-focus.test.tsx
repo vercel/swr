@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import React, { useState } from 'react'
-import useSWR, { useSWRProvider } from 'swr'
+import useSWR, { SWRConfig } from 'swr'
 import { sleep, nextTick as waitForNextTick, focusOn } from './utils'
 
 const focusWindow = () => focusOn(window)
@@ -202,9 +202,7 @@ describe('useSWR - focus', () => {
     let value = 0
 
     function Page() {
-      const { cache } = useSWRProvider(() => new Map())
       const { data } = useSWR('revalidateOnFocus + cache', () => value++, {
-        cache,
         revalidateOnFocus: true,
         dedupingInterval: 0
       })
@@ -212,7 +210,11 @@ describe('useSWR - focus', () => {
     }
 
     // reuse default test case
-    render(<Page />)
+    render(
+      <SWRConfig provider={() => new Map()}>
+        <Page />
+      </SWRConfig>
+    )
     screen.getByText('data:')
     await screen.findByText('data: 0')
     await waitForNextTick()
