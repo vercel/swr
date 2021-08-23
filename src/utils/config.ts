@@ -9,7 +9,7 @@ import {
   RevalidatorOptions,
   Revalidator
 } from '../types'
-import { isUndefined, noop } from './helper'
+import { isUndefined, noop, mergeObjects } from './helper'
 
 // error retry
 function onErrorRetry(
@@ -42,33 +42,37 @@ function onErrorRetry(
 }
 
 export const defaultProvider = initCache(new Map())!
+const [cache, mutate] = defaultProvider
+export { mutate }
 
 // Default config
-export const defaultConfig: FullConfiguration = {
-  // events
-  onLoadingSlow: noop,
-  onSuccess: noop,
-  onError: noop,
-  onErrorRetry,
+export const defaultConfig: FullConfiguration = mergeObjects(
+  {
+    // events
+    onLoadingSlow: noop,
+    onSuccess: noop,
+    onError: noop,
+    onErrorRetry,
 
-  // switches
-  revalidateOnFocus: true,
-  revalidateOnReconnect: true,
-  revalidateWhenStale: true,
-  shouldRetryOnError: true,
+    // switches
+    revalidateOnFocus: true,
+    revalidateOnReconnect: true,
+    revalidateWhenStale: true,
+    shouldRetryOnError: true,
 
-  // timeouts
-  errorRetryInterval: slowConnection ? 10000 : 5000,
-  focusThrottleInterval: 5 * 1000,
-  dedupingInterval: 2 * 1000,
-  loadingTimeout: slowConnection ? 5000 : 3000,
+    // timeouts
+    errorRetryInterval: slowConnection ? 10000 : 5000,
+    focusThrottleInterval: 5 * 1000,
+    dedupingInterval: 2 * 1000,
+    loadingTimeout: slowConnection ? 5000 : 3000,
 
-  // providers
-  compare: dequal,
-  isPaused: () => false,
-  cache: defaultProvider[0],
-  fallbackValues: {},
-
+    // providers
+    compare: dequal,
+    isPaused: () => false,
+    cache,
+    mutate,
+    fallbackValues: {}
+  },
   // use web preset by default
-  ...preset
-} as const
+  preset
+)

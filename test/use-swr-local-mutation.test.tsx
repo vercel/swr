@@ -1,6 +1,6 @@
 import { act, render, screen, fireEvent } from '@testing-library/react'
 import React, { useEffect, useState } from 'react'
-import useSWR, { mutate, useSWRProvider, SWRConfig } from 'swr'
+import useSWR, { mutate, useSWRConfig, SWRConfig } from 'swr'
 import { serialize } from '../src/utils/serialize'
 import { createResponse, sleep, nextTick, createKey } from './utils'
 
@@ -230,7 +230,7 @@ describe('useSWR - local mutation', () => {
     let globalMutate
 
     function Page() {
-      globalMutate = useSWRProvider().mutate
+      globalMutate = useSWRConfig().mutate
       const { data } = useSWR('dynamic-14', null)
       return <div>data: {data}</div>
     }
@@ -238,7 +238,9 @@ describe('useSWR - local mutation', () => {
     function App() {
       // Prefill the cache with data
       return (
-        <SWRConfig provider={() => new Map([['dynamic-15', 'cached data']])}>
+        <SWRConfig
+          value={{ provider: () => new Map([['dynamic-15', 'cached data']]) }}
+        >
           <Page />
         </SWRConfig>
       )
@@ -255,14 +257,14 @@ describe('useSWR - local mutation', () => {
     let globalCache, globalMutate
 
     function App() {
-      const { cache, mutate: mutate_ } = useSWRProvider()
+      const { cache, mutate: mutate_ } = useSWRConfig()
       globalCache = cache
       globalMutate = mutate_
       return null
     }
 
     render(
-      <SWRConfig provider={() => new Map()}>
+      <SWRConfig value={{ provider: () => new Map() }}>
         <App />
       </SWRConfig>
     )
@@ -467,7 +469,7 @@ describe('useSWR - local mutation', () => {
 
     let globalCache, globalMutate
     function Page() {
-      const { cache, mutate: mutate_ } = useSWRProvider()
+      const { cache, mutate: mutate_ } = useSWRConfig()
       globalCache = cache
       globalMutate = mutate_
       const { data, error } = useSWR(key, () => value)
@@ -475,7 +477,7 @@ describe('useSWR - local mutation', () => {
     }
 
     render(
-      <SWRConfig provider={() => new Map()}>
+      <SWRConfig value={{ provider: () => new Map() }}>
         <Page />
       </SWRConfig>
     )

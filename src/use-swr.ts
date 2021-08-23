@@ -1,9 +1,9 @@
 import { useCallback, useRef, useDebugValue } from 'react'
-import { defaultConfig, defaultProvider } from './utils/config'
+import { defaultConfig } from './utils/config'
 import { SWRGlobalState, GlobalState } from './utils/global-state'
 import { IS_SERVER, rAF, useIsomorphicLayoutEffect } from './utils/env'
 import { serialize } from './utils/serialize'
-import { isUndefined, UNDEFINED } from './utils/helper'
+import { isUndefined, UNDEFINED, mergeObjects } from './utils/helper'
 import ConfigProvider from './utils/config-context'
 import useStateWithDeps from './utils/state'
 import withArgs from './utils/resolve-args'
@@ -172,13 +172,12 @@ export const useSWRHandler = <Data = any, Error = any>(
             }, config.loadingTimeout)
           }
 
-          CONCURRENT_PROMISES[key] = fn.apply(fn, fnArgs)
+          // Start the request and keep the timestamp.
           CONCURRENT_PROMISES_TS[key] = startAt = getTimestamp()
-
-          newData = await CONCURRENT_PROMISES[key]
+          newData = await (CONCURRENT_PROMISES[key] = fn.apply(fn, fnArgs))
 
           setTimeout(() => {
-            // CONCURRENT_PROMISES_TS[key] maybe be `undefined` or a number
+            // CONCURRENT_PROMISES_TS[key] maybe be `undefined` or a number.
             if (CONCURRENT_PROMISES_TS[key] === startAt) {
               cleanupState()
             }
@@ -339,16 +338,20 @@ export const useSWRHandler = <Data = any, Error = any>(
       updatedError,
       updatedIsValidating
     ) => {
-      setState({
-        error: updatedError,
-        isValidating: updatedIsValidating,
-        // if data is undefined we should not update stateRef.current.data
-        ...(!compare(updatedData, stateRef.current.data)
-          ? {
-              data: updatedData
-            }
-          : null)
-      })
+      setState(
+        mergeObjects(
+          {
+            error: updatedError,
+            isValidating: updatedIsValidating
+          },
+          // if data is undefined we should not update stateRef.current.data
+          !compare(updatedData, stateRef.current.data)
+            ? {
+                data: updatedData
+              }
+            : null
+        )
+      )
     }
 
     // Expose revalidators to global event listeners. So we can trigger
@@ -500,8 +503,6 @@ export const SWRConfig = Object.defineProperty(ConfigProvider, 'default', {
 }) as typeof ConfigProvider & {
   default: FullConfiguration
 }
-
-export const mutate = defaultProvider[1]
 
 export const unstable_serialize = (key: Key) => serialize(key)[0]
 

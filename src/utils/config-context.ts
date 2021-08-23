@@ -2,7 +2,7 @@ import { createContext, createElement, useContext, useState, FC } from 'react'
 
 import { defaultProvider } from './config'
 import { initCache } from './cache'
-import mergeConfig from './merge-config'
+import { mergeConfigs } from './merge-config'
 import { UNDEFINED } from './helper'
 import {
   SWRConfiguration,
@@ -14,21 +14,28 @@ import {
 export const SWRConfigContext = createContext<Partial<FullConfiguration>>({})
 
 const SWRConfig: FC<{
-  value?: SWRConfiguration & Partial<ConfigOptions>
-  provider?: (cache: Readonly<Cache>) => Cache
-}> = ({ children, value, provider }) => {
+  value?: SWRConfiguration &
+    Partial<ConfigOptions> & {
+      provider?: (cache: Readonly<Cache>) => Cache
+    }
+}> = ({ children, value }) => {
   // Extend parent context values and middlewares.
-  const extendedConfig = mergeConfig(useContext(SWRConfigContext), value)
-  const currentCache = extendedConfig.cache || defaultProvider[0]
+  const extendedConfig = mergeConfigs(useContext(SWRConfigContext), value)
+
+  // Should not use the inherited provider.
+  const provider = value && value.provider
 
   // Use a lazy initialized state to create the cache on first access.
-  const [cache] = useState(() =>
-    provider ? initCache(provider(currentCache), value) : UNDEFINED
+  const [cacheAndMutate] = useState(() =>
+    provider
+      ? initCache(provider(extendedConfig.cache || defaultProvider[0]), value)
+      : UNDEFINED
   )
 
   // Override the cache if a new provider is given.
-  if (cache) {
-    extendedConfig.cache = cache[0]
+  if (cacheAndMutate) {
+    extendedConfig.cache = cacheAndMutate[0]
+    extendedConfig.mutate = cacheAndMutate[1]
   }
 
   return createElement(

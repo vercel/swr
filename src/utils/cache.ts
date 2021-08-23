@@ -1,6 +1,6 @@
 import { defaultConfigOptions } from './web-preset'
 import { IS_SERVER } from './env'
-import { UNDEFINED } from './helper'
+import { UNDEFINED, mergeObjects } from './helper'
 import { internalMutate } from './mutate'
 import { SWRGlobalState } from './global-state'
 
@@ -32,7 +32,7 @@ export function initCache<Data = any>(
   // Provider's gloabl state might be already initialized. Let's try to get the
   // global state assoicated with the provider first.
   if (!SWRGlobalState.has(provider)) {
-    const opts = { ...defaultConfigOptions, ...options }
+    const opts = mergeObjects(defaultConfigOptions, options)
 
     // If there's no global state bound to the provider, create a new one with the
     // new mutate function.

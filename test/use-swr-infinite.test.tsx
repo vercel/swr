@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { render, fireEvent, act, screen } from '@testing-library/react'
-import { mutate, useSWRProvider, SWRConfig } from 'swr'
+import { mutate, useSWRConfig, SWRConfig } from 'swr'
 import useSWRInfinite, { unstable_serialize } from 'swr/infinite'
 import { sleep, createKey, createResponse } from './utils'
 
@@ -646,7 +646,7 @@ describe('useSWRInfinite', () => {
     let mutateCustomCache
 
     function Page() {
-      mutateCustomCache = useSWRProvider().mutate
+      mutateCustomCache = useSWRConfig().mutate
       const { data } = useSWRInfinite<string, string>(
         () => key,
         () => createResponse('response data')
@@ -655,7 +655,9 @@ describe('useSWRInfinite', () => {
     }
     function App() {
       return (
-        <SWRConfig provider={() => new Map([[key, 'initial-cache']])}>
+        <SWRConfig
+          value={{ provider: () => new Map([[key, 'initial-cache']]) }}
+        >
           <Page />
         </SWRConfig>
       )
@@ -748,7 +750,9 @@ describe('useSWRInfinite', () => {
     }
 
     render(
-      <SWRConfig provider={() => new Map([[key + '-1', 'cached value']])}>
+      <SWRConfig
+        value={{ provider: () => new Map([[key + '-1', 'cached value']]) }}
+      >
         <Page />
       </SWRConfig>
     )
@@ -773,7 +777,9 @@ describe('useSWRInfinite', () => {
       )
     }
     render(
-      <SWRConfig provider={() => new Map([[key + '-1', 'cached value']])}>
+      <SWRConfig
+        value={{ provider: () => new Map([[key + '-1', 'cached value']]) }}
+      >
         <Page />
       </SWRConfig>
     )

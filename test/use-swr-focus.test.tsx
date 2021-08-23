@@ -211,7 +211,7 @@ describe('useSWR - focus', () => {
 
     // reuse default test case
     render(
-      <SWRConfig provider={() => new Map()}>
+      <SWRConfig value={{ provider: () => new Map() }}>
         <Page />
       </SWRConfig>
     )

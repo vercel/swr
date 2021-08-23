@@ -229,8 +229,10 @@ describe('useSWR - refresh', () => {
     function App() {
       return (
         <SWRConfig
-          provider={() => {
-            return (customCache = new Map())
+          value={{
+            provider: () => {
+              return (customCache = new Map())
+            }
           }}
         >
           <Page />
