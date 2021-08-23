@@ -26,6 +26,7 @@ export interface PublicConfiguration<
   initialData?: Data
   fetcher?: Fn
   middlewares?: Middleware[]
+  fallbackValues: { [key: string]: any }
 
   isPaused: () => boolean
   onLoadingSlow: (
@@ -66,7 +67,6 @@ export type FullConfiguration = InternalConfiguration & PublicConfiguration
 export type ConfigOptions = {
   initFocus: (callback: () => void) => void
   initReconnect: (callback: () => void) => void
-  fallbackValues?: { [key: string]: any }
 }
 
 export type SWRHook = <Data = any, Error = any>(

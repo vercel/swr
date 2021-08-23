@@ -151,6 +151,7 @@ describe('useSWR - cache provider', () => {
 
   it('should respect provider options', async () => {
     const key = createKey()
+    const focusFn = jest.fn()
 
     let value = 1
     function Foo() {
@@ -163,9 +164,9 @@ describe('useSWR - cache provider', () => {
       return (
         <SWRConfig
           provider={() => new Map([[key, 0]])}
-          providerOptions={{
+          value={{
             initFocus() {
-              /* do nothing */
+              focusFn()
             },
             initReconnect() {
               /* do nothing */
@@ -186,6 +187,7 @@ describe('useSWR - cache provider', () => {
     await focusOn(window)
     // revalidateOnFocus won't work
     screen.getByText('1')
+    expect(focusFn).toBeCalled()
   })
 
   it('should work with revalidateOnFocus', async () => {
@@ -225,7 +227,7 @@ describe('useSWR - cache provider', () => {
     function Page() {
       return (
         <SWRConfig
-          providerOptions={{
+          value={{
             fallbackValues: { [key]: 'fallback' }
           }}
         >
@@ -252,7 +254,7 @@ describe('useSWR - cache provider', () => {
       return (
         <SWRConfig
           provider={() => provider}
-          providerOptions={{
+          value={{
             fallbackValues: { [key]: 'fallback' }
           }}
         >
@@ -279,7 +281,7 @@ describe('useSWR - cache provider', () => {
       return (
         <SWRConfig
           provider={() => new Map([[key, 'cache']])}
-          providerOptions={{
+          value={{
             fallbackValues: { [key]: 'fallback' }
           }}
         >
@@ -364,6 +366,40 @@ describe('useSWR - cache provider', () => {
 
     render(<Page />)
     expect(cache).toBe(cache2)
+  })
+
+  it('should retain the correct cache hierarchy', async () => {
+    const key = createKey()
+    const fetcher = async () => {
+      await sleep(10)
+      return 'data'
+    }
+
+    function Foo() {
+      const { data } = useSWR(key, fetcher)
+      return <>{String(data)}</>
+    }
+    function Bar() {
+      const { data } = useSWR(key, fetcher)
+      return <>{String(data)}</>
+    }
+    function Page() {
+      const { data } = useSWR(key, fetcher)
+      return (
+        <div>
+          {String(data)},
+          <SWRConfig value={{ fallbackValues: { [key]: 'fallback' } }}>
+            <Foo />
+          </SWRConfig>
+          ,
+          <Bar />
+        </div>
+      )
+    }
+
+    render(<Page />)
+    screen.getByText('undefined,fallback,undefined')
+    await screen.findByText('data,data,data')
   })
 
   it('should clear cache between tests', async () => {

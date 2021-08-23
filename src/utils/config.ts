@@ -1,6 +1,6 @@
 import { dequal } from 'dequal/lite'
 
-import { wrapCache } from './cache'
+import { initCache } from './cache'
 import { preset } from './web-preset'
 import { slowConnection } from './env'
 import {
@@ -41,7 +41,7 @@ function onErrorRetry(
   setTimeout(revalidate, timeout, opts)
 }
 
-export const defaultProvider = wrapCache(new Map())
+export const defaultProvider = initCache(new Map())!
 
 // Default config
 export const defaultConfig: FullConfiguration = {
@@ -67,6 +67,7 @@ export const defaultConfig: FullConfiguration = {
   compare: dequal,
   isPaused: () => false,
   cache: defaultProvider[0],
+  fallbackValues: {},
 
   // use web preset by default
   ...preset

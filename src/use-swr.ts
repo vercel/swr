@@ -36,6 +36,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     cache,
     compare,
     initialData,
+    fallbackValues,
     suspense,
     revalidateOnMount,
     revalidateWhenStale,
@@ -73,20 +74,23 @@ export const useSWRHandler = <Data = any, Error = any>(
 
   // Get the current state that SWR should return.
   const cachedData = cache.get(key)
-  const data = isUndefined(cachedData) ? initialData : cachedData
+  const fallbackData = isUndefined(initialData)
+    ? fallbackValues[key]
+    : initialData
+  const data = isUndefined(cachedData) ? fallbackData : cachedData
   const error = cache.get(keyErr)
 
   // A revalidation must be triggered when mounted if:
   // - `revalidateOnMount` is explicitly set to `true`.
   // - Suspense mode and there's stale data for the initial render.
-  // - Not suspense mode and there is no `initialData` and `revalidateWhenStale` is enabled.
+  // - Not suspense mode and there is no fallback data and `revalidateWhenStale` is enabled.
   // - `revalidateWhenStale` is enabled but `data` is not defined.
   const shouldRevalidateOnMount = () => {
     if (!isUndefined(revalidateOnMount)) return revalidateOnMount
 
     return suspense
       ? !initialMountedRef.current && !isUndefined(data)
-      : isUndefined(initialData) && (revalidateWhenStale || isUndefined(data))
+      : isUndefined(data) || revalidateWhenStale
   }
 
   // Resolve the current validating state.
@@ -319,7 +323,7 @@ export const useSWRHandler = <Data = any, Error = any>(
 
   // After mounted or key changed.
   useIsomorphicLayoutEffect(() => {
-    if (!key) return UNDEFINED
+    if (!key) return
 
     // Not the initial render.
     const keyChanged = initialMountedRef.current
@@ -368,7 +372,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       } else if (type === RevalidateEvent.MUTATE_EVENT) {
         return revalidate()
       }
-      return UNDEFINED
+      return
     }
 
     const unsubUpdate = subscribeCallback(key, STATE_UPDATERS, onStateUpdate)

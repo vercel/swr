@@ -166,7 +166,7 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
       shouldRevalidate = true
     ) => {
       // It is possible that the key is still falsy.
-      if (!contextCacheKey) return UNDEFINED
+      if (!contextCacheKey) return
 
       if (shouldRevalidate && !isUndefined(data)) {
         // We only revalidate the pages that are changed
@@ -209,7 +209,7 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
   const setSize = useCallback(
     (arg: number | ((size: number) => number)) => {
       // It is possible that the key is still falsy.
-      if (!pageSizeCacheKey) return UNDEFINED
+      if (!pageSizeCacheKey) return
 
       let size
       if (isFunction(arg)) {
@@ -217,7 +217,7 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
       } else if (typeof arg === 'number') {
         size = arg
       }
-      if (typeof size !== 'number') return UNDEFINED
+      if (typeof size !== 'number') return
 
       cache.set(pageSizeCacheKey, size)
       lastPageSizeRef.current = size

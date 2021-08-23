@@ -1,7 +1,7 @@
 import { createContext, createElement, useContext, useState, FC } from 'react'
 
 import { defaultProvider } from './config'
-import { wrapCache } from './cache'
+import { initCache } from './cache'
 import mergeConfig from './merge-config'
 import { UNDEFINED } from './helper'
 import {
@@ -14,27 +14,22 @@ import {
 export const SWRConfigContext = createContext<Partial<FullConfiguration>>({})
 
 const SWRConfig: FC<{
-  value?: SWRConfiguration
+  value?: SWRConfiguration & Partial<ConfigOptions>
   provider?: (cache: Readonly<Cache>) => Cache
-  providerOptions?: Partial<ConfigOptions>
-}> = ({ children, value, provider, providerOptions }) => {
+}> = ({ children, value, provider }) => {
   // Extend parent context values and middlewares.
   const extendedConfig = mergeConfig(useContext(SWRConfigContext), value)
   const currentCache = extendedConfig.cache || defaultProvider[0]
 
   // Use a lazy initialized state to create the cache on first access.
-  const [cache] = useState(() => {
-    if (provider || providerOptions) {
-      return wrapCache(
-        provider ? provider(currentCache) : currentCache,
-        providerOptions
-      )[0]
-    }
-    return UNDEFINED
-  })
+  const [cache] = useState(() =>
+    provider ? initCache(provider(currentCache), value) : UNDEFINED
+  )
 
-  // Override the cache if created.
-  if (cache) extendedConfig.cache = cache
+  // Override the cache if a new provider is given.
+  if (cache) {
+    extendedConfig.cache = cache[0]
+  }
 
   return createElement(
     SWRConfigContext.Provider,

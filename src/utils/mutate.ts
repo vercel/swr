@@ -13,7 +13,7 @@ export const internalMutate = async <Data>(
   shouldRevalidate = true
 ) => {
   const [key, , keyErr] = serialize(_key)
-  if (!key) return UNDEFINED
+  if (!key) return
 
   const [, , MUTATION_TS, MUTATION_END_TS] = SWRGlobalState.get(
     cache
