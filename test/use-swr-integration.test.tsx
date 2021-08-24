@@ -59,13 +59,13 @@ describe('useSWR', () => {
     expect(fetch).not.toHaveBeenCalled()
   })
 
-  it('should call fetch function when revalidateOnMount is true even if initialData is set', async () => {
+  it('should call fetch function when revalidateOnMount is true even if fallbackData is set', async () => {
     const fetch = jest.fn(() => 'SWR')
 
     function Page() {
       const { data } = useSWR('revalidateOnMount', fetch, {
         revalidateOnMount: true,
-        initialData: 'gab'
+        fallbackData: 'gab'
       })
       return <div>hello, {data}</div>
     }
@@ -287,7 +287,7 @@ describe('useSWR', () => {
 
     function Page() {
       const { data } = useSWR('initial-data-1', fetcher, {
-        initialData: 'Initial'
+        fallbackData: 'Initial'
       })
       return <div>hello, {data}</div>
     }
@@ -298,13 +298,13 @@ describe('useSWR', () => {
     expect(fetcher).not.toBeCalled()
   })
 
-  it('should revalidate even if initialData is provided', async () => {
+  it('should revalidate even if fallbackData is provided', async () => {
     const fetcher = key => createResponse(key, { delay: 50 })
 
     function Page() {
       const [key, setKey] = useState('initial-data-with-initial-data')
       const { data } = useSWR(key, fetcher, {
-        initialData: 'Initial'
+        fallbackData: 'Initial'
       })
       return (
         <div onClick={() => setKey('initial-data-with-initial-data-update')}>
@@ -329,7 +329,7 @@ describe('useSWR', () => {
 
     // a request is still in flight
     await act(() => sleep(10))
-    // while validating, SWR returns the initialData
+    // while validating, SWR returns the fallbackData
     // https://github.com/vercel/swr/pull/961/files#r588928241
     screen.getByText('hello, Initial')
 

@@ -24,10 +24,10 @@ export interface PublicConfiguration<
   revalidateWhenStale: boolean
   shouldRetryOnError: boolean
   suspense?: boolean
-  initialData?: Data
+  fallbackData?: Data
   fetcher?: Fn
   use?: Middleware[]
-  fallbackValues: { [key: string]: any }
+  fallback: { [key: string]: any }
 
   isPaused: () => boolean
   onLoadingSlow: (

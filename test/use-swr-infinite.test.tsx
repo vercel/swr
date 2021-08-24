@@ -454,7 +454,7 @@ describe('useSWRInfinite', () => {
     screen.getByText('data:3')
   })
 
-  it('should re-use initialData', async () => {
+  it('should re-use fallbackData', async () => {
     const dummyResponses = {
       '/api?page=1': ['page-1-1', 'page-1-2'],
       '/api?page=2': ['page-2-1', 'page-2-2']
@@ -471,7 +471,7 @@ describe('useSWRInfinite', () => {
           return createResponse(dummyResponses[index])
         },
         {
-          initialData: [dummyResponses[`/api?page=1`]]
+          fallbackData: [dummyResponses[`/api?page=1`]]
         }
       )
 
@@ -488,7 +488,7 @@ describe('useSWRInfinite', () => {
     }
 
     render(<Page />)
-    // render with the initialData
+    // render with the fallbackData
     screen.getByText('data:page-1-1, page-1-2')
     expect(requests).toEqual([]) // should use the initial data
 

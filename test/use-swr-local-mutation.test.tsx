@@ -30,8 +30,8 @@ describe('useSWR - local mutation', () => {
   })
 
   it('should share local state when no fetcher is specified', async () => {
-    const useSharedState = (key, initialData) => {
-      const { data: state, mutate: setState } = useSWR(key, { initialData })
+    const useSharedState = (key, fallbackData) => {
+      const { data: state, mutate: setState } = useSWR(key, { fallbackData })
       return [state, setState]
     }
 
