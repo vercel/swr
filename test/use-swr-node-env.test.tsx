@@ -5,6 +5,7 @@
 import React from 'react'
 import { renderToString } from 'react-dom/server'
 import useSWR from '../src'
+import useSWRImmutable from '../immutable'
 import { createKey } from './utils'
 
 describe('useSWR', () => {
@@ -21,10 +22,9 @@ describe('useSWR', () => {
     expect(string).toContain('fallback')
   })
 
-  it('should not revalidate on server side', async () => {
-    let value = 0
+  it('should not revalidate useSWRImmutable on server side', async () => {
     const key = createKey()
-    const useData = () => useSWR(key, () => value++)
+    const useData = () => useSWRImmutable(key, k => k)
 
     function Page() {
       const { data } = useData()
