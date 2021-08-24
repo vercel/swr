@@ -231,23 +231,20 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
 
   // Use getter functions to avoid unnecessary re-renders caused by triggering
   // all the getters of the returned swr object.
-  return Object.defineProperties(
-    { size: resolvePageSize(), setSize, mutate },
-    {
-      error: {
-        get: () => swr.error,
-        enumerable: true
-      },
-      data: {
-        get: () => swr.data,
-        enumerable: true
-      },
-      isValidating: {
-        get: () => swr.isValidating,
-        enumerable: true
-      }
+  return {
+    size: resolvePageSize(),
+    setSize,
+    mutate,
+    get error() {
+      return swr.error
+    },
+    get data() {
+      return swr.data
+    },
+    get isValidating() {
+      return swr.isValidating
     }
-  ) as SWRInfiniteResponse<Data, Error>
+  } as SWRInfiniteResponse<Data, Error>
 }) as unknown) as Middleware
 
 type SWRInfiniteHook = <Data = any, Error = any>(

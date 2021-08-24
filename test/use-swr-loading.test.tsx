@@ -1,7 +1,7 @@
 import { act, render, screen } from '@testing-library/react'
 import React from 'react'
 import useSWR from 'swr'
-import { createResponse, sleep } from './utils'
+import { createResponse, createKey, sleep } from './utils'
 
 describe('useSWR - loading', () => {
   it('should return loading state', async () => {
@@ -68,5 +68,24 @@ describe('useSWR - loading', () => {
     // it doesn't re-render, but fetch was triggered
     expect(renderCount).toEqual(1)
     expect(dataLoaded).toEqual(true)
+  })
+
+  it('should return enumberable object', async () => {
+    // If the returned object is enumberable, we can use the spread operator
+    // to deconstruct all the keys.
+
+    function Page() {
+      const swr = useSWR(createKey())
+      return (
+        <div>
+          {Object.keys({ ...swr })
+            .sort()
+            .join(',')}
+        </div>
+      )
+    }
+
+    render(<Page />)
+    screen.getByText('data,error,isValidating,mutate')
   })
 })
