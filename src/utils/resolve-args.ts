@@ -22,12 +22,12 @@ export default function withArgs<SWRType>(hook: any) {
     // Merge configurations.
     const config = mergeConfigs(fallbackConfig, _config)
 
-    // Apply middlewares.
+    // Apply middleware
     let next = hook
-    const { middlewares } = config
-    if (middlewares) {
-      for (let i = middlewares.length; i-- > 0; ) {
-        next = middlewares[i](next)
+    const { use } = config
+    if (use) {
+      for (let i = use.length; i-- > 0; ) {
+        next = use[i](next)
       }
     }
 

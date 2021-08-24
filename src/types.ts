@@ -26,7 +26,7 @@ export interface PublicConfiguration<
   suspense?: boolean
   initialData?: Data
   fetcher?: Fn
-  middlewares?: Middleware[]
+  use?: Middleware[]
   fallbackValues: { [key: string]: any }
 
   isPaused: () => boolean
