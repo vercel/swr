@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import React, { useState } from 'react'
 import useSWR, { useSWRConfig, SWRConfig, mutate as globalMutate } from 'swr'
-import { sleep, createKey, nextTick, focusOn } from './utils'
+import { sleep, createKey, createResponse, nextTick, focusOn } from './utils'
 
 describe('useSWR - cache provider', () => {
   let provider
@@ -43,8 +43,7 @@ describe('useSWR - cache provider', () => {
   it('should be able to read from the initial cache with updates', async () => {
     const key = createKey()
     const renderedValues = []
-    const fetcher = () =>
-      new Promise(res => setTimeout(res, 100, 'updated value'))
+    const fetcher = () => createResponse('updated value', { delay: 10 })
 
     function Page() {
       const { data } = useSWR(key, fetcher)
@@ -352,22 +351,21 @@ describe('useSWR - cache provider', () => {
   })
 
   it('should return the cache instance from the useSWRConfig', async () => {
-    const cache = new Map()
-    let cache2
+    let cache
     function Foo() {
-      cache2 = useSWRConfig().cache
+      cache = useSWRConfig().cache
       return null
     }
     function Page() {
       return (
-        <SWRConfig value={{ provider: () => cache }}>
+        <SWRConfig value={{ provider: () => provider }}>
           <Foo />
         </SWRConfig>
       )
     }
 
     render(<Page />)
-    expect(cache).toBe(cache2)
+    expect(provider).toBe(cache)
   })
 
   it('should retain the correct cache hierarchy', async () => {
@@ -404,7 +402,27 @@ describe('useSWR - cache provider', () => {
     await screen.findByText('data,data,data')
   })
 
-  it('should clear cache between tests', async () => {
-    expect(provider.size).toBe(0)
+  it('should not recreate the cache if rerendering', async () => {
+    const createCacheProvider = jest.fn()
+    let rerender
+
+    function Page() {
+      rerender = useState({})[1]
+      return (
+        <SWRConfig
+          value={{
+            provider: () => {
+              createCacheProvider()
+              return provider
+            }
+          }}
+        />
+      )
+    }
+
+    render(<Page />)
+    expect(createCacheProvider).toBeCalledTimes(1)
+    act(() => rerender({}))
+    expect(createCacheProvider).toBeCalledTimes(1)
   })
 })
