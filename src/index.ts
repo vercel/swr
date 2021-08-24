@@ -1,9 +1,11 @@
-// Core APIs
-export { SWRConfig, mutate, createCache, unstable_serialize } from './use-swr'
-
 // useSWR
 import useSWR from './use-swr'
 export default useSWR
+
+// Core APIs
+export { SWRConfig, unstable_serialize } from './use-swr'
+export { useSWRConfig } from './utils/use-swr-config'
+export { mutate } from './utils/config'
 
 // Types
 export {

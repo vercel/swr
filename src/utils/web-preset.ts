@@ -1,4 +1,4 @@
-import { ProviderOptions } from '../types'
+import { ConfigOptions } from '../types'
 import { isUndefined, noop } from './helper'
 
 /**
@@ -27,13 +27,13 @@ const isVisible = () => {
   return true
 }
 
-const setupOnFocus = (cb: () => void) => {
+const initFocus = (cb: () => void) => {
   // focus revalidate
   onDocumentEvent('visibilitychange', cb)
   onWindowEvent('focus', cb)
 }
 
-const setupOnReconnect = (cb: () => void) => {
+const initReconnect = (cb: () => void) => {
   // reconnect revalidate
   onWindowEvent('online', () => {
     online = true
@@ -50,7 +50,7 @@ export const preset = {
   isVisible
 } as const
 
-export const provider: ProviderOptions = {
-  setupOnFocus,
-  setupOnReconnect
+export const defaultConfigOptions: ConfigOptions = {
+  initFocus,
+  initReconnect
 }

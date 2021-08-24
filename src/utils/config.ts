@@ -1,16 +1,23 @@
 import { dequal } from 'dequal/lite'
 
-import { wrapCache } from './cache'
+import { initCache } from './cache'
 import { preset } from './web-preset'
 import { slowConnection } from './env'
-import { Configuration, RevalidatorOptions, Revalidator } from '../types'
-import { UNDEFINED, noop } from './helper'
+import {
+  PublicConfiguration,
+  FullConfiguration,
+  RevalidatorOptions,
+  Revalidator,
+  ScopedMutator,
+  Cache
+} from '../types'
+import { isUndefined, noop, mergeObjects } from './helper'
 
 // error retry
 function onErrorRetry(
   _: unknown,
   __: string,
-  config: Readonly<Configuration>,
+  config: Readonly<PublicConfiguration>,
   revalidate: Revalidator,
   opts: Required<RevalidatorOptions>
 ): void {
@@ -29,40 +36,45 @@ function onErrorRetry(
       (1 << (currentRetryCount < 8 ? currentRetryCount : 8))
     ) * config.errorRetryInterval
 
-  if (maxRetryCount !== UNDEFINED && currentRetryCount > maxRetryCount) {
+  if (!isUndefined(maxRetryCount) && currentRetryCount > maxRetryCount) {
     return
   }
 
   setTimeout(revalidate, timeout, opts)
 }
 
+// Default cache provider
+const [cache, mutate] = initCache(new Map()) as [Cache<any>, ScopedMutator<any>]
+export { cache, mutate }
+
 // Default config
-const defaultConfig: Configuration = {
-  // events
-  onLoadingSlow: noop,
-  onSuccess: noop,
-  onError: noop,
-  onErrorRetry,
+export const defaultConfig: FullConfiguration = mergeObjects(
+  {
+    // events
+    onLoadingSlow: noop,
+    onSuccess: noop,
+    onError: noop,
+    onErrorRetry,
 
-  // switches
-  revalidateOnFocus: true,
-  revalidateOnReconnect: true,
-  revalidateWhenStale: true,
-  shouldRetryOnError: true,
+    // switches
+    revalidateOnFocus: true,
+    revalidateOnReconnect: true,
+    revalidateWhenStale: true,
+    shouldRetryOnError: true,
 
-  // timeouts
-  errorRetryInterval: slowConnection ? 10000 : 5000,
-  focusThrottleInterval: 5 * 1000,
-  dedupingInterval: 2 * 1000,
-  loadingTimeout: slowConnection ? 5000 : 3000,
+    // timeouts
+    errorRetryInterval: slowConnection ? 10000 : 5000,
+    focusThrottleInterval: 5 * 1000,
+    dedupingInterval: 2 * 1000,
+    loadingTimeout: slowConnection ? 5000 : 3000,
 
-  // providers
-  compare: dequal,
-  isPaused: () => false,
-  cache: wrapCache(new Map()),
-
+    // providers
+    compare: dequal,
+    isPaused: () => false,
+    cache,
+    mutate,
+    fallbackValues: {}
+  },
   // use web preset by default
-  ...preset
-} as const
-
-export default defaultConfig
+  preset
+)

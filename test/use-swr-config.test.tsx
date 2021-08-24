@@ -1,6 +1,6 @@
 import { act, render, screen, fireEvent } from '@testing-library/react'
 import React, { useEffect, useState } from 'react'
-import useSWR, { mutate, SWRConfig } from 'swr'
+import useSWR, { mutate, SWRConfig, useSWRConfig, Middleware } from 'swr'
 import { sleep } from './utils'
 
 describe('useSWR - configs', () => {
@@ -91,5 +91,57 @@ describe('useSWR - configs', () => {
 
   it('should expose default config as static property on SWRConfig', () => {
     expect(SWRConfig.default).toBeDefined()
+  })
+
+  it('should expose the default config from useSWRConfig', () => {
+    let config
+
+    function Page() {
+      config = useSWRConfig()
+      return null
+    }
+
+    render(<Page />)
+    expect(SWRConfig.default).toEqual(config)
+  })
+
+  it('should expose the correctly extended config from useSWRConfig', () => {
+    let config
+
+    function Page() {
+      config = useSWRConfig()
+      return null
+    }
+
+    const middleware1: Middleware = useSWRNext => (k, f, c) =>
+      useSWRNext(k, f, c)
+    const middleware2: Middleware = useSWRNext => (k, f, c) =>
+      useSWRNext(k, f, c)
+
+    render(
+      <SWRConfig
+        value={{
+          dedupingInterval: 1,
+          refreshInterval: 1,
+          fallbackValues: { a: 1, b: 1 },
+          middlewares: [middleware1]
+        }}
+      >
+        <SWRConfig
+          value={{
+            dedupingInterval: 2,
+            fallbackValues: { a: 2, c: 2 },
+            middlewares: [middleware2]
+          }}
+        >
+          <Page />
+        </SWRConfig>
+      </SWRConfig>
+    )
+
+    expect(config.dedupingInterval).toEqual(2)
+    expect(config.refreshInterval).toEqual(1)
+    expect(config.fallbackValues).toEqual({ a: 2, b: 1, c: 2 })
+    expect(config.middlewares).toEqual([middleware1, middleware2])
   })
 })

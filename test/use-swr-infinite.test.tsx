@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { render, fireEvent, act, screen } from '@testing-library/react'
-import { mutate, createCache, SWRConfig } from 'swr'
+import { mutate, useSWRConfig, SWRConfig } from 'swr'
 import useSWRInfinite, { unstable_serialize } from 'swr/infinite'
 import { sleep, createKey, createResponse } from './utils'
 
@@ -642,21 +642,28 @@ describe('useSWRInfinite', () => {
 
   it('should be able to use `unstable_serialize` with a custom cache', async () => {
     const key = 'page-test-14;'
-    const customCache1 = new Map([[key, 'initial-cache']])
-    const { cache, mutate: mutateCustomCache } = createCache(customCache1)
+
+    let mutateCustomCache
+
     function Page() {
+      mutateCustomCache = useSWRConfig().mutate
       const { data } = useSWRInfinite<string, string>(
         () => key,
         () => createResponse('response data')
       )
       return <div>data:{data}</div>
     }
+    function App() {
+      return (
+        <SWRConfig
+          value={{ provider: () => new Map([[key, 'initial-cache']]) }}
+        >
+          <Page />
+        </SWRConfig>
+      )
+    }
 
-    render(
-      <SWRConfig value={{ cache }}>
-        <Page />
-      </SWRConfig>
-    )
+    render(<App />)
     screen.getByText('data:')
 
     await screen.findByText('data:initial-cache')
@@ -731,8 +738,6 @@ describe('useSWRInfinite', () => {
 
   it('should reuse cached value for new pages', async () => {
     const key = createKey()
-    const customCache = new Map([[key + '-1', 'cached value']])
-    const { cache } = createCache(customCache)
 
     function Page() {
       const { data, setSize } = useSWRInfinite<string, string>(
@@ -745,7 +750,9 @@ describe('useSWRInfinite', () => {
     }
 
     render(
-      <SWRConfig value={{ cache }}>
+      <SWRConfig
+        value={{ provider: () => new Map([[key + '-1', 'cached value']]) }}
+      >
         <Page />
       </SWRConfig>
     )
@@ -760,9 +767,6 @@ describe('useSWRInfinite', () => {
     const key = createKey()
     const getData = jest.fn(v => v)
 
-    const customCache = new Map([[key + '-1', 'cached value']])
-    const { cache } = createCache(customCache)
-
     function Page() {
       const { data, setSize } = useSWRInfinite<string, string>(
         index => key + '-' + index,
@@ -772,9 +776,10 @@ describe('useSWRInfinite', () => {
         <div onClick={() => setSize(2)}>data:{data ? data.join(',') : ''}</div>
       )
     }
-
     render(
-      <SWRConfig value={{ cache }}>
+      <SWRConfig
+        value={{ provider: () => new Map([[key + '-1', 'cached value']]) }}
+      >
         <Page />
       </SWRConfig>
     )
