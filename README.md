@@ -18,27 +18,29 @@
 
 ## Introduction
 
-[swr.vercel.app](https://swr.vercel.app)
+Check out [**SWR docs**](https://swr.vercel.app) for the full documentation and examples!
 
 SWR is a React Hooks library for data fetching.
 
 The name “**SWR**” is derived from `stale-while-revalidate`, a cache invalidation strategy popularized by [HTTP RFC 5861](https://tools.ietf.org/html/rfc5861).
-**SWR** first returns the data from cache (stale), then sends the fetch request (revalidate), and finally comes with the up-to-date data again.
+**SWR** first returns the data from cache (stale), then sends the request (revalidate), and finally comes with the up-to-date data again.
 
-With just one single line of code, you can simplify the logic of data fetching in your project, and also have all these amazing features out-of-the-box:
+With just one hook, you can significantly simplify the data fetching logic in your project. And it also covered in all aspects of speed, correctness, and stability to help you build better experiences:
 
+- **Fast**, **lightweight** and **reusable** data fetching
 - Transport and protocol agnostic
-- Fast, lightweight and reusable
-- Built-in cache and request deduplication
-- Built-in error retry
-- Revalidation on focus and network recovery
+- Built-in **cache** and request deduplication
+- **Real-time** experience
+- Revalidation on focus
+- Revalidation on network recovery
+- Polling
 - Pagination and scroll position recovery
+- SSR and SSG
 - Local mutation (Optimistic UI)
-- Polling support
-- SSR support
-- Suspense mode
-- React Native ready
-- TypeScript ready
+- Built-in smart error retry
+- TypeScript
+- React Suspense
+- React Native
 
 ...and a lot more.
 
@@ -75,12 +77,16 @@ library to handle that part.
 
 ## Authors
 
+This library is created by the team behind [Next.js](https://nextjs.org), with contributions from our community:
+
 - Shu Ding ([@shuding\_](https://twitter.com/shuding_)) – [Vercel](https://vercel.com)
 - Guillermo Rauch ([@rauchg](https://twitter.com/rauchg)) – [Vercel](https://vercel.com)
 - Joe Haddad ([@timer150](https://twitter.com/timer150)) - [Vercel](https://vercel.com)
 - Paco Coursey ([@pacocoursey](https://twitter.com/pacocoursey)) - [Vercel](https://vercel.com)
 
-Thanks to Ryan Chen for donating the `swr` npm package!
+[Contributors](https://github.com/vercel/swr/graphs/contributors)
+
+Thanks to Ryan Chen for providing the awesome `swr` npm package name!
 
 <br/>
 
