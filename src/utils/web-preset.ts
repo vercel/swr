@@ -12,12 +12,11 @@ let online = true
 const isOnline = () => online
 const hasWindow = typeof window !== 'undefined'
 const hasDocument = typeof document !== 'undefined'
-const ADD_EVENT_LISTENER = 'addEventListener'
 
 // For node and React Native, `add/removeEventListener` doesn't exist on window.
 const onWindowEvent =
-  hasWindow && window[ADD_EVENT_LISTENER] ? window[ADD_EVENT_LISTENER] : noop
-const onDocumentEvent = hasDocument ? document[ADD_EVENT_LISTENER] : noop
+  hasWindow && window.addEventListener ? window.addEventListener : noop
+const onDocumentEvent = hasDocument ? document.addEventListener : noop
 
 const isVisible = () => {
   const visibilityState = hasDocument && document.visibilityState

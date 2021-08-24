@@ -38,7 +38,6 @@ export const useSWRHandler = <Data = any, Error = any>(
     fallbackData,
     suspense,
     revalidateOnMount,
-    revalidateWhenStale,
     refreshInterval,
     refreshWhenHidden,
     refreshWhenOffline
@@ -89,7 +88,7 @@ export const useSWRHandler = <Data = any, Error = any>(
 
     return suspense
       ? !initialMountedRef.current && !isUndefined(data)
-      : isUndefined(data) || revalidateWhenStale
+      : isUndefined(data) || config.revalidateWhenStale
   }
 
   // Resolve the current validating state.
@@ -122,8 +121,8 @@ export const useSWRHandler = <Data = any, Error = any>(
       let newData: Data
       let startAt: number
       let loading = true
-      const { retryCount, dedupe } = revalidateOpts || {}
-      const shouldDedupe = !isUndefined(CONCURRENT_PROMISES[key]) && dedupe
+      const opts = revalidateOpts || {}
+      const shouldDedupe = !isUndefined(CONCURRENT_PROMISES[key]) && opts.dedupe
 
       // Do unmount check for callbacks:
       // If key has changed during the revalidation, or the component has been
@@ -282,7 +281,7 @@ export const useSWRHandler = <Data = any, Error = any>(
           if (config.shouldRetryOnError) {
             // When retrying, dedupe is always enabled
             configRef.current.onErrorRetry(err, key, config, revalidate, {
-              retryCount: (retryCount || 0) + 1,
+              retryCount: (opts.retryCount || 0) + 1,
               dedupe: true
             })
           }
@@ -467,34 +466,21 @@ export const useSWRHandler = <Data = any, Error = any>(
     throw isUndefined(error) ? revalidate(WITH_DEDUPE) : error
   }
 
-  return Object.defineProperties(
-    {
-      mutate: boundMutate
+  return {
+    mutate: boundMutate,
+    get data() {
+      stateDependencies.data = true
+      return data
     },
-    {
-      data: {
-        get: function() {
-          stateDependencies.data = true
-          return data
-        },
-        enumerable: true
-      },
-      error: {
-        get: function() {
-          stateDependencies.error = true
-          return error
-        },
-        enumerable: true
-      },
-      isValidating: {
-        get: function() {
-          stateDependencies.isValidating = true
-          return isValidating
-        },
-        enumerable: true
-      }
+    get error() {
+      stateDependencies.error = true
+      return error
+    },
+    get isValidating() {
+      stateDependencies.isValidating = true
+      return isValidating
     }
-  ) as SWRResponse<Data, Error>
+  } as SWRResponse<Data, Error>
 }
 
 export const SWRConfig = Object.defineProperty(ConfigProvider, 'default', {
