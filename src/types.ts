@@ -1,5 +1,12 @@
 export type Fetcher<Data> = (...args: any) => Data | Promise<Data>
-export interface Configuration<
+
+// Configuration types that are only used internally, not exposed to the user.
+export interface InternalConfiguration {
+  cache: Cache
+  mutate: ScopedMutator
+}
+
+export interface PublicConfiguration<
   Data = any,
   Error = any,
   Fn extends Fetcher<Data> = Fetcher<Data>
@@ -17,30 +24,30 @@ export interface Configuration<
   revalidateWhenStale: boolean
   shouldRetryOnError: boolean
   suspense?: boolean
-  initialData?: Data
+  fallbackData?: Data
   fetcher?: Fn
-  cache: Cache
-  middlewares?: Middleware[]
+  use?: Middleware[]
+  fallback: { [key: string]: any }
 
   isPaused: () => boolean
   onLoadingSlow: (
     key: string,
-    config: Readonly<Configuration<Data, Error>>
+    config: Readonly<PublicConfiguration<Data, Error>>
   ) => void
   onSuccess: (
     data: Data,
     key: string,
-    config: Readonly<Configuration<Data, Error>>
+    config: Readonly<PublicConfiguration<Data, Error>>
   ) => void
   onError: (
     err: Error,
     key: string,
-    config: Readonly<Configuration<Data, Error>>
+    config: Readonly<PublicConfiguration<Data, Error>>
   ) => void
   onErrorRetry: (
     err: Error,
     key: string,
-    config: Readonly<Configuration<Data, Error>>,
+    config: Readonly<PublicConfiguration<Data, Error>>,
     revalidate: Revalidator,
     revalidateOpts: Required<RevalidatorOptions>
   ) => void
@@ -56,9 +63,11 @@ export interface Configuration<
   revalidateOnMount?: boolean
 }
 
-export type ProviderOptions = {
-  setupOnFocus: (cb: () => void) => void
-  setupOnReconnect: (cb: () => void) => void
+export type FullConfiguration = InternalConfiguration & PublicConfiguration
+
+export type ConfigOptions = {
+  initFocus: (callback: () => void) => void
+  initReconnect: (callback: () => void) => void
 }
 
 export type SWRHook = <Data = any, Error = any>(
@@ -84,20 +93,12 @@ export type Middleware = (useSWRNext: SWRHook) => SWRHookWithMiddleware
 
 export type ValueKey = string | any[] | null
 
-export type Updater<Data = any, Error = any> = (
-  shouldRevalidate?: boolean,
-  data?: Data,
-  error?: Error,
-  shouldDedupe?: boolean,
-  dedupe?: boolean
-) => boolean | Promise<boolean>
-
 export type MutatorCallback<Data = any> = (
-  currentValue: undefined | Data
+  currentValue?: Data
 ) => Promise<undefined | Data> | undefined | Data
 
 export type Broadcaster<Data = any, Error = any> = (
-  cache: Cache,
+  cache: Cache<Data>,
   key: string,
   data: Data,
   error?: Error,
@@ -144,17 +145,13 @@ export type SWRConfiguration<
   Data = any,
   Error = any,
   Fn extends Fetcher<Data> = Fetcher<Data>
-> = Partial<Configuration<Data, Error, Fn>>
+> = Partial<PublicConfiguration<Data, Error, Fn>>
 
 export type Key = ValueKey | (() => ValueKey)
 
 export interface SWRResponse<Data, Error> {
   data?: Data
   error?: Error
-  /**
-   * @deprecated `revalidate` is deprecated, please use `mutate()` for the same purpose.
-   */
-  revalidate: () => Promise<boolean>
   mutate: KeyedMutator<Data>
   isValidating: boolean
 }
@@ -170,6 +167,27 @@ export interface RevalidatorOptions {
 export type Revalidator = (
   revalidateOpts?: RevalidatorOptions
 ) => Promise<boolean> | void
+
+export const enum RevalidateEvent {
+  FOCUS_EVENT = 0,
+  RECONNECT_EVENT = 1,
+  MUTATE_EVENT = 2
+}
+
+type RevalidateCallbackReturnType = {
+  [RevalidateEvent.FOCUS_EVENT]: void
+  [RevalidateEvent.RECONNECT_EVENT]: void
+  [RevalidateEvent.MUTATE_EVENT]: Promise<boolean>
+}
+export type RevalidateCallback = <K extends RevalidateEvent>(
+  type: K
+) => RevalidateCallbackReturnType[K]
+
+export type StateUpdateCallback<Data = any, Error = any> = (
+  data?: Data,
+  error?: Error,
+  isValidating?: boolean
+) => void
 
 export interface Cache<Data = any> {
   get(key: Key): Data | null | undefined

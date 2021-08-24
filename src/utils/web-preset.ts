@@ -1,4 +1,4 @@
-import { ProviderOptions } from '../types'
+import { ConfigOptions } from '../types'
 import { isUndefined, noop } from './helper'
 
 /**
@@ -12,12 +12,11 @@ let online = true
 const isOnline = () => online
 const hasWindow = typeof window !== 'undefined'
 const hasDocument = typeof document !== 'undefined'
-const ADD_EVENT_LISTENER = 'addEventListener'
 
 // For node and React Native, `add/removeEventListener` doesn't exist on window.
 const onWindowEvent =
-  hasWindow && window[ADD_EVENT_LISTENER] ? window[ADD_EVENT_LISTENER] : noop
-const onDocumentEvent = hasDocument ? document[ADD_EVENT_LISTENER] : noop
+  hasWindow && window.addEventListener ? window.addEventListener : noop
+const onDocumentEvent = hasDocument ? document.addEventListener : noop
 
 const isVisible = () => {
   const visibilityState = hasDocument && document.visibilityState
@@ -27,13 +26,13 @@ const isVisible = () => {
   return true
 }
 
-const setupOnFocus = (cb: () => void) => {
+const initFocus = (cb: () => void) => {
   // focus revalidate
   onDocumentEvent('visibilitychange', cb)
   onWindowEvent('focus', cb)
 }
 
-const setupOnReconnect = (cb: () => void) => {
+const initReconnect = (cb: () => void) => {
   // reconnect revalidate
   onWindowEvent('online', () => {
     online = true
@@ -50,7 +49,7 @@ export const preset = {
   isVisible
 } as const
 
-export const provider: ProviderOptions = {
-  setupOnFocus,
-  setupOnReconnect
+export const defaultConfigOptions: ConfigOptions = {
+  initFocus,
+  initReconnect
 }

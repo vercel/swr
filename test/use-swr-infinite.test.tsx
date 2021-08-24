@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { render, fireEvent, act, screen } from '@testing-library/react'
-import { mutate, createCache, SWRConfig } from 'swr'
-import useSWRInfinite, { getInfiniteKey } from 'swr/infinite'
+import { mutate, useSWRConfig, SWRConfig } from 'swr'
+import useSWRInfinite, { unstable_serialize } from 'swr/infinite'
 import { sleep, createKey, createResponse } from './utils'
 
 describe('useSWRInfinite', () => {
@@ -454,7 +454,7 @@ describe('useSWRInfinite', () => {
     screen.getByText('data:3')
   })
 
-  it('should re-use initialData', async () => {
+  it('should re-use fallbackData', async () => {
     const dummyResponses = {
       '/api?page=1': ['page-1-1', 'page-1-2'],
       '/api?page=2': ['page-2-1', 'page-2-2']
@@ -471,7 +471,7 @@ describe('useSWRInfinite', () => {
           return createResponse(dummyResponses[index])
         },
         {
-          initialData: [dummyResponses[`/api?page=1`]]
+          fallbackData: [dummyResponses[`/api?page=1`]]
         }
       )
 
@@ -488,7 +488,7 @@ describe('useSWRInfinite', () => {
     }
 
     render(<Page />)
-    // render with the initialData
+    // render with the fallbackData
     screen.getByText('data:page-1-1, page-1-2')
     expect(requests).toEqual([]) // should use the initial data
 
@@ -581,7 +581,7 @@ describe('useSWRInfinite', () => {
     await screen.findByText('data:')
   })
 
-  it('should mutate a cache with getInfiniteKey', async () => {
+  it('should mutate a cache with `unstable_serialize`', async () => {
     let count = 0
     function Page() {
       const { data } = useSWRInfinite<string, string>(
@@ -596,12 +596,14 @@ describe('useSWRInfinite', () => {
 
     await screen.findByText('data:page-test-12-0:1')
 
-    await act(() => mutate(getInfiniteKey(index => `page-test-12-${index}`)))
+    await act(() =>
+      mutate(unstable_serialize(index => `page-test-12-${index}`))
+    )
     await screen.findByText('data:page-test-12-0:2')
 
     await act(() =>
       mutate(
-        getInfiniteKey(index => `page-test-12-${index}`),
+        unstable_serialize(index => `page-test-12-${index}`),
         'local-mutation',
         false
       )
@@ -609,7 +611,7 @@ describe('useSWRInfinite', () => {
     await screen.findByText('data:local-mutation')
   })
 
-  it('should mutate a cache with getInfiniteKey based on a current data', async () => {
+  it('should mutate a cache with `unstable_serialize` based on a current data', async () => {
     const getKey = index => [`pagetest-13`, index]
     function Comp() {
       const { data, size, setSize } = useSWRInfinite<string, string>(
@@ -630,7 +632,7 @@ describe('useSWRInfinite', () => {
 
     await act(() =>
       mutate(
-        getInfiniteKey(getKey),
+        unstable_serialize(getKey),
         data => data.map(value => `(edited)${value}`),
         false
       )
@@ -638,32 +640,39 @@ describe('useSWRInfinite', () => {
     await screen.findByText('data:(edited)page 0, (edited)page 1,')
   })
 
-  it('should be able to use getInfiniteKey with a custom cache', async () => {
+  it('should be able to use `unstable_serialize` with a custom cache', async () => {
     const key = 'page-test-14;'
-    const customCache1 = new Map([[key, 'initial-cache']])
-    const { cache, mutate: mutateCustomCache } = createCache(customCache1)
+
+    let mutateCustomCache
+
     function Page() {
+      mutateCustomCache = useSWRConfig().mutate
       const { data } = useSWRInfinite<string, string>(
         () => key,
         () => createResponse('response data')
       )
       return <div>data:{data}</div>
     }
+    function App() {
+      return (
+        <SWRConfig
+          value={{ provider: () => new Map([[key, 'initial-cache']]) }}
+        >
+          <Page />
+        </SWRConfig>
+      )
+    }
 
-    render(
-      <SWRConfig value={{ cache }}>
-        <Page />
-      </SWRConfig>
-    )
+    render(<App />)
     screen.getByText('data:')
 
     await screen.findByText('data:initial-cache')
 
-    await act(() => mutateCustomCache(getInfiniteKey(() => key)))
+    await act(() => mutateCustomCache(unstable_serialize(() => key)))
     await screen.findByText('data:response data')
 
     await act(() =>
-      mutateCustomCache(getInfiniteKey(() => key), 'local-mutation', false)
+      mutateCustomCache(unstable_serialize(() => key), 'local-mutation', false)
     )
     await screen.findByText('data:local-mutation')
   })
@@ -725,5 +734,95 @@ describe('useSWRInfinite', () => {
     fireEvent.click(screen.getByText('mutate'))
     await act(() => sleep(1))
     expect(renderedData).toEqual(['new'])
+  })
+
+  it('should reuse cached value for new pages', async () => {
+    const key = createKey()
+
+    function Page() {
+      const { data, setSize } = useSWRInfinite<string, string>(
+        index => key + '-' + index,
+        () => createResponse('response value')
+      )
+      return (
+        <div onClick={() => setSize(2)}>data:{data ? data.join(',') : ''}</div>
+      )
+    }
+
+    render(
+      <SWRConfig
+        value={{ provider: () => new Map([[key + '-1', 'cached value']]) }}
+      >
+        <Page />
+      </SWRConfig>
+    )
+
+    screen.getByText('data:')
+    await screen.findByText('data:response value')
+    fireEvent.click(screen.getByText('data:response value'))
+    await screen.findByText('data:response value,cached value')
+  })
+
+  it('should return cached value ASAP when updating size and revalidate in the background', async () => {
+    const key = createKey()
+    const getData = jest.fn(v => v)
+
+    function Page() {
+      const { data, setSize } = useSWRInfinite<string, string>(
+        index => key + '-' + index,
+        () => sleep(30).then(() => getData('response value'))
+      )
+      return (
+        <div onClick={() => setSize(2)}>data:{data ? data.join(',') : ''}</div>
+      )
+    }
+    render(
+      <SWRConfig
+        value={{ provider: () => new Map([[key + '-1', 'cached value']]) }}
+      >
+        <Page />
+      </SWRConfig>
+    )
+
+    screen.getByText('data:')
+    await screen.findByText('data:response value')
+    expect(getData).toHaveBeenCalledTimes(1)
+
+    fireEvent.click(screen.getByText('data:response value'))
+
+    // Returned directly from the cache without blocking
+    await screen.findByText('data:response value,cached value')
+    expect(getData).toHaveBeenCalledTimes(1)
+
+    // Revalidate
+    await act(() => sleep(30))
+    expect(getData).toHaveBeenCalledTimes(2)
+  })
+
+  it('should block on fetching new uncached pages when updating size', async () => {
+    const key = createKey()
+    const getData = jest.fn(v => v)
+
+    function Page() {
+      const { data, setSize } = useSWRInfinite<string, string>(
+        index => key + '-' + index,
+        () => sleep(30).then(() => getData('response value'))
+      )
+      return (
+        <div onClick={() => setSize(2)}>data:{data ? data.join(',') : ''}</div>
+      )
+    }
+
+    render(<Page />)
+
+    screen.getByText('data:')
+    await screen.findByText('data:response value')
+    expect(getData).toHaveBeenCalledTimes(1)
+
+    fireEvent.click(screen.getByText('data:response value'))
+
+    // Fetch new page and revalidate the first page.
+    await screen.findByText('data:response value,response value')
+    expect(getData).toHaveBeenCalledTimes(3)
   })
 })

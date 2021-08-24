@@ -1,6 +1,6 @@
 {
   "name": "swr",
-  "version": "1.0.0-beta.9",
+  "version": "1.0.0-beta.12",
   "description": "React Hooks library for remote data fetching",
   "main": "./dist/index.js",
   "module": "./dist/index.esm.js",
@@ -35,9 +35,9 @@
   "homepage": "https://swr.vercel.app",
   "license": "MIT",
   "scripts": {
-    "clean": "rm -rf dist infinite/dist immutable/dist",
+    "clean": "rimraf dist infinite/dist immutable/dist",
     "build": "yarn build:core && yarn build:infinite && yarn build:immutable",
-    "watch": "concurrently \"yarn watch:core\" \"yarn watch:infinite\" \"yarn watch:immutable\"",
+    "watch": "yarn run-p watch:core watch:infinite watch:immutable",
     "watch:core": "bunchee src/index.ts --watch",
     "watch:infinite": "bunchee index.ts --cwd infinite --watch",
     "watch:immutable": "bunchee index.ts --cwd immutable --watch",
@@ -45,26 +45,25 @@
     "build:infinite": "bunchee index.ts --cwd infinite -m --no-sourcemap",
     "build:immutable": "bunchee index.ts --cwd immutable -m --no-sourcemap",
     "prepublishOnly": "yarn clean && yarn build",
+    "publish-beta": "yarn publish --tag beta",
     "types:check": "tsc --noEmit",
-    "format": "prettier --write \"{src,infinite,immutable,test,examples}/**/*.{ts,tsx}\"",
-    "lint": "eslint \"{src,infinite,immutable,test,examples}/**/*.{ts,tsx}\"",
-    "lint:fix": "eslint \"{src,infinite,immutable,test,examples}/**/*.{ts,tsx}\" --fix",
+    "format": "prettier --write ./**/*.{ts,tsx}",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "yarn lint --fix",
     "test": "jest",
     "register": "yarn link && cd node_modules/react && yarn link",
-    "prepare:vite": "git clone https://github.com/promer94/vite-swr playground/vite-swr && cd playground/vite-swr && yarn && yarn link react && yarn link swr",
-    "prepare:next": "git clone https://github.com/promer94/next-swr playground/next-swr && cd playground/next-swr && yarn && yarn link react && yarn link swr",
-    "dev:vite": "concurrently \"yarn watch\" \"cd playground/vite-swr && yarn dev\"",
-    "dev:next": "concurrently \"yarn watch\" \"cd playground/next-swr && yarn dev\""
+    "dev-next": "node scripts/dev-next.js"
   },
   "husky": {
     "hooks": {
-      "pre-commit": "yarn types:check && lint-staged"
+      "pre-commit": "lint-staged",
+      "pre-push": "yarn types:check"
     }
   },
   "lint-staged": {
     "*.{ts,tsx}": [
-      "yarn lint:fix",
-      "yarn format",
+      "eslint --fix",
+      "prettier --write",
       "git add"
     ]
   },
@@ -76,8 +75,7 @@
     "@types/react": "16.9.11",
     "@typescript-eslint/eslint-plugin": "4.24.0",
     "@typescript-eslint/parser": "4.24.0",
-    "bunchee": "1.7.0",
-    "concurrently": "6.0.0",
+    "bunchee": "1.7.1",
     "eslint": "6.6.0",
     "eslint-config-prettier": "6.5.0",
     "eslint-plugin-jest-dom": "3.6.5",
@@ -87,11 +85,13 @@
     "husky": "2.4.1",
     "jest": "27.0.6",
     "lint-staged": "8.2.1",
+    "npm-run-all": "4.1.5",
     "prettier": "1.18.2",
     "react": "17.0.1",
     "react-dom": "17.0.1",
     "react-dom-experimental": "npm:react-dom@alpha",
     "react-experimental": "npm:react@alpha",
+    "rimraf": "3.0.2",
     "ts-jest": "27.0.3",
     "typescript": "3.9.10"
   },

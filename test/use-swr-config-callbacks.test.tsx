@@ -9,13 +9,13 @@ describe('useSWR - config callbacks', () => {
     let count = 0
 
     function Page(props: { text: string }) {
-      const { data, revalidate } = useSWR(
+      const { data, mutate } = useSWR(
         'config callbacks - onSuccess',
         () => createResponse(count++),
         { onSuccess: () => (state = props.text) }
       )
       return (
-        <div onClick={revalidate}>
+        <div onClick={() => mutate()}>
           hello, {data}, {props.text}
         </div>
       )
@@ -46,19 +46,19 @@ describe('useSWR - config callbacks', () => {
     let count = 0
 
     function Page(props: { text: string }) {
-      const { data, revalidate, error } = useSWR(
+      const { data, mutate, error } = useSWR(
         'config callbacks - onError',
         () => createResponse(new Error(`Error: ${count++}`)),
         { onError: () => (state = props.text) }
       )
       if (error)
         return (
-          <div title={props.text} onClick={revalidate}>
+          <div title={props.text} onClick={() => mutate()}>
             {error.message}
           </div>
         )
       return (
-        <div onClick={revalidate}>
+        <div onClick={() => mutate()}>
           hello, {data}, {props.text}
         </div>
       )
