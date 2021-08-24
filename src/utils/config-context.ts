@@ -1,6 +1,6 @@
 import { createContext, createElement, useContext, useState, FC } from 'react'
 
-import { defaultProvider } from './config'
+import { cache as defaultCache } from './config'
 import { initCache } from './cache'
 import { mergeConfigs } from './merge-config'
 import { UNDEFINED } from './helper'
@@ -28,7 +28,7 @@ const SWRConfig: FC<{
   // Use a lazy initialized state to create the cache on first access.
   const [cacheAndMutate] = useState(() =>
     provider
-      ? initCache(provider(extendedConfig.cache || defaultProvider[0]), value)
+      ? initCache(provider(extendedConfig.cache || defaultCache), value)
       : UNDEFINED
   )
 

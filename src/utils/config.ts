@@ -43,12 +43,9 @@ function onErrorRetry(
   setTimeout(revalidate, timeout, opts)
 }
 
-export const defaultProvider = initCache(new Map()) as [
-  Cache<any>,
-  ScopedMutator<any>
-]
-const [cache, mutate] = defaultProvider
-export { mutate }
+// Default cache provider
+const [cache, mutate] = initCache(new Map()) as [Cache<any>, ScopedMutator<any>]
+export { cache, mutate }
 
 // Default config
 export const defaultConfig: FullConfiguration = mergeObjects(
