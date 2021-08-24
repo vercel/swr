@@ -10,10 +10,10 @@ export function mergeConfigs(
 
   if (!b) return v
 
-  const { middlewares: m1, fallbackValues: f1 } = a
-  const { middlewares: m2, fallbackValues: f2 } = b
-  if (m1 && m2) {
-    v.middlewares = m1.concat(m2)
+  const { use: u1, fallbackValues: f1 } = a
+  const { use: u2, fallbackValues: f2 } = b
+  if (u1 && u2) {
+    v.use = u1.concat(u2)
   }
   if (f1 && f2) {
     v.fallbackValues = mergeObjects(f1, f2)

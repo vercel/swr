@@ -19,7 +19,7 @@ const SWRConfig: FC<{
       provider?: (cache: Readonly<Cache>) => Cache
     }
 }> = ({ children, value }) => {
-  // Extend parent context values and middlewares.
+  // Extend parent context values and middleware.
   const extendedConfig = mergeConfigs(useContext(SWRConfigContext), value)
 
   // Should not use the inherited provider.

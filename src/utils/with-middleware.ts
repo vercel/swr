@@ -15,7 +15,7 @@ export function withMiddleware(
       | readonly [Key, Fetcher<Data> | null, SWRConfiguration | undefined]
   ) => {
     const [key, fn, config] = normalize(args)
-    config.middlewares = (config.middlewares || []).concat(middleware)
+    config.use = (config.use || []).concat(middleware)
     return useSWR<Data, Error>(key, fn, config)
   }
 }
