@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { render, fireEvent, act, screen } from '@testing-library/react'
 import { mutate, useSWRConfig, SWRConfig } from 'swr'
 import useSWRInfinite, { unstable_serialize } from 'swr/infinite'
-import { sleep, createKey, createResponse } from './utils'
+import { sleep, createKey, createResponse, nextTick } from './utils'
 
 describe('useSWRInfinite', () => {
   it('should render the first page component', async () => {
@@ -693,9 +693,48 @@ describe('useSWRInfinite', () => {
 
     await screen.findByText('set size')
     fireEvent.click(screen.getByText('set size'))
-    await act(() => sleep(1))
+    await nextTick()
 
     expect(loggedValues).toEqual([1])
+  })
+
+  it('should correctly set size when setSize receives a callback', async () => {
+    const key = createKey()
+
+    function Page() {
+      const { data, size, setSize } = useSWRInfinite<string, string>(
+        index => `${key}-${index}`,
+        k => createResponse(`page-${k}`)
+      )
+      return (
+        <div>
+          <p>data: {(data || []).join()}</p>
+          <p>size: {size}</p>
+          <button onClick={() => setSize(sz => sz + 1)}>set size</button>
+        </div>
+      )
+    }
+
+    const getDataBySize = size =>
+      Array<string>(size)
+        .fill('')
+        .map((_, index) => `page-${key}-${index}`)
+        .join()
+
+    render(<Page />)
+
+    await screen.findByText('set size')
+    const btn = screen.getByText('set size')
+
+    fireEvent.click(btn)
+    await nextTick()
+    await screen.findByText(`data: ${getDataBySize(2)}`)
+    await screen.findByText('size: 2')
+
+    fireEvent.click(btn)
+    await nextTick()
+    await screen.findByText(`data: ${getDataBySize(3)}`)
+    await screen.findByText('size: 3')
   })
 
   // https://github.com/vercel/swr/issues/908
@@ -729,10 +768,10 @@ describe('useSWRInfinite', () => {
     render(<Page />)
 
     await screen.findByText('mutate')
-    await act(() => sleep(1))
+    await nextTick()
     expect(renderedData).toEqual(['old'])
     fireEvent.click(screen.getByText('mutate'))
-    await act(() => sleep(1))
+    await nextTick()
     expect(renderedData).toEqual(['new'])
   })
 
