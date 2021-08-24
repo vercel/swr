@@ -693,7 +693,7 @@ describe('useSWRInfinite', () => {
 
     await screen.findByText('set size')
     fireEvent.click(screen.getByText('set size'))
-    await act(() => sleep(1))
+    await nextTick()
 
     expect(loggedValues).toEqual([1])
   })
@@ -768,10 +768,10 @@ describe('useSWRInfinite', () => {
     render(<Page />)
 
     await screen.findByText('mutate')
-    await act(() => sleep(1))
+    await nextTick()
     expect(renderedData).toEqual(['old'])
     fireEvent.click(screen.getByText('mutate'))
-    await act(() => sleep(1))
+    await nextTick()
     expect(renderedData).toEqual(['new'])
   })
 
