@@ -18,8 +18,6 @@
 
 ## Introduction
 
-Check out [**SWR docs**](https://swr.vercel.app) for the full documentation and examples!
-
 SWR is a React Hooks library for data fetching.
 
 The name “**SWR**” is derived from `stale-while-revalidate`, a cache invalidation strategy popularized by [HTTP RFC 5861](https://tools.ietf.org/html/rfc5861).
@@ -45,6 +43,10 @@ With just one hook, you can significantly simplify the data fetching logic in yo
 ...and a lot more.
 
 With SWR, components will get **a stream of data updates constantly and automatically**. Thus, the UI will be always **fast** and **reactive**.
+
+---
+
+**View full documentation and examples on [swr.vercel.app](https://swr.vercel.app).**
 
 <br/>
 
@@ -73,7 +75,9 @@ of `fetcher` and rerenders the component.
 Note that `fetcher` can be any asynchronous function, you can use your favourite data-fetching
 library to handle that part.
 
-Check out [**SWR docs**](https://swr.vercel.app) for the full documentation and examples!
+---
+
+**View full documentation and examples on [swr.vercel.app](https://swr.vercel.app).**
 
 <br/>
 
