@@ -227,7 +227,7 @@ describe('useSWR - cache provider', () => {
       return (
         <SWRConfig
           value={{
-            fallbackValues: { [key]: 'fallback' }
+            fallback: { [key]: 'fallback' }
           }}
         >
           <Foo />
@@ -254,7 +254,7 @@ describe('useSWR - cache provider', () => {
         <SWRConfig
           value={{
             provider: () => provider,
-            fallbackValues: { [key]: 'fallback' }
+            fallback: { [key]: 'fallback' }
           }}
         >
           <Foo />
@@ -281,7 +281,7 @@ describe('useSWR - cache provider', () => {
         <SWRConfig
           value={{
             provider: () => new Map([[key, 'cache']]),
-            fallbackValues: { [key]: 'fallback' }
+            fallback: { [key]: 'fallback' }
           }}
         >
           <Foo />
@@ -388,7 +388,7 @@ describe('useSWR - cache provider', () => {
       return (
         <div>
           {String(data)},
-          <SWRConfig value={{ fallbackValues: { [key]: 'fallback' } }}>
+          <SWRConfig value={{ fallback: { [key]: 'fallback' } }}>
             <Foo />
           </SWRConfig>
           ,

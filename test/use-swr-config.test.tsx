@@ -123,14 +123,14 @@ describe('useSWR - configs', () => {
         value={{
           dedupingInterval: 1,
           refreshInterval: 1,
-          fallbackValues: { a: 1, b: 1 },
+          fallback: { a: 1, b: 1 },
           use: [middleware1]
         }}
       >
         <SWRConfig
           value={{
             dedupingInterval: 2,
-            fallbackValues: { a: 2, c: 2 },
+            fallback: { a: 2, c: 2 },
             use: [middleware2]
           }}
         >
@@ -141,7 +141,7 @@ describe('useSWR - configs', () => {
 
     expect(config.dedupingInterval).toEqual(2)
     expect(config.refreshInterval).toEqual(1)
-    expect(config.fallbackValues).toEqual({ a: 2, b: 1, c: 2 })
+    expect(config.fallback).toEqual({ a: 2, b: 1, c: 2 })
     expect(config.use).toEqual([middleware1, middleware2])
   })
 })

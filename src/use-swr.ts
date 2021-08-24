@@ -35,8 +35,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   const {
     cache,
     compare,
-    initialData,
-    fallbackValues,
+    fallbackData,
     suspense,
     revalidateOnMount,
     revalidateWhenStale,
@@ -73,11 +72,11 @@ export const useSWRHandler = <Data = any, Error = any>(
   const configRef = useRef(config)
 
   // Get the current state that SWR should return.
-  const cachedData = cache.get(key)
-  const fallbackData = isUndefined(initialData)
-    ? fallbackValues[key]
-    : initialData
-  const data = isUndefined(cachedData) ? fallbackData : cachedData
+  const cached = cache.get(key)
+  const fallback = isUndefined(fallbackData)
+    ? config.fallback[key]
+    : fallbackData
+  const data = isUndefined(cached) ? fallback : cached
   const error = cache.get(keyErr)
 
   // A revalidation must be triggered when mounted if:

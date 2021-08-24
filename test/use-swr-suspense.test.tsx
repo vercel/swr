@@ -217,7 +217,7 @@ describe('useSWR - suspense', () => {
 
     function Page() {
       const { data } = useSWR('suspense-9', fetcher, {
-        initialData: 'Initial',
+        fallbackData: 'Initial',
         suspense: true
       })
       return <div>hello, {data}</div>

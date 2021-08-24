@@ -73,7 +73,7 @@ export const defaultConfig: FullConfiguration = mergeObjects(
     isPaused: () => false,
     cache,
     mutate,
-    fallbackValues: {}
+    fallback: {}
   },
   // use web preset by default
   preset
