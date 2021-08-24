@@ -21,6 +21,7 @@ export interface PublicConfiguration<
   refreshWhenOffline?: boolean
   revalidateOnFocus: boolean
   revalidateOnReconnect: boolean
+  revalidateOnMount?: boolean
   revalidateWhenStale: boolean
   shouldRetryOnError: boolean
   suspense?: boolean
@@ -56,11 +57,6 @@ export interface PublicConfiguration<
 
   isOnline: () => boolean
   isVisible: () => boolean
-
-  /**
-   * @deprecated `revalidateOnMount` will be removed. Please considering using the `revalidateWhenStale` option.
-   */
-  revalidateOnMount?: boolean
 }
 
 export type FullConfiguration = InternalConfiguration & PublicConfiguration
