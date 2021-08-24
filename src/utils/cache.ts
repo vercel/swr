@@ -41,20 +41,20 @@ export function initCache<Data = any>(
       Data
     >
 
+    // Update the state if it's new, or the provider has been extended.
+    SWRGlobalState.set(provider, [
+      EVENT_REVALIDATORS,
+      {},
+      {},
+      {},
+      {},
+      {},
+      mutate
+    ])
+
     // This is a new provider, we need to initialize it and setup DOM events
     // listeners for `focus` and `reconnect` actions.
     if (!IS_SERVER) {
-      // Update the state if it's new, or the provider has been extended.
-      SWRGlobalState.set(provider, [
-        EVENT_REVALIDATORS,
-        {},
-        {},
-        {},
-        {},
-        {},
-        mutate
-      ])
-
       opts.initFocus(
         revalidateAllKeys.bind(
           UNDEFINED,
