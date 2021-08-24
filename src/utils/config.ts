@@ -7,7 +7,9 @@ import {
   PublicConfiguration,
   FullConfiguration,
   RevalidatorOptions,
-  Revalidator
+  Revalidator,
+  ScopedMutator,
+  Cache
 } from '../types'
 import { isUndefined, noop, mergeObjects } from './helper'
 
@@ -41,7 +43,10 @@ function onErrorRetry(
   setTimeout(revalidate, timeout, opts)
 }
 
-export const defaultProvider = initCache(new Map())!
+export const defaultProvider = initCache(new Map()) as [
+  Cache<any>,
+  ScopedMutator<any>
+]
 const [cache, mutate] = defaultProvider
 export { mutate }
 
