@@ -70,8 +70,10 @@ The `key` is a unique identifier of the request, normally the URL of the API. An
 `data` will be `undefined`. And when we get a response, it sets `data` and `error` based on the result
 of `fetcher` and rerenders the component.
 
-Note that `fetcher` can be any asynchronous function, so you can use your favourite data-fetching
+Note that `fetcher` can be any asynchronous function, you can use your favourite data-fetching
 library to handle that part.
+
+Check out [**SWR docs**](https://swr.vercel.app) for the full documentation and examples!
 
 <br/>
 
