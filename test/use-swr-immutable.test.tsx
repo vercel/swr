@@ -19,6 +19,7 @@ describe('useSWR - immutable', () => {
       useData()
       return null
     }
+
     function Page() {
       const [showComponent, setShowComponent] = useState(false)
       const { data } = useData()
