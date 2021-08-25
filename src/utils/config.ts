@@ -59,7 +59,7 @@ export const defaultConfig: FullConfiguration = mergeObjects(
     // switches
     revalidateOnFocus: true,
     revalidateOnReconnect: true,
-    revalidateWhenStale: true,
+    revalidateIfStale: true,
     shouldRetryOnError: true,
 
     // timeouts

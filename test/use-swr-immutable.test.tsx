@@ -50,13 +50,13 @@ describe('useSWR - immutable', () => {
     await screen.findByText('data: 1')
   })
 
-  it('should not revalidate on mount when `revalidateWhenStale` is enabled', async () => {
+  it('should not revalidate on mount when `revalidateIfStale` is enabled', async () => {
     let value = 0
     const key = createKey()
     const useData = () =>
       useSWR(key, () => value++, {
         dedupingInterval: 0,
-        revalidateWhenStale: false
+        revalidateIfStale: false
       })
 
     function Component() {

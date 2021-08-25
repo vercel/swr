@@ -22,7 +22,7 @@ export interface PublicConfiguration<
   revalidateOnFocus: boolean
   revalidateOnReconnect: boolean
   revalidateOnMount?: boolean
-  revalidateWhenStale: boolean
+  revalidateIfStale: boolean
   shouldRetryOnError: boolean
   suspense?: boolean
   fallbackData?: Data
