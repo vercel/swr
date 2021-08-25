@@ -5,8 +5,8 @@ import useSWR from 'swr'
 
 const URL = 'https://pokeapi.co/api/v2/pokemon/'
 
-export default function Home({ initialData }) {
-  const { data } = useSWR(URL, fetcher, { initialData })
+export default function Home({ fallbackData }) {
+  const { data } = useSWR(URL, fetcher, { fallbackData })
 
   return (
     <div style={{ textAlign: 'center' }}>
@@ -28,5 +28,5 @@ export default function Home({ initialData }) {
 
 export async function getServerSideProps() {
   const data = await fetcher(URL)
-  return { props: { initialData: data } }
+  return { props: { fallbackData: data } }
 }
