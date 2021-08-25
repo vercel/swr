@@ -864,4 +864,27 @@ describe('useSWRInfinite', () => {
     await screen.findByText('data:response value,response value')
     expect(getData).toHaveBeenCalledTimes(3)
   })
+
+  it('should return fallbackData if cache is empty', async () => {
+    const key = createKey()
+
+    function Page() {
+      const { data, setSize } = useSWRInfinite<string, string>(
+        index => key + '-' + index,
+        () => sleep(30).then(() => 'response value'),
+        { fallbackData: ['fallback-1', 'fallback-2'] }
+      )
+      return (
+        <div onClick={() => setSize(2)}>data:{data ? data.join(',') : ''}</div>
+      )
+    }
+    render(<Page />)
+
+    screen.getByText('data:fallback-1,fallback-2')
+
+    // Update size, it should still render the fallback
+    fireEvent.click(screen.getByText('data:fallback-1,fallback-2'))
+    await nextTick()
+    screen.getByText('data:fallback-1,fallback-2')
+  })
 })

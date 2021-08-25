@@ -162,7 +162,7 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
 
   const mutate = useCallback(
     (
-      data: Data[] | Promise<Data[]> | MutatorCallback<Data[]>,
+      data: Data[] | undefined | Promise<Data[]> | MutatorCallback<Data[]>,
       shouldRevalidate = true
     ) => {
       // It is possible that the key is still falsy.
@@ -185,7 +185,7 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
   )
 
   // Function to load pages data from the cache based on the page size.
-  const resolvePagesFromCache = (pageSize: number): Data[] => {
+  const resolvePagesFromCache = (pageSize: number): Data[] | undefined => {
     // return an array of page data
     const data: Data[] = []
 
@@ -193,15 +193,17 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
     for (let i = 0; i < pageSize; ++i) {
       const [pageKey] = serialize(getKey ? getKey(i, previousPageData) : null)
 
-      // Get the cached page data. Skip if we can't get it from the cache.
+      // Get the cached page data.
       const pageData = pageKey ? cache.get(pageKey) : UNDEFINED
-      if (isUndefined(pageData)) break
+
+      // Return the current data if we can't get it from the cache.
+      if (isUndefined(pageData)) return dataRef.current
 
       data.push(pageData)
       previousPageData = pageData
     }
 
-    // return the data
+    // Return the data
     return data
   }
 
