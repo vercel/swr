@@ -13,7 +13,7 @@ function prefetchParent() {
 // if we are on the browser trigger a prefetch as soon as possible
 if (typeof window !== 'undefined') prefetchParent()
 
-export default () => {
+export default function Repo() {
   const id = typeof window !== 'undefined' ? window.location.pathname.slice(1) : ''
   const { data } = useSWR('/api/data?id=' + id, fetch)
 
