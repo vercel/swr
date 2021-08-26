@@ -23,7 +23,7 @@ const Detail = ({ id }) => {
   )
 }
 
-export default () => {
+export default function Repo() {
   const id =
     typeof window !== 'undefined' ? window.location.pathname.slice(1) : ''
 

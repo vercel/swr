@@ -22,7 +22,7 @@ const Repos = () => {
   )
 }
 
-export default () => {
+export default function Index() {
   return (
     <div style={{ textAlign: 'center' }}>
       <h1>Trending Projects</h1>
