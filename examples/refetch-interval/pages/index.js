@@ -4,7 +4,7 @@ import fetch from '../libs/fetch'
 
 import useSWR from 'swr'
 
-export default () => {
+export default function Index() {
   const { data, mutate } = useSWR('/api/data', fetch, {
     // revalidate the data per second
     refreshInterval: 1000
