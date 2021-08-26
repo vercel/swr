@@ -4,8 +4,8 @@
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
-    "next": "9.3.3",
-    "swr": "latest"
+    "next": "11.1.0",
+    "swr": "beta"
   },
   "scripts": {
     "dev": "next",
