@@ -225,7 +225,7 @@ const countries = [
   "Sudan"
 ]
 
-export default (req, res) => {
+export default function suggestions(req, res) {
   const results = countries
     .filter(country => country.toLowerCase().startsWith(req.query.value))
 
