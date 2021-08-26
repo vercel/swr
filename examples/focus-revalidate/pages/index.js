@@ -4,7 +4,7 @@ import { login, logout } from '../libs/auth'
 
 import useSWR from 'swr'
 
-export default () => {
+export default function Index() {
   const { data, mutate } = useSWR('/api/user', fetch)
 
   if (!data) return <h1>loading...</h1>
