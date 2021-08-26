@@ -4,7 +4,7 @@ const projects = [
   'facebook/flipper', 'vuejs/vuepress', 'rust-lang/rust', 'zeit/next.js'
 ]
 
-export default (req, res) => {
+export default function api(req, res) {
   if (req.query.id) {
     // a slow endpoint for getting repo data
     fetch(`https://api.github.com/repos/${req.query.id}`)
@@ -14,7 +14,7 @@ export default (req, res) => {
           res.json(data)
         }, 2000)
       })
-    
+
     return
   }
   setTimeout(() => {

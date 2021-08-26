@@ -3,7 +3,7 @@ import fetch from '../../libs/fetch'
 
 import useSWR from 'swr'
 
-export default () => {
+export default function Repo() {
   const id = typeof window !== 'undefined' ? window.location.pathname.slice(1) : ''
   const { data } = useSWR('/api/data?id=' + id, fetch)
 
