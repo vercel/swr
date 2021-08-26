@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import useRepository from '../../hooks/use-repository'
 
-export default () => {
+export default function Repo() {
   const id = typeof window !== 'undefined' ? window.location.pathname.slice(1) : ''
   const { data } = useRepository(id)
 
