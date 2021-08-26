@@ -1,4 +1,4 @@
-import { useSWRInfinite } from 'swr'
+import useSWRInfinite from 'swr/infinite'
 import { useState, useRef, useEffect } from 'react'
 
 import fetcher from '../libs/fetch'
