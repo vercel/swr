@@ -723,4 +723,33 @@ describe('useSWR - local mutation', () => {
     render(<Page />)
     screen.getByText('false')
   })
+
+  it('bound mutate should always use the latest key', async () => {
+    const key = createKey()
+    const fetcher = jest.fn(() => 'data')
+    function Page() {
+      const [ready, setReady] = useState(false)
+      const { mutate: boundMutate } = useSWR(ready ? key : null, fetcher)
+      return (
+        <div>
+          <button onClick={() => setReady(true)}>set ready</button>
+          <button onClick={() => boundMutate()}>mutate</button>
+        </div>
+      )
+    }
+    render(<Page />)
+    screen.getByText('set ready')
+
+    expect(fetcher).toBeCalledTimes(0)
+
+    // it should trigger the fetch
+    fireEvent.click(screen.getByText('set ready'))
+    await act(() => sleep(10))
+    expect(fetcher).toBeCalledTimes(1)
+
+    // it should trigger the fetch again
+    fireEvent.click(screen.getByText('mutate'))
+    await act(() => sleep(10))
+    expect(fetcher).toBeCalledTimes(2)
+  })
 })
