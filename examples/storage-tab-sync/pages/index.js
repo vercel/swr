@@ -2,7 +2,7 @@ import storage from '../libs/storage'
 
 import useSWR, { mutate } from 'swr'
 
-export default () => {
+export default function Index() {
   const { data = { name: "" } } = useSWR('user-name', storage)
 
   function handleChange(event) {
