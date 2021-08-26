@@ -4,7 +4,7 @@ import fetch from '../libs/fetch'
 import useSWR, { mutate } from 'swr'
 import produce from "immer"
 
-export default () => {
+export default function Index() {
   const [text, setText] = React.useState('');
   const { data } = useSWR('/api/data', fetch)
 
