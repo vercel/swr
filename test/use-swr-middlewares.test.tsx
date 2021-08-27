@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import useSWR, { Middleware, SWRConfig } from 'swr'
 import { withMiddleware } from '../src/utils/with-middleware'
 
-import { createResponse, sleep, createKey } from './utils'
+import { createResponse, sleep, createKey, nextTick } from './utils'
 
 describe('useSWR - middleware', () => {
   it('should use middleware', async () => {
@@ -220,5 +220,35 @@ describe('useSWR - middleware', () => {
     render(<Page />)
     screen.getByText('hello,')
     await screen.findByText(`hello, #!${key}!#`)
+  })
+
+  it('should send the non-serialized key to the middleware', async () => {
+    const key = createKey()
+    const logger = jest.fn()
+
+    const m: Middleware = useSWRNext => (k, fn, config) => {
+      logger(Array.isArray(k))
+      return useSWRNext(JSON.stringify(k), _k => fn(...JSON.parse(_k)), config)
+    }
+
+    function Page() {
+      const { data } = useSWR(
+        [key, { hello: 'world' }],
+        (_, o) => {
+          return o.hello
+        },
+        {
+          use: [m]
+        }
+      )
+      return <div>hello, {data || ''}</div>
+    }
+
+    render(<Page />)
+    screen.getByText('hello,')
+    await nextTick()
+
+    expect(logger).toBeCalledWith(true)
+    screen.getByText('hello, world')
   })
 })
