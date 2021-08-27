@@ -1,5 +1,5 @@
 // an endpoint for getting user info
-export default (req, res) => {
+export default function user(req, res) {
   if (req.cookies['swr-test-token'] === 'swr') {
     // authorized
     res.json({

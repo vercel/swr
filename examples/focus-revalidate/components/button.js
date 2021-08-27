@@ -1,4 +1,4 @@
-export default ({ children, ...props }) => {
+export default function Button({ children, ...props }) {
   return <div><button {...props}>
     {children}
     <style jsx>{`

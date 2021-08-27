@@ -43,10 +43,12 @@ function Other() {
   )
 }
 
-export default () => (
-  <div style={{ padding: 40 }}>
-    useSWR can share state between components:
-    <Profile />
-    <Other />
-  </div>
-)
+export default function Index() {
+  return (
+    <div style={{ padding: 40 }}>
+      useSWR can share state between components:
+      <Profile />
+      <Other />
+    </div>
+  )
+}

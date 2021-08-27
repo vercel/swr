@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 
-const useOnScreen = (ref) => {
+export default function useOnScreen(ref) {
   const [isIntersecting, setIntersecting] = useState(false)
 
   useEffect(() => {
@@ -17,5 +17,3 @@ const useOnScreen = (ref) => {
 
   return isIntersecting
 }
-
-export default useOnScreen
