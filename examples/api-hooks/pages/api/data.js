@@ -1,5 +1,3 @@
-import fetch from 'isomorphic-unfetch'
-
 const projects = [
   'facebook/flipper', 'vuejs/vuepress', 'rust-lang/rust', 'zeit/next.js'
 ]
@@ -14,7 +12,7 @@ export default (req, res) => {
           res.json(data)
         }, 2000)
       })
-    
+
     return
   }
   setTimeout(() => {
