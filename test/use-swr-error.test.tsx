@@ -254,4 +254,42 @@ describe('useSWR - error', () => {
     // error won't be cleared during revalidation
     expect(errors).toEqual([null, 'error', 'error'])
   })
+
+  it('should reset isValidating when an error occured synchronously', async () => {
+    function Page() {
+      const { error, isValidating } = useSWR('error-10', () => {
+        throw new Error('error!')
+      })
+      if (error)
+        return (
+          <div>
+            {error.message},{isValidating.toString()}
+          </div>
+        )
+      return <div>hello,{isValidating.toString()}</div>
+    }
+
+    render(<Page />)
+    screen.getByText('error!,false')
+  })
+
+  it('should reset isValidating when an error occured asynchronously', async () => {
+    function Page() {
+      const { error, isValidating } = useSWR('error-11', () =>
+        createResponse(new Error('error!'))
+      )
+      if (error)
+        return (
+          <div>
+            {error.message},{isValidating.toString()}
+          </div>
+        )
+      return <div>hello,{isValidating.toString()}</div>
+    }
+
+    render(<Page />)
+    screen.getByText('hello,true')
+
+    await screen.findByText('error!,false')
+  })
 })

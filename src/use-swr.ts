@@ -254,6 +254,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         }
       } catch (err) {
         cleanupState()
+        cache.set(keyValidating, false)
         if (configRef.current.isPaused()) {
           setState({
             isValidating: false
