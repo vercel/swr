@@ -14,9 +14,8 @@ const hasWindow = typeof window !== 'undefined'
 const hasDocument = typeof document !== 'undefined'
 
 // For node and React Native, `add/removeEventListener` doesn't exist on window.
-const onWindowEvent =
-  hasWindow && window.addEventListener ? window.addEventListener : noop
-const onDocumentEvent = hasDocument ? document.addEventListener : noop
+const onWindowEvent = (hasWindow && window.addEventListener) || noop
+const onDocumentEvent = (hasDocument && document.addEventListener) || noop
 
 const isVisible = () => {
   const visibilityState = hasDocument && document.visibilityState
