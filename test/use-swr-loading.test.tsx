@@ -70,8 +70,8 @@ describe('useSWR - loading', () => {
     expect(dataLoaded).toEqual(true)
   })
 
-  it('should return enumberable object', async () => {
-    // If the returned object is enumberable, we can use the spread operator
+  it('should return enumerable object', async () => {
+    // If the returned object is enumerable, we can use the spread operator
     // to deconstruct all the keys.
 
     function Page() {
