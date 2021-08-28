@@ -5,7 +5,7 @@
   "license": "MIT",
   "dependencies": {
     "next": "11.1.0",
-    "swr": "beta"
+    "swr": "latest"
   },
   "scripts": {
     "dev": "next",
