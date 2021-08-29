@@ -1,0 +1,27 @@
+name: Report
+
+on:
+  pull_request:
+
+jobs:
+  pkg-size-report:
+    name: Package Size
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14.x'
+
+      - name: Package size report
+        uses: pkg-size/action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          unchanged-files: hide
+          hide-files: '*.{ts,json,md}'
+
