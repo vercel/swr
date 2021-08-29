@@ -14,6 +14,7 @@ export {
   RevalidatorOptions,
   Key,
   KeyLoader,
+  KeyedMutator,
   SWRResponse,
   Cache,
   SWRHook,
