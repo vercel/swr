@@ -752,4 +752,50 @@ describe('useSWR - local mutation', () => {
     await act(() => sleep(10))
     expect(fetcher).toBeCalledTimes(2)
   })
+
+  it('should reset isValidating after mutate', async () => {
+    const key = createKey()
+    function Data() {
+      const { data, isValidating } = useSWR(key, () =>
+        createResponse('data', { delay: 30 })
+      )
+      const { cache } = useSWRConfig()
+      const [, , , keyValidating] = serialize(key)
+      const cacheIsValidating = cache.get(keyValidating) || false
+      return (
+        <>
+          <p>data:{data}</p>
+          <p>isValidating:{isValidating.toString()}</p>
+          <p>cache:validating:{cacheIsValidating.toString()}</p>
+        </>
+      )
+    }
+
+    function Page() {
+      const { mutate: boundMutate } = useSWR(key, () =>
+        createResponse('data', { delay: 30 })
+      )
+      const [visible, setVisible] = useState(false)
+
+      return (
+        <div>
+          <button onClick={() => boundMutate(() => 'data', false)}>
+            preload
+          </button>
+          <button onClick={() => setVisible(true)}>show</button>
+          {visible && <Data />}
+        </div>
+      )
+    }
+    render(<Page />)
+
+    fireEvent.click(screen.getByText('preload'))
+    await act(() => sleep(20))
+    fireEvent.click(screen.getByText('show'))
+    screen.getByText('data:data')
+    screen.getByText('isValidating:true')
+    await act(() => sleep(20))
+    screen.getByText('data:data')
+    screen.getByText('isValidating:false')
+  })
 })

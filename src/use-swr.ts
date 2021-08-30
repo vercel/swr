@@ -202,6 +202,13 @@ export const useSWRHandler = <Data = any, Error = any>(
           return false
         }
 
+        cache.set(keyErr, UNDEFINED)
+        cache.set(keyValidating, false)
+
+        const newState: State<Data, Error> = {
+          isValidating: false
+        }
+
         // if there're other mutations(s), overlapped with the current revalidation:
         // case 1:
         //   req------------------>res
@@ -223,15 +230,8 @@ export const useSWRHandler = <Data = any, Error = any>(
             // case 3
             MUTATION_END_TS[key] === 0)
         ) {
-          setState({ isValidating: false })
+          setState(newState)
           return false
-        }
-
-        cache.set(keyErr, UNDEFINED)
-        cache.set(keyValidating, false)
-
-        const newState: State<Data, Error> = {
-          isValidating: false
         }
 
         if (!isUndefined(stateRef.current.error)) {
