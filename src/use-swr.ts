@@ -78,6 +78,10 @@ export const useSWRHandler = <Data = any, Error = any>(
   const data = isUndefined(cached) ? fallback : cached
   const error = cache.get(keyErr)
 
+  if (suspense && (!key || !fn)) {
+    throw new Error('useSWR requires either key or fetcher with suspense mode')
+  }
+
   // A revalidation must be triggered when mounted if:
   // - `revalidateOnMount` is explicitly set to `true`.
   // - Suspense mode and there's stale data for the initial render.
@@ -198,6 +202,13 @@ export const useSWRHandler = <Data = any, Error = any>(
           return false
         }
 
+        cache.set(keyErr, UNDEFINED)
+        cache.set(keyValidating, false)
+
+        const newState: State<Data, Error> = {
+          isValidating: false
+        }
+
         // if there're other mutations(s), overlapped with the current revalidation:
         // case 1:
         //   req------------------>res
@@ -219,15 +230,8 @@ export const useSWRHandler = <Data = any, Error = any>(
             // case 3
             MUTATION_END_TS[key] === 0)
         ) {
-          setState({ isValidating: false })
+          setState(newState)
           return false
-        }
-
-        cache.set(keyErr, UNDEFINED)
-        cache.set(keyValidating, false)
-
-        const newState: State<Data, Error> = {
-          isValidating: false
         }
 
         if (!isUndefined(stateRef.current.error)) {
