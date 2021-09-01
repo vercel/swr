@@ -214,32 +214,6 @@ describe('useSWR - cache provider', () => {
     screen.getByText('1')
   })
 
-  it('should support fallback values', async () => {
-    const key = createKey()
-    function Foo() {
-      const { data } = useSWR(key, async () => {
-        await sleep(10)
-        return 'data'
-      })
-      return <>{String(data)}</>
-    }
-    function Page() {
-      return (
-        <SWRConfig
-          value={{
-            fallback: { [key]: 'fallback' }
-          }}
-        >
-          <Foo />
-        </SWRConfig>
-      )
-    }
-
-    render(<Page />)
-    screen.getByText('fallback') // no `undefined`, directly fallback
-    await screen.findByText('data')
-  })
-
   it('should support fallback values with custom provider', async () => {
     const key = createKey()
     function Foo() {
@@ -292,20 +266,6 @@ describe('useSWR - cache provider', () => {
     render(<Page />)
     screen.getByText('cache') // no `undefined`, directly from cache
     await screen.findByText('data')
-  })
-
-  it('should return the global cache and mutate by default', async () => {
-    let localCache, localMutate
-    function Page() {
-      const { cache, mutate } = useSWRConfig()
-      localCache = cache
-      localMutate = mutate
-      return null
-    }
-
-    render(<Page />)
-    expect(localCache).toBe(SWRConfig.default.cache)
-    expect(localMutate).toBe(globalMutate)
   })
 
   it('should be able to extend the parent cache', async () => {
@@ -424,5 +384,106 @@ describe('useSWR - cache provider', () => {
     expect(createCacheProvider).toBeCalledTimes(1)
     act(() => rerender({}))
     expect(createCacheProvider).toBeCalledTimes(1)
+  })
+})
+
+describe('useSWR - global cache', () => {
+  it('should return the global cache and mutate by default', async () => {
+    let localCache, localMutate
+    function Page() {
+      const { cache, mutate } = useSWRConfig()
+      localCache = cache
+      localMutate = mutate
+      return null
+    }
+
+    render(<Page />)
+    expect(localCache).toBe(SWRConfig.default.cache)
+    expect(localMutate).toBe(globalMutate)
+  })
+
+  it('should be able to update the cache', async () => {
+    const fetcher = _key => 'res:' + _key
+    const keys = [createKey(), createKey()]
+
+    let cache
+    function Section() {
+      const [index, setIndex] = useState(0)
+      cache = useSWRConfig().cache
+      const { data } = useSWR(keys[index], fetcher)
+
+      return <div onClick={() => setIndex(1)}>{data}</div>
+    }
+
+    const { container } = render(<Section />)
+    await screen.findByText(fetcher(keys[0]))
+
+    expect(cache.get(keys[1])).toBe(undefined)
+    fireEvent.click(container.firstElementChild)
+    await act(() => sleep(10))
+
+    expect(cache.get(keys[0])).toBe(fetcher(keys[0]))
+    expect(cache.get(keys[1])).toBe(fetcher(keys[1]))
+  })
+
+  it('should correctly mutate the cached value', async () => {
+    const key = createKey()
+    let mutate
+
+    function Page() {
+      const { mutate: mutateWithCache } = useSWRConfig()
+      mutate = mutateWithCache
+      const { data } = useSWR(key, null)
+      return <div>data:{data}</div>
+    }
+
+    render(<Page />)
+    screen.getByText('data:')
+    await act(() => mutate(key, 'mutated value', false))
+    await screen.findByText('data:mutated value')
+  })
+
+  it('should work with revalidateOnFocus', async () => {
+    const key = createKey()
+    let value = 0
+    function Foo() {
+      const { data } = useSWR(key, () => value++, {
+        dedupingInterval: 0
+      })
+      return <>{String(data)}</>
+    }
+    render(<Foo />)
+    screen.getByText('undefined')
+
+    await screen.findByText('0')
+    await nextTick()
+    await focusOn(window)
+    screen.getByText('1')
+  })
+
+  it('should support fallback values', async () => {
+    const key = createKey()
+    function Foo() {
+      const { data } = useSWR(key, async () => {
+        await sleep(10)
+        return 'data'
+      })
+      return <>{String(data)}</>
+    }
+    function Page() {
+      return (
+        <SWRConfig
+          value={{
+            fallback: { [key]: 'fallback' }
+          }}
+        >
+          <Foo />
+        </SWRConfig>
+      )
+    }
+
+    render(<Page />)
+    screen.getByText('fallback') // no `undefined`, directly fallback
+    await screen.findByText('data')
   })
 })
