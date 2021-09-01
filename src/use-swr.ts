@@ -69,6 +69,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   // Refs to keep the key and config.
   const keyRef = useRef(key)
   const configRef = useRef(config)
+  const getConfig = () => configRef.current
 
   // Get the current state that SWR should return.
   const cached = cache.get(key)
@@ -118,7 +119,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   // `fetcher`, to correctly handle the many edge cases.
   const revalidate = useCallback(
     async (revalidateOpts?: RevalidatorOptions): Promise<boolean> => {
-      if (!key || !fn || unmountedRef.current || configRef.current.isPaused()) {
+      if (!key || !fn || unmountedRef.current || getConfig().isPaused()) {
         return false
       }
 
@@ -170,7 +171,7 @@ export const useSWRHandler = <Data = any, Error = any>(
           if (config.loadingTimeout && !cache.get(key)) {
             setTimeout(() => {
               if (loading && isCallbackSafe())
-                configRef.current.onLoadingSlow(key, config)
+                getConfig().onLoadingSlow(key, config)
             }, config.loadingTimeout)
           }
 
@@ -188,7 +189,7 @@ export const useSWRHandler = <Data = any, Error = any>(
           // trigger the success event,
           // only do this for the original request.
           if (isCallbackSafe()) {
-            configRef.current.onSuccess(newData, key, config)
+            getConfig().onSuccess(newData, key, config)
           }
         }
 
@@ -259,7 +260,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       } catch (err) {
         cleanupState()
         cache.set(keyValidating, false)
-        if (configRef.current.isPaused()) {
+        if (getConfig().isPaused()) {
           setState({
             isValidating: false
           })
@@ -282,10 +283,10 @@ export const useSWRHandler = <Data = any, Error = any>(
 
         // Error event and retry logic.
         if (isCallbackSafe()) {
-          configRef.current.onError(err, key, config)
+          getConfig().onError(err, key, config)
           if (config.shouldRetryOnError) {
             // When retrying, dedupe is always enabled
-            configRef.current.onErrorRetry(err, key, config, revalidate, {
+            getConfig().onErrorRetry(err, key, config, revalidate, {
               retryCount: (opts.retryCount || 0) + 1,
               dedupe: true
             })
@@ -332,8 +333,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     const keyChanged = initialMountedRef.current
     const softRevalidate = revalidate.bind(UNDEFINED, WITH_DEDUPE)
 
-    const isActive = () =>
-      configRef.current.isVisible() && configRef.current.isOnline()
+    const isActive = () => getConfig().isVisible() && getConfig().isOnline()
 
     // Expose state updater to global event listeners. So we can update hook's
     // internal state from the outside.
@@ -365,15 +365,15 @@ export const useSWRHandler = <Data = any, Error = any>(
       if (type === RevalidateEvent.FOCUS_EVENT) {
         const now = Date.now()
         if (
-          configRef.current.revalidateOnFocus &&
+          getConfig().revalidateOnFocus &&
           now > nextFocusRevalidatedAt &&
           isActive()
         ) {
-          nextFocusRevalidatedAt = now + configRef.current.focusThrottleInterval
+          nextFocusRevalidatedAt = now + getConfig().focusThrottleInterval
           softRevalidate()
         }
       } else if (type === RevalidateEvent.RECONNECT_EVENT) {
-        if (configRef.current.revalidateOnReconnect && isActive()) {
+        if (getConfig().revalidateOnReconnect && isActive()) {
           softRevalidate()
         }
       } else if (type === RevalidateEvent.MUTATE_EVENT) {
@@ -441,8 +441,8 @@ export const useSWRHandler = <Data = any, Error = any>(
       // Only revalidate when the page is visible, online and not errored.
       if (
         !stateRef.current.error &&
-        (refreshWhenHidden || config.isVisible()) &&
-        (refreshWhenOffline || config.isOnline())
+        (refreshWhenHidden || getConfig().isVisible()) &&
+        (refreshWhenOffline || getConfig().isOnline())
       ) {
         revalidate(WITH_DEDUPE).then(() => next())
       } else {
