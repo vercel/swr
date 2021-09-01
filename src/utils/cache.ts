@@ -3,13 +3,14 @@ import { IS_SERVER } from './env'
 import { UNDEFINED, mergeObjects } from './helper'
 import { internalMutate } from './mutate'
 import { SWRGlobalState } from './global-state'
+import * as revalidateEvents from '../constants/revalidate-events'
+import { RevalidateEvent } from '../types'
 
 import {
   Cache,
   ScopedMutator,
   RevalidateCallback,
-  ConfigOptions,
-  RevalidateEvent
+  ConfigOptions
 } from '../types'
 
 function revalidateAllKeys(
@@ -59,14 +60,14 @@ export function initCache<Data = any>(
         revalidateAllKeys.bind(
           UNDEFINED,
           EVENT_REVALIDATORS,
-          RevalidateEvent.FOCUS_EVENT
+          revalidateEvents.FOCUS_EVENT
         )
       )
       opts.initReconnect(
         revalidateAllKeys.bind(
           UNDEFINED,
           EVENT_REVALIDATORS,
-          RevalidateEvent.RECONNECT_EVENT
+          revalidateEvents.RECONNECT_EVENT
         )
       )
     }
