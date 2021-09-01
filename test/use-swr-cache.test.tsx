@@ -415,11 +415,7 @@ describe('useSWR - global cache', () => {
       return <div onClick={() => setIndex(1)}>{data}</div>
     }
 
-    function App() {
-      return <Section />
-    }
-
-    const { container } = render(<App />)
+    const { container } = render(<Section />)
     await screen.findByText(fetcher(keys[0]))
 
     expect(cache.get(keys[1])).toBe(undefined)
@@ -441,11 +437,7 @@ describe('useSWR - global cache', () => {
       return <div>data:{data}</div>
     }
 
-    function App() {
-      return <Page />
-    }
-
-    render(<App />)
+    render(<Page />)
     screen.getByText('data:')
     await act(() => mutate(key, 'mutated value', false))
     await screen.findByText('data:mutated value')
@@ -460,10 +452,7 @@ describe('useSWR - global cache', () => {
       })
       return <>{String(data)}</>
     }
-    function Page() {
-      return <Foo />
-    }
-    render(<Page />)
+    render(<Foo />)
     screen.getByText('undefined')
 
     await screen.findByText('0')
