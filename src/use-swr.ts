@@ -69,6 +69,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   // Refs to keep the key and config.
   const keyRef = useRef(key)
   const configRef = useRef(config)
+  const getConfig = () => configRef.current
 
   // Get the current state that SWR should return.
   const cached = cache.get(key)
@@ -323,8 +324,6 @@ export const useSWRHandler = <Data = any, Error = any>(
   useIsomorphicLayoutEffect(() => {
     configRef.current = config
   })
-
-  const getConfig = () => configRef.current
 
   // After mounted or key changed.
   useIsomorphicLayoutEffect(() => {
