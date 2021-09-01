@@ -1,19 +1,23 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import React, { useEffect, useState } from 'react'
-import useSWR, { mutate } from 'swr'
-import { sleep, createResponse } from './utils'
+import useSWR from 'swr'
+import { sleep, createResponse, TestSWRConfig } from './utils'
 
 describe('useSWR - error', () => {
   it('should handle errors', async () => {
     function Page() {
-      const { data, error } = useSWR('error-1', () =>
+      const { data, error } = useSWR('error-key', () =>
         createResponse(new Error('error!'))
       )
       if (error) return <div>{error.message}</div>
       return <div>hello, {data}</div>
     }
 
-    render(<Page />)
+    render(
+      <TestSWRConfig>
+        <Page />
+      </TestSWRConfig>
+    )
     screen.getByText('hello,')
 
     // mount
@@ -24,7 +28,7 @@ describe('useSWR - error', () => {
     let erroredSWR = null
     function Page() {
       const { data, error } = useSWR(
-        'error-2',
+        'error-key',
         () => createResponse(new Error('error!')),
         { onError: (_, key) => (erroredSWR = key) }
       )
@@ -32,19 +36,23 @@ describe('useSWR - error', () => {
       return <div>hello, {data}</div>
     }
 
-    render(<Page />)
+    render(
+      <TestSWRConfig>
+        <Page />
+      </TestSWRConfig>
+    )
     screen.getByText('hello,')
 
     // mount
     await screen.findByText('error!')
-    expect(erroredSWR).toEqual('error-2')
+    expect(erroredSWR).toEqual('error-key')
   })
 
   it('should trigger error retry', async () => {
     let count = 0
     function Page() {
       const { data, error } = useSWR(
-        'error-3',
+        'error-key',
         () => createResponse(new Error('error: ' + count++), { delay: 100 }),
         {
           onErrorRetry: (_, __, ___, revalidate, revalidateOpts) => {
@@ -57,7 +65,11 @@ describe('useSWR - error', () => {
       return <div>hello, {data}</div>
     }
 
-    render(<Page />)
+    render(
+      <TestSWRConfig>
+        <Page />
+      </TestSWRConfig>
+    )
     screen.getByText('hello,')
 
     // mount
@@ -75,7 +87,7 @@ describe('useSWR - error', () => {
       success = null
     function Page() {
       const { data } = useSWR(
-        'error-4',
+        'error-key',
         () => createResponse('SWR', { delay: 200 }),
         {
           onLoadingSlow: key => (loadingSlow = key),
@@ -86,23 +98,27 @@ describe('useSWR - error', () => {
       return <div>hello, {data}</div>
     }
 
-    render(<Page />)
+    render(
+      <TestSWRConfig>
+        <Page />
+      </TestSWRConfig>
+    )
     screen.getByText('hello,')
     expect(loadingSlow).toEqual(null)
 
     await act(() => sleep(150)) // trigger onLoadingSlow event
-    expect(loadingSlow).toEqual('error-4')
+    expect(loadingSlow).toEqual('error-key')
     expect(success).toEqual(null)
 
     await act(() => sleep(150)) // finish the request
-    expect(success).toEqual('error-4')
+    expect(success).toEqual('error-key')
     screen.getByText('hello, SWR')
   })
   it('should trigger limited error retries if errorRetryCount exists', async () => {
     let count = 0
     function Page() {
       const { data, error } = useSWR(
-        'error-5',
+        'error-key',
         () => createResponse(new Error('error: ' + count++)),
         {
           errorRetryCount: 1,
@@ -114,7 +130,11 @@ describe('useSWR - error', () => {
       return <div>hello, {data}</div>
     }
 
-    render(<Page />)
+    render(
+      <TestSWRConfig>
+        <Page />
+      </TestSWRConfig>
+    )
     screen.getByText('hello,')
 
     // mount
@@ -130,7 +150,7 @@ describe('useSWR - error', () => {
     let loadingSlow = null,
       success = null
     function Page() {
-      const { data } = useSWR('error-6', () => createResponse('SWR'), {
+      const { data } = useSWR('error-key', () => createResponse('SWR'), {
         onLoadingSlow: key => {
           loadingSlow = key
         },
@@ -151,7 +171,11 @@ describe('useSWR - error', () => {
       )
     }
 
-    render(<App />)
+    render(
+      <TestSWRConfig>
+        <App />
+      </TestSWRConfig>
+    )
     screen.getByText('hello,')
     expect(loadingSlow).toEqual(null)
     expect(success).toEqual(null)
@@ -167,7 +191,7 @@ describe('useSWR - error', () => {
       failed = null
     function Page() {
       const { data } = useSWR(
-        'error-7',
+        'error-key',
         () => createResponse(new Error('error!')),
         {
           onError: (_, key) => {
@@ -191,7 +215,11 @@ describe('useSWR - error', () => {
       )
     }
 
-    render(<App />)
+    render(
+      <TestSWRConfig>
+        <App />
+      </TestSWRConfig>
+    )
     screen.getByText('hello,')
     expect(retry).toEqual(null)
     expect(failed).toEqual(null)
@@ -206,7 +234,7 @@ describe('useSWR - error', () => {
     let count = 0
     function Page() {
       const { data, error } = useSWR(
-        'error-8',
+        'error-key',
         () => createResponse(new Error('error: ' + count++)),
         {
           errorRetryCount: 0,
@@ -218,7 +246,11 @@ describe('useSWR - error', () => {
       return <div>hello, {data}</div>
     }
 
-    render(<Page />)
+    render(
+      <TestSWRConfig>
+        <Page />
+      </TestSWRConfig>
+    )
     screen.getByText('hello,')
 
     // mount
@@ -230,13 +262,19 @@ describe('useSWR - error', () => {
 
   it('should not clear error during revalidating until fetcher is finished successfully', async () => {
     const errors = []
-    const key = 'error-9'
+    const key = 'error-key'
+    let mutate
     function Page() {
-      const { error } = useSWR(key, () => createResponse(new Error('error')), {
-        errorRetryCount: 0,
-        errorRetryInterval: 0,
-        dedupingInterval: 0
-      })
+      const { error, mutate: _mutate } = useSWR(
+        key,
+        () => createResponse(new Error('error')),
+        {
+          errorRetryCount: 0,
+          errorRetryInterval: 0,
+          dedupingInterval: 0
+        }
+      )
+      mutate = _mutate
       useEffect(() => {
         errors.push(error ? error.message : null)
       }, [error])
@@ -244,12 +282,16 @@ describe('useSWR - error', () => {
       return <div>hello, {error ? error.message : null}</div>
     }
 
-    render(<Page />)
+    render(
+      <TestSWRConfig>
+        <Page />
+      </TestSWRConfig>
+    )
 
     // mount
     await screen.findByText('hello, error')
 
-    await act(() => mutate(key, undefined, true))
+    await act(() => mutate(undefined, true))
     // initial -> first error -> mutate -> receive another error
     // error won't be cleared during revalidation
     expect(errors).toEqual([null, 'error', 'error'])
@@ -257,7 +299,7 @@ describe('useSWR - error', () => {
 
   it('should reset isValidating when an error occured synchronously', async () => {
     function Page() {
-      const { error, isValidating } = useSWR('error-10', () => {
+      const { error, isValidating } = useSWR('error-key', () => {
         throw new Error('error!')
       })
       if (error)
@@ -269,13 +311,17 @@ describe('useSWR - error', () => {
       return <div>hello,{isValidating.toString()}</div>
     }
 
-    render(<Page />)
+    render(
+      <TestSWRConfig>
+        <Page />
+      </TestSWRConfig>
+    )
     screen.getByText('error!,false')
   })
 
   it('should reset isValidating when an error occured asynchronously', async () => {
     function Page() {
-      const { error, isValidating } = useSWR('error-11', () =>
+      const { error, isValidating } = useSWR('error-key', () =>
         createResponse(new Error('error!'))
       )
       if (error)
@@ -287,7 +333,11 @@ describe('useSWR - error', () => {
       return <div>hello,{isValidating.toString()}</div>
     }
 
-    render(<Page />)
+    render(
+      <TestSWRConfig>
+        <Page />
+      </TestSWRConfig>
+    )
     screen.getByText('hello,true')
 
     await screen.findByText('error!,false')
