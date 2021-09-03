@@ -444,7 +444,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         (refreshWhenHidden || getConfig().isVisible()) &&
         (refreshWhenOffline || getConfig().isOnline())
       ) {
-        revalidate(WITH_DEDUPE).then(() => next())
+        revalidate(WITH_DEDUPE).then(next)
       } else {
         // Schedule next interval to check again.
         next()
