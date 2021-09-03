@@ -20,7 +20,7 @@ export function serialize(key: Key): [string, any, string, string] {
     key = hash(key)
   } else {
     // Convert falsy values to ''.
-    key = String(key || '')
+    key = '' + (key || '')
     // The only argument is the key.
     args = [key]
   }

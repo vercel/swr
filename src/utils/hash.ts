@@ -17,7 +17,7 @@ export default function hash(args: any[]): string {
     const arg = args[i]
 
     let _hash: any = UNDEFINED
-    if (arg === null || (typeof arg !== 'object' && !isFunction(arg))) {
+    if (!isFunction(arg)) {
       // need to consider the case that `arg` is a string:
       // "undefined" -> '"undefined"'
       // 123         -> '123'
