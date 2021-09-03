@@ -1,4 +1,4 @@
-import hash from './hash'
+import { hash } from './hash'
 import { isFunction } from './helper'
 
 import { Key } from '../types'
