@@ -1,5 +1,6 @@
-import { Broadcaster, RevalidateEvent } from '../types'
+import { Broadcaster } from '../types'
 import { SWRGlobalState, GlobalState } from './global-state'
+import * as revalidateEvents from '../constants/revalidate-events'
 
 export const broadcastState: Broadcaster = (
   cache,
@@ -24,7 +25,7 @@ export const broadcastState: Broadcaster = (
 
   // If we also need to revalidate, only do it for the first hook.
   if (shouldRevalidate && revalidators && revalidators[0]) {
-    return revalidators[0](RevalidateEvent.MUTATE_EVENT).then(() =>
+    return revalidators[0](revalidateEvents.MUTATE_EVENT).then(() =>
       cache.get(key)
     )
   }
