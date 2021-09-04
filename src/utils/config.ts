@@ -1,5 +1,4 @@
-import { dequal } from 'dequal/lite'
-
+import { stableHash } from './hash'
 import { initCache } from './cache'
 import { preset } from './web-preset'
 import { slowConnection } from './env'
@@ -69,7 +68,7 @@ export const defaultConfig: FullConfiguration = mergeObjects(
     loadingTimeout: slowConnection ? 5000 : 3000,
 
     // providers
-    compare: dequal,
+    compare: (a: any, b: any) => stableHash(a) === stableHash(b),
     isPaused: () => false,
     cache,
     mutate,
