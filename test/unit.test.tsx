@@ -34,19 +34,23 @@ describe('Unit tests', () => {
     expect(hash([1])).toEqual('arg$[1,]')
     expect(hash(['false'])).toEqual('arg$["false",]')
     expect(hash([false])).toEqual('arg$[false,]')
+    expect(hash([true])).toEqual('arg$[true,]')
     expect(hash([null])).toEqual('arg$[null,]')
     expect(hash(['null'])).toEqual('arg$["null",]')
     expect(hash([undefined])).toEqual('arg$[undefined,]')
     expect(hash([NaN])).toEqual('arg$[NaN,]')
     expect(hash([''])).toEqual('arg$["",]')
 
-    // Unsupported: BigInt, Symbol, Set, Map, Buffer...
-    // expect(hash([BigInt(1)])).toEqual('arg$1')
-    // expect(hash([Symbol('key')])).toEqual('arg$Symbol(key)')
+    // BigInt
+    expect(hash([BigInt(1)])).toEqual('arg$[1,]')
+
+    // Unsupported: Symbol, Set, Map, Buffer, Date...
+    // expect(hash([Symbol('key')])).toEqual('arg$[Symbol(key),]')
 
     // Serializable objects
     expect(hash([{ x: 1 }])).toEqual('arg$[{x:1,},]')
     expect(hash([{ x: { y: 2 } }])).toEqual('arg$[{x:{y:2,},},]')
+    expect(hash([[]])).toEqual('arg$[[],]')
 
     // Unserializable objects
     expect(hash([() => {}])).toMatch(/arg\$\[\$\d+,\]/)

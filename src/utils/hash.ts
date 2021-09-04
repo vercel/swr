@@ -22,38 +22,38 @@ export function stableHash(arg: any): string | undefined {
   const type = typeof arg
   let result: any = ''
 
-  if (!arg && type !== 'string') {
-    // False, null, undefined, 0, NaN
-    return '' + arg
-  } else if (isFunction(arg)) {
-    // `function` type, use WeakMap.
-    result = table.get(arg)
-    if (!result) {
-      result = ++counter
-      table.set(arg, result)
-    }
-    return '$' + result
-  } else if (arg && type === 'object') {
-    // Non-null object.
-    if (Array.isArray(arg)) {
-      // Array.
-      for (const v of arg) {
-        result += stableHash(v) + ','
+  if (arg) {
+    if (isFunction(arg)) {
+      // `function` type, use WeakMap.
+      result = table.get(arg)
+      if (!result) {
+        result = ++counter
+        table.set(arg, result)
       }
-      return '[' + result + ']'
-    } else {
-      // Not array, sort keys.
-      const keys = Object.keys(arg).sort()
-      for (const k of keys) {
-        if (!isUndefined(arg[k])) {
-          result += k + ':' + stableHash(arg[k]) + ','
+      return '$' + result
+    } else if (type === 'object') {
+      // Non-null object.
+      if (Array.isArray(arg)) {
+        // Array.
+        for (const v of arg) {
+          result += stableHash(v) + ','
         }
+        return `[${result}]`
+      } else {
+        // Not array, sort keys.
+        const keys = Object.keys(arg).sort()
+        for (const k of keys) {
+          if (!isUndefined(arg[k])) {
+            result += k + ':' + stableHash(arg[k]) + ','
+          }
+        }
+        return `{${result}}`
       }
-      return '{' + result + '}'
     }
   }
 
-  return JSON.stringify(arg)
+  // Boolean, null, undefined, number, NaN, string, bigint, etc.
+  return type === 'string' ? `"${arg}"` : '' + arg
 }
 
 // hashes an array of objects and returns a string
