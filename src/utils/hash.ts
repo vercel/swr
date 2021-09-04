@@ -16,44 +16,44 @@ let counter = 0
 // - Generates short results
 //
 // This is not a serialization function, and the result is not guaranteed to be
-// parsible. RegEx, Date, Symbol, circular reference and other things are not
+// parsible. RegExp, Date, Symbol, circular reference and other things are not
 // currently supported.
 export function stableHash(arg: any): string | undefined {
   const type = typeof arg
-  let result
+  let result: any = ''
 
-  // `function` type, use WeakMap.
-  if (isFunction(arg)) {
+  if (!arg && type !== 'string') {
+    // False, null, undefined, 0, NaN
+    return '' + arg
+  } else if (isFunction(arg)) {
+    // `function` type, use WeakMap.
     result = table.get(arg)
     if (!result) {
       result = ++counter
       table.set(arg, result)
     }
     return '$' + result
-  }
-
-  if (Array.isArray(arg)) {
-    return JSON.stringify(arg, (_, value) =>
-      value === arg ? value : stableHash(value)
-    )
-  }
-
-  // Non-null object
-  if (arg && type === 'object') {
-    // Not array, sort keys.
-    const keys = Object.keys(arg).sort()
-    result = '{'
-    for (const k of keys) {
-      const v = arg[k]
-      // Skip `undefined` values.
-      if (isUndefined(v)) continue
-      result += k + ':' + stableHash(v) + ','
+  } else if (arg && type === 'object') {
+    // Non-null object.
+    if (Array.isArray(arg)) {
+      // Array.
+      for (const v of arg) {
+        result += stableHash(v) + ','
+      }
+      return '[' + result + ']'
+    } else {
+      // Not array, sort keys.
+      const keys = Object.keys(arg).sort()
+      for (const k of keys) {
+        if (!isUndefined(arg[k])) {
+          result += k + ':' + stableHash(arg[k]) + ','
+        }
+      }
+      return '{' + result + '}'
     }
-    return result + '}'
   }
 
-  // Other primitives: number, string, boolean, undefined, symbol, bigint, null
-  return '' + arg
+  return JSON.stringify(arg)
 }
 
 // hashes an array of objects and returns a string

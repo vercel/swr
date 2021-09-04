@@ -26,27 +26,50 @@ describe('Unit tests', () => {
   })
 
   it('should hash arguments correctly', async () => {
+    // Empty
+    expect(hash([])).toEqual('')
+
     // Primitives
-    expect(hash(['key'])).toEqual('arg$["key"]')
-    expect(hash([1])).toEqual('arg$[1]')
-    expect(hash([false])).toEqual('arg$[false]')
-    expect(hash([null])).toEqual('arg$[null]')
-    expect(hash(['null'])).toEqual('arg$["null"]')
-    expect(hash([undefined])).toEqual('arg$[undefined]')
-    expect(hash([NaN])).toEqual('arg$[NaN]')
+    expect(hash(['key'])).toEqual('arg$["key",]')
+    expect(hash([1])).toEqual('arg$[1,]')
+    expect(hash(['false'])).toEqual('arg$["false",]')
+    expect(hash([false])).toEqual('arg$[false,]')
+    expect(hash([null])).toEqual('arg$[null,]')
+    expect(hash(['null'])).toEqual('arg$["null",]')
+    expect(hash([undefined])).toEqual('arg$[undefined,]')
+    expect(hash([NaN])).toEqual('arg$[NaN,]')
+    expect(hash([''])).toEqual('arg$["",]')
 
     // Unsupported: BigInt, Symbol, Set, Map, Buffer...
     // expect(hash([BigInt(1)])).toEqual('arg$1')
     // expect(hash([Symbol('key')])).toEqual('arg$Symbol(key)')
 
     // Serializable objects
-    expect(hash([{ x: 1 }])).toEqual('arg$[{"x":1}]')
-    expect(hash([{ x: { y: 2 } }])).toEqual('arg$[{"x":{"y":2}}]')
+    expect(hash([{ x: 1 }])).toEqual('arg$[{x:1,},]')
+    expect(hash([{ x: { y: 2 } }])).toEqual('arg$[{x:{y:2,},},]')
 
     // Unserializable objects
-    expect(hash([() => {}])).toMatch(/arg\$_\d+/)
-    expect(hash([class {}])).toMatch(/arg\$_\d+/)
+    expect(hash([() => {}])).toMatch(/arg\$\[\$\d+,\]/)
+    expect(hash([class {}])).toMatch(/arg\$\[\$\d+,\]/)
+  })
 
+  it('should always generate the same and stable hash', async () => {
     // Multiple arguments
+    expect(hash([() => {}, 1, 'key', null, { x: 1 }])).toMatch(
+      /arg\$\[\$\d+,1,"key",null,\{x:1,\},\]/
+    )
+
+    // Stable hash
+    expect(hash([{ x: 1, y: 2, z: undefined }])).toMatch(
+      hash([{ z: undefined, y: 2, x: 1 }])
+    )
+    expect(hash([{ x: 1, y: { a: 1, b: 2 }, z: undefined }])).toMatch(
+      hash([{ y: { b: 2, a: 1 }, x: 1 }])
+    )
+
+    // Same hash of the same reference
+    const f = () => {}
+    expect(hash([f])).toEqual(hash([f]))
+    expect(hash([() => {}])).not.toEqual(hash([() => {}]))
   })
 })
