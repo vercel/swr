@@ -68,7 +68,8 @@ export const defaultConfig: FullConfiguration = mergeObjects(
     loadingTimeout: slowConnection ? 5000 : 3000,
 
     // providers
-    compare: (a: any, b: any) => stableHash(a) === stableHash(b),
+    compare: (currentData: any, newData: any) =>
+      stableHash(currentData) === stableHash(newData),
     isPaused: () => false,
     cache,
     mutate,
