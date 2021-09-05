@@ -138,4 +138,56 @@ describe('useSWR - immutable', () => {
     await act(() => sleep(50))
     await screen.findByText('data: 0')
   })
+
+  it('should not revalidate with revalidateIfStale disabled when key changes', async () => {
+    const fetcher = jest.fn(v => {
+      console.log(v)
+      return v
+    })
+
+    const key = createKey()
+    const useData = (id: string) =>
+      useSWR(key + id, fetcher, {
+        dedupingInterval: 0,
+        revalidateIfStale: false
+      })
+
+    function Page() {
+      const [id, setId] = useState('0')
+      const { data } = useData(id)
+      return (
+        <button onClick={() => setId(id === '0' ? '1' : '0')}>
+          data: {data}
+        </button>
+      )
+    }
+
+    render(<Page />)
+
+    // Ready
+    await screen.findByText(`data: ${key}0`)
+
+    // Toggle key by clicking the button
+    fireEvent.click(screen.getByText(`data: ${key}0`))
+    await screen.findByText(`data: ${key}1`)
+
+    await waitForNextTick()
+
+    // Toggle key again by clicking the button
+    fireEvent.click(screen.getByText(`data: ${key}1`))
+    await screen.findByText(`data: ${key}0`)
+
+    await waitForNextTick()
+
+    // Toggle key by clicking the button
+    fireEvent.click(screen.getByText(`data: ${key}0`))
+    await screen.findByText(`data: ${key}1`)
+
+    await sleep(20)
+
+    // `fetcher` should only be called twice, with each key.
+    expect(fetcher).toBeCalledTimes(2)
+    expect(fetcher).nthCalledWith(1, key + '0')
+    expect(fetcher).nthCalledWith(2, key + '1')
+  })
 })
