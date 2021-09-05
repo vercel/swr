@@ -19,10 +19,13 @@ let counter = 0
 // parsible. RegExp, Date, Symbol, circular reference and other things are not
 // currently supported.
 export function stableHash(arg: any): string | undefined {
-  const type = typeof arg
-  let result: any = ''
+  // Arg isn't null or undefined: https://dorey.github.io/JavaScript-Equality-Table
+  const constructor = arg != null && arg.constructor
 
-  if (arg) {
+  // Boolean, null, undefined, number, NaN, string, bigint, etc.
+  let result: any = constructor === String ? `"${arg}"` : '' + arg
+
+  if (constructor) {
     if (isFunction(arg)) {
       // `function` type, use WeakMap.
       result = table.get(arg)
@@ -30,34 +33,33 @@ export function stableHash(arg: any): string | undefined {
         result = ++counter
         table.set(arg, result)
       }
-      return '$' + result
-    } else if (type === 'object') {
+      result += '~'
+    } else {
       // Non-null object.
-      if (Array.isArray(arg)) {
+      if (constructor === Array) {
         // Array.
+        result = '$'
         for (const v of arg) {
           result += stableHash(v) + ','
         }
-        return `[${result}]`
-      } else {
-        // Not array, sort keys.
+      } else if (constructor === Object) {
+        // Object, sort keys.
+        result = '#'
         const keys = Object.keys(arg).sort()
         for (const k of keys) {
           if (!isUndefined(arg[k])) {
             result += k + ':' + stableHash(arg[k]) + ','
           }
         }
-        return `{${result}}`
       }
     }
   }
 
-  // Boolean, null, undefined, number, NaN, string, bigint, etc.
-  return type === 'string' ? `"${arg}"` : '' + arg
+  return result
 }
 
 // hashes an array of objects and returns a string
 export function hash(args: any[]): string {
   if (!args.length) return ''
-  return 'arg$' + stableHash(args)
+  return 'arg' + stableHash(args)
 }
