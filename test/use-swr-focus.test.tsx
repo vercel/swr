@@ -195,6 +195,7 @@ describe('useSWR - focus', () => {
     await act(() => sleep(150))
     // trigger revalidation
     await focusWindow()
+    await waitForNextTick()
     await screen.findByText('data: 5')
   })
 

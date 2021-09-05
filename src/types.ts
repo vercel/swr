@@ -1,3 +1,5 @@
+import * as revalidateEvents from './constants/revalidate-events'
+
 export type Fetcher<Data> = (...args: any) => Data | Promise<Data>
 
 // Configuration types that are only used internally, not exposed to the user.
@@ -164,16 +166,15 @@ export type Revalidator = (
   revalidateOpts?: RevalidatorOptions
 ) => Promise<boolean> | void
 
-export const enum RevalidateEvent {
-  FOCUS_EVENT = 0,
-  RECONNECT_EVENT = 1,
-  MUTATE_EVENT = 2
-}
+export type RevalidateEvent =
+  | typeof revalidateEvents.FOCUS_EVENT
+  | typeof revalidateEvents.RECONNECT_EVENT
+  | typeof revalidateEvents.MUTATE_EVENT
 
 type RevalidateCallbackReturnType = {
-  [RevalidateEvent.FOCUS_EVENT]: void
-  [RevalidateEvent.RECONNECT_EVENT]: void
-  [RevalidateEvent.MUTATE_EVENT]: Promise<boolean>
+  [revalidateEvents.FOCUS_EVENT]: void
+  [revalidateEvents.RECONNECT_EVENT]: void
+  [revalidateEvents.MUTATE_EVENT]: Promise<boolean>
 }
 export type RevalidateCallback = <K extends RevalidateEvent>(
   type: K
