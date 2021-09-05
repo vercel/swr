@@ -16,7 +16,7 @@ let counter = 0
 // - Generates short results
 //
 // This is not a serialization function, and the result is not guaranteed to be
-// parsible. RegExp, Date, Symbol, circular reference and other things are not
+// parsible. Symbol, circular reference and other things are not
 // currently supported.
 export function stableHash(arg: any): string | undefined {
   // Arg isn't null or undefined: https://dorey.github.io/JavaScript-Equality-Table

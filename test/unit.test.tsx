@@ -50,6 +50,9 @@ describe('Unit tests', () => {
     const date = new Date()
     expect(hash([date])).toEqual(`arg$${date},`)
 
+    // Regex
+    expect(hash([/regex/])).toEqual('arg$/regex/,')
+
     // Unsupported: Symbol, Set, Map, Buffer...
     // expect(hash([Symbol('key')])).toEqual('arg$Symbol(key),')
 
