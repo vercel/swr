@@ -362,7 +362,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     // revalidation from the outside.
     let nextFocusRevalidatedAt = 0
     const onRevalidate = (type: RevalidateEvent) => {
-      if (type === revalidateEvents.FOCUS_EVENT) {
+      if (type == revalidateEvents.FOCUS_EVENT) {
         const now = Date.now()
         if (
           getConfig().revalidateOnFocus &&
@@ -372,11 +372,11 @@ export const useSWRHandler = <Data = any, Error = any>(
           nextFocusRevalidatedAt = now + getConfig().focusThrottleInterval
           softRevalidate()
         }
-      } else if (type === revalidateEvents.RECONNECT_EVENT) {
+      } else if (type == revalidateEvents.RECONNECT_EVENT) {
         if (getConfig().revalidateOnReconnect && isActive()) {
           softRevalidate()
         }
-      } else if (type === revalidateEvents.MUTATE_EVENT) {
+      } else if (type == revalidateEvents.MUTATE_EVENT) {
         return revalidate()
       }
       return

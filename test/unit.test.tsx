@@ -70,7 +70,7 @@ describe('Unit tests', () => {
     expect(hash([Symbol('key')])).toMatch(hash([Symbol.for('key')]))
 
     // Unsupported: Set, Map, Buffer...
-    // expect(hash[new Set([])])
+    expect(hash([new Set()])).toMatch(hash([new Set()]))
 
     // Serializable objects
     expect(hash([{ x: 1 }])).toEqual('arg$#x:1,,')

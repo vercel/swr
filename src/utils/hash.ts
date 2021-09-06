@@ -20,7 +20,7 @@ let counter = 0
 // currently supported.
 export function stableHash(arg: any): string | undefined {
   // Arg isn't null or undefined: https://dorey.github.io/JavaScript-Equality-Table
-  // Not using `typeof` here because `typeof new String('') === 'object'`.
+  // Not using `typeof` here because `typeof new String('') == 'object'`.
   const constructor = arg != null && arg.constructor
 
   let result: any
