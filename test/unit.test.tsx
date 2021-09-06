@@ -25,7 +25,7 @@ describe('Unit tests', () => {
     expect(normalize(['key', fetcher, opts])).toEqual(['key', fetcher, opts])
   })
 
-  it('should hash arguments correctly', async () => {
+  it.only('should hash arguments correctly', async () => {
     // Empty
     expect(hash([])).toEqual('')
 
@@ -48,10 +48,6 @@ describe('Unit tests', () => {
     // BigInt
     expect(hash([BigInt(1)])).toEqual('arg$1,')
 
-    // Constructor
-    expect(hash([new String('key')])).toEqual('arg$"key",')
-    expect(hash([new Number(123)])).toEqual('arg$123,')
-
     // Date
     const date = new Date()
     expect(hash([date])).toEqual(`arg$${date},`)
@@ -69,14 +65,26 @@ describe('Unit tests', () => {
     expect(hash([Symbol('key')])).toMatch(hash([Symbol('key')]))
     expect(hash([Symbol('key')])).toMatch(hash([Symbol.for('key')]))
 
-    // Unsupported: Set, Map, Buffer...
-    expect(hash([new Set()])).toMatch(hash([new Set()]))
+    // Set, Map, Buffer...
+    const set = new Set()
+    expect(hash([set])).not.toMatch(hash([new Set()]))
+    expect(hash([set])).toMatch(hash([set]))
 
     // Serializable objects
     expect(hash([{ x: 1 }])).toEqual('arg$#x:1,,')
     expect(hash([{ x: { y: 2 } }])).toEqual('arg$#x:#y:2,,,')
     expect(hash([[]])).toEqual('arg$$,')
     expect(hash([[[]]])).not.toMatch(hash([[], []]))
+
+    // Circular
+    const o: any = {}
+    o.o = o
+    expect(hash([o])).toEqual(hash([o]))
+    expect(hash([o])).not.toEqual(hash([{}]))
+    const a: any = []
+    a.push(a)
+    expect(hash([a])).toEqual(hash([a]))
+    expect(hash([a])).not.toEqual(hash([[]]))
 
     // Unserializable objects
     expect(hash([() => {}])).toMatch(/arg\$\d+~,/)
