@@ -400,7 +400,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     }
 
     // Trigger a revalidation.
-    if (keyChanged || shouldRevalidateOnMount()) {
+    if (shouldRevalidateOnMount()) {
       if (isUndefined(data) || IS_SERVER) {
         // Revalidate immediately.
         softRevalidate()
