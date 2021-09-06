@@ -39,12 +39,18 @@ describe('Unit tests', () => {
     expect(hash(['null'])).toEqual('arg$"null",')
     expect(hash([undefined])).toEqual('arg$undefined,')
     expect(hash([NaN])).toEqual('arg$NaN,')
+    expect(hash([Infinity])).toEqual('arg$Infinity,')
     expect(hash([''])).toEqual('arg$"",')
-    expect(hash([new String('key')])).toEqual('arg$"key",')
-    expect(hash([new Number(123)])).toEqual('arg$123,')
+
+    // Encodes `"`
+    expect(hash(['","', 1])).not.toEqual(hash(['', '', 1]))
 
     // BigInt
     expect(hash([BigInt(1)])).toEqual('arg$1,')
+
+    // Constructor
+    expect(hash([new String('key')])).toEqual('arg$"key",')
+    expect(hash([new Number(123)])).toEqual('arg$123,')
 
     // Date
     const date = new Date()

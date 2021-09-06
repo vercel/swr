@@ -23,7 +23,7 @@ export function stableHash(arg: any): string | undefined {
   const constructor = arg != null && arg.constructor
 
   // Boolean, null, undefined, number, NaN, string, bigint, etc.
-  let result: any = constructor === String ? `"${arg}"` : '' + arg
+  let result: any = constructor == String ? JSON.stringify(arg) : '' + arg
 
   if (constructor) {
     if (isFunction(arg)) {
@@ -36,13 +36,13 @@ export function stableHash(arg: any): string | undefined {
       result += '~'
     } else {
       // Non-null object.
-      if (constructor === Array) {
+      if (constructor == Array) {
         // Array.
         result = '$'
         for (const v of arg) {
           result += stableHash(v) + ','
         }
-      } else if (constructor === Object) {
+      } else if (constructor == Object) {
         // Object, sort keys.
         result = '#'
         const keys = Object.keys(arg).sort()
