@@ -148,10 +148,10 @@ export type SWRConfiguration<
 export type Key = ValueKey | (() => ValueKey)
 
 export interface SWRResponse<Data, Error> {
-  data?: Data
-  error?: Error
+  data?: Readonly<Data>
+  error?: Readonly<Error>
   mutate: KeyedMutator<Data>
-  isValidating: boolean
+  isValidating: Readonly<boolean>
 }
 
 export type KeyLoader<Data = any> =
