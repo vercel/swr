@@ -1,15 +1,12 @@
 import { useEffect, useLayoutEffect } from 'react'
+import { hasWindow } from './helper'
 
-export const IS_SERVER = typeof window === 'undefined' || 'Deno' in window
+export const IS_SERVER = !hasWindow || 'Deno' in window
 
-const __requestAnimationFrame = !IS_SERVER
-  ? window['requestAnimationFrame']
-  : null
-
-// polyfill for requestAnimationFrame
-export const rAF = __requestAnimationFrame
-  ? (f: FrameRequestCallback) => __requestAnimationFrame(f)
-  : (f: (...args: any[]) => void) => setTimeout(f, 1)
+// Polyfill requestAnimationFrame
+export const rAF =
+  (hasWindow && window['requestAnimationFrame']) ||
+  ((f: (...args: any[]) => void) => setTimeout(f, 1))
 
 // React currently throws a warning when using useLayoutEffect on the server.
 // To get around it, we can conditionally useEffect on the server (no-op) and

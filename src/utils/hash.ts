@@ -20,38 +20,42 @@ let counter = 0
 // currently supported.
 export function stableHash(arg: any): string | undefined {
   // Arg isn't null or undefined: https://dorey.github.io/JavaScript-Equality-Table
+  // Not using `typeof` here because `typeof new String('') === 'object'`.
   const constructor = arg != null && arg.constructor
 
-  // Boolean, null, undefined, number, NaN, string, bigint, etc.
-  let result: any = constructor == String ? JSON.stringify(arg) : '' + arg
+  let result: any
 
-  if (constructor) {
-    if (isFunction(arg)) {
-      // `function` type, use WeakMap.
-      result = table.get(arg)
-      if (!result) {
-        result = ++counter
-        table.set(arg, result)
+  if (isFunction(arg)) {
+    // Function, class, use WeakMap because not serializable.
+    result = table.get(arg)
+    if (!result) {
+      result = ++counter
+      table.set(arg, result)
+    }
+    result += '~'
+  } else if (constructor == Array) {
+    // Array.
+    result = '$'
+    for (const v of arg) {
+      result += stableHash(v) + ','
+    }
+  } else if (constructor == Object) {
+    // Object, sort keys.
+    result = '#'
+    const keys = Object.keys(arg).sort()
+    for (const k of keys) {
+      if (!isUndefined(arg[k])) {
+        result += k + ':' + stableHash(arg[k]) + ','
       }
-      result += '~'
-    } else {
-      // Non-null object.
-      if (constructor == Array) {
-        // Array.
-        result = '$'
-        for (const v of arg) {
-          result += stableHash(v) + ','
-        }
-      } else if (constructor == Object) {
-        // Object, sort keys.
-        result = '#'
-        const keys = Object.keys(arg).sort()
-        for (const k of keys) {
-          if (!isUndefined(arg[k])) {
-            result += k + ':' + stableHash(arg[k]) + ','
-          }
-        }
-      }
+    }
+  } else {
+    // Other primitives.
+    try {
+      // Handles boolean, null, undefined, number, NaN, string, bigint, etc.
+      result = constructor == String ? JSON.stringify(arg) : '' + arg
+    } catch (err) {
+      // For symbols, we have to use `toString`.
+      result = arg.toString()
     }
   }
 

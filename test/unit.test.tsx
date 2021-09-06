@@ -59,8 +59,18 @@ describe('Unit tests', () => {
     // Regex
     expect(hash([/regex/])).toEqual('arg$/regex/,')
 
-    // Unsupported: Symbol, Set, Map, Buffer...
-    // expect(hash([Symbol('key')])).toEqual('arg$Symbol(key),')
+    // Symbol
+    expect(hash([Symbol('key')])).toMatch('arg$Symbol(key),')
+    const symbol = Symbol('foo')
+    expect(hash([symbol])).toMatch(hash([symbol]))
+
+    // Due to serialization, those three are equivalent
+    expect(hash([Symbol.for('key')])).toMatch(hash([Symbol.for('key')]))
+    expect(hash([Symbol('key')])).toMatch(hash([Symbol('key')]))
+    expect(hash([Symbol('key')])).toMatch(hash([Symbol.for('key')]))
+
+    // Unsupported: Set, Map, Buffer...
+    // expect(hash[new Set([])])
 
     // Serializable objects
     expect(hash([{ x: 1 }])).toEqual('arg$#x:1,,')
