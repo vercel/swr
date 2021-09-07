@@ -1,4 +1,4 @@
-import { isFunction, isUndefined } from './helper'
+import { isUndefined } from './helper'
 
 // use WeakMap to store the object->key mapping
 // so the objects can be garbage collected.
@@ -17,20 +17,15 @@ let counter = 0
 //
 // This is not a serialization function, and the result is not guaranteed to be
 // parsible.
-export function stableHash(arg: any): string | undefined {
-  const constructor = arg && arg.constructor
+export function stableHash(arg: any): string {
   const type = typeof arg
+  const constructor = arg && arg.constructor
   const isDate = constructor == Date
 
   let result: any
-  let index
+  let index: any
 
-  if (
-    constructor &&
-    (isFunction(arg) || type == 'object') &&
-    !isDate &&
-    constructor != RegExp
-  ) {
+  if (Object(arg) === arg && !isDate && constructor != RegExp) {
     // Object/function, not null/date/regexp. Use WeakMap to store the id first.
     // If it's already hashed, directly return the result.
     result = table.get(arg)
@@ -70,10 +65,4 @@ export function stableHash(arg: any): string | undefined {
   }
 
   return result
-}
-
-// hashes an array of objects and returns a string
-export function hash(args: any[]): string {
-  if (!args.length) return ''
-  return 'arg' + stableHash(args)
 }
