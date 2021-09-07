@@ -19,15 +19,9 @@ let counter = 0
 // parsible.
 export function stableHash(arg: any): string | undefined {
   // Arg isn't null or undefined: https://dorey.github.io/JavaScript-Equality-Table
-  // Not using `typeof` here because `typeof new String('') == 'object'`.
-  const constructor = arg != null && arg.constructor
-
+  const constructor = arg && arg.constructor
   const type = typeof arg
-
-  const isString = constructor == String
   const isDate = constructor == Date
-  const isRegExp = constructor == RegExp
-  const isSymbol = type == 'symbol'
 
   let result: any
 
@@ -35,9 +29,9 @@ export function stableHash(arg: any): string | undefined {
     constructor &&
     (isFunction(arg) || type == 'object') &&
     !isDate &&
-    !isRegExp
+    constructor != RegExp
   ) {
-    // It's an object, use WeakMap to store the id first.
+    // Object/function, not null/date/regexp. Use WeakMap to store the id first.
     result = table.get(arg)
     if (!result) {
       result = ++counter + '~'
@@ -66,46 +60,14 @@ export function stableHash(arg: any): string | undefined {
       table.set(arg, result)
     }
   } else {
-    result = isSymbol
+    result = isDate
+      ? arg.toJSON()
+      : type == 'symbol'
       ? arg.toString()
-      : isString
+      : type == 'string'
       ? JSON.stringify(arg)
       : '' + arg
   }
-
-  // if (isFunction(arg)) {
-  //   // Function, class, use WeakMap because not serializable.
-  //   result = table.get(arg)
-  //   if (!result) {
-  //     result = ++counter
-  //     table.set(arg, result)
-  //   }
-  //   result += '~'
-  // } else if (constructor == Array) {
-  //   // Array.
-  //   result = '$'
-  //   for (const v of arg) {
-  //     result += stableHash(v) + ','
-  //   }
-  // } else if (constructor == Object) {
-  //   // Object, sort keys.
-  //   result = '#'
-  //   const keys = Object.keys(arg).sort()
-  //   for (const k of keys) {
-  //     if (!isUndefined(arg[k])) {
-  //       result += k + ':' + stableHash(arg[k]) + ','
-  //     }
-  //   }
-  // } else {
-  //   // Other primitives.
-  //   try {
-  //     // Handles boolean, null, undefined, number, NaN, string, bigint, etc.
-  //     result = constructor == String ? JSON.stringify(arg) : '' + arg
-  //   } catch (err) {
-  //     // For symbols, we have to use `toString`.
-  //     result = arg.toString()
-  //   }
-  // }
 
   return result
 }
