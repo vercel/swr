@@ -13,13 +13,13 @@ import {
 import { isUndefined, noop, mergeObjects } from './helper'
 
 // error retry
-function onErrorRetry(
+const onErrorRetry = (
   _: unknown,
   __: string,
   config: Readonly<PublicConfiguration>,
   revalidate: Revalidator,
   opts: Required<RevalidatorOptions>
-): void {
+): void => {
   if (!preset.isVisible()) {
     // If it's hidden, stop. It will auto revalidate when refocusing.
     return

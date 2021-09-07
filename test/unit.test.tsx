@@ -31,34 +31,34 @@ describe('Unit tests', () => {
     expect(serialize([])[0]).toEqual('')
 
     // Primitives
-    expect(hash(['key'])).toEqual('$"key",')
-    expect(hash([1])).toEqual('$1,')
-    expect(hash(['false'])).toEqual('$"false",')
-    expect(hash([false])).toEqual('$false,')
-    expect(hash([true])).toEqual('$true,')
-    expect(hash([null])).toEqual('$null,')
-    expect(hash(['null'])).toEqual('$"null",')
-    expect(hash([undefined])).toEqual('$undefined,')
-    expect(hash([NaN])).toEqual('$NaN,')
-    expect(hash([Infinity])).toEqual('$Infinity,')
-    expect(hash([''])).toEqual('$"",')
+    expect(hash(['key'])).toEqual('@"key",')
+    expect(hash([1])).toEqual('@1,')
+    expect(hash(['false'])).toEqual('@"false",')
+    expect(hash([false])).toEqual('@false,')
+    expect(hash([true])).toEqual('@true,')
+    expect(hash([null])).toEqual('@null,')
+    expect(hash(['null'])).toEqual('@"null",')
+    expect(hash([undefined])).toEqual('@undefined,')
+    expect(hash([NaN])).toEqual('@NaN,')
+    expect(hash([Infinity])).toEqual('@Infinity,')
+    expect(hash([''])).toEqual('@"",')
 
     // Encodes `"`
     expect(hash(['","', 1])).not.toEqual(hash(['', '', 1]))
 
     // BigInt
-    expect(hash([BigInt(1)])).toEqual('$1,')
+    expect(hash([BigInt(1)])).toEqual('@1,')
 
     // Date
     const date = new Date()
-    expect(hash([date])).toEqual(`$${date.toJSON()},`)
+    expect(hash([date])).toEqual(`@${date.toJSON()},`)
     expect(hash([new Date(1234)])).toEqual(hash([new Date(1234)]))
 
     // Regex
-    expect(hash([/regex/])).toEqual('$/regex/,')
+    expect(hash([/regex/])).toEqual('@/regex/,')
 
     // Symbol
-    expect(hash([Symbol('key')])).toMatch('$Symbol(key),')
+    expect(hash([Symbol('key')])).toMatch('@Symbol(key),')
     const symbol = Symbol('foo')
     expect(hash([symbol])).toMatch(hash([symbol]))
 
@@ -79,10 +79,10 @@ describe('Unit tests', () => {
     expect(hash([buffer])).toMatch(hash([buffer]))
 
     // Serializable objects
-    expect(hash([{ x: 1 }])).toEqual('$#x:1,,')
-    expect(hash([{ '': 1 }])).toEqual('$#:1,,')
-    expect(hash([{ x: { y: 2 } }])).toEqual('$#x:#y:2,,,')
-    expect(hash([[]])).toEqual('$$,')
+    expect(hash([{ x: 1 }])).toEqual('@#x:1,,')
+    expect(hash([{ '': 1 }])).toEqual('@#:1,,')
+    expect(hash([{ x: { y: 2 } }])).toEqual('@#x:#y:2,,,')
+    expect(hash([[]])).toEqual('@@,')
     expect(hash([[[]]])).not.toMatch(hash([[], []]))
 
     // Circular
@@ -100,14 +100,14 @@ describe('Unit tests', () => {
     expect(hash([o2])).toEqual(hash([o2]))
 
     // Unserializable objects
-    expect(hash([() => {}])).toMatch(/\$\d+~,/)
-    expect(hash([class {}])).toMatch(/\$\d+~,/)
+    expect(hash([() => {}])).toMatch(/@\d+~,/)
+    expect(hash([class {}])).toMatch(/@\d+~,/)
   })
 
   it('should always generate the same and stable hash', async () => {
     // Multiple arguments
     expect(hash([() => {}, 1, 'key', null, { x: 1 }])).toMatch(
-      /\$\d+~,1,"key",null,#x:1,,/
+      /@\d+~,1,"key",null,#x:1,,/
     )
 
     // Stable hash

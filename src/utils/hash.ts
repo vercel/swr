@@ -17,7 +17,7 @@ let counter = 0
 //
 // This is not a serialization function, and the result is not guaranteed to be
 // parsible.
-export function stableHash(arg: any): string {
+export const stableHash = (arg: any): string => {
   const type = typeof arg
   const constructor = arg && arg.constructor
   const isDate = constructor == Date
@@ -33,17 +33,19 @@ export function stableHash(arg: any): string {
 
     // Store the hash first for circular reference detection before entering the
     // recursive `stableHash` calls.
+    // For other objects like set and map, we use this id directly as the hash.
     result = ++counter + '~'
     table.set(arg, result)
 
     if (constructor == Array) {
       // Array.
-      result = '$'
+      result = '@'
       for (index = 0; index < arg.length; index++) {
         result += stableHash(arg[index]) + ','
       }
       table.set(arg, result)
-    } else if (constructor == Object) {
+    }
+    if (constructor == Object) {
       // Object, sort keys.
       result = '#'
       const keys = Object.keys(arg).sort()
