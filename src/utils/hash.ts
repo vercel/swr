@@ -4,7 +4,7 @@ import { isFunction, isUndefined } from './helper'
 // so the objects can be garbage collected.
 // WeakMap uses a hashtable under the hood, so the lookup
 // complexity is almost O(1).
-const table = new WeakMap<object, number>()
+const table = new WeakMap<object, number | string>()
 
 // counter of the key
 let counter = 0
@@ -18,12 +18,12 @@ let counter = 0
 // This is not a serialization function, and the result is not guaranteed to be
 // parsible.
 export function stableHash(arg: any): string | undefined {
-  // Arg isn't null or undefined: https://dorey.github.io/JavaScript-Equality-Table
   const constructor = arg && arg.constructor
   const type = typeof arg
   const isDate = constructor == Date
 
   let result: any
+  let index
 
   if (
     constructor &&
@@ -32,29 +32,29 @@ export function stableHash(arg: any): string | undefined {
     constructor != RegExp
   ) {
     // Object/function, not null/date/regexp. Use WeakMap to store the id first.
+    // If it's already hashed, directly return the result.
     result = table.get(arg)
-    if (!result) {
-      result = ++counter + '~'
-      table.set(arg, result)
-    } else {
-      // It's already hashed, directly return the result.
-      return result
-    }
+    if (result) return result
+
+    // Store the hash first for circular reference detection before entering the
+    // recursive `stableHash` calls.
+    result = ++counter + '~'
+    table.set(arg, result)
 
     if (constructor == Array) {
       // Array.
       result = '$'
-      for (const v of arg) {
-        result += stableHash(v) + ','
+      for (index = 0; index < arg.length; index++) {
+        result += stableHash(arg[index]) + ','
       }
       table.set(arg, result)
     } else if (constructor == Object) {
       // Object, sort keys.
       result = '#'
       const keys = Object.keys(arg).sort()
-      for (const k of keys) {
-        if (!isUndefined(arg[k])) {
-          result += k + ':' + stableHash(arg[k]) + ','
+      while (!isUndefined((index = keys.pop() as string))) {
+        if (!isUndefined(arg[index])) {
+          result += index + ':' + stableHash(arg[index]) + ','
         }
       }
       table.set(arg, result)

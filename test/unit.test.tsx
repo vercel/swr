@@ -25,7 +25,7 @@ describe('Unit tests', () => {
     expect(normalize(['key', fetcher, opts])).toEqual(['key', fetcher, opts])
   })
 
-  it.only('should hash arguments correctly', async () => {
+  it('should hash arguments correctly', async () => {
     // Empty
     expect(hash([])).toEqual('')
 
@@ -50,7 +50,8 @@ describe('Unit tests', () => {
 
     // Date
     const date = new Date()
-    expect(hash([date])).toEqual(`arg$${date},`)
+    expect(hash([date])).toEqual(`arg$${date.toJSON()},`)
+    expect(hash([new Date(1234)])).toEqual(hash([new Date(1234)]))
 
     // Regex
     expect(hash([/regex/])).toEqual('arg$/regex/,')
@@ -72,6 +73,7 @@ describe('Unit tests', () => {
 
     // Serializable objects
     expect(hash([{ x: 1 }])).toEqual('arg$#x:1,,')
+    expect(hash([{ '': 1 }])).toEqual('arg$#:1,,')
     expect(hash([{ x: { y: 2 } }])).toEqual('arg$#x:#y:2,,,')
     expect(hash([[]])).toEqual('arg$$,')
     expect(hash([[[]]])).not.toMatch(hash([[], []]))
@@ -85,6 +87,10 @@ describe('Unit tests', () => {
     a.push(a)
     expect(hash([a])).toEqual(hash([a]))
     expect(hash([a])).not.toEqual(hash([[]]))
+    const o2: any = {}
+    const a2: any = [o2]
+    o2.a = a2
+    expect(hash([o2])).toEqual(hash([o2]))
 
     // Unserializable objects
     expect(hash([() => {}])).toMatch(/arg\$\d+~,/)
