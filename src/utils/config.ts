@@ -1,5 +1,4 @@
-import { dequal } from 'dequal/lite'
-
+import { stableHash } from './hash'
 import { initCache } from './cache'
 import { preset } from './web-preset'
 import { slowConnection } from './env'
@@ -14,13 +13,13 @@ import {
 import { isUndefined, noop, mergeObjects } from './helper'
 
 // error retry
-function onErrorRetry(
+const onErrorRetry = (
   _: unknown,
   __: string,
   config: Readonly<PublicConfiguration>,
   revalidate: Revalidator,
   opts: Required<RevalidatorOptions>
-): void {
+): void => {
   if (!preset.isVisible()) {
     // If it's hidden, stop. It will auto revalidate when refocusing.
     return
@@ -69,7 +68,8 @@ export const defaultConfig: FullConfiguration = mergeObjects(
     loadingTimeout: slowConnection ? 5000 : 3000,
 
     // providers
-    compare: dequal,
+    compare: (currentData: any, newData: any) =>
+      stableHash(currentData) == stableHash(newData),
     isPaused: () => false,
     cache,
     mutate,

@@ -89,7 +89,7 @@ type SWRHookWithMiddleware = <Data = any, Error = any>(
 
 export type Middleware = (useSWRNext: SWRHook) => SWRHookWithMiddleware
 
-export type ValueKey = string | any[] | null
+export type ValueKey = string | any[] | object | null
 
 export type MutatorCallback<Data = any> = (
   currentValue?: Data

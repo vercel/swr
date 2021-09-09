@@ -216,10 +216,10 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
       let size
       if (isFunction(arg)) {
         size = arg(resolvePageSize())
-      } else if (typeof arg === 'number') {
+      } else if (typeof arg == 'number') {
         size = arg
       }
-      if (typeof size !== 'number') return
+      if (typeof size != 'number') return
 
       cache.set(pageSizeCacheKey, size)
       lastPageSizeRef.current = size

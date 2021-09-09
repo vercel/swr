@@ -188,4 +188,24 @@ describe('useSWR - key', () => {
     // All values should equal because they're sharing the same key
     expect(values.some(([a, b]) => a !== b)).toBeFalsy()
   })
+
+  it('should support object as the key and deep compare', async () => {
+    const fetcher = jest.fn(() => 'data')
+    function Page() {
+      const { data: v1 } = useSWR({ foo: { bar: 1 } }, fetcher)
+      const { data: v2 } = useSWR({ foo: { bar: 1 } }, fetcher)
+
+      return (
+        <div>
+          {v1},{v2}
+        </div>
+      )
+    }
+
+    render(<Page />)
+    await screen.findByText('data,data')
+
+    // Only 1 request since the keys are the same.
+    expect(fetcher).toBeCalledTimes(1)
+  })
 })

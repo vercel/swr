@@ -9,10 +9,10 @@ type StateDeps = Record<StateKeys, boolean>
 /**
  * An implementation of state with dependency-tracking.
  */
-export default function useStateWithDeps<Data, Error, S = State<Data, Error>>(
+export const useStateWithDeps = <Data, Error, S = State<Data, Error>>(
   state: S,
   unmountedRef: MutableRefObject<boolean>
-): [MutableRefObject<S>, Record<StateKeys, boolean>, (payload: S) => void] {
+): [MutableRefObject<S>, Record<StateKeys, boolean>, (payload: S) => void] => {
   const rerender = useState<Record<string, unknown>>({})[1]
   const stateRef = useRef(state)
 

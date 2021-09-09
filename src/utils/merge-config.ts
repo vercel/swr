@@ -1,10 +1,10 @@
 import { mergeObjects } from './helper'
 import { FullConfiguration } from '../types'
 
-export function mergeConfigs(
+export const mergeConfigs = (
   a: Partial<FullConfiguration>,
   b?: Partial<FullConfiguration>
-) {
+) => {
   // Need to create a new object to avoid mutating the original here.
   const v: Partial<FullConfiguration> = mergeObjects(a, b)
 

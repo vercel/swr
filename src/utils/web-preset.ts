@@ -1,5 +1,5 @@
 import { ConfigOptions } from '../types'
-import { isUndefined, noop } from './helper'
+import { isUndefined, noop, hasWindow, hasDocument } from './helper'
 
 /**
  * Due to bug https://bugs.chromium.org/p/chromium/issues/detail?id=678075,
@@ -10,11 +10,9 @@ import { isUndefined, noop } from './helper'
  */
 let online = true
 const isOnline = () => online
-const hasWindow = typeof window !== 'undefined'
-const hasDocument = typeof document !== 'undefined'
 
 // For node and React Native, `add/removeEventListener` doesn't exist on window.
-const onWindowEvent = (hasWindow && window.addEventListener) || noop
+const onWindowEvent = (hasWindow && addEventListener) || noop
 const onDocumentEvent = (hasDocument && document.addEventListener) || noop
 
 const isVisible = () => {
