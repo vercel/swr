@@ -3,7 +3,7 @@ import App from 'next/app'
 import { SWRConfig } from 'swr'
 import fetch from '../libs/fetch.js';
 
-class MyApp extends App {
+export default class MyApp extends App {
   render() {
     const { Component, pageProps } = this.props
     return <SWRConfig
@@ -15,5 +15,3 @@ class MyApp extends App {
     </SWRConfig>
   }
 }
-
-export default MyApp

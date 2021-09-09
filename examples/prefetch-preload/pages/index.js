@@ -28,7 +28,7 @@ function prefetchWithProjects() {
 // if we are on the browser trigger a prefetch as soon as possible
 if (typeof window !== 'undefined') prefetchWithProjects()
 
-export default () => {
+export default function Index() {
   const { data } = useSWR('/api/data', fetch)
 
   // This effect will fetch all project after mounting
@@ -55,7 +55,7 @@ export default () => {
         <h1>Trending Projects</h1>
         <div>
         {
-          data ? data.map(project => 
+          data ? data.map(project =>
             <p key={project}>
               <Link href='/[user]/[repo]' as={`/${project}`}>
                 <a onMouseEnter={handleMouseEnter}>{project}</a>

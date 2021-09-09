@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 import useRequest from '../libs/useRequest'
 
-export default () => {
+export default function Index() {
   const { data } = useRequest({
     url: '/api/data'
   })

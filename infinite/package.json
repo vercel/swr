@@ -6,7 +6,6 @@
   "types": "./dist/infinite",
   "peerDependencies": {
     "swr": "*",
-    "react": "*",
-    "dequal": "*"
+    "react": "*"
   }
 }

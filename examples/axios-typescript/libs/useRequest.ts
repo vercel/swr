@@ -6,7 +6,7 @@ export type GetRequest = AxiosRequestConfig | null
 interface Return<Data, Error>
   extends Pick<
     SWRResponse<AxiosResponse<Data>, AxiosError<Error>>,
-    'isValidating' | 'revalidate' | 'error' | 'mutate'
+    'isValidating' | 'error' | 'mutate'
   > {
   data: Data | undefined
   response: AxiosResponse<Data> | undefined
@@ -15,16 +15,16 @@ interface Return<Data, Error>
 export interface Config<Data = unknown, Error = unknown>
   extends Omit<
     SWRConfiguration<AxiosResponse<Data>, AxiosError<Error>>,
-    'initialData'
+    'fallbackData'
   > {
-  initialData?: Data
+  fallbackData?: Data
 }
 
 export default function useRequest<Data = unknown, Error = unknown>(
   request: GetRequest,
-  { initialData, ...config }: Config<Data, Error> = {}
+  { fallbackData, ...config }: Config<Data, Error> = {}
 ): Return<Data, Error> {
-  const { data: response, error, isValidating, revalidate, mutate } = useSWR<
+  const { data: response, error, isValidating, mutate } = useSWR<
     AxiosResponse<Data>,
     AxiosError<Error>
   >(
@@ -37,13 +37,13 @@ export default function useRequest<Data = unknown, Error = unknown>(
     () => axios(request!),
     {
       ...config,
-      initialData: initialData && {
+      fallbackData: fallbackData && {
         status: 200,
         statusText: 'InitialData',
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         config: request!,
         headers: {},
-        data: initialData
+        data: fallbackData
       }
     }
   )
@@ -53,7 +53,6 @@ export default function useRequest<Data = unknown, Error = unknown>(
     response,
     error,
     isValidating,
-    revalidate,
     mutate
   }
 }

@@ -1,17 +1,17 @@
 import useSWR from 'swr'
 import axios from 'axios'
 
-export default function useRequest(request, { initialData, ...config } = {}) {
+export default function useRequest(request, { fallbackData, ...config } = {}) {
   return useSWR(
     request && JSON.stringify(request),
     () => axios(request || {}).then(response => response.data),
     {
       ...config,
-      initialData: initialData && {
+      fallbackData: fallbackData && {
         status: 200,
         statusText: 'InitialData',
         headers: {},
-        data: initialData
+        data: fallbackData
       }
     }
   ) 

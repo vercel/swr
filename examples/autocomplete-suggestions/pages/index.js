@@ -1,3 +1,4 @@
+import { useState } from "react"
 import fetcher from '../libs/fetcher'
 import {
   Combobox,
@@ -9,8 +10,8 @@ import {
 
 import useSWR from 'swr'
 
-export default () => {
-  const [searchTerm, setSearchTerm] = React.useState(null)
+export default function Index() {
+  const [searchTerm, setSearchTerm] = useState(null)
   const { data: countries = [], isValidating } = useSWR(
     () => (searchTerm ? `/api/suggestions?value=${searchTerm}` : null),
     fetcher

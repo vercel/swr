@@ -9,14 +9,10 @@ type StateDeps = Record<StateKeys, boolean>
 /**
  * An implementation of state with dependency-tracking.
  */
-export default function useStateWithDeps<Data, Error, S = State<Data, Error>>(
+export const useStateWithDeps = <Data, Error, S = State<Data, Error>>(
   state: S,
   unmountedRef: MutableRefObject<boolean>
-): [
-  MutableRefObject<S>,
-  MutableRefObject<Record<StateKeys, boolean>>,
-  (payload: S) => void
-] {
+): [MutableRefObject<S>, Record<StateKeys, boolean>, (payload: S) => void] => {
   const rerender = useState<Record<string, unknown>>({})[1]
   const stateRef = useRef(state)
 
@@ -52,9 +48,7 @@ export default function useStateWithDeps<Data, Error, S = State<Data, Error>>(
       let shouldRerender = false
 
       const currentState = stateRef.current
-      for (const _ of Object.keys(payload)) {
-        // Type casting to work around the `for...in` loop
-        // https://github.com/Microsoft/TypeScript/issues/3500
+      for (const _ in payload) {
         const k = _ as keyof S & StateKeys
 
         // If the property has changed, update the state and mark rerender as
@@ -84,5 +78,5 @@ export default function useStateWithDeps<Data, Error, S = State<Data, Error>>(
     stateRef.current = state
   })
 
-  return [stateRef, stateDependenciesRef, setState]
+  return [stateRef, stateDependenciesRef.current, setState]
 }

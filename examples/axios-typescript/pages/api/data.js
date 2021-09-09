@@ -7,7 +7,7 @@ const projects = [
   'zeit/next.js'
 ]
 
-export default (req, res) => {
+export default function api(req, res) {
   if (req.query.id) {
     // a slow endpoint for getting repo data
     axios(`https://api.github.com/repos/${req.query.id}`)

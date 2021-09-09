@@ -10,4 +10,3 @@ esm
 .vscode
 examples/**/yarn.lock
 package-lock.json
-playground/**

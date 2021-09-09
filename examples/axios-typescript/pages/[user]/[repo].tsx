@@ -3,7 +3,7 @@ import Link from 'next/link'
 
 import useRequest from '../../libs/useRequest'
 
-export default () => {
+export default function Repo() {
   const id =
     typeof window !== 'undefined' ? window.location.pathname.slice(1) : ''
   const { data } = useRequest<{

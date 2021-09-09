@@ -12,9 +12,19 @@ import useSWR, {
 } from 'swr'
 import { useIsomorphicLayoutEffect } from '../src/utils/env'
 import { serialize } from '../src/utils/serialize'
-import { isUndefined, UNDEFINED } from '../src/utils/helper'
+import { isUndefined, isFunction, UNDEFINED } from '../src/utils/helper'
 import { withMiddleware } from '../src/utils/with-middleware'
 import { SWRInfiniteConfiguration, SWRInfiniteResponse } from './types'
+
+const INFINITE_PREFIX = '$inf$'
+
+const getFirstPageKey = (getKey: KeyLoader<any>) => {
+  return serialize(getKey ? getKey(0, null) : null)[0]
+}
+
+export const unstable_serialize = (getKey: KeyLoader<any>) => {
+  return INFINITE_PREFIX + getFirstPageKey(getKey)
+}
 
 export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
   getKey: KeyLoader<Data>,
@@ -31,21 +41,22 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
   // get the serialized key of the first page
   let firstPageKey: string | null = null
   try {
-    firstPageKey = serialize(getKey ? getKey(0, null) : null)[0]
+    firstPageKey = getFirstPageKey(getKey)
   } catch (err) {
     // not ready
   }
 
   const rerender = useState({})[1]
 
-  // we use cache to pass extra info (context) to fetcher so it can be globally shared
-  // here we get the key of the fetcher context cache
+  // We use cache to pass extra info (context) to fetcher so it can be globally
+  // shared. The key of the context data is based on the first page key.
   let contextCacheKey: string | null = null
   if (firstPageKey) {
     contextCacheKey = '$ctx$' + firstPageKey
   }
 
-  // page size is also cached to share the page data between hooks having the same key
+  // Page size is also cached to share the page data between hooks with the
+  // same key.
   let pageSizeCacheKey: string | null = null
   if (firstPageKey) {
     pageSizeCacheKey = '$len$' + firstPageKey
@@ -84,17 +95,19 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
   // keep the data inside a ref
   const dataRef = useRef<Data[]>()
 
-  // actual swr of all pages
+  // Actual SWR hook to load all pages in one fetcher.
   const swr = useSWRNext<Data[], Error>(
-    firstPageKey ? '$inf$' + firstPageKey : null,
+    firstPageKey ? INFINITE_PREFIX + firstPageKey : null,
     async () => {
       // get the revalidate context
-      const { data: originalData, force } = cache.get(contextCacheKey) || {}
+      const [forceRevalidateAll, originalData] =
+        cache.get(contextCacheKey) || []
 
       // return an array of page data
       const data: Data[] = []
 
       const pageSize = resolvePageSize()
+
       let previousPageData = null
       for (let i = 0; i < pageSize; ++i) {
         const [pageKey, pageArgs] = serialize(
@@ -102,32 +115,30 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
         )
 
         if (!pageKey) {
-          // pageKey is falsy, stop fetching next pages
+          // `pageKey` is falsy, stop fetching new pages.
           break
         }
 
-        // get the current page cache
+        // Get the cached page data.
         let pageData = cache.get(pageKey)
 
         // should fetch (or revalidate) if:
         // - `revalidateAll` is enabled
         // - `mutate()` called
         // - the cache is missing
-        // - it's the first page and it's not the first render
-        // - cache has changed
+        // - it's the first page and it's not the initial render
+        // - cache for that page has changed
         const shouldFetchPage =
           revalidateAll ||
-          force ||
+          forceRevalidateAll ||
           isUndefined(pageData) ||
-          (isUndefined(force) && i === 0 && !isUndefined(dataRef.current)) ||
-          (originalData && !config.compare(originalData[i], pageData))
+          (!i && !isUndefined(dataRef.current)) ||
+          (originalData &&
+            !isUndefined(originalData[i]) &&
+            !config.compare(originalData[i], pageData))
 
         if (fn && shouldFetchPage) {
-          if (pageArgs !== null) {
-            pageData = await fn(...pageArgs)
-          } else {
-            pageData = await fn(pageKey)
-          }
+          pageData = await fn(...pageArgs)
           cache.set(pageKey, pageData)
         }
 
@@ -150,17 +161,20 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
   }, [swr.data])
 
   const mutate = useCallback(
-    (data: MutatorCallback, shouldRevalidate = true) => {
+    (
+      data: Data[] | undefined | Promise<Data[]> | MutatorCallback<Data[]>,
+      shouldRevalidate = true
+    ) => {
       // It is possible that the key is still falsy.
-      if (!contextCacheKey) return UNDEFINED
+      if (!contextCacheKey) return
 
       if (shouldRevalidate && !isUndefined(data)) {
-        // we only revalidate the pages that are changed
+        // We only revalidate the pages that are changed
         const originalData = dataRef.current
-        cache.set(contextCacheKey, { data: originalData, force: false })
+        cache.set(contextCacheKey, [false, originalData])
       } else if (shouldRevalidate) {
-        // calling `mutate()`, we revalidate all pages
-        cache.set(contextCacheKey, { force: true })
+        // Calling `mutate()`, we revalidate all pages
+        cache.set(contextCacheKey, [true])
       }
 
       return swr.mutate(data, shouldRevalidate)
@@ -170,24 +184,47 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
     [contextCacheKey]
   )
 
-  // extend the SWR API
+  // Function to load pages data from the cache based on the page size.
+  const resolvePagesFromCache = (pageSize: number): Data[] | undefined => {
+    // return an array of page data
+    const data: Data[] = []
+
+    let previousPageData = null
+    for (let i = 0; i < pageSize; ++i) {
+      const [pageKey] = serialize(getKey ? getKey(i, previousPageData) : null)
+
+      // Get the cached page data.
+      const pageData = pageKey ? cache.get(pageKey) : UNDEFINED
+
+      // Return the current data if we can't get it from the cache.
+      if (isUndefined(pageData)) return dataRef.current
+
+      data.push(pageData)
+      previousPageData = pageData
+    }
+
+    // Return the data
+    return data
+  }
+
+  // Extend the SWR API
   const setSize = useCallback(
     (arg: number | ((size: number) => number)) => {
       // It is possible that the key is still falsy.
-      if (!pageSizeCacheKey) return UNDEFINED
+      if (!pageSizeCacheKey) return
 
       let size
-      if (typeof arg === 'function') {
+      if (isFunction(arg)) {
         size = arg(resolvePageSize())
-      } else if (typeof arg === 'number') {
+      } else if (typeof arg == 'number') {
         size = arg
       }
-      if (typeof size === 'number') {
-        cache.set(pageSizeCacheKey, size)
-        lastPageSizeRef.current = size
-      }
+      if (typeof size != 'number') return
+
+      cache.set(pageSizeCacheKey, size)
+      lastPageSizeRef.current = size
       rerender({})
-      return mutate(v => v)
+      return mutate(resolvePagesFromCache(size))
     },
     // `cache` and `rerender` isn't allowed to change during the lifecycle
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -196,30 +233,20 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
 
   // Use getter functions to avoid unnecessary re-renders caused by triggering
   // all the getters of the returned swr object.
-  return Object.defineProperties(
-    { size: resolvePageSize(), setSize, mutate },
-    {
-      error: {
-        get: () => swr.error,
-        enumerable: true
-      },
-      data: {
-        get: () => swr.data,
-        enumerable: true
-      },
-      // revalidate will be deprecated in the 1.x release
-      // because mutate() covers the same use case of revalidate().
-      // This remains only for backward compatibility
-      revalidate: {
-        get: () => swr.revalidate,
-        enumerable: true
-      },
-      isValidating: {
-        get: () => swr.isValidating,
-        enumerable: true
-      }
+  return {
+    size: resolvePageSize(),
+    setSize,
+    mutate,
+    get error() {
+      return swr.error
+    },
+    get data() {
+      return swr.data
+    },
+    get isValidating() {
+      return swr.isValidating
     }
-  ) as SWRInfiniteResponse<Data, Error>
+  } as SWRInfiniteResponse<Data, Error>
 }) as unknown) as Middleware
 
 type SWRInfiniteHook = <Data = any, Error = any>(

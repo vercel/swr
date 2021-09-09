@@ -5,8 +5,8 @@ import useSWR from 'swr'
 
 const getURL = pokemon => `https://pokeapi.co/api/v2/pokemon/${pokemon}`
 
-export default function Pokemon({ pokemon, initialData }) {
-  const { data } = useSWR(getURL(pokemon), fetcher, { initialData })
+export default function Pokemon({ pokemon, fallbackData }) {
+  const { data } = useSWR(getURL(pokemon), fetcher, { fallbackData })
 
   return (
     <div>
@@ -38,5 +38,5 @@ export default function Pokemon({ pokemon, initialData }) {
 
 export async function getServerSideProps({ query }) {
   const data = await fetcher(getURL(query.pokemon))
-  return { props: { initialData: data, pokemon: query.pokemon } }
+  return { props: { fallbackData: data, pokemon: query.pokemon } }
 }

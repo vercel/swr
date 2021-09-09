@@ -1,5 +1,3 @@
-import fetch from 'isomorphic-unfetch'
-
 const projects = [
   'facebook/flipper',
   'vuejs/vuepress',
@@ -8,7 +6,7 @@ const projects = [
   'emperor/clothes'
 ]
 
-export default (req, res) => {
+export default function api(req, res) {
   if (req.query.id) {
     if (req.query.id === projects[4]) {
       setTimeout(() => {

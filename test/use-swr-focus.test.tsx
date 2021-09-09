@@ -1,13 +1,9 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import React, { useState } from 'react'
-import useSWR from 'swr'
-import { sleep } from './utils'
+import useSWR, { SWRConfig } from 'swr'
+import { sleep, nextTick as waitForNextTick, focusOn } from './utils'
 
-const waitForNextTick = () => act(() => sleep(1))
-const focusWindow = () =>
-  act(async () => {
-    fireEvent.focus(window)
-  })
+const focusWindow = () => focusOn(window)
 
 describe('useSWR - focus', () => {
   it('should revalidate on focus by default', async () => {
@@ -57,7 +53,8 @@ describe('useSWR - focus', () => {
     // should not be revalidated
     screen.getByText('data: 0')
   })
-  it('revalidateOnFocus shoule be stateful', async () => {
+
+  it('revalidateOnFocus should be stateful', async () => {
     let value = 0
 
     function Page() {
@@ -198,6 +195,31 @@ describe('useSWR - focus', () => {
     await act(() => sleep(150))
     // trigger revalidation
     await focusWindow()
+    await waitForNextTick()
     await screen.findByText('data: 5')
+  })
+
+  it('should revalidate on focus even with custom cache', async () => {
+    let value = 0
+
+    function Page() {
+      const { data } = useSWR('revalidateOnFocus + cache', () => value++, {
+        revalidateOnFocus: true,
+        dedupingInterval: 0
+      })
+      return <div>data: {data}</div>
+    }
+
+    // reuse default test case
+    render(
+      <SWRConfig value={{ provider: () => new Map() }}>
+        <Page />
+      </SWRConfig>
+    )
+    screen.getByText('data:')
+    await screen.findByText('data: 0')
+    await waitForNextTick()
+    await focusWindow()
+    await screen.findByText('data: 1')
   })
 })

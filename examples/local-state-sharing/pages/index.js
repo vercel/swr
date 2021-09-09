@@ -3,7 +3,7 @@ import initialStore from "../libs/store"
 import useSWR, { mutate } from "swr"
 
 function Profile() {
-  const { data } = useSWR("globalState", { initialData: initialStore })
+  const { data } = useSWR("globalState", { fallbackData: initialStore })
   const [value, updateValue] = useState((data || {}).name)
   if (!data) {
     return null
@@ -29,7 +29,7 @@ function Profile() {
 }
 
 function Other() {
-  const { data } = useSWR("globalState", { initialData: initialStore })
+  const { data } = useSWR("globalState", { fallbackData: initialStore })
   if (!data) {
     return null
   }
@@ -43,10 +43,12 @@ function Other() {
   )
 }
 
-export default () => (
-  <div style={{ padding: 40 }}>
-    useSWR can share state between components:
-    <Profile />
-    <Other />
-  </div>
-)
+export default function Index() {
+  return (
+    <div style={{ padding: 40 }}>
+      useSWR can share state between components:
+      <Profile />
+      <Other />
+    </div>
+  )
+}

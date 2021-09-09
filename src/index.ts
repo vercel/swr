@@ -1,31 +1,24 @@
-// Core APIs
-export { SWRConfig, mutate, createCache } from './use-swr'
-
 // useSWR
 import useSWR from './use-swr'
 export default useSWR
 
+// Core APIs
+export { SWRConfig, unstable_serialize } from './use-swr'
+export { useSWRConfig } from './utils/use-swr-config'
+export { mutate } from './utils/config'
+
 // Types
 export {
   SWRConfiguration,
-  SWRInfiniteConfiguration,
-  SWRInfiniteResponse,
   Revalidator,
   RevalidatorOptions,
   Key,
   KeyLoader,
+  KeyedMutator,
   SWRResponse,
   Cache,
   SWRHook,
   Fetcher,
   MutatorCallback,
-  Middleware,
-  // Legacy, for backwards compatibility
-  ConfigInterface,
-  SWRInfiniteConfigInterface,
-  SWRInfiniteResponseInterface,
-  revalidateType,
-  RevalidateOptionInterface,
-  keyInterface,
-  responseInterface
+  Middleware
 } from './types'

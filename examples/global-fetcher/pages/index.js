@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 import useSWR from 'swr'
 
-export default () => {
+export default function Index() {
   const { data } = useSWR('/api/data')
 
   return (

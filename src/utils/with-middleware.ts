@@ -3,10 +3,10 @@ import { normalize } from './normalize-args'
 import { Key, Fetcher, Middleware, SWRConfiguration, SWRHook } from '../types'
 
 // Create a custom hook with a middleware
-export function withMiddleware(
+export const withMiddleware = (
   useSWR: SWRHook,
   middleware: Middleware
-): SWRHook {
+): SWRHook => {
   return <Data = any, Error = any>(
     ...args:
       | readonly [Key]
@@ -15,7 +15,7 @@ export function withMiddleware(
       | readonly [Key, Fetcher<Data> | null, SWRConfiguration | undefined]
   ) => {
     const [key, fn, config] = normalize(args)
-    config.middlewares = (config.middlewares || []).concat(middleware)
+    config.use = (config.use || []).concat(middleware)
     return useSWR<Data, Error>(key, fn, config)
   }
 }

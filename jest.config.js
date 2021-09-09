@@ -5,11 +5,14 @@ module.exports = {
   modulePathIgnorePatterns: ['<rootDir>/examples/'],
   setupFilesAfterEnv: ['<rootDir>/jest-setup.ts'],
   moduleNameMapper: {
-    '^swr$': '<rootDir>/src'
+    '^swr$': '<rootDir>/src',
+    '^swr/infinite$': '<rootDir>/infinite/index.ts',
+    '^swr/immutable$': '<rootDir>/immutable/index.ts'
   },
   globals: {
     'ts-jest': {
-      tsconfig: 'test/tsconfig.json'
+      tsconfig: 'test/tsconfig.json',
+      diagnostics: false,
     }
-  }
+  },
 }

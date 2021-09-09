@@ -1,10 +1,8 @@
 import { act, render, screen, fireEvent } from '@testing-library/react'
 import React, { useEffect, useState } from 'react'
-import useSWR, { mutate, createCache, SWRConfig } from 'swr'
+import useSWR, { mutate, useSWRConfig, SWRConfig } from 'swr'
 import { serialize } from '../src/utils/serialize'
-import { createResponse, sleep } from './utils'
-
-const waitForNextTick = () => act(() => sleep(1))
+import { createResponse, sleep, nextTick, createKey } from './utils'
 
 describe('useSWR - local mutation', () => {
   it('should trigger revalidation programmatically', async () => {
@@ -29,6 +27,33 @@ describe('useSWR - local mutation', () => {
       mutate('dynamic-7')
     })
     await screen.findByText('data: 1')
+  })
+
+  it('should share local state when no fetcher is specified', async () => {
+    const useSharedState = (key, fallbackData) => {
+      const { data: state, mutate: setState } = useSWR(key, { fallbackData })
+      return [state, setState]
+    }
+
+    function Page() {
+      const [name, setName] = useSharedState('name', 'huozhi')
+      const [job, setJob] = useSharedState('job', 'gardener')
+
+      return (
+        <span
+          onClick={() => {
+            setName('@huozhi')
+            setJob('chef')
+          }}
+        >
+          {name}:{job}
+        </span>
+      )
+    }
+    render(<Page />)
+    const root = screen.getByText('huozhi:gardener')
+    fireEvent.click(root)
+    await screen.findByText('@huozhi:chef')
   })
 
   it('should trigger revalidation programmatically within a dedupingInterval', async () => {
@@ -146,7 +171,7 @@ describe('useSWR - local mutation', () => {
     //mount
     await screen.findByText('data: 0')
 
-    await waitForNextTick()
+    await nextTick()
     await act(() => {
       // mutate and revalidate
       return mutate('mutate-promise', createResponse(999), false)
@@ -169,7 +194,7 @@ describe('useSWR - local mutation', () => {
     //mount
     await screen.findByText('data: 0')
 
-    await waitForNextTick()
+    await nextTick()
     await act(() => {
       // mutate and revalidate
       return mutate('mutate-async-fn', async () => createResponse(999), false)
@@ -202,24 +227,26 @@ describe('useSWR - local mutation', () => {
   })
 
   it('should call function as data passing current cached value', async () => {
+    let globalMutate
+
     function Page() {
+      globalMutate = useSWRConfig().mutate
       const { data } = useSWR('dynamic-14', null)
       return <div>data: {data}</div>
     }
 
-    // prefill cache with data
-    const { cache, mutate: globalMutate } = createCache(
-      new Map([['dynamic-15', 'cached data']])
-    )
-    render(
-      <SWRConfig
-        value={{
-          cache
-        }}
-      >
-        <Page />
-      </SWRConfig>
-    )
+    function App() {
+      // Prefill the cache with data
+      return (
+        <SWRConfig
+          value={{ provider: () => new Map([['dynamic-15', 'cached data']]) }}
+        >
+          <Page />
+        </SWRConfig>
+      )
+    }
+
+    render(<App />)
 
     const callback = jest.fn()
     await globalMutate('dynamic-15', callback)
@@ -227,7 +254,20 @@ describe('useSWR - local mutation', () => {
   })
 
   it('should call function with undefined if key not cached', async () => {
-    const { cache, mutate: globalMutate } = createCache(new Map())
+    let globalCache, globalMutate
+
+    function App() {
+      const { cache, mutate: mutate_ } = useSWRConfig()
+      globalCache = cache
+      globalMutate = mutate_
+      return null
+    }
+
+    render(
+      <SWRConfig value={{ provider: () => new Map() }}>
+        <App />
+      </SWRConfig>
+    )
 
     const increment = jest.fn(currentValue =>
       currentValue == null ? undefined : currentValue + 1
@@ -239,7 +279,7 @@ describe('useSWR - local mutation', () => {
     expect(increment).toHaveBeenLastCalledWith(undefined)
     expect(increment).toHaveLastReturnedWith(undefined)
 
-    cache.set('dynamic-15.1', 42)
+    globalCache.set('dynamic-15.1', 42)
 
     await globalMutate('dynamic-15.1', increment, false)
 
@@ -426,24 +466,23 @@ describe('useSWR - local mutation', () => {
     const value = 0
     const key = 'mutate-4'
     const message = 'mutate-error'
+
+    let globalCache, globalMutate
     function Page() {
+      const { cache, mutate: mutate_ } = useSWRConfig()
+      globalCache = cache
+      globalMutate = mutate_
       const { data, error } = useSWR(key, () => value)
       return <div>{error ? error.message : `data: ${data}`}</div>
     }
 
-    // prefill cache with data
-    const { cache, mutate: globalMutate } = createCache(new Map())
     render(
-      <SWRConfig
-        value={{
-          cache
-        }}
-      >
+      <SWRConfig value={{ provider: () => new Map() }}>
         <Page />
       </SWRConfig>
     )
 
-    //mount
+    // Mount
     await screen.findByText('data: 0')
     await act(async () => {
       // mutate error will be thrown, add try catch to avoid crashing
@@ -462,15 +501,15 @@ describe('useSWR - local mutation', () => {
 
     screen.getByText(message)
     const [keyData, , keyErr] = serialize(key)
-    let cacheError = cache.get(keyErr)
+    let cacheError = globalCache.get(keyErr)
     expect(cacheError.message).toMatchInlineSnapshot(`"${message}"`)
 
     // if mutate throws an error synchronously, the cache shouldn't be updated
-    expect(cache.get(keyData)).toBe(value)
+    expect(globalCache.get(keyData)).toBe(value)
 
     // if mutate succeed, error should be cleared
     await act(() => globalMutate(key, value, false))
-    cacheError = cache.get(keyErr)
+    cacheError = globalCache.get(keyErr)
     expect(cacheError).toMatchInlineSnapshot(`undefined`)
   })
 
@@ -673,5 +712,90 @@ describe('useSWR - local mutation', () => {
     // mutate success
     await act(() => sleep(100))
     await screen.findByText('data: 1')
+  })
+
+  it('isValidating should be false when no fetcher is provided', async () => {
+    const key = createKey()
+    function Page() {
+      const { isValidating } = useSWR(key)
+      return <p>{isValidating.toString()}</p>
+    }
+    render(<Page />)
+    screen.getByText('false')
+  })
+
+  it('bound mutate should always use the latest key', async () => {
+    const key = createKey()
+    const fetcher = jest.fn(() => 'data')
+    function Page() {
+      const [ready, setReady] = useState(false)
+      const { mutate: boundMutate } = useSWR(ready ? key : null, fetcher)
+      return (
+        <div>
+          <button onClick={() => setReady(true)}>set ready</button>
+          <button onClick={() => boundMutate()}>mutate</button>
+        </div>
+      )
+    }
+    render(<Page />)
+    screen.getByText('set ready')
+
+    expect(fetcher).toBeCalledTimes(0)
+
+    // it should trigger the fetch
+    fireEvent.click(screen.getByText('set ready'))
+    await act(() => sleep(10))
+    expect(fetcher).toBeCalledTimes(1)
+
+    // it should trigger the fetch again
+    fireEvent.click(screen.getByText('mutate'))
+    await act(() => sleep(10))
+    expect(fetcher).toBeCalledTimes(2)
+  })
+
+  it('should reset isValidating after mutate', async () => {
+    const key = createKey()
+    function Data() {
+      const { data, isValidating } = useSWR(key, () =>
+        createResponse('data', { delay: 30 })
+      )
+      const { cache } = useSWRConfig()
+      const [, , , keyValidating] = serialize(key)
+      const cacheIsValidating = cache.get(keyValidating) || false
+      return (
+        <>
+          <p>data:{data}</p>
+          <p>isValidating:{isValidating.toString()}</p>
+          <p>cache:validating:{cacheIsValidating.toString()}</p>
+        </>
+      )
+    }
+
+    function Page() {
+      const { mutate: boundMutate } = useSWR(key, () =>
+        createResponse('data', { delay: 30 })
+      )
+      const [visible, setVisible] = useState(false)
+
+      return (
+        <div>
+          <button onClick={() => boundMutate(() => 'data', false)}>
+            preload
+          </button>
+          <button onClick={() => setVisible(true)}>show</button>
+          {visible && <Data />}
+        </div>
+      )
+    }
+    render(<Page />)
+
+    fireEvent.click(screen.getByText('preload'))
+    await act(() => sleep(20))
+    fireEvent.click(screen.getByText('show'))
+    screen.getByText('data:data')
+    screen.getByText('isValidating:true')
+    await act(() => sleep(20))
+    screen.getByText('data:data')
+    screen.getByText('isValidating:false')
   })
 })
