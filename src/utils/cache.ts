@@ -13,19 +13,19 @@ import {
   ConfigOptions
 } from '../types'
 
-function revalidateAllKeys(
+const revalidateAllKeys = (
   revalidators: Record<string, RevalidateCallback[]>,
   type: RevalidateEvent
-) {
+) => {
   for (const key in revalidators) {
     if (revalidators[key][0]) revalidators[key][0](type)
   }
 }
 
-export function initCache<Data = any>(
+export const initCache = <Data = any>(
   provider: Cache<Data>,
   options?: Partial<ConfigOptions>
-): [Cache<Data>, ScopedMutator<Data>] | undefined {
+): [Cache<Data>, ScopedMutator<Data>] | undefined => {
   // The global state for a specific provider will be used to deduplicate
   // requests and store listeners. As well as a mutate function that bound to
   // the cache.

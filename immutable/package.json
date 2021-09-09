@@ -6,7 +6,6 @@
   "types": "./dist/immutable",
   "peerDependencies": {
     "swr": "*",
-    "react": "*",
-    "dequal": "*"
+    "react": "*"
   }
 }

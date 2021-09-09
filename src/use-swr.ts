@@ -5,8 +5,8 @@ import { IS_SERVER, rAF, useIsomorphicLayoutEffect } from './utils/env'
 import { serialize } from './utils/serialize'
 import { isUndefined, UNDEFINED, mergeObjects } from './utils/helper'
 import ConfigProvider from './utils/config-context'
-import useStateWithDeps from './utils/state'
-import withArgs from './utils/resolve-args'
+import { useStateWithDeps } from './utils/state'
+import { withArgs } from './utils/resolve-args'
 import { subscribeCallback } from './utils/subscribe-key'
 import { broadcastState } from './utils/broadcast-state'
 import { getTimestamp } from './utils/timestamp'
@@ -349,7 +349,7 @@ export const useSWRHandler = <Data = any, Error = any>(
             isValidating: updatedIsValidating
           },
           // if data is undefined we should not update stateRef.current.data
-          !compare(updatedData, stateRef.current.data)
+          !compare(stateRef.current.data, updatedData)
             ? {
                 data: updatedData
               }
@@ -362,7 +362,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     // revalidation from the outside.
     let nextFocusRevalidatedAt = 0
     const onRevalidate = (type: RevalidateEvent) => {
-      if (type === revalidateEvents.FOCUS_EVENT) {
+      if (type == revalidateEvents.FOCUS_EVENT) {
         const now = Date.now()
         if (
           getConfig().revalidateOnFocus &&
@@ -372,11 +372,11 @@ export const useSWRHandler = <Data = any, Error = any>(
           nextFocusRevalidatedAt = now + getConfig().focusThrottleInterval
           softRevalidate()
         }
-      } else if (type === revalidateEvents.RECONNECT_EVENT) {
+      } else if (type == revalidateEvents.RECONNECT_EVENT) {
         if (getConfig().revalidateOnReconnect && isActive()) {
           softRevalidate()
         }
-      } else if (type === revalidateEvents.MUTATE_EVENT) {
+      } else if (type == revalidateEvents.MUTATE_EVENT) {
         return revalidate()
       }
       return
@@ -444,7 +444,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         (refreshWhenHidden || getConfig().isVisible()) &&
         (refreshWhenOffline || getConfig().isOnline())
       ) {
-        revalidate(WITH_DEDUPE).then(() => next())
+        revalidate(WITH_DEDUPE).then(next)
       } else {
         // Schedule next interval to check again.
         next()

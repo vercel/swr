@@ -8,7 +8,7 @@ import { mergeObjects } from './helper'
 
 // It's tricky to pass generic types as parameters, so we just directly override
 // the types here.
-export default function withArgs<SWRType>(hook: any) {
+export const withArgs = <SWRType>(hook: any) => {
   return (((...args: any) => {
     // Normalize arguments.
     const [key, fn, _config] = normalize<any, any>(args)
