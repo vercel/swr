@@ -12,7 +12,7 @@ module.exports = {
   globals: {
     'ts-jest': {
       tsconfig: 'test/tsconfig.json',
-      diagnostics: false,
+      diagnostics: process.env.CI,
     }
   },
 }
