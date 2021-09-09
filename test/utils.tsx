@@ -36,7 +36,7 @@ const _renderWithConfig = (
   const result = render(<SWRConfig value={config}>{element}</SWRConfig>)
   return {
     ...result,
-    // override the rerender method to use the same config
+    // override the rerender method to wrap the element with SWRConfig again
     rerender: (rerenderElement: React.ReactElement) =>
       result.rerender(<SWRConfig value={config}>{rerenderElement}</SWRConfig>)
   }
