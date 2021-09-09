@@ -140,10 +140,7 @@ describe('useSWR - immutable', () => {
   })
 
   it('should not revalidate with revalidateIfStale disabled when key changes', async () => {
-    const fetcher = jest.fn(v => {
-      console.log(v)
-      return v
-    })
+    const fetcher = jest.fn(v => v)
 
     const key = createKey()
     const useData = (id: string) =>
