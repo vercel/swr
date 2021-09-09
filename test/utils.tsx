@@ -1,6 +1,6 @@
-import { act, fireEvent } from '@testing-library/react'
+import { act, fireEvent, render } from '@testing-library/react'
 import React from 'react'
-import { SWRConfiguration, SWRConfig } from 'swr'
+import { SWRConfig } from 'swr'
 
 export function sleep(time: number) {
   return new Promise(resolve => setTimeout(resolve, time))
@@ -29,14 +29,30 @@ export const focusOn = (element: any) =>
 
 export const createKey = () => 'swr-key-' + ~~(Math.random() * 1e7)
 
-export const TestSWRConfig = ({
-  children,
-  value
-}: {
-  children: React.ReactNode
-  value?: SWRConfiguration
-}) => (
-  <SWRConfig value={{ provider: () => new Map(), ...value }}>
-    {children}
-  </SWRConfig>
-)
+const _renderWithConfig = (
+  element: React.ReactElement,
+  config: Parameters<typeof SWRConfig>[0]['value']
+): ReturnType<typeof render> => {
+  const result = render(<SWRConfig value={config}>{element}</SWRConfig>)
+  return {
+    ...result,
+    // override the rerender method to wrap the element with SWRConfig again
+    rerender: (rerenderElement: React.ReactElement) =>
+      result.rerender(<SWRConfig value={config}>{rerenderElement}</SWRConfig>)
+  }
+}
+
+export const renderWithConfig = (
+  element: React.ReactElement,
+  config?: Parameters<typeof _renderWithConfig>[1]
+): ReturnType<typeof _renderWithConfig> => {
+  const provider = () => new Map()
+  return _renderWithConfig(element, { provider, ...config })
+}
+
+export const renderWithGlobalCache = (
+  element: React.ReactElement,
+  config?: Parameters<typeof _renderWithConfig>[1]
+): ReturnType<typeof _renderWithConfig> => {
+  return _renderWithConfig(element, { ...config })
+}
