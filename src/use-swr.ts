@@ -254,11 +254,13 @@ export function useSWRHandler<Data = any, Error = any>(
 
   // A revalidation must be triggered when mounted if:
   // - `revalidateOnMount` is explicitly set to `true`.
+  // - `isPaused()` returns to `true`.
   // - Suspense mode and there's stale data for the initial render.
   // - Not suspense mode and there is no `initialData` and `revalidateWhenStale` is enabled.
   // - `revalidateWhenStale` is enabled but `data` is not defined.
   const shouldRevalidateOnMount = () => {
     if (!isUndefined(revalidateOnMount)) return revalidateOnMount
+    if (configRef.current.isPaused()) return false
 
     return suspense
       ? !initialMountedRef.current && !isUndefined(data)

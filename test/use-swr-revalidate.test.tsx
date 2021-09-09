@@ -136,4 +136,19 @@ describe('useSWR - revalidate', () => {
     await act(() => sleep(70))
     screen.getByText('count: 2')
   })
+
+  it('should keep initial isValidating be false when config.isPaused returns true', async () => {
+    function Page() {
+      const { isValidating } = useSWR(
+        'keep isValidating for config.isPaused',
+        () => '123',
+        { isPaused: () => true }
+      )
+
+      return <div>{isValidating ? 'true' : 'false'}</div>
+    }
+
+    render(<Page />)
+    screen.getByText('false')
+  })
 })
