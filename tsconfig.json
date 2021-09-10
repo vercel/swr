@@ -17,6 +17,7 @@
     "strict": true,
     "target": "es5",
     "baseUrl": ".",
+    "noEmitOnError": true,
     "paths": {
       "swr": ["./src/index.ts"],
       "swr/infinite": ["./infinite/index.ts"],
