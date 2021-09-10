@@ -275,7 +275,7 @@ export const useSWRHandler = <Data = any, Error = any>(
           // Keep the stale data but update error.
           setState({
             isValidating: false,
-            error: err
+            error: err as Error
           })
           if (!shouldDedupe) {
             // Broadcast to update the states of other hooks.
