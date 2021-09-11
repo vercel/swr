@@ -12,7 +12,6 @@
     "noUnusedParameters": true,
     "strictBindCallApply": true,
     "outDir": "./dist",
-    "types": ["node", "jest"],
     "rootDir": "src",
     "strict": true,
     "target": "es5",
