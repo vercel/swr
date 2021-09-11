@@ -85,11 +85,13 @@ export const useSWRHandler = <Data = any, Error = any>(
 
   // A revalidation must be triggered when mounted if:
   // - `revalidateOnMount` is explicitly set to `true`.
+  // - `isPaused()` returns `false`, and:
   // - Suspense mode and there's stale data for the initial render.
   // - Not suspense mode and there is no fallback data and `revalidateIfStale` is enabled.
   // - `revalidateIfStale` is enabled but `data` is not defined.
   const shouldRevalidateOnMount = () => {
     if (!isUndefined(revalidateOnMount)) return revalidateOnMount
+    if (configRef.current.isPaused()) return false
 
     return suspense
       ? !initialMountedRef.current && !isUndefined(data)
@@ -273,7 +275,7 @@ export const useSWRHandler = <Data = any, Error = any>(
           // Keep the stale data but update error.
           setState({
             isValidating: false,
-            error: err
+            error: err as Error
           })
           if (!shouldDedupe) {
             // Broadcast to update the states of other hooks.

@@ -64,8 +64,8 @@ export interface PublicConfiguration<
 export type FullConfiguration = InternalConfiguration & PublicConfiguration
 
 export type ConfigOptions = {
-  initFocus: (callback: () => void) => void
-  initReconnect: (callback: () => void) => void
+  initFocus: (callback: () => void) => (() => void) | void
+  initReconnect: (callback: () => void) => (() => void) | void
 }
 
 export type SWRHook = <Data = any, Error = any>(
@@ -148,10 +148,10 @@ export type SWRConfiguration<
 export type Key = ValueKey | (() => ValueKey)
 
 export interface SWRResponse<Data, Error> {
-  data?: Readonly<Data>
-  error?: Readonly<Error>
+  data?: Data
+  error?: Error
   mutate: KeyedMutator<Data>
-  isValidating: Readonly<boolean>
+  isValidating: boolean
 }
 
 export type KeyLoader<Data = any> =
