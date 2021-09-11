@@ -25,7 +25,7 @@ const revalidateAllKeys = (
 export const initCache = <Data = any>(
   provider: Cache<Data>,
   options?: Partial<ConfigOptions>
-): [Cache<Data>, ScopedMutator<Data>] | undefined => {
+): [Cache<Data>, ScopedMutator<Data>, () => void] | undefined => {
   // The global state for a specific provider will be used to deduplicate
   // requests and store listeners. As well as a mutate function that bound to
   // the cache.
@@ -55,28 +55,31 @@ export const initCache = <Data = any>(
 
     // This is a new provider, we need to initialize it and setup DOM events
     // listeners for `focus` and `reconnect` actions.
+    let unscubscibe = () => {}
     if (!IS_SERVER) {
-      opts.initFocus(
+      const releaseFocus = opts.initFocus(
         revalidateAllKeys.bind(
           UNDEFINED,
           EVENT_REVALIDATORS,
           revalidateEvents.FOCUS_EVENT
         )
       )
-      opts.initReconnect(
+      const releaseReconnect = opts.initReconnect(
         revalidateAllKeys.bind(
           UNDEFINED,
           EVENT_REVALIDATORS,
           revalidateEvents.RECONNECT_EVENT
         )
       )
+      unscubscibe = () => {
+        releaseFocus && releaseFocus()
+        releaseReconnect && releaseReconnect()
+      }
     }
 
     // We might want to inject an extra layer on top of `provider` in the future,
     // such as key serialization, auto GC, etc.
     // For now, it's just a `Map` interface without any modifications.
-    return [provider, mutate]
+    return [provider, mutate, unscubscibe]
   }
-
-  return
 }

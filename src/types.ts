@@ -64,8 +64,8 @@ export interface PublicConfiguration<
 export type FullConfiguration = InternalConfiguration & PublicConfiguration
 
 export type ConfigOptions = {
-  initFocus: (callback: () => void) => void
-  initReconnect: (callback: () => void) => void
+  initFocus: (callback: () => void) => (() => void) | void
+  initReconnect: (callback: () => void) => (() => void) | void
 }
 
 export type SWRHook = <Data = any, Error = any>(

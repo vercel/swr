@@ -151,6 +151,8 @@ describe('useSWR - cache provider', () => {
   it('should respect provider options', async () => {
     const key = createKey()
     const focusFn = jest.fn()
+    const unsubscribeFocusFn = jest.fn()
+    const unsubscribeReconnectFn = jest.fn()
 
     let value = 1
     function Foo() {
@@ -166,9 +168,11 @@ describe('useSWR - cache provider', () => {
             provider: () => new Map([[key, 0]]),
             initFocus() {
               focusFn()
+              return unsubscribeFocusFn
             },
             initReconnect() {
               /* do nothing */
+              return unsubscribeReconnectFn
             }
           }}
         >
@@ -176,7 +180,7 @@ describe('useSWR - cache provider', () => {
         </SWRConfig>
       )
     }
-    render(<Page />)
+    const { unmount } = render(<Page />)
     screen.getByText('0')
 
     // mount
@@ -186,7 +190,10 @@ describe('useSWR - cache provider', () => {
     await focusOn(window)
     // revalidateOnFocus won't work
     screen.getByText('1')
+    unmount()
     expect(focusFn).toBeCalled()
+    expect(unsubscribeFocusFn).toBeCalledTimes(1)
+    expect(unsubscribeReconnectFn).toBeCalledTimes(1)
   })
 
   it('should work with revalidateOnFocus', async () => {

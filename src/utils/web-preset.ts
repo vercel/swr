@@ -14,6 +14,8 @@ const isOnline = () => online
 // For node and React Native, `add/removeEventListener` doesn't exist on window.
 const onWindowEvent = (hasWindow && addEventListener) || noop
 const onDocumentEvent = (hasDocument && document.addEventListener) || noop
+const offWindowEvent = (hasWindow && removeEventListener) || noop
+const offDocumentEvent = (hasDocument && document.removeEventListener) || noop
 
 const isVisible = () => {
   const visibilityState = hasDocument && document.visibilityState
@@ -27,18 +29,28 @@ const initFocus = (cb: () => void) => {
   // focus revalidate
   onDocumentEvent('visibilitychange', cb)
   onWindowEvent('focus', cb)
+  return () => {
+    offDocumentEvent('visibilitychange', cb)
+    offWindowEvent('focus', cb)
+  }
 }
 
 const initReconnect = (cb: () => void) => {
-  // reconnect revalidate
-  onWindowEvent('online', () => {
+  // revalidate on reconnected
+  const onOnline = () => {
     online = true
     cb()
-  })
+  }
   // nothing to revalidate, just update the status
-  onWindowEvent('offline', () => {
+  const onOffline = () => {
     online = false
-  })
+  }
+  onWindowEvent('online', onOnline)
+  onWindowEvent('offline', onOffline)
+  return () => {
+    offWindowEvent('online', onOnline)
+    offWindowEvent('offline', onOffline)
+  }
 }
 
 export const preset = {
