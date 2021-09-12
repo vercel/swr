@@ -8,7 +8,7 @@ export const broadcastState: Broadcaster = (
   data,
   error,
   isValidating,
-  shouldRevalidate = false,
+  shouldRevalidate,
   populateCache = true
 ) => {
   const [EVENT_REVALIDATORS, STATE_UPDATERS] = SWRGlobalState.get(

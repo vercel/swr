@@ -5,24 +5,46 @@ import { serialize } from '../src/utils/serialize'
 import { useStateWithDeps } from '../src/utils/state'
 import { withMiddleware } from '../src/utils/with-middleware'
 
-export const mutation: Middleware = () => (key, fetcher, config) => {
+export const mutation: Middleware = <Data, Error>() => (
+  key,
+  fetcher,
+  config
+) => {
   const [serializedKey, args] = serialize(key)
   const argsRef = useRef(args)
   const { mutate } = useSWRConfig()
 
-  const [stateRef, stateDependencies, setState] = useStateWithDeps({
-    data: undefined,
-    error: undefined,
-    isMutating: false
-  })
+  const [stateRef, stateDependencies, setState] = useStateWithDeps<Data, Error>(
+    {
+      data: undefined,
+      error: undefined,
+      isValidating: false
+    }
+  )
 
-  const trigger = useCallback((extraArg, shouldRevalidate, opts) => {
+  const trigger = useCallback(async (extraArg, shouldRevalidate, opts) => {
     // Trigger a mutation.
     // Assign extra arguments to the ref, so the fetcher can access them later.
-    return mutate(serializedKey, () => fetcher(...argsRef.current, extraArg), {
-      revalidate: shouldRevalidate,
-      populateCache: false
-    })
+    try {
+      setState({ isValidating: true })
+      const data = await mutate(
+        serializedKey,
+        () => fetcher(...argsRef.current, extraArg),
+        {
+          revalidate: shouldRevalidate,
+          populateCache: false
+        }
+      )
+      setState({ data, isValidating: false })
+      return data
+    } catch (error) {
+      setState({ error, isValidating: false })
+      throw error
+    }
+  }, [])
+
+  const reset = useCallback(() => {
+    setState({ data: undefined, error: undefined, isValidating: false })
   }, [])
 
   return {
@@ -36,9 +58,9 @@ export const mutation: Middleware = () => (key, fetcher, config) => {
       stateDependencies.error = true
       return stateRef.current.error
     },
-    get isValidating() {
-      ;(stateDependencies as any).isMutating = true
-      return stateRef.current.isMutating
+    get isMutating() {
+      ;(stateDependencies as any).isValidating = true
+      return stateRef.current.isValidating
     }
   }
 }

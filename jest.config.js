@@ -7,12 +7,13 @@ module.exports = {
   moduleNameMapper: {
     '^swr$': '<rootDir>/src',
     '^swr/infinite$': '<rootDir>/infinite/index.ts',
-    '^swr/immutable$': '<rootDir>/immutable/index.ts'
+    '^swr/immutable$': '<rootDir>/immutable/index.ts',
+    '^swr/mutation$': '<rootDir>/mutation/index.ts'
   },
   globals: {
     'ts-jest': {
       tsconfig: 'test/tsconfig.json',
-      diagnostics: false,
+      diagnostics: false
     }
-  },
+  }
 }
