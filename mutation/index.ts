@@ -77,7 +77,7 @@ const mutation = <Data, Error>() => (
       return stateRef.current.error
     },
     get isMutating() {
-      ;(stateDependencies as any).isValidating = true
+      stateDependencies.isValidating = true
       return stateRef.current.isValidating
     }
   } as SWRMutationResponse<Data, Error>
