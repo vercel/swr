@@ -1,10 +1,11 @@
-import { SWRResponse } from 'swr'
+import { SWRResponse, SWRConfiguration, Fetcher } from 'swr'
 
-export type SWRMutationConfiguration<Data, Error> = {
+export type SWRMutationConfiguration<Data, Error> = Pick<
+  SWRConfiguration<Data[], Error, Fetcher<Data[]>>,
+  'fetcher' | 'onSuccess' | 'onError'
+> & {
   revalidate?: boolean
   populateCache?: boolean
-  onSuccess?: (data: Data, key: string) => void
-  onError?: (error: Error, key: string) => void
 }
 
 export interface SWRMutationResponse<Data = any, Error = any>

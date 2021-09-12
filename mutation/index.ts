@@ -5,7 +5,7 @@ import { serialize } from '../src/utils/serialize'
 import { useStateWithDeps } from '../src/utils/state'
 import { withMiddleware } from '../src/utils/with-middleware'
 import { useIsomorphicLayoutEffect } from '../src/utils/env'
-import { isUndefined } from '../src/utils/helper'
+import { isUndefined, UNDEFINED } from '../src/utils/helper'
 
 import { SWRMutationConfiguration, SWRMutationResponse } from './types'
 
@@ -22,7 +22,8 @@ const mutation = <Data, Error>() => (
       data: undefined,
       error: undefined,
       isValidating: false
-    }
+    },
+    true
   )
 
   const trigger = useCallback(async (extraArg, opts) => {
@@ -41,17 +42,18 @@ const mutation = <Data, Error>() => (
     // Assign extra arguments to the ref, so the fetcher can access them later.
     try {
       setState({ isValidating: true })
+      args.push(extraArg)
       const data = await mutate(
         serializedKey,
-        () => fetcher(...args, extraArg),
+        fetcher.apply(UNDEFINED, args),
         options
       )
       setState({ data, isValidating: false })
-      options.onSuccess && options.onSuccess(data, serializedKey)
+      options.onSuccess && options.onSuccess(data, serializedKey, options)
       return data
     } catch (error) {
       setState({ error, isValidating: false })
-      options.onError && options.onError(error, serializedKey)
+      options.onError && options.onError(error, serializedKey, options)
       throw error
     }
   }, [])

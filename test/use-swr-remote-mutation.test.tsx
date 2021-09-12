@@ -476,4 +476,36 @@ describe('useSWR - remote mutation', () => {
     // A revalidation is triggered
     await screen.findByText('data:foo')
   })
+
+  it('should be able to reset the state', async () => {
+    const key = createKey()
+
+    function Page() {
+      const { data, trigger, reset } = useSWRMutation(key, async () => {
+        return 'data'
+      })
+
+      return (
+        <div>
+          <button onClick={trigger}>trigger</button>
+          <button onClick={reset}>reset</button>
+          <div>data:{data || 'none'}</div>
+        </div>
+      )
+    }
+
+    render(<Page />)
+
+    // mount
+    await screen.findByText('data:none')
+
+    fireEvent.click(screen.getByText('trigger'))
+
+    // Cache is updated
+    await screen.findByText('data:data')
+
+    // reset
+    fireEvent.click(screen.getByText('reset'))
+    await screen.findByText('data:none')
+  })
 })

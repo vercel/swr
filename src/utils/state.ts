@@ -10,7 +10,8 @@ type StateDeps = Record<StateKeys, boolean>
  * An implementation of state with dependency-tracking.
  */
 export const useStateWithDeps = <Data, Error, S = State<Data, Error>>(
-  state: S
+  state: S,
+  asInitialState?: boolean
 ): [MutableRefObject<S>, Record<StateKeys, boolean>, (payload: S) => void] => {
   const rerender = useState<Record<string, unknown>>({})[1]
   const unmountedRef = useRef(false)
@@ -73,9 +74,12 @@ export const useStateWithDeps = <Data, Error, S = State<Data, Error>>(
     []
   )
 
-  // Always update the state reference.
   useIsomorphicLayoutEffect(() => {
-    stateRef.current = state
+    // Always update the state reference.
+    if (!asInitialState) {
+      stateRef.current = state
+    }
+
     unmountedRef.current = false
     return () => {
       unmountedRef.current = true
