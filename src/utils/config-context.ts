@@ -1,9 +1,15 @@
-import { createContext, createElement, useContext, useState, FC } from 'react'
-
+import {
+  createContext,
+  createElement,
+  useContext,
+  useState,
+  FC,
+  useEffect
+} from 'react'
 import { cache as defaultCache } from './config'
 import { initCache } from './cache'
 import { mergeConfigs } from './merge-config'
-import { UNDEFINED } from './helper'
+import { isFunction, UNDEFINED } from './helper'
 import {
   SWRConfiguration,
   FullConfiguration,
@@ -26,17 +32,24 @@ const SWRConfig: FC<{
   const provider = value && value.provider
 
   // Use a lazy initialized state to create the cache on first access.
-  const [cacheAndMutate] = useState(() =>
+  const [cacheHandle] = useState(() =>
     provider
       ? initCache(provider(extendedConfig.cache || defaultCache), value)
       : UNDEFINED
   )
 
   // Override the cache if a new provider is given.
-  if (cacheAndMutate) {
-    extendedConfig.cache = cacheAndMutate[0]
-    extendedConfig.mutate = cacheAndMutate[1]
+  if (cacheHandle) {
+    extendedConfig.cache = cacheHandle[0]
+    extendedConfig.mutate = cacheHandle[1]
   }
+
+  useEffect(() => {
+    return () => {
+      const unsubscribe = cacheHandle ? cacheHandle[2] : UNDEFINED
+      isFunction(unsubscribe) && unsubscribe()
+    }
+  }, [])
 
   return createElement(
     SWRConfigContext.Provider,

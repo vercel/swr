@@ -9,7 +9,7 @@ import { createResponse, sleep } from './utils'
 describe('useSWR - concurrent rendering', () => {
   let React, ReactDOM, act, useSWR
 
-  beforeEach(() => {
+  beforeAll(() => {
     jest.resetModules()
     jest.mock('scheduler', () => require('scheduler/unstable_mock'))
     jest.mock('react', () => require('react-experimental'))

@@ -43,7 +43,11 @@ const onErrorRetry = (
 }
 
 // Default cache provider
-const [cache, mutate] = initCache(new Map()) as [Cache<any>, ScopedMutator<any>]
+const [cache, mutate] = initCache(new Map()) as [
+  Cache<any>,
+  ScopedMutator<any>,
+  () => {}
+]
 export { cache, mutate }
 
 // Default config
