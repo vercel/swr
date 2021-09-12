@@ -4,14 +4,19 @@ import { SWRGlobalState, GlobalState } from './global-state'
 import { broadcastState } from './broadcast-state'
 import { getTimestamp } from './timestamp'
 
-import { Key, Cache, MutatorCallback } from '../types'
+import { Key, Cache, MutatorCallback, MutatorConfig } from '../types'
 
 export const internalMutate = async <Data>(
   cache: Cache,
   _key: Key,
   _data?: Data | Promise<Data | undefined> | MutatorCallback<Data>,
-  shouldRevalidate = true
+  opts?: boolean | MutatorConfig
 ) => {
+  const options: MutatorConfig =
+    typeof opts === 'boolean' ? { revalidate: opts } : {}
+  const revalidate = options.revalidate !== false
+  const populateCache = options.populateCache !== false
+
   const [key, , keyErr] = serialize(_key)
   if (!key) return
 
@@ -19,7 +24,7 @@ export const internalMutate = async <Data>(
     cache
   ) as GlobalState
 
-  // if there is no new data to update, let's just revalidate the key
+  // If there is no new data to update, let's just revalidate the key
   if (isUndefined(_data)) {
     return broadcastState(
       cache,
@@ -27,7 +32,8 @@ export const internalMutate = async <Data>(
       cache.get(key),
       cache.get(keyErr),
       UNDEFINED,
-      shouldRevalidate
+      revalidate,
+      populateCache
     )
   }
 
@@ -69,12 +75,14 @@ export const internalMutate = async <Data>(
     data = _data
   }
 
-  if (!isUndefined(data)) {
-    // update cached data
-    cache.set(key, data)
+  if (populateCache) {
+    if (!isUndefined(data)) {
+      // update cached data
+      cache.set(key, data)
+    }
+    // Always update or reset the error.
+    cache.set(keyErr, error)
   }
-  // Always update or reset the error.
-  cache.set(keyErr, error)
 
   // Reset the timestamp to mark the mutation has ended
   MUTATION_END_TS[key] = getTimestamp()
@@ -86,7 +94,8 @@ export const internalMutate = async <Data>(
     data,
     error,
     UNDEFINED,
-    shouldRevalidate
+    revalidate,
+    populateCache
   )
 
   // Throw error or return data

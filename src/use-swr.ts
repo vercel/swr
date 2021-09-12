@@ -142,15 +142,9 @@ export const useSWRHandler = <Data = any, Error = any>(
         delete CONCURRENT_PROMISES_TS[key]
       }
 
-      const writeCache = (k: string, v: any) => {
-        if (getConfig().populateCache) {
-          cache.set(k, v)
-        }
-      }
-
       // start fetching
       try {
-        writeCache(keyValidating, true)
+        cache.set(keyValidating, true)
 
         setState({
           isValidating: true
@@ -253,7 +247,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         // For global state, it's possible that the key has changed.
         // https://github.com/vercel/swr/pull/1058
         if (!compare(cache.get(key), newData)) {
-          writeCache(key, newData)
+          cache.set(key, newData)
         }
 
         // merge the new state
@@ -266,7 +260,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       } catch (err) {
         cleanupState()
 
-        writeCache(keyValidating, false)
+        cache.set(keyValidating, false)
 
         if (getConfig().isPaused()) {
           setState({
@@ -276,7 +270,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         }
 
         // We don't use deep comparison for errors.
-        writeCache(keyErr, err)
+        cache.set(keyErr, err)
 
         if (stateRef.current.error !== err) {
           // Keep the stale data but update error.
@@ -391,13 +385,8 @@ export const useSWRHandler = <Data = any, Error = any>(
       return
     }
 
-    const shouldSubscribeToGlobal = !getConfig().local
-    const unsubUpdate =
-      shouldSubscribeToGlobal &&
-      subscribeCallback(key, STATE_UPDATERS, onStateUpdate)
-    const unsubEvents =
-      shouldSubscribeToGlobal &&
-      subscribeCallback(key, EVENT_REVALIDATORS, onRevalidate)
+    const unsubUpdate = subscribeCallback(key, STATE_UPDATERS, onStateUpdate)
+    const unsubEvents = subscribeCallback(key, EVENT_REVALIDATORS, onRevalidate)
 
     // Mark the component as mounted and update corresponding refs.
     unmountedRef.current = false
@@ -432,8 +421,8 @@ export const useSWRHandler = <Data = any, Error = any>(
       // Mark it as unmounted.
       unmountedRef.current = true
 
-      unsubUpdate && unsubUpdate()
-      unsubEvents && unsubEvents()
+      unsubUpdate()
+      unsubEvents()
     }
   }, [key, revalidate])
 

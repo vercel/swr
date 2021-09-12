@@ -27,8 +27,6 @@ export interface PublicConfiguration<
   revalidateIfStale: boolean
   shouldRetryOnError: boolean
   suspense?: boolean
-  populateCache?: boolean
-  local?: boolean
   fallbackData?: Data
   fetcher?: Fn
   use?: Middleware[]
@@ -97,13 +95,19 @@ export type MutatorCallback<Data = any> = (
   currentValue?: Data
 ) => Promise<undefined | Data> | undefined | Data
 
+export type MutatorConfig = {
+  revalidate?: boolean
+  populateCache?: boolean
+}
+
 export type Broadcaster<Data = any, Error = any> = (
   cache: Cache<Data>,
   key: string,
   data: Data,
   error?: Error,
   isValidating?: boolean,
-  shouldRevalidate?: boolean
+  shouldRevalidate?: boolean,
+  populateCache?: boolean
 ) => Promise<Data>
 
 export type State<Data, Error> = {
@@ -150,10 +154,10 @@ export type SWRConfiguration<
 export type Key = ValueKey | (() => ValueKey)
 
 export interface SWRResponse<Data = any, Error = any> {
-  data?: Readonly<Data>
-  error?: Readonly<Error>
+  data?: Data
+  error?: Error
   mutate: KeyedMutator<Data>
-  isValidating: Readonly<boolean>
+  isValidating: boolean
 }
 
 export type KeyLoader<Data = any> =
