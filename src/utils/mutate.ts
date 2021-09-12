@@ -13,7 +13,7 @@ export const internalMutate = async <Data>(
   opts?: boolean | MutatorConfig
 ) => {
   const options: MutatorConfig =
-    typeof opts === 'boolean' ? { revalidate: opts } : {}
+    typeof opts === 'boolean' ? { revalidate: opts } : opts || {}
   const revalidate = options.revalidate !== false
   const populateCache = options.populateCache !== false
 
@@ -100,5 +100,5 @@ export const internalMutate = async <Data>(
 
   // Throw error or return data
   if (error) throw error
-  return res
+  return populateCache ? res : data
 }
