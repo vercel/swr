@@ -20,6 +20,11 @@
       "import": "./immutable/dist/index.esm.js",
       "require": "./immutable/dist/index.js",
       "types": "./immutable/dist/immutable/index.d.ts"
+    },
+    "./mutation": {
+      "import": "./mutation/dist/index.esm.js",
+      "require": "./mutation/dist/index.js",
+      "types": "./mutation/dist/mutation/index.d.ts"
     }
   },
   "react-native": "./dist/index.esm.js",
@@ -28,8 +33,10 @@
     "dist/**",
     "infinite/dist/**",
     "immutable/dist/**",
+    "mutation/dist/**",
     "infinite/package.json",
-    "immutable/package.json"
+    "immutable/package.json",
+    "mutation/package.json"
   ],
   "repository": "vercel/swr",
   "homepage": "https://swr.vercel.app",

@@ -27,6 +27,8 @@ export interface PublicConfiguration<
   revalidateIfStale: boolean
   shouldRetryOnError: boolean
   suspense?: boolean
+  populateCache?: boolean
+  local?: boolean
   fallbackData?: Data
   fetcher?: Fn
   use?: Middleware[]
@@ -147,7 +149,7 @@ export type SWRConfiguration<
 
 export type Key = ValueKey | (() => ValueKey)
 
-export interface SWRResponse<Data, Error> {
+export interface SWRResponse<Data = any, Error = any> {
   data?: Readonly<Data>
   error?: Readonly<Error>
   mutate: KeyedMutator<Data>

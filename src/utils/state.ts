@@ -2,6 +2,7 @@ import { useRef, useCallback, useState, MutableRefObject } from 'react'
 
 import { useIsomorphicLayoutEffect } from './env'
 import { State } from '../types'
+import { noop } from '../utils/helper'
 
 type StateKeys = keyof State<any, any>
 type StateDeps = Record<StateKeys, boolean>
@@ -10,10 +11,9 @@ type StateDeps = Record<StateKeys, boolean>
  * An implementation of state with dependency-tracking.
  */
 export const useStateWithDeps = <Data, Error, S = State<Data, Error>>(
-  state: S,
-  unmountedRef: MutableRefObject<boolean>
+  state: S
 ): [MutableRefObject<S>, Record<StateKeys, boolean>, (payload: S) => void] => {
-  const rerender = useState<Record<string, unknown>>({})[1]
+  let rerender = useState<Record<string, unknown>>({})[1]
   const stateRef = useRef(state)
 
   // If a state property (data, error or isValidating) is accessed by the render
@@ -64,7 +64,7 @@ export const useStateWithDeps = <Data, Error, S = State<Data, Error>>(
         }
       }
 
-      if (shouldRerender && !unmountedRef.current) {
+      if (shouldRerender) {
         rerender({})
       }
     },
@@ -76,6 +76,10 @@ export const useStateWithDeps = <Data, Error, S = State<Data, Error>>(
   // Always update the state reference.
   useIsomorphicLayoutEffect(() => {
     stateRef.current = state
+    return () => {
+      // When unmounting, set the `rerender` function to a no-op.
+      rerender = noop
+    }
   })
 
   return [stateRef, stateDependenciesRef.current, setState]

@@ -61,6 +61,9 @@ export const defaultConfig: FullConfiguration = mergeObjects(
     revalidateIfStale: true,
     shouldRetryOnError: true,
 
+    // cache strategy
+    populateCache: true,
+
     // timeouts
     errorRetryInterval: slowConnection ? 10000 : 5000,
     focusThrottleInterval: 5 * 1000,

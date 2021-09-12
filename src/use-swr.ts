@@ -111,8 +111,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       data,
       error,
       isValidating
-    },
-    unmountedRef
+    }
   )
 
   // The revalidation function is a carefully crafted wrapper of the original
@@ -143,9 +142,16 @@ export const useSWRHandler = <Data = any, Error = any>(
         delete CONCURRENT_PROMISES_TS[key]
       }
 
+      const writeCache = (k: string, v: any) => {
+        if (getConfig().populateCache) {
+          cache.set(k, v)
+        }
+      }
+
       // start fetching
       try {
-        cache.set(keyValidating, true)
+        writeCache(keyValidating, true)
+
         setState({
           isValidating: true
         })
@@ -247,7 +253,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         // For global state, it's possible that the key has changed.
         // https://github.com/vercel/swr/pull/1058
         if (!compare(cache.get(key), newData)) {
-          cache.set(key, newData)
+          writeCache(key, newData)
         }
 
         // merge the new state
@@ -259,7 +265,9 @@ export const useSWRHandler = <Data = any, Error = any>(
         }
       } catch (err) {
         cleanupState()
-        cache.set(keyValidating, false)
+
+        writeCache(keyValidating, false)
+
         if (getConfig().isPaused()) {
           setState({
             isValidating: false
@@ -267,8 +275,9 @@ export const useSWRHandler = <Data = any, Error = any>(
           return false
         }
 
-        // Get a new error, don't use deep comparison for errors.
-        cache.set(keyErr, err)
+        // We don't use deep comparison for errors.
+        writeCache(keyErr, err)
+
         if (stateRef.current.error !== err) {
           // Keep the stale data but update error.
           setState({
@@ -382,8 +391,13 @@ export const useSWRHandler = <Data = any, Error = any>(
       return
     }
 
-    const unsubUpdate = subscribeCallback(key, STATE_UPDATERS, onStateUpdate)
-    const unsubEvents = subscribeCallback(key, EVENT_REVALIDATORS, onRevalidate)
+    const shouldSubscribeToGlobal = !getConfig().local
+    const unsubUpdate =
+      shouldSubscribeToGlobal &&
+      subscribeCallback(key, STATE_UPDATERS, onStateUpdate)
+    const unsubEvents =
+      shouldSubscribeToGlobal &&
+      subscribeCallback(key, EVENT_REVALIDATORS, onRevalidate)
 
     // Mark the component as mounted and update corresponding refs.
     unmountedRef.current = false
@@ -418,8 +432,8 @@ export const useSWRHandler = <Data = any, Error = any>(
       // Mark it as unmounted.
       unmountedRef.current = true
 
-      unsubUpdate()
-      unsubEvents()
+      unsubUpdate && unsubUpdate()
+      unsubEvents && unsubEvents()
     }
   }, [key, revalidate])
 
