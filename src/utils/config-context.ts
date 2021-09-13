@@ -1,15 +1,9 @@
-import {
-  createContext,
-  createElement,
-  useContext,
-  useState,
-  FC,
-  useEffect
-} from 'react'
+import { createContext, createElement, useContext, useState, FC } from 'react'
 import { cache as defaultCache } from './config'
 import { initCache } from './cache'
 import { mergeConfigs } from './merge-config'
-import { isFunction, UNDEFINED } from './helper'
+import { UNDEFINED } from './helper'
+import { useIsomorphicLayoutEffect } from './env'
 import {
   SWRConfiguration,
   FullConfiguration,
@@ -32,24 +26,23 @@ const SWRConfig: FC<{
   const provider = value && value.provider
 
   // Use a lazy initialized state to create the cache on first access.
-  const [cacheHandle] = useState(() =>
+  const [cacheContext] = useState(() =>
     provider
       ? initCache(provider(extendedConfig.cache || defaultCache), value)
       : UNDEFINED
   )
 
   // Override the cache if a new provider is given.
-  if (cacheHandle) {
-    extendedConfig.cache = cacheHandle[0]
-    extendedConfig.mutate = cacheHandle[1]
+  if (cacheContext) {
+    extendedConfig.cache = cacheContext[0]
+    extendedConfig.mutate = cacheContext[1]
   }
 
-  useEffect(() => {
-    return () => {
-      const unsubscribe = cacheHandle ? cacheHandle[2] : UNDEFINED
-      isFunction(unsubscribe) && unsubscribe()
-    }
-  }, [])
+  // Unsubscribe events.
+  useIsomorphicLayoutEffect(
+    () => (cacheContext ? cacheContext[2] : UNDEFINED),
+    []
+  )
 
   return createElement(
     SWRConfigContext.Provider,
