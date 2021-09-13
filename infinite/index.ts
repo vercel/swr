@@ -31,6 +31,10 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
   fn: Fetcher<Data> | null,
   config: typeof SWRConfig.default & SWRInfiniteConfiguration<Data, Error>
 ): SWRInfiniteResponse<Data, Error> => {
+  const rerender = useState({})[1]
+  const didMountRef = useRef<boolean>(false)
+  const dataRef = useRef<Data[]>()
+
   const {
     cache,
     initialSize = 1,
@@ -38,7 +42,7 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
     persistSize = false
   } = config
 
-  // get the serialized key of the first page
+  // The serialized key of the first page.
   let firstPageKey: string | null = null
   try {
     firstPageKey = getFirstPageKey(getKey)
@@ -46,22 +50,18 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
     // not ready
   }
 
-  const rerender = useState({})[1]
-
   // We use cache to pass extra info (context) to fetcher so it can be globally
   // shared. The key of the context data is based on the first page key.
   let contextCacheKey: string | null = null
-  if (firstPageKey) {
-    contextCacheKey = '$ctx$' + firstPageKey
-  }
 
   // Page size is also cached to share the page data between hooks with the
   // same key.
   let pageSizeCacheKey: string | null = null
+
   if (firstPageKey) {
+    contextCacheKey = '$ctx$' + firstPageKey
     pageSizeCacheKey = '$len$' + firstPageKey
   }
-  const didMountRef = useRef<boolean>(false)
 
   const resolvePageSize = useCallback((): number => {
     const cachedPageSize = cache.get(pageSizeCacheKey)
@@ -91,9 +91,6 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
     // `initialSize` isn't allowed to change during the lifecycle
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [firstPageKey])
-
-  // keep the data inside a ref
-  const dataRef = useRef<Data[]>()
 
   // Actual SWR hook to load all pages in one fetcher.
   const swr = useSWRNext<Data[], Error>(
