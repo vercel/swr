@@ -33,13 +33,10 @@ const _renderWithConfig = (
   element: React.ReactElement,
   config: Parameters<typeof SWRConfig>[0]['value']
 ): ReturnType<typeof render> => {
-  const result = render(<SWRConfig value={config}>{element}</SWRConfig>)
-  return {
-    ...result,
-    // override the rerender method to wrap the element with SWRConfig again
-    rerender: (rerenderElement: React.ReactElement) =>
-      result.rerender(<SWRConfig value={config}>{rerenderElement}</SWRConfig>)
-  }
+  const TestSWRConfig = ({ children }: { children: React.ReactNode }) => (
+    <SWRConfig value={config}>{children}</SWRConfig>
+  )
+  return render(element, { wrapper: TestSWRConfig })
 }
 
 export const renderWithConfig = (
