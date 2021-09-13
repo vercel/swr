@@ -10,12 +10,6 @@ import { getTimestamp } from '../src/utils/timestamp'
 
 import { SWRMutationConfiguration, SWRMutationResponse } from './types'
 
-const DEFAULT_STATE = {
-  data: UNDEFINED,
-  error: UNDEFINED,
-  isValidating: false
-}
-
 const mutation = <Data, Error>() => (
   key: Key,
   fetcher: Fetcher<Data>,
@@ -28,9 +22,14 @@ const mutation = <Data, Error>() => (
   const ditchMutationsTilRef = useRef(0)
 
   const [stateRef, stateDependencies, setState] = useStateWithDeps<Data, Error>(
-    DEFAULT_STATE,
+    {
+      data: UNDEFINED,
+      error: UNDEFINED,
+      isValidating: false
+    },
     true
   )
+  const currentState = stateRef.current
 
   const trigger = useCallback(async (extraArg, opts) => {
     if (!fetcher) {
@@ -76,7 +75,7 @@ const mutation = <Data, Error>() => (
 
   const reset = useCallback(() => {
     ditchMutationsTilRef.current = getTimestamp()
-    setState(DEFAULT_STATE)
+    setState({ data: UNDEFINED, error: UNDEFINED, isValidating: false })
   }, [])
 
   useIsomorphicLayoutEffect(() => {
@@ -89,15 +88,15 @@ const mutation = <Data, Error>() => (
     reset,
     get data() {
       stateDependencies.data = true
-      return stateRef.current.data
+      return currentState.data
     },
     get error() {
       stateDependencies.error = true
-      return stateRef.current.error
+      return currentState.error
     },
     get isMutating() {
       stateDependencies.isValidating = true
-      return stateRef.current.isValidating
+      return currentState.isValidating
     }
   } as SWRMutationResponse<Data, Error>
 }
