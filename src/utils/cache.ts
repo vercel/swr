@@ -1,6 +1,6 @@
 import { defaultConfigOptions } from './web-preset'
 import { IS_SERVER } from './env'
-import { UNDEFINED, mergeObjects } from './helper'
+import { UNDEFINED, mergeObjects, noop } from './helper'
 import { internalMutate } from './mutate'
 import { SWRGlobalState } from './global-state'
 import * as revalidateEvents from '../constants/revalidate-events'
@@ -41,6 +41,7 @@ export const initCache = <Data = any>(
     const mutate = internalMutate.bind(UNDEFINED, provider) as ScopedMutator<
       Data
     >
+    let unsubscribe = noop
 
     // Update the state if it's new, or the provider has been extended.
     SWRGlobalState.set(provider, [
@@ -55,7 +56,6 @@ export const initCache = <Data = any>(
 
     // This is a new provider, we need to initialize it and setup DOM events
     // listeners for `focus` and `reconnect` actions.
-    let unscubscibe = () => {}
     if (!IS_SERVER) {
       const releaseFocus = opts.initFocus(
         revalidateAllKeys.bind(
@@ -71,7 +71,7 @@ export const initCache = <Data = any>(
           revalidateEvents.RECONNECT_EVENT
         )
       )
-      unscubscibe = () => {
+      unsubscribe = () => {
         releaseFocus && releaseFocus()
         releaseReconnect && releaseReconnect()
       }
@@ -80,6 +80,6 @@ export const initCache = <Data = any>(
     // We might want to inject an extra layer on top of `provider` in the future,
     // such as key serialization, auto GC, etc.
     // For now, it's just a `Map` interface without any modifications.
-    return [provider, mutate, unscubscibe]
+    return [provider, mutate, unsubscribe]
   }
 }
