@@ -1,20 +1,22 @@
-import { act, render, screen } from '@testing-library/react'
+import { act, screen } from '@testing-library/react'
 import React from 'react'
 import useSWR, { mutate } from 'swr'
-import { createResponse } from './utils'
+import { createKey, createResponse, renderWithGlobalCache } from './utils'
 
 describe('useSWR - context configs', () => {
   it('mutate before mount should not block rerender', async () => {
     const prefetch = () => createResponse('prefetch-data')
     const fetcher = () => createResponse('data')
-    await act(() => mutate('prefetch', prefetch))
+    const key = createKey()
+
+    await act(() => mutate(key, prefetch))
 
     function Page() {
-      const { data } = useSWR('prefetch', fetcher)
+      const { data } = useSWR(key, fetcher)
       return <div>{data}</div>
     }
 
-    render(<Page />)
+    renderWithGlobalCache(<Page />)
     // render with the prefetched data
     screen.getByText('prefetch-data')
 

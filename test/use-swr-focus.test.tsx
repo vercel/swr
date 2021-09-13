@@ -1,22 +1,28 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, screen } from '@testing-library/react'
 import React, { useState } from 'react'
-import useSWR, { SWRConfig } from 'swr'
-import { sleep, nextTick as waitForNextTick, focusOn } from './utils'
+import useSWR from 'swr'
+import {
+  sleep,
+  nextTick as waitForNextTick,
+  focusOn,
+  renderWithConfig,
+  createKey
+} from './utils'
 
 const focusWindow = () => focusOn(window)
 
 describe('useSWR - focus', () => {
   it('should revalidate on focus by default', async () => {
     let value = 0
-
+    const key = createKey()
     function Page() {
-      const { data } = useSWR('dynamic-5', () => value++, {
+      const { data } = useSWR(key, () => value++, {
         dedupingInterval: 0
       })
       return <div>data: {data}</div>
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     // hydration
     screen.getByText('data:')
     // mount
@@ -32,15 +38,16 @@ describe('useSWR - focus', () => {
   it("shouldn't revalidate on focus when revalidateOnFocus is false", async () => {
     let value = 0
 
+    const key = createKey()
     function Page() {
-      const { data } = useSWR('dynamic-6', () => value++, {
+      const { data } = useSWR(key, () => value++, {
         dedupingInterval: 0,
         revalidateOnFocus: false
       })
       return <div>data: {data}</div>
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     // hydration
     screen.getByText('data:')
 
@@ -57,9 +64,10 @@ describe('useSWR - focus', () => {
   it('revalidateOnFocus should be stateful', async () => {
     let value = 0
 
+    const key = createKey()
     function Page() {
       const [revalidateOnFocus, toggle] = useState(false)
-      const { data } = useSWR('dynamic-revalidateOnFocus', () => value++, {
+      const { data } = useSWR(key, () => value++, {
         dedupingInterval: 0,
         revalidateOnFocus,
         focusThrottleInterval: 0
@@ -67,7 +75,7 @@ describe('useSWR - focus', () => {
       return <div onClick={() => toggle(s => !s)}>data: {data}</div>
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     // hydration
     screen.getByText('data:')
 
@@ -105,20 +113,17 @@ describe('useSWR - focus', () => {
   it('focusThrottleInterval should work', async () => {
     let value = 0
 
+    const key = createKey()
     function Page() {
-      const { data } = useSWR(
-        'focusThrottleInterval should work',
-        () => value++,
-        {
-          dedupingInterval: 0,
-          revalidateOnFocus: true,
-          focusThrottleInterval: 50
-        }
-      )
+      const { data } = useSWR(key, () => value++, {
+        dedupingInterval: 0,
+        revalidateOnFocus: true,
+        focusThrottleInterval: 50
+      })
       return <div>data: {data}</div>
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     // hydration
     screen.getByText('data:')
 
@@ -144,21 +149,18 @@ describe('useSWR - focus', () => {
   it('focusThrottleInterval should be stateful', async () => {
     let value = 0
 
+    const key = createKey()
     function Page() {
       const [focusThrottleInterval, setInterval] = useState(50)
-      const { data } = useSWR(
-        'focusThrottleInterval should be stateful',
-        () => value++,
-        {
-          dedupingInterval: 0,
-          revalidateOnFocus: true,
-          focusThrottleInterval
-        }
-      )
+      const { data } = useSWR(key, () => value++, {
+        dedupingInterval: 0,
+        revalidateOnFocus: true,
+        focusThrottleInterval
+      })
       return <div onClick={() => setInterval(s => s + 100)}>data: {data}</div>
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     // hydration
     screen.getByText('data:')
 
@@ -202,20 +204,16 @@ describe('useSWR - focus', () => {
   it('should revalidate on focus even with custom cache', async () => {
     let value = 0
 
+    const key = createKey()
     function Page() {
-      const { data } = useSWR('revalidateOnFocus + cache', () => value++, {
+      const { data } = useSWR(key, () => value++, {
         revalidateOnFocus: true,
         dedupingInterval: 0
       })
       return <div>data: {data}</div>
     }
 
-    // reuse default test case
-    render(
-      <SWRConfig value={{ provider: () => new Map() }}>
-        <Page />
-      </SWRConfig>
-    )
+    renderWithConfig(<Page />)
     screen.getByText('data:')
     await screen.findByText('data: 0')
     await waitForNextTick()
