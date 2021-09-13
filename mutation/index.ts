@@ -15,9 +15,11 @@ const mutation = <Data, Error>() => (
   fetcher: Fetcher<Data>,
   config: SWRMutationConfiguration<Data, Error> = {}
 ) => {
-  const keyRef = useRef(key)
-  const resetStartedRef = useRef(0)
   const { mutate } = useSWRConfig()
+
+  const keyRef = useRef(key)
+  // Ditch all mutation results that happened earlier than this timestamp.
+  const ditchMutationsTilRef = useRef(0)
 
   const [stateRef, stateDependencies, setState] = useStateWithDeps<Data, Error>(
     {
@@ -40,9 +42,11 @@ const mutation = <Data, Error>() => (
       options.populateCache = false
     }
 
-    // Trigger a mutation.
-    // Assign extra arguments to the ref, so the fetcher can access them later.
+    // Trigger a mutation, also track the timestamp. Any mutation that happened
+    // earlier this timestamp should be ignored.
     const mutationStartedAt = getTimestamp()
+    ditchMutationsTilRef.current = mutationStartedAt
+
     try {
       setState({ isValidating: true })
       args.push(extraArg)
@@ -52,14 +56,14 @@ const mutation = <Data, Error>() => (
         options
       )
       // If it's reset after the mutation, we don't broadcast any state change.
-      if (resetStartedRef.current < mutationStartedAt) {
+      if (ditchMutationsTilRef.current <= mutationStartedAt) {
         setState({ data, isValidating: false })
         options.onSuccess && options.onSuccess(data, serializedKey, options)
       }
       return data
     } catch (error) {
       // If it's reset after the mutation, we don't broadcast any state change.
-      if (resetStartedRef.current < mutationStartedAt) {
+      if (ditchMutationsTilRef.current <= mutationStartedAt) {
         setState({ error, isValidating: false })
         options.onError && options.onError(error, serializedKey, options)
       }
@@ -68,7 +72,7 @@ const mutation = <Data, Error>() => (
   }, [])
 
   const reset = useCallback(() => {
-    resetStartedRef.current = getTimestamp()
+    ditchMutationsTilRef.current = getTimestamp()
     setState({ data: undefined, error: undefined, isValidating: false })
   }, [])
 

@@ -567,8 +567,41 @@ describe('useSWR - remote mutation', () => {
     // reset, before it ends
     fireEvent.click(screen.getByText('reset'))
 
-    await sleep(30)
+    await act(() => sleep(30))
     await screen.findByText('data:none')
+  })
+
+  it('should prevent race condition if triggered multiple times', async () => {
+    const key = createKey()
+    const logger = []
+
+    let id = 0
+    function Page() {
+      const { data, trigger } = useSWRMutation(key, async () => {
+        await sleep(10)
+        return id++
+      })
+
+      logger.push(data)
+
+      return <button onClick={trigger}>trigger</button>
+    }
+
+    render(<Page />)
+
+    // Mount
+    await screen.findByText('trigger')
+
+    // Start mutation multiple times, to break the previous one
+    fireEvent.click(screen.getByText('trigger')) // 0
+    await act(() => sleep(5))
+    fireEvent.click(screen.getByText('trigger')) // 1
+    await act(() => sleep(5))
+    fireEvent.click(screen.getByText('trigger')) // 2
+    await act(() => sleep(20))
+
+    // Shouldn't have intermediate states
+    expect(logger).toEqual([undefined, 2])
   })
 
   it('should error if no mutator is given', async () => {
