@@ -10,6 +10,12 @@ import { getTimestamp } from '../src/utils/timestamp'
 
 import { SWRMutationConfiguration, SWRMutationResponse } from './types'
 
+const DEFAULT_STATE = {
+  data: UNDEFINED,
+  error: UNDEFINED,
+  isValidating: false
+}
+
 const mutation = <Data, Error>() => (
   key: Key,
   fetcher: Fetcher<Data>,
@@ -22,17 +28,14 @@ const mutation = <Data, Error>() => (
   const ditchMutationsTilRef = useRef(0)
 
   const [stateRef, stateDependencies, setState] = useStateWithDeps<Data, Error>(
-    {
-      data: undefined,
-      error: undefined,
-      isValidating: false
-    },
+    DEFAULT_STATE,
     true
   )
 
   const trigger = useCallback(async (extraArg, opts) => {
-    if (!fetcher)
+    if (!fetcher) {
       throw new Error('Can’t trigger the mutation: missing fetcher.')
+    }
 
     const [serializedKey, args] = serialize(keyRef.current)
     const options = Object.assign({}, config, opts)
@@ -73,7 +76,7 @@ const mutation = <Data, Error>() => (
 
   const reset = useCallback(() => {
     ditchMutationsTilRef.current = getTimestamp()
-    setState({ data: undefined, error: undefined, isValidating: false })
+    setState(DEFAULT_STATE)
   }, [])
 
   useIsomorphicLayoutEffect(() => {
