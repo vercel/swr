@@ -4,10 +4,10 @@
 // Only eventual consistency is guaranteed.
 
 import { screen, fireEvent } from '@testing-library/react'
-import { createResponse, sleep } from './utils'
+import { createKey, createResponse, sleep } from './utils'
 
 describe('useSWR - concurrent rendering', () => {
-  let React, ReactDOM, act, useSWR
+  let React, ReactDOM, act, useSWR, reactRoot, renderWithConfig
 
   beforeAll(() => {
     jest.resetModules()
@@ -21,38 +21,44 @@ describe('useSWR - concurrent rendering', () => {
     ReactDOM = require('react-dom')
     act = require('react-dom/test-utils').act
     useSWR = require('swr').default
+    const SWRConfig = require('swr').SWRConfig
+
+    const root = document.createElement('div')
+    document.body.appendChild(root)
+    reactRoot = ReactDOM.createRoot(root)
+
+    renderWithConfig = (element, config) =>
+      act(() =>
+        reactRoot.render(
+          <SWRConfig value={{ provider: () => new Map(), ...config }}>
+            {element}
+          </SWRConfig>
+        )
+      )
+  })
+  afterEach(() => {
+    act(() => reactRoot.unmount())
   })
 
   it('should fetch data in concurrent rendering', async () => {
-    const root = document.createElement('div')
-    document.body.appendChild(root)
-    const reactRoot = ReactDOM.createRoot(root)
-
+    const key = createKey()
     function Page() {
-      const { data } = useSWR(
-        'concurrent-1',
-        () => createResponse('0', { delay: 50 }),
-        {
-          dedupingInterval: 0
-        }
-      )
+      const { data } = useSWR(key, () => createResponse('0', { delay: 50 }), {
+        dedupingInterval: 0
+      })
       return <div>data:{data}</div>
     }
 
-    act(() => reactRoot.render(<Page />))
+    renderWithConfig(<Page />)
 
     screen.getByText('data:')
     await act(() => sleep(100))
     screen.getByText('data:0')
-
-    act(() => reactRoot.unmount())
   })
 
   it('should pause when changing the key inside a transition', async () => {
-    const root = document.createElement('div')
-    document.body.appendChild(root)
-    const reactRoot = ReactDOM.createRoot(root)
-
+    const initialKey = createKey()
+    const newKey = createKey()
     const fetcher = (k: string) => createResponse(k, { delay: 100 })
     // eslint-disable-next-line react/prop-types
     function Component({ swrKey }) {
@@ -65,10 +71,10 @@ describe('useSWR - concurrent rendering', () => {
     }
     function Page() {
       const [isPending, startTransition] = React.useTransition()
-      const [key, setKey] = React.useState('concurrent-2')
+      const [key, setKey] = React.useState(initialKey)
 
       return (
-        <div onClick={() => startTransition(() => setKey('new-key'))}>
+        <div onClick={() => startTransition(() => setKey(newKey))}>
           isPending:{isPending ? 1 : 0},
           <React.Suspense fallback="loading">
             <Component swrKey={key} />
@@ -77,21 +83,19 @@ describe('useSWR - concurrent rendering', () => {
       )
     }
 
-    act(() => reactRoot.render(<Page />))
+    renderWithConfig(<Page />)
 
     screen.getByText('isPending:0,loading')
     await act(() => sleep(120))
-    screen.getByText('isPending:0,data:concurrent-2')
-    fireEvent.click(screen.getByText('isPending:0,data:concurrent-2'))
+    screen.getByText(`isPending:0,data:${initialKey}`)
+    fireEvent.click(screen.getByText(`isPending:0,data:${initialKey}`))
     await act(() => sleep(10))
 
     // Pending state
-    screen.getByText('isPending:1,data:concurrent-2')
+    screen.getByText(`isPending:1,data:${initialKey}`)
 
     // Transition end
     await act(() => sleep(120))
-    screen.getByText('isPending:0,data:new-key')
-
-    act(() => reactRoot.unmount())
+    screen.getByText(`isPending:0,data:${newKey}`)
   })
 })
