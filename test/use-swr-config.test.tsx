@@ -1,29 +1,29 @@
-import { act, render, screen, fireEvent } from '@testing-library/react'
+import { act, screen, fireEvent } from '@testing-library/react'
 import React, { useEffect, useState } from 'react'
-import useSWR, { mutate, SWRConfig, useSWRConfig, Middleware } from 'swr'
-import { sleep } from './utils'
+import useSWR, { SWRConfig, useSWRConfig, Middleware } from 'swr'
+import {
+  sleep,
+  renderWithConfig,
+  createKey,
+  renderWithGlobalCache
+} from './utils'
 
 describe('useSWR - configs', () => {
   it('should read the config fallback from the context', async () => {
     let value = 0
     const INTERVAL = 100
     const fetcher = () => value++
+    const key = createKey()
 
-    function Section() {
-      const { data } = useSWR('config-0')
+    function Page() {
+      const { data } = useSWR(key)
       return <div>data: {data}</div>
     }
-    function Page() {
-      // config provider
-      return (
-        <SWRConfig
-          value={{ fetcher, refreshInterval: INTERVAL, dedupingInterval: 0 }}
-        >
-          <Section />
-        </SWRConfig>
-      )
-    }
-    render(<Page />)
+    renderWithConfig(<Page />, {
+      fetcher,
+      refreshInterval: INTERVAL,
+      dedupingInterval: 0
+    })
     // hydration
     screen.getByText('data:')
     // mount
@@ -35,23 +35,24 @@ describe('useSWR - configs', () => {
   })
 
   it('should stop revalidations when config.isPaused returns true', async () => {
-    const key = 'config-1'
+    const key = createKey()
     let value = 0
     const fetcher = () => {
       if (value === 2) throw new Error()
       return value++
     }
-    const revalidate = () => mutate(key)
+    let mutate
 
     function Page() {
       const [paused, setPaused] = useState(false)
-      const { data, error } = useSWR(key, fetcher, {
+      const { data, error, mutate: _mutate } = useSWR(key, fetcher, {
         revalidateOnMount: true,
         refreshInterval: 1,
         isPaused() {
           return paused
         }
       })
+      mutate = _mutate
 
       useEffect(() => {
         // revalidate on mount and turn to idle
@@ -65,27 +66,27 @@ describe('useSWR - configs', () => {
       )
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     await screen.findByText('data: 0')
 
     // should not be revalidated
-    await act(() => revalidate())
+    await act(() => mutate())
     screen.getByText('data: 0')
-    await act(() => revalidate())
+    await act(() => mutate())
     screen.getByText('data: 0')
 
     // enable isPaused
     fireEvent.click(screen.getByText('data: 0'))
     // should be revalidated
-    await act(() => revalidate())
+    await act(() => mutate())
     screen.getByText('data: 1')
 
     // disable isPaused
     fireEvent.click(screen.getByText('data: 1'))
     // should not be revalidated
-    await act(() => revalidate())
+    await act(() => mutate())
     screen.getByText('data: 1')
-    await act(() => revalidate())
+    await act(() => mutate())
     screen.getByText('data: 1')
   })
 
@@ -101,7 +102,7 @@ describe('useSWR - configs', () => {
       return null
     }
 
-    render(<Page />)
+    renderWithGlobalCache(<Page />)
     expect(SWRConfig.default).toEqual(config)
   })
 
@@ -118,7 +119,7 @@ describe('useSWR - configs', () => {
     const middleware2: Middleware = useSWRNext => (k, f, c) =>
       useSWRNext(k, f, c)
 
-    render(
+    renderWithConfig(
       <SWRConfig
         value={{
           dedupingInterval: 1,
