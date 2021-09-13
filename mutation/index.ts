@@ -6,6 +6,7 @@ import { useStateWithDeps } from '../src/utils/state'
 import { withMiddleware } from '../src/utils/with-middleware'
 import { useIsomorphicLayoutEffect } from '../src/utils/env'
 import { isUndefined, UNDEFINED } from '../src/utils/helper'
+import { getTimestamp } from '../src/utils/timestamp'
 
 import { SWRMutationConfiguration, SWRMutationResponse } from './types'
 
@@ -15,6 +16,7 @@ const mutation = <Data, Error>() => (
   config: SWRMutationConfiguration<Data, Error> = {}
 ) => {
   const keyRef = useRef(key)
+  const resetStartedRef = useRef(0)
   const { mutate } = useSWRConfig()
 
   const [stateRef, stateDependencies, setState] = useStateWithDeps<Data, Error>(
@@ -40,6 +42,7 @@ const mutation = <Data, Error>() => (
 
     // Trigger a mutation.
     // Assign extra arguments to the ref, so the fetcher can access them later.
+    const mutationStartedAt = getTimestamp()
     try {
       setState({ isValidating: true })
       args.push(extraArg)
@@ -48,17 +51,24 @@ const mutation = <Data, Error>() => (
         fetcher.apply(UNDEFINED, args),
         options
       )
-      setState({ data, isValidating: false })
-      options.onSuccess && options.onSuccess(data, serializedKey, options)
+      // If it's reset after the mutation, we don't broadcast any state change.
+      if (resetStartedRef.current < mutationStartedAt) {
+        setState({ data, isValidating: false })
+        options.onSuccess && options.onSuccess(data, serializedKey, options)
+      }
       return data
     } catch (error) {
-      setState({ error, isValidating: false })
-      options.onError && options.onError(error, serializedKey, options)
+      // If it's reset after the mutation, we don't broadcast any state change.
+      if (resetStartedRef.current < mutationStartedAt) {
+        setState({ error, isValidating: false })
+        options.onError && options.onError(error, serializedKey, options)
+      }
       throw error
     }
   }, [])
 
   const reset = useCallback(() => {
+    resetStartedRef.current = getTimestamp()
     setState({ data: undefined, error: undefined, isValidating: false })
   }, [])
 

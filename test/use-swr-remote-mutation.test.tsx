@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import React from 'react'
 import useSWR from 'swr'
 import useSWRMutation from 'swr/mutation'
-import { createKey, sleep } from './utils'
+import { createKey, sleep, nextTick } from './utils'
 
 const waitForNextTick = () => act(() => sleep(1))
 
@@ -62,6 +62,32 @@ describe('useSWR - remote mutation', () => {
         onSuccess
       })
       return <button onClick={() => trigger()}>{data || 'pending'}</button>
+    }
+
+    render(<Page />)
+
+    // mount
+    await screen.findByText('pending')
+
+    fireEvent.click(screen.getByText('pending'))
+    await waitForNextTick()
+
+    screen.getByText('data')
+
+    expect(onSuccess).toHaveBeenCalled()
+  })
+
+  it('should support configuring `onSuccess` with trigger', async () => {
+    const key = createKey()
+    const onSuccess = jest.fn()
+
+    function Page() {
+      const { data, trigger } = useSWRMutation(key, () => 'data')
+      return (
+        <button onClick={() => trigger(undefined, { onSuccess })}>
+          {data || 'pending'}
+        </button>
+      )
     }
 
     render(<Page />)
@@ -507,5 +533,62 @@ describe('useSWR - remote mutation', () => {
     // reset
     fireEvent.click(screen.getByText('reset'))
     await screen.findByText('data:none')
+  })
+
+  it('should prevent race condition if reset the state', async () => {
+    const key = createKey()
+    const onSuccess = jest.fn()
+
+    function Page() {
+      const { data, trigger, reset } = useSWRMutation(key, async () => {
+        await sleep(10)
+        return 'data'
+      })
+
+      return (
+        <div>
+          <button onClick={() => trigger(undefined, { onSuccess })}>
+            trigger
+          </button>
+          <button onClick={reset}>reset</button>
+          <div>data:{data || 'none'}</div>
+        </div>
+      )
+    }
+
+    render(<Page />)
+
+    // mount
+    await screen.findByText('data:none')
+
+    // start mutation
+    fireEvent.click(screen.getByText('trigger'))
+
+    // reset, before it ends
+    fireEvent.click(screen.getByText('reset'))
+
+    await sleep(30)
+    await screen.findByText('data:none')
+  })
+
+  it('should error if no mutator is given', async () => {
+    const key = createKey()
+    const catchError = jest.fn()
+
+    function Page() {
+      const { trigger } = useSWRMutation(key, null)
+
+      return (
+        <div>
+          <button onClick={() => trigger().catch(catchError)}>trigger</button>
+        </div>
+      )
+    }
+
+    render(<Page />)
+
+    fireEvent.click(screen.getByText('trigger'))
+    await nextTick()
+    expect(catchError).toBeCalled()
   })
 })
