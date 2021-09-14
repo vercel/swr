@@ -3,17 +3,16 @@ import React, { ReactNode, Suspense, useEffect, useState } from 'react'
 import useSWR, { mutate } from 'swr'
 import { createResponse, sleep } from './utils'
 
-class ErrorBoundary extends React.Component<{ fallback?: ReactNode }> {
-  state = { hasError: false, message: null }
-  static getDerivedStateFromError(error: Error) {
+class ErrorBoundary extends React.Component<{ fallback: ReactNode }> {
+  state = { hasError: false }
+  static getDerivedStateFromError() {
     return {
-      hasError: true,
-      message: error.message
+      hasError: true
     }
   }
   render() {
     if (this.state.hasError) {
-      return this.props.fallback || this.state.message
+      return this.props.fallback
     }
     return this.props.children
   }
@@ -258,47 +257,5 @@ describe('useSWR - suspense', () => {
     await act(() => sleep(50)) // wait a moment to observe unnecessary renders
     expect(startRenderCount).toBe(2) // fallback + data
     expect(renderCount).toBe(1) // data
-  })
-
-  it('should throw an error if key is a falsy value', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    jest.spyOn(console, 'error').mockImplementation(() => {})
-
-    function Page() {
-      const { data } = useSWR(null, () => createResponse('SWR'), {
-        suspense: true
-      })
-      return <div>hello, {data}</div>
-    }
-    render(
-      <ErrorBoundary>
-        <Suspense fallback={<div>fallback</div>}>
-          <Page />
-        </Suspense>
-      </ErrorBoundary>
-    )
-
-    screen.getByText('useSWR requires either key or fetcher with suspense mode')
-  })
-
-  it('should throw an error if fetch is null', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    jest.spyOn(console, 'error').mockImplementation(() => {})
-
-    function Page() {
-      const { data } = useSWR('suspense-11', null, {
-        suspense: true
-      })
-      return <div>hello, {data}</div>
-    }
-    render(
-      <ErrorBoundary>
-        <Suspense fallback={<div>fallback</div>}>
-          <Page />
-        </Suspense>
-      </ErrorBoundary>
-    )
-
-    screen.getByText('useSWR requires either key or fetcher with suspense mode')
   })
 })
