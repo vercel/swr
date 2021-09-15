@@ -1,5 +1,11 @@
 import { useCallback, useRef } from 'react'
-import useSWR, { Middleware, Key, Fetcher, useSWRConfig } from 'swr'
+import useSWR, {
+  useSWRConfig,
+  Middleware,
+  Key,
+  Fetcher,
+  SWRResponse
+} from 'swr'
 
 import { serialize } from '../src/utils/serialize'
 import { useStateWithDeps } from '../src/utils/state'
@@ -30,6 +36,17 @@ const mutation = <Data, Error>() => (
     true
   )
   const currentState = stateRef.current
+
+  // Similar to the global mutate, but bound to the current cache and key.
+  // `cache` isn't allowed to change during the lifecycle.
+  const boundMutate: SWRResponse<Data, Error>['mutate'] = useCallback(
+    (newData, shouldRevalidate) => {
+      const serializedKey = serialize(keyRef.current)[0]
+      return mutate(serializedKey, newData, shouldRevalidate)
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  )
 
   const trigger = useCallback(async (extraArg, opts) => {
     if (!fetcher) {
@@ -83,7 +100,7 @@ const mutation = <Data, Error>() => (
   })
 
   return {
-    mutate,
+    mutate: boundMutate,
     trigger,
     reset,
     get data() {

@@ -624,4 +624,34 @@ describe('useSWR - remote mutation', () => {
     await nextTick()
     expect(catchError).toBeCalled()
   })
+
+  it('should return the bound mutate', async () => {
+    const key = createKey()
+
+    function Page() {
+      const { data } = useSWR(key, async () => {
+        await sleep(10)
+        return 'stale'
+      })
+      const { trigger, mutate } = useSWRMutation(key, () => 'new')
+
+      return (
+        <div>
+          <button onClick={() => trigger().then(mutate)}>request</button>
+          {data || 'none'}
+        </div>
+      )
+    }
+
+    render(<Page />)
+
+    await screen.findByText('none')
+    // Initial result
+    await screen.findByText('stale')
+    fireEvent.click(screen.getByText('request'))
+    // Mutate
+    await screen.findByText('new')
+    // Revalidate
+    await screen.findByText('stale')
+  })
 })
