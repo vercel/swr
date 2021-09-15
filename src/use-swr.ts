@@ -79,10 +79,6 @@ export const useSWRHandler = <Data = any, Error = any>(
   const data = isUndefined(cached) ? fallback : cached
   const error = cache.get(keyErr)
 
-  if (suspense && (!key || !fn)) {
-    throw new Error('useSWR requires either key or fetcher with suspense mode')
-  }
-
   // A revalidation must be triggered when mounted if:
   // - `revalidateOnMount` is explicitly set to `true`.
   // - `isPaused()` returns `false`, and:
