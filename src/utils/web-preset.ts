@@ -19,7 +19,7 @@ const onDocumentEvent = hasDocument
   : noop
 const offWindowEvent = (hasWindow && removeEventListener) || noop
 const offDocumentEvent = hasDocument
-  ? (...args: Parameters<typeof document.addEventListener>) =>
+  ? (...args: Parameters<typeof document.removeEventListener>) =>
       document.removeEventListener(...args)
   : noop
 
