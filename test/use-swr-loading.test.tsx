@@ -1,15 +1,14 @@
-import { act, render, screen } from '@testing-library/react'
+import { act, screen } from '@testing-library/react'
 import React from 'react'
 import useSWR from 'swr'
-import { createResponse, createKey, sleep } from './utils'
+import { createResponse, createKey, sleep, renderWithConfig } from './utils'
 
 describe('useSWR - loading', () => {
   it('should return loading state', async () => {
     let renderCount = 0
+    const key = createKey()
     function Page() {
-      const { data, isValidating } = useSWR('is-validating-1', () =>
-        createResponse('data')
-      )
+      const { data, isValidating } = useSWR(key, () => createResponse('data'))
       renderCount++
       return (
         <div>
@@ -18,7 +17,7 @@ describe('useSWR - loading', () => {
       )
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     screen.getByText('hello, , loading')
 
     await screen.findByText('hello, data, ready')
@@ -30,14 +29,15 @@ describe('useSWR - loading', () => {
 
   it('should avoid extra rerenders', async () => {
     let renderCount = 0
+    const key = createKey()
     function Page() {
       // we never access `isValidating`, so it will not trigger rerendering
-      const { data } = useSWR('is-validating-2', () => createResponse('data'))
+      const { data } = useSWR(key, () => createResponse('data'))
       renderCount++
       return <div>hello, {data}</div>
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
 
     await screen.findByText('hello, data')
     //    data
@@ -50,9 +50,10 @@ describe('useSWR - loading', () => {
     let renderCount = 0,
       dataLoaded = false
 
+    const key = createKey()
     function Page() {
       // we never access anything
-      useSWR('is-validating-3', async () => {
+      useSWR(key, async () => {
         const res = await createResponse('data')
         dataLoaded = true
         return res
@@ -61,7 +62,7 @@ describe('useSWR - loading', () => {
       return <div>hello</div>
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     screen.getByText('hello')
 
     await act(() => sleep(100)) // wait
@@ -85,7 +86,7 @@ describe('useSWR - loading', () => {
       )
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     screen.getByText('data,error,isValidating,mutate')
   })
 })
