@@ -15,7 +15,7 @@ describe('useSWRInfinite', () => {
   it('should render the first page component', async () => {
     const key = createKey()
     function Page() {
-      const { data } = useSWRInfinite<string, string>(
+      const { data } = useSWRInfinite(
         index => `page-${index}-${key}`,
         infiniteKey => createResponse(infiniteKey)
       )
@@ -32,7 +32,7 @@ describe('useSWRInfinite', () => {
   it('should render the multiple pages', async () => {
     const key = createKey()
     function Page() {
-      const { data, size, setSize } = useSWRInfinite<string, string>(
+      const { data, size, setSize } = useSWRInfinite(
         index => [key, index],
         (_, index) => createResponse(`page ${index}, `)
       )
@@ -59,7 +59,7 @@ describe('useSWRInfinite', () => {
 
     const key = createKey()
     function Page() {
-      const { data, mutate: boundMutate } = useSWRInfinite<string, string>(
+      const { data, mutate: boundMutate } = useSWRInfinite(
         index => [key, index],
         (_, index) => createResponse(`${pageData[index]}, `),
         {
@@ -168,7 +168,7 @@ describe('useSWRInfinite', () => {
     const key = createKey()
 
     function Page() {
-      const { data, size, setSize } = useSWRInfinite<string, string>(
+      const { data, size, setSize } = useSWRInfinite(
         index => [key, index],
         (_, index) => {
           requests++
@@ -218,7 +218,7 @@ describe('useSWRInfinite', () => {
 
     const key = createKey()
     function Page() {
-      const { data, size, setSize } = useSWRInfinite<string, string>(
+      const { data, size, setSize } = useSWRInfinite(
         index => [key, index],
         (_, index) => createResponse(`page ${index}, `)
       )
@@ -267,7 +267,7 @@ describe('useSWRInfinite', () => {
     const key = createKey()
     function Page() {
       const [t, setT] = useState(false)
-      const { data, size, setSize } = useSWRInfinite<string, string>(
+      const { data, size, setSize } = useSWRInfinite(
         index => [key, index, t ? 'A' : 'B'],
         (_, index) => createResponse(`page ${index}, `)
       )
@@ -306,7 +306,7 @@ describe('useSWRInfinite', () => {
     const key = createKey()
     function Page() {
       const [t, setT] = useState(false)
-      const { data, size, setSize } = useSWRInfinite<string, string>(
+      const { data, size, setSize } = useSWRInfinite(
         index => [key, index, t ? 'A' : 'B'],
         async (_, index) => createResponse(`page ${index}, `),
         {
@@ -348,7 +348,7 @@ describe('useSWRInfinite', () => {
 
     const key = createKey()
     function Comp() {
-      const { data, size, setSize } = useSWRInfinite<string, string>(
+      const { data, size, setSize } = useSWRInfinite(
         index => [key, index],
         (_, index) => createResponse(`page ${index}, `)
       )
@@ -394,7 +394,7 @@ describe('useSWRInfinite', () => {
 
     const key = createKey()
     function Comp() {
-      const { data, size, setSize } = useSWRInfinite<string, string>(
+      const { data, size, setSize } = useSWRInfinite(
         index => [key, index],
         (_, index) => createResponse(`page ${index}, `)
       )
@@ -453,7 +453,7 @@ describe('useSWRInfinite', () => {
     let value = 0
     const key = createKey()
     function Page() {
-      const { data } = useSWRInfinite<number, string>(
+      const { data } = useSWRInfinite(
         index => `interval-${key}-${index}`,
         () => value++,
         {
@@ -481,13 +481,13 @@ describe('useSWRInfinite', () => {
 
     const key = createKey()
     function Page() {
-      const { data, size, setSize } = useSWRInfinite<string[], string>(
+      const { data, size, setSize } = useSWRInfinite(
         index => {
           return [key, `/api?page=${index + 1}`]
         },
         (_, index) => {
           requests.push(index)
-          return createResponse(dummyResponses[index])
+          return createResponse<string[]>(dummyResponses[index])
         },
         {
           fallbackData: [dummyResponses[`/api?page=1`]]
@@ -524,9 +524,9 @@ describe('useSWRInfinite', () => {
       '/api?page=2': ['page-2-1', 'page-2-2']
     }
     const useCustomSWRInfinite = () => {
-      const { data, setSize, size } = useSWRInfinite<string[], string>(
+      const { data, setSize, size } = useSWRInfinite(
         index => [key, `/api?page=${index + 1}`],
-        (_, index) => createResponse(dummyResponses[index])
+        (_, index) => createResponse<string[]>(dummyResponses[index])
       )
       return {
         data: data ? [].concat(...data) : [],
@@ -575,10 +575,7 @@ describe('useSWRInfinite', () => {
 
   it('should support null as getKey', async () => {
     function Page() {
-      const { data, setSize } = useSWRInfinite<string, string>(
-        null,
-        () => 'data'
-      )
+      const { data, setSize } = useSWRInfinite(null, () => 'data')
 
       return (
         <div
@@ -607,7 +604,7 @@ describe('useSWRInfinite', () => {
     let mutate
     function Page() {
       mutate = useSWRConfig().mutate
-      const { data } = useSWRInfinite<string, string>(
+      const { data } = useSWRInfinite(
         index => `page-test-${key}-${index}`,
         infiniteKey => createResponse(`${infiniteKey}:${++count}`)
       )
@@ -636,13 +633,15 @@ describe('useSWRInfinite', () => {
 
   it('should mutate a cache with `unstable_serialize` based on a current data', async () => {
     const key = createKey()
-    const getKey = index => [key, index]
+    const getKey: (index: number) => [string, number] = (index: number) => [
+      key,
+      index
+    ]
     let mutate
     function Comp() {
       mutate = useSWRConfig().mutate
-      const { data, size, setSize } = useSWRInfinite<string, string>(
-        getKey,
-        (_, index) => createResponse(`page ${index}, `)
+      const { data, size, setSize } = useSWRInfinite(getKey, (_, index) =>
+        createResponse(`page ${index}, `)
       )
       useEffect(() => {
         setSize(size + 1)
@@ -673,7 +672,7 @@ describe('useSWRInfinite', () => {
 
     function Page() {
       mutateCustomCache = useSWRConfig().mutate
-      const { data } = useSWRInfinite<string, string>(
+      const { data } = useSWRInfinite(
         () => key,
         () => createResponse('response data')
       )
@@ -707,10 +706,7 @@ describe('useSWRInfinite', () => {
     const loggedValues = []
 
     function Page() {
-      const { size, setSize } = useSWRInfinite<string, string>(
-        () => null,
-        () => ''
-      )
+      const { size, setSize } = useSWRInfinite(() => null, () => '')
       loggedValues.push(size)
       return <button onClick={() => setSize(1)}>set size</button>
     }
@@ -728,7 +724,7 @@ describe('useSWRInfinite', () => {
     const key = createKey()
 
     function Page() {
-      const { data, size, setSize } = useSWRInfinite<string, string>(
+      const { data, size, setSize } = useSWRInfinite(
         index => `${key}-${index}`,
         k => createResponse(`page-${k}`)
       )
@@ -770,10 +766,10 @@ describe('useSWRInfinite', () => {
     let v = 'old'
 
     function Page() {
-      const { data, size, mutate: boundMutate } = useSWRInfinite<
-        string,
-        string
-      >(i => [key, i], () => v)
+      const { data, size, mutate: boundMutate } = useSWRInfinite(
+        i => [key, i],
+        () => v
+      )
       renderedData = data
 
       return (
@@ -805,7 +801,7 @@ describe('useSWRInfinite', () => {
     const key = createKey()
 
     function Page() {
-      const { data, setSize } = useSWRInfinite<string, string>(
+      const { data, setSize } = useSWRInfinite(
         index => key + '-' + index,
         () => createResponse('response value')
       )
@@ -829,7 +825,7 @@ describe('useSWRInfinite', () => {
     const getData = jest.fn(v => v)
 
     function Page() {
-      const { data, setSize } = useSWRInfinite<string, string>(
+      const { data, setSize } = useSWRInfinite(
         index => key + '-' + index,
         () => sleep(30).then(() => getData('response value'))
       )
@@ -861,7 +857,7 @@ describe('useSWRInfinite', () => {
     const getData = jest.fn(v => v)
 
     function Page() {
-      const { data, setSize } = useSWRInfinite<string, string>(
+      const { data, setSize } = useSWRInfinite(
         index => key + '-' + index,
         () => sleep(30).then(() => getData('response value'))
       )
@@ -887,7 +883,7 @@ describe('useSWRInfinite', () => {
     const key = createKey()
 
     function Page() {
-      const { data, setSize } = useSWRInfinite<string, string>(
+      const { data, setSize } = useSWRInfinite(
         index => key + '-' + index,
         () => sleep(30).then(() => 'response value'),
         { fallbackData: ['fallback-1', 'fallback-2'] }

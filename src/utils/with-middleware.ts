@@ -9,10 +9,10 @@ export const withMiddleware = (
 ): SWRHook => {
   return <Data = any, Error = any>(
     ...args:
-      | readonly [Key]
-      | readonly [Key, Fetcher<Data> | null]
-      | readonly [Key, SWRConfiguration | undefined]
-      | readonly [Key, Fetcher<Data> | null, SWRConfiguration | undefined]
+      | [Key]
+      | [Key, Fetcher<Data> | null]
+      | [Key, SWRConfiguration | undefined]
+      | [Key, Fetcher<Data> | null, SWRConfiguration | undefined]
   ) => {
     const [key, fn, config] = normalize(args)
     config.use = (config.use || []).concat(middleware)
