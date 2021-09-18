@@ -1,7 +1,13 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, screen } from '@testing-library/react'
 import React, { ReactNode, Suspense, useEffect, useState } from 'react'
 import useSWR, { mutate } from 'swr'
-import { createResponse, sleep } from './utils'
+import {
+  createKey,
+  createResponse,
+  renderWithConfig,
+  renderWithGlobalCache,
+  sleep
+} from './utils'
 
 class ErrorBoundary extends React.Component<{ fallback: ReactNode }> {
   state = { hasError: false }
@@ -25,14 +31,15 @@ describe('useSWR - suspense', () => {
   })
 
   it('should render fallback', async () => {
+    const key = createKey()
     function Section() {
-      const { data } = useSWR('suspense-1', () => createResponse('SWR'), {
+      const { data } = useSWR(key, () => createResponse('SWR'), {
         suspense: true
       })
       return <div>{data}</div>
     }
 
-    render(
+    renderWithConfig(
       <Suspense fallback={<div>fallback</div>}>
         <Section />
       </Suspense>
@@ -44,9 +51,10 @@ describe('useSWR - suspense', () => {
   })
 
   it('should render multiple SWR fallbacks', async () => {
+    const key = createKey()
     function Section() {
       const { data: v1 } = useSWR<number>(
-        'suspense-2',
+        key,
         () => createResponse(1, { delay: 50 }),
         {
           suspense: true
@@ -62,7 +70,7 @@ describe('useSWR - suspense', () => {
       return <div>{v1 + v2}</div>
     }
 
-    render(
+    renderWithConfig(
       <Suspense fallback={<div>fallback</div>}>
         <Section />
       </Suspense>
@@ -77,13 +85,14 @@ describe('useSWR - suspense', () => {
   })
 
   it('should work for non-promises', async () => {
+    const key = createKey()
     function Section() {
-      const { data } = useSWR('suspense-4', () => 'hello', {
+      const { data } = useSWR(key, () => 'hello', {
         suspense: true
       })
       return <div>{data}</div>
     }
-    render(
+    renderWithConfig(
       <Suspense fallback={<div>fallback</div>}>
         <Section />
       </Suspense>
@@ -94,19 +103,16 @@ describe('useSWR - suspense', () => {
   it('should throw errors', async () => {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     jest.spyOn(console, 'error').mockImplementation(() => {})
+    const key = createKey()
     function Section() {
-      const { data } = useSWR(
-        'suspense-5',
-        () => createResponse(new Error('error')),
-        {
-          suspense: true
-        }
-      )
+      const { data } = useSWR(key, () => createResponse(new Error('error')), {
+        suspense: true
+      })
       return <div>{data}</div>
     }
 
     // https://reactjs.org/docs/concurrent-mode-suspense.html#handling-errors
-    render(
+    renderWithConfig(
       <ErrorBoundary fallback={<div>error boundary</div>}>
         <Suspense fallback={<div>fallback</div>}>
           <Section />
@@ -122,12 +128,13 @@ describe('useSWR - suspense', () => {
   })
 
   it('should render cached data with error', async () => {
-    mutate('suspense-6', 'hello')
+    const key = createKey()
+    mutate(key, 'hello')
 
     function Section() {
       const { data, error } = useSWR(
         // this value is cached
-        'suspense-6',
+        key,
         () => createResponse(new Error('error')),
         {
           suspense: true
@@ -140,7 +147,7 @@ describe('useSWR - suspense', () => {
       )
     }
 
-    render(
+    renderWithGlobalCache(
       <Suspense fallback={<div>fallback</div>}>
         <Section />
       </Suspense>
@@ -152,15 +159,17 @@ describe('useSWR - suspense', () => {
 
   it('should pause when key changes', async () => {
     const renderedResults = []
+    const initialKey = createKey()
+    const updatedKey = createKey()
     function Section() {
-      const [key, setKey] = useState('suspense-7')
+      const [key, setKey] = useState(initialKey)
       const { data } = useSWR(key, k => createResponse(k), {
         suspense: true
       })
 
       useEffect(() => {
-        if (data === 'suspense-7') {
-          setKey('suspense-8')
+        if (data === initialKey) {
+          setKey(updatedKey)
         }
       }, [data])
 
@@ -171,33 +180,38 @@ describe('useSWR - suspense', () => {
       return <>{data}</>
     }
 
-    render(
+    renderWithConfig(
       <Suspense fallback={<div>fallback</div>}>
         <Section />
       </Suspense>
     )
 
-    await screen.findByText('suspense-8')
+    await screen.findByText(updatedKey)
     // fixes https://github.com/zeit/swr/issues/57
-    // 'suspense-7' -> undefined -> 'suspense-8'
-    expect(renderedResults).toEqual(['suspense-7', 'suspense-8'])
+    // initialKey' -> undefined -> updatedKey
+    expect(renderedResults).toEqual([initialKey, updatedKey])
   })
 
   it('should render correctly when key changes (but with same response data)', async () => {
     // https://github.com/vercel/swr/issues/1056
     const renderedResults = []
+    const baseKey = createKey()
     function Section() {
       const [key, setKey] = useState(1)
-      const { data } = useSWR(`foo?a=${key}`, () => createResponse('123'), {
-        suspense: true
-      })
+      const { data } = useSWR(
+        `${baseKey}-${key}`,
+        () => createResponse('123'),
+        {
+          suspense: true
+        }
+      )
       if (`${data},${key}` !== renderedResults[renderedResults.length - 1]) {
         renderedResults.push(`${data},${key}`)
       }
       return <div onClick={() => setKey(v => v + 1)}>{`${data},${key}`}</div>
     }
 
-    render(
+    renderWithConfig(
       <Suspense fallback={<div>fallback</div>}>
         <Section />
       </Suspense>
@@ -215,15 +229,16 @@ describe('useSWR - suspense', () => {
   it('should render initial data if set', async () => {
     const fetcher = jest.fn(() => 'SWR')
 
+    const key = createKey()
     function Page() {
-      const { data } = useSWR('suspense-9', fetcher, {
+      const { data } = useSWR(key, fetcher, {
         fallbackData: 'Initial',
         suspense: true
       })
       return <div>hello, {data}</div>
     }
 
-    render(
+    renderWithConfig(
       <Suspense fallback={<div>fallback</div>}>
         <Page />
       </Suspense>
@@ -236,16 +251,17 @@ describe('useSWR - suspense', () => {
   it('should avoid unnecessary re-renders', async () => {
     let renderCount = 0
     let startRenderCount = 0
+    const key = createKey()
     function Section() {
       ++startRenderCount
-      const { data } = useSWR('suspense-10', () => createResponse('SWR'), {
+      const { data } = useSWR(key, () => createResponse('SWR'), {
         suspense: true
       })
       ++renderCount
       return <div>{data}</div>
     }
 
-    render(
+    renderWithConfig(
       <Suspense fallback={<div>fallback</div>}>
         <Section />
       </Suspense>

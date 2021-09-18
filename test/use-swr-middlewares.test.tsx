@@ -1,9 +1,15 @@
-import { act, render, screen } from '@testing-library/react'
+import { act, screen } from '@testing-library/react'
 import React, { useState, useEffect, useRef } from 'react'
 import useSWR, { Middleware, SWRConfig } from 'swr'
 import { withMiddleware } from '../src/utils/with-middleware'
 
-import { createResponse, sleep, createKey, nextTick } from './utils'
+import {
+  createResponse,
+  sleep,
+  createKey,
+  nextTick,
+  renderWithConfig
+} from './utils'
 
 describe('useSWR - middleware', () => {
   it('should use middleware', async () => {
@@ -20,7 +26,7 @@ describe('useSWR - middleware', () => {
       return <div>hello, {data}</div>
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     screen.getByText('hello,')
     await screen.findByText('hello, data')
     expect(mockConsoleLog.mock.calls[0][0]).toBe(key)
@@ -42,7 +48,7 @@ describe('useSWR - middleware', () => {
       return <div>hello, {data}</div>
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     screen.getByText('hello,')
     await screen.findByText('hello, data')
     expect(mockConsoleLog.mock.calls[0][0]).toEqual([key, 1, 2, 3])
@@ -62,11 +68,7 @@ describe('useSWR - middleware', () => {
       return <div>hello, {data}</div>
     }
 
-    render(
-      <SWRConfig value={{ use: [loggerMiddleware] }}>
-        <Page />
-      </SWRConfig>
-    )
+    renderWithConfig(<Page />, { use: [loggerMiddleware] })
     screen.getByText('hello,')
     await screen.findByText('hello, data')
     expect(mockConsoleLog.mock.calls[0][0]).toBe(key)
@@ -91,7 +93,7 @@ describe('useSWR - middleware', () => {
       return <div>hello, {data}</div>
     }
 
-    render(
+    renderWithConfig(
       <SWRConfig value={{ use: [createLoggerMiddleware(2)] }}>
         <SWRConfig value={{ use: [createLoggerMiddleware(1)] }}>
           <Page />
@@ -138,11 +140,7 @@ describe('useSWR - middleware', () => {
       return <div>hello, {data}</div>
     }
 
-    render(
-      <SWRConfig value={{ use: [createLoggerMiddleware(2)] }}>
-        <Page />
-      </SWRConfig>
-    )
+    renderWithConfig(<Page />, { use: [createLoggerMiddleware(2)] })
     screen.getByText('hello,')
     await screen.findByText('hello, data')
     expect(mockConsoleLog.mock.calls.map(call => call[0])).toEqual([
@@ -184,11 +182,7 @@ describe('useSWR - middleware', () => {
       return <div>data:{data}</div>
     }
 
-    render(
-      <SWRConfig value={{ use: [lazyMiddleware] }}>
-        <Page />
-      </SWRConfig>
-    )
+    renderWithConfig(<Page />, { use: [lazyMiddleware] })
 
     screen.getByText('data:') // undefined, time=0
     await act(() => sleep(150))
@@ -217,7 +211,7 @@ describe('useSWR - middleware', () => {
       return <div>hello, {data}</div>
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     screen.getByText('hello,')
     await screen.findByText(`hello, #!${key}!#`)
   })
@@ -244,7 +238,7 @@ describe('useSWR - middleware', () => {
       return <div>hello, {data || ''}</div>
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     screen.getByText('hello,')
     await nextTick()
 
