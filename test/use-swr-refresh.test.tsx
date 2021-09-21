@@ -1,7 +1,7 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, screen } from '@testing-library/react'
 import React, { useState } from 'react'
 import useSWR, { SWRConfig } from 'swr'
-import { sleep } from './utils'
+import { createKey, renderWithConfig, sleep } from './utils'
 
 // This has to be an async function to wait a microtask to flush updates
 const advanceTimers = async (ms: number) => jest.advanceTimersByTime(ms)
@@ -18,15 +18,16 @@ describe('useSWR - refresh', () => {
   it('should rerender automatically on interval', async () => {
     let count = 0
 
+    const key = createKey()
     function Page() {
-      const { data } = useSWR('dynamic-1', () => count++, {
+      const { data } = useSWR(key, () => count++, {
         refreshInterval: 200,
         dedupingInterval: 100
       })
       return <div>count: {data}</div>
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
 
     // hydration
     screen.getByText('count:')
@@ -45,15 +46,16 @@ describe('useSWR - refresh', () => {
   it('should dedupe requests combined with intervals', async () => {
     let count = 0
 
+    const key = createKey()
     function Page() {
-      const { data } = useSWR('dynamic-2', () => count++, {
+      const { data } = useSWR(key, () => count++, {
         refreshInterval: 100,
         dedupingInterval: 500
       })
       return <div>count: {data}</div>
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
 
     // hydration
     screen.getByText('count:')
@@ -75,9 +77,10 @@ describe('useSWR - refresh', () => {
 
   it('should update data upon interval changes', async () => {
     let count = 0
+    const key = createKey()
     function Page() {
       const [int, setInt] = React.useState(100)
-      const { data } = useSWR('/api', () => count++, {
+      const { data } = useSWR(key, () => count++, {
         refreshInterval: int,
         dedupingInterval: 50
       })
@@ -88,7 +91,7 @@ describe('useSWR - refresh', () => {
       )
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     screen.getByText('count:')
 
     // mount
@@ -133,20 +136,17 @@ describe('useSWR - refresh', () => {
   it('should update data upon interval changes -- changes happened during revalidate', async () => {
     let count = 0
     const STOP_POLLING_THRESHOLD = 2
+    const key = createKey()
     function Page() {
       const [flag, setFlag] = useState(0)
       const shouldPoll = flag < STOP_POLLING_THRESHOLD
-      const { data } = useSWR(
-        '/interval-changes-during-revalidate',
-        () => count++,
-        {
-          refreshInterval: shouldPoll ? 100 : 0,
-          dedupingInterval: 50,
-          onSuccess() {
-            setFlag(value => value + 1)
-          }
+      const { data } = useSWR(key, () => count++, {
+        refreshInterval: shouldPoll ? 100 : 0,
+        dedupingInterval: 50,
+        onSuccess() {
+          setFlag(value => value + 1)
         }
-      )
+      })
       return (
         <div onClick={() => setFlag(0)}>
           count: {data} {flag}
@@ -154,7 +154,7 @@ describe('useSWR - refresh', () => {
       )
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     screen.getByText('count: 0')
 
     await screen.findByText('count: 0 1')
@@ -200,7 +200,7 @@ describe('useSWR - refresh', () => {
 
   it('should allow use custom compare method', async () => {
     let count = 0
-    const key = 'dynamic-11'
+    const key = createKey()
     const fetcher = jest.fn(() => ({
       timestamp: ++count,
       version: '1.0'
@@ -240,7 +240,7 @@ describe('useSWR - refresh', () => {
       )
     }
 
-    render(<App />)
+    renderWithConfig(<App />)
 
     screen.getByText('loading')
 
@@ -265,13 +265,14 @@ describe('useSWR - refresh', () => {
   })
 
   it('should not let the previous interval timer to set new timer if key changes too fast', async () => {
+    const key = createKey()
     const fetcherWithToken = jest.fn(async token => {
       await sleep(200)
       return token
     })
     function Page() {
       const [count, setCount] = useState(0)
-      const { data } = useSWR(count.toString(), fetcherWithToken, {
+      const { data } = useSWR(`${key}-${count}`, fetcherWithToken, {
         refreshInterval: 100,
         dedupingInterval: 50
       })
@@ -282,7 +283,7 @@ describe('useSWR - refresh', () => {
       )
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
 
     // initial revalidate
     await act(() => advanceTimers(200))
@@ -291,27 +292,27 @@ describe('useSWR - refresh', () => {
     // first refresh
     await act(() => advanceTimers(100))
     expect(fetcherWithToken).toBeCalledTimes(2)
-    expect(fetcherWithToken).toHaveBeenLastCalledWith('0')
+    expect(fetcherWithToken).toHaveBeenLastCalledWith(`${key}-0`)
     await act(() => advanceTimers(200))
 
     // second refresh start
     await act(() => advanceTimers(100))
     expect(fetcherWithToken).toBeCalledTimes(3)
-    expect(fetcherWithToken).toHaveBeenLastCalledWith('0')
+    expect(fetcherWithToken).toHaveBeenLastCalledWith(`${key}-0`)
     // change the key during revalidation
     // The second refresh will not start a new timer
-    fireEvent.click(screen.getByText('click me 0'))
+    fireEvent.click(screen.getByText(`click me ${key}-0`))
 
     // first refresh with new key 1
     await act(() => advanceTimers(100))
     expect(fetcherWithToken).toBeCalledTimes(4)
-    expect(fetcherWithToken).toHaveBeenLastCalledWith('1')
+    expect(fetcherWithToken).toHaveBeenLastCalledWith(`${key}-1`)
     await act(() => advanceTimers(200))
 
     // second refresh with new key 1
     await act(() => advanceTimers(100))
     expect(fetcherWithToken).toBeCalledTimes(5)
-    expect(fetcherWithToken).toHaveBeenLastCalledWith('1')
+    expect(fetcherWithToken).toHaveBeenLastCalledWith(`${key}-1`)
   })
 
   it('should not call onSuccess from the previous interval if key has changed', async () => {
@@ -322,9 +323,10 @@ describe('useSWR - refresh', () => {
     const onSuccess = jest.fn((data, key) => {
       return `${data} ${key}`
     })
+    const key = createKey()
     function Page() {
       const [count, setCount] = useState(0)
-      const { data } = useSWR(`${count.toString()}-hash`, fetcherWithToken, {
+      const { data } = useSWR(`${count.toString()}-${key}`, fetcherWithToken, {
         refreshInterval: 50,
         dedupingInterval: 25,
         onSuccess
@@ -336,40 +338,40 @@ describe('useSWR - refresh', () => {
       )
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
 
     // initial revalidate
     await act(() => advanceTimers(100))
     expect(fetcherWithToken).toBeCalledTimes(1)
     expect(onSuccess).toBeCalledTimes(1)
-    expect(onSuccess).toHaveLastReturnedWith(`0-hash 0-hash`)
+    expect(onSuccess).toHaveLastReturnedWith(`0-${key} 0-${key}`)
     // first refresh
     await act(() => advanceTimers(50))
     expect(fetcherWithToken).toBeCalledTimes(2)
-    expect(fetcherWithToken).toHaveBeenLastCalledWith('0-hash')
+    expect(fetcherWithToken).toHaveBeenLastCalledWith(`0-${key}`)
     await act(() => advanceTimers(100))
     expect(onSuccess).toBeCalledTimes(2)
-    expect(onSuccess).toHaveLastReturnedWith(`0-hash 0-hash`)
+    expect(onSuccess).toHaveLastReturnedWith(`0-${key} 0-${key}`)
 
     // second refresh start
     await act(() => advanceTimers(50))
     expect(fetcherWithToken).toBeCalledTimes(3)
-    expect(fetcherWithToken).toHaveBeenLastCalledWith('0-hash')
+    expect(fetcherWithToken).toHaveBeenLastCalledWith(`0-${key}`)
     // change the key during revalidation
     // The second refresh will not start a new timer
-    fireEvent.click(screen.getByText('click me 0-hash'))
+    fireEvent.click(screen.getByText(`click me 0-${key}`))
 
     // first refresh with new key 1
     await act(() => advanceTimers(50))
     expect(fetcherWithToken).toBeCalledTimes(4)
-    expect(fetcherWithToken).toHaveBeenLastCalledWith('1-hash')
+    expect(fetcherWithToken).toHaveBeenLastCalledWith(`1-${key}`)
     await act(() => advanceTimers(100))
     expect(onSuccess).toBeCalledTimes(3)
-    expect(onSuccess).toHaveLastReturnedWith(`1-hash 1-hash`)
+    expect(onSuccess).toHaveLastReturnedWith(`1-${key} 1-${key}`)
 
     // second refresh with new key 1
     await act(() => advanceTimers(50))
     expect(fetcherWithToken).toBeCalledTimes(5)
-    expect(fetcherWithToken).toHaveBeenLastCalledWith('1-hash')
+    expect(fetcherWithToken).toHaveBeenLastCalledWith(`1-${key}`)
   })
 })

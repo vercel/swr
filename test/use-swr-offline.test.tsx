@@ -1,7 +1,12 @@
-import { act, render, screen } from '@testing-library/react'
+import { act, screen } from '@testing-library/react'
 import React from 'react'
 import useSWR from 'swr'
-import { nextTick as waitForNextTick, focusOn } from './utils'
+import {
+  nextTick as waitForNextTick,
+  focusOn,
+  createKey,
+  renderWithConfig
+} from './utils'
 
 const focusWindow = () => focusOn(window)
 const dispatchWindowEvent = event =>
@@ -13,14 +18,15 @@ describe('useSWR - offline', () => {
   it('should not revalidate when offline', async () => {
     let value = 0
 
+    const key = createKey()
     function Page() {
-      const { data } = useSWR('offline-1', () => value++, {
+      const { data } = useSWR(key, () => value++, {
         dedupingInterval: 0
       })
       return <div>data: {data}</div>
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     // hydration
     screen.getByText('data:')
     // mount
@@ -40,14 +46,15 @@ describe('useSWR - offline', () => {
   it('should revalidate immediately when becoming online', async () => {
     let value = 0
 
+    const key = createKey()
     function Page() {
-      const { data } = useSWR('offline-2', () => value++, {
+      const { data } = useSWR(key, () => value++, {
         dedupingInterval: 0
       })
       return <div>data: {data}</div>
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     // hydration
     screen.getByText('data:')
     // mount
