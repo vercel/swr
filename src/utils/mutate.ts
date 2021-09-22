@@ -10,7 +10,7 @@ export const internalMutate = async <Data>(
   cache: Cache,
   _key: Key,
   _data?: Data | Promise<Data | undefined> | MutatorCallback<Data>,
-  shouldRevalidate = true
+  revalidate = true
 ) => {
   const [key, , keyErr] = serialize(_key)
   if (!key) return
@@ -27,7 +27,7 @@ export const internalMutate = async <Data>(
       cache.get(key),
       cache.get(keyErr),
       UNDEFINED,
-      shouldRevalidate
+      revalidate
     )
   }
 
@@ -86,7 +86,7 @@ export const internalMutate = async <Data>(
     data,
     error,
     UNDEFINED,
-    shouldRevalidate
+    revalidate
   )
 
   // Throw error or return data

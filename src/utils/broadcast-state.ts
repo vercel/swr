@@ -8,7 +8,7 @@ export const broadcastState: Broadcaster = (
   data,
   error,
   isValidating,
-  shouldRevalidate = false
+  revalidate
 ) => {
   const [EVENT_REVALIDATORS, STATE_UPDATERS] = SWRGlobalState.get(
     cache
@@ -24,7 +24,7 @@ export const broadcastState: Broadcaster = (
   }
 
   // If we also need to revalidate, only do it for the first hook.
-  if (shouldRevalidate && revalidators && revalidators[0]) {
+  if (revalidate && revalidators && revalidators[0]) {
     return revalidators[0](revalidateEvents.MUTATE_EVENT).then(() =>
       cache.get(key)
     )
