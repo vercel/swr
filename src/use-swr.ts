@@ -145,22 +145,23 @@ export const useSWRHandler = <Data = any, Error = any>(
         delete CONCURRENT_PROMISES_TS[key]
       }
 
-      // Start fetching. Change the `isValidating` state, update the cache and
-      // broadcast to all.
+      // Start fetching. Change the `isValidating` state, update the cache.
       cache.set(keyValidating, true)
       setState({
         isValidating: true
       })
-      broadcastState(
-        cache,
-        key,
-        stateRef.current.data,
-        stateRef.current.error,
-        true
-      )
 
       try {
         if (shouldStartNewRequest) {
+          // Tell all other hooks to change the `isValidating` state.
+          broadcastState(
+            cache,
+            key,
+            stateRef.current.data,
+            stateRef.current.error,
+            true
+          )
+
           // If no cache being rendered currently (it shows a blank page),
           // we trigger the loading slow event.
           if (config.loadingTimeout && !cache.get(key)) {
