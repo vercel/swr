@@ -79,10 +79,6 @@ export const useSWRHandler = <Data = any, Error = any>(
   const data = isUndefined(cached) ? fallback : cached
   const error = cache.get(keyErr)
 
-  if (suspense && (!key || !fn)) {
-    throw new Error('useSWR requires either key or fetcher with suspense mode')
-  }
-
   // A revalidation must be triggered when mounted if:
   // - `revalidateOnMount` is explicitly set to `true`.
   // - `isPaused()` returns `false`, and:
@@ -128,7 +124,11 @@ export const useSWRHandler = <Data = any, Error = any>(
       let startAt: number
       let loading = true
       const opts = revalidateOpts || {}
-      const shouldDedupe = !isUndefined(CONCURRENT_PROMISES[key]) && opts.dedupe
+
+      // If there is no ongoing concurrent request, or `dedupe` is not set, a
+      // new request should be initiated.
+      const shouldStartNewRequest =
+        isUndefined(CONCURRENT_PROMISES[key]) || !opts.dedupe
 
       // Do unmount check for callbacks:
       // If key has changed during the revalidation, or the component has been
@@ -144,15 +144,15 @@ export const useSWRHandler = <Data = any, Error = any>(
         delete CONCURRENT_PROMISES_TS[key]
       }
 
-      // start fetching
-      try {
-        cache.set(keyValidating, true)
+      // Start fetching. Change the `isValidating` state, update the cache.
+      cache.set(keyValidating, true)
+      setState({
+        isValidating: true
+      })
 
-        setState({
-          isValidating: true
-        })
-        if (!shouldDedupe) {
-          // also update other hooks
+      try {
+        if (shouldStartNewRequest) {
+          // Tell all other hooks to change the `isValidating` state.
           broadcastState(
             cache,
             key,
@@ -160,14 +160,7 @@ export const useSWRHandler = <Data = any, Error = any>(
             stateRef.current.error,
             true
           )
-        }
 
-        if (shouldDedupe) {
-          // There's already an ongoing request, this one needs to be
-          // deduplicated.
-          startAt = CONCURRENT_PROMISES_TS[key]
-          newData = await CONCURRENT_PROMISES[key]
-        } else {
           // If no cache being rendered currently (it shows a blank page),
           // we trigger the loading slow event.
           if (config.loadingTimeout && !cache.get(key)) {
@@ -178,18 +171,26 @@ export const useSWRHandler = <Data = any, Error = any>(
           }
 
           // Start the request and keep the timestamp.
-          CONCURRENT_PROMISES_TS[key] = startAt = getTimestamp()
-          newData = await (CONCURRENT_PROMISES[key] = fn.apply(fn, fnArgs))
+          CONCURRENT_PROMISES_TS[key] = getTimestamp()
+          CONCURRENT_PROMISES[key] = fn.apply(fn, fnArgs)
+        }
 
+        // Wait until the ongoing request is done. Deduplication is also
+        // considered here.
+        startAt = CONCURRENT_PROMISES_TS[key]
+        newData = await CONCURRENT_PROMISES[key]
+
+        if (shouldStartNewRequest) {
+          // If the request isn't interrupted, clean it up after the
+          // deduplication interval.
           setTimeout(() => {
-            // CONCURRENT_PROMISES_TS[key] maybe be `undefined` or a number.
+            // CONCURRENT_PROMISES_TS[key] maybe be `undefined`.
             if (CONCURRENT_PROMISES_TS[key] === startAt) {
               cleanupState()
             }
           }, config.dedupingInterval)
 
-          // trigger the success event,
-          // only do this for the original request.
+          // Trigger the successful callback.
           if (isCallbackSafe()) {
             getConfig().onSuccess(newData, key, config)
           }
@@ -255,7 +256,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         // merge the new state
         setState(newState)
 
-        if (!shouldDedupe) {
+        if (shouldStartNewRequest) {
           // also update other hooks
           broadcastState(cache, key, newData, newState.error, false)
         }
@@ -280,7 +281,7 @@ export const useSWRHandler = <Data = any, Error = any>(
             isValidating: false,
             error: err as Error
           })
-          if (!shouldDedupe) {
+          if (shouldStartNewRequest) {
             // Broadcast to update the states of other hooks.
             broadcastState(cache, key, UNDEFINED, err, false)
           }

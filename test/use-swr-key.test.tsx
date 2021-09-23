@@ -1,15 +1,16 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, screen } from '@testing-library/react'
 import React, { useState, useEffect } from 'react'
 import useSWR from 'swr'
-import { createResponse, sleep } from './utils'
+import { createKey, createResponse, renderWithConfig, sleep } from './utils'
 
 describe('useSWR - key', () => {
   it('should respect requests after key has changed', async () => {
     let rerender
 
+    const baseKey = createKey()
     function Page() {
       const [mounted, setMounted] = useState(0)
-      const key = `key-1-${mounted ? 'short' : 'long'}`
+      const key = `${baseKey}-${mounted ? 'short' : 'long'}`
       const { data } = useSWR(key, () => {
         if (mounted) {
           return createResponse('short request', { delay: 50 })
@@ -22,7 +23,7 @@ describe('useSWR - key', () => {
       return <div>data:{data}</div>
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     screen.getByText('data:')
 
     await screen.findByText('data:short request')
@@ -38,9 +39,10 @@ describe('useSWR - key', () => {
   })
 
   it('should render undefined after key has changed', async () => {
+    const baseKey = createKey()
     function Page() {
       const [mounted, setMounted] = useState(false)
-      const key = `key-${mounted ? '1' : '0'}`
+      const key = `${baseKey}-${mounted ? '1' : '0'}`
       const { data } = useSWR(key, k => createResponse(k, { delay: 100 }))
       useEffect(() => {
         setTimeout(() => setMounted(true), 200)
@@ -53,14 +55,14 @@ describe('useSWR - key', () => {
     // -> 100      0,         '0'
     // -> 200      undefined, '1' <- this state is required; we can't show 0 here
     // -> 300      1,         '1'
-    render(<Page />)
+    renderWithConfig(<Page />)
     screen.getByText('data:') // undefined, time=0
     await act(() => sleep(150))
-    screen.getByText('data:key-0') // 0, time=150
+    screen.getByText(`data:${baseKey}-0`) // 0, time=150
     await act(() => sleep(100))
     screen.getByText('data:') // undefined, time=250
     await act(() => sleep(100))
-    screen.getByText('data:key-1') // 1, time=350
+    screen.getByText(`data:${baseKey}-1`) // 1, time=350
   })
 
   it('should return undefined after key change when fetcher is synchronized', async () => {
@@ -70,11 +72,12 @@ describe('useSWR - key', () => {
       '3': 'c'
     }
 
+    const baseKey = createKey()
     function Page() {
       const [sampleKey, setKey] = React.useState(1)
       const { data } = useSWR(
-        `key-2-${sampleKey}`,
-        key => samples[key.replace('key-2-', '')]
+        `${baseKey}-${sampleKey}`,
+        key => samples[key.replace(`${baseKey}-`, '')]
       )
       return (
         <div
@@ -87,7 +90,7 @@ describe('useSWR - key', () => {
       )
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     screen.getByText('hello, 1:')
 
     await screen.findByText('hello, 1:a')
@@ -102,9 +105,10 @@ describe('useSWR - key', () => {
   it('should revalidate if a function key changes identity', async () => {
     const closureFunctions: { [key: string]: () => Promise<string> } = {}
 
+    const baseKey = createKey()
     const closureFactory = id => {
       if (closureFunctions[id]) return closureFunctions[id]
-      closureFunctions[id] = () => Promise.resolve(`data-${id}`)
+      closureFunctions[id] = () => Promise.resolve(`${baseKey}-${id}`)
       return closureFunctions[id]
     }
 
@@ -121,28 +125,28 @@ describe('useSWR - key', () => {
       return <div>{data}</div>
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     const closureSpy = jest.spyOn(closureFunctions, 'first')
 
-    await screen.findByText('data-first')
+    await screen.findByText(`${baseKey}-first`)
     expect(closureSpy).toHaveBeenCalledTimes(1)
 
     // update, but don't change the id.
     // Function identity should stay the same, and useSWR should not call the function again.
     act(() => updateId('first'))
-    await screen.findByText('data-first')
+    await screen.findByText(`${baseKey}-first`)
     expect(closureSpy).toHaveBeenCalledTimes(1)
 
     act(() => updateId('second'))
-    await screen.findByText('data-second')
+    await screen.findByText(`${baseKey}-second`)
   })
 
   it('should cleanup state when key turns to empty', async () => {
+    const key = createKey()
     function Page() {
       const [cnt, setCnt] = useState(1)
-      const { isValidating } = useSWR(
-        cnt === -1 ? '' : `key-empty-${cnt}`,
-        () => createResponse('', { delay: 100 })
+      const { isValidating } = useSWR(cnt === -1 ? '' : `${key}-${cnt}`, () =>
+        createResponse('', { delay: 100 })
       )
 
       return (
@@ -152,7 +156,7 @@ describe('useSWR - key', () => {
       )
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     screen.getByText('true')
 
     fireEvent.click(screen.getByText('true'))
@@ -168,6 +172,7 @@ describe('useSWR - key', () => {
     const fetcher = () => createResponse('test', { delay: 100 })
     const values = []
 
+    const updatedKey = createKey()
     function Page() {
       const [key, setKey] = useState(null)
 
@@ -176,10 +181,10 @@ describe('useSWR - key', () => {
 
       values.push([v1, v2])
 
-      return <button onClick={() => setKey('key-sync')}>update key</button>
+      return <button onClick={() => setKey(updatedKey)}>update key</button>
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     screen.getByText('update key')
 
     fireEvent.click(screen.getByText('update key'))
@@ -202,7 +207,7 @@ describe('useSWR - key', () => {
       )
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     await screen.findByText('data,data')
 
     // Only 1 request since the keys are the same.

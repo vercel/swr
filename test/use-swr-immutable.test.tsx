@@ -1,8 +1,14 @@
-import { render, screen, act, fireEvent } from '@testing-library/react'
+import { screen, act, fireEvent } from '@testing-library/react'
 import React, { useState } from 'react'
 import useSWR from 'swr'
 import useSWRImmutable from 'swr/immutable'
-import { sleep, createKey, nextTick as waitForNextTick, focusOn } from './utils'
+import {
+  sleep,
+  createKey,
+  nextTick as waitForNextTick,
+  focusOn,
+  renderWithConfig
+} from './utils'
 
 const focusWindow = () => focusOn(window)
 
@@ -34,12 +40,12 @@ describe('useSWR - immutable', () => {
       )
     }
 
-    const { container } = render(<Page />)
+    renderWithConfig(<Page />)
 
     // hydration
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"mount componentdata: "`
-    )
+    screen.getByText('mount component')
+    screen.getByText('data:')
+
     // ready
     await screen.findByText('data: 0')
 
@@ -77,12 +83,12 @@ describe('useSWR - immutable', () => {
       )
     }
 
-    const { container } = render(<Page />)
+    renderWithConfig(<Page />)
 
     // hydration
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"mount componentdata: "`
-    )
+    screen.getByText('mount component')
+    screen.getByText('data:')
+
     // ready
     await screen.findByText('data: 0')
 
@@ -118,12 +124,12 @@ describe('useSWR - immutable', () => {
       )
     }
 
-    const { container } = render(<Page />)
+    renderWithConfig(<Page />)
 
     // hydration
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"mount componentdata: "`
-    )
+    screen.getByText('mount component')
+    screen.getByText('data:')
+
     // ready
     await screen.findByText('data: 0')
 
@@ -159,7 +165,7 @@ describe('useSWR - immutable', () => {
       )
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
 
     // Ready
     await screen.findByText(`data: ${key}0`)

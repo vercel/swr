@@ -1,16 +1,24 @@
-import { act, render, screen, fireEvent } from '@testing-library/react'
+import { act, screen, fireEvent } from '@testing-library/react'
 import React, { useState, useEffect } from 'react'
 import useSWR from 'swr'
-import { createResponse, sleep, nextTick as waitForNextTick } from './utils'
+import {
+  createResponse,
+  sleep,
+  nextTick as waitForNextTick,
+  renderWithConfig,
+  createKey,
+  renderWithGlobalCache
+} from './utils'
 
 describe('useSWR', () => {
+  const sharedKey = createKey()
   it('should return `undefined` on hydration then return data', async () => {
     function Page() {
-      const { data } = useSWR('constant-2', () => 'SWR')
+      const { data } = useSWR(sharedKey, () => 'SWR')
       return <div>hello, {data}</div>
     }
 
-    render(<Page />)
+    renderWithGlobalCache(<Page />)
     // hydration
     screen.getByText('hello,')
 
@@ -20,22 +28,23 @@ describe('useSWR', () => {
 
   it('should allow functions as key and reuse the cache', async () => {
     function Page() {
-      const { data } = useSWR(() => 'constant-2', () => 'SWR')
+      const { data } = useSWR(() => sharedKey, () => 'SWR')
       return <div>hello, {data}</div>
     }
 
-    render(<Page />)
+    renderWithGlobalCache(<Page />)
     screen.getByText('hello, SWR')
   })
 
   it('should allow async fetcher functions', async () => {
     const fetcher = jest.fn(() => createResponse('SWR'))
+    const key = createKey()
     function Page() {
-      const { data } = useSWR('constant-3', fetcher)
+      const { data } = useSWR(key, fetcher)
       return <div>hello, {data}</div>
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     // hydration
     screen.getByText('hello,')
 
@@ -46,14 +55,15 @@ describe('useSWR', () => {
   it('should not call fetch function when revalidateOnMount is false', async () => {
     const fetch = jest.fn(() => 'SWR')
 
+    const key = createKey()
     function Page() {
-      const { data } = useSWR('revalidateOnMount', fetch, {
+      const { data } = useSWR(key, fetch, {
         revalidateOnMount: false
       })
       return <div>hello, {data}</div>
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
 
     await screen.findByText('hello,')
     expect(fetch).not.toHaveBeenCalled()
@@ -62,15 +72,16 @@ describe('useSWR', () => {
   it('should call fetch function when revalidateOnMount is true even if fallbackData is set', async () => {
     const fetch = jest.fn(() => 'SWR')
 
+    const key = createKey()
     function Page() {
-      const { data } = useSWR('revalidateOnMount', fetch, {
+      const { data } = useSWR(key, fetch, {
         revalidateOnMount: true,
         fallbackData: 'gab'
       })
       return <div>hello, {data}</div>
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     screen.getByText('hello, gab')
 
     await screen.findByText('hello, SWR')
@@ -80,9 +91,10 @@ describe('useSWR', () => {
   it('should dedupe requests by default', async () => {
     const fetcher = jest.fn(() => createResponse('SWR'))
 
+    const key = createKey()
     function Page() {
-      const { data: v1 } = useSWR('constant-4', fetcher)
-      const { data: v2 } = useSWR('constant-4', fetcher)
+      const { data: v1 } = useSWR(key, fetcher)
+      const { data: v2 } = useSWR(key, fetcher)
       return (
         <div>
           {v1}, {v2}
@@ -90,7 +102,7 @@ describe('useSWR', () => {
       )
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     screen.getByText(',')
 
     await screen.findByText('SWR, SWR')
@@ -99,14 +111,15 @@ describe('useSWR', () => {
 
   it('should trigger the onSuccess event', async () => {
     let SWRData = null
+    const key = createKey()
     function Page() {
-      const { data } = useSWR('constant-5', () => createResponse('SWR'), {
+      const { data } = useSWR(key, () => createResponse('SWR'), {
         onSuccess: _data => (SWRData = _data)
       })
       return <div>hello, {data}</div>
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     screen.getByText('hello,')
 
     await screen.findByText('hello, SWR')
@@ -116,8 +129,9 @@ describe('useSWR', () => {
   it('should broadcast data', async () => {
     let cnt = 0
 
+    const key = createKey()
     function Block() {
-      const { data } = useSWR('broadcast-1', () => cnt++, {
+      const { data } = useSWR(key, () => cnt++, {
         refreshInterval: 100,
         // need to turn of deduping otherwise
         // refreshing will be ignored
@@ -133,7 +147,7 @@ describe('useSWR', () => {
       )
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
 
     await act(() => sleep(50))
     screen.getByText('0 0 0')
@@ -148,9 +162,10 @@ describe('useSWR', () => {
   it('should broadcast error', async () => {
     let cnt = 0
 
+    const key = createKey()
     function Block() {
       const { data, error } = useSWR(
-        'broadcast-2',
+        key,
         () => {
           if (cnt === 2) throw new Error('err')
           return cnt++
@@ -173,7 +188,7 @@ describe('useSWR', () => {
       )
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
 
     await act(() => sleep(50))
     screen.getByText('0 0 0')
@@ -186,8 +201,9 @@ describe('useSWR', () => {
   })
 
   it('should broadcast isValidating', async () => {
+    const key = createKey()
     function useBroadcast3() {
-      const { isValidating, mutate } = useSWR('broadcast-3', () => sleep(100), {
+      const { isValidating, mutate } = useSWR(key, () => sleep(100), {
         // need to turn of deduping otherwise
         // revalidating will be ignored
         dedupingInterval: 10
@@ -218,7 +234,7 @@ describe('useSWR', () => {
       )
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     screen.getByText('true true true')
 
     await act(() => sleep(150))
@@ -235,18 +251,17 @@ describe('useSWR', () => {
     const obj = { v: 'hello' }
     const arr = ['world']
 
+    const key1 = createKey()
+    const key2 = createKey()
     function Page() {
-      const { data: v1 } = useSWR(
-        ['args-1', obj, arr],
-        (a, b, c) => a + b.v + c[0]
-      )
+      const { data: v1 } = useSWR([key1, obj, arr], (a, b, c) => a + b.v + c[0])
 
       // reuse the cache
-      const { data: v2 } = useSWR(['args-1', obj, arr], () => 'not called!')
+      const { data: v2 } = useSWR([key1, obj, arr], () => 'not called!')
 
       // different object
       const { data: v3 } = useSWR(
-        ['args-2', obj, 'world'],
+        [key2, obj, 'world'],
         (a, b, c) => a + b.v + c
       )
 
@@ -257,10 +272,10 @@ describe('useSWR', () => {
       )
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
 
     await screen.findByText(
-      'args-1helloworld, args-1helloworld, args-2helloworld'
+      `${key1}helloworld, ${key1}helloworld, ${key2}helloworld`
     )
   })
 
@@ -268,31 +283,33 @@ describe('useSWR', () => {
     const obj = { v: 'hello' }
     const arr = ['world']
 
+    const key = createKey()
     function Page() {
       const { data } = useSWR(
-        () => ['args-3', obj, arr],
+        () => [key, obj, arr],
         (a, b, c) => a + b.v + c[0]
       )
 
       return <div>{data}</div>
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
 
-    await screen.findByText('args-3helloworld')
+    await screen.findByText(`${key}helloworld`)
   })
 
   it('should accept initial data', async () => {
     const fetcher = jest.fn(() => 'SWR')
 
+    const key = createKey()
     function Page() {
-      const { data } = useSWR('initial-data-1', fetcher, {
+      const { data } = useSWR(key, fetcher, {
         fallbackData: 'Initial'
       })
       return <div>hello, {data}</div>
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
 
     await screen.findByText('hello, Initial')
     expect(fetcher).not.toBeCalled()
@@ -301,19 +318,21 @@ describe('useSWR', () => {
   it('should revalidate even if fallbackData is provided', async () => {
     const fetcher = key => createResponse(key, { delay: 50 })
 
+    const initialKey = createKey()
+    const updatedKey = createKey()
     function Page() {
-      const [key, setKey] = useState('initial-data-with-initial-data')
+      const [key, setKey] = useState(initialKey)
       const { data } = useSWR(key, fetcher, {
         fallbackData: 'Initial'
       })
       return (
-        <div onClick={() => setKey('initial-data-with-initial-data-update')}>
+        <div onClick={() => setKey(updatedKey)}>
           {data ? `hello, ${data}` : 'loading'}
         </div>
       )
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
 
     // render with the initial data
     await screen.findByText('hello, Initial')
@@ -321,11 +340,11 @@ describe('useSWR', () => {
     await waitForNextTick()
     fireEvent.focus(window)
 
-    await screen.findByText('hello, initial-data-with-initial-data')
+    await screen.findByText(`hello, ${initialKey}`)
 
     // change the key
     await waitForNextTick()
-    fireEvent.click(screen.getByText('hello, initial-data-with-initial-data'))
+    fireEvent.click(screen.getByText(`hello, ${initialKey}`))
 
     // a request is still in flight
     await act(() => sleep(10))
@@ -334,21 +353,22 @@ describe('useSWR', () => {
     screen.getByText('hello, Initial')
 
     // render with data the fetcher returns
-    await screen.findByText('hello, initial-data-with-initial-data-update')
+    await screen.findByText(`hello, ${updatedKey}`)
   })
 
   it('should set config as second parameter', async () => {
     const fetcher = jest.fn(() => 'SWR')
 
+    const key = createKey()
     function Page() {
-      const { data } = useSWR('config-as-second-param', {
+      const { data } = useSWR(key, {
         fetcher
       })
 
       return <div>hello, {data}</div>
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     screen.getByText('hello,')
     expect(fetcher).toBeCalled()
     await screen.findByText('hello, SWR')

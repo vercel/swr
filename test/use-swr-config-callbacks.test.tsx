@@ -1,26 +1,24 @@
-import { act, render, screen, fireEvent } from '@testing-library/react'
+import { act, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 import useSWR from 'swr'
-import { sleep, createResponse } from './utils'
+import { sleep, createResponse, renderWithConfig, createKey } from './utils'
 
 describe('useSWR - config callbacks', () => {
   it('should trigger the onSuccess event with the latest version of the onSuccess callback', async () => {
     let state = null
     let count = 0
-
+    const key = createKey()
     function Page(props: { text: string }) {
-      const { data, mutate } = useSWR(
-        'config callbacks - onSuccess',
-        () => createResponse(count++),
-        { onSuccess: () => (state = props.text) }
-      )
+      const { data, mutate } = useSWR(key, () => createResponse(count++), {
+        onSuccess: () => (state = props.text)
+      })
       return (
         <div onClick={() => mutate()}>
           hello, {data}, {props.text}
         </div>
       )
     }
-    const { rerender } = render(<Page text={'a'} />)
+    const { rerender } = renderWithConfig(<Page text={'a'} />)
     // the onSuccess callback does not trigger yet, the state still null.
     screen.getByText('hello, , a')
     expect(state).toEqual(null)
@@ -64,7 +62,7 @@ describe('useSWR - config callbacks', () => {
       )
     }
 
-    const { rerender } = render(<Page text="a" />)
+    const { rerender } = renderWithConfig(<Page text="a" />)
 
     screen.getByText('hello, , a')
     expect(state).toEqual(null)
@@ -107,7 +105,7 @@ describe('useSWR - config callbacks', () => {
       )
     }
 
-    const { rerender } = render(<Page text="a" />)
+    const { rerender } = renderWithConfig(<Page text="a" />)
     screen.getByText('hello, , a')
     expect(state).toEqual(null)
 
@@ -154,7 +152,7 @@ describe('useSWR - config callbacks', () => {
       )
     }
 
-    const { rerender } = render(<Page text="a" />)
+    const { rerender } = renderWithConfig(<Page text="a" />)
 
     screen.getByText('hello, , a')
     expect(state).toEqual(null)

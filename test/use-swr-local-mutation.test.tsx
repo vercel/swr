@@ -1,21 +1,30 @@
-import { act, render, screen, fireEvent } from '@testing-library/react'
+import { act, screen, fireEvent } from '@testing-library/react'
 import React, { useEffect, useState } from 'react'
-import useSWR, { mutate, useSWRConfig, SWRConfig } from 'swr'
+import useSWR, { mutate as globalMutate, useSWRConfig } from 'swr'
 import { serialize } from '../src/utils/serialize'
-import { createResponse, sleep, nextTick, createKey } from './utils'
+import {
+  createResponse,
+  sleep,
+  nextTick,
+  createKey,
+  renderWithConfig,
+  renderWithGlobalCache
+} from './utils'
 
 describe('useSWR - local mutation', () => {
   it('should trigger revalidation programmatically', async () => {
-    let value = 0
-
+    let value = 0,
+      mutate
+    const key = createKey()
     function Page() {
-      const { data } = useSWR('dynamic-7', () => value++, {
+      mutate = useSWRConfig().mutate
+      const { data } = useSWR(key, () => value++, {
         dedupingInterval: 0
       })
       return <div>data: {data}</div>
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     // hydration
     screen.getByText('data:')
 
@@ -24,14 +33,17 @@ describe('useSWR - local mutation', () => {
 
     act(() => {
       // mutate and revalidate
-      mutate('dynamic-7')
+      mutate(key)
     })
     await screen.findByText('data: 1')
   })
 
   it('should share local state when no fetcher is specified', async () => {
+    const baseKey = createKey()
     const useSharedState = (key, fallbackData) => {
-      const { data: state, mutate: setState } = useSWR(key, { fallbackData })
+      const { data: state, mutate: setState } = useSWR(`${baseKey}--${key}`, {
+        fallbackData
+      })
       return [state, setState]
     }
 
@@ -50,23 +62,26 @@ describe('useSWR - local mutation', () => {
         </span>
       )
     }
-    render(<Page />)
+    renderWithConfig(<Page />)
     const root = screen.getByText('huozhi:gardener')
     fireEvent.click(root)
     await screen.findByText('@huozhi:chef')
   })
 
   it('should trigger revalidation programmatically within a dedupingInterval', async () => {
-    let value = 0
+    let value = 0,
+      mutate
 
+    const key = createKey()
     function Page() {
-      const { data } = useSWR('dynamic-12', () => value++, {
+      mutate = useSWRConfig().mutate
+      const { data } = useSWR(key, () => value++, {
         dedupingInterval: 2000
       })
       return <div>data: {data}</div>
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     // hydration
     screen.getByText('data:')
 
@@ -75,22 +90,25 @@ describe('useSWR - local mutation', () => {
 
     act(() => {
       // trigger revalidation
-      mutate('dynamic-12')
+      mutate(key)
     })
     await screen.findByText('data: 1')
   })
 
   it('should mutate the cache and revalidate', async () => {
-    let value = 0
+    let value = 0,
+      mutate
 
+    const key = createKey()
     function Page() {
-      const { data } = useSWR('dynamic-8', () => value++, {
+      mutate = useSWRConfig().mutate
+      const { data } = useSWR(key, () => value++, {
         dedupingInterval: 0
       })
       return <div>data: {data}</div>
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     // hydration
     screen.getByText('data:')
 
@@ -99,25 +117,29 @@ describe('useSWR - local mutation', () => {
 
     act(() => {
       // mutate and revalidate
-      mutate('dynamic-8', 'mutate')
+      mutate(key, 'mutate')
     })
     await screen.findByText('data: 1')
   })
 
   it('should dedupe extra requests after mutation', async () => {
-    let value = 0
+    let value = 0,
+      mutate
 
+    const key = createKey()
     function Page() {
-      const { data } = useSWR('dynamic-13', () => value++, {
+      mutate = useSWRConfig().mutate
+      const { data } = useSWR(key, () => value++, {
         dedupingInterval: 2000
       })
-      useSWR('dynamic-13', () => value++, {
+
+      useSWR(key, () => value++, {
         dedupingInterval: 2000
       })
       return <div>data: {data}</div>
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     // hydration
     screen.getByText('data:')
 
@@ -125,20 +147,23 @@ describe('useSWR - local mutation', () => {
     await screen.findByText('data: 0')
     act(() => {
       // mutate and revalidate
-      mutate('dynamic-13')
+      mutate(key)
     })
     await screen.findByText('data: 1')
   })
 
   it('should mutate the cache and revalidate in async', async () => {
+    let mutate
+    const key = createKey()
     function Page() {
-      const { data } = useSWR('dynamic-9', () => createResponse('truth'), {
+      mutate = useSWRConfig().mutate
+      const { data } = useSWR(key, () => createResponse('truth'), {
         dedupingInterval: 0
       })
       return <div>data: {data}</div>
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     // hydration
     screen.getByText('data:')
 
@@ -147,7 +172,7 @@ describe('useSWR - local mutation', () => {
 
     act(() => {
       // mutate and revalidate
-      mutate('dynamic-9', 'local')
+      mutate(key, 'local')
     })
 
     await screen.findByText('data: local')
@@ -157,14 +182,17 @@ describe('useSWR - local mutation', () => {
   })
 
   it('should support async mutation with promise', async () => {
+    let mutate
+    const key = createKey()
     function Page() {
-      const { data } = useSWR('mutate-promise', () => 0, {
+      mutate = useSWRConfig().mutate
+      const { data } = useSWR(key, () => 0, {
         dedupingInterval: 0
       })
       return <div>data: {data}</div>
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     // hydration
     screen.getByText('data:')
 
@@ -174,20 +202,23 @@ describe('useSWR - local mutation', () => {
     await nextTick()
     await act(() => {
       // mutate and revalidate
-      return mutate('mutate-promise', createResponse(999), false)
+      return mutate(key, createResponse(999), false)
     })
     await screen.findByText('data: 999')
   })
 
   it('should support async mutation with async function', async () => {
+    let mutate
+    const key = createKey()
     function Page() {
-      const { data } = useSWR('mutate-async-fn', () => 0, {
+      mutate = useSWRConfig().mutate
+      const { data } = useSWR(key, () => 0, {
         dedupingInterval: 0
       })
       return <div>data: {data}</div>
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     // hydration
     screen.getByText('data:')
 
@@ -197,22 +228,25 @@ describe('useSWR - local mutation', () => {
     await nextTick()
     await act(() => {
       // mutate and revalidate
-      return mutate('mutate-async-fn', async () => createResponse(999), false)
+      return mutate(key, async () => createResponse(999), false)
     })
     await screen.findByText('data: 999')
   })
 
   it('should trigger on mutation without data', async () => {
-    let value = 0
+    let value = 0,
+      mutate
 
+    const key = createKey()
     function Page() {
-      const { data } = useSWR('dynamic-14', () => value++, {
+      mutate = useSWRConfig().mutate
+      const { data } = useSWR(key, () => value++, {
         dedupingInterval: 0
       })
       return <div>data: {data}</div>
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     // hydration
     screen.getByText('data:')
 
@@ -221,67 +255,57 @@ describe('useSWR - local mutation', () => {
 
     act(() => {
       // trigger revalidation
-      mutate('dynamic-14')
+      mutate(key)
     })
     await screen.findByText('data: 1')
   })
 
   it('should call function as data passing current cached value', async () => {
-    let globalMutate
+    let mutate
 
+    const key = createKey()
     function Page() {
-      globalMutate = useSWRConfig().mutate
-      const { data } = useSWR('dynamic-14', null)
+      mutate = useSWRConfig().mutate
+      const { data } = useSWR(key, null)
       return <div>data: {data}</div>
     }
 
-    function App() {
-      // Prefill the cache with data
-      return (
-        <SWRConfig
-          value={{ provider: () => new Map([['dynamic-15', 'cached data']]) }}
-        >
-          <Page />
-        </SWRConfig>
-      )
-    }
-
-    render(<App />)
+    // Prefill the cache with data
+    renderWithConfig(<Page />, {
+      provider: () => new Map([[key, 'cached data']])
+    })
 
     const callback = jest.fn()
-    await globalMutate('dynamic-15', callback)
+    await act(() => mutate(key, callback))
     expect(callback).toHaveBeenCalledWith('cached data')
   })
 
   it('should call function with undefined if key not cached', async () => {
-    let globalCache, globalMutate
+    let cache, mutate
 
     function App() {
-      const { cache, mutate: mutate_ } = useSWRConfig()
-      globalCache = cache
-      globalMutate = mutate_
+      const { cache: cache_, mutate: mutate_ } = useSWRConfig()
+      cache = cache_
+      mutate = mutate_
       return null
     }
 
-    render(
-      <SWRConfig value={{ provider: () => new Map() }}>
-        <App />
-      </SWRConfig>
-    )
+    renderWithConfig(<App />)
 
     const increment = jest.fn(currentValue =>
       currentValue == null ? undefined : currentValue + 1
     )
 
-    await globalMutate('dynamic-15.1', increment, false)
+    const key = createKey()
+    await mutate(key, increment, false)
 
     expect(increment).toHaveBeenCalledTimes(1)
     expect(increment).toHaveBeenLastCalledWith(undefined)
     expect(increment).toHaveLastReturnedWith(undefined)
 
-    globalCache.set('dynamic-15.1', 42)
+    cache.set(key, 42)
 
-    await globalMutate('dynamic-15.1', increment, false)
+    await mutate(key, increment, false)
 
     expect(increment).toHaveBeenCalledTimes(2)
     expect(increment).toHaveBeenLastCalledWith(42)
@@ -289,28 +313,27 @@ describe('useSWR - local mutation', () => {
   })
 
   it('should return results of the mutation', async () => {
+    const key = createKey()
     // returns the data if promise resolved
-    expect(mutate('dynamic-16', Promise.resolve('data'))).resolves.toBe('data')
+    expect(globalMutate(key, Promise.resolve('data'))).resolves.toBe('data')
 
     // throw the error if promise rejected
     expect(
-      mutate('dynamic-16', Promise.reject(new Error('error')))
+      globalMutate(key, Promise.reject(new Error('error')))
     ).rejects.toBeInstanceOf(Error)
   })
 
   it('should get bound mutate from useSWR', async () => {
+    const key = createKey()
     function Page() {
       // eslint-disable-next-line no-shadow
-      const { data, mutate: boundMutate } = useSWR(
-        'dynamic-17',
-        () => 'fetched'
-      )
+      const { data, mutate: boundMutate } = useSWR(key, () => 'fetched')
       return (
         <div onClick={() => boundMutate('mutated', false)}>data: {data}</div>
       )
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     // hydration
     screen.getByText('data:')
 
@@ -324,23 +347,22 @@ describe('useSWR - local mutation', () => {
   })
 
   it('should ignore in flight requests when mutating', async () => {
+    const key = createKey()
     // set it to 1
     act(() => {
-      mutate('mutate-2', 1)
+      globalMutate(key, 1)
     })
 
     function Section() {
-      const { data } = useSWR('mutate-2', () =>
-        createResponse(2, { delay: 150 })
-      )
+      const { data } = useSWR(key, () => createResponse(2, { delay: 150 }))
       return <div>{data}</div>
     }
 
-    render(<Section />)
+    renderWithGlobalCache(<Section />)
     screen.getByText('1') // directly from cache
     await act(() => sleep(100)) // still suspending
     act(() => {
-      mutate('mutate-2', 3)
+      globalMutate(key, 3)
     }) // set it to 3. this will drop the ongoing request
 
     await screen.findByText('3')
@@ -350,21 +372,22 @@ describe('useSWR - local mutation', () => {
   })
 
   it('should ignore in flight mutations when calling another async mutate', async () => {
-    let value = 'off'
+    let value = 'off',
+      mutate
+    const key = createKey()
     function Page() {
-      const { data } = useSWR('mutate-3', () =>
-        createResponse(value, { delay: 100 })
-      )
+      mutate = useSWRConfig().mutate
+      const { data } = useSWR(key, () => createResponse(value, { delay: 100 }))
 
       return <div>{data}</div>
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
 
     await screen.findByText('off') // Initial state
 
     act(() => {
-      mutate('mutate-3', 'on', false)
+      mutate(key, 'on', false)
     })
     // Validate local state is now "on"
     await screen.findByText('on')
@@ -373,7 +396,7 @@ describe('useSWR - local mutation', () => {
     await act(async () => {
       expect(
         mutate(
-          'mutate-3',
+          key,
           () => {
             value = 'on'
             return createResponse('on', { delay: 100 })
@@ -384,7 +407,7 @@ describe('useSWR - local mutation', () => {
     })
 
     act(() => {
-      mutate('mutate-3', 'off', false)
+      mutate(key, 'off', false)
     })
 
     // Validate local state is now "off"
@@ -394,7 +417,7 @@ describe('useSWR - local mutation', () => {
     await act(async () => {
       expect(
         mutate(
-          'mutate-3',
+          key,
           () => {
             value = 'off'
             return createResponse('off', { delay: 100 })
@@ -414,16 +437,18 @@ describe('useSWR - local mutation', () => {
   })
 
   it('null is stringified when found inside an array', async () => {
-    let value = 0
+    let value = 0,
+      mutate
 
     function Page() {
+      mutate = useSWRConfig().mutate
       const { data } = useSWR([null], () => value++, {
         dedupingInterval: 0
       })
       return <div>data: {data}</div>
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     // hydration
     screen.getByText('data:')
 
@@ -438,15 +463,18 @@ describe('useSWR - local mutation', () => {
   })
 
   it('should return promise from mutate without data', async () => {
-    let value = 0
+    let value = 0,
+      mutate
+    const key = createKey()
     function Page() {
-      const { data } = useSWR('dynamic-18', () => value++, {
+      mutate = useSWRConfig().mutate
+      const { data } = useSWR(key, () => value++, {
         dedupingInterval: 0
       })
       return <div>data: {data}</div>
     }
 
-    render(<Page />)
+    renderWithConfig(<Page />)
     screen.getByText('data:')
 
     // mount
@@ -454,7 +482,7 @@ describe('useSWR - local mutation', () => {
 
     let promise
     await act(() => {
-      promise = mutate('dynamic-18')
+      promise = mutate(key)
       return promise
     })
     expect(promise).toBeInstanceOf(Promise) // mutate returns a promise
@@ -464,30 +492,26 @@ describe('useSWR - local mutation', () => {
 
   it('should update error in cache when mutate failed with error', async () => {
     const value = 0
-    const key = 'mutate-4'
+    const key = createKey()
     const message = 'mutate-error'
 
-    let globalCache, globalMutate
+    let cache, mutate
     function Page() {
-      const { cache, mutate: mutate_ } = useSWRConfig()
-      globalCache = cache
-      globalMutate = mutate_
+      const { cache: cache_, mutate: mutate_ } = useSWRConfig()
+      cache = cache_
+      mutate = mutate_
       const { data, error } = useSWR(key, () => value)
       return <div>{error ? error.message : `data: ${data}`}</div>
     }
 
-    render(
-      <SWRConfig value={{ provider: () => new Map() }}>
-        <Page />
-      </SWRConfig>
-    )
+    renderWithConfig(<Page />)
 
     // Mount
     await screen.findByText('data: 0')
     await act(async () => {
       // mutate error will be thrown, add try catch to avoid crashing
       try {
-        await globalMutate(
+        await mutate(
           key,
           () => {
             throw new Error(message)
@@ -501,27 +525,30 @@ describe('useSWR - local mutation', () => {
 
     screen.getByText(message)
     const [keyData, , keyErr] = serialize(key)
-    let cacheError = globalCache.get(keyErr)
+    let cacheError = cache.get(keyErr)
     expect(cacheError.message).toMatchInlineSnapshot(`"${message}"`)
 
     // if mutate throws an error synchronously, the cache shouldn't be updated
-    expect(globalCache.get(keyData)).toBe(value)
+    expect(cache.get(keyData)).toBe(value)
 
     // if mutate succeed, error should be cleared
-    await act(() => globalMutate(key, value, false))
-    cacheError = globalCache.get(keyErr)
+    await act(() => mutate(key, value, false))
+    cacheError = cache.get(keyErr)
     expect(cacheError).toMatchInlineSnapshot(`undefined`)
   })
 
   it('should keep the `mutate` function referential equal', async () => {
     const refs = []
 
+    let mutate
+    const updatedKey = createKey()
     function Section() {
+      mutate = useSWRConfig().mutate
       const [key, setKey] = useState(null)
       const { data, mutate: boundMutate } = useSWR(key, () => createResponse(1))
 
       useEffect(() => {
-        const timeout = setTimeout(() => setKey('mutate-5'), 50)
+        const timeout = setTimeout(() => setKey(updatedKey), 50)
         return () => clearTimeout(timeout)
       }, [])
 
@@ -529,10 +556,10 @@ describe('useSWR - local mutation', () => {
       return <div>{data}</div>
     }
 
-    render(<Section />)
+    renderWithConfig(<Section />)
     await act(() => sleep(100))
     act(() => {
-      mutate('mutate-5', 2)
+      mutate(updatedKey, 2)
     })
     await act(() => sleep(50))
 
@@ -547,8 +574,9 @@ describe('useSWR - local mutation', () => {
     const mutationRecivedValues = []
     const renderRecivedValues = []
 
+    const key = createKey()
     function Component() {
-      const { data, mutate: boundMutate } = useSWR('mutate-6', () => 0)
+      const { data, mutate: boundMutate } = useSWR(key, () => 0)
 
       useEffect(() => {
         setTimeout(() => {
@@ -570,7 +598,7 @@ describe('useSWR - local mutation', () => {
       return null
     }
 
-    render(<Component />)
+    renderWithConfig(<Component />)
 
     await act(() => sleep(50))
     expect(mutationRecivedValues).toEqual([0, 1])
@@ -579,10 +607,11 @@ describe('useSWR - local mutation', () => {
 
   it('async mutation case 1 (startAt <= MUTATION_TS[key])', async () => {
     let result = 0
+    const key = createKey()
     const fetcher = jest.fn(createResponse)
     function Component() {
       const { data, mutate: boundMutate } = useSWR(
-        'mutate-7',
+        key,
         () =>
           fetcher(0, {
             delay: 300
@@ -607,7 +636,7 @@ describe('useSWR - local mutation', () => {
       )
     }
 
-    render(<Component />)
+    renderWithConfig(<Component />)
     screen.getByText('loading')
 
     await act(() => sleep(50))
@@ -625,10 +654,13 @@ describe('useSWR - local mutation', () => {
   })
 
   it('async mutation case 2 (startAt <= MUTATION_END_TS[key])', async () => {
-    let result = 0
+    let result = 0,
+      mutate
     const fetcher = jest.fn(createResponse)
+    const updatedKey = createKey()
     function Component() {
       const [key, setKey] = useState(null)
+      mutate = useSWRConfig().mutate
       const { data } = useSWR(
         key,
         () =>
@@ -641,7 +673,7 @@ describe('useSWR - local mutation', () => {
       )
       useEffect(() => {
         mutate(
-          'mutate-8',
+          updatedKey,
           async () => {
             result += 1
             return createResponse(result, {
@@ -650,14 +682,14 @@ describe('useSWR - local mutation', () => {
           },
           false
         )
-        setKey('mutate-8')
+        setKey(updatedKey)
       }, [])
       return (
         <div>{data !== undefined ? `data: ${data.toString()}` : 'loading'}</div>
       )
     }
 
-    render(<Component />)
+    renderWithConfig(<Component />)
     screen.getByText('loading')
 
     // mutate success
@@ -671,10 +703,13 @@ describe('useSWR - local mutation', () => {
   })
 
   it('async mutation case 3 (MUTATION_END_TS[key] === 0)', async () => {
-    let result = 0
+    let result = 0,
+      mutate
     const fetcher = jest.fn(createResponse)
+    const updatedKey = createKey()
     function Component() {
       const [key, setKey] = useState(null)
+      mutate = useSWRConfig().mutate
       const { data } = useSWR(
         key,
         () =>
@@ -686,9 +721,9 @@ describe('useSWR - local mutation', () => {
         }
       )
       useEffect(() => {
-        setKey('mutate-9')
+        setKey(updatedKey)
         mutate(
-          'mutate-9',
+          updatedKey,
           async () => {
             result += 1
             return createResponse(result, { delay: 200 })
@@ -701,7 +736,7 @@ describe('useSWR - local mutation', () => {
       )
     }
 
-    render(<Component />)
+    renderWithConfig(<Component />)
     screen.getByText('loading')
 
     // fetcher result should be ignored
@@ -720,7 +755,7 @@ describe('useSWR - local mutation', () => {
       const { isValidating } = useSWR(key)
       return <p>{isValidating.toString()}</p>
     }
-    render(<Page />)
+    renderWithConfig(<Page />)
     screen.getByText('false')
   })
 
@@ -737,7 +772,7 @@ describe('useSWR - local mutation', () => {
         </div>
       )
     }
-    render(<Page />)
+    renderWithConfig(<Page />)
     screen.getByText('set ready')
 
     expect(fetcher).toBeCalledTimes(0)
@@ -787,7 +822,7 @@ describe('useSWR - local mutation', () => {
         </div>
       )
     }
-    render(<Page />)
+    renderWithConfig(<Page />)
 
     fireEvent.click(screen.getByText('preload'))
     await act(() => sleep(20))
