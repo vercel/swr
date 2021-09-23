@@ -11,7 +11,7 @@ import { serialize } from '../src/utils/serialize'
 import { useStateWithDeps } from '../src/utils/state'
 import { withMiddleware } from '../src/utils/with-middleware'
 import { useIsomorphicLayoutEffect } from '../src/utils/env'
-import { isUndefined, UNDEFINED } from '../src/utils/helper'
+import { UNDEFINED } from '../src/utils/helper'
 import { getTimestamp } from '../src/utils/timestamp'
 
 import { SWRMutationConfiguration, SWRMutationResponse } from './types'
@@ -54,12 +54,9 @@ const mutation = <Data, Error>() => (
     }
 
     const [serializedKey, args] = serialize(keyRef.current)
-    const options = Object.assign({}, config, opts)
 
     // Disable cache population by default.
-    if (isUndefined(options.populateCache)) {
-      options.populateCache = false
-    }
+    const options = Object.assign({ populateCache: false }, config, opts)
 
     // Trigger a mutation, also track the timestamp. Any mutation that happened
     // earlier this timestamp should be ignored.
@@ -83,7 +80,7 @@ const mutation = <Data, Error>() => (
     } catch (error) {
       // If it's reset after the mutation, we don't broadcast any state change.
       if (ditchMutationsTilRef.current <= mutationStartedAt) {
-        setState({ error, isValidating: false })
+        setState({ error: error as Error, isValidating: false })
         options.onError && options.onError(error, serializedKey, options)
       }
       throw error

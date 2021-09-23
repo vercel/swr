@@ -75,7 +75,8 @@ export const useStateWithDeps = <Data, Error, S = State<Data, Error>>(
   )
 
   useIsomorphicLayoutEffect(() => {
-    // Always update the state reference.
+    // Always update the state reference if it's not used as the initial state
+    // only.
     if (!asInitialState) {
       stateRef.current = state
     }
