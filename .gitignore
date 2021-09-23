@@ -1,6 +1,5 @@
 node_modules
 dist
-esm
 *.log
 *.tgz
 .env
@@ -10,3 +9,4 @@ esm
 .vscode
 examples/**/yarn.lock
 package-lock.json
+tsconfig.tsbuildinfo
