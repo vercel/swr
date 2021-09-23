@@ -148,7 +148,7 @@ describe('useSWR - loading', () => {
     screen.getByText('stopped,stopped')
   })
 
-  it.only('should sync all loading states if errored but paused', async () => {
+  it('should sync all loading states if errored but paused', async () => {
     const key = createKey()
     let paused = false
 
