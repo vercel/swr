@@ -143,9 +143,9 @@ export interface SWRHook {
 }
 
 // Middlewares guarantee that a SWRHook receives a key, fetcher, and config as the argument
-type SWRHookWithMiddleware = <Data = any, Error = any>(
-  key: Key,
-  fetcher: Fetcher<Data, Key> | null,
+type SWRHookWithMiddleware = <Data = any, Error = any, Args extends Key = Key>(
+  key: Args,
+  fetcher: Fetcher<Data, Args> | null,
   config: SWRConfiguration<Data, Error>
 ) => SWRResponse<Data, Error>
 
@@ -216,8 +216,8 @@ export interface SWRResponse<Data, Error> {
   isValidating: boolean
 }
 
-export type KeyLoader<Data = any> =
-  | ((index: number, previousPageData: Data | null) => ValueKey)
+export type KeyLoader<Args extends ValueKey = ValueKey> =
+  | ((index: number, previousPageData: any | null) => Args)
   | null
 
 export interface RevalidatorOptions {
