@@ -252,13 +252,11 @@ export const infinite = ((<Data, Error, Args extends ValueKey>(
 
 export type InfiniteFetcher<
   Args extends ValueKey = ValueKey,
-  Data = unknown
+  Data = any
 > = Args extends (readonly [...infer K])
   ? ((...args: [...K]) => Result<Data>)
-  : Args extends (string | null)
-  ? Args extends (Record<any, any> | null)
-    ? never
-    : (...args: [string]) => Result<Data>
+  : Args extends null
+  ? never
   : Args extends (infer T)
   ? (...args: [T]) => Result<Data>
   : never

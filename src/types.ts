@@ -10,34 +10,24 @@ export type Fetcher<Data = unknown, Args extends Key = Key> =
    */
   Args extends (() => readonly [...infer K] | null)
     ? ((...args: [...K]) => Result<Data>)
-      /**
-       * [{ foo: string }, { bar: number } ] | null
-       *
-       * [{ foo: string }, { bar: number } ] as const | null
-       */
-    : Args extends (readonly [...infer K])
+    : /**
+     * [{ foo: string }, { bar: number } ] | null
+     *
+     * [{ foo: string }, { bar: number } ] as const | null
+     */
+    Args extends (readonly [...infer K])
     ? ((...args: [...K]) => Result<Data>)
-      /**
-       * () => string | null
-       * () => Record<any, any> | null
-       */
-    : Args extends (() => infer T | null)
+    : /**
+     * () => string | null
+     * () => Record<any, any> | null
+     */
+    Args extends (() => infer T | null)
     ? (...args: [T]) => Result<Data>
-      /**
-       *  string | null
-       */
-    : Args extends (string | null)
-      /**
-       * when key is Record<any, any> | null
-       * use { foo: string, bar: number } | null as example
-       *
-       * the fetcher would be
-       * (arg0: string) => any | (arg0: { foo: string, bar: number }) => any
-       * so we add this condition to make (arg0: string) => any to be never
-       */
-    ? Args extends (Record<any, any> | null)
-      ? never
-      : (...args: [string]) => Result<Data>
+    : /**
+     *  string | null | Record<any,any>
+     */
+    Args extends null
+    ? never
     : Args extends (infer T)
     ? (...args: [T]) => Result<Data>
     : never
