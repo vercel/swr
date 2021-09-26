@@ -27,7 +27,8 @@
   "include": [
     "src", 
     "immutable", 
-    "infinite"
+    "infinite",
+    "test-type"
   ],
   "exclude": [
     "./**/dist",

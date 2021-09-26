@@ -1,9 +1,10 @@
-import { SWRConfiguration, Fetcher, SWRResponse } from 'swr'
+import { SWRConfiguration, Fetcher, SWRResponse, ValueKey } from 'swr'
 
 export type SWRInfiniteConfiguration<
   Data = any,
-  Error = any
-> = SWRConfiguration<Data[], Error, Fetcher<Data[]>> & {
+  Error = any,
+  Args extends ValueKey = ValueKey
+> = SWRConfiguration<Data[], Error, Args, Fetcher<Data[], Args>> & {
   initialSize?: number
   revalidateAll?: boolean
   persistSize?: boolean
