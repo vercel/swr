@@ -21,6 +21,6 @@ export {
   Fetcher,
   MutatorCallback,
   Middleware,
-  ValueKey,
-  Result
+  //
+  Arguments
 } from './types'
