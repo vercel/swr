@@ -1,4 +1,4 @@
-import { SWRConfiguration, Fetcher, SWRResponse, Arguments } from 'swr'
+import { SWRConfiguration, SWRResponse, Arguments } from 'swr'
 
 type FetcherReturnValue<Data = unknown> = Data | Promise<Data>
 
@@ -21,7 +21,7 @@ export type SWRInfiniteConfiguration<
   Data = any,
   Error = any,
   Args extends Arguments = Arguments
-> = SWRConfiguration<Data[], Error, Args, Fetcher<Data[], Args>> & {
+> = SWRConfiguration<Data[], Error, Args> & {
   initialSize?: number
   revalidateAll?: boolean
   persistSize?: boolean

@@ -18,7 +18,8 @@ import {
   SWRInfiniteConfiguration,
   SWRInfiniteResponse,
   SWRInfiniteHook,
-  InfiniteKeyLoader
+  InfiniteKeyLoader,
+  InfiniteFetcher
 } from './types'
 
 const INFINITE_PREFIX = '$inf$'
@@ -254,4 +255,4 @@ export const infinite = ((<Data, Error, Args extends Arguments>(
 }) as unknown) as Middleware
 
 export default withMiddleware(useSWR, infinite) as SWRInfiniteHook
-export { SWRInfiniteConfiguration, SWRInfiniteResponse }
+export { SWRInfiniteConfiguration, SWRInfiniteResponse, InfiniteFetcher }

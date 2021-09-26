@@ -9,22 +9,22 @@ export type Fetcher<Data = unknown, SWRKey extends Key = Key> =
    */
   SWRKey extends (() => readonly [...infer Args] | null)
     ? ((...args: [...Args]) => FetcherReturnValue<Data>)
-    : /**
-     * [{ foo: string }, { bar: number } ] | null
-     * [{ foo: string }, { bar: number } ] as const | null
-     */
-    SWRKey extends (readonly [...infer Args])
+      /**
+       * [{ foo: string }, { bar: number } ] | null
+       * [{ foo: string }, { bar: number } ] as const | null
+       */
+    : SWRKey extends (readonly [...infer Args])
     ? ((...args: [...Args]) => FetcherReturnValue<Data>)
-    : /**
-     * () => string | null
-     * () => Record<any, any> | null
-     */
-    SWRKey extends (() => infer Arg | null)
+      /**
+       * () => string | null
+       * () => Record<any, any> | null
+       */
+    : SWRKey extends (() => infer Arg | null)
     ? (...args: [Arg]) => FetcherReturnValue<Data>
-    : /**
-     *  string | null | Record<any,any>
-     */
-    SWRKey extends null
+      /**
+       *  string | null | Record<any,any>
+       */
+    : SWRKey extends null
     ? never
     : SWRKey extends (infer Arg)
     ? (...args: [Arg]) => FetcherReturnValue<Data>
@@ -39,8 +39,7 @@ export interface InternalConfiguration {
 export interface PublicConfiguration<
   Data = any,
   Error = any,
-  Args extends Key = Key,
-  Fn = Fetcher<Data, Args>
+  SWRKey extends Key = Key
 > {
   errorRetryInterval: number
   errorRetryCount?: number
@@ -57,29 +56,29 @@ export interface PublicConfiguration<
   shouldRetryOnError: boolean
   suspense?: boolean
   fallbackData?: Data
-  fetcher?: Fn
+  fetcher?: Fetcher<Data, SWRKey>
   use?: Middleware[]
   fallback: { [key: string]: any }
 
   isPaused: () => boolean
   onLoadingSlow: (
     key: string,
-    config: Readonly<PublicConfiguration<Data, Error, Args, Fn>>
+    config: Readonly<PublicConfiguration<Data, Error, SWRKey>>
   ) => void
   onSuccess: (
     data: Data,
     key: string,
-    config: Readonly<PublicConfiguration<Data, Error, Args, Fn>>
+    config: Readonly<PublicConfiguration<Data, Error, SWRKey>>
   ) => void
   onError: (
     err: Error,
     key: string,
-    config: Readonly<PublicConfiguration<Data, Error, Args, Fn>>
+    config: Readonly<PublicConfiguration<Data, Error, SWRKey>>
   ) => void
   onErrorRetry: (
     err: Error,
     key: string,
-    config: Readonly<PublicConfiguration<Data, Error, Args, Fn>>,
+    config: Readonly<PublicConfiguration<Data, Error, SWRKey>>,
     revalidate: Revalidator,
     revalidateOpts: Required<RevalidatorOptions>
   ) => void
@@ -108,14 +107,23 @@ export interface SWRHook {
   ): SWRResponse<Data, Error>
   <Data = any, Error = any, SWRKey extends Key = Key>(
     key: SWRKey,
-    config:
-      | SWRConfiguration<Data, Error, SWRKey, Fetcher<Data, SWRKey>>
-      | undefined
+    config: SWRConfiguration<Data, Error, SWRKey> | undefined
   ): SWRResponse<Data, Error>
   <Data = any, Error = any, SWRKey extends Key = Key>(
     key: SWRKey,
     fetcher: Fetcher<Data, SWRKey>,
-    config: SWRConfiguration<Data, Error, SWRKey, Fetcher<Data, SWRKey>>
+    config: SWRConfiguration<Data, Error, SWRKey>
+  ): SWRResponse<Data, Error>
+  <Data = any, Error = any, SWRKey extends Key = Key>(
+    ...args:
+      | [SWRKey]
+      | [SWRKey, Fetcher<Data, SWRKey> | null]
+      | [SWRKey, SWRConfiguration<Data, Error, SWRKey> | undefined]
+      | [
+          SWRKey,
+          Fetcher<Data, Key> | null,
+          SWRConfiguration<Data, Error, SWRKey>
+        ]
   ): SWRResponse<Data, Error>
 }
 
@@ -183,9 +191,8 @@ export type KeyedMutator<Data> = (
 export type SWRConfiguration<
   Data = any,
   Error = any,
-  Args extends Key = Key,
-  Fn = Fetcher<any, Args>
-> = Partial<PublicConfiguration<Data, Error, Args, Fn>>
+  SWRKey extends Key = Key
+> = Partial<PublicConfiguration<Data, Error, SWRKey>>
 
 export interface SWRResponse<Data, Error> {
   data?: Data
