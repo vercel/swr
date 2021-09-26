@@ -1,16 +1,16 @@
 import { SWRConfiguration, SWRResponse, Arguments } from 'swr'
 
-type FetcherReturnValue<Data = unknown> = Data | Promise<Data>
+type FetcherResponse<Data = unknown> = Data | Promise<Data>
 
 export type InfiniteFetcher<
   Args extends Arguments = Arguments,
   Data = any
 > = Args extends (readonly [...infer K])
-  ? ((...args: [...K]) => FetcherReturnValue<Data>)
+  ? ((...args: [...K]) => FetcherResponse<Data>)
   : Args extends null
   ? never
   : Args extends (infer T)
-  ? (...args: [T]) => FetcherReturnValue<Data>
+  ? (...args: [T]) => FetcherResponse<Data>
   : never
 
 export type InfiniteKeyLoader<Args extends Arguments = Arguments> =
