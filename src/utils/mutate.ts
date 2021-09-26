@@ -15,22 +15,12 @@ export const internalMutate = async <Data>(
   const [key, , keyErr] = serialize(_key)
   if (!key) return
 
-  const [
-    ,
-    ,
-    MUTATION_TS,
-    MUTATION_END_TS,
-    CONCURRENT_PROMISES,
-    CONCURRENT_PROMISES_TS
-  ] = SWRGlobalState.get(cache) as GlobalState
+  const [, , MUTATION_TS, MUTATION_END_TS] = SWRGlobalState.get(
+    cache
+  ) as GlobalState
 
   // If there is no new data to update, we revalidate the key.
   if (isUndefined(_data)) {
-    // Invalidate the key by deleting the concurrent request markers so new
-    // requests will not be deduped.
-    delete CONCURRENT_PROMISES[key]
-    delete CONCURRENT_PROMISES_TS[key]
-
     // Revalidate and broadcast state.
     return broadcastState(
       cache,
