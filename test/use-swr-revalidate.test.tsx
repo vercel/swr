@@ -1,6 +1,6 @@
 import { act, fireEvent, screen } from '@testing-library/react'
 import React from 'react'
-import useSWR, { mutate as globalMutate } from 'swr'
+import useSWR, { useSWRConfig } from 'swr'
 import {
   createResponse,
   sleep,
@@ -164,7 +164,7 @@ describe('useSWR - revalidate', () => {
     screen.getByText('false')
   })
 
-  it.only('should mark the key as invalidated and clear deduping with `mutate`, even if there is no mounted hook', async () => {
+  it('should mark the key as invalidated and clear deduping with `mutate`, even if there is no mounted hook', async () => {
     const key = createKey()
     let cnt = 0
 
@@ -177,11 +177,12 @@ describe('useSWR - revalidate', () => {
 
     function Page() {
       const [showFoo, setShowFoo] = React.useState(true)
+      const { mutate } = useSWRConfig()
       return (
         <>
           {showFoo ? <Foo /> : null}
           <button onClick={() => setShowFoo(!showFoo)}>toggle</button>
-          <button onClick={() => globalMutate(key)}>mutate</button>
+          <button onClick={() => mutate(key)}>mutate</button>
         </>
       )
     }
