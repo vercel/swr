@@ -3,7 +3,7 @@ module.exports = {
   testEnvironment: 'jsdom',
   testRegex: '/test/.*\\.test\\.tsx$',
   modulePathIgnorePatterns: ['<rootDir>/examples/'],
-  setupFilesAfterEnv: ['<rootDir>/jest-setup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/scripts/jest-setup.ts'],
   moduleNameMapper: {
     '^swr$': '<rootDir>/src',
     '^swr/infinite$': '<rootDir>/infinite/index.ts',
@@ -12,7 +12,7 @@ module.exports = {
   globals: {
     'ts-jest': {
       tsconfig: 'test/tsconfig.json',
-      diagnostics: process.env.CI,
+      diagnostics: process.env.CI
     }
-  },
+  }
 }

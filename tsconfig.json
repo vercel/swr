@@ -24,16 +24,8 @@
     },
     "typeRoots": ["./src/types", "./node_modules/@types"]
   },
-  "include": [
-    "src", 
-    "immutable", 
-    "infinite",
-    "test-type"
-  ],
-  "exclude": [
-    "./**/dist",
-    "node_modules"
-  ],
+  "include": ["src", "immutable", "infinite"],
+  "exclude": ["./**/dist", "node_modules"],
   "watchOptions": {
     "watchFile": "useFsEvents",
     "watchDirectory": "useFsEvents",
