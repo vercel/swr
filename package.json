@@ -48,7 +48,7 @@
     "publish-beta": "yarn publish --tag beta",
     "types:check": "tsc --noEmit --project tsconfig.check.json",
     "format": "prettier --write ./**/*.{ts,tsx}",
-    "lint": "eslint . --ext .ts,.tsx",
+    "lint": "eslint . --ext .ts,.tsx --cache",
     "lint:fix": "yarn lint --fix",
     "test": "jest",
     "register": "yarn link && cd node_modules/react && yarn link",
@@ -62,7 +62,7 @@
   },
   "lint-staged": {
     "*.{ts,tsx}": [
-      "eslint --fix",
+      "eslint --fix --cache",
       "prettier --write",
       "git add"
     ]
