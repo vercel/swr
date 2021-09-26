@@ -128,7 +128,7 @@ export type Middleware = (
   config: SWRConfiguration<Data, Error>
 ) => SWRResponse<Data, Error>
 
-export type ArgumentsTuple = [any, ...unknown[]] | readonly [any, ...unknown[]]
+type ArgumentsTuple = [any, ...unknown[]] | readonly [any, ...unknown[]]
 export type Arguments = string | null | ArgumentsTuple | Record<any, any>
 export type Key = Arguments | (() => Arguments)
 
