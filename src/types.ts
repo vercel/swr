@@ -1,35 +1,33 @@
 import * as revalidateEvents from './constants/revalidate-events'
 
-export type Result<T = unknown> = T | Promise<T>
+export type FetcherResponse<Data = unknown> = Data | Promise<Data>
 
-export type Fetcher<Data = unknown, Args extends Key = Key> =
+export type Fetcher<Data = unknown, SWRKey extends Key = Key> =
   /**
    * () => [{ foo: string }, { bar: number }] | null
-   *
    * () => ( [{ foo: string }, { bar: number } ] as const | null )
    */
-  Args extends (() => readonly [...infer K] | null)
-    ? ((...args: [...K]) => Result<Data>)
+  SWRKey extends (() => readonly [...infer Args] | null)
+    ? ((...args: [...Args]) => FetcherResponse<Data>)
     : /**
      * [{ foo: string }, { bar: number } ] | null
-     *
      * [{ foo: string }, { bar: number } ] as const | null
      */
-    Args extends (readonly [...infer K])
-    ? ((...args: [...K]) => Result<Data>)
+    SWRKey extends (readonly [...infer Args])
+    ? ((...args: [...Args]) => FetcherResponse<Data>)
     : /**
      * () => string | null
      * () => Record<any, any> | null
      */
-    Args extends (() => infer T | null)
-    ? (...args: [T]) => Result<Data>
+    SWRKey extends (() => infer Arg | null)
+    ? (...args: [Arg]) => FetcherResponse<Data>
     : /**
      *  string | null | Record<any,any>
      */
-    Args extends null
+    SWRKey extends null
     ? never
-    : Args extends (infer T)
-    ? (...args: [T]) => Result<Data>
+    : SWRKey extends (infer Arg)
+    ? (...args: [Arg]) => FetcherResponse<Data>
     : never
 
 // Configuration types that are only used internally, not exposed to the user.
@@ -41,8 +39,7 @@ export interface InternalConfiguration {
 export interface PublicConfiguration<
   Data = any,
   Error = any,
-  Args extends Key = Key,
-  Fn = Fetcher<Data, Args>
+  SWRKey extends Key = Key
 > {
   errorRetryInterval: number
   errorRetryCount?: number
@@ -59,29 +56,29 @@ export interface PublicConfiguration<
   shouldRetryOnError: boolean
   suspense?: boolean
   fallbackData?: Data
-  fetcher?: Fn
+  fetcher?: Fetcher<Data, SWRKey>
   use?: Middleware[]
   fallback: { [key: string]: any }
 
   isPaused: () => boolean
   onLoadingSlow: (
     key: string,
-    config: Readonly<PublicConfiguration<Data, Error, Args, Fn>>
+    config: Readonly<PublicConfiguration<Data, Error, SWRKey>>
   ) => void
   onSuccess: (
     data: Data,
     key: string,
-    config: Readonly<PublicConfiguration<Data, Error, Args, Fn>>
+    config: Readonly<PublicConfiguration<Data, Error, SWRKey>>
   ) => void
   onError: (
     err: Error,
     key: string,
-    config: Readonly<PublicConfiguration<Data, Error, Args, Fn>>
+    config: Readonly<PublicConfiguration<Data, Error, SWRKey>>
   ) => void
   onErrorRetry: (
     err: Error,
     key: string,
-    config: Readonly<PublicConfiguration<Data, Error, Args, Fn>>,
+    config: Readonly<PublicConfiguration<Data, Error, SWRKey>>,
     revalidate: Revalidator,
     revalidateOpts: Required<RevalidatorOptions>
   ) => void
@@ -94,55 +91,54 @@ export interface PublicConfiguration<
 
 export type FullConfiguration = InternalConfiguration & PublicConfiguration
 
-export type ConfigOptions = {
+export type ProviderConfiguration = {
   initFocus: (callback: () => void) => (() => void) | void
   initReconnect: (callback: () => void) => (() => void) | void
 }
+
 export interface SWRHook {
-  <Data = any, Error = any, Args extends Key = Key>(args: Args): SWRResponse<
+  <Data = any, Error = any, SWRKey extends Key = Key>(key: SWRKey): SWRResponse<
     Data,
     Error
   >
-  <Data = any, Error = any, Args extends Key = Key>(
-    args: Args,
-    fn: Fetcher<Data, Args> | null
+  <Data = any, Error = any, SWRKey extends Key = Key>(
+    key: SWRKey,
+    fetcher: Fetcher<Data, SWRKey> | null
   ): SWRResponse<Data, Error>
-  <Data = any, Error = any, Args extends Key = Key>(
-    args: Args,
-    config: SWRConfiguration<Data, Error, Args, Fetcher<Data, Args>> | undefined
+  <Data = any, Error = any, SWRKey extends Key = Key>(
+    key: SWRKey,
+    config: SWRConfiguration<Data, Error, SWRKey> | undefined
   ): SWRResponse<Data, Error>
-  <Data = any, Error = any, Args extends Key = Key>(
-    args: Args,
-    fn: Fetcher<Data, Args>,
-    config: SWRConfiguration<Data, Error, Args, Fetcher<Data, Args>>
+  <Data = any, Error = any, SWRKey extends Key = Key>(
+    key: SWRKey,
+    fetcher: Fetcher<Data, SWRKey>,
+    config: SWRConfiguration<Data, Error, SWRKey> | undefined
   ): SWRResponse<Data, Error>
-  <Data = any, Error = any, Args extends Key = Key>(
+  <Data = any, Error = any, SWRKey extends Key = Key>(
     ...args:
-      | [Args]
-      | [Args, Fetcher<Data, Args> | null]
+      | [SWRKey]
+      | [SWRKey, Fetcher<Data, SWRKey> | null]
+      | [SWRKey, SWRConfiguration<Data, Error, SWRKey> | undefined]
       | [
-          Args,
-          SWRConfiguration<Data, Error, Args, Fetcher<Data, Args>> | undefined
-        ]
-      | [
-          Args,
+          SWRKey,
           Fetcher<Data, Key> | null,
-          SWRConfiguration<Data, Error, Args, Fetcher<Data, Args>>
+          SWRConfiguration<Data, Error, SWRKey> | undefined
         ]
   ): SWRResponse<Data, Error>
 }
 
 // Middlewares guarantee that a SWRHook receives a key, fetcher, and config as the argument
-type SWRHookWithMiddleware = <Data = any, Error = any, Args extends Key = Key>(
+export type Middleware = (
+  useSWRNext: SWRHook
+) => <Data = any, Error = any, Args extends Key = Key>(
   key: Args,
   fetcher: Fetcher<Data, Args> | null,
   config: SWRConfiguration<Data, Error>
 ) => SWRResponse<Data, Error>
 
-export type Middleware = (useSWRNext: SWRHook) => SWRHookWithMiddleware
-export type TupleKey = [any, ...unknown[]] | readonly [any, ...unknown[]]
-export type ValueKey = string | null | TupleKey | Record<any, any>
-export type Key = ValueKey | (() => ValueKey)
+type ArgumentsTuple = [any, ...unknown[]] | readonly [any, ...unknown[]]
+export type Arguments = string | null | ArgumentsTuple | Record<any, any>
+export type Key = Arguments | (() => Arguments)
 
 export type MutatorCallback<Data = any> = (
   currentValue?: Data
@@ -195,9 +191,8 @@ export type KeyedMutator<Data> = (
 export type SWRConfiguration<
   Data = any,
   Error = any,
-  Args extends Key = Key,
-  Fn = Fetcher<any, Args>
-> = Partial<PublicConfiguration<Data, Error, Args, Fn>>
+  SWRKey extends Key = Key
+> = Partial<PublicConfiguration<Data, Error, SWRKey>>
 
 export interface SWRResponse<Data, Error> {
   data?: Data
@@ -206,7 +201,7 @@ export interface SWRResponse<Data, Error> {
   isValidating: boolean
 }
 
-export type KeyLoader<Args extends ValueKey = ValueKey> =
+export type KeyLoader<Args extends Arguments = Arguments> =
   | ((index: number, previousPageData: any | null) => Args)
   | null
 

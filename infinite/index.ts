@@ -4,34 +4,38 @@
 import { useRef, useState, useCallback } from 'react'
 import useSWR, {
   SWRConfig,
-  KeyLoader,
   Fetcher,
   SWRHook,
   MutatorCallback,
   Middleware,
-  ValueKey,
-  Result
+  Arguments
 } from 'swr'
 import { useIsomorphicLayoutEffect } from '../src/utils/env'
 import { serialize } from '../src/utils/serialize'
 import { isUndefined, isFunction, UNDEFINED } from '../src/utils/helper'
 import { withMiddleware } from '../src/utils/with-middleware'
-import { SWRInfiniteConfiguration, SWRInfiniteResponse } from './types'
+import {
+  SWRInfiniteConfiguration,
+  SWRInfiniteResponse,
+  SWRInfiniteHook,
+  InfiniteKeyLoader,
+  InfiniteFetcher
+} from './types'
 
 const INFINITE_PREFIX = '$inf$'
 
-const getFirstPageKey = (getKey: KeyLoader) => {
+const getFirstPageKey = (getKey: InfiniteKeyLoader) => {
   return serialize(getKey ? getKey(0, null) : null)[0]
 }
 
-export const unstable_serialize = (getKey: KeyLoader) => {
+export const unstable_serialize = (getKey: InfiniteKeyLoader) => {
   return INFINITE_PREFIX + getFirstPageKey(getKey)
 }
 
-export const infinite = ((<Data, Error, Args extends ValueKey>(
+export const infinite = ((<Data, Error, Args extends Arguments>(
   useSWRNext: SWRHook
 ) => (
-  getKey: KeyLoader<Args>,
+  getKey: InfiniteKeyLoader<Args>,
   fn: Fetcher<Data> | null,
   config: typeof SWRConfig.default & SWRInfiniteConfiguration<Data, Error, Args>
 ): SWRInfiniteResponse<Data, Error> => {
@@ -250,37 +254,5 @@ export const infinite = ((<Data, Error, Args extends ValueKey>(
   } as SWRInfiniteResponse<Data, Error>
 }) as unknown) as Middleware
 
-export type InfiniteFetcher<
-  Args extends ValueKey = ValueKey,
-  Data = any
-> = Args extends (readonly [...infer K])
-  ? ((...args: [...K]) => Result<Data>)
-  : Args extends null
-  ? never
-  : Args extends (infer T)
-  ? (...args: [T]) => Result<Data>
-  : never
-
-interface SWRInfiniteHook {
-  <Data = any, Error = any, Args extends ValueKey = ValueKey>(
-    getKey: KeyLoader<Args>
-  ): SWRInfiniteResponse<Data, Error>
-  <Data = any, Error = any, Args extends ValueKey = ValueKey>(
-    getKey: KeyLoader<Args>,
-    fn: InfiniteFetcher<Args, Data> | null
-  ): SWRInfiniteResponse<Data, Error>
-  <Data = any, Error = any, Args extends ValueKey = ValueKey>(
-    getKey: KeyLoader<Args>,
-    config: SWRInfiniteConfiguration<Data, Error, Args> | undefined
-  ): SWRInfiniteResponse<Data, Error>
-  <Data = any, Error = any, Args extends ValueKey = ValueKey>(
-    ...args: [
-      KeyLoader<Args>,
-      InfiniteFetcher<Args, Data> | null,
-      SWRInfiniteConfiguration<Data, Error, Args> | undefined
-    ]
-  ): SWRInfiniteResponse<Data, Error>
-}
-
 export default withMiddleware(useSWR, infinite) as SWRInfiniteHook
-export { SWRInfiniteConfiguration, SWRInfiniteResponse }
+export { SWRInfiniteConfiguration, SWRInfiniteResponse, InfiniteFetcher }
