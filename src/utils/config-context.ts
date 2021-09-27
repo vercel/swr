@@ -7,7 +7,7 @@ import { useIsomorphicLayoutEffect } from './env'
 import {
   SWRConfiguration,
   FullConfiguration,
-  ConfigOptions,
+  ProviderConfiguration,
   Cache
 } from '../types'
 
@@ -15,7 +15,7 @@ export const SWRConfigContext = createContext<Partial<FullConfiguration>>({})
 
 const SWRConfig: FC<{
   value?: SWRConfiguration &
-    Partial<ConfigOptions> & {
+    Partial<ProviderConfiguration> & {
       provider?: (cache: Readonly<Cache>) => Cache
     }
 }> = ({ children, value }) => {

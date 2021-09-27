@@ -1,4 +1,4 @@
-import { ConfigOptions } from '../types'
+import { ProviderConfiguration } from '../types'
 import { isUndefined, noop, hasWindow, hasDocument } from './helper'
 
 /**
@@ -62,7 +62,7 @@ export const preset = {
   isVisible
 } as const
 
-export const defaultConfigOptions: ConfigOptions = {
+export const defaultConfigOptions: ProviderConfiguration = {
   initFocus,
   initReconnect
 }
