@@ -1,12 +1,13 @@
 import { act, fireEvent, screen } from '@testing-library/react'
 import React from 'react'
-import useSWR from 'swr'
+import useSWR, { useSWRConfig } from 'swr'
 import {
   createResponse,
   sleep,
   nextTick as waitForNextTick,
   createKey,
-  renderWithConfig
+  renderWithConfig,
+  nextTick
 } from './utils'
 
 describe('useSWR - revalidate', () => {
@@ -161,5 +162,40 @@ describe('useSWR - revalidate', () => {
 
     renderWithConfig(<Page />)
     screen.getByText('false')
+  })
+
+  it('should mark the key as invalidated and clear deduping with `mutate`, even if there is no mounted hook', async () => {
+    const key = createKey()
+    let cnt = 0
+
+    function Foo() {
+      const { data } = useSWR(key, () => 'data: ' + cnt++, {
+        dedupingInterval: 1000
+      })
+      return <>{data}</>
+    }
+
+    function Page() {
+      const [showFoo, setShowFoo] = React.useState(true)
+      const { mutate } = useSWRConfig()
+      return (
+        <>
+          {showFoo ? <Foo /> : null}
+          <button onClick={() => setShowFoo(!showFoo)}>toggle</button>
+          <button onClick={() => mutate(key)}>mutate</button>
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await nextTick()
+    screen.getByText('data: 0')
+    fireEvent.click(screen.getByText('toggle'))
+    await nextTick()
+    fireEvent.click(screen.getByText('mutate'))
+    await nextTick()
+    fireEvent.click(screen.getByText('toggle'))
+    await act(() => sleep(20))
+    screen.getByText('data: 1')
   })
 })
