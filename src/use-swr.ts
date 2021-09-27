@@ -262,7 +262,8 @@ export const useSWRHandler = <Data = any, Error = any>(
         }
       } catch (err) {
         // Reset the state immediately.
-        cleanupState(startAt!)
+        // @ts-ignore
+        cleanupState(startAt)
         cache.set(keyValidating, false)
         if (getConfig().isPaused()) {
           setState({
