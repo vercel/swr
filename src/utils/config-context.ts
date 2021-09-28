@@ -14,15 +14,15 @@ import {
   SWRConfiguration,
   FullConfiguration,
   ProviderConfiguration,
-  Cache
+  Cache,
+  CacheProvider
 } from '../types'
 
 export const SWRConfigContext = createContext<Partial<FullConfiguration>>({})
 
-type Provider<Data = any> = (cache: Cache<Data>) => Cache<Data>
 type SWRConfigValue = SWRConfiguration &
   Partial<ProviderConfiguration> & {
-    provider?: Provider<any>
+    provider?: CacheProvider<any>
   }
 
 const SWRConfig = ({

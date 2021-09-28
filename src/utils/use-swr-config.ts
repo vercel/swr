@@ -4,6 +4,6 @@ import { SWRConfigContext } from './config-context'
 import { mergeObjects } from './helper'
 import { FullConfiguration } from '../types'
 
-export const useSWRConfig = (): FullConfiguration => {
+export const useSWRConfig = <Provider = any>(): FullConfiguration<Provider> => {
   return mergeObjects(defaultConfig, useContext(SWRConfigContext))
 }

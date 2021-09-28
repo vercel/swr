@@ -9,30 +9,30 @@ export type Fetcher<Data = unknown, SWRKey extends Key = Key> =
    */
   SWRKey extends (() => readonly [...infer Args] | null)
     ? ((...args: [...Args]) => FetcherResponse<Data>)
-    : /**
-     * [{ foo: string }, { bar: number } ] | null
-     * [{ foo: string }, { bar: number } ] as const | null
-     */
-    SWRKey extends (readonly [...infer Args])
+      /**
+       * [{ foo: string }, { bar: number } ] | null
+       * [{ foo: string }, { bar: number } ] as const | null
+       */
+    : SWRKey extends (readonly [...infer Args])
     ? ((...args: [...Args]) => FetcherResponse<Data>)
-    : /**
-     * () => string | null
-     * () => Record<any, any> | null
-     */
-    SWRKey extends (() => infer Arg | null)
+      /**
+       * () => string | null
+       * () => Record<any, any> | null
+       */
+    : SWRKey extends (() => infer Arg | null)
     ? (...args: [Arg]) => FetcherResponse<Data>
-    : /**
-     *  string | null | Record<any,any>
-     */
-    SWRKey extends null
+      /**
+       *  string | null | Record<any,any>
+       */
+    : SWRKey extends null
     ? never
     : SWRKey extends (infer Arg)
     ? (...args: [Arg]) => FetcherResponse<Data>
     : never
 
 // Configuration types that are only used internally, not exposed to the user.
-export interface InternalConfiguration {
-  cache: Cache
+export interface InternalConfiguration<P> {
+  cache: P
   mutate: ScopedMutator
 }
 export interface PublicConfiguration<
@@ -88,7 +88,10 @@ export interface PublicConfiguration<
   isVisible: () => boolean
 }
 
-export type FullConfiguration = InternalConfiguration & PublicConfiguration
+export type FullConfiguration<Provider = any> = InternalConfiguration<
+  Provider
+> &
+  PublicConfiguration
 
 export type ProviderConfiguration = {
   initFocus: (callback: () => void) => (() => void) | void
@@ -239,8 +242,10 @@ export interface ICache<Data = any> {
   delete(key: Key): void
 }
 
-export type DefaultCacheType = Map<string | null, any>
+export type DefaultProvider = Map<string | null, any>
 
-export type Cache<T = DefaultCacheType, Data = any> = T extends ICache<Data>
+export type Cache<T = DefaultProvider, Data = any> = T extends ICache<Data>
   ? T
   : never
+
+export type CacheProvider<Data = any> = (cache: Cache<Data>) => Cache<Data>
