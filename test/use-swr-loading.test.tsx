@@ -1,7 +1,13 @@
-import { act, screen } from '@testing-library/react'
+import { act, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 import useSWR from 'swr'
-import { createResponse, createKey, sleep, renderWithConfig } from './utils'
+import {
+  createResponse,
+  createKey,
+  sleep,
+  renderWithConfig,
+  nextTick
+} from './utils'
 
 describe('useSWR - loading', () => {
   it('should return loading state', async () => {
@@ -88,5 +94,102 @@ describe('useSWR - loading', () => {
 
     renderWithConfig(<Page />)
     screen.getByText('data,error,isValidating,mutate')
+  })
+
+  it('should sync loading states', async () => {
+    const key = createKey()
+    const fetcher = jest.fn()
+
+    function Foo() {
+      const { isValidating } = useSWR(key, async () => {
+        fetcher()
+        return 'foo'
+      })
+      return isValidating ? <>loading</> : <>stopped</>
+    }
+
+    function Page() {
+      return (
+        <>
+          <Foo />,<Foo />
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('loading,loading')
+    await nextTick()
+    screen.getByText('stopped,stopped')
+    expect(fetcher).toBeCalledTimes(1)
+  })
+
+  it('should sync all loading states if errored', async () => {
+    const key = createKey()
+
+    function Foo() {
+      const { isValidating } = useSWR(key, async () => {
+        throw new Error(key)
+      })
+
+      return isValidating ? <>loading</> : <>stopped</>
+    }
+
+    function Page() {
+      return (
+        <>
+          <Foo />,<Foo />
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('loading,loading')
+    await nextTick()
+    screen.getByText('stopped,stopped')
+  })
+
+  it('should sync all loading states if errored but paused', async () => {
+    const key = createKey()
+    let paused = false
+
+    function Foo() {
+      const { isValidating } = useSWR(key, {
+        isPaused: () => paused,
+        fetcher: async () => {
+          await sleep(50)
+          throw new Error(key)
+        },
+        dedupingInterval: 0
+      })
+
+      return isValidating ? <>loading</> : <>stopped</>
+    }
+
+    function Page() {
+      const [mountSecondRequest, setMountSecondRequest] = React.useState(false)
+      return (
+        <>
+          <Foo />,{mountSecondRequest ? <Foo /> : null}
+          <br />
+          <button onClick={() => setMountSecondRequest(true)}>start</button>
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('loading,')
+    await act(() => sleep(70))
+    screen.getByText('stopped,')
+
+    fireEvent.click(screen.getByText('start'))
+    await act(() => sleep(20))
+    screen.getByText('loading,loading')
+
+    // Pause before it resolves
+    paused = true
+    await act(() => sleep(50))
+
+    // They should both stop
+    screen.getByText('stopped,stopped')
   })
 })

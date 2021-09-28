@@ -149,11 +149,16 @@ export const useSWRHandler = <Data = any, Error = any>(
         }
       }
 
+      // The new state object when request finishes.
+      const newState: State<Data, Error> = { isValidating: false }
+      const finishRequestAndUpdateState = () => {
+        cache.set(keyValidating, false)
+        setState(newState)
+      }
+
       // Start fetching. Change the `isValidating` state, update the cache.
       cache.set(keyValidating, true)
-      setState({
-        isValidating: true
-      })
+      setState({ isValidating: true })
 
       try {
         if (shouldStartNewRequest) {
@@ -196,7 +201,7 @@ export const useSWRHandler = <Data = any, Error = any>(
           }
         }
 
-        // if there're other ongoing request(s), started after the current one,
+        // If there're other ongoing request(s), started after the current one,
         // we need to ignore the current one to avoid possible race conditions:
         //   req1------------------>res1        (current one)
         //        req2---------------->res2
@@ -206,14 +211,11 @@ export const useSWRHandler = <Data = any, Error = any>(
           return false
         }
 
+        // Clear error.
         cache.set(keyErr, UNDEFINED)
-        cache.set(keyValidating, false)
+        newState.error = UNDEFINED
 
-        const newState: State<Data, Error> = {
-          isValidating: false
-        }
-
-        // if there're other mutations(s), overlapped with the current revalidation:
+        // If there're other mutations(s), overlapped with the current revalidation:
         // case 1:
         //   req------------------>res
         //       mutate------>end
@@ -234,12 +236,8 @@ export const useSWRHandler = <Data = any, Error = any>(
             // case 3
             MUTATION_END_TS[key] === 0)
         ) {
-          setState(newState)
+          finishRequestAndUpdateState()
           return false
-        }
-
-        if (!isUndefined(stateRef.current.error)) {
-          newState.error = UNDEFINED
         }
 
         // Deep compare with latest state to avoid extra re-renders.
@@ -247,59 +245,48 @@ export const useSWRHandler = <Data = any, Error = any>(
         if (!compare(stateRef.current.data, newData)) {
           newState.data = newData
         }
+
         // For global state, it's possible that the key has changed.
         // https://github.com/vercel/swr/pull/1058
         if (!compare(cache.get(key), newData)) {
           cache.set(key, newData)
         }
-
-        // merge the new state
-        setState(newState)
-
-        if (shouldStartNewRequest) {
-          // also update other hooks
-          broadcastState(cache, key, newData, newState.error, false)
-        }
       } catch (err) {
-        // Reset the state immediately.
         // @ts-ignore
         cleanupState(startAt)
-        cache.set(keyValidating, false)
-        if (getConfig().isPaused()) {
-          setState({
-            isValidating: false
-          })
-          return false
-        }
 
-        // Get a new error, don't use deep comparison for errors.
-        cache.set(keyErr, err)
-        if (stateRef.current.error !== err) {
-          // Keep the stale data but update error.
-          setState({
-            isValidating: false,
-            error: err as Error
-          })
-          if (shouldStartNewRequest) {
-            // Broadcast to update the states of other hooks.
-            broadcastState(cache, key, UNDEFINED, err, false)
-          }
-        }
+        // Not paused, we continue handling the error. Otherwise discard it.
+        if (!getConfig().isPaused()) {
+          // Get a new error, don't use deep comparison for errors.
+          cache.set(keyErr, err)
+          newState.error = err as Error
 
-        // Error event and retry logic.
-        if (isCallbackSafe()) {
-          getConfig().onError(err, key, config)
-          if (config.shouldRetryOnError) {
-            // When retrying, dedupe is always enabled
-            getConfig().onErrorRetry(err, key, config, revalidate, {
-              retryCount: (opts.retryCount || 0) + 1,
-              dedupe: true
-            })
+          // Error event and retry logic.
+          if (isCallbackSafe()) {
+            getConfig().onError(err, key, config)
+            if (config.shouldRetryOnError) {
+              // When retrying, dedupe is always enabled
+              getConfig().onErrorRetry(err, key, config, revalidate, {
+                retryCount: (opts.retryCount || 0) + 1,
+                dedupe: true
+              })
+            }
           }
         }
       }
 
+      // Mark loading as stopped.
       loading = false
+
+      // Update the current hook's state.
+      finishRequestAndUpdateState()
+
+      // Here is the source of the request, need to tell all other hooks to
+      // update their states.
+      if (shouldStartNewRequest) {
+        broadcastState(cache, key, newState.data, newState.error, false)
+      }
+
       return true
     },
     // `setState` is immutable, and `eventsCallback`, `fnArgs`, `keyErr`,
