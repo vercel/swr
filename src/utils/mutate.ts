@@ -19,8 +19,9 @@ export const internalMutate = async <Data>(
     cache
   ) as GlobalState
 
-  // if there is no new data to update, let's just revalidate the key
+  // If there is no new data to update, we revalidate the key.
   if (isUndefined(_data)) {
+    // Revalidate and broadcast state.
     return broadcastState(
       cache,
       key,

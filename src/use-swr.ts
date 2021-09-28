@@ -140,9 +140,13 @@ export const useSWRHandler = <Data = any, Error = any>(
         key === keyRef.current &&
         initialMountedRef.current
 
-      const cleanupState = () => {
-        delete CONCURRENT_PROMISES[key]
-        delete CONCURRENT_PROMISES_TS[key]
+      const cleanupState = (ts: number) => {
+        // CONCURRENT_PROMISES_TS[key] might be overridden, check if it's still
+        // the same request before deleting.
+        if (CONCURRENT_PROMISES_TS[key] === ts) {
+          delete CONCURRENT_PROMISES[key]
+          delete CONCURRENT_PROMISES_TS[key]
+        }
       }
 
       // The new state object when request finishes.
@@ -189,12 +193,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         if (shouldStartNewRequest) {
           // If the request isn't interrupted, clean it up after the
           // deduplication interval.
-          setTimeout(() => {
-            // CONCURRENT_PROMISES_TS[key] maybe be `undefined`.
-            if (CONCURRENT_PROMISES_TS[key] === startAt) {
-              cleanupState()
-            }
-          }, config.dedupingInterval)
+          setTimeout(() => cleanupState(startAt), config.dedupingInterval)
 
           // Trigger the successful callback.
           if (isCallbackSafe()) {
@@ -253,7 +252,8 @@ export const useSWRHandler = <Data = any, Error = any>(
           cache.set(key, newData)
         }
       } catch (err) {
-        cleanupState()
+        // @ts-ignore
+        cleanupState(startAt)
 
         // Not paused, we continue handling the error. Otherwise discard it.
         if (!getConfig().isPaused()) {
