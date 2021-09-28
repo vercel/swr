@@ -9,8 +9,8 @@ export function test1() {
 
     useEffect(() => {
       return () => {
-        cache.clear() // DefaultProvider
-        defaultCache.clear() // any
+        cache.clear() // infer DefaultProvider
+        defaultCache.clear() // infer DefaultProvider
       }
     }, [])
     return null
@@ -22,6 +22,7 @@ export function test1() {
 export function test2() {
   const provider2 = new Map([['k1', 'v1']])
   function Inner() {
+    // infer Map<string, string>
     const { cache } = useSWRConfig<typeof provider2>()
 
     useEffect(() => {

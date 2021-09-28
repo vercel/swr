@@ -9,22 +9,22 @@ export type Fetcher<Data = unknown, SWRKey extends Key = Key> =
    */
   SWRKey extends (() => readonly [...infer Args] | null)
     ? ((...args: [...Args]) => FetcherResponse<Data>)
-      /**
-       * [{ foo: string }, { bar: number } ] | null
-       * [{ foo: string }, { bar: number } ] as const | null
-       */
-    : SWRKey extends (readonly [...infer Args])
+    : /**
+     * [{ foo: string }, { bar: number } ] | null
+     * [{ foo: string }, { bar: number } ] as const | null
+     */
+    SWRKey extends (readonly [...infer Args])
     ? ((...args: [...Args]) => FetcherResponse<Data>)
-      /**
-       * () => string | null
-       * () => Record<any, any> | null
-       */
-    : SWRKey extends (() => infer Arg | null)
+    : /**
+     * () => string | null
+     * () => Record<any, any> | null
+     */
+    SWRKey extends (() => infer Arg | null)
     ? (...args: [Arg]) => FetcherResponse<Data>
-      /**
-       *  string | null | Record<any,any>
-       */
-    : SWRKey extends null
+    : /**
+     *  string | null | Record<any,any>
+     */
+    SWRKey extends null
     ? never
     : SWRKey extends (infer Arg)
     ? (...args: [Arg]) => FetcherResponse<Data>
@@ -88,7 +88,7 @@ export interface PublicConfiguration<
   isVisible: () => boolean
 }
 
-export type FullConfiguration<Provider = any> = InternalConfiguration<
+export type FullConfiguration<Provider = Cache> = InternalConfiguration<
   Provider
 > &
   PublicConfiguration
