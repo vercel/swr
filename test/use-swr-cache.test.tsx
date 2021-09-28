@@ -245,7 +245,8 @@ describe('useSWR - cache provider', () => {
             if (typeof v === 'undefined') return v
             return v + '-extended'
           },
-          delete: k => parentCache_.delete(k)
+          delete: k => parentCache_.delete(k),
+          clear: () => parentCache_.clear()
         }
       }
     })
