@@ -7,7 +7,8 @@ import {
   FullConfiguration,
   RevalidatorOptions,
   Revalidator,
-  ScopedMutator
+  ScopedMutator,
+  DefaultCacheType
 } from '../types'
 import { isUndefined, noop, mergeObjects } from './helper'
 
@@ -43,7 +44,7 @@ const onErrorRetry = (
 
 // Default cache provider
 const [cache, mutate] = initCache(new Map()) as [
-  Map<string, any>,
+  DefaultCacheType,
   ScopedMutator<any>,
   () => {}
 ]
