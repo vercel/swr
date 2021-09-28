@@ -46,7 +46,7 @@
     "build:immutable": "bunchee index.ts --cwd immutable -m --no-sourcemap",
     "prepublishOnly": "yarn clean && yarn build",
     "publish-beta": "yarn publish --tag beta",
-    "types:check": "tsc --noEmit --project tsconfig.check.json",
+    "types:check": "tsc --noEmit && tsc --noEmit -p test",
     "format": "prettier --write ./**/*.{ts,tsx}",
     "lint": "eslint . --ext .ts,.tsx --cache",
     "lint:fix": "yarn lint --fix",
