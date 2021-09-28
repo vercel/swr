@@ -10,7 +10,7 @@ import {
   Cache,
   ScopedMutator,
   RevalidateCallback,
-  ConfigOptions
+  ProviderConfiguration
 } from '../types'
 
 const revalidateAllKeys = (
@@ -24,7 +24,7 @@ const revalidateAllKeys = (
 
 export const initCache = <Data = any>(
   provider: Cache<Data>,
-  options?: Partial<ConfigOptions>
+  options?: Partial<ProviderConfiguration>
 ): [Cache<Data>, ScopedMutator<Data>, () => void] | undefined => {
   // The global state for a specific provider will be used to deduplicate
   // requests and store listeners. As well as a mutate function that bound to

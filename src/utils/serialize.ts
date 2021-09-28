@@ -3,7 +3,7 @@ import { isFunction } from './helper'
 
 import { Key } from '../types'
 
-export const serialize = (key: Key): [string, any, string, string] => {
+export const serialize = (key: Key): [string, any[], string, string] => {
   if (isFunction(key)) {
     try {
       key = key()

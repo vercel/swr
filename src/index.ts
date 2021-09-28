@@ -20,5 +20,6 @@ export {
   SWRHook,
   Fetcher,
   MutatorCallback,
-  Middleware
+  Middleware,
+  Arguments
 } from './types'

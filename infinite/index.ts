@@ -4,32 +4,40 @@
 import { useRef, useState, useCallback } from 'react'
 import useSWR, {
   SWRConfig,
-  KeyLoader,
   Fetcher,
   SWRHook,
   MutatorCallback,
-  Middleware
+  Middleware,
+  Arguments
 } from 'swr'
 import { useIsomorphicLayoutEffect } from '../src/utils/env'
 import { serialize } from '../src/utils/serialize'
 import { isUndefined, isFunction, UNDEFINED } from '../src/utils/helper'
 import { withMiddleware } from '../src/utils/with-middleware'
-import { SWRInfiniteConfiguration, SWRInfiniteResponse } from './types'
+import {
+  SWRInfiniteConfiguration,
+  SWRInfiniteResponse,
+  SWRInfiniteHook,
+  InfiniteKeyLoader,
+  InfiniteFetcher
+} from './types'
 
 const INFINITE_PREFIX = '$inf$'
 
-const getFirstPageKey = (getKey: KeyLoader<any>) => {
+const getFirstPageKey = (getKey: InfiniteKeyLoader) => {
   return serialize(getKey ? getKey(0, null) : null)[0]
 }
 
-export const unstable_serialize = (getKey: KeyLoader<any>) => {
+export const unstable_serialize = (getKey: InfiniteKeyLoader) => {
   return INFINITE_PREFIX + getFirstPageKey(getKey)
 }
 
-export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
-  getKey: KeyLoader<Data>,
+export const infinite = ((<Data, Error, Args extends Arguments>(
+  useSWRNext: SWRHook
+) => (
+  getKey: InfiniteKeyLoader<Args>,
   fn: Fetcher<Data> | null,
-  config: typeof SWRConfig.default & SWRInfiniteConfiguration<Data, Error>
+  config: typeof SWRConfig.default & SWRInfiniteConfiguration<Data, Error, Args>
 ): SWRInfiniteResponse<Data, Error> => {
   const rerender = useState({})[1]
   const didMountRef = useRef<boolean>(false)
@@ -246,20 +254,5 @@ export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
   } as SWRInfiniteResponse<Data, Error>
 }) as unknown) as Middleware
 
-type SWRInfiniteHook = <Data = any, Error = any>(
-  ...args:
-    | readonly [KeyLoader<Data>]
-    | readonly [KeyLoader<Data>, Fetcher<Data> | null]
-    | readonly [
-        KeyLoader<Data>,
-        SWRInfiniteConfiguration<Data, Error> | undefined
-      ]
-    | readonly [
-        KeyLoader<Data>,
-        Fetcher<Data> | null,
-        SWRInfiniteConfiguration<Data, Error> | undefined
-      ]
-) => SWRInfiniteResponse<Data, Error>
-
 export default withMiddleware(useSWR, infinite) as SWRInfiniteHook
-export { SWRInfiniteConfiguration, SWRInfiniteResponse }
+export { SWRInfiniteConfiguration, SWRInfiniteResponse, InfiniteFetcher }
