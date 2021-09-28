@@ -27,14 +27,13 @@ To run SWR locally, you can start it with any example in `examples` folder. You 
 First of all, build SWR assets
 
 ```sh
-# or `yarn watch`
-yarn build
+yarn watch
 ```
 
 Install dependency of the target example, for instance `examples/basic`:
 
 ```sh
-cd examples/basic && yarn
+cd examples/basic && yarn && npx yalc link swr
 ```
 
 After setup, back to the root directory and run:

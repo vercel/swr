@@ -22,16 +22,10 @@ const exampleDir = resolve(examplesDir, target)
 
 const nextBin = resolve(exampleDir, 'node_modules/.bin/next')
 if (!fs.existsSync(nextBin)) {
-  error(`Please run "yarn install" inside ${target} example directory\n`)
+  error(`Please run "yarn install && npx yalc link swr" inside ${target} example directory\n`)
 }
 
-const requireHookPath = resolve(__dirname, 'require-hook.js')
-const nextConfigPath = resolve(exampleDir, 'next.config.js')
-const devCmd = `node -r ${requireHookPath} ${nextBin} ${nextCmd}`.split(' ')
-
-if (!fs.existsSync(nextConfigPath)) {
-  fs.symlinkSync(resolve(__dirname, 'next-config.js'), nextConfigPath, 'file')
-}
+const devCmd = `node ${nextBin} ${nextCmd}`.split(' ')
 
 const sub = childProcess.spawn(devCmd.shift(), devCmd, { cwd: exampleDir })
 
@@ -47,7 +41,6 @@ sub.stderr.on('close', () => {
 
 const teardown = () => {
   if (sub.killed) sub.kill('SIGINT')
-  if (fs.existsSync(nextConfigPath)) fs.unlinkSync(nextConfigPath)
 }
 
 process.on('exit', teardown)
