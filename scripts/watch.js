@@ -1,5 +1,5 @@
-/** @type {import('bunchee/dist/src/bundle').default}
- *
+/**
+ * @type {import('bunchee/dist/src/bundle').default}
  */
 const bundle = require('bunchee').bundle
 const childProcess = require('child_process')
@@ -43,12 +43,19 @@ function start() {
     error(`package ${target} not found`)
   }
 }
-
+/**
+ *
+ * @param {import('rollup').RollupWatcher} rollupWatcher
+ */
 function watch(rollupWatcher) {
   rollupWatcher.on('event', event => {
     if (event.code === 'BUNDLE_END') {
       event.result.close()
       push()
+    }
+    if (event.code === 'ERROR') {
+      error(event.error)
+      event.result.close()
     }
   })
   teardown(rollupWatcher.close)
