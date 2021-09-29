@@ -12,7 +12,7 @@
     "noUnusedParameters": true,
     "strictBindCallApply": true,
     "outDir": "./dist",
-    "rootDir": ".",
+    "rootDir": "src",
     "strict": true,
     "target": "es5",
     "baseUrl": ".",
@@ -24,7 +24,7 @@
     },
     "typeRoots": ["./src/types", "./node_modules/@types"]
   },
-  "include": ["src", "immutable", "infinite"],
+  "include": ["src"],
   "exclude": ["./**/dist", "node_modules"],
   "watchOptions": {
     "watchFile": "useFsEvents",
