@@ -11,3 +11,5 @@ dist
 examples/**/yarn.lock
 package-lock.json
 tsconfig.tsbuildinfo
+**/*.yalc
+yalc.lock

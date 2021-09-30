@@ -37,10 +37,10 @@
   "scripts": {
     "clean": "rimraf dist infinite/dist immutable/dist",
     "build": "yarn build:core && yarn build:infinite && yarn build:immutable",
-    "watch": "yarn run-p watch:core watch:infinite watch:immutable",
-    "watch:core": "bunchee src/index.ts --watch",
-    "watch:infinite": "bunchee index.ts --cwd infinite --watch",
-    "watch:immutable": "bunchee index.ts --cwd immutable --watch",
+    "watch": "yalc publish && node scripts/watch.js",
+    "watch:core": "node scripts/watch.js core",
+    "watch:infinite": "node scripts/watch.js infinite",
+    "watch:immutable": "node scripts/watch.js immutable",
     "build:core": "bunchee src/index.ts -m --no-sourcemap",
     "build:infinite": "bunchee index.ts --cwd infinite -m --no-sourcemap",
     "build:immutable": "bunchee index.ts --cwd immutable -m --no-sourcemap",
@@ -51,7 +51,6 @@
     "lint": "eslint . --ext .ts,.tsx --cache",
     "lint:fix": "yarn lint --fix",
     "test": "jest",
-    "register": "yarn link && cd node_modules/react && yarn link",
     "dev-next": "node scripts/dev-next.js"
   },
   "husky": {
@@ -94,7 +93,8 @@
     "react-experimental": "npm:react@alpha",
     "rimraf": "3.0.2",
     "ts-jest": "27.0.3",
-    "typescript": "4.4.3"
+    "typescript": "4.4.3",
+    "yalc": "1.0.0-pre.53"
   },
   "peerDependencies": {
     "react": "^16.11.0 || ^17.0.0 || ^18.0.0"
