@@ -373,4 +373,35 @@ describe('useSWR', () => {
     expect(fetcher).toBeCalled()
     await screen.findByText('hello, SWR')
   })
+
+  it('should revalidate on mount after dedupingInterval', async () => {
+    const key = createKey()
+    let cnt = 0
+
+    function Foo() {
+      const { data } = useSWR(key, () => 'data: ' + cnt++, {
+        dedupingInterval: 0
+      })
+      return <>{data}</>
+    }
+
+    function Page() {
+      const [showFoo, setShowFoo] = React.useState(true)
+      return (
+        <>
+          {showFoo ? <Foo /> : null}
+          <button onClick={() => setShowFoo(!showFoo)}>toggle</button>
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await waitForNextTick()
+    screen.getByText('data: 0')
+    fireEvent.click(screen.getByText('toggle'))
+    await waitForNextTick()
+    fireEvent.click(screen.getByText('toggle'))
+    await act(() => sleep(20))
+    screen.getByText('data: 1')
+  })
 })
