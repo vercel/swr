@@ -9,7 +9,7 @@ const target = args[2]
 const nextCmd = args[3] || 'dev'
 
 function error(message) {
-  console.log(message)
+  console.log(message1)
   process.exit(1)
 }
 
