@@ -258,7 +258,7 @@ describe('useSWR - error', () => {
     // mount
     await screen.findByText('hello, error')
 
-    await act(() => mutate(undefined, true))
+    await act(() => mutate())
     // initial -> first error -> mutate -> receive another error
     // error won't be cleared during revalidation
     expect(errors).toEqual([null, 'error', 'error'])
