@@ -14,7 +14,10 @@ export const internalMutate = async <Data>(
     undefined | boolean
   ]
 ) => {
-  const [cache, _key, _data, _revalidate] = args
+  const [cache, _key] = args
+  // Fallback to `true` if it's not explicitly set to `false`
+  const revalidate = args[3] !== false
+  let _data = args[2]
 
   // Serilaize key
   const [key, , keyErr] = serialize(_key)
@@ -23,9 +26,6 @@ export const internalMutate = async <Data>(
   const [, , MUTATION_TS, MUTATION_END_TS] = SWRGlobalState.get(
     cache
   ) as GlobalState
-
-  // Fallback to `true` if it's not explicitly set to `false`
-  const revalidate = _revalidate !== false
 
   // If there is no new data provided, revalidate the key with current state.
   if (args.length < 3) {
