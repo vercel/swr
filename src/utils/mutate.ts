@@ -53,11 +53,9 @@ export const internalMutate = async <Data>(
   if (_data && isFunction((_data as Promise<Data>).then)) {
     // This means that the mutation is async, we need to check timestamps to
     // avoid race conditions.
-    try {
-      data = await _data
-    } catch (err) {
+    data = await (_data as Promise<Data>).catch(err => {
       error = err
-    }
+    })
 
     // Check if other mutations have occurred since we've started this mutation.
     // If there's a race we don't update cache or broadcast the change,
