@@ -340,12 +340,13 @@ export const useSWRHandler = <Data = any, Error = any>(
             error: updatedError,
             isValidating: updatedIsValidating
           },
-          // if data is undefined we should not update stateRef.current.data
-          !compare(stateRef.current.data, updatedData)
-            ? {
+          // Since `setState` only shallowly compares states, we do a deep
+          // comparison here.
+          compare(stateRef.current.data, updatedData)
+            ? UNDEFINED
+            : {
                 data: updatedData
               }
-            : null
         )
       )
     }

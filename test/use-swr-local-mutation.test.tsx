@@ -833,4 +833,23 @@ describe('useSWR - local mutation', () => {
     screen.getByText('data:data')
     screen.getByText('isValidating:false')
   })
+
+  it('should be able to mutate data to undefined', async () => {
+    const key = createKey()
+    function Page() {
+      const { data, mutate } = useSWR(key, () => 'foo')
+      return (
+        <>
+          <div>data: {String(data)}</div>
+          <button onClick={() => mutate(undefined, false)}>mutate</button>
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data: foo')
+
+    fireEvent.click(screen.getByText('mutate'))
+    await screen.findByText('data: undefined')
+  })
 })
