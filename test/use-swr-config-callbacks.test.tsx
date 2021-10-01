@@ -167,4 +167,32 @@ describe('useSWR - config callbacks', () => {
     await screen.findByText('hello, 0, b')
     expect(state).toEqual('b')
   })
+
+  it('should trigger the onDiscarded callback when having a race condition with mutate', async () => {
+    const key = createKey()
+    const discardedEvents = []
+
+    function Page() {
+      const { mutate } = useSWR(
+        key,
+        () => createResponse('foo', { delay: 50 }),
+        {
+          onDiscarded: k => {
+            discardedEvents.push(k)
+          }
+        }
+      )
+      return <div onClick={() => mutate('bar')}>mutate</div>
+    }
+
+    renderWithConfig(<Page />)
+
+    screen.getByText('mutate')
+    await act(() => sleep(10))
+    fireEvent.click(screen.getByText('mutate'))
+    await act(() => sleep(80))
+
+    // Should have one event recorded.
+    expect(discardedEvents).toEqual([key])
+  })
 })
