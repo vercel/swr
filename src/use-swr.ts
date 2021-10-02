@@ -307,6 +307,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   // `cache` isn't allowed to change during the lifecycle.
   const boundMutate: SWRResponse<Data, Error>['mutate'] = useCallback(
     // By using `bind` we don't need to modify the size of the rest arguments.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     internalMutate.bind(UNDEFINED, cache, () => keyRef.current),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
