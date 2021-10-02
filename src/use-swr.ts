@@ -267,8 +267,9 @@ export const useSWRHandler = <Data = any, Error = any>(
           cache.set(keyErr, err)
           newState.error = err as Error
 
-          // Error event and retry logic.
-          if (isCallbackSafe()) {
+          // Error event and retry logic. Only for the actual request, not
+          // deduped ones.
+          if (shouldStartNewRequest && isCallbackSafe()) {
             getConfig().onError(err, key, config)
             if (config.shouldRetryOnError) {
               // When retrying, dedupe is always enabled
