@@ -1,6 +1,7 @@
 import { normalize } from '../src/utils/normalize-args'
 import { stableHash as hash } from '../src/utils/hash'
 import { serialize } from '../src/utils/serialize'
+import { mergeConfigs } from '../src/utils/merge-config'
 
 describe('Unit tests', () => {
   it('should normalize arguments correctly', async () => {
@@ -122,5 +123,18 @@ describe('Unit tests', () => {
     const f = () => {}
     expect(hash([f])).toEqual(hash([f]))
     expect(hash([() => {}])).not.toEqual(hash([() => {}]))
+  })
+
+  it('should correctly merge configs', async () => {
+    const a: any = { a: 1 },
+      b: any = { b: 1 }
+
+    // Should merge middleware
+    expect(mergeConfigs({ use: [a] }, { use: [b] })).toEqual({ use: [a, b] })
+
+    // Should merge fallback
+    expect(mergeConfigs({ fallback: a }, { fallback: b })).toEqual({
+      fallback: { a: 1, b: 1 }
+    })
   })
 })
