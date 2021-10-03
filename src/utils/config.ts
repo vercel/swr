@@ -58,6 +58,7 @@ export const defaultConfig: FullConfiguration = mergeObjects(
     onSuccess: noop,
     onError: noop,
     onErrorRetry,
+    onDiscarded: noop,
 
     // switches
     revalidateOnFocus: true,

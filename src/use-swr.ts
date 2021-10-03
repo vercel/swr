@@ -208,6 +208,9 @@ export const useSWRHandler = <Data = any, Error = any>(
         // the request that fired later will always be kept.
         // CONCURRENT_PROMISES_TS[key] maybe be `undefined` or a number
         if (CONCURRENT_PROMISES_TS[key] !== startAt) {
+          if (shouldStartNewRequest) {
+            getConfig().onDiscarded(key)
+          }
           return false
         }
 
@@ -237,6 +240,9 @@ export const useSWRHandler = <Data = any, Error = any>(
             MUTATION_END_TS[key] === 0)
         ) {
           finishRequestAndUpdateState()
+          if (shouldStartNewRequest) {
+            getConfig().onDiscarded(key)
+          }
           return false
         }
 
@@ -261,8 +267,9 @@ export const useSWRHandler = <Data = any, Error = any>(
           cache.set(keyErr, err)
           newState.error = err as Error
 
-          // Error event and retry logic.
-          if (isCallbackSafe()) {
+          // Error event and retry logic. Only for the actual request, not
+          // deduped ones.
+          if (shouldStartNewRequest && isCallbackSafe()) {
             getConfig().onError(err, key, config)
             if (config.shouldRetryOnError) {
               // When retrying, dedupe is always enabled

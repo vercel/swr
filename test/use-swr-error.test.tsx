@@ -303,4 +303,29 @@ describe('useSWR - error', () => {
 
     await screen.findByText('error!,false')
   })
+
+  it('should dedupe onError events', async () => {
+    const key = createKey()
+    const errorEvents = []
+    function Foo() {
+      useSWR(key, () => createResponse(new Error('error!'), { delay: 20 }), {
+        onError: e => errorEvents.push(e)
+      })
+      return null
+    }
+    function Page() {
+      return (
+        <>
+          <Foo />
+          <Foo />
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await act(() => sleep(30))
+
+    // Since there's only 1 request fired, only 1 error event should be reported.
+    expect(errorEvents.length).toBe(1)
+  })
 })
