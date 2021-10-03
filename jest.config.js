@@ -15,5 +15,8 @@ module.exports = {
       tsconfig: 'test/tsconfig.json',
       diagnostics: process.env.CI
     }
-  }
+  },
+  coveragePathIgnorePatterns: ['/node_modules/', '/dist/', '/test/'],
+  coverageProvider: 'v8',
+  coverageReporters: ['text']
 }
