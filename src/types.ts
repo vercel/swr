@@ -1,6 +1,7 @@
 import * as revalidateEvents from './constants/revalidate-events'
 
-export type FetcherResponse<Data = unknown> = Data | Promise<Data>
+type Async<Data> = Data | Promise<Data>
+export type FetcherResponse<Data = unknown> = Async<Data>
 
 export type Fetcher<Data = unknown, SWRKey extends Key = Key> =
   /**
@@ -142,8 +143,8 @@ export type Arguments = string | null | ArgumentsTuple | Record<any, any>
 export type Key = Arguments | (() => Arguments)
 
 export type MutatorCallback<Data = any> = (
-  currentValue?: Data
-) => Promise<undefined | Data> | undefined | Data
+  currentValue?: Readonly<Data>
+) => Async<undefined | Data | Readonly<Data>>
 
 export type Broadcaster<Data = any, Error = any> = (
   cache: Cache<Data>,
@@ -160,32 +161,35 @@ export type State<Data, Error> = {
   isValidating?: boolean
 }
 
+type MutatorData<Data> =
+  | Async<Data>
+  | Async<Readonly<Data>>
+  | MutatorCallback<Data>
+
 export type Mutator<Data = any> = (
   cache: Cache,
   key: Key,
-  data?: Data | Promise<Data> | MutatorCallback<Data>,
+  data?: MutatorData<Data>,
   shouldRevalidate?: boolean
-) => Promise<Data | undefined>
+) => Promise<Readonly<Data> | undefined>
 
 export interface ScopedMutator<Data = any> {
   /** This is used for bound mutator */
-  (
-    key: Key,
-    data?: Data | Promise<Data> | MutatorCallback<Data>,
-    shouldRevalidate?: boolean
-  ): Promise<Data | undefined>
+  (key: Key, data?: MutatorData<Data>, shouldRevalidate?: boolean): Promise<
+    Readonly<Data> | undefined
+  >
   /** This is used for global mutator */
   <T = any>(
     key: Key,
-    data?: T | Promise<T> | MutatorCallback<T>,
+    data?: MutatorData<T>,
     shouldRevalidate?: boolean
-  ): Promise<T | undefined>
+  ): Promise<Readonly<T> | undefined>
 }
 
 export type KeyedMutator<Data> = (
-  data?: Data | Promise<Data> | MutatorCallback<Data>,
+  data?: MutatorData<Data>,
   shouldRevalidate?: boolean
-) => Promise<Data | undefined>
+) => Promise<Readonly<Data> | undefined>
 
 // Public types
 
@@ -196,10 +200,10 @@ export type SWRConfiguration<
 > = Partial<PublicConfiguration<Data, Error, SWRKey>>
 
 export interface SWRResponse<Data, Error> {
-  data?: Data
-  error?: Error
-  mutate: KeyedMutator<Data>
+  data?: Readonly<Data>
+  error?: Readonly<Error>
   isValidating: boolean
+  mutate: KeyedMutator<Data>
 }
 
 export type KeyLoader<Args extends Arguments = Arguments> =

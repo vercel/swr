@@ -41,7 +41,7 @@ export const infinite = ((<Data, Error, Args extends Arguments>(
 ): SWRInfiniteResponse<Data, Error> => {
   const rerender = useState({})[1]
   const didMountRef = useRef<boolean>(false)
-  const dataRef = useRef<Data[]>()
+  const dataRef = useRef<Readonly<Data[]>>()
 
   const {
     cache,
@@ -167,7 +167,12 @@ export const infinite = ((<Data, Error, Args extends Arguments>(
 
   const mutate = useCallback(
     (
-      data: Data[] | undefined | Promise<Data[]> | MutatorCallback<Data[]>,
+      data?:
+        | Data[]
+        | Readonly<Data[]>
+        | Promise<Data[]>
+        | Promise<Readonly<Data[]>>
+        | MutatorCallback<Data[]>,
       shouldRevalidate = true
     ) => {
       // It is possible that the key is still falsy.
@@ -190,7 +195,9 @@ export const infinite = ((<Data, Error, Args extends Arguments>(
   )
 
   // Function to load pages data from the cache based on the page size.
-  const resolvePagesFromCache = (pageSize: number): Data[] | undefined => {
+  const resolvePagesFromCache = (
+    pageSize: number
+  ): Readonly<Data[]> | undefined => {
     // return an array of page data
     const data: Data[] = []
 
