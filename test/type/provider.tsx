@@ -12,7 +12,7 @@ export function test1() {
         cache.clear() // infer DefaultProvider
         defaultCache.clear() // infer DefaultProvider
       }
-    }, [])
+    }, [cache])
     return null
   }
 
@@ -27,7 +27,7 @@ export function test2() {
 
     useEffect(() => {
       return () => cache.clear()
-    }, [])
+    }, [cache])
     return null
   }
 

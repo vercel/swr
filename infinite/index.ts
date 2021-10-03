@@ -91,7 +91,7 @@ export const infinite = ((<Data, Error, Args extends Arguments>(
     if (firstPageKey) {
       // If the key has been changed, we keep the current page size if persistSize is enabled
       cache.set(
-        pageSizeCacheKey,
+        pageSizeCacheKey as string,
         persistSize ? lastPageSizeRef.current : initialSize
       )
     }
