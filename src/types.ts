@@ -10,8 +10,8 @@ export type Fetcher<Data = unknown, SWRKey extends Key = Key> =
   SWRKey extends (() => readonly [...infer Args] | null)
     ? ((...args: [...Args]) => FetcherResponse<Data>)
       /**
-       * [{ foo: string }, { bar: number } ] | null
-       * [{ foo: string }, { bar: number } ] as const | null
+       * [{ foo: string }, { bar: number }] | null
+       * [{ foo: string }, { bar: number }] as const | null
        */
     : SWRKey extends (readonly [...infer Args])
     ? ((...args: [...Args]) => FetcherResponse<Data>)
@@ -31,8 +31,8 @@ export type Fetcher<Data = unknown, SWRKey extends Key = Key> =
     : never
 
 // Configuration types that are only used internally, not exposed to the user.
-export interface InternalConfiguration {
-  cache: Cache
+export interface InternalConfiguration<CustomCache extends Cache = Cache> {
+  cache: CustomCache
   mutate: ScopedMutator
 }
 
@@ -90,7 +90,9 @@ export interface PublicConfiguration<
   isVisible: () => boolean
 }
 
-export type FullConfiguration = InternalConfiguration & PublicConfiguration
+export type FullConfiguration<
+  CustomCache extends Cache = Cache
+> = InternalConfiguration<CustomCache> & PublicConfiguration
 
 export type ProviderConfiguration = {
   initFocus: (callback: () => void) => (() => void) | void

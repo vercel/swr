@@ -24,12 +24,10 @@ const SWRConfig: FC<{
 
   // Should not use the inherited provider.
   const provider = value && value.provider
-
+  const cache = extendedConfig.cache || defaultCache
   // Use a lazy initialized state to create the cache on first access.
   const [cacheContext] = useState(() =>
-    provider
-      ? initCache(provider(extendedConfig.cache || defaultCache), value)
-      : UNDEFINED
+    provider ? initCache(provider(cache), value) : UNDEFINED
   )
 
   // Override the cache if a new provider is given.
