@@ -253,8 +253,8 @@ export const useSWRHandler = <Data = any, Error = any>(
           cache.set(key, newData)
         }
 
+        // Trigger the successful callback if it's the original request.
         if (shouldStartNewRequest) {
-          // Trigger the successful callback.
           if (isCallbackSafe()) {
             getConfig().onSuccess(newData, key, config)
           }
