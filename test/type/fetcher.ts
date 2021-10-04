@@ -1,8 +1,6 @@
 import useSWR from 'swr'
 import useSWRInfinite from 'swr/infinite'
-
-type ExpectType = <T>(value: T) => void
-const expectType: ExpectType = () => {}
+import { expectType } from './utils'
 
 const truthy: () => boolean = () => true
 

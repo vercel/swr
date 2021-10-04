@@ -1,7 +1,5 @@
 import useSWR from 'swr'
-
-type ExpectType = <T>(value: T) => void
-const expectType: ExpectType = () => {}
+import { expectType } from './utils'
 
 export function useInferDataType() {
   // Should infer the data type
