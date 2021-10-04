@@ -1,11 +1,5 @@
 import { useCallback, useRef } from 'react'
-import useSWR, {
-  useSWRConfig,
-  Middleware,
-  Key,
-  Fetcher,
-  SWRResponse
-} from 'swr'
+import useSWR, { useSWRConfig, Middleware, Key } from 'swr'
 
 import { serialize } from '../src/utils/serialize'
 import { useStateWithDeps } from '../src/utils/state'
@@ -14,11 +8,16 @@ import { useIsomorphicLayoutEffect } from '../src/utils/env'
 import { UNDEFINED } from '../src/utils/helper'
 import { getTimestamp } from '../src/utils/timestamp'
 
-import { SWRMutationConfiguration, SWRMutationResponse } from './types'
+import {
+  SWRMutationConfiguration,
+  SWRMutationResponse,
+  SWRMutationHook,
+  MutationFetcher
+} from './types'
 
 const mutation = <Data, Error>() => (
   key: Key,
-  fetcher: Fetcher<Data>,
+  fetcher: MutationFetcher<Data>,
   config: SWRMutationConfiguration<Data, Error> = {}
 ) => {
   const { mutate } = useSWRConfig()
@@ -39,7 +38,7 @@ const mutation = <Data, Error>() => (
 
   // Similar to the global mutate, but bound to the current cache and key.
   // `cache` isn't allowed to change during the lifecycle.
-  const boundMutate: SWRResponse<Data, Error>['mutate'] = useCallback(
+  const boundMutate = useCallback(
     (newData, shouldRevalidate) => {
       const serializedKey = serialize(keyRef.current)[0]
       return mutate(serializedKey, newData, shouldRevalidate)
@@ -66,11 +65,8 @@ const mutation = <Data, Error>() => (
     try {
       setState({ isValidating: true })
       args.push(extraArg)
-      const data = await mutate(
-        serializedKey,
-        fetcher.apply(UNDEFINED, args),
-        options
-      )
+      const data = await mutate(serializedKey, fetcher(...args), options)
+
       // If it's reset after the mutation, we don't broadcast any state change.
       if (ditchMutationsTilRef.current <= mutationStartedAt) {
         setState({ data, isValidating: false })
@@ -112,14 +108,8 @@ const mutation = <Data, Error>() => (
       stateDependencies.isValidating = true
       return currentState.isValidating
     }
-  } as SWRMutationResponse<Data, Error>
+  }
 }
-
-type SWRMutationHook = <Data = any, Error = any>(
-  ...args:
-    | readonly [Key, Fetcher<Data>]
-    | readonly [Key, Fetcher<Data>, SWRMutationConfiguration<Data, Error>]
-) => SWRMutationResponse<Data, Error>
 
 export default (withMiddleware(
   useSWR,
