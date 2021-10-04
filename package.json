@@ -50,7 +50,8 @@
     "format": "prettier --write ./**/*.{ts,tsx}",
     "lint": "eslint . --ext .ts,.tsx --cache",
     "lint:fix": "yarn lint --fix",
-    "test": "jest",
+    "test": "jest --coverage",
+    "register": "yarn link && cd node_modules/react && yarn link",
     "dev-next": "node scripts/dev-next.js"
   },
   "husky": {
