@@ -81,11 +81,13 @@ const mutation = <Data, Error>() => (
       }
       throw error
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const reset = useCallback(() => {
     ditchMutationsTilRef.current = getTimestamp()
     setState({ data: UNDEFINED, error: UNDEFINED, isValidating: false })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useIsomorphicLayoutEffect(() => {
