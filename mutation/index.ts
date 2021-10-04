@@ -62,9 +62,10 @@ const mutation = <Data, Error>() => (
     const mutationStartedAt = getTimestamp()
     ditchMutationsTilRef.current = mutationStartedAt
 
+    setState({ isValidating: true })
+    args.push(extraArg)
+
     try {
-      setState({ isValidating: true })
-      args.push(extraArg)
       const data = await mutate(serializedKey, fetcher(...args), options)
 
       // If it's reset after the mutation, we don't broadcast any state change.
