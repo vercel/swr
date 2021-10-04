@@ -194,11 +194,6 @@ export const useSWRHandler = <Data = any, Error = any>(
           // If the request isn't interrupted, clean it up after the
           // deduplication interval.
           setTimeout(() => cleanupState(startAt), config.dedupingInterval)
-
-          // Trigger the successful callback.
-          if (isCallbackSafe()) {
-            getConfig().onSuccess(newData, key, config)
-          }
         }
 
         // If there're other ongoing request(s), started after the current one,
@@ -256,6 +251,13 @@ export const useSWRHandler = <Data = any, Error = any>(
         // https://github.com/vercel/swr/pull/1058
         if (!compare(cache.get(key), newData)) {
           cache.set(key, newData)
+        }
+
+        // Trigger the successful callback if it's the original request.
+        if (shouldStartNewRequest) {
+          if (isCallbackSafe()) {
+            getConfig().onSuccess(newData, key, config)
+          }
         }
       } catch (err) {
         // @ts-ignore
