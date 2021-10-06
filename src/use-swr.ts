@@ -87,7 +87,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   // - `revalidateIfStale` is enabled but `data` is not defined.
   const shouldRevalidateOnMount = () => {
     if (!isUndefined(revalidateOnMount)) return revalidateOnMount
-    if (configRef.current.isPaused()) return false
+    if (getConfig().isPaused()) return false
 
     return suspense
       ? !initialMountedRef.current && !isUndefined(data)
