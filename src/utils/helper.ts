@@ -1,8 +1,8 @@
 export const noop = () => {}
 
-// `undefined` can possibly be replaced by something else. Using `noop()` as the
-// undefined value. Prettier ignore and extra parentheses are necessary here to
-// ensure that tsc doesn't remove the comment.
+// Using noop() as the undefined value as undefined can possibly be replaced
+// by something else.  Prettier ignore and extra parentheses are necessary here
+// to ensure that tsc doesn't remove the __NOINLINE__ comment.
 // prettier-ignore
 export const UNDEFINED: undefined = (/*#__NOINLINE__*/ noop()) as undefined
 
