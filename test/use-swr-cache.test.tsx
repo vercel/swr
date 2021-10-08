@@ -1,5 +1,5 @@
 import { act, fireEvent, screen } from '@testing-library/react'
-import React, { useState } from 'react'
+import React, { useState, StrictMode } from 'react'
 import useSWR, { useSWRConfig, SWRConfig, mutate as globalMutate } from 'swr'
 import {
   sleep,
@@ -412,5 +412,71 @@ describe('useSWR - global cache', () => {
     renderWithGlobalCache(<Page />, { fallback: { [key]: 'fallback' } })
     screen.getByText('fallback') // no `undefined`, directly fallback
     await screen.findByText('data')
+  })
+
+  it('should reusing the same cache instance after unmounting SWRConfig', async () => {
+    let focusEventRegistered = false
+
+    const cacheSingleton = new Map([['key', 'value']])
+    function Page() {
+      return (
+        <SWRConfig
+          value={{
+            provider: () => cacheSingleton,
+            initFocus: () => {
+              focusEventRegistered = true
+              return () => (focusEventRegistered = false)
+            }
+          }}
+        >
+          <Comp />
+        </SWRConfig>
+      )
+    }
+    function Comp() {
+      const { cache } = useSWRConfig()
+      return <>{String(cache.get('key'))}</>
+    }
+
+    function Wrapper() {
+      const [mount, setMountPage] = useState(true)
+      return (
+        <>
+          <button onClick={() => setMountPage(!mount)}>toggle</button>
+          {mount ? <Page /> : null}
+        </>
+      )
+    }
+
+    renderWithGlobalCache(<Wrapper />)
+    await screen.findByText('value')
+    fireEvent.click(screen.getByText('toggle'))
+    fireEvent.click(screen.getByText('toggle'))
+    await screen.findByText('value')
+
+    expect(focusEventRegistered).toEqual(true)
+  })
+
+  it('should correctly return the cache instance under strict mode', async () => {
+    function Page() {
+      // Intentionally do this.
+      const [cache] = useState(new Map([['key', 'value']]))
+      return (
+        <SWRConfig value={{ provider: () => cache }}>
+          <Comp />
+        </SWRConfig>
+      )
+    }
+    function Comp() {
+      const { cache } = useSWRConfig()
+      return <>{String(cache.get('key'))}</>
+    }
+
+    renderWithGlobalCache(
+      <StrictMode>
+        <Page />
+      </StrictMode>
+    )
+    await screen.findByText('value')
   })
 })

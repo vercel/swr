@@ -25,7 +25,10 @@ const revalidateAllKeys = (
 export const initCache = <Data = any>(
   provider: Cache<Data>,
   options?: Partial<ProviderConfiguration>
-): [Cache<Data>, ScopedMutator<Data>, () => void] | undefined => {
+):
+  | [Cache<Data>, ScopedMutator<Data>, () => void]
+  | [Cache<Data>, ScopedMutator<Data>]
+  | undefined => {
   // The global state for a specific provider will be used to deduplicate
   // requests and store listeners. As well as a mutate function that bound to
   // the cache.
@@ -41,7 +44,7 @@ export const initCache = <Data = any>(
     const mutate = internalMutate.bind(UNDEFINED, provider) as ScopedMutator<
       Data
     >
-    let unsubscribe = noop
+    let unmount = noop
 
     // Update the state if it's new, or the provider has been extended.
     SWRGlobalState.set(provider, [
@@ -71,15 +74,23 @@ export const initCache = <Data = any>(
           revalidateEvents.RECONNECT_EVENT
         )
       )
-      unsubscribe = () => {
+      unmount = () => {
         releaseFocus && releaseFocus()
         releaseReconnect && releaseReconnect()
+
+        // When un-mounting, we need to remove the cache provider from the state
+        // storage too because it's a side-effect. Otherwise when re-mounting we
+        // will not re-register those event listeners.
+        // @ts-ignore
+        SWRGlobalState.delete(provider)
       }
     }
 
     // We might want to inject an extra layer on top of `provider` in the future,
     // such as key serialization, auto GC, etc.
     // For now, it's just a `Map` interface without any modifications.
-    return [provider, mutate, unsubscribe]
+    return [provider, mutate, unmount]
   }
+
+  return [provider, SWRGlobalState.get(provider)![6]]
 }
