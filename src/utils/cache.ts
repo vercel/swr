@@ -2,7 +2,7 @@ import { defaultConfigOptions } from './web-preset'
 import { IS_SERVER } from './env'
 import { UNDEFINED, mergeObjects, noop } from './helper'
 import { internalMutate } from './mutate'
-import { SWRGlobalState } from './global-state'
+import { GlobalState, SWRGlobalState } from './global-state'
 import * as revalidateEvents from '../constants/revalidate-events'
 import { RevalidateEvent } from '../types'
 
@@ -81,7 +81,6 @@ export const initCache = <Data = any>(
         // When un-mounting, we need to remove the cache provider from the state
         // storage too because it's a side-effect. Otherwise when re-mounting we
         // will not re-register those event listeners.
-        // @ts-ignore
         SWRGlobalState.delete(provider)
       }
     }
@@ -92,5 +91,5 @@ export const initCache = <Data = any>(
     return [provider, mutate, unmount]
   }
 
-  return [provider, SWRGlobalState.get(provider)![6]]
+  return [provider, (SWRGlobalState.get(provider) as GlobalState)[6]]
 }
