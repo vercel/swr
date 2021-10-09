@@ -1,5 +1,5 @@
 import { serialize } from './serialize'
-import { isUndefined, isFunction, UNDEFINED } from './helper'
+import { isFunction, UNDEFINED } from './helper'
 import { SWRGlobalState, GlobalState } from './global-state'
 import { broadcastState } from './broadcast-state'
 import { getTimestamp } from './timestamp'
@@ -7,11 +7,19 @@ import { getTimestamp } from './timestamp'
 import { Key, Cache, MutatorCallback } from '../types'
 
 export const internalMutate = async <Data>(
-  cache: Cache,
-  _key: Key,
-  _data?: Data | Promise<Data | undefined> | MutatorCallback<Data>,
-  revalidate = true
+  ...args: [
+    Cache,
+    Key,
+    undefined | Data | Promise<Data | undefined> | MutatorCallback<Data>,
+    undefined | boolean
+  ]
 ) => {
+  const [cache, _key] = args
+  // Fallback to `true` if it's not explicitly set to `false`
+  const revalidate = args[3] !== false
+  let _data = args[2]
+
+  // Serilaize key
   const [key, , keyErr] = serialize(_key)
   if (!key) return
 
@@ -19,8 +27,8 @@ export const internalMutate = async <Data>(
     cache
   ) as GlobalState
 
-  // If there is no new data to update, we revalidate the key.
-  if (isUndefined(_data)) {
+  // If there is no new data provided, revalidate the key with current state.
+  if (args.length < 3) {
     // Revalidate and broadcast state.
     return broadcastState(
       cache,
@@ -43,8 +51,7 @@ export const internalMutate = async <Data>(
     try {
       _data = (_data as MutatorCallback<Data>)(cache.get(key))
     } catch (err) {
-      // if `_data` function throws an error synchronously, it shouldn't be cached
-      _data = UNDEFINED
+      // If it throws an error synchronously, we shouldn't update the cache.
       error = err
     }
   }
@@ -68,14 +75,14 @@ export const internalMutate = async <Data>(
     data = _data
   }
 
-  if (!isUndefined(data)) {
-    // update cached data
+  // Only update cached data if there's no error. Data can be `undefined` here.
+  if (!error) {
     cache.set(key, data)
   }
   // Always update or reset the error.
   cache.set(keyErr, error)
 
-  // Reset the timestamp to mark the mutation has ended
+  // Reset the timestamp to mark the mutation has ended.
   MUTATION_END_TS[key] = getTimestamp()
 
   // Update existing SWR Hooks' internal states:
