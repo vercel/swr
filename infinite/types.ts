@@ -25,6 +25,7 @@ export type SWRInfiniteConfiguration<
   initialSize?: number
   revalidateAll?: boolean
   persistSize?: boolean
+  revalidateFirstPage?: boolean
 }
 
 export interface SWRInfiniteResponse<Data = any, Error = any>

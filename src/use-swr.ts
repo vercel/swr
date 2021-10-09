@@ -79,19 +79,23 @@ export const useSWRHandler = <Data = any, Error = any>(
   const data = isUndefined(cached) ? fallback : cached
   const error = cache.get(keyErr)
 
-  // A revalidation must be triggered when mounted if:
-  // - `revalidateOnMount` is explicitly set to `true`.
-  // - `isPaused()` returns `false`, and:
   // - Suspense mode and there's stale data for the initial render.
   // - Not suspense mode and there is no fallback data and `revalidateIfStale` is enabled.
   // - `revalidateIfStale` is enabled but `data` is not defined.
   const shouldRevalidateOnMount = () => {
+    // If `revalidateOnMount` is set, we take the value directly.
     if (!isUndefined(revalidateOnMount)) return revalidateOnMount
-    if (configRef.current.isPaused()) return false
+
+    // If it's paused, we skip revalidation.
+    if (getConfig().isPaused()) return false
 
     return suspense
-      ? !initialMountedRef.current && !isUndefined(data)
-      : isUndefined(data) || config.revalidateIfStale
+      ? // Under suspense mode, we will have to revalidate if there's no stale
+        // data to return.
+        !isUndefined(data)
+      : // If there is no stale data, we need to revalidate on mount;
+        // If `revalidateIfStale` is set to true, we will always revalidate.
+        isUndefined(data) || config.revalidateIfStale
   }
 
   // Resolve the current validating state.
@@ -122,7 +126,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       }
 
       let newData: Data
-      let startAt: number
+      let startAt = -1
       let loading = true
       const opts = revalidateOpts || {}
 
@@ -131,11 +135,11 @@ export const useSWRHandler = <Data = any, Error = any>(
       const shouldStartNewRequest =
         isUndefined(CONCURRENT_PROMISES[key]) || !opts.dedupe
 
-      // Do unmount check for callbacks:
+      // Do unmount check for calls:
       // If key has changed during the revalidation, or the component has been
       // unmounted, old dispatch and old event callbacks should not take any
       // effect.
-      const isCallbackSafe = () =>
+      const isCurrentKeyMounted = () =>
         !unmountedRef.current &&
         key === keyRef.current &&
         initialMountedRef.current
@@ -153,7 +157,10 @@ export const useSWRHandler = <Data = any, Error = any>(
       const newState: State<Data, Error> = { isValidating: false }
       const finishRequestAndUpdateState = () => {
         cache.set(keyValidating, false)
-        setState(newState)
+        // We can only set state if it's safe (still mounted with the same key).
+        if (isCurrentKeyMounted()) {
+          setState(newState)
+        }
       }
 
       // Start fetching. Change the `isValidating` state, update the cache.
@@ -175,8 +182,9 @@ export const useSWRHandler = <Data = any, Error = any>(
           // we trigger the loading slow event.
           if (config.loadingTimeout && !cache.get(key)) {
             setTimeout(() => {
-              if (loading && isCallbackSafe())
+              if (loading && isCurrentKeyMounted()) {
                 getConfig().onLoadingSlow(key, config)
+              }
             }, config.loadingTimeout)
           }
 
@@ -194,11 +202,6 @@ export const useSWRHandler = <Data = any, Error = any>(
           // If the request isn't interrupted, clean it up after the
           // deduplication interval.
           setTimeout(() => cleanupState(startAt), config.dedupingInterval)
-
-          // Trigger the successful callback.
-          if (isCallbackSafe()) {
-            getConfig().onSuccess(newData, key, config)
-          }
         }
 
         // If there're other ongoing request(s), started after the current one,
@@ -208,6 +211,11 @@ export const useSWRHandler = <Data = any, Error = any>(
         // the request that fired later will always be kept.
         // CONCURRENT_PROMISES_TS[key] maybe be `undefined` or a number
         if (CONCURRENT_PROMISES_TS[key] !== startAt) {
+          if (shouldStartNewRequest) {
+            if (isCurrentKeyMounted()) {
+              getConfig().onDiscarded(key)
+            }
+          }
           return false
         }
 
@@ -237,6 +245,11 @@ export const useSWRHandler = <Data = any, Error = any>(
             MUTATION_END_TS[key] === 0)
         ) {
           finishRequestAndUpdateState()
+          if (shouldStartNewRequest) {
+            if (isCurrentKeyMounted()) {
+              getConfig().onDiscarded(key)
+            }
+          }
           return false
         }
 
@@ -251,8 +264,14 @@ export const useSWRHandler = <Data = any, Error = any>(
         if (!compare(cache.get(key), newData)) {
           cache.set(key, newData)
         }
+
+        // Trigger the successful callback if it's the original request.
+        if (shouldStartNewRequest) {
+          if (isCurrentKeyMounted()) {
+            getConfig().onSuccess(newData, key, config)
+          }
+        }
       } catch (err) {
-        // @ts-ignore
         cleanupState(startAt)
 
         // Not paused, we continue handling the error. Otherwise discard it.
@@ -261,8 +280,9 @@ export const useSWRHandler = <Data = any, Error = any>(
           cache.set(keyErr, err)
           newState.error = err as Error
 
-          // Error event and retry logic.
-          if (isCallbackSafe()) {
+          // Error event and retry logic. Only for the actual request, not
+          // deduped ones.
+          if (shouldStartNewRequest && isCurrentKeyMounted()) {
             getConfig().onError(err, key, config)
             if (config.shouldRetryOnError) {
               // When retrying, dedupe is always enabled
@@ -283,7 +303,7 @@ export const useSWRHandler = <Data = any, Error = any>(
 
       // Here is the source of the request, need to tell all other hooks to
       // update their states.
-      if (shouldStartNewRequest) {
+      if (isCurrentKeyMounted() && shouldStartNewRequest) {
         broadcastState(cache, key, newState.data, newState.error, false)
       }
 
@@ -382,6 +402,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     // Mark the component as mounted and update corresponding refs.
     unmountedRef.current = false
     keyRef.current = key
+    initialMountedRef.current = true
 
     // When `key` updates, reset the state to the initial value
     // and trigger a rerender if necessary.
@@ -404,9 +425,6 @@ export const useSWRHandler = <Data = any, Error = any>(
         rAF(softRevalidate)
       }
     }
-
-    // Finally, the component is mounted.
-    initialMountedRef.current = true
 
     return () => {
       // Mark it as unmounted.

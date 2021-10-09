@@ -44,7 +44,7 @@ describe('useSWR - local mutation', () => {
       const { data: state, mutate: setState } = useSWR(`${baseKey}--${key}`, {
         fallbackData
       })
-      return [state, setState]
+      return [state, setState] as const
     }
 
     function Page() {
