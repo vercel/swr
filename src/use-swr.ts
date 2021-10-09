@@ -305,9 +305,9 @@ export const useSWRHandler = <Data = any, Error = any>(
 
   // Similar to the global mutate, but bound to the current cache and key.
   // `cache` isn't allowed to change during the lifecycle.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const boundMutate: SWRResponse<Data, Error>['mutate'] = useCallback(
     // By using `bind` we don't need to modify the size of the rest arguments.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     internalMutate.bind(UNDEFINED, cache, () => keyRef.current),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
