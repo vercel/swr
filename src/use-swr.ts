@@ -126,7 +126,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       }
 
       let newData: Data
-      let startAt: number
+      let startAt = -1
       let loading = true
       const opts = revalidateOpts || {}
 
@@ -135,11 +135,11 @@ export const useSWRHandler = <Data = any, Error = any>(
       const shouldStartNewRequest =
         isUndefined(CONCURRENT_PROMISES[key]) || !opts.dedupe
 
-      // Do unmount check for callbacks:
+      // Do unmount check for calls:
       // If key has changed during the revalidation, or the component has been
       // unmounted, old dispatch and old event callbacks should not take any
       // effect.
-      const isCallbackSafe = () =>
+      const isCurrentKeyMounted = () =>
         !unmountedRef.current &&
         key === keyRef.current &&
         initialMountedRef.current
@@ -158,7 +158,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       const finishRequestAndUpdateState = () => {
         cache.set(keyValidating, false)
         // We can only set state if it's safe (still mounted with the same key).
-        if (isCallbackSafe()) {
+        if (isCurrentKeyMounted()) {
           setState(newState)
         }
       }
@@ -182,7 +182,7 @@ export const useSWRHandler = <Data = any, Error = any>(
           // we trigger the loading slow event.
           if (config.loadingTimeout && !cache.get(key)) {
             setTimeout(() => {
-              if (loading && isCallbackSafe()) {
+              if (loading && isCurrentKeyMounted()) {
                 getConfig().onLoadingSlow(key, config)
               }
             }, config.loadingTimeout)
@@ -212,7 +212,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         // CONCURRENT_PROMISES_TS[key] maybe be `undefined` or a number
         if (CONCURRENT_PROMISES_TS[key] !== startAt) {
           if (shouldStartNewRequest) {
-            if (isCallbackSafe()) {
+            if (isCurrentKeyMounted()) {
               getConfig().onDiscarded(key)
             }
           }
@@ -246,7 +246,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         ) {
           finishRequestAndUpdateState()
           if (shouldStartNewRequest) {
-            if (isCallbackSafe()) {
+            if (isCurrentKeyMounted()) {
               getConfig().onDiscarded(key)
             }
           }
@@ -267,12 +267,11 @@ export const useSWRHandler = <Data = any, Error = any>(
 
         // Trigger the successful callback if it's the original request.
         if (shouldStartNewRequest) {
-          if (isCallbackSafe()) {
+          if (isCurrentKeyMounted()) {
             getConfig().onSuccess(newData, key, config)
           }
         }
       } catch (err) {
-        // @ts-ignore
         cleanupState(startAt)
 
         // Not paused, we continue handling the error. Otherwise discard it.
@@ -283,7 +282,7 @@ export const useSWRHandler = <Data = any, Error = any>(
 
           // Error event and retry logic. Only for the actual request, not
           // deduped ones.
-          if (shouldStartNewRequest && isCallbackSafe()) {
+          if (shouldStartNewRequest && isCurrentKeyMounted()) {
             getConfig().onError(err, key, config)
             if (config.shouldRetryOnError) {
               // When retrying, dedupe is always enabled
@@ -304,7 +303,7 @@ export const useSWRHandler = <Data = any, Error = any>(
 
       // Here is the source of the request, need to tell all other hooks to
       // update their states.
-      if (isCallbackSafe() && shouldStartNewRequest) {
+      if (isCurrentKeyMounted() && shouldStartNewRequest) {
         broadcastState(cache, key, newState.data, newState.error, false)
       }
 
