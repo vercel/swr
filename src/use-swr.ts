@@ -90,8 +90,8 @@ export const useSWRHandler = <Data = any, Error = any>(
     if (getConfig().isPaused()) return false
 
     return suspense
-      ? // Under suspense mode, we will have to revalidate if there's no stale
-        // data to return.
+      ? // Under suspense mode, it will always fetch on render if there is no
+        // stale data so no need to revalidate immediately on mount again.
         !isUndefined(data)
       : // If there is no stale data, we need to revalidate on mount;
         // If `revalidateIfStale` is set to true, we will always revalidate.
@@ -126,7 +126,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       }
 
       let newData: Data
-      let startAt = -1
+      let startAt: number | undefined
       let loading = true
       const opts = revalidateOpts || {}
 
@@ -144,7 +144,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         key === keyRef.current &&
         initialMountedRef.current
 
-      const cleanupState = (ts: number) => {
+      const cleanupState = (ts?: number) => {
         // CONCURRENT_PROMISES_TS[key] might be overridden, check if it's still
         // the same request before deleting.
         if (CONCURRENT_PROMISES_TS[key] === ts) {
