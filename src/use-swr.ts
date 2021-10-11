@@ -126,7 +126,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       }
 
       let newData: Data
-      let startAt: number | undefined
+      let startAt: number
       let loading = true
       const opts = revalidateOpts || {}
 
@@ -144,10 +144,10 @@ export const useSWRHandler = <Data = any, Error = any>(
         key === keyRef.current &&
         initialMountedRef.current
 
-      const cleanupState = (ts?: number) => {
+      const cleanupState = () => {
         // CONCURRENT_PROMISES_TS[key] might be overridden, check if it's still
         // the same request before deleting.
-        if (CONCURRENT_PROMISES_TS[key] === ts) {
+        if (CONCURRENT_PROMISES_TS[key] === startAt) {
           delete CONCURRENT_PROMISES[key]
           delete CONCURRENT_PROMISES_TS[key]
         }
@@ -201,7 +201,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         if (shouldStartNewRequest) {
           // If the request isn't interrupted, clean it up after the
           // deduplication interval.
-          setTimeout(() => cleanupState(startAt), config.dedupingInterval)
+          setTimeout(cleanupState, config.dedupingInterval)
         }
 
         // If there're other ongoing request(s), started after the current one,
@@ -272,7 +272,7 @@ export const useSWRHandler = <Data = any, Error = any>(
           }
         }
       } catch (err) {
-        cleanupState(startAt)
+        cleanupState()
 
         // Not paused, we continue handling the error. Otherwise discard it.
         if (!getConfig().isPaused()) {
