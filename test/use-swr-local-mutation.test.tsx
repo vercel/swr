@@ -880,4 +880,46 @@ describe('useSWR - local mutation', () => {
     fireEvent.click(screen.getByText('mutate'))
     await screen.findByText('data: undefined')
   })
+
+  // https://github.com/vercel/swr/issues/482
+  it('should be able to deduplicate multiple mutate calls', async () => {
+    const key = createKey()
+    const loggedData = []
+
+    function Page() {
+      const { data, mutate } = useSWR(key, () => 'foo')
+
+      useEffect(() => {
+        async function startMutation() {
+          await sleep(10)
+          mutate('sync1', false)
+          mutate(createResponse('async1', { delay: 50 }), false)
+          await sleep(10)
+          mutate('sync2', false)
+          mutate(createResponse('async2', { delay: 50 }), false)
+          await sleep(10)
+          mutate('sync3', false)
+          mutate(createResponse('async3', { delay: 50 }), false)
+        }
+
+        startMutation()
+      }, [])
+
+      loggedData.push(data)
+      return null
+    }
+
+    renderWithConfig(<Page />)
+    await act(() => sleep(200))
+
+    // Only "async3" is left and others were deduped.
+    expect(loggedData).toEqual([
+      undefined,
+      'foo',
+      'sync1',
+      'sync2',
+      'sync3',
+      'async3'
+    ])
+  })
 })
