@@ -34,7 +34,7 @@ export default function useRequest<Data = unknown, Error = unknown>(
      * function is actually only called by `useSWR` when it isn't.
      */
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    () => axios(request!),
+    () => axios.request<Data>(request!),
     {
       ...config,
       fallbackData: fallbackData && {
