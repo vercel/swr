@@ -195,4 +195,37 @@ describe('useSWR - config callbacks', () => {
     // Should have one event recorded.
     expect(discardedEvents).toEqual([key])
   })
+
+  it('should not trigger the onSuccess callback when discarded', async () => {
+    const key = createKey()
+    const discardedEvents = []
+    const successEvents = []
+
+    function Page() {
+      const { mutate } = useSWR(
+        key,
+        () => createResponse('foo', { delay: 50 }),
+        {
+          onDiscarded: k => {
+            discardedEvents.push(k)
+          },
+          onSuccess: d => {
+            successEvents.push(d)
+          }
+        }
+      )
+      return <div onClick={() => mutate('bar', false)}>mutate</div>
+    }
+
+    renderWithConfig(<Page />)
+
+    screen.getByText('mutate')
+    await act(() => sleep(10))
+    fireEvent.click(screen.getByText('mutate'))
+    await act(() => sleep(80))
+
+    // Should have one event recorded.
+    expect(discardedEvents).toEqual([key])
+    expect(successEvents).toEqual([])
+  })
 })

@@ -47,7 +47,8 @@ export const infinite = ((<Data, Error, Args extends Arguments>(
     cache,
     initialSize = 1,
     revalidateAll = false,
-    persistSize = false
+    persistSize = false,
+    revalidateFirstPage = true
   } = config
 
   // The serialized key of the first page.
@@ -137,7 +138,7 @@ export const infinite = ((<Data, Error, Args extends Arguments>(
           revalidateAll ||
           forceRevalidateAll ||
           isUndefined(pageData) ||
-          (!i && !isUndefined(dataRef.current)) ||
+          (revalidateFirstPage && !i && !isUndefined(dataRef.current)) ||
           (originalData &&
             !isUndefined(originalData[i]) &&
             !config.compare(originalData[i], pageData))
