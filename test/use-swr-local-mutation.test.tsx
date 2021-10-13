@@ -890,7 +890,7 @@ describe('useSWR - local mutation', () => {
       const { data, mutate } = useSWR(key, () => 'foo')
 
       useEffect(() => {
-        ;(async () => {
+        async function startMutation() {
           await sleep(10)
           mutate('sync1', false)
           mutate(createResponse('async1', { delay: 50 }), false)
@@ -900,7 +900,9 @@ describe('useSWR - local mutation', () => {
           await sleep(10)
           mutate('sync3', false)
           mutate(createResponse('async3', { delay: 50 }), false)
-        })()
+        }
+
+        startMutation()
       }, [])
 
       loggedData.push(data)
