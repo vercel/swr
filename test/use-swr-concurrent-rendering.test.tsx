@@ -5,10 +5,10 @@
 
 import { screen, fireEvent } from '@testing-library/react'
 import { createKey, createResponse, sleep } from './utils'
+let React // swc transformer requires to define React at the top
 
 describe('useSWR - concurrent rendering', () => {
-  let React, ReactDOM, act, useSWR, reactRoot, renderWithConfig
-
+  let ReactDOM, act, useSWR, reactRoot, renderWithConfig
   beforeAll(() => {
     jest.resetModules()
     jest.mock('scheduler', () => require('scheduler/unstable_mock'))
