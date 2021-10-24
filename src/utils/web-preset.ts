@@ -16,16 +16,14 @@ const onWindowEvent =
   hasWindow && window.addEventListener
     ? window.addEventListener.bind(window)
     : noop
-const onDocumentEvent =
-  hasDocument && document.addEventListener
-    ? document.addEventListener.bind(document)
-    : noop
+const onDocumentEvent = hasDocument
+  ? document.addEventListener.bind(document)
+  : noop
 const offWindowEvent =
   hasWindow && window.removeEventListener ? removeEventListener : noop
-const offDocumentEvent =
-  hasDocument && document.removeEventListener
-    ? document.removeEventListener.bind(document)
-    : noop
+const offDocumentEvent = hasDocument
+  ? document.removeEventListener.bind(document)
+  : noop
 
 const isVisible = () => {
   const visibilityState = hasDocument && document.visibilityState
