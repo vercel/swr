@@ -3,7 +3,7 @@ import { defaultConfig } from './utils/config'
 import { SWRGlobalState, GlobalState } from './utils/global-state'
 import { IS_SERVER, rAF, useIsomorphicLayoutEffect } from './utils/env'
 import { serialize } from './utils/serialize'
-import { isUndefined, UNDEFINED, mergeObjects } from './utils/helper'
+import { isUndefined, UNDEFINED, OBJECT, mergeObjects } from './utils/helper'
 import ConfigProvider from './utils/config-context'
 import { useStateWithDeps } from './utils/state'
 import { withArgs } from './utils/resolve-args'
@@ -501,7 +501,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   } as SWRResponse<Data, Error>
 }
 
-export const SWRConfig = Object.defineProperty(ConfigProvider, 'default', {
+export const SWRConfig = OBJECT.defineProperty(ConfigProvider, 'default', {
   value: defaultConfig
 }) as typeof ConfigProvider & {
   default: FullConfiguration

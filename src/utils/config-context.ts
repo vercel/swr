@@ -2,7 +2,7 @@ import { createContext, createElement, useContext, useState, FC } from 'react'
 import { cache as defaultCache } from './config'
 import { initCache } from './cache'
 import { mergeConfigs } from './merge-config'
-import { UNDEFINED } from './helper'
+import { UNDEFINED, mergeObjects } from './helper'
 import { useIsomorphicLayoutEffect } from './env'
 import {
   SWRConfiguration,
@@ -18,7 +18,9 @@ const SWRConfig: FC<{
     Partial<ProviderConfiguration> & {
       provider?: (cache: Readonly<Cache>) => Cache
     }
-}> = ({ children, value }) => {
+}> = props => {
+  const { value } = props
+
   // Extend parent context values and middleware.
   const extendedConfig = mergeConfigs(useContext(SWRConfigContext), value)
 
@@ -46,8 +48,9 @@ const SWRConfig: FC<{
 
   return createElement(
     SWRConfigContext.Provider,
-    { value: extendedConfig },
-    children
+    mergeObjects(props, {
+      value: extendedConfig
+    })
   )
 }
 
