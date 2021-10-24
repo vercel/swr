@@ -1,4 +1,4 @@
-import { isUndefined } from './helper'
+import { OBJECT, isUndefined } from './helper'
 
 // use WeakMap to store the object->key mapping
 // so the objects can be garbage collected.
@@ -25,7 +25,7 @@ export const stableHash = (arg: any): string => {
   let result: any
   let index: any
 
-  if (Object(arg) === arg && !isDate && constructor != RegExp) {
+  if (OBJECT(arg) === arg && !isDate && constructor != RegExp) {
     // Object/function, not null/date/regexp. Use WeakMap to store the id first.
     // If it's already hashed, directly return the result.
     result = table.get(arg)
@@ -45,10 +45,10 @@ export const stableHash = (arg: any): string => {
       }
       table.set(arg, result)
     }
-    if (constructor == Object) {
+    if (constructor == OBJECT) {
       // Object, sort keys.
       result = '#'
-      const keys = Object.keys(arg).sort()
+      const keys = OBJECT.keys(arg).sort()
       while (!isUndefined((index = keys.pop() as string))) {
         if (!isUndefined(arg[index])) {
           result += index + ':' + stableHash(arg[index]) + ','
