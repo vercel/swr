@@ -5,27 +5,27 @@ export type FetcherResponse<Data = unknown> = Async<Data>
 
 export type Fetcher<Data = unknown, SWRKey extends Key = Key> =
   /**
-   * () => [{ foo: string }, { bar: number }] | null
-   * () => ( [{ foo: string }, { bar: number } ] as const | null )
+   * () => [{ foo: string }, { bar: number }] | null | false
+   * () => ( [{ foo: string }, { bar: number } ] as const | null | false )
    */
-  SWRKey extends (() => readonly [...infer Args] | null)
+  SWRKey extends (() => readonly [...infer Args] | null | false)
     ? ((...args: [...Args]) => FetcherResponse<Data>)
-      /**
-       * [{ foo: string }, { bar: number } ] | null
-       * [{ foo: string }, { bar: number } ] as const | null
-       */
-    : SWRKey extends (readonly [...infer Args])
+    : /**
+     * [{ foo: string }, { bar: number }]
+     * [{ foo: string }, { bar: number }] as const
+     */
+    SWRKey extends (readonly [...infer Args])
     ? ((...args: [...Args]) => FetcherResponse<Data>)
-      /**
-       * () => string | null
-       * () => Record<any, any> | null
-       */
-    : SWRKey extends (() => infer Arg | null)
+    : /**
+     * () => string | null | false
+     * () => Record<any, any> | null | false
+     */
+    SWRKey extends (() => infer Arg | null | false)
     ? (...args: [Arg]) => FetcherResponse<Data>
-      /**
-       *  string | null | Record<any,any>
-       */
-    : SWRKey extends null
+    : /**
+     *  string | Record<any,any> | null | false
+     */
+    SWRKey extends null | false
     ? never
     : SWRKey extends (infer Arg)
     ? (...args: [Arg]) => FetcherResponse<Data>
@@ -139,7 +139,12 @@ export type Middleware = (
 ) => SWRResponse<Data, Error>
 
 type ArgumentsTuple = [any, ...unknown[]] | readonly [any, ...unknown[]]
-export type Arguments = string | null | ArgumentsTuple | Record<any, any>
+export type Arguments =
+  | string
+  | ArgumentsTuple
+  | Record<any, any>
+  | null
+  | false
 export type Key = Arguments | (() => Arguments)
 
 export type MutatorCallback<Data = any> = (
