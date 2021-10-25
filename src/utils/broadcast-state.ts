@@ -19,13 +19,11 @@ export const broadcastState: Broadcaster = (
     CONCURRENT_PROMISES_TS
   ] = SWRGlobalState.get(cache) as GlobalState
   const revalidators = EVENT_REVALIDATORS[key]
-  const updaters = STATE_UPDATERS[key]
+  const updaters = STATE_UPDATERS[key] || []
 
   // Always update states of all hooks.
-  if (updaters) {
-    for (let i = 0; i < updaters.length; ++i) {
-      updaters[i](data, error, isValidating)
-    }
+  for (let i = 0; i < updaters.length; ++i) {
+    updaters[i](data, error, isValidating)
   }
 
   // If we also need to revalidate, only do it for the first hook.

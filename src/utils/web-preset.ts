@@ -12,11 +12,15 @@ let online = true
 const isOnline = () => online
 
 // For node and React Native, `add/removeEventListener` doesn't exist on window.
-const onWindowEvent = hasWindow ? window.addEventListener.bind(window) : noop
+const onWindowEvent =
+  hasWindow && window.addEventListener
+    ? window.addEventListener.bind(window)
+    : noop
 const onDocumentEvent = hasDocument
   ? document.addEventListener.bind(document)
   : noop
-const offWindowEvent = (hasWindow && removeEventListener) || noop
+const offWindowEvent =
+  hasWindow && window.removeEventListener ? removeEventListener : noop
 const offDocumentEvent = hasDocument
   ? document.removeEventListener.bind(document)
   : noop
