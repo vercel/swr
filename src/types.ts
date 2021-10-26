@@ -5,10 +5,10 @@ export type FetcherResponse<Data = unknown> = Async<Data>
 
 export type Fetcher<Data = unknown, SWRKey extends Key = Key> =
   /**
-   * () => [{ foo: string }, { bar: number }] | null | false
-   * () => ( [{ foo: string }, { bar: number } ] as const | null | false )
+   * () => [{ foo: string }, { bar: number }] | null | undefined | false
+   * () => ( [{ foo: string }, { bar: number } ] as const | null | undefined | false )
    */
-  SWRKey extends (() => readonly [...infer Args] | null | false)
+  SWRKey extends (() => readonly [...infer Args] | null | undefined | false)
     ? ((...args: [...Args]) => FetcherResponse<Data>)
     : /**
      * [{ foo: string }, { bar: number }]
@@ -17,15 +17,15 @@ export type Fetcher<Data = unknown, SWRKey extends Key = Key> =
     SWRKey extends (readonly [...infer Args])
     ? ((...args: [...Args]) => FetcherResponse<Data>)
     : /**
-     * () => string | null | false
-     * () => Record<any, any> | null | false
+     * () => string | null | undefined | false
+     * () => Record<any, any> | null | undefined | false
      */
-    SWRKey extends (() => infer Arg | null | false)
+    SWRKey extends (() => infer Arg | null | undefined | false)
     ? (...args: [Arg]) => FetcherResponse<Data>
     : /**
-     *  string | Record<any,any> | null | false
+     *  string | Record<any,any> | null | undefined | false
      */
-    SWRKey extends null | false
+    SWRKey extends null | undefined | false
     ? never
     : SWRKey extends (infer Arg)
     ? (...args: [Arg]) => FetcherResponse<Data>
@@ -144,6 +144,7 @@ export type Arguments =
   | ArgumentsTuple
   | Record<any, any>
   | null
+  | undefined
   | false
 export type Key = Arguments | (() => Arguments)
 
