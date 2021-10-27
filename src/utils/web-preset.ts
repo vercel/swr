@@ -20,7 +20,9 @@ const onDocumentEvent = hasDocument
   ? document.addEventListener.bind(document)
   : noop
 const offWindowEvent =
-  hasWindow && window.removeEventListener ? window.removeEventListener : noop
+  hasWindow && window.removeEventListener
+    ? window.removeEventListener.bind(window)
+    : noop
 const offDocumentEvent = hasDocument
   ? document.removeEventListener.bind(document)
   : noop

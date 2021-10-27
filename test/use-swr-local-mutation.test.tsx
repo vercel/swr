@@ -903,7 +903,7 @@ describe('useSWR - local mutation', () => {
         }
 
         startMutation()
-      }, [])
+      }, [mutate])
 
       loggedData.push(data)
       return null
