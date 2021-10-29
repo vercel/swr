@@ -1,76 +1,98 @@
-/**
- * @jest-environment node
- *
- * Simulate web preset in node env
- */
-
 import { EventEmitter } from 'events'
 
-type WindowType = Window & typeof globalThis
-
 const FOCUS_EVENT = 'focus'
+const VISIBILITYCHANGE_EVENT = 'visibilitychange'
 
-const createEvent = type => ({ type } as Event)
+function createEventTarget() {
+  EventEmitter.prototype['addEventListener'] = EventEmitter.prototype.on
+  EventEmitter.prototype['removeEventListener'] = EventEmitter.prototype.off
+  const target = new EventEmitter()
 
-function mockBrowserWindow() {
-  const events = new EventEmitter()
-  const win = {
-    addEventListener(name, fn) {
-      events.on(name, fn)
-    },
-    removeEventListener(name, fn) {
-      events.off(name, fn)
-    },
-    dispatchEvent(event) {
-      events.emit(event.type)
-    }
-  }
-  return win as WindowType
+  return target
 }
 
-describe('Web Preset', () => {
-  let win
+function runTests(propertyName) {
   let webPreset
   let initFocus
+  const eventName =
+    propertyName === 'window' ? FOCUS_EVENT : VISIBILITYCHANGE_EVENT
 
-  it('should trigger listener when window has browser APIs', async () => {
-    // Use require to avoid pre-eval for global values like `helper.hasWindow`
-    win = globalThis.window = mockBrowserWindow()
-    webPreset = require('../../src/utils/web-preset')
-    initFocus = webPreset.defaultConfigOptions.initFocus
-
-    const fn = jest.fn()
-    const release = initFocus(fn) as () => void
-
-    win.dispatchEvent(createEvent(FOCUS_EVENT))
-    expect(fn).toBeCalledTimes(1)
-
-    release()
-    win.dispatchEvent(createEvent(FOCUS_EVENT))
-    expect(fn).toBeCalledTimes(1)
-
-    delete global.window
-  })
-
-  it('should not trigger listener when window is falsy', async () => {
-    // @ts-ignore
-    win = globalThis['window'] = {
-      dispatchEvent: mockBrowserWindow().dispatchEvent
+  describe(`Web Preset ${propertyName}`, () => {
+    const globalSpy = {
+      window: undefined,
+      document: undefined
     }
-    webPreset = require('../../src/utils/web-preset')
-    initFocus = webPreset.defaultConfigOptions.initFocus
-    global.window = win
 
-    const fn = jest.fn()
-    const release = initFocus(fn) as () => void
+    beforeEach(() => {
+      globalSpy.window = jest.spyOn(global, 'window', 'get')
+      globalSpy.document = jest.spyOn(global, 'document', 'get')
 
-    win.dispatchEvent(createEvent(FOCUS_EVENT))
-    expect(fn).toBeCalledTimes(0)
+      jest.resetModules()
+    })
 
-    release()
-    win.dispatchEvent(createEvent(FOCUS_EVENT))
-    expect(fn).toBeCalledTimes(0)
+    afterEach(() => {
+      globalSpy.window.mockClear()
+      globalSpy.document.mockClear()
+    })
 
-    delete global.window
+    it(`should trigger listener when ${propertyName} has browser APIs`, async () => {
+      const target = createEventTarget()
+      if (propertyName === 'window') {
+        globalSpy.window.mockImplementation(() => target)
+        globalSpy.document.mockImplementation(() => undefined)
+      } else if (propertyName === 'document') {
+        globalSpy.window.mockImplementation(() => undefined)
+        globalSpy.document.mockImplementation(() => target)
+      }
+
+      webPreset = require('../../src/utils/web-preset')
+      initFocus = webPreset.defaultConfigOptions.initFocus
+
+      const fn = jest.fn()
+      const release = initFocus(fn) as () => void
+
+      target.emit(eventName)
+      expect(fn).toBeCalledTimes(1)
+
+      release()
+      target.emit(eventName)
+      expect(fn).toBeCalledTimes(1)
+    })
+
+    it(`should not trigger listener when ${propertyName} is falsy`, async () => {
+      if (propertyName === 'window') {
+        // window exists but without event APIs
+        globalSpy.window.mockImplementation(() => ({
+          emit: createEventTarget().emit
+        }))
+        globalSpy.document.mockImplementation(() => undefined)
+      } else if (propertyName === 'document') {
+        globalSpy.window.mockImplementation(() => undefined)
+        globalSpy.document.mockImplementation(() => undefined)
+      }
+
+      webPreset = require('../../src/utils/web-preset')
+      initFocus = webPreset.defaultConfigOptions.initFocus
+
+      const fn = jest.fn()
+      const release = initFocus(fn) as () => void
+      const target = global[propertyName]
+
+      // TODO: target?.emit?() breaks prettier, fix prettier format
+      if (target && target.emit) {
+        target.emit(eventName)
+      }
+
+      expect(fn).toBeCalledTimes(0)
+
+      release()
+      if (target && target.emit) {
+        target.emit(eventName)
+      }
+      expect(fn).toBeCalledTimes(0)
+    })
   })
-})
+}
+
+runTests('window')
+runTests('document')
