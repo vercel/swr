@@ -1,7 +1,6 @@
 import * as revalidateEvents from './constants/revalidate-events'
 
-type Async<Data> = Data | Promise<Data>
-export type FetcherResponse<Data = unknown> = Async<Data>
+export type FetcherResponse<Data = unknown> = Data | Promise<Data>
 
 export type Fetcher<Data = unknown, SWRKey extends Key = Key> =
   /**
@@ -149,8 +148,8 @@ export type Arguments =
 export type Key = Arguments | (() => Arguments)
 
 export type MutatorCallback<Data = any> = (
-  currentValue?: Readonly<Data>
-) => Async<undefined | Data | Readonly<Data>>
+  currentValue?: Data
+) => Promise<undefined | Data> | undefined | Data
 
 export type Broadcaster<Data = any, Error = any> = (
   cache: Cache<Data>,
@@ -167,35 +166,32 @@ export type State<Data, Error> = {
   isValidating?: boolean
 }
 
-type MutatorData<Data> =
-  | Async<Data>
-  | Async<Readonly<Data>>
-  | MutatorCallback<Data>
-
 export type Mutator<Data = any> = (
   cache: Cache,
   key: Key,
-  data?: MutatorData<Data>,
+  data?: Data | Promise<Data> | MutatorCallback<Data>,
   shouldRevalidate?: boolean
-) => Promise<Readonly<Data> | undefined>
+) => Promise<Data | undefined>
 
 export interface ScopedMutator<Data = any> {
   /** This is used for bound mutator */
-  (key: Key, data?: MutatorData<Data>, shouldRevalidate?: boolean): Promise<
-    Readonly<Data> | undefined
-  >
+  (
+    key: Key,
+    data?: Data | Promise<Data> | MutatorCallback<Data>,
+    shouldRevalidate?: boolean
+  ): Promise<Data | undefined>
   /** This is used for global mutator */
   <T = any>(
     key: Key,
-    data?: MutatorData<T>,
+    data?: T | Promise<T> | MutatorCallback<T>,
     shouldRevalidate?: boolean
-  ): Promise<Readonly<T> | undefined>
+  ): Promise<T | undefined>
 }
 
 export type KeyedMutator<Data> = (
-  data?: MutatorData<Data>,
+  data?: Data | Promise<Data> | MutatorCallback<Data>,
   shouldRevalidate?: boolean
-) => Promise<Readonly<Data> | undefined>
+) => Promise<Data | undefined>
 
 // Public types
 
@@ -206,10 +202,10 @@ export type SWRConfiguration<
 > = Partial<PublicConfiguration<Data, Error, SWRKey>>
 
 export interface SWRResponse<Data, Error> {
-  data?: Readonly<Data>
-  error?: Readonly<Error>
-  isValidating: boolean
+  data?: Data
+  error?: Error
   mutate: KeyedMutator<Data>
+  isValidating: boolean
 }
 
 export type KeyLoader<Args extends Arguments = Arguments> =
