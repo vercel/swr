@@ -954,4 +954,34 @@ describe('useSWRInfinite', () => {
     await nextTick()
     screen.getByText('data:fallback-1,fallback-2')
   })
+
+  it('should revalidate the resource with bound mutate when no argument is passed', async () => {
+    let t = 0
+    const key = createKey()
+    const fetcher = jest.fn(async () =>
+      createResponse(`foo-${t++}`, { delay: 10 })
+    )
+    const logger = []
+    function Page() {
+      const { data, mutate } = useSWRInfinite(() => key, fetcher, {
+        dedupingInterval: 0
+      })
+      logger.push(data)
+      return (
+        <>
+          <div>data: {String(data)}</div>
+          <button onClick={() => mutate()}>mutate</button>
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data: foo-0')
+
+    fireEvent.click(screen.getByText('mutate'))
+    await screen.findByText('data: foo-1')
+    expect(fetcher).toBeCalledTimes(2)
+
+    expect(logger).toEqual([undefined, ['foo-0'], ['foo-1']])
+  })
 })
