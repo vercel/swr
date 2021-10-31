@@ -15,7 +15,7 @@ export const withMiddleware = (
       | [Key, Fetcher<Data> | null, SWRConfiguration | undefined]
   ) => {
     const [key, fn, config] = normalize(args)
-    config.use = (config.use || []).concat(middleware)
-    return useSWR<Data, Error>(key, fn, config)
+    const middlewares = (config.use || []).concat(middleware)
+    return useSWR<Data, Error>(key, fn, { ...config, use: middlewares })
   }
 }
