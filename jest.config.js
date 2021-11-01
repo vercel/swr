@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   testEnvironment: 'jsdom',
   testRegex: '/test/.*\\.test\\.tsx$',
   modulePathIgnorePatterns: ['<rootDir>/examples/'],
@@ -8,10 +8,10 @@ module.exports = {
       '@swc-node/jest',
       {
         jsc: {
-          minify: false,
+          minify: false
         }
-      },
-    ],
+      }
+    ]
   },
   coveragePathIgnorePatterns: ['/node_modules/', '/dist/', '/test/'],
   coverageProvider: 'v8',
