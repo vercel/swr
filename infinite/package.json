@@ -1,8 +1,9 @@
 {
   "name": "swr-infinite",
   "version": "0.0.1",
+  "type": "module",
   "main": "./dist/index.js",
-  "module": "./dist/index.esm.js",
+  "module": "./dist/index.mjs",
   "types": "./dist/infinite",
   "peerDependencies": {
     "swr": "*",
