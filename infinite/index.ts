@@ -168,22 +168,34 @@ export const infinite = ((<Data, Error, Args extends Arguments>(
 
   const mutate = useCallback(
     (
-      data: Data[] | undefined | Promise<Data[]> | MutatorCallback<Data[]>,
-      shouldRevalidate = true
+      ...args:
+        | []
+        | [undefined | Data[] | Promise<Data[]> | MutatorCallback<Data[]>]
+        | [
+            undefined | Data[] | Promise<Data[]> | MutatorCallback<Data[]>,
+            boolean
+          ]
     ) => {
+      const data = args[0]
+
+      // Default to true.
+      const shouldRevalidate = args[1] !== false
+
       // It is possible that the key is still falsy.
       if (!contextCacheKey) return
 
-      if (shouldRevalidate && !isUndefined(data)) {
-        // We only revalidate the pages that are changed
-        const originalData = dataRef.current
-        cache.set(contextCacheKey, [false, originalData])
-      } else if (shouldRevalidate) {
-        // Calling `mutate()`, we revalidate all pages
-        cache.set(contextCacheKey, [true])
+      if (shouldRevalidate) {
+        if (!isUndefined(data)) {
+          // We only revalidate the pages that are changed
+          const originalData = dataRef.current
+          cache.set(contextCacheKey, [false, originalData])
+        } else {
+          // Calling `mutate()`, we revalidate all pages
+          cache.set(contextCacheKey, [true])
+        }
       }
 
-      return swr.mutate(data, shouldRevalidate)
+      return args.length ? swr.mutate(data, shouldRevalidate) : swr.mutate()
     },
     // swr.mutate is always the same reference
     // eslint-disable-next-line react-hooks/exhaustive-deps
