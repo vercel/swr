@@ -9,22 +9,22 @@ export type Fetcher<Data = unknown, SWRKey extends Key = Key> =
    */
   SWRKey extends (() => readonly [...infer Args] | null | undefined | false)
     ? ((...args: [...Args]) => FetcherResponse<Data>)
-    : /**
-     * [{ foo: string }, { bar: number }]
-     * [{ foo: string }, { bar: number }] as const
-     */
-    SWRKey extends (readonly [...infer Args])
+      /**
+       * [{ foo: string }, { bar: number }]
+       * [{ foo: string }, { bar: number }] as const
+       */
+    : SWRKey extends (readonly [...infer Args])
     ? ((...args: [...Args]) => FetcherResponse<Data>)
-    : /**
-     * () => string | null | undefined | false
-     * () => Record<any, any> | null | undefined | false
-     */
-    SWRKey extends (() => infer Arg | null | undefined | false)
+      /**
+       * () => string | null | undefined | false
+       * () => Record<any, any> | null | undefined | false
+       */
+    : SWRKey extends (() => infer Arg | null | undefined | false)
     ? (...args: [Arg]) => FetcherResponse<Data>
-    : /**
-     *  string | Record<any,any> | null | undefined | false
-     */
-    SWRKey extends null | undefined | false
+      /**
+       *  string | Record<any,any> | null | undefined | false
+       */
+    : SWRKey extends null | undefined | false
     ? never
     : SWRKey extends (infer Arg)
     ? (...args: [Arg]) => FetcherResponse<Data>
@@ -201,7 +201,7 @@ export type SWRConfiguration<
   SWRKey extends Key = Key
 > = Partial<PublicConfiguration<Data, Error, SWRKey>>
 
-export interface SWRResponse<Data, Error> {
+export interface SWRResponse<Data = any, Error = any> {
   data?: Data
   error?: Error
   mutate: KeyedMutator<Data>
