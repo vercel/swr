@@ -2,28 +2,27 @@
   "name": "swr",
   "version": "1.1.0-beta.8",
   "description": "React Hooks library for remote data fetching",
-  "type": "module",
   "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
+  "module": "./dist/index.esm.js",
   "exports": {
     "./package.json": "./package.json",
     ".": {
-      "import": "./dist/index.mjs",
+      "import": "./dist/index.esm.js",
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
     "./infinite": {
-      "import": "./infinite/dist/index.mjs",
+      "import": "./infinite/dist/index.esm.js",
       "require": "./infinite/dist/index.js",
       "types": "./infinite/dist/infinite/index.d.ts"
     },
     "./immutable": {
-      "import": "./immutable/dist/index.mjs",
+      "import": "./immutable/dist/index.esm.js",
       "require": "./immutable/dist/index.js",
       "types": "./immutable/dist/immutable/index.d.ts"
     }
   },
-  "react-native": "./dist/index.mjs",
+  "react-native": "./dist/index.esm.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist/**",
