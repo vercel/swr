@@ -1,9 +1,8 @@
 {
   "name": "swr-immutable",
   "version": "0.0.1",
-  "type": "module",
   "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
+  "module": "./dist/index.esm.js",
   "types": "./dist/immutable",
   "peerDependencies": {
     "swr": "*",
