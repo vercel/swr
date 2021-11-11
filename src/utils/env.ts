@@ -1,11 +1,11 @@
 import { useEffect, useLayoutEffect } from 'react'
 import { hasWindow } from './helper'
 
-export const IS_SERVER = !hasWindow || 'Deno' in window
+export const IS_SERVER = !hasWindow() || 'Deno' in window
 
 // Polyfill requestAnimationFrame
 export const rAF =
-  (hasWindow && window['requestAnimationFrame']) ||
+  (hasWindow() && window['requestAnimationFrame']) ||
   ((f: (...args: any[]) => void) => setTimeout(f, 1))
 
 // React currently throws a warning when using useLayoutEffect on the server.
