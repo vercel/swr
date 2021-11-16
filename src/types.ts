@@ -9,22 +9,22 @@ export type Fetcher<Data = unknown, SWRKey extends Key = Key> =
    */
   SWRKey extends (() => readonly [...infer Args] | null | undefined | false)
     ? ((...args: [...Args]) => FetcherResponse<Data>)
-    : /**
-     * [{ foo: string }, { bar: number }]
-     * [{ foo: string }, { bar: number }] as const
-     */
-    SWRKey extends (readonly [...infer Args])
+      /**
+       * [{ foo: string }, { bar: number }]
+       * [{ foo: string }, { bar: number }] as const
+       */
+    : SWRKey extends (readonly [...infer Args])
     ? ((...args: [...Args]) => FetcherResponse<Data>)
-    : /**
-     * () => string | null | undefined | false
-     * () => Record<any, any> | null | undefined | false
-     */
-    SWRKey extends (() => infer Arg | null | undefined | false)
+      /**
+       * () => string | null | undefined | false
+       * () => Record<any, any> | null | undefined | false
+       */
+    : SWRKey extends (() => infer Arg | null | undefined | false)
     ? (...args: [Arg]) => FetcherResponse<Data>
-    : /**
-     *  string | Record<any,any> | null | undefined | false
-     */
-    SWRKey extends null | undefined | false
+      /**
+       *  string | Record<any,any> | null | undefined | false
+       */
+    : SWRKey extends null | undefined | false
     ? never
     : SWRKey extends (infer Arg)
     ? (...args: [Arg]) => FetcherResponse<Data>
@@ -125,6 +125,31 @@ export interface SWRHook {
           Fetcher<Data, Key> | null,
           SWRConfiguration<Data, Error, SWRKey> | undefined
         ]
+  ): SWRResponse<Data, Error>
+  /**
+   * allow people to use generics like this
+   * useSWR<{foo: string}>(key, fn)
+   */
+  <Data = any, Error = any>(key: Key): SWRResponse<Data, Error>
+  <Data = any, Error = any>(
+    key: Key,
+    fetcher: Fetcher<Data> | null
+  ): SWRResponse<Data, Error>
+  <Data = any, Error = any>(
+    key: Key,
+    config: SWRConfiguration<Data, Error> | undefined
+  ): SWRResponse<Data, Error>
+  <Data = any, Error = any>(
+    key: Key,
+    fetcher: Fetcher<Data>,
+    config: SWRConfiguration<Data, Error> | undefined
+  ): SWRResponse<Data, Error>
+  <Data = any, Error = any>(
+    ...args:
+      | [Key]
+      | [Key, Fetcher<Data> | null]
+      | [Key, SWRConfiguration<Data, Error> | undefined]
+      | [Key, Fetcher<Data> | null, SWRConfiguration<Data, Error> | undefined]
   ): SWRResponse<Data, Error>
 }
 

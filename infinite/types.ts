@@ -9,6 +9,8 @@ export type InfiniteFetcher<
   ? ((...args: [...K]) => FetcherResponse<Data>)
   : Args extends null
   ? never
+  : Args extends false
+  ? never
   : Args extends (infer T)
   ? (...args: [T]) => FetcherResponse<Data>
   : never
@@ -56,5 +58,25 @@ export interface SWRInfiniteHook {
     config:
       | SWRInfiniteConfiguration<Data, Error, SWRInfiniteArguments>
       | undefined
+  ): SWRInfiniteResponse<Data, Error>
+  /**
+   * allow user to use generics like this
+   * useSWR<{foo: string}>(key, fn)
+   */
+  <Data = any, Error = any>(
+    getKey: InfiniteKeyLoader<Arguments>
+  ): SWRInfiniteResponse<Data, Error>
+  <Data = any, Error = any>(
+    getKey: InfiniteKeyLoader<Arguments>,
+    fetcher: InfiniteFetcher<Arguments, Data> | null
+  ): SWRInfiniteResponse<Data, Error>
+  <Data = any, Error = any>(
+    getKey: InfiniteKeyLoader<Arguments>,
+    config: SWRInfiniteConfiguration<Data, Error, Arguments> | undefined
+  ): SWRInfiniteResponse<Data, Error>
+  <Data = any, Error = any>(
+    getKey: InfiniteKeyLoader<Arguments>,
+    fetcher: InfiniteFetcher<Arguments, Data> | null,
+    config: SWRInfiniteConfiguration<Data, Error, Arguments> | undefined
   ): SWRInfiniteResponse<Data, Error>
 }
