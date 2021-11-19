@@ -59,10 +59,6 @@ export interface SWRInfiniteHook {
       | SWRInfiniteConfiguration<Data, Error, SWRInfiniteArguments>
       | undefined
   ): SWRInfiniteResponse<Data, Error>
-  /**
-   * allow user to use generics like this
-   * useSWR<{foo: string}>(key, fn)
-   */
   <Data = any, Error = any>(
     getKey: InfiniteKeyLoader<Arguments>
   ): SWRInfiniteResponse<Data, Error>
