@@ -33,7 +33,7 @@ export const initCache = <Data = any>(
   // requests and store listeners. As well as a mutate function that bound to
   // the cache.
 
-  // Provider's gloabl state might be already initialized. Let's try to get the
+  // Provider's global state might be already initialized. Let's try to get the
   // global state associated with the provider first.
   if (!SWRGlobalState.has(provider)) {
     const opts = mergeObjects(defaultConfigOptions, options)
