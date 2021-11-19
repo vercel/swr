@@ -1,7 +1,9 @@
 import * as revalidateEvents from './constants/revalidate-events'
 
 export type FetcherResponse<Data = unknown> = Data | Promise<Data>
-
+export type OriginFetcher<Data = unknown> = (
+  ...args: any[]
+) => FetcherResponse<Data>
 export type Fetcher<Data = unknown, SWRKey extends Key = Key> =
   /**
    * () => [{ foo: string }, { bar: number }] | null | undefined | false
@@ -9,22 +11,22 @@ export type Fetcher<Data = unknown, SWRKey extends Key = Key> =
    */
   SWRKey extends (() => readonly [...infer Args] | null | undefined | false)
     ? ((...args: [...Args]) => FetcherResponse<Data>)
-    : /**
-     * [{ foo: string }, { bar: number }]
-     * [{ foo: string }, { bar: number }] as const
-     */
-    SWRKey extends (readonly [...infer Args])
+      /**
+       * [{ foo: string }, { bar: number }]
+       * [{ foo: string }, { bar: number }] as const
+       */
+    : SWRKey extends (readonly [...infer Args])
     ? ((...args: [...Args]) => FetcherResponse<Data>)
-    : /**
-     * () => string | null | undefined | false
-     * () => Record<any, any> | null | undefined | false
-     */
-    SWRKey extends (() => infer Arg | null | undefined | false)
+      /**
+       * () => string | null | undefined | false
+       * () => Record<any, any> | null | undefined | false
+       */
+    : SWRKey extends (() => infer Arg | null | undefined | false)
     ? (...args: [Arg]) => FetcherResponse<Data>
-    : /**
-     *  string | Record<any,any> | null | undefined | false
-     */
-    SWRKey extends null | undefined | false
+      /**
+       *  string | Record<any,any> | null | undefined | false
+       */
+    : SWRKey extends null | undefined | false
     ? never
     : SWRKey extends (infer Arg)
     ? (...args: [Arg]) => FetcherResponse<Data>
@@ -129,7 +131,7 @@ export interface SWRHook {
   <Data = any, Error = any>(key: Key): SWRResponse<Data, Error>
   <Data = any, Error = any>(
     key: Key,
-    fetcher: Fetcher<Data> | null
+    fetcher: OriginFetcher<Data> | null
   ): SWRResponse<Data, Error>
   <Data = any, Error = any>(
     key: Key,
@@ -137,15 +139,19 @@ export interface SWRHook {
   ): SWRResponse<Data, Error>
   <Data = any, Error = any>(
     key: Key,
-    fetcher: Fetcher<Data>,
+    fetcher: OriginFetcher<Data>,
     config: SWRConfiguration<Data, Error> | undefined
   ): SWRResponse<Data, Error>
   <Data = any, Error = any>(
     ...args:
       | [Key]
-      | [Key, Fetcher<Data> | null]
+      | [Key, OriginFetcher<Data> | null]
       | [Key, SWRConfiguration<Data, Error> | undefined]
-      | [Key, Fetcher<Data> | null, SWRConfiguration<Data, Error> | undefined]
+      | [
+          Key,
+          OriginFetcher<Data> | null,
+          SWRConfiguration<Data, Error> | undefined
+        ]
   ): SWRResponse<Data, Error>
 }
 

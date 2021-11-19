@@ -1,4 +1,4 @@
-import { SWRConfiguration, SWRResponse, Arguments } from 'swr'
+import { SWRConfiguration, SWRResponse, Arguments, OriginFetcher } from 'swr'
 
 type FetcherResponse<Data = unknown> = Data | Promise<Data>
 
@@ -64,7 +64,7 @@ export interface SWRInfiniteHook {
   ): SWRInfiniteResponse<Data, Error>
   <Data = any, Error = any>(
     getKey: InfiniteKeyLoader<Arguments>,
-    fetcher: InfiniteFetcher<Arguments, Data> | null
+    fetcher: OriginFetcher<Data> | null
   ): SWRInfiniteResponse<Data, Error>
   <Data = any, Error = any>(
     getKey: InfiniteKeyLoader<Arguments>,
@@ -72,7 +72,7 @@ export interface SWRInfiniteHook {
   ): SWRInfiniteResponse<Data, Error>
   <Data = any, Error = any>(
     getKey: InfiniteKeyLoader<Arguments>,
-    fetcher: InfiniteFetcher<Arguments, Data> | null,
+    fetcher: OriginFetcher<Data> | null,
     config: SWRInfiniteConfiguration<Data, Error, Arguments> | undefined
   ): SWRInfiniteResponse<Data, Error>
 }
