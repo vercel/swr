@@ -18,7 +18,7 @@ export {
   SWRResponse,
   Cache,
   SWRHook,
-  OriginFetcher,
+  BareFetcher,
   Fetcher,
   MutatorCallback,
   Middleware,

@@ -1,7 +1,7 @@
 import * as revalidateEvents from './constants/revalidate-events'
 
 export type FetcherResponse<Data = unknown> = Data | Promise<Data>
-export type OriginFetcher<Data = unknown> = (
+export type BareFetcher<Data = unknown> = (
   ...args: any[]
 ) => FetcherResponse<Data>
 export type Fetcher<
@@ -118,7 +118,7 @@ export interface SWRHook {
   <Data = any, Error = any>(key: Key): SWRResponse<Data, Error>
   <Data = any, Error = any>(
     key: Key,
-    fetcher: OriginFetcher<Data> | null
+    fetcher: BareFetcher<Data> | null
   ): SWRResponse<Data, Error>
   <Data = any, Error = any>(
     key: Key,
@@ -126,17 +126,17 @@ export interface SWRHook {
   ): SWRResponse<Data, Error>
   <Data = any, Error = any>(
     key: Key,
-    fetcher: OriginFetcher<Data>,
+    fetcher: BareFetcher<Data>,
     config: SWRConfiguration<Data, Error> | undefined
   ): SWRResponse<Data, Error>
   <Data = any, Error = any>(
     ...args:
       | [Key]
-      | [Key, OriginFetcher<Data> | null]
+      | [Key, BareFetcher<Data> | null]
       | [Key, SWRConfiguration<Data, Error> | undefined]
       | [
           Key,
-          OriginFetcher<Data> | null,
+          BareFetcher<Data> | null,
           SWRConfiguration<Data, Error> | undefined
         ]
   ): SWRResponse<Data, Error>
