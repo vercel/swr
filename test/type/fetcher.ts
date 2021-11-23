@@ -6,6 +6,11 @@ const expectType: ExpectType = () => {}
 
 const truthy: () => boolean = () => true
 
+export function useDataErrorGeneric() {
+  useSWR<{ id: number }>('/api/', () => ({ id: 123 }))
+  useSWR<string, any>('/api/', (key: string) => key)
+}
+
 export function useString() {
   useSWR('/api/user', key => {
     expectType<string>(key)
