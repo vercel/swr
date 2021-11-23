@@ -1,4 +1,4 @@
-import { SWRConfiguration, SWRResponse, Arguments } from 'swr'
+import { SWRConfiguration, SWRResponse, Arguments, BareFetcher } from 'swr'
 
 type FetcherResponse<Data = unknown> = Data | Promise<Data>
 
@@ -8,6 +8,8 @@ export type InfiniteFetcher<
 > = Args extends (readonly [...infer K])
   ? ((...args: [...K]) => FetcherResponse<Data>)
   : Args extends null
+  ? never
+  : Args extends false
   ? never
   : Args extends (infer T)
   ? (...args: [T]) => FetcherResponse<Data>
@@ -56,5 +58,21 @@ export interface SWRInfiniteHook {
     config:
       | SWRInfiniteConfiguration<Data, Error, SWRInfiniteArguments>
       | undefined
+  ): SWRInfiniteResponse<Data, Error>
+  <Data = any, Error = any>(
+    getKey: InfiniteKeyLoader<Arguments>
+  ): SWRInfiniteResponse<Data, Error>
+  <Data = any, Error = any>(
+    getKey: InfiniteKeyLoader<Arguments>,
+    fetcher: BareFetcher<Data> | null
+  ): SWRInfiniteResponse<Data, Error>
+  <Data = any, Error = any>(
+    getKey: InfiniteKeyLoader<Arguments>,
+    config: SWRInfiniteConfiguration<Data, Error, Arguments> | undefined
+  ): SWRInfiniteResponse<Data, Error>
+  <Data = any, Error = any>(
+    getKey: InfiniteKeyLoader<Arguments>,
+    fetcher: BareFetcher<Data> | null,
+    config: SWRInfiniteConfiguration<Data, Error, Arguments> | undefined
   ): SWRInfiniteResponse<Data, Error>
 }
