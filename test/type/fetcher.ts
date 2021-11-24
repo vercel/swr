@@ -1,14 +1,11 @@
 import useSWR from 'swr'
 import useSWRInfinite from 'swr/infinite'
-
-type ExpectType = <T>(value: T) => void
-const expectType: ExpectType = () => {}
-
-const truthy: () => boolean = () => true
+import { expectType, truthy } from './utils'
 
 export function useDataErrorGeneric() {
   useSWR<{ id: number }>('/api/', () => ({ id: 123 }))
-  useSWR<string, any>('/api/', (key: string) => key)
+  useSWR<string>('/api/', (key: string) => key)
+  useSWRInfinite<number>(() => '/api/', key => key)
 }
 
 export function useString() {
@@ -16,6 +13,7 @@ export function useString() {
     expectType<string>(key)
     return key
   })
+
   useSWR(truthy() ? '/api/user' : null, key => {
     expectType<string>(key)
     return key
@@ -32,10 +30,12 @@ export function useRecord() {
     expectType<{ a: string; b: { c: string; d: number } }>(key)
     return key
   })
+
   useSWR(truthy() ? { a: '1', b: { c: '3', d: 2 } } : null, key => {
     expectType<{ a: string; b: { c: string; d: number } }>(key)
     return key
   })
+
   useSWR(truthy() ? { a: '1', b: { c: '3', d: 2 } } : false, key => {
     expectType<{ a: string; b: { c: string; d: number } }>(key)
     return key
