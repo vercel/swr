@@ -87,24 +87,23 @@ export type ProviderConfiguration = {
 }
 
 export interface SWRHook {
-  <Data = any, Error = any, SWRKey extends Key = Key>(key: SWRKey): SWRResponse<
-    Data,
-    Error
-  >
-  <Data = any, Error = any, SWRKey extends Key = Key>(
+  <Data = any, Error = any, SWRKey extends Key = null>(
+    key: SWRKey
+  ): SWRResponse<Data, Error>
+  <Data = any, Error = any, SWRKey extends Key = null>(
     key: SWRKey,
     fetcher: Fetcher<Data, SWRKey> | null
   ): SWRResponse<Data, Error>
-  <Data = any, Error = any, SWRKey extends Key = Key>(
+  <Data = any, Error = any, SWRKey extends Key = null>(
     key: SWRKey,
     config: SWRConfiguration<Data, Error, SWRKey> | undefined
   ): SWRResponse<Data, Error>
-  <Data = any, Error = any, SWRKey extends Key = Key>(
+  <Data = any, Error = any, SWRKey extends Key = null>(
     key: SWRKey,
     fetcher: Fetcher<Data, SWRKey>,
     config: SWRConfiguration<Data, Error, SWRKey> | undefined
   ): SWRResponse<Data, Error>
-  <Data = any, Error = any, SWRKey extends Key = Key>(
+  <Data = any, Error = any, SWRKey extends Key = null>(
     ...args:
       | [SWRKey]
       | [SWRKey, Fetcher<Data, SWRKey> | null]

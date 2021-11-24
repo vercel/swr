@@ -8,7 +8,8 @@ const truthy: () => boolean = () => true
 
 export function useDataErrorGeneric() {
   useSWR<{ id: number }>('/api/', () => ({ id: 123 }))
-  useSWR<string, any>('/api/', (key: string) => key)
+  useSWR<string>('/api/', (key: string) => key)
+  useSWR<number>('/api/', key => key)
 }
 
 export function useString() {
