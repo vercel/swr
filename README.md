@@ -11,7 +11,7 @@
   <a aria-label="Package size" href="https://bundlephobia.com/result?p=swr">
     <img alt="" src="https://badgen.net/bundlephobia/minzip/swr">
   </a>
-  <a aria-label="License" href="https://github.com/zeit/swr/blob/master/LICENSE">
+  <a aria-label="License" href="https://github.com/zeit/swr/blob/main/LICENSE">
     <img alt="" src="https://badgen.net/npm/license/swr">
   </a>
 </p>
