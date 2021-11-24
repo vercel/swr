@@ -10,6 +10,7 @@ export function useDataErrorGeneric() {
   useSWR<{ id: number }>('/api/', () => ({ id: 123 }))
   useSWR<string>('/api/', (key: string) => key)
   useSWR<number>('/api/', key => key)
+  useSWRInfinite<number>(() => '/api/', key => key)
 }
 
 export function useString() {

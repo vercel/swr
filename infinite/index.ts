@@ -35,7 +35,7 @@ export const unstable_serialize = (getKey: InfiniteKeyLoader) => {
 export const infinite = ((<Data, Error, Args extends Arguments>(
   useSWRNext: SWRHook
 ) => (
-  getKey: InfiniteKeyLoader<Args>,
+  getKey: InfiniteKeyLoader,
   fn: Fetcher<Data> | null,
   config: typeof SWRConfig.default & SWRInfiniteConfiguration<Data, Error, Args>
 ): SWRInfiniteResponse<Data, Error> => {
