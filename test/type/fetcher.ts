@@ -1,15 +1,10 @@
 import useSWR from 'swr'
 import useSWRInfinite from 'swr/infinite'
-
-type ExpectType = <T>(value: T) => void
-const expectType: ExpectType = () => {}
-
-const truthy: () => boolean = () => true
+import { expectType, truthy } from './utils'
 
 export function useDataErrorGeneric() {
   useSWR<{ id: number }>('/api/', () => ({ id: 123 }))
   useSWR<string>('/api/', (key: string) => key)
-  useSWR<number>('/api/', key => key)
   useSWRInfinite<number>(() => '/api/', key => key)
 }
 
@@ -18,14 +13,35 @@ export function useString() {
     expectType<string>(key)
     return key
   })
+  useSWR('/api/user', {
+    fetcher: key => {
+      expectType<string>(key)
+      return key
+    }
+  })
+
   useSWR(truthy() ? '/api/user' : null, key => {
     expectType<string>(key)
     return key
   })
 
+  useSWR(truthy() ? '/api/user' : null, {
+    fetcher: key => {
+      expectType<string>(key)
+      return key
+    }
+  })
+
   useSWR(truthy() ? '/api/user' : false, key => {
     expectType<string>(key)
     return key
+  })
+
+  useSWR(truthy() ? '/api/user' : false, {
+    fetcher: key => {
+      expectType<string>(key)
+      return key
+    }
   })
 }
 
@@ -34,13 +50,38 @@ export function useRecord() {
     expectType<{ a: string; b: { c: string; d: number } }>(key)
     return key
   })
+  useSWR(
+    { a: '1', b: { c: '3', d: 2 } },
+    {
+      fetcher: key => {
+        expectType<{ a: string; b: { c: string; d: number } }>(key)
+        return key
+      }
+    }
+  )
+
   useSWR(truthy() ? { a: '1', b: { c: '3', d: 2 } } : null, key => {
     expectType<{ a: string; b: { c: string; d: number } }>(key)
     return key
   })
+
+  useSWR(truthy() ? { a: '1', b: { c: '3', d: 2 } } : null, {
+    fetcher: key => {
+      expectType<{ a: string; b: { c: string; d: number } }>(key)
+      return key
+    }
+  })
+
   useSWR(truthy() ? { a: '1', b: { c: '3', d: 2 } } : false, key => {
     expectType<{ a: string; b: { c: string; d: number } }>(key)
     return key
+  })
+
+  useSWR(truthy() ? { a: '1', b: { c: '3', d: 2 } } : false, {
+    fetcher: key => {
+      expectType<{ a: string; b: { c: string; d: number } }>(key)
+      return key
+    }
   })
 }
 
