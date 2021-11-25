@@ -43,20 +43,48 @@ export interface SWRInfiniteResponse<Data = any, Error = any>
 }
 
 export interface SWRInfiniteHook {
-  <Data = any, Error = any, KeyLoader extends InfiniteKeyLoader = () => null>(
+  <
+    Data = any,
+    Error = any,
+    KeyLoader extends InfiniteKeyLoader = (
+      index: number,
+      previousPageData: Data | null
+    ) => null
+  >(
     getKey: KeyLoader
   ): SWRInfiniteResponse<Data, Error>
-  <Data = any, Error = any, KeyLoader extends InfiniteKeyLoader = () => null>(
+  <
+    Data = any,
+    Error = any,
+    KeyLoader extends InfiniteKeyLoader = (
+      index: number,
+      previousPageData: Data | null
+    ) => null
+  >(
     getKey: KeyLoader,
     fetcher: InfiniteFetcher<Data, KeyLoader> | null
   ): SWRInfiniteResponse<Data, Error>
-  <Data = any, Error = any, KeyLoader extends InfiniteKeyLoader = () => null>(
+  <
+    Data = any,
+    Error = any,
+    KeyLoader extends InfiniteKeyLoader = (
+      index: number,
+      previousPageData: Data | null
+    ) => null
+  >(
     getKey: KeyLoader,
     config:
       | SWRInfiniteConfiguration<Data, Error, InfiniteFetcher<Data, KeyLoader>>
       | undefined
   ): SWRInfiniteResponse<Data, Error>
-  <Data = any, Error = any, KeyLoader extends InfiniteKeyLoader = () => null>(
+  <
+    Data = any,
+    Error = any,
+    KeyLoader extends InfiniteKeyLoader = (
+      index: number,
+      previousPageData: Data | null
+    ) => null
+  >(
     getKey: KeyLoader,
     fetcher: InfiniteFetcher<Data, KeyLoader> | null,
     config:
