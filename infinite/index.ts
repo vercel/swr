@@ -4,11 +4,10 @@
 import { useRef, useState, useCallback } from 'react'
 import useSWR, {
   SWRConfig,
-  Fetcher,
   SWRHook,
   MutatorCallback,
   Middleware,
-  Arguments
+  BareFetcher
 } from 'swr'
 import { useIsomorphicLayoutEffect } from '../src/utils/env'
 import { serialize } from '../src/utils/serialize'
@@ -32,12 +31,11 @@ export const unstable_serialize = (getKey: InfiniteKeyLoader) => {
   return INFINITE_PREFIX + getFirstPageKey(getKey)
 }
 
-export const infinite = ((<Data, Error, Args extends Arguments>(
-  useSWRNext: SWRHook
-) => (
-  getKey: InfiniteKeyLoader<Args>,
-  fn: Fetcher<Data> | null,
-  config: typeof SWRConfig.default & SWRInfiniteConfiguration<Data, Error, Args>
+export const infinite = ((<Data, Error>(useSWRNext: SWRHook) => (
+  getKey: InfiniteKeyLoader,
+  fn: BareFetcher<Data> | null,
+  config: Omit<typeof SWRConfig.default, 'fetcher'> &
+    Omit<SWRInfiniteConfiguration<Data, Error>, 'fetcher'>
 ): SWRInfiniteResponse<Data, Error> => {
   const rerender = useState({})[1]
   const didMountRef = useRef<boolean>(false)

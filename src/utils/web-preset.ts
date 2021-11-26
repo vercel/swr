@@ -11,22 +11,25 @@ import { isUndefined, noop, hasWindow, hasDocument } from './helper'
 let online = true
 const isOnline = () => online
 
+const hasWin = hasWindow()
+const hasDoc = hasDocument()
+
 // For node and React Native, `add/removeEventListener` doesn't exist on window.
 const onWindowEvent =
-  hasWindow && window.addEventListener
+  hasWin && window.addEventListener
     ? window.addEventListener.bind(window)
     : noop
-const onDocumentEvent = hasDocument
-  ? document.addEventListener.bind(document)
-  : noop
+const onDocumentEvent = hasDoc ? document.addEventListener.bind(document) : noop
 const offWindowEvent =
-  hasWindow && window.removeEventListener ? window.removeEventListener : noop
-const offDocumentEvent = hasDocument
+  hasWin && window.removeEventListener
+    ? window.removeEventListener.bind(window)
+    : noop
+const offDocumentEvent = hasDoc
   ? document.removeEventListener.bind(document)
   : noop
 
 const isVisible = () => {
-  const visibilityState = hasDocument && document.visibilityState
+  const visibilityState = hasDoc && document.visibilityState
   if (!isUndefined(visibilityState)) {
     return visibilityState !== 'hidden'
   }
