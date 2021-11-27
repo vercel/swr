@@ -217,7 +217,7 @@ export type SWRConfiguration<
   Fn extends BareFetcher<any> = BareFetcher<any>
 > = Partial<PublicConfiguration<Data, Error, Fn>>
 
-export interface SWRResponse<Data, Error> {
+export interface SWRResponse<Data = any, Error = any> {
   data?: Data
   error?: Error
   mutate: KeyedMutator<Data>
