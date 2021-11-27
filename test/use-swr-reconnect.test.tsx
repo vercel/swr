@@ -1,4 +1,4 @@
-import { screen, fireEvent, createEvent, act } from '@testing-library/react'
+import { screen, fireEvent, createEvent } from '@testing-library/react'
 import React from 'react'
 import useSWR from 'swr'
 import {
@@ -27,10 +27,8 @@ describe('useSWR - reconnect', () => {
     await waitForNextTick()
 
     // trigger reconnect
-    await act(async () => {
-      fireEvent(window, createEvent('offline', window))
-      fireEvent(window, createEvent('online', window))
-    })
+    fireEvent(window, createEvent('offline', window))
+    fireEvent(window, createEvent('online', window))
 
     await screen.findByText('data: 1')
   })
@@ -57,10 +55,8 @@ describe('useSWR - reconnect', () => {
     await waitForNextTick()
 
     // trigger reconnect
-    await act(async () => {
-      fireEvent(window, createEvent('offline', window))
-      fireEvent(window, createEvent('online', window))
-    })
+    fireEvent(window, createEvent('offline', window))
+    fireEvent(window, createEvent('online', window))
 
     // should not be revalidated
     screen.getByText('data: 0')
@@ -88,10 +84,8 @@ describe('useSWR - reconnect', () => {
     await waitForNextTick()
 
     // trigger reconnect
-    await act(async () => {
-      fireEvent(window, createEvent('offline', window))
-      fireEvent(window, createEvent('online', window))
-    })
+    fireEvent(window, createEvent('offline', window))
+    fireEvent(window, createEvent('online', window))
 
     // should not be revalidated
     screen.getByText('data: 0')

@@ -6,7 +6,7 @@ export function sleep(time: number) {
   return new Promise(resolve => setTimeout(resolve, time))
 }
 
-export const createResponse = <T extends any>(
+export const createResponse = <T,>(
   response: T,
   { delay } = { delay: 10 }
 ): Promise<T> =>
