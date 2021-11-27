@@ -45,7 +45,11 @@ describe('useSWR - configs', () => {
 
     function Page() {
       const [paused, setPaused] = useState(false)
-      const { data, error, mutate: _mutate } = useSWR(key, fetcher, {
+      const {
+        data,
+        error,
+        mutate: _mutate
+      } = useSWR(key, fetcher, {
         revalidateOnMount: true,
         refreshInterval: 1,
         isPaused() {
