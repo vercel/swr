@@ -103,20 +103,6 @@ export interface SWRHook {
     fetcher: Fetcher<Data, SWRKey>,
     config: SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>> | undefined
   ): SWRResponse<Data, Error>
-  <Data = any, Error = any, SWRKey extends Key = null>(
-    ...args:
-      | [SWRKey]
-      | [SWRKey, Fetcher<Data, SWRKey> | null]
-      | [
-          SWRKey,
-          SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>> | undefined
-        ]
-      | [
-          SWRKey,
-          Fetcher<Data, Key> | null,
-          SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>> | undefined
-        ]
-  ): SWRResponse<Data, Error>
   <Data = any, Error = any>(key: Key): SWRResponse<Data, Error>
   <Data = any, Error = any>(
     key: Key,
