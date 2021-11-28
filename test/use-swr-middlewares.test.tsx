@@ -78,14 +78,13 @@ describe('useSWR - middleware', () => {
   it('should support extending middleware via context and per-hook config', async () => {
     const key = createKey()
     const mockConsoleLog = jest.fn((_, s) => s)
-    const createLoggerMiddleware = (id: number): Middleware => useSWRNext => (
-      k,
-      fn,
-      config
-    ) => {
-      mockConsoleLog(id, k)
-      return useSWRNext(k, fn, config)
-    }
+    const createLoggerMiddleware =
+      (id: number): Middleware =>
+      useSWRNext =>
+      (k, fn, config) => {
+        mockConsoleLog(id, k)
+        return useSWRNext(k, fn, config)
+      }
     function Page() {
       const { data } = useSWR(key, () => createResponse('data'), {
         use: [createLoggerMiddleware(0)]
@@ -103,28 +102,22 @@ describe('useSWR - middleware', () => {
     screen.getByText('hello,')
     await screen.findByText('hello, data')
     expect(mockConsoleLog.mock.calls.map(call => call[0])).toEqual([
-      2,
-      1,
-      0,
-      2,
-      1,
-      0
+      2, 1, 0, 2, 1, 0
     ])
   })
 
   it('should use the correct middleware order in `withMiddleware`', async () => {
     const key = createKey()
     const mockConsoleLog = jest.fn((_, s) => s)
-    const createLoggerMiddleware = (id: number): Middleware => useSWRNext => (
-      k,
-      fn,
-      config
-    ) => {
-      mockConsoleLog(id + '-enter', k)
-      const swr = useSWRNext(k, fn, config)
-      mockConsoleLog(id + '-exit', k)
-      return swr
-    }
+    const createLoggerMiddleware =
+      (id: number): Middleware =>
+      useSWRNext =>
+      (k, fn, config) => {
+        mockConsoleLog(id + '-enter', k)
+        const swr = useSWRNext(k, fn, config)
+        mockConsoleLog(id + '-exit', k)
+        return swr
+      }
 
     const customSWRHook = withMiddleware(useSWR, useSWRNext => (...args) => {
       mockConsoleLog('0-enter', args[0])
@@ -195,11 +188,12 @@ describe('useSWR - middleware', () => {
 
   it('should pass modified keys to the next middleware and useSWR', async () => {
     const key = createKey()
-    const createDecoratingKeyMiddleware = (
-      c: string
-    ): Middleware => useSWRNext => (k, fn, config) => {
-      return useSWRNext(`${c}${k}${c}`, fn, config)
-    }
+    const createDecoratingKeyMiddleware =
+      (c: string): Middleware =>
+      useSWRNext =>
+      (k, fn, config) => {
+        return useSWRNext(`${c}${k}${c}`, fn, config)
+      }
 
     function Page() {
       const { data } = useSWR(key, k => createResponse(k), {

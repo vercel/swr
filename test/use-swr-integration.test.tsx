@@ -28,7 +28,10 @@ describe('useSWR', () => {
 
   it('should allow functions as key and reuse the cache', async () => {
     function Page() {
-      const { data } = useSWR(() => sharedKey, () => 'SWR')
+      const { data } = useSWR(
+        () => sharedKey,
+        () => 'SWR'
+      )
       return <div>hello, {data}</div>
     }
 

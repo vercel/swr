@@ -6,13 +6,13 @@ export type InfiniteFetcher<
   Data = any,
   KeyLoader extends InfiniteKeyLoader = InfiniteKeyLoader
 > = KeyLoader extends (...args: any[]) => any
-  ? ReturnType<KeyLoader> extends (
+  ? ReturnType<KeyLoader> extends
       | readonly [...infer K]
       | null
       | false
-      | undefined)
-    ? ((...args: [...K]) => FetcherResponse<Data>)
-    : ReturnType<KeyLoader> extends (infer T | null | false | undefined)
+      | undefined
+    ? (...args: [...K]) => FetcherResponse<Data>
+    : ReturnType<KeyLoader> extends infer T | null | false | undefined
     ? (...args: [T]) => FetcherResponse<Data>
     : never
   : never

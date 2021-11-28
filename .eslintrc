@@ -16,7 +16,6 @@
     "plugin:react/recommended",
     "plugin:@typescript-eslint/recommended",
     "prettier",
-    "prettier/@typescript-eslint",
     "plugin:jest-dom/recommended",
     "plugin:testing-library/react"
   ],
@@ -46,6 +45,7 @@
     "@typescript-eslint/ban-types": 0,
     "react-hooks/rules-of-hooks": 2,
     "react-hooks/exhaustive-deps": 1,
-    "react/prop-types": 0
+    "react/prop-types": 0,
+    "testing-library/no-unnecessary-act": 0
   }
 }

@@ -126,7 +126,9 @@ describe('useSWRInfinite', () => {
           }
 
           // fetch with offset
-          return `/api/${key}?offset=${previousPageData[previousPageData.length - 1].id}`
+          return `/api/${key}?offset=${
+            previousPageData[previousPageData.length - 1].id
+          }`
         },
         mockAPIFetcher,
         {
@@ -750,7 +752,11 @@ describe('useSWRInfinite', () => {
     await screen.findByText('data:response data')
 
     await act(() =>
-      mutateCustomCache(unstable_serialize(() => key), 'local-mutation', false)
+      mutateCustomCache(
+        unstable_serialize(() => key),
+        'local-mutation',
+        false
+      )
     )
     await screen.findByText('data:local-mutation')
   })
@@ -759,7 +765,10 @@ describe('useSWRInfinite', () => {
     const loggedValues = []
 
     function Page() {
-      const { size, setSize } = useSWRInfinite(() => null, () => '')
+      const { size, setSize } = useSWRInfinite(
+        () => null,
+        () => ''
+      )
       loggedValues.push(size)
       return <button onClick={() => setSize(1)}>set size</button>
     }
@@ -819,7 +828,11 @@ describe('useSWRInfinite', () => {
     let v = 'old'
 
     function Page() {
-      const { data, size, mutate: boundMutate } = useSWRInfinite(
+      const {
+        data,
+        size,
+        mutate: boundMutate
+      } = useSWRInfinite(
         i => [key, i],
         () => v
       )
