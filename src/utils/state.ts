@@ -1,4 +1,4 @@
-import { useRef, useCallback, useState, MutableRefObject } from 'react'
+import { useRef, useCallback, useReducer, MutableRefObject } from 'react'
 
 import { useIsomorphicLayoutEffect } from './env'
 import { State } from '../types'
@@ -13,7 +13,7 @@ export const useStateWithDeps = <Data, Error, S = State<Data, Error>>(
   state: S,
   unmountedRef: MutableRefObject<boolean>
 ): [MutableRefObject<S>, Record<StateKeys, boolean>, (payload: S) => void] => {
-  const rerender = useState<Record<string, unknown>>({})[1]
+  const rerender = useReducer(s => s + 1, 0)[1]
   const stateRef = useRef(state)
 
   // If a state property (data, error or isValidating) is accessed by the render
@@ -65,7 +65,7 @@ export const useStateWithDeps = <Data, Error, S = State<Data, Error>>(
       }
 
       if (shouldRerender && !unmountedRef.current) {
-        rerender({})
+        rerender()
       }
     },
     // config.suspense isn't allowed to change during the lifecycle

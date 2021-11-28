@@ -1,7 +1,7 @@
 // We have to several type castings here because `useSWRInfinite` is a special
 // hook where `key` and return type are not like the normal `useSWR` types.
 
-import { useRef, useState, useCallback } from 'react'
+import { useRef, useReducer, useCallback } from 'react'
 import useSWR, {
   SWRConfig,
   SWRHook,
@@ -38,7 +38,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
     config: Omit<typeof SWRConfig.default, 'fetcher'> &
       Omit<SWRInfiniteConfiguration<Data, Error>, 'fetcher'>
   ): SWRInfiniteResponse<Data, Error> => {
-    const rerender = useState({})[1]
+    const rerender = useReducer(s => s + 1, 0)[1]
     const didMountRef = useRef<boolean>(false)
     const dataRef = useRef<Data[]>()
 
@@ -240,7 +240,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
 
         cache.set(pageSizeCacheKey, size)
         lastPageSizeRef.current = size
-        rerender({})
+        rerender()
         return mutate(resolvePagesFromCache(size))
       },
       // `cache` and `rerender` isn't allowed to change during the lifecycle
