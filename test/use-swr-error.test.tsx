@@ -162,7 +162,7 @@ describe('useSWR - error', () => {
     expect(success).toEqual(null)
 
     fireEvent.click(screen.getByText('hello,'))
-    await act(async () => sleep(200))
+    await act(() => sleep(200))
     expect(success).toEqual(null)
     expect(loadingSlow).toEqual(null)
   })
@@ -199,7 +199,7 @@ describe('useSWR - error', () => {
     expect(failed).toEqual(null)
 
     fireEvent.click(screen.getByText('hello,'))
-    await act(async () => sleep(200))
+    await act(() => sleep(200))
     expect(retry).toEqual(null)
     expect(failed).toEqual(null)
   })
