@@ -114,19 +114,8 @@ export interface SWRHook {
   ): SWRResponse<Data, Error>
   <Data = any, Error = any>(
     key: Key,
-    fetcher: BareFetcher<Data>,
+    fetcher: BareFetcher<Data> | null,
     config: SWRConfiguration<Data, Error, BareFetcher<Data>> | undefined
-  ): SWRResponse<Data, Error>
-  <Data = any, Error = any>(
-    ...args:
-      | [Key]
-      | [Key, BareFetcher<Data> | null]
-      | [Key, SWRConfiguration<Data, Error, BareFetcher<Data>> | undefined]
-      | [
-          Key,
-          BareFetcher<Data> | null,
-          SWRConfiguration<Data, Error, BareFetcher<Data>> | undefined
-        ]
   ): SWRResponse<Data, Error>
 }
 
