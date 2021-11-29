@@ -100,22 +100,8 @@ export interface SWRHook {
   ): SWRResponse<Data, Error>
   <Data = any, Error = any, SWRKey extends Key = null>(
     key: SWRKey,
-    fetcher: Fetcher<Data, SWRKey>,
+    fetcher: Fetcher<Data, SWRKey> | null,
     config: SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>> | undefined
-  ): SWRResponse<Data, Error>
-  <Data = any, Error = any, SWRKey extends Key = null>(
-    ...args:
-      | [SWRKey]
-      | [SWRKey, Fetcher<Data, SWRKey> | null]
-      | [
-          SWRKey,
-          SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>> | undefined
-        ]
-      | [
-          SWRKey,
-          Fetcher<Data, Key> | null,
-          SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>> | undefined
-        ]
   ): SWRResponse<Data, Error>
   <Data = any, Error = any>(key: Key): SWRResponse<Data, Error>
   <Data = any, Error = any>(
@@ -128,19 +114,8 @@ export interface SWRHook {
   ): SWRResponse<Data, Error>
   <Data = any, Error = any>(
     key: Key,
-    fetcher: BareFetcher<Data>,
+    fetcher: BareFetcher<Data> | null,
     config: SWRConfiguration<Data, Error, BareFetcher<Data>> | undefined
-  ): SWRResponse<Data, Error>
-  <Data = any, Error = any>(
-    ...args:
-      | [Key]
-      | [Key, BareFetcher<Data> | null]
-      | [Key, SWRConfiguration<Data, Error, BareFetcher<Data>> | undefined]
-      | [
-          Key,
-          BareFetcher<Data> | null,
-          SWRConfiguration<Data, Error, BareFetcher<Data>> | undefined
-        ]
   ): SWRResponse<Data, Error>
 }
 
