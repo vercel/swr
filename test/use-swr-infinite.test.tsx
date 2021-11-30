@@ -126,9 +126,7 @@ describe('useSWRInfinite', () => {
           }
 
           // fetch with offset
-          return `/api/${key}?offset=${
-            previousPageData[previousPageData.length - 1].id
-          }`
+          return `/api/${key}?offset=${previousPageData[previousPageData.length - 1].id}`
         },
         mockAPIFetcher,
         {
@@ -752,11 +750,7 @@ describe('useSWRInfinite', () => {
     await screen.findByText('data:response data')
 
     await act(() =>
-      mutateCustomCache(
-        unstable_serialize(() => key),
-        'local-mutation',
-        false
-      )
+      mutateCustomCache(unstable_serialize(() => key), 'local-mutation', false)
     )
     await screen.findByText('data:local-mutation')
   })
@@ -765,10 +759,7 @@ describe('useSWRInfinite', () => {
     const loggedValues = []
 
     function Page() {
-      const { size, setSize } = useSWRInfinite(
-        () => null,
-        () => ''
-      )
+      const { size, setSize } = useSWRInfinite(() => null, () => '')
       loggedValues.push(size)
       return <button onClick={() => setSize(1)}>set size</button>
     }
@@ -828,11 +819,7 @@ describe('useSWRInfinite', () => {
     let v = 'old'
 
     function Page() {
-      const {
-        data,
-        size,
-        mutate: boundMutate
-      } = useSWRInfinite(
+      const { data, size, mutate: boundMutate } = useSWRInfinite(
         i => [key, i],
         () => v
       )
@@ -996,5 +983,43 @@ describe('useSWRInfinite', () => {
     expect(fetcher).toBeCalledTimes(2)
 
     expect(logger).toEqual([undefined, ['foo-0'], ['foo-1']])
+  })
+
+  it('should pass the correct cursor information in `getKey`', async () => {
+    const key = createKey()
+    const fetcher = jest.fn(index => createResponse('data-' + index))
+    const logger = []
+    function Page() {
+      const { data } = useSWRInfinite(
+        (index, previousPageData) => {
+          logger.push(key + ':' + index + ':' + previousPageData)
+          return '' + index
+        },
+        fetcher,
+        {
+          dedupingInterval: 0,
+          initialSize: 5
+        }
+      )
+      return (
+        <>
+          <div>{data ? data.length : 0}</div>
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('5')
+
+    expect(
+      logger.every(log => {
+        const [k, index, previousData] = log.split(':')
+        return (
+          k === key &&
+          ((index === '0' && previousData === 'null') ||
+            previousData === 'data-' + (index - 1))
+        )
+      })
+    ).toBeTruthy()
   })
 })
