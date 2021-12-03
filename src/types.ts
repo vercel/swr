@@ -35,7 +35,7 @@ export interface PublicConfiguration<
   loadingTimeout: number
   focusThrottleInterval: number
   dedupingInterval: number
-  refreshInterval?: number
+  refreshInterval?: number | ((latestData: Data | undefined) => number)
   refreshWhenHidden?: boolean
   refreshWhenOffline?: boolean
   revalidateOnFocus: boolean
