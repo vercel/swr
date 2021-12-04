@@ -434,4 +434,28 @@ describe('useSWR - refresh', () => {
     await act(() => advanceTimers(1000)) // updated after 3s
     screen.getByText('count: 4')
   })
+
+  it('should disable refresh if function returns 0', async () => {
+    let count = 1
+
+    const key = createKey()
+    function Page() {
+      const { data } = useSWR(key, () => count++, {
+        refreshInterval: () => 0,
+        dedupingInterval: 100
+      })
+      return <div>count: {data}</div>
+    }
+
+    renderWithConfig(<Page />)
+
+    // hydration
+    screen.getByText('count:')
+
+    // mount
+    await screen.findByText('count: 1')
+
+    await act(() => advanceTimers(9999)) // no update
+    screen.getByText('count: 1')
+  })
 })
