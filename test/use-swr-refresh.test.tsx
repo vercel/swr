@@ -374,4 +374,64 @@ describe('useSWR - refresh', () => {
     expect(fetcherWithToken).toBeCalledTimes(5)
     expect(fetcherWithToken).toHaveBeenLastCalledWith(`1-${key}`)
   })
+
+  it('should allow using function as an interval', async () => {
+    let count = 0
+
+    const key = createKey()
+    function Page() {
+      const { data } = useSWR(key, () => count++, {
+        refreshInterval: () => 200,
+        dedupingInterval: 100
+      })
+      return <div>count: {data}</div>
+    }
+
+    renderWithConfig(<Page />)
+
+    // hydration
+    screen.getByText('count:')
+
+    // mount
+    await screen.findByText('count: 0')
+
+    await act(() => advanceTimers(200)) // update
+    screen.getByText('count: 1')
+    await act(() => advanceTimers(50)) // no update
+    screen.getByText('count: 1')
+    await act(() => advanceTimers(150)) // update
+    screen.getByText('count: 2')
+  })
+
+  it('should pass updated data to refreshInterval', async () => {
+    let count = 1
+
+    const key = createKey()
+    function Page() {
+      const { data } = useSWR(key, () => count++, {
+        refreshInterval: updatedCount => updatedCount * 1000,
+        dedupingInterval: 100
+      })
+      return <div>count: {data}</div>
+    }
+
+    renderWithConfig(<Page />)
+
+    // hydration
+    screen.getByText('count:')
+
+    // mount
+    await screen.findByText('count: 1')
+
+    await act(() => advanceTimers(1000)) // updated after 1s
+    screen.getByText('count: 2')
+    await act(() => advanceTimers(1000)) // no update
+    screen.getByText('count: 2')
+    await act(() => advanceTimers(1000)) // updated after 2s
+    screen.getByText('count: 3')
+    await act(() => advanceTimers(2000)) // no update
+    screen.getByText('count: 3')
+    await act(() => advanceTimers(1000)) // updated after 3s
+    screen.getByText('count: 4')
+  })
 })

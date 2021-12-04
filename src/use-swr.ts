@@ -3,7 +3,13 @@ import { defaultConfig } from './utils/config'
 import { SWRGlobalState, GlobalState } from './utils/global-state'
 import { IS_SERVER, rAF, useIsomorphicLayoutEffect } from './utils/env'
 import { serialize } from './utils/serialize'
-import { isUndefined, UNDEFINED, OBJECT, mergeObjects } from './utils/helper'
+import {
+  isUndefined,
+  UNDEFINED,
+  OBJECT,
+  mergeObjects,
+  isFunction
+} from './utils/helper'
 import ConfigProvider from './utils/config-context'
 import { useStateWithDeps } from './utils/state'
 import { withArgs } from './utils/resolve-args'
@@ -440,11 +446,17 @@ export const useSWRHandler = <Data = any, Error = any>(
     let timer: any
 
     function next() {
+      // Use the passed interval
+      // ...or invoke the function with the updated data to get the interval
+      const interval = isFunction(refreshInterval)
+        ? refreshInterval(data)
+        : refreshInterval
+
       // We only start next interval if `refreshInterval` is not 0, and:
       // - `force` is true, which is the start of polling
       // - or `timer` is not 0, which means the effect wasn't canceled
-      if (refreshInterval && timer !== -1) {
-        timer = setTimeout(execute, refreshInterval)
+      if (interval && timer !== -1) {
+        timer = setTimeout(execute, interval)
       }
     }
 
