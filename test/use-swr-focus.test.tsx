@@ -220,4 +220,27 @@ describe('useSWR - focus', () => {
     await focusWindow()
     await screen.findByText('data: 1')
   })
+
+  it('should not revalidate on focus when key changes in the same tick', async () => {
+    const fetcher = jest.fn()
+    function Page() {
+      const [key, setKey] = useState(() => createKey())
+      useSWR(key, fetcher, {
+        revalidateOnFocus: true,
+        dedupingInterval: 0
+      })
+      return <div onClick={() => setKey(createKey())}>change key</div>
+    }
+
+    renderWithConfig(<Page />)
+    await waitForNextTick()
+
+    fireEvent.focus(window)
+    fireEvent.click(screen.getByText('change key'))
+
+    await waitForNextTick()
+
+    // Initial and the new key.
+    expect(fetcher).toBeCalledTimes(2)
+  })
 })
