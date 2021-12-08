@@ -263,6 +263,12 @@ export const useSWRHandler = <Data = any, Error = any>(
         // For local state, compare and assign.
         if (!compare(stateRef.current.data, newData)) {
           newState.data = newData
+        } else {
+          // data and newData are deeply equal
+          // it should be safe to broadcast the stale data
+          newState.data = stateRef.current.data
+          // At the end of this function, `brocastState` invokes the `onStateUpdate` function,
+          // which takes care of avoiding the re-render
         }
 
         // For global state, it's possible that the key has changed.
