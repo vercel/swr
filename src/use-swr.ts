@@ -498,7 +498,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   // If there is `error`, the `error` needs to be thrown to the error boundary.
   // If there is no `error`, the `revalidation` promise needs to be thrown to
   // the suspense boundary.
-  if (suspense && isUndefined(data)) {
+  if (suspense && isUndefined(data) && key) {
     throw isUndefined(error) ? revalidate(WITH_DEDUPE) : error
   }
 
