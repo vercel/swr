@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect } from 'react'
-import { hasRequestAnimationFrame } from './helper'
+import { hasRequestAnimationFrame, hasWindow } from './helper'
 
 export const IS_SERVER = !hasWindow() || 'Deno' in window
 
