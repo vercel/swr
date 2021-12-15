@@ -4,14 +4,14 @@
 
 Deploy your own SWR project with Vercel.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/project?template=https://github.com/vercel/swr/tree/master/examples/infinite)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/project?template=https://github.com/vercel/swr/tree/main/examples/infinite)
 
 ## How to Use
 
 Download the example:
 
 ```bash
-curl https://codeload.github.com/vercel/swr/tar.gz/master | tar -xz --strip=2 swr-master/examples/infinite
+curl https://codeload.github.com/vercel/swr/tar.gz/main | tar -xz --strip=2 swr-main/examples/infinite
 cd basic
 ```
 

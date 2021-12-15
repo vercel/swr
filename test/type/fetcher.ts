@@ -4,8 +4,23 @@ import { expectType, truthy } from './utils'
 
 export function useDataErrorGeneric() {
   useSWR<{ id: number }>('/api/', () => ({ id: 123 }))
-  useSWR<string>('/api/', (key: string) => key)
-  useSWRInfinite<number>(() => '/api/', key => key)
+  useSWR<string, any>('/api/', (key: string) => key)
+  useSWRInfinite<string[], any>(
+    (index, previousPageData) => {
+      expectType<number>(index)
+      expectType<string[] | null>(previousPageData)
+      return 'key'
+    },
+    key => key
+  )
+  useSWRInfinite<{ id: number }[], any>(
+    (index, previousPageData) => {
+      expectType<number>(index)
+      expectType<{ id: number }[] | null>(previousPageData)
+      return truthy() ? 'key' : null
+    },
+    key => key
+  )
 }
 
 export function useString() {

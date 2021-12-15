@@ -1,12 +1,7 @@
 import { act, screen, fireEvent } from '@testing-library/react'
 import React, { useEffect, useState } from 'react'
 import useSWR, { SWRConfig, useSWRConfig, Middleware } from 'swr'
-import {
-  sleep,
-  renderWithConfig,
-  createKey,
-  renderWithGlobalCache
-} from './utils'
+import { renderWithConfig, createKey, renderWithGlobalCache } from './utils'
 
 describe('useSWR - configs', () => {
   it('should read the config fallback from the context', async () => {
@@ -30,8 +25,7 @@ describe('useSWR - configs', () => {
     await screen.findByText('data: 0')
 
     // wait for the refresh interval
-    await act(() => sleep(INTERVAL * 1.5))
-    screen.getByText('data: 1')
+    await screen.findByText('data: 1')
   })
 
   it('should stop revalidations when config.isPaused returns true', async () => {
@@ -45,7 +39,11 @@ describe('useSWR - configs', () => {
 
     function Page() {
       const [paused, setPaused] = useState(false)
-      const { data, error, mutate: _mutate } = useSWR(key, fetcher, {
+      const {
+        data,
+        error,
+        mutate: _mutate
+      } = useSWR(key, fetcher, {
         revalidateOnMount: true,
         refreshInterval: 1,
         isPaused() {

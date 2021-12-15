@@ -984,4 +984,42 @@ describe('useSWRInfinite', () => {
 
     expect(logger).toEqual([undefined, ['foo-0'], ['foo-1']])
   })
+
+  it('should pass the correct cursor information in `getKey`', async () => {
+    const key = createKey()
+    const fetcher = jest.fn(index => createResponse('data-' + index))
+    const logger = []
+    function Page() {
+      const { data } = useSWRInfinite(
+        (index, previousPageData) => {
+          logger.push(key + ':' + index + ':' + previousPageData)
+          return '' + index
+        },
+        fetcher,
+        {
+          dedupingInterval: 0,
+          initialSize: 5
+        }
+      )
+      return (
+        <>
+          <div>{data ? data.length : 0}</div>
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('5')
+
+    expect(
+      logger.every(log => {
+        const [k, index, previousData] = log.split(':')
+        return (
+          k === key &&
+          ((index === '0' && previousData === 'null') ||
+            previousData === 'data-' + (index - 1))
+        )
+      })
+    ).toBeTruthy()
+  })
 })

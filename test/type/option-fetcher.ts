@@ -4,7 +4,7 @@ import { expectType, truthy } from './utils'
 
 export function useDataErrorGeneric() {
   useSWR<{ id: number }>('/api/', { fetcher: () => ({ id: 123 }) })
-  useSWR<string>('/api/', { fetcher: (key: string) => key })
+  useSWR<string, any>('/api/', { fetcher: (key: string) => key })
   useSWRInfinite<number[]>(() => '/api/', { fetcher: key => key })
 }
 

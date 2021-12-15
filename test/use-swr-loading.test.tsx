@@ -1,5 +1,5 @@
 import { act, screen, fireEvent } from '@testing-library/react'
-import React from 'react'
+import React, { useEffect } from 'react'
 import useSWR from 'swr'
 import {
   createResponse,
@@ -75,6 +75,51 @@ describe('useSWR - loading', () => {
     // it doesn't re-render, but fetch was triggered
     expect(renderCount).toEqual(1)
     expect(dataLoaded).toEqual(true)
+  })
+
+  it('should avoid extra rerenders is the data is the `same`', async () => {
+    let renderCount = 0,
+      initialDataLoaded = false,
+      mutationDataLoaded = false
+
+    const key = createKey()
+    function Page() {
+      const { data, mutate } = useSWR(
+        key,
+        async () => {
+          const res = await createResponse({ greeting: 'hello' })
+          initialDataLoaded = true
+          return res
+        },
+        { fallbackData: { greeting: 'hello' } }
+      )
+
+      useEffect(() => {
+        const timeout = setTimeout(
+          () =>
+            mutate(async () => {
+              const res = await createResponse({ greeting: 'hello' })
+              mutationDataLoaded = true
+              return res
+            }),
+          200
+        )
+
+        return () => clearTimeout(timeout)
+      }, [mutate])
+
+      renderCount++
+      return <div>{data?.greeting}</div>
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('hello')
+
+    await act(() => sleep(1000)) // wait
+    // it doesn't re-render, but fetch was triggered
+    expect(initialDataLoaded).toEqual(true)
+    expect(mutationDataLoaded).toEqual(true)
+    expect(renderCount).toEqual(1)
   })
 
   it('should return enumerable object', async () => {

@@ -1,5 +1,11 @@
 import { act, fireEvent, screen } from '@testing-library/react'
-import React, { ReactNode, Suspense, useEffect, useState } from 'react'
+import React, {
+  ReactNode,
+  Suspense,
+  useEffect,
+  useReducer,
+  useState
+} from 'react'
 import useSWR, { mutate } from 'swr'
 import {
   createKey,
@@ -273,5 +279,41 @@ describe('useSWR - suspense', () => {
     await act(() => sleep(50)) // wait a moment to observe unnecessary renders
     expect(startRenderCount).toBe(2) // fallback + data
     expect(renderCount).toBe(1) // data
+  })
+
+  it('should return `undefined` data for falsy key', async () => {
+    const key = createKey()
+    const Section = ({ trigger }: { trigger: boolean }) => {
+      const { data } = useSWR(
+        trigger ? key : null,
+        () => createResponse('SWR'),
+        {
+          suspense: true
+        }
+      )
+      return <div>{data || 'empty'}</div>
+    }
+
+    const App = () => {
+      const [trigger, toggle] = useReducer(x => !x, false)
+      return (
+        <div>
+          <button onClick={toggle}>toggle</button>
+          <Suspense fallback={<div>fallback</div>}>
+            <Section trigger={trigger} />
+          </Suspense>
+        </div>
+      )
+    }
+
+    renderWithConfig(<App />)
+
+    await screen.findByText('empty')
+
+    fireEvent.click(screen.getByRole('button'))
+
+    screen.getByText('fallback')
+
+    await screen.findByText('SWR')
   })
 })

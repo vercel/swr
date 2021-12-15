@@ -6,13 +6,13 @@ export type InfiniteFetcher<
   Data = any,
   KeyLoader extends InfiniteKeyLoader = InfiniteKeyLoader
 > = KeyLoader extends (...args: any[]) => any
-  ? ReturnType<KeyLoader> extends (
+  ? ReturnType<KeyLoader> extends
       | readonly [...infer K]
       | null
       | false
-      | undefined)
-    ? ((...args: [...K]) => FetcherResponse<Data>)
-    : ReturnType<KeyLoader> extends (infer T | null | false | undefined)
+      | undefined
+    ? (...args: [...K]) => FetcherResponse<Data>
+    : ReturnType<KeyLoader> extends infer T | null | false | undefined
     ? (...args: [T]) => FetcherResponse<Data>
     : never
   : never
@@ -43,20 +43,48 @@ export interface SWRInfiniteResponse<Data = any, Error = any>
 }
 
 export interface SWRInfiniteHook {
-  <Data = any, Error = any, KeyLoader extends InfiniteKeyLoader = () => null>(
+  <
+    Data = any,
+    Error = any,
+    KeyLoader extends InfiniteKeyLoader = (
+      index: number,
+      previousPageData: Data | null
+    ) => null
+  >(
     getKey: KeyLoader
   ): SWRInfiniteResponse<Data, Error>
-  <Data = any, Error = any, KeyLoader extends InfiniteKeyLoader = () => null>(
+  <
+    Data = any,
+    Error = any,
+    KeyLoader extends InfiniteKeyLoader = (
+      index: number,
+      previousPageData: Data | null
+    ) => null
+  >(
     getKey: KeyLoader,
     fetcher: InfiniteFetcher<Data, KeyLoader> | null
   ): SWRInfiniteResponse<Data, Error>
-  <Data = any, Error = any, KeyLoader extends InfiniteKeyLoader = () => null>(
+  <
+    Data = any,
+    Error = any,
+    KeyLoader extends InfiniteKeyLoader = (
+      index: number,
+      previousPageData: Data | null
+    ) => null
+  >(
     getKey: KeyLoader,
     config:
       | SWRInfiniteConfiguration<Data, Error, InfiniteFetcher<Data, KeyLoader>>
       | undefined
   ): SWRInfiniteResponse<Data, Error>
-  <Data = any, Error = any, KeyLoader extends InfiniteKeyLoader = () => null>(
+  <
+    Data = any,
+    Error = any,
+    KeyLoader extends InfiniteKeyLoader = (
+      index: number,
+      previousPageData: Data | null
+    ) => null
+  >(
     getKey: KeyLoader,
     fetcher: InfiniteFetcher<Data, KeyLoader> | null,
     config:

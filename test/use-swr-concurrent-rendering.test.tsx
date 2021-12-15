@@ -29,6 +29,7 @@ describe('useSWR - concurrent rendering', () => {
 
     renderWithConfig = (element, config) =>
       act(() =>
+        // eslint-disable-next-line testing-library/no-render-in-setup
         reactRoot.render(
           <SWRConfig value={{ provider: () => new Map(), ...config }}>
             {element}

@@ -1,4 +1,4 @@
-import axios from 'axios'
+import { NextApiRequest, NextApiResponse } from 'next'
 
 const projects = [
   'facebook/flipper',
@@ -7,11 +7,11 @@ const projects = [
   'zeit/next.js'
 ]
 
-export default function api(req, res) {
+export default function api(req: NextApiRequest, res: NextApiResponse) {
   if (req.query.id) {
     // a slow endpoint for getting repo data
-    axios(`https://api.github.com/repos/${req.query.id}`)
-      .then(resp => resp.data)
+    fetch(`https://api.github.com/repos/${req.query.id}`)
+      .then(resp => resp.json())
       .then(data => {
         setTimeout(() => {
           res.json(data)

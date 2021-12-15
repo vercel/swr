@@ -3,7 +3,13 @@ import { defaultConfig } from './utils/config'
 import { SWRGlobalState, GlobalState } from './utils/global-state'
 import { IS_SERVER, rAF, useIsomorphicLayoutEffect } from './utils/env'
 import { serialize } from './utils/serialize'
-import { isUndefined, UNDEFINED, OBJECT, mergeObjects } from './utils/helper'
+import {
+  isUndefined,
+  UNDEFINED,
+  OBJECT,
+  mergeObjects,
+  isFunction
+} from './utils/helper'
 import ConfigProvider from './utils/config-context'
 import { useStateWithDeps } from './utils/state'
 import { withArgs } from './utils/resolve-args'
@@ -257,6 +263,12 @@ export const useSWRHandler = <Data = any, Error = any>(
         // For local state, compare and assign.
         if (!compare(stateRef.current.data, newData)) {
           newState.data = newData
+        } else {
+          // data and newData are deeply equal
+          // it should be safe to broadcast the stale data
+          newState.data = stateRef.current.data
+          // At the end of this function, `brocastState` invokes the `onStateUpdate` function,
+          // which takes care of avoiding the re-render
         }
 
         // For global state, it's possible that the key has changed.
@@ -440,11 +452,17 @@ export const useSWRHandler = <Data = any, Error = any>(
     let timer: any
 
     function next() {
+      // Use the passed interval
+      // ...or invoke the function with the updated data to get the interval
+      const interval = isFunction(refreshInterval)
+        ? refreshInterval(data)
+        : refreshInterval
+
       // We only start next interval if `refreshInterval` is not 0, and:
       // - `force` is true, which is the start of polling
       // - or `timer` is not 0, which means the effect wasn't canceled
-      if (refreshInterval && timer !== -1) {
-        timer = setTimeout(execute, refreshInterval)
+      if (interval && timer !== -1) {
+        timer = setTimeout(execute, interval)
       }
     }
 
@@ -480,7 +498,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   // If there is `error`, the `error` needs to be thrown to the error boundary.
   // If there is no `error`, the `revalidation` promise needs to be thrown to
   // the suspense boundary.
-  if (suspense && isUndefined(data)) {
+  if (suspense && isUndefined(data) && key) {
     throw isUndefined(error) ? revalidate(WITH_DEDUPE) : error
   }
 
