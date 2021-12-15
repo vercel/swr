@@ -15,3 +15,4 @@ export const mergeObjects = (a: any, b: any) => OBJECT.assign({}, a, b)
 const STR_UNDEFINED = 'undefined'
 export const hasWindow = () => typeof window != STR_UNDEFINED
 export const hasDocument = () => typeof document != STR_UNDEFINED
+export const hasRequestAnimationFrame = () => (hasWindow() && (typeof window['requestAnimationFrame'] != STR_UNDEFINED))
