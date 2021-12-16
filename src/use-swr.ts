@@ -203,6 +203,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         // considered here.
         startAt = CONCURRENT_PROMISES_TS[key]
         newData = await CONCURRENT_PROMISES[key]
+        newState.updatedAt = Date.now()
 
         if (shouldStartNewRequest) {
           // If the request isn't interrupted, clean it up after the
@@ -515,6 +516,10 @@ export const useSWRHandler = <Data = any, Error = any>(
     get isValidating() {
       stateDependencies.isValidating = true
       return isValidating
+    },
+    get updatedAt() {
+      stateDependencies.updatedAt = true
+      return stateRef.current.updatedAt
     }
   } as SWRResponse<Data, Error>
 }

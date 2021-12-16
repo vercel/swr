@@ -1,6 +1,6 @@
 import { act, fireEvent, screen } from '@testing-library/react'
 import React, { useState, useEffect } from 'react'
-import useSWR from 'swr'
+import useSWR, { useSWRConfig } from 'swr'
 import { createKey, createResponse, renderWithConfig, sleep } from './utils'
 
 describe('useSWR - key', () => {
@@ -212,5 +212,47 @@ describe('useSWR - key', () => {
 
     // Only 1 request since the keys are the same.
     expect(fetcher).toBeCalledTimes(1)
+  })
+
+  it.only('gracefully handles mutate on non existing keys', async () => {
+    const fetcher = jest.fn(() => 'data')
+    const mutSpy = jest.fn()
+
+    const key = createKey()
+    const mutKey = createKey()
+
+    function Page() {
+      const { mutate } = useSWRConfig()
+      useSWR(key, fetcher)
+
+      return (
+        <div>
+          <span>Hello</span>
+          <button
+            onClick={() =>
+              mutate(
+                mutKey,
+                () => {
+                  mutSpy()
+                  return undefined
+                },
+                false
+              )
+            }
+          >
+            mutate
+          </button>
+        </div>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('Hello')
+
+    fireEvent.click(screen.getByRole('button'))
+
+    expect(mutSpy).toHaveBeenCalledTimes(1)
+
+    screen.getByText('Hello')
   })
 })

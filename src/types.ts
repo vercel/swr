@@ -155,6 +155,7 @@ export type State<Data, Error> = {
   data?: Data
   error?: Error
   isValidating?: boolean
+  updatedAt?: number
 }
 
 export type Mutator<Data = any> = (
@@ -196,6 +197,7 @@ export interface SWRResponse<Data = any, Error = any> {
   data?: Data
   error?: Error
   mutate: KeyedMutator<Data>
+  updatedAt?: number
   isValidating: boolean
 }
 

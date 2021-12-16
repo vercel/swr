@@ -138,7 +138,7 @@ describe('useSWR - loading', () => {
     }
 
     renderWithConfig(<Page />)
-    screen.getByText('data,error,isValidating,mutate')
+    screen.getByText('data,error,isValidating,mutate,updatedAt')
   })
 
   it('should sync loading states', async () => {
