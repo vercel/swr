@@ -2,9 +2,9 @@ import { SWRConfiguration, SWRResponse, Arguments, BareFetcher } from 'swr'
 
 type FetcherResponse<Data = unknown> = Data | Promise<Data>
 
-export type InfiniteFetcher<
+export type SWRInfiniteFetcher<
   Data = any,
-  KeyLoader extends InfiniteKeyLoader = InfiniteKeyLoader
+  KeyLoader extends SWRInfiniteKeyLoader = SWRInfiniteKeyLoader
 > = KeyLoader extends (...args: any[]) => any
   ? ReturnType<KeyLoader> extends
       | readonly [...infer K]
@@ -17,7 +17,7 @@ export type InfiniteFetcher<
     : never
   : never
 
-export type InfiniteKeyLoader = (
+export type SWRInfiniteKeyLoader = (
   index: number,
   previousPageData: any | null
 ) => Arguments
@@ -25,7 +25,7 @@ export type InfiniteKeyLoader = (
 export interface SWRInfiniteConfiguration<
   Data = any,
   Error = any,
-  Fn extends InfiniteFetcher<Data> = BareFetcher<Data>
+  Fn extends SWRInfiniteFetcher<Data> = BareFetcher<Data>
 > extends SWRConfiguration<Data[], Error> {
   initialSize?: number
   revalidateAll?: boolean
@@ -46,7 +46,7 @@ export interface SWRInfiniteHook {
   <
     Data = any,
     Error = any,
-    KeyLoader extends InfiniteKeyLoader = (
+    KeyLoader extends SWRInfiniteKeyLoader = (
       index: number,
       previousPageData: Data | null
     ) => null
@@ -56,55 +56,63 @@ export interface SWRInfiniteHook {
   <
     Data = any,
     Error = any,
-    KeyLoader extends InfiniteKeyLoader = (
+    KeyLoader extends SWRInfiniteKeyLoader = (
       index: number,
       previousPageData: Data | null
     ) => null
   >(
     getKey: KeyLoader,
-    fetcher: InfiniteFetcher<Data, KeyLoader> | null
+    fetcher: SWRInfiniteFetcher<Data, KeyLoader> | null
   ): SWRInfiniteResponse<Data, Error>
   <
     Data = any,
     Error = any,
-    KeyLoader extends InfiniteKeyLoader = (
+    KeyLoader extends SWRInfiniteKeyLoader = (
       index: number,
       previousPageData: Data | null
     ) => null
   >(
     getKey: KeyLoader,
     config:
-      | SWRInfiniteConfiguration<Data, Error, InfiniteFetcher<Data, KeyLoader>>
+      | SWRInfiniteConfiguration<
+          Data,
+          Error,
+          SWRInfiniteFetcher<Data, KeyLoader>
+        >
       | undefined
   ): SWRInfiniteResponse<Data, Error>
   <
     Data = any,
     Error = any,
-    KeyLoader extends InfiniteKeyLoader = (
+    KeyLoader extends SWRInfiniteKeyLoader = (
       index: number,
       previousPageData: Data | null
     ) => null
   >(
     getKey: KeyLoader,
-    fetcher: InfiniteFetcher<Data, KeyLoader> | null,
+    fetcher: SWRInfiniteFetcher<Data, KeyLoader> | null,
     config:
-      | SWRInfiniteConfiguration<Data, Error, InfiniteFetcher<Data, KeyLoader>>
+      | SWRInfiniteConfiguration<
+          Data,
+          Error,
+          SWRInfiniteFetcher<Data, KeyLoader>
+        >
       | undefined
   ): SWRInfiniteResponse<Data, Error>
-  <Data = any, Error = any>(getKey: InfiniteKeyLoader): SWRInfiniteResponse<
+  <Data = any, Error = any>(getKey: SWRInfiniteKeyLoader): SWRInfiniteResponse<
     Data,
     Error
   >
   <Data = any, Error = any>(
-    getKey: InfiniteKeyLoader,
+    getKey: SWRInfiniteKeyLoader,
     fetcher: BareFetcher<Data> | null
   ): SWRInfiniteResponse<Data, Error>
   <Data = any, Error = any>(
-    getKey: InfiniteKeyLoader,
+    getKey: SWRInfiniteKeyLoader,
     config: SWRInfiniteConfiguration<Data, Error, BareFetcher<Data>> | undefined
   ): SWRInfiniteResponse<Data, Error>
   <Data = any, Error = any>(
-    getKey: InfiniteKeyLoader,
+    getKey: SWRInfiniteKeyLoader,
     fetcher: BareFetcher<Data> | null,
     config: SWRInfiniteConfiguration<Data, Error, BareFetcher<Data>> | undefined
   ): SWRInfiniteResponse<Data, Error>
