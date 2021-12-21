@@ -17,23 +17,23 @@ import {
   SWRInfiniteConfiguration,
   SWRInfiniteResponse,
   SWRInfiniteHook,
-  InfiniteKeyLoader,
-  InfiniteFetcher
+  SWRInfiniteKeyLoader,
+  SWRInfiniteFetcher
 } from './types'
 
 const INFINITE_PREFIX = '$inf$'
 
-const getFirstPageKey = (getKey: InfiniteKeyLoader) => {
+const getFirstPageKey = (getKey: SWRInfiniteKeyLoader) => {
   return serialize(getKey ? getKey(0, null) : null)[0]
 }
 
-export const unstable_serialize = (getKey: InfiniteKeyLoader) => {
+export const unstable_serialize = (getKey: SWRInfiniteKeyLoader) => {
   return INFINITE_PREFIX + getFirstPageKey(getKey)
 }
 
 export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
   (
-    getKey: InfiniteKeyLoader,
+    getKey: SWRInfiniteKeyLoader,
     fn: BareFetcher<Data> | null,
     config: Omit<typeof SWRConfig.default, 'fetcher'> &
       Omit<SWRInfiniteConfiguration<Data, Error>, 'fetcher'>
@@ -267,4 +267,10 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
   }) as unknown as Middleware
 
 export default withMiddleware(useSWR, infinite) as SWRInfiniteHook
-export { SWRInfiniteConfiguration, SWRInfiniteResponse, InfiniteFetcher }
+export {
+  SWRInfiniteConfiguration,
+  SWRInfiniteResponse,
+  SWRInfiniteHook,
+  SWRInfiniteKeyLoader,
+  SWRInfiniteFetcher
+}
