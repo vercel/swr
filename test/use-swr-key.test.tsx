@@ -141,6 +141,23 @@ describe('useSWR - key', () => {
     await screen.findByText(`${baseKey}-second`)
   })
 
+  it('should not fetch if the function key throws an error', async () => {
+    let value = 0
+    const fetcher = jest.fn(() => value++)
+    const key = () => {
+      throw new Error('error')
+    }
+
+    function Page() {
+      const { data } = useSWR(key, fetcher)
+      return <div>{`key-${data}`}</div>
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText(`key-undefined`)
+    expect(fetcher).toBeCalledTimes(0)
+  })
+
   it('should cleanup state when key turns to empty', async () => {
     const key = createKey()
     function Page() {

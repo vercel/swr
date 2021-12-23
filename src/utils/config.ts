@@ -1,8 +1,4 @@
-import { stableHash } from './hash'
-import { initCache } from './cache'
-import { preset } from './web-preset'
-import { slowConnection } from './env'
-import {
+import type {
   PublicConfiguration,
   FullConfiguration,
   RevalidatorOptions,
@@ -10,6 +6,10 @@ import {
   ScopedMutator,
   Cache
 } from '../types'
+import { stableHash } from './hash'
+import { initCache } from './cache'
+import { preset } from './web-preset'
+import { slowConnection } from './env'
 import { isUndefined, noop, mergeObjects } from './helper'
 
 // error retry
