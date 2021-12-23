@@ -35,7 +35,7 @@ const WITH_DEDUPE = { dedupe: true }
 
 export const useSWRHandler = <Data = any, Error = any>(
   _key: Key,
-  fn: Fetcher<Data> | null,
+  fetcher: Fetcher<Data> | null,
   config: typeof defaultConfig & SWRConfiguration<Data, Error>
 ) => {
   const {
@@ -74,6 +74,7 @@ export const useSWRHandler = <Data = any, Error = any>(
 
   // Refs to keep the key and config.
   const keyRef = useRef(key)
+  const fetcherRef = useRef(fetcher)
   const configRef = useRef(config)
   const getConfig = () => configRef.current
 
@@ -106,7 +107,7 @@ export const useSWRHandler = <Data = any, Error = any>(
 
   // Resolve the current validating state.
   const resolveValidating = () => {
-    if (!key || !fn) return false
+    if (!key || !fetcher) return false
     if (cache.get(keyValidating)) return true
 
     // If it's not mounted yet and it should revalidate on mount, revalidate.
@@ -127,7 +128,14 @@ export const useSWRHandler = <Data = any, Error = any>(
   // `fetcher`, to correctly handle the many edge cases.
   const revalidate = useCallback(
     async (revalidateOpts?: RevalidatorOptions): Promise<boolean> => {
-      if (!key || !fn || unmountedRef.current || getConfig().isPaused()) {
+      const currentFetcher = fetcherRef.current
+
+      if (
+        !key ||
+        !currentFetcher ||
+        unmountedRef.current ||
+        getConfig().isPaused()
+      ) {
         return false
       }
 
@@ -196,7 +204,7 @@ export const useSWRHandler = <Data = any, Error = any>(
 
           // Start the request and keep the timestamp.
           CONCURRENT_PROMISES_TS[key] = getTimestamp()
-          CONCURRENT_PROMISES[key] = fn(...fnArgs)
+          CONCURRENT_PROMISES[key] = currentFetcher(...fnArgs)
         }
 
         // Wait until the ongoing request is done. Deduplication is also
@@ -345,8 +353,9 @@ export const useSWRHandler = <Data = any, Error = any>(
     []
   )
 
-  // Always update config.
+  // Always update fetcher and config refs.
   useIsomorphicLayoutEffect(() => {
+    fetcherRef.current = fetcher
     configRef.current = config
   })
 
