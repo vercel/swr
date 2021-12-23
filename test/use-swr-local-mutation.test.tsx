@@ -323,6 +323,18 @@ describe('useSWR - local mutation', () => {
     ).rejects.toBeInstanceOf(Error)
   })
 
+  it('globalMutate should return undefined if the key is serialized to "" ', async () => {
+    // returns the data if promise resolved
+    expect(globalMutate(null, Promise.resolve('data'))).resolves.toBe(undefined)
+
+    // throw the error if promise rejected
+    expect(
+      globalMutate(() => {
+        throw new Error('error')
+      }, Promise.resolve('data'))
+    ).resolves.toBe(undefined)
+  })
+
   it('should get bound mutate from useSWR', async () => {
     const key = createKey()
     function Page() {
@@ -921,5 +933,53 @@ describe('useSWR - local mutation', () => {
       'sync3',
       'async3'
     ])
+  })
+
+  it('should ignore in flight mutation error when calling another async mutate', async () => {
+    const key = createKey()
+    const errorMutate = () =>
+      new Promise<string>((_, reject) => {
+        setTimeout(() => reject('error'), 200)
+      })
+
+    const successMutate = () =>
+      new Promise<string>(resolve => {
+        setTimeout(() => resolve('success'), 100)
+      })
+    function Page() {
+      const { data, mutate: boundMutate } = useSWR(key, () =>
+        createResponse('data', { delay: 100 })
+      )
+      return (
+        <div>
+          <div>{data}</div>
+          <button
+            onClick={() => {
+              boundMutate(successMutate, false)
+            }}
+          >
+            success-mutate
+          </button>
+          <button
+            onClick={() => {
+              boundMutate(errorMutate, false).catch(() => {})
+            }}
+          >
+            error-mutate
+          </button>
+        </div>
+      )
+    }
+    renderWithConfig(<Page />)
+    await screen.findByText('data')
+
+    fireEvent.click(screen.getByText('error-mutate'))
+    await sleep(50)
+
+    fireEvent.click(screen.getByText('success-mutate'))
+    await screen.findByText('success')
+
+    await sleep(300)
+    await screen.findByText('success')
   })
 })
