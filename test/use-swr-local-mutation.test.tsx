@@ -982,4 +982,33 @@ describe('useSWR - local mutation', () => {
     await sleep(300)
     await screen.findByText('success')
   })
+
+  it('should not update the cache when `populateCache` is disabled', async () => {
+    const key = createKey()
+    function Page() {
+      const { data, mutate } = useSWR(key, () => 'foo')
+      return (
+        <>
+          <div>data: {String(data)}</div>
+          <button
+            onClick={() =>
+              mutate('bar', {
+                revalidate: false,
+                populateCache: false
+              })
+            }
+          >
+            mutate
+          </button>
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data: foo')
+
+    fireEvent.click(screen.getByText('mutate'))
+    await sleep(30)
+    await screen.findByText('data: foo')
+  })
 })
