@@ -4,14 +4,14 @@ import { SWRGlobalState, GlobalState } from './global-state'
 import { broadcastState } from './broadcast-state'
 import { getTimestamp } from './timestamp'
 
-import { Key, Cache, MutatorCallback, MutatorOption } from '../types'
+import { Key, Cache, MutatorCallback, MutatorOptions } from '../types'
 
 export const internalMutate = async <Data>(
   ...args: [
     Cache,
     Key,
     undefined | Data | Promise<Data | undefined> | MutatorCallback<Data>,
-    undefined | boolean | MutatorOption
+    undefined | boolean | MutatorOptions
   ]
 ) => {
   const [cache, _key, _data, _opts] = args
