@@ -21,6 +21,7 @@ export {
   BareFetcher,
   Fetcher,
   MutatorCallback,
+  MutatorOptions,
   Middleware,
   Arguments
 } from './types'
