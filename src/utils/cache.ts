@@ -48,15 +48,7 @@ export const initCache = <Data = any>(
     let unmount = noop
 
     // Update the state if it's new, or the provider has been extended.
-    SWRGlobalState.set(provider, [
-      EVENT_REVALIDATORS,
-      {},
-      {},
-      {},
-      {},
-      {},
-      mutate
-    ])
+    SWRGlobalState.set(provider, [EVENT_REVALIDATORS, {}, {}, {}, {}, mutate])
 
     // This is a new provider, we need to initialize it and setup DOM events
     // listeners for `focus` and `reconnect` actions.
@@ -104,5 +96,5 @@ export const initCache = <Data = any>(
     return [provider, mutate, unmount]
   }
 
-  return [provider, (SWRGlobalState.get(provider) as GlobalState)[6]]
+  return [provider, (SWRGlobalState.get(provider) as GlobalState)[5]]
 }

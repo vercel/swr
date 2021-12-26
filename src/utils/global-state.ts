@@ -10,8 +10,7 @@ export type GlobalState = [
   Record<string, StateUpdateCallback[]>, // STATE_UPDATERS
   Record<string, number>, // MUTATION_TS
   Record<string, number>, // MUTATION_END_TS
-  Record<string, any>, // CONCURRENT_PROMISES
-  Record<string, number>, // CONCURRENT_PROMISES_TS
+  Record<string, [any, number]>, // CONCURRENT_REQUESTS: [data, ts]
   ScopedMutator // Mutator
 ]
 
