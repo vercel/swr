@@ -22,8 +22,8 @@ export const internalMutate = async <Data>(
     typeof _opts === 'boolean' ? { revalidate: _opts } : _opts || {}
 
   // Fallback to `true` if it's not explicitly set to `false`
+  let populateCache = options.populateCache !== false
   const revalidate = options.revalidate !== false
-  const populateCache = options.populateCache !== false
   const rollbackOnError = options.rollbackOnError !== false
   const optimisticData = options.optimisticData
 
@@ -60,6 +60,7 @@ export const internalMutate = async <Data>(
 
   // Do optimistic data update.
   if (hasOptimisticData) {
+    cache.set(key, optimisticData)
     broadcastState(cache, key, optimisticData)
   }
 
@@ -88,7 +89,10 @@ export const internalMutate = async <Data>(
       if (error) throw error
       return data
     } else if (error && hasOptimisticData && rollbackOnError) {
-      broadcastState(cache, key, rollbackData)
+      // Rollback. Always populate the cache in this case.
+      populateCache = true
+      data = rollbackData
+      cache.set(key, rollbackData)
     }
   }
 
