@@ -53,3 +53,9 @@ export const renderWithGlobalCache = (
 ): ReturnType<typeof _renderWithConfig> => {
   return _renderWithConfig(element, { ...config })
 }
+
+export const mockVisibilityHidden = () => {
+  const mockVisibilityState = jest.spyOn(document, 'visibilityState', 'get')
+  mockVisibilityState.mockImplementation(() => 'hidden')
+  return () => mockVisibilityState.mockRestore()
+}
