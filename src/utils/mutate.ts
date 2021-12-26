@@ -1,5 +1,5 @@
 import { serialize } from './serialize'
-import { isFunction, UNDEFINED } from './helper'
+import { isFunction, isUndefined, UNDEFINED } from './helper'
 import { SWRGlobalState, GlobalState } from './global-state'
 import { broadcastState } from './broadcast-state'
 import { getTimestamp } from './timestamp'
@@ -11,7 +11,7 @@ export const internalMutate = async <Data>(
     Cache,
     Key,
     undefined | Data | Promise<Data | undefined> | MutatorCallback<Data>,
-    undefined | boolean | MutatorOptions
+    undefined | boolean | MutatorOptions<Data>
   ]
 ) => {
   const [cache, _key, _data, _opts] = args
@@ -24,6 +24,8 @@ export const internalMutate = async <Data>(
   // Fallback to `true` if it's not explicitly set to `false`
   const revalidate = options.revalidate !== false
   const populateCache = options.populateCache !== false
+  const rollbackOnError = options.rollbackOnError !== false
+  const optimisticData = options.optimisticData
 
   // Serilaize key
   const [key, , keyErr] = serialize(_key)
@@ -53,6 +55,13 @@ export const internalMutate = async <Data>(
   // Update global timestamps.
   const beforeMutationTs = (MUTATION_TS[key] = getTimestamp())
   MUTATION_END_TS[key] = 0
+  const hasOptimisticData = !isUndefined(optimisticData)
+  const rollbackData = cache.get(key)
+
+  // Do optimistic data update.
+  if (hasOptimisticData) {
+    broadcastState(cache, key, optimisticData)
+  }
 
   if (isFunction(data)) {
     // `data` is a function, call it passing current cache value.
@@ -78,6 +87,8 @@ export const internalMutate = async <Data>(
     if (beforeMutationTs !== MUTATION_TS[key]) {
       if (error) throw error
       return data
+    } else if (error && hasOptimisticData && rollbackOnError) {
+      broadcastState(cache, key, rollbackData)
     }
   }
 
