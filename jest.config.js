@@ -3,15 +3,20 @@ module.exports = {
   testRegex: '/test/.*\\.test\\.tsx?$',
   modulePathIgnorePatterns: ['<rootDir>/examples/'],
   setupFilesAfterEnv: ['<rootDir>/scripts/jest-setup.ts'],
+  moduleNameMapper: {
+    '^swr$': '<rootDir>/src',
+    '^swr/infinite$': '<rootDir>/infinite/index.ts',
+    '^swr/immutable$': '<rootDir>/immutable/index.ts'
+  },
   transform: {
     '^.+\\.(t|j)sx?$': [
       '@swc-node/jest',
       {
         jsc: {
-          minify: false,
+          minify: false
         }
-      },
-    ],
+      }
+    ]
   },
   coveragePathIgnorePatterns: ['/node_modules/', '/dist/', '/test/'],
   coverageProvider: 'v8',

@@ -13,27 +13,28 @@ import { useIsomorphicLayoutEffect } from '../src/utils/env'
 import { serialize } from '../src/utils/serialize'
 import { isUndefined, isFunction, UNDEFINED } from '../src/utils/helper'
 import { withMiddleware } from '../src/utils/with-middleware'
-import {
+
+import type {
   SWRInfiniteConfiguration,
   SWRInfiniteResponse,
   SWRInfiniteHook,
-  InfiniteKeyLoader,
-  InfiniteFetcher
+  SWRInfiniteKeyLoader,
+  SWRInfiniteFetcher
 } from './types'
 
 const INFINITE_PREFIX = '$inf$'
 
-const getFirstPageKey = (getKey: InfiniteKeyLoader) => {
+const getFirstPageKey = (getKey: SWRInfiniteKeyLoader) => {
   return serialize(getKey ? getKey(0, null) : null)[0]
 }
 
-export const unstable_serialize = (getKey: InfiniteKeyLoader) => {
+export const unstable_serialize = (getKey: SWRInfiniteKeyLoader) => {
   return INFINITE_PREFIX + getFirstPageKey(getKey)
 }
 
 export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
   (
-    getKey: InfiniteKeyLoader,
+    getKey: SWRInfiniteKeyLoader,
     fn: BareFetcher<Data> | null,
     config: Omit<typeof SWRConfig.default, 'fetcher'> &
       Omit<SWRInfiniteConfiguration<Data, Error>, 'fetcher'>
@@ -115,9 +116,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
 
         let previousPageData = null
         for (let i = 0; i < pageSize; ++i) {
-          const [pageKey, pageArgs] = serialize(
-            getKey ? getKey(i, previousPageData) : null
-          )
+          const [pageKey, pageArgs] = serialize(getKey(i, previousPageData))
 
           if (!pageKey) {
             // `pageKey` is falsy, stop fetching new pages.
@@ -208,7 +207,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
 
       let previousPageData = null
       for (let i = 0; i < pageSize; ++i) {
-        const [pageKey] = serialize(getKey ? getKey(i, previousPageData) : null)
+        const [pageKey] = serialize(getKey(i, previousPageData))
 
         // Get the cached page data.
         const pageData = pageKey ? cache.get(pageKey) : UNDEFINED
@@ -267,4 +266,17 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
   }) as unknown as Middleware
 
 export default withMiddleware(useSWR, infinite) as SWRInfiniteHook
-export { SWRInfiniteConfiguration, SWRInfiniteResponse, InfiniteFetcher }
+
+export {
+  SWRInfiniteConfiguration,
+  SWRInfiniteResponse,
+  SWRInfiniteHook,
+  SWRInfiniteKeyLoader,
+  SWRInfiniteFetcher
+}
+
+// @TODO: remove this in 2.0
+/**
+ * @deprecated `InfiniteFetcher` will be renamed to `SWRInfiniteFetcher`.
+ */
+export type InfiniteFetcher = SWRInfiniteFetcher

@@ -41,9 +41,10 @@ export const initCache = <Data = any>(
     // If there's no global state bound to the provider, create a new one with the
     // new mutate function.
     const EVENT_REVALIDATORS = {}
-    const mutate = internalMutate.bind(UNDEFINED, provider) as ScopedMutator<
-      Data
-    >
+    const mutate = internalMutate.bind(
+      UNDEFINED,
+      provider
+    ) as ScopedMutator<Data>
     let unmount = noop
 
     // Update the state if it's new, or the provider has been extended.
@@ -60,18 +61,30 @@ export const initCache = <Data = any>(
     // This is a new provider, we need to initialize it and setup DOM events
     // listeners for `focus` and `reconnect` actions.
     if (!IS_SERVER) {
+      // When listening to the native events for auto revalidations,
+      // we intentionally put a delay (setTimeout) here to make sure they are
+      // fired after immediate JavaScript executions, which can possibly be
+      // React's state updates.
+      // This avoids some unnecessary revalidations such as
+      // https://github.com/vercel/swr/issues/1680.
       const releaseFocus = opts.initFocus(
-        revalidateAllKeys.bind(
+        setTimeout.bind(
           UNDEFINED,
-          EVENT_REVALIDATORS,
-          revalidateEvents.FOCUS_EVENT
+          revalidateAllKeys.bind(
+            UNDEFINED,
+            EVENT_REVALIDATORS,
+            revalidateEvents.FOCUS_EVENT
+          )
         )
       )
       const releaseReconnect = opts.initReconnect(
-        revalidateAllKeys.bind(
+        setTimeout.bind(
           UNDEFINED,
-          EVENT_REVALIDATORS,
-          revalidateEvents.RECONNECT_EVENT
+          revalidateAllKeys.bind(
+            UNDEFINED,
+            EVENT_REVALIDATORS,
+            revalidateEvents.RECONNECT_EVENT
+          )
         )
       )
       unmount = () => {

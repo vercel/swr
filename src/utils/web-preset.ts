@@ -36,21 +36,21 @@ const isVisible = () => {
   return true
 }
 
-const initFocus = (cb: () => void) => {
+const initFocus = (callback: () => void) => {
   // focus revalidate
-  onDocumentEvent('visibilitychange', cb)
-  onWindowEvent('focus', cb)
+  onDocumentEvent('visibilitychange', callback)
+  onWindowEvent('focus', callback)
   return () => {
-    offDocumentEvent('visibilitychange', cb)
-    offWindowEvent('focus', cb)
+    offDocumentEvent('visibilitychange', callback)
+    offWindowEvent('focus', callback)
   }
 }
 
-const initReconnect = (cb: () => void) => {
+const initReconnect = (callback: () => void) => {
   // revalidate on reconnected
   const onOnline = () => {
     online = true
-    cb()
+    callback()
   }
   // nothing to revalidate, just update the status
   const onOffline = () => {

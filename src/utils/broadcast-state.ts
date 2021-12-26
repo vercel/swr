@@ -8,7 +8,8 @@ export const broadcastState: Broadcaster = (
   data,
   error,
   isValidating,
-  revalidate
+  revalidate,
+  populateCache = true
 ) => {
   const [
     EVENT_REVALIDATORS,
@@ -21,9 +22,11 @@ export const broadcastState: Broadcaster = (
   const revalidators = EVENT_REVALIDATORS[key]
   const updaters = STATE_UPDATERS[key] || []
 
-  // Always update states of all hooks.
-  for (let i = 0; i < updaters.length; ++i) {
-    updaters[i](data, error, isValidating)
+  // Cache was populated, update states of all hooks.
+  if (populateCache && updaters) {
+    for (let i = 0; i < updaters.length; ++i) {
+      updaters[i](data, error, isValidating)
+    }
   }
 
   // If we also need to revalidate, only do it for the first hook.
