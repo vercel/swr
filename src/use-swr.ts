@@ -77,6 +77,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   const fetcherRef = useRef(fetcher)
   const configRef = useRef(config)
   const getConfig = () => configRef.current
+  const isActive = () => getConfig().isVisible() && getConfig().isOnline()
 
   // Get the current state that SWR should return.
   const cached = cache.get(key)
@@ -306,10 +307,14 @@ export const useSWRHandler = <Data = any, Error = any>(
             getConfig().onError(err, key, config)
             if (config.shouldRetryOnError) {
               // When retrying, dedupe is always enabled
-              getConfig().onErrorRetry(err, key, config, revalidate, {
-                retryCount: (opts.retryCount || 0) + 1,
-                dedupe: true
-              })
+              if (isActive()) {
+                // If it's active, stop. It will auto revalidate when refocusing
+                // or reconnecting.
+                getConfig().onErrorRetry(err, key, config, revalidate, {
+                  retryCount: (opts.retryCount || 0) + 1,
+                  dedupe: true
+                })
+              }
             }
           }
         }
@@ -366,8 +371,6 @@ export const useSWRHandler = <Data = any, Error = any>(
     // Not the initial render.
     const keyChanged = initialMountedRef.current
     const softRevalidate = revalidate.bind(UNDEFINED, WITH_DEDUPE)
-
-    const isActive = () => getConfig().isVisible() && getConfig().isOnline()
 
     // Expose state updater to global event listeners. So we can update hook's
     // internal state from the outside.
