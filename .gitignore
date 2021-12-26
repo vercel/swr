@@ -13,3 +13,4 @@ package-lock.json
 tsconfig.tsbuildinfo
 **/*.yalc
 yalc.lock
+coverage
