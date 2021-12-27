@@ -1049,7 +1049,12 @@ describe('useSWR - local mutation', () => {
         createResponse(cnt++, { delay: 20 })
       )
       mutate = boundMutate
-      renderedData.push(data)
+      if (
+        !renderedData.length ||
+        renderedData[renderedData.length - 1] !== data
+      ) {
+        renderedData.push(data)
+      }
       return <div>data: {String(data)}</div>
     }
 
@@ -1068,5 +1073,43 @@ describe('useSWR - local mutation', () => {
 
     await sleep(30)
     expect(renderedData).toEqual([undefined, 0, 'bar', 0, 1])
+  })
+
+  it('should not rollback optimistic updates if `rollbackOnError`', async () => {
+    const key = createKey()
+    const renderedData = []
+    let mutate
+    let cnt = 0
+
+    function Page() {
+      const { data, mutate: boundMutate } = useSWR(key, () =>
+        createResponse(cnt++, { delay: 20 })
+      )
+      mutate = boundMutate
+      if (
+        !renderedData.length ||
+        renderedData[renderedData.length - 1] !== data
+      ) {
+        renderedData.push(data)
+      }
+      return <div>data: {String(data)}</div>
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data: 0')
+
+    try {
+      await act(() =>
+        mutate(createResponse(new Error('baz'), { delay: 20 }), {
+          optimisticData: 'bar',
+          rollbackOnError: false
+        })
+      )
+    } catch (e) {
+      expect(e.message).toEqual('baz')
+    }
+
+    await sleep(30)
+    expect(renderedData).toEqual([undefined, 0, 'bar', 1])
   })
 })
