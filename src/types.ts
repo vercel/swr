@@ -142,9 +142,11 @@ export type MutatorCallback<Data = any> = (
   currentValue?: Data
 ) => Promise<undefined | Data> | undefined | Data
 
-export type MutatorOptions = {
+export type MutatorOptions<Data = any> = {
   revalidate?: boolean
   populateCache?: boolean
+  optimisticData?: Data
+  rollbackOnError?: boolean
 }
 
 export type Broadcaster<Data = any, Error = any> = (
@@ -167,7 +169,7 @@ export type Mutator<Data = any> = (
   cache: Cache,
   key: Key,
   data?: Data | Promise<Data> | MutatorCallback<Data>,
-  opts?: boolean | MutatorOptions
+  opts?: boolean | MutatorOptions<Data>
 ) => Promise<Data | undefined>
 
 export interface ScopedMutator<Data = any> {
@@ -175,19 +177,19 @@ export interface ScopedMutator<Data = any> {
   (
     key: Key,
     data?: Data | Promise<Data> | MutatorCallback<Data>,
-    opts?: boolean | MutatorOptions
+    opts?: boolean | MutatorOptions<Data>
   ): Promise<Data | undefined>
   /** This is used for global mutator */
   <T = any>(
     key: Key,
     data?: T | Promise<T> | MutatorCallback<T>,
-    opts?: boolean | MutatorOptions
+    opts?: boolean | MutatorOptions<Data>
   ): Promise<T | undefined>
 }
 
 export type KeyedMutator<Data> = (
   data?: Data | Promise<Data> | MutatorCallback<Data>,
-  opts?: boolean | MutatorOptions
+  opts?: boolean | MutatorOptions<Data>
 ) => Promise<Data | undefined>
 
 // Public types

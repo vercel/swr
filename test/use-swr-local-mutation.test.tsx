@@ -1011,4 +1011,105 @@ describe('useSWR - local mutation', () => {
     await sleep(30)
     await screen.findByText('data: foo')
   })
+
+  it('should support optimistic updates via `optimisticData`', async () => {
+    const key = createKey()
+    const renderedData = []
+    let mutate
+
+    function Page() {
+      const { data, mutate: boundMutate } = useSWR(key, () =>
+        createResponse('foo', { delay: 20 })
+      )
+      mutate = boundMutate
+      renderedData.push(data)
+      return <div>data: {String(data)}</div>
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data: foo')
+
+    await act(() =>
+      mutate(createResponse('baz', { delay: 20 }), {
+        optimisticData: 'bar'
+      })
+    )
+    await sleep(30)
+    expect(renderedData).toEqual([undefined, 'foo', 'bar', 'baz', 'foo'])
+  })
+
+  it('should rollback optimistic updates when mutation fails', async () => {
+    const key = createKey()
+    const renderedData = []
+    let mutate
+    let cnt = 0
+
+    function Page() {
+      const { data, mutate: boundMutate } = useSWR(key, () =>
+        createResponse(cnt++, { delay: 20 })
+      )
+      mutate = boundMutate
+      if (
+        !renderedData.length ||
+        renderedData[renderedData.length - 1] !== data
+      ) {
+        renderedData.push(data)
+      }
+      return <div>data: {String(data)}</div>
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data: 0')
+
+    try {
+      await act(() =>
+        mutate(createResponse(new Error('baz'), { delay: 20 }), {
+          optimisticData: 'bar'
+        })
+      )
+    } catch (e) {
+      expect(e.message).toEqual('baz')
+    }
+
+    await sleep(30)
+    expect(renderedData).toEqual([undefined, 0, 'bar', 0, 1])
+  })
+
+  it('should not rollback optimistic updates if `rollbackOnError`', async () => {
+    const key = createKey()
+    const renderedData = []
+    let mutate
+    let cnt = 0
+
+    function Page() {
+      const { data, mutate: boundMutate } = useSWR(key, () =>
+        createResponse(cnt++, { delay: 20 })
+      )
+      mutate = boundMutate
+      if (
+        !renderedData.length ||
+        renderedData[renderedData.length - 1] !== data
+      ) {
+        renderedData.push(data)
+      }
+      return <div>data: {String(data)}</div>
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data: 0')
+
+    try {
+      await act(() =>
+        mutate(createResponse(new Error('baz'), { delay: 20 }), {
+          optimisticData: 'bar',
+          rollbackOnError: false
+        })
+      )
+    } catch (e) {
+      expect(e.message).toEqual('baz')
+    }
+
+    await sleep(30)
+    expect(renderedData).toEqual([undefined, 0, 'bar', 1])
+  })
 })
