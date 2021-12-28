@@ -5,10 +5,10 @@
 
 import { screen, fireEvent } from '@testing-library/react'
 import { createKey, createResponse, sleep } from './utils'
+let React // swc transformer requires to define React at the top
 
 describe('useSWR - concurrent rendering', () => {
-  let React, ReactDOM, act, useSWR, reactRoot, renderWithConfig
-
+  let ReactDOM, act, useSWR, reactRoot, renderWithConfig
   beforeAll(() => {
     jest.resetModules()
     jest.mock('scheduler', () => require('scheduler/unstable_mock'))
@@ -29,6 +29,7 @@ describe('useSWR - concurrent rendering', () => {
 
     renderWithConfig = (element, config) =>
       act(() =>
+        // eslint-disable-next-line testing-library/no-render-in-setup
         reactRoot.render(
           <SWRConfig value={{ provider: () => new Map(), ...config }}>
             {element}

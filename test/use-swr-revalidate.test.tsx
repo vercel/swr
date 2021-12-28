@@ -87,7 +87,7 @@ describe('useSWR - revalidate', () => {
     faster = true
     fireEvent.click(screen.getByText('data:'))
 
-    await act(async () => sleep(150))
+    await act(() => sleep(150))
     screen.getByText('data: 1')
   })
 

@@ -5,7 +5,7 @@ const bundle = require('bunchee').bundle
 const childProcess = require('child_process')
 
 const args = process.argv
-const target = args[2]
+const target = args[2] || 'core'
 
 const entryMap = {
   core: {

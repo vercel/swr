@@ -1,8 +1,4 @@
-import { stableHash } from './hash'
-import { initCache } from './cache'
-import { preset } from './web-preset'
-import { slowConnection } from './env'
-import {
+import type {
   PublicConfiguration,
   FullConfiguration,
   RevalidatorOptions,
@@ -10,6 +6,10 @@ import {
   ScopedMutator,
   Cache
 } from '../types'
+import { stableHash } from './hash'
+import { initCache } from './cache'
+import { preset } from './web-preset'
+import { slowConnection } from './env'
 import { isUndefined, noop, mergeObjects } from './helper'
 
 // error retry
@@ -20,11 +20,6 @@ const onErrorRetry = (
   revalidate: Revalidator,
   opts: Required<RevalidatorOptions>
 ): void => {
-  if (!preset.isVisible()) {
-    // If it's hidden, stop. It will auto revalidate when refocusing.
-    return
-  }
-
   const maxRetryCount = config.errorRetryCount
   const currentRetryCount = opts.retryCount
 

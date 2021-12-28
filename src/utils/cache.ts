@@ -33,7 +33,7 @@ export const initCache = <Data = any>(
   // requests and store listeners. As well as a mutate function that bound to
   // the cache.
 
-  // Provider's gloabl state might be already initialized. Let's try to get the
+  // Provider's global state might be already initialized. Let's try to get the
   // global state associated with the provider first.
   if (!SWRGlobalState.has(provider)) {
     const opts = mergeObjects(defaultConfigOptions, options)
@@ -41,37 +41,42 @@ export const initCache = <Data = any>(
     // If there's no global state bound to the provider, create a new one with the
     // new mutate function.
     const EVENT_REVALIDATORS = {}
-    const mutate = internalMutate.bind(UNDEFINED, provider) as ScopedMutator<
-      Data
-    >
+    const mutate = internalMutate.bind(
+      UNDEFINED,
+      provider
+    ) as ScopedMutator<Data>
     let unmount = noop
 
     // Update the state if it's new, or the provider has been extended.
-    SWRGlobalState.set(provider, [
-      EVENT_REVALIDATORS,
-      {},
-      {},
-      {},
-      {},
-      {},
-      mutate
-    ])
+    SWRGlobalState.set(provider, [EVENT_REVALIDATORS, {}, {}, {}, mutate])
 
     // This is a new provider, we need to initialize it and setup DOM events
     // listeners for `focus` and `reconnect` actions.
     if (!IS_SERVER) {
+      // When listening to the native events for auto revalidations,
+      // we intentionally put a delay (setTimeout) here to make sure they are
+      // fired after immediate JavaScript executions, which can possibly be
+      // React's state updates.
+      // This avoids some unnecessary revalidations such as
+      // https://github.com/vercel/swr/issues/1680.
       const releaseFocus = opts.initFocus(
-        revalidateAllKeys.bind(
+        setTimeout.bind(
           UNDEFINED,
-          EVENT_REVALIDATORS,
-          revalidateEvents.FOCUS_EVENT
+          revalidateAllKeys.bind(
+            UNDEFINED,
+            EVENT_REVALIDATORS,
+            revalidateEvents.FOCUS_EVENT
+          )
         )
       )
       const releaseReconnect = opts.initReconnect(
-        revalidateAllKeys.bind(
+        setTimeout.bind(
           UNDEFINED,
-          EVENT_REVALIDATORS,
-          revalidateEvents.RECONNECT_EVENT
+          revalidateAllKeys.bind(
+            UNDEFINED,
+            EVENT_REVALIDATORS,
+            revalidateEvents.RECONNECT_EVENT
+          )
         )
       )
       unmount = () => {
@@ -91,5 +96,5 @@ export const initCache = <Data = any>(
     return [provider, mutate, unmount]
   }
 
-  return [provider, (SWRGlobalState.get(provider) as GlobalState)[6]]
+  return [provider, (SWRGlobalState.get(provider) as GlobalState)[4]]
 }

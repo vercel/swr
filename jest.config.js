@@ -1,7 +1,6 @@
 module.exports = {
-  preset: 'ts-jest',
   testEnvironment: 'jsdom',
-  testRegex: '/test/.*\\.test\\.tsx$',
+  testRegex: '/test/.*\\.test\\.tsx?$',
   modulePathIgnorePatterns: ['<rootDir>/examples/'],
   setupFilesAfterEnv: ['<rootDir>/scripts/jest-setup.ts'],
   moduleNameMapper: {
@@ -10,13 +9,16 @@ module.exports = {
     '^swr/immutable$': '<rootDir>/immutable/index.ts',
     '^swr/mutation$': '<rootDir>/mutation/index.ts'
   },
-  globals: {
-    'ts-jest': {
-      tsconfig: 'test/tsconfig.json',
-      diagnostics: process.env.CI
-    }
+  transform: {
+    '^.+\\.(t|j)sx?$': [
+      '@swc-node/jest',
+      {
+        jsc: {
+          minify: false
+        }
+      }
+    ]
   },
   coveragePathIgnorePatterns: ['/node_modules/', '/dist/', '/test/'],
-  coverageProvider: 'v8',
-  coverageReporters: ['text']
+  coverageReporters: ['text', 'html']
 }

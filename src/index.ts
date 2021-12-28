@@ -8,7 +8,7 @@ export { useSWRConfig } from './utils/use-swr-config'
 export { mutate } from './utils/config'
 
 // Types
-export {
+export type {
   SWRConfiguration,
   Revalidator,
   RevalidatorOptions,
@@ -18,8 +18,10 @@ export {
   SWRResponse,
   Cache,
   SWRHook,
+  BareFetcher,
   Fetcher,
   MutatorCallback,
+  MutatorOptions,
   Middleware,
   Arguments
 } from './types'

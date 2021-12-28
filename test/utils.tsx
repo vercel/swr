@@ -6,7 +6,7 @@ export function sleep(time: number) {
   return new Promise(resolve => setTimeout(resolve, time))
 }
 
-export const createResponse = <T extends any>(
+export const createResponse = <T,>(
   response: T,
   { delay } = { delay: 10 }
 ): Promise<T> =>
@@ -52,4 +52,10 @@ export const renderWithGlobalCache = (
   config?: Parameters<typeof _renderWithConfig>[1]
 ): ReturnType<typeof _renderWithConfig> => {
   return _renderWithConfig(element, { ...config })
+}
+
+export const mockVisibilityHidden = () => {
+  const mockVisibilityState = jest.spyOn(document, 'visibilityState', 'get')
+  mockVisibilityState.mockImplementation(() => 'hidden')
+  return () => mockVisibilityState.mockRestore()
 }

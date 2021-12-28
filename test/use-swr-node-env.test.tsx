@@ -2,6 +2,9 @@
  * @jest-environment node
  */
 
+// Do not lint the return value destruction for `renderToString`
+/* eslint-disable testing-library/render-result-naming-convention */
+
 import React from 'react'
 import { renderToString } from 'react-dom/server'
 import useSWR from '../src'
@@ -23,8 +26,8 @@ describe('useSWR', () => {
       return <p>{data}</p>
     }
 
-    const string = renderToString(<Page />)
-    expect(string).toContain('fallback')
+    const html = renderToString(<Page />)
+    expect(html).toContain('fallback')
   })
 
   it('should not revalidate useSWRImmutable on server side', async () => {
@@ -36,7 +39,7 @@ describe('useSWR', () => {
       return <p>{data || 'empty'}</p>
     }
 
-    const string = renderToString(<Page />)
-    expect(string).toContain('empty')
+    const html = renderToString(<Page />)
+    expect(html).toContain('empty')
   })
 })
