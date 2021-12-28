@@ -31,9 +31,7 @@ export const internalMutate = async <Data>(
   const [key, , keyErr] = serialize(_key)
   if (!key) return
 
-  const [, , MUTATION_TS, MUTATION_END_TS] = SWRGlobalState.get(
-    cache
-  ) as GlobalState
+  const [, , MUTATION] = SWRGlobalState.get(cache) as GlobalState
 
   // If there is no new data provided, revalidate the key with current state.
   if (args.length < 3) {
@@ -53,8 +51,8 @@ export const internalMutate = async <Data>(
   let error: unknown
 
   // Update global timestamps.
-  const beforeMutationTs = (MUTATION_TS[key] = getTimestamp())
-  MUTATION_END_TS[key] = 0
+  const beforeMutationTs = getTimestamp()
+  MUTATION[key] = [beforeMutationTs, 0]
   const hasOptimisticData = !isUndefined(optimisticData)
   const rollbackData = cache.get(key)
 
@@ -85,7 +83,7 @@ export const internalMutate = async <Data>(
     // Check if other mutations have occurred since we've started this mutation.
     // If there's a race we don't update cache or broadcast the change,
     // just return the data.
-    if (beforeMutationTs !== MUTATION_TS[key]) {
+    if (beforeMutationTs !== MUTATION[key][0]) {
       if (error) throw error
       return data
     } else if (error && hasOptimisticData && rollbackOnError) {
@@ -106,7 +104,7 @@ export const internalMutate = async <Data>(
   }
 
   // Reset the timestamp to mark the mutation has ended.
-  MUTATION_END_TS[key] = getTimestamp()
+  MUTATION[key][1] = getTimestamp()
 
   // Update existing SWR Hooks' internal states:
   const res = await broadcastState(

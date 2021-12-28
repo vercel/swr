@@ -49,13 +49,8 @@ export const useSWRHandler = <Data = any, Error = any>(
     refreshWhenOffline
   } = config
 
-  const [
-    EVENT_REVALIDATORS,
-    STATE_UPDATERS,
-    MUTATION_TS,
-    MUTATION_END_TS,
-    CONCURRENT_REQUESTS
-  ] = SWRGlobalState.get(cache) as GlobalState
+  const [EVENT_REVALIDATORS, STATE_UPDATERS, MUTATION, CONCURRENT_REQUESTS] =
+    SWRGlobalState.get(cache) as GlobalState
 
   // `key` is the identifier of the SWR `data` state, `keyErr` and
   // `keyValidating` are identifiers of `error` and `isValidating`,
@@ -249,14 +244,15 @@ export const useSWRHandler = <Data = any, Error = any>(
         //       mutate-------...---------->
         // we have to ignore the revalidation result (res) because it's no longer fresh.
         // meanwhile, a new revalidation should be triggered when the mutation ends.
+        const mutationInfo = MUTATION[key]
         if (
-          !isUndefined(MUTATION_TS[key]) &&
+          !isUndefined(mutationInfo) &&
           // case 1
-          (startAt <= MUTATION_TS[key] ||
+          (startAt <= mutationInfo[0] ||
             // case 2
-            startAt <= MUTATION_END_TS[key] ||
+            startAt <= mutationInfo[1] ||
             // case 3
-            MUTATION_END_TS[key] === 0)
+            mutationInfo[1] === 0)
         ) {
           finishRequestAndUpdateState()
           if (shouldStartNewRequest) {
