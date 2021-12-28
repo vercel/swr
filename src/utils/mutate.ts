@@ -1,5 +1,5 @@
 import { serialize } from './serialize'
-import { isFunction, isUndefined, UNDEFINED } from './helper'
+import { isFunction, isUndefined, mergeObjects, UNDEFINED } from './helper'
 import { SWRGlobalState, GlobalState } from './global-state'
 import { broadcastState } from './broadcast-state'
 import { getTimestamp } from './timestamp'
@@ -28,7 +28,7 @@ export const internalMutate = async <Data>(
   const optimisticData = options.optimisticData
 
   // Serilaize key
-  const [key, , keyErr] = serialize(_key)
+  const [key, , keyInfo] = serialize(_key)
   if (!key) return
 
   const [, , MUTATION] = SWRGlobalState.get(cache) as GlobalState
@@ -40,7 +40,7 @@ export const internalMutate = async <Data>(
       cache,
       key,
       cache.get(key),
-      cache.get(keyErr),
+      UNDEFINED,
       UNDEFINED,
       revalidate,
       populateCache
@@ -100,7 +100,7 @@ export const internalMutate = async <Data>(
       cache.set(key, data)
     }
     // Always update or reset the error.
-    cache.set(keyErr, error)
+    cache.set(keyInfo, mergeObjects(cache.get(keyInfo), { error }))
   }
 
   // Reset the timestamp to mark the mutation has ended.

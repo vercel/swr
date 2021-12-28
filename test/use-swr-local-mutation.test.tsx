@@ -536,8 +536,8 @@ describe('useSWR - local mutation', () => {
     })
 
     screen.getByText(message)
-    const [keyData, , keyErr] = serialize(key)
-    let cacheError = cache.get(keyErr)
+    const [keyData, , keyInfo] = serialize(key)
+    let cacheError = cache.get(keyInfo)?.error
     expect(cacheError.message).toMatchInlineSnapshot(`"${message}"`)
 
     // if mutate throws an error synchronously, the cache shouldn't be updated
@@ -545,7 +545,7 @@ describe('useSWR - local mutation', () => {
 
     // if mutate succeed, error should be cleared
     await act(() => mutate(key, value, false))
-    cacheError = cache.get(keyErr)
+    cacheError = cache.get(keyInfo)?.error
     expect(cacheError).toMatchInlineSnapshot(`undefined`)
   })
 
@@ -807,8 +807,8 @@ describe('useSWR - local mutation', () => {
         createResponse('data', { delay: 30 })
       )
       const { cache } = useSWRConfig()
-      const [, , , keyValidating] = serialize(key)
-      const cacheIsValidating = cache.get(keyValidating) || false
+      const [, , keyInfo] = serialize(key)
+      const cacheIsValidating = cache.get(keyInfo)?.isValidating
       return (
         <>
           <p>data:{data}</p>

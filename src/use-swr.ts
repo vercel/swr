@@ -52,12 +52,12 @@ export const useSWRHandler = <Data = any, Error = any>(
   const [EVENT_REVALIDATORS, STATE_UPDATERS, MUTATION, FETCH] =
     SWRGlobalState.get(cache) as GlobalState
 
-  // `key` is the identifier of the SWR `data` state, `keyErr` and
-  // `keyValidating` are identifiers of `error` and `isValidating`,
+  // `key` is the identifier of the SWR `data` state, `keyInfo` holds extra
+  // states such as `error` and `isValidating` inside,
   // all of them are derived from `_key`.
   // `fnArgs` is an array of arguments parsed from the key, which will be passed
   // to the fetcher.
-  const [key, fnArgs, keyErr, keyValidating] = serialize(_key)
+  const [key, fnArgs, keyInfo] = serialize(_key)
 
   // If it's the initial render of this hook.
   const initialMountedRef = useRef(false)
@@ -72,6 +72,8 @@ export const useSWRHandler = <Data = any, Error = any>(
   const configRef = useRef(config)
   const getConfig = () => configRef.current
   const isActive = () => getConfig().isVisible() && getConfig().isOnline()
+  const patchFetchInfo = (info: { isValidating?: boolean; error?: any }) =>
+    cache.set(keyInfo, mergeObjects(cache.get(keyInfo), info))
 
   // Get the current state that SWR should return.
   const cached = cache.get(key)
@@ -79,7 +81,8 @@ export const useSWRHandler = <Data = any, Error = any>(
     ? config.fallback[key]
     : fallbackData
   const data = isUndefined(cached) ? fallback : cached
-  const error = cache.get(keyErr)
+  const info = cache.get(keyInfo) || {}
+  const error = info.error
 
   // - Suspense mode and there's stale data for the initial render.
   // - Not suspense mode and there is no fallback data and `revalidateIfStale` is enabled.
@@ -103,7 +106,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   // Resolve the current validating state.
   const resolveValidating = () => {
     if (!key || !fetcher) return false
-    if (cache.get(keyValidating)) return true
+    if (info.isValidating) return true
 
     // If it's not mounted yet and it should revalidate on mount, revalidate.
     return !initialMountedRef.current && shouldRevalidateOnMount()
@@ -163,7 +166,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       // The new state object when request finishes.
       const newState: State<Data, Error> = { isValidating: false }
       const finishRequestAndUpdateState = () => {
-        cache.set(keyValidating, false)
+        patchFetchInfo({ isValidating: false })
         // We can only set state if it's safe (still mounted with the same key).
         if (isCurrentKeyMounted()) {
           setState(newState)
@@ -171,7 +174,9 @@ export const useSWRHandler = <Data = any, Error = any>(
       }
 
       // Start fetching. Change the `isValidating` state, update the cache.
-      cache.set(keyValidating, true)
+      patchFetchInfo({
+        isValidating: true
+      })
       setState({ isValidating: true })
 
       try {
@@ -226,7 +231,9 @@ export const useSWRHandler = <Data = any, Error = any>(
         }
 
         // Clear error.
-        cache.set(keyErr, UNDEFINED)
+        patchFetchInfo({
+          error: UNDEFINED
+        })
         newState.error = UNDEFINED
 
         // If there're other mutations(s), overlapped with the current revalidation:
@@ -290,7 +297,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         // Not paused, we continue handling the error. Otherwise discard it.
         if (!getConfig().isPaused()) {
           // Get a new error, don't use deep comparison for errors.
-          cache.set(keyErr, err)
+          patchFetchInfo({ error: err })
           newState.error = err as Error
 
           // Error event and retry logic. Only for the actual request, not
@@ -326,7 +333,7 @@ export const useSWRHandler = <Data = any, Error = any>(
 
       return true
     },
-    // `setState` is immutable, and `eventsCallback`, `fnArgs`, `keyErr`,
+    // `setState` is immutable, and `eventsCallback`, `fnArgs`, `keyInfo`,
     // and `keyValidating` are depending on `key`, so we can exclude them from
     // the deps array.
     //
