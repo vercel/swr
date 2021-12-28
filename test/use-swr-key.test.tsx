@@ -231,7 +231,7 @@ describe('useSWR - key', () => {
     expect(fetcher).toBeCalledTimes(1)
   })
 
-  it.only('gracefully handles mutate on non existing keys', async () => {
+  it('gracefully handles mutate on non existing keys', async () => {
     const fetcher = jest.fn(() => 'data')
     const mutSpy = jest.fn()
 
