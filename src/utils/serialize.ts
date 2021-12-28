@@ -3,7 +3,7 @@ import { isFunction } from './helper'
 
 import { Key } from '../types'
 
-export const serialize = (key: Key): [string, any[], string, string] => {
+export const serialize = (key: Key): [string, any[], string] => {
   if (isFunction(key)) {
     try {
       key = key()
@@ -19,14 +19,10 @@ export const serialize = (key: Key): [string, any[], string, string] => {
   key =
     typeof key == 'string'
       ? key
-      : (Array.isArray(key)
-        ? key.length
-        : key)
+      : (Array.isArray(key) ? key.length : key)
       ? stableHash(key)
       : ''
 
-  const errorKey = key ? '$err$' + key : ''
-  const isValidatingKey = key ? '$req$' + key : ''
-
-  return [key, args, errorKey, isValidatingKey]
+  const infoKey = key ? '$swr$' + key : ''
+  return [key, args, infoKey]
 }
