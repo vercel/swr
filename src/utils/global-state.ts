@@ -9,7 +9,7 @@ export type GlobalState = [
   Record<string, RevalidateCallback[]>, // EVENT_REVALIDATORS
   Record<string, StateUpdateCallback[]>, // STATE_UPDATERS
   Record<string, [number, number]>, // MUTATION: [ts, end_ts]
-  Record<string, [any, number]>, // CONCURRENT_REQUESTS: [data, ts]
+  Record<string, [any, number]>, // FETCH: [data, ts]
   ScopedMutator // Mutator
 ]
 
