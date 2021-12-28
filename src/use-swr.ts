@@ -49,7 +49,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     refreshWhenOffline
   } = config
 
-  const [EVENT_REVALIDATORS, STATE_UPDATERS, MUTATION, CONCURRENT_REQUESTS] =
+  const [EVENT_REVALIDATORS, STATE_UPDATERS, MUTATION, FETCH] =
     SWRGlobalState.get(cache) as GlobalState
 
   // `key` is the identifier of the SWR `data` state, `keyErr` and
@@ -141,7 +141,7 @@ export const useSWRHandler = <Data = any, Error = any>(
 
       // If there is no ongoing concurrent request, or `dedupe` is not set, a
       // new request should be initiated.
-      const shouldStartNewRequest = !CONCURRENT_REQUESTS[key] || !opts.dedupe
+      const shouldStartNewRequest = !FETCH[key] || !opts.dedupe
 
       // Do unmount check for calls:
       // If key has changed during the revalidation, or the component has been
@@ -154,9 +154,9 @@ export const useSWRHandler = <Data = any, Error = any>(
 
       const cleanupState = () => {
         // Check if it's still the same request before deleting.
-        const requestInfo = CONCURRENT_REQUESTS[key]
+        const requestInfo = FETCH[key]
         if (requestInfo && requestInfo[1] === startAt) {
-          delete CONCURRENT_REQUESTS[key]
+          delete FETCH[key]
         }
       }
 
@@ -196,12 +196,12 @@ export const useSWRHandler = <Data = any, Error = any>(
           }
 
           // Start the request and save the timestamp.
-          CONCURRENT_REQUESTS[key] = [currentFetcher(...fnArgs), getTimestamp()]
+          FETCH[key] = [currentFetcher(...fnArgs), getTimestamp()]
         }
 
         // Wait until the ongoing request is done. Deduplication is also
         // considered here.
-        ;[newData, startAt] = CONCURRENT_REQUESTS[key]
+        ;[newData, startAt] = FETCH[key]
         newData = await newData
 
         if (shouldStartNewRequest) {
@@ -216,10 +216,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         //        req2---------------->res2
         // the request that fired later will always be kept.
         // The timestamp maybe be `undefined` or a number
-        if (
-          !CONCURRENT_REQUESTS[key] ||
-          CONCURRENT_REQUESTS[key][1] !== startAt
-        ) {
+        if (!FETCH[key] || FETCH[key][1] !== startAt) {
           if (shouldStartNewRequest) {
             if (isCurrentKeyMounted()) {
               getConfig().onDiscarded(key)
