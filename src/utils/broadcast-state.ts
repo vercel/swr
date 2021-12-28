@@ -11,7 +11,7 @@ export const broadcastState: Broadcaster = (
   revalidate,
   broadcast = true
 ) => {
-  const [EVENT_REVALIDATORS, STATE_UPDATERS, , , CONCURRENT_REQUESTS] =
+  const [EVENT_REVALIDATORS, STATE_UPDATERS, , CONCURRENT_REQUESTS] =
     SWRGlobalState.get(cache) as GlobalState
   const revalidators = EVENT_REVALIDATORS[key]
   const updaters = STATE_UPDATERS[key]
