@@ -30,10 +30,7 @@ const offDocumentEvent = hasDoc
 
 const isVisible = () => {
   const visibilityState = hasDoc && document.visibilityState
-  if (!isUndefined(visibilityState)) {
-    return visibilityState !== 'hidden'
-  }
-  return true
+  return isUndefined(visibilityState) || visibilityState !== 'hidden'
 }
 
 const initFocus = (callback: () => void) => {

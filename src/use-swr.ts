@@ -49,21 +49,15 @@ export const useSWRHandler = <Data = any, Error = any>(
     refreshWhenOffline
   } = config
 
-  const [
-    EVENT_REVALIDATORS,
-    STATE_UPDATERS,
-    MUTATION_TS,
-    MUTATION_END_TS,
-    CONCURRENT_PROMISES,
-    CONCURRENT_PROMISES_TS
-  ] = SWRGlobalState.get(cache) as GlobalState
+  const [EVENT_REVALIDATORS, STATE_UPDATERS, MUTATION, FETCH] =
+    SWRGlobalState.get(cache) as GlobalState
 
-  // `key` is the identifier of the SWR `data` state, `keyErr` and
-  // `keyValidating` are identifiers of `error` and `isValidating`,
+  // `key` is the identifier of the SWR `data` state, `keyInfo` holds extra
+  // states such as `error` and `isValidating` inside,
   // all of them are derived from `_key`.
   // `fnArgs` is an array of arguments parsed from the key, which will be passed
   // to the fetcher.
-  const [key, fnArgs, keyErr, keyValidating] = serialize(_key)
+  const [key, fnArgs, keyInfo] = serialize(_key)
 
   // If it's the initial render of this hook.
   const initialMountedRef = useRef(false)
@@ -77,6 +71,9 @@ export const useSWRHandler = <Data = any, Error = any>(
   const fetcherRef = useRef(fetcher)
   const configRef = useRef(config)
   const getConfig = () => configRef.current
+  const isActive = () => getConfig().isVisible() && getConfig().isOnline()
+  const patchFetchInfo = (info: { isValidating?: boolean; error?: any }) =>
+    cache.set(keyInfo, mergeObjects(cache.get(keyInfo), info))
 
   // Get the current state that SWR should return.
   const cached = cache.get(key)
@@ -84,7 +81,8 @@ export const useSWRHandler = <Data = any, Error = any>(
     ? config.fallback[key]
     : fallbackData
   const data = isUndefined(cached) ? fallback : cached
-  const error = cache.get(keyErr)
+  const info = cache.get(keyInfo) || {}
+  const error = info.error
 
   // - Suspense mode and there's stale data for the initial render.
   // - Not suspense mode and there is no fallback data and `revalidateIfStale` is enabled.
@@ -108,7 +106,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   // Resolve the current validating state.
   const resolveValidating = () => {
     if (!key || !fetcher) return false
-    if (cache.get(keyValidating)) return true
+    if (info.isValidating) return true
 
     // If it's not mounted yet and it should revalidate on mount, revalidate.
     return !initialMountedRef.current && shouldRevalidateOnMount()
@@ -151,8 +149,7 @@ export const useSWRHandler = <Data = any, Error = any>(
 
       // If there is no ongoing concurrent request, or `dedupe` is not set, a
       // new request should be initiated.
-      const shouldStartNewRequest =
-        isUndefined(CONCURRENT_PROMISES[key]) || !opts.dedupe
+      const shouldStartNewRequest = !FETCH[key] || !opts.dedupe
 
       // Do unmount check for calls:
       // If key has changed during the revalidation, or the component has been
@@ -164,18 +161,17 @@ export const useSWRHandler = <Data = any, Error = any>(
         initialMountedRef.current
 
       const cleanupState = () => {
-        // CONCURRENT_PROMISES_TS[key] might be overridden, check if it's still
-        // the same request before deleting.
-        if (CONCURRENT_PROMISES_TS[key] === startAt) {
-          delete CONCURRENT_PROMISES[key]
-          delete CONCURRENT_PROMISES_TS[key]
+        // Check if it's still the same request before deleting.
+        const requestInfo = FETCH[key]
+        if (requestInfo && requestInfo[1] === startAt) {
+          delete FETCH[key]
         }
       }
 
       // The new state object when request finishes.
       const newState: State<Data, Error> = { isValidating: false }
       const finishRequestAndUpdateState = () => {
-        cache.set(keyValidating, false)
+        patchFetchInfo({ isValidating: false })
         // We can only set state if it's safe (still mounted with the same key).
         if (isCurrentKeyMounted()) {
           setState(newState)
@@ -183,7 +179,9 @@ export const useSWRHandler = <Data = any, Error = any>(
       }
 
       // Start fetching. Change the `isValidating` state, update the cache.
-      cache.set(keyValidating, true)
+      patchFetchInfo({
+        isValidating: true
+      })
       setState({ isValidating: true })
 
       try {
@@ -207,15 +205,14 @@ export const useSWRHandler = <Data = any, Error = any>(
             }, config.loadingTimeout)
           }
 
-          // Start the request and keep the timestamp.
-          CONCURRENT_PROMISES_TS[key] = getTimestamp()
-          CONCURRENT_PROMISES[key] = currentFetcher(...fnArgs)
+          // Start the request and save the timestamp.
+          FETCH[key] = [currentFetcher(...fnArgs), getTimestamp()]
         }
 
         // Wait until the ongoing request is done. Deduplication is also
         // considered here.
-        startAt = CONCURRENT_PROMISES_TS[key]
-        newData = await CONCURRENT_PROMISES[key]
+        ;[newData, startAt] = FETCH[key]
+        newData = await newData
 
         if (shouldStartNewRequest) {
           // If the request isn't interrupted, clean it up after the
@@ -228,8 +225,8 @@ export const useSWRHandler = <Data = any, Error = any>(
         //   req1------------------>res1        (current one)
         //        req2---------------->res2
         // the request that fired later will always be kept.
-        // CONCURRENT_PROMISES_TS[key] maybe be `undefined` or a number
-        if (CONCURRENT_PROMISES_TS[key] !== startAt) {
+        // The timestamp maybe be `undefined` or a number
+        if (!FETCH[key] || FETCH[key][1] !== startAt) {
           if (shouldStartNewRequest) {
             if (isCurrentKeyMounted()) {
               getConfig().onDiscarded(key)
@@ -239,7 +236,9 @@ export const useSWRHandler = <Data = any, Error = any>(
         }
 
         // Clear error.
-        cache.set(keyErr, UNDEFINED)
+        patchFetchInfo({
+          error: UNDEFINED
+        })
         newState.error = UNDEFINED
 
         // If there're other mutations(s), overlapped with the current revalidation:
@@ -254,14 +253,15 @@ export const useSWRHandler = <Data = any, Error = any>(
         //       mutate-------...---------->
         // we have to ignore the revalidation result (res) because it's no longer fresh.
         // meanwhile, a new revalidation should be triggered when the mutation ends.
+        const mutationInfo = MUTATION[key]
         if (
-          !isUndefined(MUTATION_TS[key]) &&
+          !isUndefined(mutationInfo) &&
           // case 1
-          (startAt <= MUTATION_TS[key] ||
+          (startAt <= mutationInfo[0] ||
             // case 2
-            startAt <= MUTATION_END_TS[key] ||
+            startAt <= mutationInfo[1] ||
             // case 3
-            MUTATION_END_TS[key] === 0)
+            mutationInfo[1] === 0)
         ) {
           finishRequestAndUpdateState()
           if (shouldStartNewRequest) {
@@ -302,7 +302,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         // Not paused, we continue handling the error. Otherwise discard it.
         if (!getConfig().isPaused()) {
           // Get a new error, don't use deep comparison for errors.
-          cache.set(keyErr, err)
+          patchFetchInfo({ error: err })
           newState.error = err as Error
 
           // Error event and retry logic. Only for the actual request, not
@@ -311,10 +311,14 @@ export const useSWRHandler = <Data = any, Error = any>(
             getConfig().onError(err, key, config)
             if (config.shouldRetryOnError) {
               // When retrying, dedupe is always enabled
-              getConfig().onErrorRetry(err, key, config, revalidate, {
-                retryCount: (opts.retryCount || 0) + 1,
-                dedupe: true
-              })
+              if (isActive()) {
+                // If it's active, stop. It will auto revalidate when refocusing
+                // or reconnecting.
+                getConfig().onErrorRetry(err, key, config, revalidate, {
+                  retryCount: (opts.retryCount || 0) + 1,
+                  dedupe: true
+                })
+              }
             }
           }
         }
@@ -344,7 +348,7 @@ export const useSWRHandler = <Data = any, Error = any>(
 
       return true
     },
-    // `setState` is immutable, and `eventsCallback`, `fnArgs`, `keyErr`,
+    // `setState` is immutable, and `eventsCallback`, `fnArgs`, `keyInfo`,
     // and `keyValidating` are depending on `key`, so we can exclude them from
     // the deps array.
     //
@@ -381,8 +385,6 @@ export const useSWRHandler = <Data = any, Error = any>(
     // Not the initial render.
     const keyChanged = initialMountedRef.current
     const softRevalidate = revalidate.bind(UNDEFINED, WITH_DEDUPE)
-
-    const isActive = () => getConfig().isVisible() && getConfig().isOnline()
 
     // Expose state updater to global event listeners. So we can update hook's
     // internal state from the outside.

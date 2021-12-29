@@ -9,22 +9,17 @@ export const broadcastState: Broadcaster = (
   error,
   isValidating,
   revalidate,
-  populateCache = true,
+  broadcast = true,
   updatedAt
 ) => {
-  const [
-    EVENT_REVALIDATORS,
-    STATE_UPDATERS,
-    ,
-    ,
-    CONCURRENT_PROMISES,
-    CONCURRENT_PROMISES_TS
-  ] = SWRGlobalState.get(cache) as GlobalState
+  const [EVENT_REVALIDATORS, STATE_UPDATERS, , FETCH] = SWRGlobalState.get(
+    cache
+  ) as GlobalState
   const revalidators = EVENT_REVALIDATORS[key]
-  const updaters = STATE_UPDATERS[key] || []
+  const updaters = STATE_UPDATERS[key]
 
   // Cache was populated, update states of all hooks.
-  if (populateCache && updaters) {
+  if (broadcast && updaters) {
     for (let i = 0; i < updaters.length; ++i) {
       updaters[i](data, error, isValidating, updatedAt)
     }
@@ -34,8 +29,7 @@ export const broadcastState: Broadcaster = (
   if (revalidate) {
     // Invalidate the key by deleting the concurrent request markers so new
     // requests will not be deduped.
-    delete CONCURRENT_PROMISES[key]
-    delete CONCURRENT_PROMISES_TS[key]
+    delete FETCH[key]
 
     if (revalidators && revalidators[0]) {
       return revalidators[0](revalidateEvents.MUTATE_EVENT).then(() =>

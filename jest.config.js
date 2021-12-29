@@ -19,6 +19,5 @@ module.exports = {
     ]
   },
   coveragePathIgnorePatterns: ['/node_modules/', '/dist/', '/test/'],
-  coverageProvider: 'v8',
-  coverageReporters: ['text']
+  coverageReporters: ['text', 'html']
 }

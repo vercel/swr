@@ -20,11 +20,6 @@ const onErrorRetry = (
   revalidate: Revalidator,
   opts: Required<RevalidatorOptions>
 ): void => {
-  if (!preset.isVisible()) {
-    // If it's hidden, stop. It will auto revalidate when refocusing.
-    return
-  }
-
   const maxRetryCount = config.errorRetryCount
   const currentRetryCount = opts.retryCount
 

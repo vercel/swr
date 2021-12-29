@@ -1,7 +1,13 @@
 import { act, fireEvent, screen } from '@testing-library/react'
 import React, { useEffect, useState } from 'react'
 import useSWR from 'swr'
-import { sleep, createResponse, createKey, renderWithConfig } from './utils'
+import {
+  sleep,
+  createResponse,
+  createKey,
+  renderWithConfig,
+  mockVisibilityHidden
+} from './utils'
 
 describe('useSWR - error', () => {
   it('should handle errors', async () => {
@@ -70,6 +76,70 @@ describe('useSWR - error', () => {
 
     await act(() => sleep(200)) // retry
     screen.getByText('error: 2')
+  })
+
+  it('should stop retrying when document is not visible', async () => {
+    const key = createKey()
+    let count = 0
+    function Page() {
+      const { data, error } = useSWR(
+        key,
+        () => createResponse(new Error('error: ' + count++), { delay: 100 }),
+        {
+          onErrorRetry: (_, __, ___, revalidate, revalidateOpts) => {
+            revalidate(revalidateOpts)
+          },
+          dedupingInterval: 0
+        }
+      )
+      if (error) return <div>{error.message}</div>
+      return <div>hello, {data}</div>
+    }
+    renderWithConfig(<Page />)
+    screen.getByText('hello,')
+
+    // mount
+    await screen.findByText('error: 0')
+
+    // errored, retrying
+    await act(() => sleep(50))
+    const resetVisibility = mockVisibilityHidden()
+
+    await act(() => sleep(100))
+    screen.getByText('error: 1')
+
+    await act(() => sleep(100)) // stopped due to invisible
+    screen.getByText('error: 1')
+
+    resetVisibility()
+  })
+
+  it('should not retry when shouldRetryOnError is disabled', async () => {
+    const key = createKey()
+    let count = 0
+    function Page() {
+      const { data, error } = useSWR(
+        key,
+        () => createResponse(new Error('error: ' + count++), { delay: 100 }),
+        {
+          onErrorRetry: (_, __, ___, revalidate, revalidateOpts) => {
+            revalidate(revalidateOpts)
+          },
+          dedupingInterval: 0,
+          shouldRetryOnError: false
+        }
+      )
+      if (error) return <div>{error.message}</div>
+      return <div>hello, {data}</div>
+    }
+    renderWithConfig(<Page />)
+    screen.getByText('hello,')
+
+    // mount
+    await screen.findByText('error: 0')
+
+    await act(() => sleep(150))
+    screen.getByText('error: 0')
   })
 
   it('should trigger the onLoadingSlow and onSuccess event', async () => {
