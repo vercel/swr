@@ -1,4 +1,4 @@
-import { SWRResponse, SWRConfiguration, Key } from 'swr'
+import { SWRResponse, SWRConfiguration, Key, MutatorOptions } from 'swr'
 
 type Async<Data> = Data | Promise<Data>
 
@@ -11,26 +11,26 @@ export type MutationFetcher<
    * () => [{ foo: string }, { bar: number }] | null
    * () => ( [{ foo: string }, { bar: number } ] as const | null )
    */
-  SWRKey extends (() => readonly [...infer Args] | null)
-    ? ((...args: [...Args, ExtraArg]) => Async<Data>)
+  SWRKey extends () => readonly [...infer Args] | null
+    ? (...args: [...Args, ExtraArg]) => Async<Data>
     : /**
      * [{ foo: string }, { bar: number } ] | null
      * [{ foo: string }, { bar: number } ] as const | null
      */
-    SWRKey extends (readonly [...infer Args])
-    ? ((...args: [...Args, ExtraArg]) => Async<Data>)
+    SWRKey extends readonly [...infer Args]
+    ? (...args: [...Args, ExtraArg]) => Async<Data>
     : /**
      * () => string | null
      * () => Record<any, any> | null
      */
-    SWRKey extends (() => infer Arg | null)
+    SWRKey extends () => infer Arg | null
     ? (...args: [Arg, ExtraArg]) => Async<Data>
     : /**
      *  string | null | Record<any,any>
      */
     SWRKey extends null
     ? never
-    : SWRKey extends (infer Arg)
+    : SWRKey extends infer Arg
     ? (...args: [Arg, ExtraArg]) => Async<Data>
     : never
 
@@ -46,10 +46,8 @@ export type SWRMutationConfiguration<
     MutationFetcher<Data, SWRMutationKey, ExtraArg>
   >,
   'fetcher' | 'onSuccess' | 'onError'
-> & {
-  revalidate?: boolean
-  populateCache?: boolean
-}
+> &
+  MutatorOptions<Data>
 
 export interface SWRMutationResponse<
   Data = any,

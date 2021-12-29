@@ -110,13 +110,11 @@ export const useSWRHandler = <Data = any, Error = any>(
   }
   const isValidating = resolveValidating()
 
-  const [stateRef, stateDependencies, setState] = useStateWithDeps<Data, Error>(
-    {
-      data,
-      error,
-      isValidating
-    }
-  )
+  const [stateRef, stateDependencies, setState] = useStateWithDeps({
+    data,
+    error,
+    isValidating
+  })
 
   // The revalidation function is a carefully crafted wrapper of the original
   // `fetcher`, to correctly handle the many edge cases.

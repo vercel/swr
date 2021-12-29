@@ -28,14 +28,11 @@ const mutation =
     // Ditch all mutation results that happened earlier than this timestamp.
     const ditchMutationsTilRef = useRef(0)
 
-    const [stateRef, stateDependencies, setState] = useStateWithDeps<
-      Data,
-      Error
-    >(
+    const [stateRef, stateDependencies, setState] = useStateWithDeps(
       {
         data: UNDEFINED,
         error: UNDEFINED,
-        isValidating: false
+        isMutating: false
       },
       true
     )
@@ -44,9 +41,9 @@ const mutation =
     // Similar to the global mutate, but bound to the current cache and key.
     // `cache` isn't allowed to change during the lifecycle.
     const boundMutate = useCallback(
-      (newData, shouldRevalidate) => {
+      (arg0, arg1) => {
         const serializedKey = serialize(keyRef.current)[0]
-        return mutate(serializedKey, newData, shouldRevalidate)
+        return mutate(serializedKey, arg0, arg1)
       },
       // eslint-disable-next-line react-hooks/exhaustive-deps
       []
@@ -67,7 +64,7 @@ const mutation =
       const mutationStartedAt = getTimestamp()
       ditchMutationsTilRef.current = mutationStartedAt
 
-      setState({ isValidating: true })
+      setState({ isMutating: true })
       args.push(extraArg)
 
       try {
@@ -79,14 +76,14 @@ const mutation =
 
         // If it's reset after the mutation, we don't broadcast any state change.
         if (ditchMutationsTilRef.current <= mutationStartedAt) {
-          setState({ data, isValidating: false })
+          setState({ data, isMutating: false })
           options.onSuccess && options.onSuccess(data, serializedKey, options)
         }
         return data
       } catch (error) {
         // If it's reset after the mutation, we don't broadcast any state change.
         if (ditchMutationsTilRef.current <= mutationStartedAt) {
-          setState({ error: error as Error, isValidating: false })
+          setState({ error: error as Error, isMutating: false })
           options.onError && options.onError(error, serializedKey, options)
         }
         throw error
@@ -96,7 +93,7 @@ const mutation =
 
     const reset = useCallback(() => {
       ditchMutationsTilRef.current = getTimestamp()
-      setState({ data: UNDEFINED, error: UNDEFINED, isValidating: false })
+      setState({ data: UNDEFINED, error: UNDEFINED, isMutating: false })
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
@@ -117,8 +114,8 @@ const mutation =
         return currentState.error
       },
       get isMutating() {
-        stateDependencies.isValidating = true
-        return currentState.isValidating
+        stateDependencies.isMutating = true
+        return currentState.isMutating
       }
     }
   }

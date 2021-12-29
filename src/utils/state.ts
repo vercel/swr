@@ -1,18 +1,18 @@
 import { useRef, useCallback, useState, MutableRefObject } from 'react'
 
 import { useIsomorphicLayoutEffect } from './env'
-import { State } from '../types'
-
-type StateKeys = keyof State<any, any>
-type StateDeps = Record<StateKeys, boolean>
 
 /**
  * An implementation of state with dependency-tracking.
  */
-export const useStateWithDeps = <Data, Error, S = State<Data, Error>>(
-  state: S,
+export const useStateWithDeps = <S = any>(
+  state: any,
   asInitialState?: boolean
-): [MutableRefObject<S>, Record<StateKeys, boolean>, (payload: S) => void] => {
+): [
+  MutableRefObject<any>,
+  Record<keyof S, boolean>,
+  (payload: Partial<S>) => void
+] => {
   const rerender = useState<Record<string, unknown>>({})[1]
   const unmountedRef = useRef(false)
   const stateRef = useRef(state)
@@ -21,11 +21,11 @@ export const useStateWithDeps = <Data, Error, S = State<Data, Error>>(
   // function, we mark the property as a dependency so if it is updated again
   // in the future, we trigger a rerender.
   // This is also known as dependency-tracking.
-  const stateDependenciesRef = useRef<StateDeps>({
+  const stateDependenciesRef = useRef<Record<keyof S, boolean>>({
     data: false,
     error: false,
     isValidating: false
-  })
+  } as any)
 
   /**
    * @param payload To change stateRef, pass the values explicitly to setState:
@@ -45,17 +45,17 @@ export const useStateWithDeps = <Data, Error, S = State<Data, Error>>(
    * ```
    */
   const setState = useCallback(
-    (payload: S) => {
+    (payload: Partial<S>) => {
       let shouldRerender = false
 
       const currentState = stateRef.current
       for (const _ in payload) {
-        const k = _ as keyof S & StateKeys
+        const k = _ as keyof S
 
         // If the property has changed, update the state and mark rerender as
         // needed.
         if (currentState[k] !== payload[k]) {
-          currentState[k] = payload[k]
+          currentState[k] = payload[k]!
 
           // If the property is accessed by the component, a rerender should be
           // triggered.
