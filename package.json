@@ -7,17 +7,20 @@
   "exports": {
     "./package.json": "./package.json",
     ".": {
-      "import": "./dist/index.esm.js",
+      "import": "./dist/index.mjs",
+      "module": "./dist/index.esm.js",
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
     "./infinite": {
-      "import": "./infinite/dist/index.esm.js",
+      "import": "./infinite/dist/index.mjs",
+      "module": "./infinite/dist/index.esm.js",
       "require": "./infinite/dist/index.js",
       "types": "./infinite/dist/infinite/index.d.ts"
     },
     "./immutable": {
-      "import": "./immutable/dist/index.esm.js",
+      "import": "./immutable/dist/index.mjs",
+      "module": "./immutable/dist/index.esm.js",
       "require": "./immutable/dist/index.js",
       "types": "./immutable/dist/immutable/index.d.ts"
     }
@@ -77,7 +80,7 @@
     "@types/react": "17.0.20",
     "@typescript-eslint/eslint-plugin": "5.8.0",
     "@typescript-eslint/parser": "5.8.0",
-    "bunchee": "1.7.1",
+    "bunchee": "1.8.0",
     "eslint": "8.3.0",
     "eslint-config-prettier": "8.3.0",
     "eslint-plugin-jest-dom": "3.9.2",
