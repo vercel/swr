@@ -25,7 +25,6 @@
       "types": "./immutable/dist/immutable/index.d.ts"
     }
   },
-  "react-native": "./dist/index.esm.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist/**",
