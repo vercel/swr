@@ -119,7 +119,7 @@ export interface SWRHook {
   ): SWRResponse<Data, Error>
 }
 
-// Middlewares guarantee that a SWRHook receives a key, fetcher, and config as the argument
+// Middleware guarantee that a SWRHook receives a key, fetcher, and config as the argument
 export type Middleware = (
   useSWRNext: SWRHook
 ) => <Data = any, Error = any>(
