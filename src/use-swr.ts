@@ -215,6 +215,9 @@ export const useSWRHandler = <Data = any, Error = any>(
         newData = await newData
 
         if (shouldStartNewRequest) {
+          const now = Date.now()
+          updatedAtRef.current = now
+          newState.updatedAt = now
           // If the request isn't interrupted, clean it up after the
           // deduplication interval.
           setTimeout(cleanupState, config.dedupingInterval)
@@ -333,7 +336,6 @@ export const useSWRHandler = <Data = any, Error = any>(
       // Here is the source of the request, need to tell all other hooks to
       // update their states.
       if (isCurrentKeyMounted() && shouldStartNewRequest) {
-        updatedAtRef.current = Date.now()
         broadcastState(
           cache,
           key,
@@ -342,7 +344,7 @@ export const useSWRHandler = <Data = any, Error = any>(
           false,
           false,
           undefined,
-          getUpdatedAt()
+          newState.updatedAt
         )
       }
 
@@ -392,11 +394,11 @@ export const useSWRHandler = <Data = any, Error = any>(
       updatedData,
       updatedError,
       updatedIsValidating,
-      updatedUpdatedAt
+      nextUpdatedAt
     ) => {
-      updatedAtRef.current = isUndefined(updatedUpdatedAt)
-        ? updatedAtRef.current
-        : updatedUpdatedAt
+      updatedAtRef.current = isUndefined(nextUpdatedAt)
+        ? getUpdatedAt()
+        : nextUpdatedAt
 
       setState(
         mergeObjects(
@@ -551,7 +553,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     },
     get updatedAt() {
       stateDependencies.updatedAt = true
-      return updatedAt
+      return getUpdatedAt()
     }
   } as SWRResponse<Data, Error>
 }

@@ -1,7 +1,15 @@
 import { act, fireEvent, screen } from '@testing-library/react'
 import React, { useEffect, useReducer } from 'react'
 import useSWR from 'swr'
-import { createKey, renderWithConfig, sleep } from './utils'
+import {
+  createKey,
+  renderWithConfig,
+  nextTick as waitForNextTick,
+  sleep,
+  focusOn
+} from './utils'
+
+const focusWindow = () => focusOn(window)
 
 describe('useSWR - updatedAt', () => {
   it('should be initially undefined', async () => {
@@ -12,16 +20,18 @@ describe('useSWR - updatedAt', () => {
     }
 
     function Page() {
-      const { mutate, updatedAt } = useSWR(key, fetcher, {
-        revalidateOnMount: false
-      })
+      const { updatedAt } = useSWR(key, fetcher)
 
-      return <button onClick={() => mutate()}>data: {updatedAt}</button>
+      return <span data-testid="updatedAt">{updatedAt}</span>
     }
 
     renderWithConfig(<Page />)
 
-    screen.getByText('data:')
+    expect(screen.getByTestId('updatedAt')).toBeEmptyDOMElement()
+
+    await waitForNextTick()
+
+    expect(screen.getByTestId('updatedAt')).not.toBeEmptyDOMElement()
   })
 
   it('should not trigger re-render if not consumed', async () => {
@@ -34,29 +44,38 @@ describe('useSWR - updatedAt', () => {
     const renderSpy = jest.fn()
 
     function Page() {
-      const { mutate } = useSWR(key, fetcher, {
-        revalidateOnMount: false
-      })
+      const { data, isValidating } = useSWR(key, fetcher)
+
+      // reading is validating just to trigger more renders
+      useEffect(() => {}, [isValidating])
 
       renderSpy()
 
-      return <button onClick={() => mutate()}>data</button>
+      return <span>data: {data}</span>
     }
 
     renderWithConfig(<Page />)
 
-    screen.getByText('data')
-
-    fireEvent.click(screen.getByRole('button'))
-
-    await act(async () => {
-      await new Promise<void>(resolve => window.queueMicrotask(resolve))
-    })
+    expect(screen.getByText(/data/i)).toHaveTextContent('data:')
 
     expect(renderSpy).toHaveBeenCalledTimes(1)
+
+    await waitForNextTick()
+
+    expect(screen.getByText(/data/i)).toHaveTextContent('data: data')
+
+    expect(renderSpy).toHaveBeenCalledTimes(2)
+
+    await focusWindow()
+
+    await waitForNextTick()
+
+    expect(screen.getByText(/data/i)).toHaveTextContent('data: data')
+
+    expect(renderSpy).toHaveBeenCalledTimes(4)
   })
 
-  it('should eventually reflect the last time the fetcher was called', async () => {
+  it('should updated when the fetcher is called', async () => {
     const key = createKey()
 
     let fetcherCallTime: number
@@ -68,36 +87,52 @@ describe('useSWR - updatedAt', () => {
 
     const updateSpy = jest.fn()
 
+    const TIME_INTERVAL = Math.floor(100 + Math.random() * 100)
+
+    const config = {
+      dedupingInterval: TIME_INTERVAL
+    }
+
     function Page() {
-      const { mutate, updatedAt } = useSWR(key, fetcher)
+      const { data, updatedAt } = useSWR(key, fetcher, config)
 
       useEffect(() => {
-        updateSpy(updatedAt)
-      }, [updatedAt])
+        updateSpy(data, updatedAt)
+      }, [data, updatedAt])
 
-      return <button onClick={() => mutate()}>data</button>
+      return (
+        <div>
+          <span>data: {data}</span>
+          <span>updatedAt: {updatedAt}</span>
+        </div>
+      )
     }
 
     renderWithConfig(<Page />)
 
-    screen.getByText('data')
-
-    fireEvent.click(screen.getByRole('button'))
-
     expect(updateSpy).toHaveBeenCalledTimes(1)
+    expect(updateSpy).toHaveBeenLastCalledWith(undefined, undefined)
 
-    expect(updateSpy.mock.calls[0][0]).toBeUndefined()
-
-    await act(async () => {
-      await new Promise<void>(resolve => window.queueMicrotask(resolve))
-    })
+    await waitForNextTick()
 
     expect(updateSpy).toHaveBeenCalledTimes(2)
+    const [data, updatedAt] = updateSpy.mock.calls[1]
 
-    const updatedAt = updateSpy.mock.calls[1][0]
+    expect(data).toEqual('data')
     expect(updatedAt).toBeDefined()
 
     expect(updatedAt).toBeGreaterThanOrEqual(fetcherCallTime)
+
+    await sleep(config.dedupingInterval)
+
+    await focusWindow()
+    await waitForNextTick()
+
+    expect(updateSpy).toHaveBeenCalledTimes(3)
+    const [, lastUpdatedAt] = updateSpy.mock.calls[2]
+
+    expect(lastUpdatedAt).toBeGreaterThanOrEqual(fetcherCallTime)
+    expect(lastUpdatedAt).toBeGreaterThan(updatedAt)
   })
 
   it('should be consistent in all hooks using the same key', async () => {
@@ -105,12 +140,22 @@ describe('useSWR - updatedAt', () => {
 
     const fetcher = () => 'data'
 
+    const TIME_INTERVAL = Math.floor(100 + Math.random() * 100)
+
+    const config = {
+      dedupingInterval: TIME_INTERVAL,
+      refreshInterval: TIME_INTERVAL * 2
+    }
+
     const Dashboard = ({
       testId = 'testId',
       children = null,
       revalidateOnMount = false
     }) => {
-      const { updatedAt } = useSWR(key, fetcher, { revalidateOnMount })
+      const { updatedAt } = useSWR(key, fetcher, {
+        ...config,
+        revalidateOnMount
+      })
 
       return (
         <section>
@@ -121,28 +166,18 @@ describe('useSWR - updatedAt', () => {
       )
     }
 
-    const Mutator = () => {
-      const { mutate } = useSWR(key, fetcher)
-
-      return <button onClick={() => mutate()}>deep mutator</button>
-    }
-
     function Page() {
-      const { mutate, updatedAt } = useSWR(key, fetcher)
+      const { updatedAt } = useSWR(key, fetcher, config)
       const [show, toggle] = useReducer(x => !x, false)
 
       return (
         <div>
-          <button onClick={() => mutate()}>mutate</button>
-
           <span data-testid="zero">{updatedAt}</span>
 
           <button onClick={toggle}>show</button>
 
           <div>
-            <Dashboard testId="first">
-              <Mutator />
-            </Dashboard>
+            <Dashboard testId="first" />
           </div>
 
           {show && <Dashboard testId="second" revalidateOnMount />}
@@ -156,65 +191,75 @@ describe('useSWR - updatedAt', () => {
     expect(screen.getByTestId('zero')).toBeEmptyDOMElement()
     expect(screen.getByTestId('first')).toBeEmptyDOMElement()
 
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'mutate' }))
-      await new Promise<void>(resolve => window.queueMicrotask(resolve))
-    })
+    await waitForNextTick()
 
     expect(screen.getByTestId('zero')).not.toBeEmptyDOMElement()
+    expect(screen.getByTestId('first')).not.toBeEmptyDOMElement()
 
-    // copy the text value
-    const firstUpdatedAt = screen.getByTestId('zero').textContent
+    const firstUpdatedAt = Number(screen.getByTestId('zero').textContent)
 
     // Assert that `first` agrees with `zero`
-    expect(screen.getByTestId('first')).toHaveTextContent(firstUpdatedAt)
-
-    // Need to wait on the deduping interval
-    await act(async () => {
-      await sleep(2000)
-    })
+    expect(screen.getByTestId('first')).toHaveTextContent(
+      screen.getByTestId('zero').textContent
+    )
 
     fireEvent.click(screen.getByRole('button', { name: 'show' }))
 
     // Assert that when it mounts, `second` has no knowledge of `updatedAt`
     expect(screen.getByTestId('second')).toBeEmptyDOMElement()
 
+    // wait for the refresh interval
     await act(async () => {
-      await new Promise(resolve => window.requestAnimationFrame(resolve))
+      await sleep(config.refreshInterval)
     })
 
-    await act(async () => {
-      await new Promise<void>(resolve => window.queueMicrotask(resolve))
-    })
-
-    // Assert that `second`, eventually agrees with `zero`
-    expect(screen.getByTestId('second')).toHaveTextContent(
-      screen.getByTestId('zero').textContent
+    expect(Number(screen.getByTestId('zero').textContent)).toBeGreaterThan(
+      firstUpdatedAt
     )
 
-    await act(async () => {
-      // mutate from a nested element
-      fireEvent.click(screen.getByRole('button', { name: 'deep mutator' }))
-      await new Promise<void>(resolve => window.queueMicrotask(resolve))
-    })
-
-    // not empty, and not the same as before
-    expect(screen.getByTestId('zero')).not.toBeEmptyDOMElement()
-    expect(screen.getByTestId('zero')).not.toEqual(firstUpdatedAt)
-
-    // sanity check, the value showed by `first` and `second` has increased
     expect(Number(screen.getByTestId('first').textContent)).toBeGreaterThan(
-      Number(firstUpdatedAt)
+      firstUpdatedAt
     )
 
     expect(Number(screen.getByTestId('second').textContent)).toBeGreaterThan(
-      Number(firstUpdatedAt)
+      firstUpdatedAt
     )
 
     // transitively check that all hooks continue to agree on the `updatedAt` value for `key`
     expect(screen.getByTestId('zero')).toHaveTextContent(
       screen.getByTestId('first').textContent
     )
+
+    expect(screen.getByTestId('first')).toHaveTextContent(
+      screen.getByTestId('second').textContent
+    )
+
+    const secondUpdateAt = Number(screen.getByTestId('zero').textContent)
+
+    // let the deduping interval run
+    await sleep(config.dedupingInterval)
+
+    // trigger revalidation by focus - all `updatedAt` keys should continue to agree
+    await focusWindow()
+    await waitForNextTick()
+
+    expect(Number(screen.getByTestId('zero').textContent)).toBeGreaterThan(
+      secondUpdateAt
+    )
+
+    expect(Number(screen.getByTestId('first').textContent)).toBeGreaterThan(
+      secondUpdateAt
+    )
+
+    expect(Number(screen.getByTestId('second').textContent)).toBeGreaterThan(
+      secondUpdateAt
+    )
+
+    // transitively check that all hooks continue to agree on the `updatedAt` value for `key`
+    expect(screen.getByTestId('zero')).toHaveTextContent(
+      screen.getByTestId('first').textContent
+    )
+
     expect(screen.getByTestId('first')).toHaveTextContent(
       screen.getByTestId('second').textContent
     )
