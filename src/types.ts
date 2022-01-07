@@ -165,12 +165,26 @@ export type State<Data, Error> = {
   isValidating?: boolean
 }
 
-export type Mutator<Data = any> = (
+export type MutatorFn<Data = any> = (
   cache: Cache,
   key: Key,
   data?: Data | Promise<Data> | MutatorCallback<Data>,
   opts?: boolean | MutatorOptions<Data>
 ) => Promise<Data | undefined>
+
+export type MutatorWrapper<Fn> = Fn extends (
+  ...args: [...infer Parameters]
+) => infer Result
+  ? Parameters[3] extends boolean
+    ? Result
+    : Parameters[3] extends Required<Pick<MutatorOptions, 'populateCache'>>
+    ? Parameters[3]['populateCache'] extends false
+      ? never
+      : Result
+    : Result
+  : never
+
+export type Mutator<Data = any> = MutatorWrapper<MutatorFn<Data>>
 
 export interface ScopedMutator<Data = any> {
   /** This is used for bound mutator */

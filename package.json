@@ -76,6 +76,7 @@
     "@swc-node/jest": "1.3.3",
     "@testing-library/jest-dom": "5.14.1",
     "@testing-library/react": "12.0.0",
+    "@type-challenges/utils": "0.1.1",
     "@types/react": "17.0.20",
     "@typescript-eslint/eslint-plugin": "5.8.0",
     "@typescript-eslint/parser": "5.8.0",
