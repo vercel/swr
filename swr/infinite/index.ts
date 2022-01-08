@@ -9,10 +9,10 @@ import useSWR, {
   Middleware,
   BareFetcher
 } from 'swr'
-import { useIsomorphicLayoutEffect } from '../src/utils/env'
-import { serialize } from '../src/utils/serialize'
-import { isUndefined, isFunction, UNDEFINED } from '../src/utils/helper'
-import { withMiddleware } from '../src/utils/with-middleware'
+import { useIsomorphicLayoutEffect } from '../core/utils/env'
+import { serialize } from '../core/utils/serialize'
+import { isUndefined, isFunction, UNDEFINED } from '../core/utils/helper'
+import { withMiddleware } from '../core/utils/with-middleware'
 
 import type {
   SWRInfiniteConfiguration,

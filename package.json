@@ -1,41 +1,15 @@
 {
-  "name": "swr",
-  "version": "1.2.0-beta.0",
+  "name": "swr-mono",
+  "version": "0.0.0",
+  "private": true,
   "description": "React Hooks library for remote data fetching",
   "main": "./dist/index.js",
   "module": "./dist/index.esm.js",
-  "exports": {
-    "./package.json": "./package.json",
-    ".": {
-      "import": "./dist/index.mjs",
-      "module": "./dist/index.esm.js",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    },
-    "./infinite": {
-      "import": "./infinite/dist/index.mjs",
-      "module": "./infinite/dist/index.esm.js",
-      "require": "./infinite/dist/index.js",
-      "types": "./infinite/dist/infinite/index.d.ts"
-    },
-    "./immutable": {
-      "import": "./immutable/dist/index.mjs",
-      "module": "./immutable/dist/index.esm.js",
-      "require": "./immutable/dist/index.js",
-      "types": "./immutable/dist/immutable/index.d.ts"
-    }
-  },
-  "types": "./dist/index.d.ts",
-  "files": [
-    "dist/**",
-    "infinite/dist/**",
-    "immutable/dist/**",
-    "infinite/package.json",
-    "immutable/package.json"
+  "workspaces": [
+    "./swr",
+    "./swr/infinite",
+    "./swr/immutable"
   ],
-  "repository": "vercel/swr",
-  "homepage": "https://swr.vercel.app",
-  "license": "MIT",
   "scripts": {
     "clean": "rimraf dist infinite/dist immutable/dist",
     "build": "yarn build:core && yarn build:infinite && yarn build:immutable",
@@ -43,18 +17,17 @@
     "watch:core": "node scripts/watch.js core",
     "watch:infinite": "node scripts/watch.js infinite",
     "watch:immutable": "node scripts/watch.js immutable",
-    "build:core": "bunchee src/index.ts --no-sourcemap",
-    "build:infinite": "bunchee index.ts --cwd infinite --no-sourcemap",
-    "build:immutable": "bunchee index.ts --cwd immutable --no-sourcemap",
-    "prepublishOnly": "yarn clean && yarn build",
+    "build:core": "bunchee core/index.ts --cwd swr --no-sourcemap",
+    "build:infinite": "bunchee index.ts --cwd swr/infinite --no-sourcemap",
+    "build:immutable": "bunchee index.ts --cwd swr/immutable --no-sourcemap",
+    "prepublishOnly": "cd swr && yarn clean && yarn build",
     "publish-beta": "yarn publish --tag beta",
     "types:check": "tsc --noEmit --project tsconfig.check.json && tsc --noEmit -p test",
     "format": "prettier --write ./**/*.{ts,tsx}",
     "lint": "eslint . --ext .ts,.tsx --cache",
     "lint:fix": "yarn lint --fix",
     "test": "jest --coverage",
-    "register": "yarn link && cd node_modules/react && yarn link",
-    "dev-next": "node scripts/dev-next.js"
+    "register": "yarn link && cd node_modules/react && yarn link"
   },
   "husky": {
     "hooks": {
@@ -90,6 +63,7 @@
     "husky": "2.4.1",
     "jest": "27.0.6",
     "lint-staged": "8.2.1",
+    "next": "12.0.8-canary.19",
     "npm-run-all": "4.1.5",
     "prettier": "2.5.0",
     "react": "17.0.1",
@@ -99,9 +73,5 @@
     "rimraf": "3.0.2",
     "typescript": "4.4.3",
     "yalc": "1.0.0-pre.53"
-  },
-  "peerDependencies": {
-    "react": "^16.11.0 || ^17.0.0 || ^18.0.0"
-  },
-  "dependencies": {}
+  }
 }

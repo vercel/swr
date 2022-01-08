@@ -5,7 +5,9 @@ export const IS_SERVER = !hasWindow() || 'Deno' in window
 
 // Polyfill requestAnimationFrame
 export const rAF = (f: (...args: any[]) => void) =>
-  hasRequestAnimationFrame() ? window['requestAnimationFrame'](f) : setTimeout(f, 1)
+  hasRequestAnimationFrame()
+    ? window['requestAnimationFrame'](f)
+    : setTimeout(f, 1)
 
 // React currently throws a warning when using useLayoutEffect on the server.
 // To get around it, we can conditionally useEffect on the server (no-op) and
@@ -15,12 +17,14 @@ export const useIsomorphicLayoutEffect = IS_SERVER ? useEffect : useLayoutEffect
 // This assignment is to extend the Navigator type to use effectiveType.
 const navigatorConnection =
   typeof navigator !== 'undefined' &&
-  (navigator as Navigator & {
-    connection?: {
-      effectiveType: string
-      saveData: boolean
+  (
+    navigator as Navigator & {
+      connection?: {
+        effectiveType: string
+        saveData: boolean
+      }
     }
-  }).connection
+  ).connection
 
 // Adjust the config based on slow connection status (<= 70Kbps).
 export const slowConnection =
