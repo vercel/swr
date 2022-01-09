@@ -7,7 +7,7 @@
     "./package"
   ],
   "scripts": {
-    "clean": "rimraf package/dist package/infinite/dist package/immutable/dist",
+    "clean": "rimraf package/core/dist package/infinite/dist package/immutable/dist",
     "build": "yarn build:core && yarn build:infinite && yarn build:immutable",
     "prepublish-swr": "yarn clean && yarn build",
     "build:core": "bunchee core/index.ts --cwd package --no-sourcemap",
