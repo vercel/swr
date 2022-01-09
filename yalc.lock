@@ -1,0 +1,8 @@
+{
+  "version": "v1",
+  "packages": {
+    "swr": {
+      "signature": "984b0beb41ffe50f87a7a947b8de4e6a"
+    }
+  }
+}

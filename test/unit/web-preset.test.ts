@@ -45,7 +45,7 @@ function runTests(propertyName) {
         globalSpy.document.mockImplementation(() => target)
       }
 
-      webPreset = require('../../swr/core/utils/web-preset')
+      webPreset = require('../../package/core/utils/web-preset')
       initFocus = webPreset.defaultConfigOptions.initFocus
 
       const fn = jest.fn()
@@ -71,7 +71,7 @@ function runTests(propertyName) {
         globalSpy.document.mockImplementation(() => undefined)
       }
 
-      webPreset = require('../../swr/core/utils/web-preset')
+      webPreset = require('../../package/core/utils/web-preset')
       initFocus = webPreset.defaultConfigOptions.initFocus
 
       const fn = jest.fn()

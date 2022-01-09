@@ -6,7 +6,7 @@ import {
   MutatorCallback,
   Mutator,
   MutatorWrapper
-} from '../../swr/core/types'
+} from '../../package/core/types'
 
 type Case1<Data = any> = MutatorFn<Data>
 type Case2<Data = any> = (

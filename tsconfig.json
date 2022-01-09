@@ -11,19 +11,19 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "strictBindCallApply": true,
-    "rootDir": "swr",
+    "rootDir": "./package",
     "strict": true,
     "target": "es5",
     "baseUrl": ".",
     "noEmitOnError": true,
     "paths": {
-      "swr": ["./swr/core/index.ts"],
-      "swr/infinite": ["./swr/infinite/index.ts"],
-      "swr/immutable": ["./swr/immutable/index.ts"]
+      "swr": ["./package/core/index.ts"],
+      "swr/infinite": ["./package/infinite/index.ts"],
+      "swr/immutable": ["./package/immutable/index.ts"]
     },
-    "typeRoots": ["swr/types", "./node_modules/@types"]
+    "typeRoots": ["package/types", "./node_modules/@types"]
   },
-  "include": ["swr", "swr/immutable", "swr/infinite"],
+  "include": ["package", "package/immutable", "package/infinite"],
   "exclude": ["./**/dist", "node_modules"],
   "watchOptions": {
     "watchFile": "useFsEvents",
