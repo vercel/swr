@@ -3,8 +3,6 @@
   "version": "0.0.0",
   "private": true,
   "description": "React Hooks library for remote data fetching",
-  "main": "./dist/index.js",
-  "module": "./dist/index.esm.js",
   "workspaces": [
     "./swr",
     "./swr/infinite",

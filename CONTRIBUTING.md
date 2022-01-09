@@ -33,23 +33,11 @@ yarn watch
 Install dependency of the target example, for instance `examples/basic`:
 
 ```sh
-cd examples/basic && yarn && npx yalc link swr
+yarn next dev examples/basic
 ```
 
-After setup, back to the root directory and run:
+You could also use other next.js commands like `next build` and `next start`
 
-```sh
-# by default it will run next dev for the example
-yarn dev-next basic
-```
-
-All examples are built with Next.js, so Next.js commands are all supported:
-
-```sh
-# if you want to build and start
-yarn dev-next basic build
-yarn dev-next basic start
-```
 ## Update Documentation
 
 To update the [SWR Documentation](https://swr.vercel.app), you can contribute to the [website repository](https://github.com/vercel/swr-site).
