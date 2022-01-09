@@ -1,5 +1,5 @@
 import { unstable_serialize } from 'swr'
-import { stableHash } from '../../src/utils/hash'
+import { stableHash } from '../../swr/core/utils/hash'
 
 describe('SWR - unstable_serialize', () => {
   it('should serialize arguments correctly', async () => {
