@@ -1,7 +1,7 @@
 {
   "name": "local-state-sharing",
   "version": "1.0.0",
-  "main": "index.js",
+  "private": true,
   "license": "MIT",
   "dependencies": {
     "react": "17.0.2",

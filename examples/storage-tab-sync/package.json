@@ -1,7 +1,7 @@
 {
   "name": "storage-tab-sync",
   "version": "1.0.0",
-  "main": "index.js",
+  "private": true,
   "license": "MIT",
   "dependencies": {
     "next": "latest",
