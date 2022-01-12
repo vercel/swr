@@ -32,7 +32,7 @@ export const unstable_serialize = (getKey: SWRInfiniteKeyLoader) => {
   return INFINITE_PREFIX + getFirstPageKey(getKey)
 }
 
-export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
+const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
   (
     getKey: SWRInfiniteKeyLoader,
     fn: BareFetcher<Data> | null,

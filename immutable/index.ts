@@ -1,7 +1,7 @@
 import useSWR, { Middleware } from 'swr'
 import { withMiddleware } from '../src/utils/with-middleware'
 
-export const immutable: Middleware = useSWRNext => (key, fetcher, config) => {
+const immutable: Middleware = useSWRNext => (key, fetcher, config) => {
   // Always override all revalidate options.
   config.revalidateOnFocus = false
   config.revalidateIfStale = false
