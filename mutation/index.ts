@@ -41,10 +41,7 @@ const mutation =
     // Similar to the global mutate, but bound to the current cache and key.
     // `cache` isn't allowed to change during the lifecycle.
     const boundMutate = useCallback(
-      (arg0, arg1) => {
-        const serializedKey = serialize(keyRef.current)[0]
-        return mutate(serializedKey, arg0, arg1)
-      },
+      (arg0, arg1) => mutate(serialize(keyRef.current)[0], arg0, arg1),
       // eslint-disable-next-line react-hooks/exhaustive-deps
       []
     )
