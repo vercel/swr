@@ -1,8 +1,5 @@
 {
-  "name": "swr-mono",
-  "version": "0.0.0",
   "private": true,
-  "description": "React Hooks library for remote data fetching",
   "workspaces": [
     "./package"
   ],
