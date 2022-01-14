@@ -32,15 +32,10 @@ yarn watch
 
 Install dependency of the target example, for instance `examples/basic`:
 
-```sh
-cd examples/basic && yarn && npx yalc link swr
-```
-
-After setup, back to the root directory and run:
 
 ```sh
 # by default it will run next dev for the example
-yarn dev-next basic
+yarn next dev examples/basic
 ```
 
 All examples are built with Next.js, so Next.js commands are all supported:
