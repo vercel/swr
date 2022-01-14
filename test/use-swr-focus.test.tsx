@@ -195,11 +195,7 @@ describe('useSWR - focus', () => {
     await focusWindow()
     // wait for throttle intervals
     await act(() => sleep(150))
-    // trigger revalidation
-    await focusWindow()
-    await waitForNextTick()
-    await act(() => sleep(100))
-    await screen.findByText('data: 5')
+    await screen.findByText('data: 4')
   })
 
   it('should revalidate on focus even with custom cache', async () => {
