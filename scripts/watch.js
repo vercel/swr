@@ -51,7 +51,6 @@ function watch(rollupWatcher) {
   rollupWatcher.on('event', event => {
     if (event.code === 'BUNDLE_END') {
       event.result.close()
-      push()
     }
     if (event.code === 'ERROR') {
       error(event.error)
@@ -61,21 +60,10 @@ function watch(rollupWatcher) {
   teardown(rollupWatcher.close)
 }
 
-function push() {
-  const sub = childProcess.spawn('yalc', ['push'])
-  sub.stdout.on('data', logStdout)
-  sub.stderr.on('data', logStderr)
-  sub.stderr.on('close', () => {
-    sub.stdout.off('data', logStdout)
-    sub.stderr.off('data', logStderr)
-  })
-}
 
 function teardown(cb) {
   process.on('exit', cb)
   process.on('SIGINT', cb)
 }
 
-const logStdout = data => process.stdout.write(data.toString())
-const logStderr = data => process.stderr.write(data.toString())
 start()

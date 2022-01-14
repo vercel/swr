@@ -39,7 +39,7 @@
   "scripts": {
     "clean": "rimraf dist infinite/dist immutable/dist",
     "build": "yarn build:core && yarn build:infinite && yarn build:immutable",
-    "watch": "yalc publish && node scripts/watch.js",
+    "watch": "node scripts/watch.js",
     "watch:core": "node scripts/watch.js core",
     "watch:infinite": "node scripts/watch.js infinite",
     "watch:immutable": "node scripts/watch.js immutable",
@@ -52,9 +52,7 @@
     "format": "prettier --write ./**/*.{ts,tsx}",
     "lint": "eslint . --ext .ts,.tsx --cache",
     "lint:fix": "yarn lint --fix",
-    "test": "jest --coverage",
-    "register": "yarn link && cd node_modules/react && yarn link",
-    "dev-next": "node scripts/dev-next.js"
+    "test": "jest --coverage"
   },
   "husky": {
     "hooks": {
@@ -90,6 +88,7 @@
     "husky": "2.4.1",
     "jest": "27.0.6",
     "lint-staged": "8.2.1",
+    "next": "12.0.8",
     "npm-run-all": "4.1.5",
     "prettier": "2.5.0",
     "react": "17.0.1",
@@ -98,7 +97,7 @@
     "react-experimental": "npm:react@alpha",
     "rimraf": "3.0.2",
     "typescript": "4.4.3",
-    "yalc": "1.0.0-pre.53"
+    "swr": "link:./"
   },
   "peerDependencies": {
     "react": "^16.11.0 || ^17.0.0 || ^18.0.0"

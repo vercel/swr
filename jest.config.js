@@ -2,7 +2,7 @@ module.exports = {
   testEnvironment: 'jsdom',
   testRegex: '/test/.*\\.test\\.tsx?$',
   modulePathIgnorePatterns: ['<rootDir>/examples/'],
-  setupFilesAfterEnv: ['<rootDir>/scripts/jest-setup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/test/jest-setup.ts'],
   moduleNameMapper: {
     '^swr$': '<rootDir>/src',
     '^swr/infinite$': '<rootDir>/infinite/index.ts',
