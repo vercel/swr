@@ -9,14 +9,7 @@ module.exports = {
     '^swr/immutable$': '<rootDir>/immutable/index.ts'
   },
   transform: {
-    '^.+\\.(t|j)sx?$': [
-      '@swc-node/jest',
-      {
-        jsc: {
-          minify: false
-        }
-      }
-    ]
+    '^.+\\.(t|j)sx?$': '@swc/jest'
   },
   coveragePathIgnorePatterns: ['/node_modules/', '/dist/', '/test/'],
   coverageReporters: ['text', 'html']
