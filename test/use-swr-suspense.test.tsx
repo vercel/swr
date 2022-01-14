@@ -193,7 +193,7 @@ describe('useSWR - suspense', () => {
     )
 
     await screen.findByText(updatedKey)
-    // fixes https://github.com/zeit/swr/issues/57
+    // fixes https://github.com/vercel/swr/issues/57
     // initialKey' -> undefined -> updatedKey
     expect(renderedResults).toEqual([initialKey, updatedKey])
   })
