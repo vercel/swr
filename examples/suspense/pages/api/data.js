@@ -2,7 +2,7 @@ const projects = [
   'facebook/flipper',
   'vuejs/vuepress',
   'rust-lang/rust',
-  'zeit/next.js',
+  'vercel/next.js',
   'emperor/clothes'
 ]
 

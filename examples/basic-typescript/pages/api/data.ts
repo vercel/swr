@@ -4,7 +4,7 @@ const projects = [
   'facebook/flipper',
   'vuejs/vuepress',
   'rust-lang/rust',
-  'zeit/next.js'
+  'vercel/next.js'
 ]
 
 export default function api(req: NextApiRequest, res: NextApiResponse) {
