@@ -39,10 +39,10 @@
   "scripts": {
     "clean": "rimraf dist infinite/dist immutable/dist",
     "build": "yarn build:core && yarn build:infinite && yarn build:immutable",
-    "watch": "node scripts/watch.js",
-    "watch:core": "node scripts/watch.js core",
-    "watch:infinite": "node scripts/watch.js infinite",
-    "watch:immutable": "node scripts/watch.js immutable",
+    "watch": "npm-run-all -p watch:core watch:infinite watch:immutable",
+    "watch:core": "yarn build:core -w",
+    "watch:infinite": "yarn build:infinite -w",
+    "watch:immutable": "yarn build:immutable -w",
     "build:core": "bunchee src/index.ts --no-sourcemap",
     "build:infinite": "bunchee index.ts --cwd infinite --no-sourcemap",
     "build:immutable": "bunchee index.ts --cwd immutable --no-sourcemap",
@@ -78,7 +78,7 @@
     "@types/react": "17.0.20",
     "@typescript-eslint/eslint-plugin": "5.8.0",
     "@typescript-eslint/parser": "5.8.0",
-    "bunchee": "1.8.0",
+    "bunchee": "1.8.2",
     "eslint": "8.3.0",
     "eslint-config-prettier": "8.3.0",
     "eslint-plugin-jest-dom": "3.9.2",
@@ -96,8 +96,8 @@
     "react-dom-experimental": "npm:react-dom@alpha",
     "react-experimental": "npm:react@alpha",
     "rimraf": "3.0.2",
-    "typescript": "4.4.3",
-    "swr": "link:./"
+    "swr": "link:./",
+    "typescript": "4.4.3"
   },
   "peerDependencies": {
     "react": "^16.11.0 || ^17.0.0 || ^18.0.0"

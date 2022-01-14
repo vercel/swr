@@ -42,8 +42,8 @@ All examples are built with Next.js, so Next.js commands are all supported:
 
 ```sh
 # if you want to build and start
-yarn dev-next basic build
-yarn dev-next basic start
+yarn next build examples/basic
+yarn next start examples/basic
 ```
 ## Update Documentation
 
