@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const projects = [
-  'facebook/flipper', 'vuejs/vuepress', 'rust-lang/rust', 'zeit/next.js'
+  'facebook/flipper', 'vuejs/vuepress', 'rust-lang/rust', 'vercel/next.js'
 ]
 
 export default function api(req, res) {
