@@ -2291,10 +2291,10 @@ builtin-modules@^3.1.0:
   resolved "https://registry.yarnpkg.com/builtin-modules/-/builtin-modules-3.2.0.tgz#45d5db99e7ee5e6bc4f362e008bf917ab5049887"
   integrity sha512-lGzLKcioL90C7wMczpkY0n/oART3MbBa8R9OFGE1rJxoVI86u4WAGfEk8Wjv10eKSyTHVGkSo3bvBylCEtk7LA==
 
-bunchee@1.8.0:
-  version "1.8.0"
-  resolved "https://registry.yarnpkg.com/bunchee/-/bunchee-1.8.0.tgz#51ac0badcaf7218dc9977d658c2992765236cdaa"
-  integrity sha512-fRgiDsPjEwlWEKfIRCu3XeE5IdYZ0x4I4K2tcpyrYOjuW5re6kYXjuMi1IVBZ90PBb+13XApIUJ+QBfptn+SEA==
+bunchee@1.8.2:
+  version "1.8.2"
+  resolved "https://registry.yarnpkg.com/bunchee/-/bunchee-1.8.2.tgz#7423e40de5635640c7c792322baf1089f51ca3e0"
+  integrity sha512-i8NfUIQcC7VIGbninHTzM/PnEHD+b0pkCcSMVKb5N8nAK6On32f2N3vHczzYk0FcwxuIt27r2zB0yTMErLTfSA==
   dependencies:
     "@rollup/plugin-babel" "5.2.1"
     "@rollup/plugin-commonjs" "20.0.0"
