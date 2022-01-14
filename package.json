@@ -2,6 +2,14 @@
   "name": "swr",
   "version": "1.2.0-beta.1",
   "description": "React Hooks library for remote data fetching",
+  "keywords": [
+    "swr",
+    "react",
+    "hooks",
+    "request",
+    "cache",
+    "fetch"
+  ],
   "main": "./dist/index.js",
   "module": "./dist/index.esm.js",
   "exports": {
@@ -33,7 +41,7 @@
     "infinite/package.json",
     "immutable/package.json"
   ],
-  "repository": "vercel/swr",
+  "repository": "github:vercel/swr",
   "homepage": "https://swr.vercel.app",
   "license": "MIT",
   "scripts": {
@@ -102,5 +110,13 @@
   },
   "peerDependencies": {
     "react": "^16.11.0 || ^17.0.0 || ^18.0.0"
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true,
+    "useTabs": false,
+    "trailingComma": "none",
+    "tabWidth": 2,
+    "arrowParens": "avoid"
   }
 }
