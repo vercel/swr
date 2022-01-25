@@ -69,6 +69,8 @@ export const useSWRHandler = <Data = any, Error = any>(
   // Refs to keep the key and config.
   const keyRef = useRef(key)
   const fetcherRef = useRef(fetcher)
+  fetcherRef.current = fetcher
+
   const configRef = useRef(config)
   const getConfig = () => configRef.current
   const isActive = () => getConfig().isVisible() && getConfig().isOnline()
