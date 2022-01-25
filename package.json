@@ -2,6 +2,14 @@
   "name": "swr",
   "version": "1.2.0-beta.1",
   "description": "React Hooks library for remote data fetching",
+  "keywords": [
+    "swr",
+    "react",
+    "hooks",
+    "request",
+    "cache",
+    "fetch"
+  ],
   "main": "./dist/index.js",
   "module": "./dist/index.esm.js",
   "exports": {
@@ -33,16 +41,16 @@
     "infinite/package.json",
     "immutable/package.json"
   ],
-  "repository": "vercel/swr",
+  "repository": "github:vercel/swr",
   "homepage": "https://swr.vercel.app",
   "license": "MIT",
   "scripts": {
     "clean": "rimraf dist infinite/dist immutable/dist",
     "build": "yarn build:core && yarn build:infinite && yarn build:immutable",
-    "watch": "yalc publish && node scripts/watch.js",
-    "watch:core": "node scripts/watch.js core",
-    "watch:infinite": "node scripts/watch.js infinite",
-    "watch:immutable": "node scripts/watch.js immutable",
+    "watch": "npm-run-all -p watch:core watch:infinite watch:immutable",
+    "watch:core": "yarn build:core -w",
+    "watch:infinite": "yarn build:infinite -w",
+    "watch:immutable": "yarn build:immutable -w",
     "build:core": "bunchee src/index.ts --no-sourcemap",
     "build:infinite": "bunchee index.ts --cwd infinite --no-sourcemap",
     "build:immutable": "bunchee index.ts --cwd immutable --no-sourcemap",
@@ -52,9 +60,7 @@
     "format": "prettier --write ./**/*.{ts,tsx}",
     "lint": "eslint . --ext .ts,.tsx --cache",
     "lint:fix": "yarn lint --fix",
-    "test": "jest --coverage",
-    "register": "yarn link && cd node_modules/react && yarn link",
-    "dev-next": "node scripts/dev-next.js"
+    "test": "jest --coverage"
   },
   "husky": {
     "hooks": {
@@ -73,14 +79,15 @@
     "tslib": "2.3.0"
   },
   "devDependencies": {
-    "@swc-node/jest": "1.3.3",
+    "@swc/core": "1.2.129",
+    "@swc/jest": "0.2.17",
     "@testing-library/jest-dom": "5.14.1",
     "@testing-library/react": "12.0.0",
     "@type-challenges/utils": "0.1.1",
     "@types/react": "17.0.20",
     "@typescript-eslint/eslint-plugin": "5.8.0",
     "@typescript-eslint/parser": "5.8.0",
-    "bunchee": "1.8.0",
+    "bunchee": "1.8.2",
     "eslint": "8.3.0",
     "eslint-config-prettier": "8.3.0",
     "eslint-plugin-jest-dom": "3.9.2",
@@ -90,6 +97,7 @@
     "husky": "2.4.1",
     "jest": "27.0.6",
     "lint-staged": "8.2.1",
+    "next": "12.0.8",
     "npm-run-all": "4.1.5",
     "prettier": "2.5.0",
     "react": "17.0.1",
@@ -97,11 +105,18 @@
     "react-dom-experimental": "npm:react-dom@alpha",
     "react-experimental": "npm:react@alpha",
     "rimraf": "3.0.2",
-    "typescript": "4.4.3",
-    "yalc": "1.0.0-pre.53"
+    "swr": "link:./",
+    "typescript": "4.4.3"
   },
   "peerDependencies": {
     "react": "^16.11.0 || ^17.0.0 || ^18.0.0"
   },
-  "dependencies": {}
+  "prettier": {
+    "semi": false,
+    "singleQuote": true,
+    "useTabs": false,
+    "trailingComma": "none",
+    "tabWidth": 2,
+    "arrowParens": "avoid"
+  }
 }
