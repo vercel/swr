@@ -316,4 +316,57 @@ describe('useSWR - suspense', () => {
 
     await screen.findByText('SWR')
   })
+
+  it('should use the latest available fetcher closure', async () => {
+    const fetcherSpy = jest.fn()
+
+    const useData = (dataKey: string | null) => {
+      return useSWR(
+        dataKey,
+        () => {
+          fetcherSpy(dataKey)
+          return createResponse('SWR')
+        },
+        { suspense: true }
+      )
+    }
+
+    function Section({ dataKey }: { dataKey: string | null }) {
+      const { data } = useData(dataKey)
+      return (
+        <div>
+          <p>{dataKey}</p>
+          <p>{data}</p>
+        </div>
+      )
+    }
+
+    const key = createKey()
+
+    const App = () => {
+      const [flag, toggle] = useReducer(x => !x, false)
+
+      return (
+        <div>
+          <button onClick={toggle}>click</button>
+
+          <Suspense fallback={<div>fallback</div>}>
+            <Section dataKey={flag ? key : null} />
+          </Suspense>
+        </div>
+      )
+    }
+
+    renderWithConfig(<App />)
+
+    fireEvent.click(screen.getByText(/click/i))
+
+    screen.getByText('fallback')
+
+    expect(await screen.findByText('SWR')).toBeInTheDocument()
+    expect(await screen.findByText(key)).toBeInTheDocument()
+
+    expect(fetcherSpy).toHaveBeenCalledTimes(1)
+    expect(fetcherSpy).toHaveBeenCalledWith(key)
+  })
 })
