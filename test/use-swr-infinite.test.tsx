@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { Suspense, useEffect, useState } from 'react'
 import { fireEvent, act, screen } from '@testing-library/react'
 import { mutate as globalMutate, useSWRConfig, SWRConfig } from 'swr'
 import useSWRInfinite, { unstable_serialize } from 'swr/infinite'
@@ -166,7 +166,9 @@ describe('useSWRInfinite', () => {
           }
 
           // fetch with offset
-          return `/api/${key}?offset=${previousPageData[previousPageData.length - 1].id}`
+          return `/api/${key}?offset=${
+            previousPageData[previousPageData.length - 1].id
+          }`
         },
         mockAPIFetcher,
         {
@@ -790,7 +792,11 @@ describe('useSWRInfinite', () => {
     await screen.findByText('data:response data')
 
     await act(() =>
-      mutateCustomCache(unstable_serialize(() => key), 'local-mutation', false)
+      mutateCustomCache(
+        unstable_serialize(() => key),
+        'local-mutation',
+        false
+      )
     )
     await screen.findByText('data:local-mutation')
   })
@@ -799,7 +805,10 @@ describe('useSWRInfinite', () => {
     const loggedValues = []
 
     function Page() {
-      const { size, setSize } = useSWRInfinite(() => null, () => '')
+      const { size, setSize } = useSWRInfinite(
+        () => null,
+        () => ''
+      )
       loggedValues.push(size)
       return <button onClick={() => setSize(1)}>set size</button>
     }
@@ -892,7 +901,11 @@ describe('useSWRInfinite', () => {
     let v = 'old'
 
     function Page() {
-      const { data, size, mutate: boundMutate } = useSWRInfinite(
+      const {
+        data,
+        size,
+        mutate: boundMutate
+      } = useSWRInfinite(
         i => [key, i],
         () => v
       )
@@ -1094,5 +1107,47 @@ describe('useSWRInfinite', () => {
         )
       })
     ).toBeTruthy()
+  })
+
+  // https://github.com/vercel/swr/issues/1776
+  it('should update the getKey reference with the suspense mode', async () => {
+    const keyA = 'keyA' + createKey()
+    const keyB = 'keyB' + createKey()
+
+    const apiData = {
+      [keyA]: ['A1', 'A2', 'A3'],
+      [keyB]: ['B1', 'B2', 'B3']
+    }
+
+    function Page() {
+      const [status, setStatus] = useState('a')
+      const { data, setSize } = useSWRInfinite(
+        () => (status === 'a' ? keyA : keyB),
+        key => createResponse(apiData[key]),
+        { suspense: true }
+      )
+      return (
+        <>
+          <div>data: {String(data)}</div>
+          <button
+            onClick={() => {
+              setStatus('b')
+              setSize(1)
+            }}
+          >
+            mutate
+          </button>
+        </>
+      )
+    }
+    renderWithConfig(
+      <Suspense fallback="loading">
+        <Page />
+      </Suspense>
+    )
+    await screen.findByText('data: A1,A2,A3')
+
+    fireEvent.click(screen.getByText('mutate'))
+    await screen.findByText('data: B1,B2,B3')
   })
 })
