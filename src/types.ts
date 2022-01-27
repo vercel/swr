@@ -42,7 +42,7 @@ export interface PublicConfiguration<
   revalidateOnReconnect: boolean
   revalidateOnMount?: boolean
   revalidateIfStale: boolean
-  shouldRetryOnError: boolean
+  shouldRetryOnError: boolean | ((err: Error) => boolean)
   suspense?: boolean
   fallbackData?: Data
   fetcher?: Fn

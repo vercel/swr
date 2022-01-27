@@ -304,7 +304,12 @@ export const useSWRHandler = <Data = any, Error = any>(
           // deduped ones.
           if (shouldStartNewRequest && isCurrentKeyMounted()) {
             getConfig().onError(err, key, config)
-            if (config.shouldRetryOnError) {
+            if (
+              (typeof config.shouldRetryOnError === 'boolean' &&
+                config.shouldRetryOnError) ||
+              (isFunction(config.shouldRetryOnError) &&
+                config.shouldRetryOnError(err as Error))
+            ) {
               // When retrying, dedupe is always enabled
               if (isActive()) {
                 // If it's active, stop. It will auto revalidate when refocusing
