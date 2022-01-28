@@ -22,7 +22,9 @@ export const internalMutate = async <Data>(
     typeof _opts === 'boolean' ? { revalidate: _opts } : _opts || {}
 
   // Fallback to `true` if it's not explicitly set to `false`
-  let populateCache = options.populateCache !== false
+  let populateCache = isUndefined(options.populateCache)
+    ? true
+    : options.populateCache
   const revalidate = options.revalidate !== false
   const rollbackOnError = options.rollbackOnError !== false
   const optimisticData = options.optimisticData
@@ -43,7 +45,7 @@ export const internalMutate = async <Data>(
       UNDEFINED,
       UNDEFINED,
       revalidate,
-      populateCache
+      true
     )
   }
 
@@ -87,18 +89,30 @@ export const internalMutate = async <Data>(
       if (error) throw error
       return data
     } else if (error && hasOptimisticData && rollbackOnError) {
-      // Rollback. Always populate the cache in this case.
+      // Rollback. Always populate the cache in this case but without
+      // transforming the data.
       populateCache = true
       data = rollbackData
       cache.set(key, rollbackData)
     }
   }
 
+  // If we should write back the cache after request.
   if (populateCache) {
     if (!error) {
-      // Only update cached data if there's no error. Data can be `undefined` here.
-      cache.set(key, data)
+      try {
+        // Transform the result into data.
+        if (isFunction(populateCache)) {
+          data = populateCache(data)
+        }
+
+        // Only update cached data if there's no error. Data can be `undefined` here.
+        cache.set(key, data)
+      } catch (_) {
+        // Skip populating the cache.
+      }
     }
+
     // Always update or reset the error.
     cache.set(keyInfo, mergeObjects(cache.get(keyInfo), { error }))
   }
@@ -114,7 +128,7 @@ export const internalMutate = async <Data>(
     error,
     UNDEFINED,
     revalidate,
-    populateCache
+    !!populateCache
   )
 
   // Throw error or return data
