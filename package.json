@@ -10,26 +10,26 @@
     "cache",
     "fetch"
   ],
-  "main": "./dist/index.js",
+  "main": "./dist/index.cjs",
   "module": "./dist/index.esm.js",
   "exports": {
     "./package.json": "./package.json",
     ".": {
       "import": "./dist/index.mjs",
       "module": "./dist/index.esm.js",
-      "require": "./dist/index.js",
+      "require": "./dist/index.cjs",
       "types": "./dist/index.d.ts"
     },
     "./infinite": {
       "import": "./infinite/dist/index.mjs",
       "module": "./infinite/dist/index.esm.js",
-      "require": "./infinite/dist/index.js",
+      "require": "./infinite/dist/index.cjs",
       "types": "./infinite/dist/infinite/index.d.ts"
     },
     "./immutable": {
       "import": "./immutable/dist/index.mjs",
       "module": "./immutable/dist/index.esm.js",
-      "require": "./immutable/dist/index.js",
+      "require": "./immutable/dist/index.cjs",
       "types": "./immutable/dist/immutable/index.d.ts"
     }
   },
