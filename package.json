@@ -10,7 +10,7 @@
     "cache",
     "fetch"
   ],
-  "main": "./dist/index.cjs",
+  "main": "./dist/index.js",
   "module": "./dist/index.esm.js",
   "exports": {
     "./package.json": "./package.json",
