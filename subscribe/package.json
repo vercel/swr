@@ -4,9 +4,9 @@
   "main": "./dist/index.js",
   "module": "./dist/index.esm.js",
   "types": "./dist/subscribe",
+  "exports": "./dist/index.mjs",
   "peerDependencies": {
     "swr": "*",
-    "react": "*",
-    "dequal": "*"
+    "react": "*"
   }
 }

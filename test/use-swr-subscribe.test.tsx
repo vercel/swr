@@ -1,7 +1,7 @@
 import React from 'react'
-import { render } from '@testing-library/react'
-import { sleep } from './utils'
-import useSWRSubscription from 'swr/subscribe'
+import { act, screen } from '@testing-library/react'
+import { sleep, renderWithConfig } from './utils'
+import { unstable_useSWRSubscribe as useSWRSubscription } from 'swr/subscribe'
 
 describe('useSWRSubscription', () => {
   it('should update state when fetcher is a subscription', async () => {
@@ -23,27 +23,25 @@ describe('useSWRSubscription', () => {
     }
 
     function Page() {
-      const { data, error } = useSWRSubscription(key, subscribe)
+      const { data, error } = useSWRSubscription(key, subscribe, {
+        fallbackData: 'fallback'
+      })
       return <div>{error ? error.message : data}</div>
     }
 
-    const { container } = render(<Page />)
-    await sleep(10)
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`""`)
-    await sleep(100)
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"${key}0"`)
-    await sleep(100)
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"${key}1"`)
-    await sleep(100)
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(`"${key}2"`)
-    await sleep(100)
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"${key}error"`
-    )
+    renderWithConfig(<Page />)
+    await act(() => sleep(10))
+    screen.getByText(`fallback`)
+    await act(() => sleep(100))
+    screen.getByText(`${key}0`)
+    await act(() => sleep(100))
+    screen.getByText(`${key}1`)
+    await act(() => sleep(100))
+    screen.getByText(`${key}2`)
+    await act(() => sleep(100))
+    screen.getByText(`${key}error`)
     clearInterval(intervalId)
     await sleep(100)
-    expect(container.firstChild.textContent).toMatchInlineSnapshot(
-      `"${key}error"`
-    )
+    screen.getByText(`${key}error`)
   })
 })
