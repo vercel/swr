@@ -1,20 +1,20 @@
 import React from 'react'
 import { act, screen } from '@testing-library/react'
 import { sleep, renderWithConfig } from './utils'
-import { unstable_useSWRSubscribe as useSWRSubscription } from 'swr/subscribe'
+import { unstable_useSWRSubscription as useSWRSubscription } from 'swr/subscription'
 
 describe('useSWRSubscription', () => {
   it('should update state when fetcher is a subscription', async () => {
     const key = 'sub-0'
     let intervalId
     let res = 0
-    function subscribe(_key, { onData, onError }) {
+    function subscribe(_key, callback) {
       intervalId = setInterval(() => {
         if (res === 3) {
           const err = new Error(_key + 'error')
-          onError(err)
+          callback(err)
         } else {
-          onData(_key + res)
+          callback(undefined, _key + res)
         }
         res++
       }, 100)

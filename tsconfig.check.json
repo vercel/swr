@@ -3,5 +3,5 @@
   "compilerOptions": {
     "rootDir": ".",
   },
-  "include": ["src", "immutable", "infinite", "subscribe"]
+  "include": ["src", "immutable", "infinite", "subscription"]
 }

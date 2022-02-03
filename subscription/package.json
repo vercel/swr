@@ -1,9 +1,9 @@
 {
-  "name": "swr-subscribe",
+  "name": "swr-subscription",
   "private": true,
   "main": "./dist/index.js",
   "module": "./dist/index.esm.js",
-  "types": "./dist/subscribe",
+  "types": "./dist/subscription",
   "exports": "./dist/index.mjs",
   "peerDependencies": {
     "swr": "*",

@@ -32,11 +32,11 @@
       "require": "./immutable/dist/index.js",
       "types": "./immutable/dist/immutable/index.d.ts"
     },
-    "./subscribe": {
-      "import": "./subscribe/dist/index.mjs",
-      "module": "./subscribe/dist/index.esm.js",
-      "require": "./subscribe/dist/index.js",
-      "types": "./subscribe/dist/subscribe/index.d.ts"
+    "./subscription": {
+      "import": "./subscription/dist/index.mjs",
+      "module": "./subscription/dist/index.esm.js",
+      "require": "./subscription/dist/index.js",
+      "types": "./subscription/dist/subscription/index.d.ts"
     }
   },
   "types": "./dist/index.d.ts",
@@ -44,26 +44,26 @@
     "dist/**",
     "infinite/dist/**",
     "immutable/dist/**",
-    "subscribe/dist/**",
+    "subscription/dist/**",
     "infinite/package.json",
     "immutable/package.json",
-    "subscribe/package.json"
+    "subscription/package.json"
   ],
   "repository": "github:vercel/swr",
   "homepage": "https://swr.vercel.app",
   "license": "MIT",
   "scripts": {
     "clean": "rimraf dist infinite/dist immutable/dist",
-    "build": "yarn build:core && yarn build:infinite && yarn build:immutable && yarn build:subscribe",
+    "build": "yarn build:core && yarn build:infinite && yarn build:immutable && yarn build:subscription",
     "watch": "npm-run-all -p watch:core watch:infinite watch:immutable",
     "watch:core": "yarn build:core -w",
     "watch:infinite": "yarn build:infinite -w",
     "watch:immutable": "yarn build:immutable -w",
-    "watch:subscribe": "yarn build:subscribe -w",
+    "watch:subscription": "yarn build:subscription -w",
     "build:core": "bunchee src/index.ts --no-sourcemap",
     "build:infinite": "bunchee index.ts --cwd infinite --no-sourcemap",
     "build:immutable": "bunchee index.ts --cwd immutable --no-sourcemap",
-    "build:subscribe": "bunchee index.ts --cwd subscribe --no-sourcemap",
+    "build:subscription": "bunchee index.ts --cwd subscription --no-sourcemap",
     "prepublishOnly": "yarn clean && yarn build",
     "publish-beta": "yarn publish --tag beta",
     "types:check": "tsc --noEmit --project tsconfig.check.json && tsc --noEmit -p test",
