@@ -42,7 +42,7 @@ export const subscription = (<Data, Error>(useSWRNext: SWRHook) =>
     useEffect(() => {
       subscriptions.set(key, (subscriptions.get(key) || 0) + 1)
 
-      const onData = (val: Data) => mutateRef.current(val, false)
+      const onData = (val?: Data) => mutateRef.current(val, false)
       const onError = async (err: any) => {
         // Avoid thrown errors from `mutate`
         // eslint-disable-next-line no-empty
@@ -57,7 +57,7 @@ export const subscription = (<Data, Error>(useSWRNext: SWRHook) =>
 
       const callback = (_err?: any, _data?: Data) => {
         if (_err) onError(_err)
-        else if (typeof _data !== 'undefined') onData(_data)
+        else onData(_data)
       }
 
       if (subscriptions.get(key) === 1) {
@@ -65,12 +65,15 @@ export const subscription = (<Data, Error>(useSWRNext: SWRHook) =>
         disposers.set(key, dispose)
       }
       return () => {
-        const count = subscriptions.get(key) || 1
-        subscriptions.set(key, count - 1)
-        // dispose if it's last one
-        if (count === 1) {
-          disposers.get(key)()
-        }
+        // Prevent frequent unsubscribe caused by unmount
+        setTimeout(() => {
+          const count = subscriptions.get(key) || 1
+          subscriptions.set(key, count - 1)
+          // Dispose if it's last one
+          if (count === 1) {
+            disposers.get(key)()
+          }
+        })
       }
     }, [key])
 
