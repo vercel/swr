@@ -49,6 +49,12 @@ export const useSWRHandler = <Data = any, Error = any>(
     refreshWhenOffline
   } = config
 
+  // SWR should throw when trying to suspend on the server:
+  // https://github.com/vercel/swr/issues/1832
+  if (IS_SERVER && suspense) {
+    throw new Error('`suspense: true` is not supported on the server side.')
+  }
+
   const [EVENT_REVALIDATORS, STATE_UPDATERS, MUTATION, FETCH] =
     SWRGlobalState.get(cache) as GlobalState
 
