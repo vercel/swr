@@ -520,6 +520,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     // Always update fetcher and config refs even with the Suspense mode.
     fetcherRef.current = fetcher
     configRef.current = config
+    unmountedRef.current = false
     throw isUndefined(error) ? revalidate(WITH_DEDUPE) : error
   }
 
