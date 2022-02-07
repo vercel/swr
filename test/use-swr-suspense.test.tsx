@@ -232,6 +232,61 @@ describe('useSWR - suspense', () => {
     expect(renderedResults).toEqual(['123,1', '123,2'])
   })
 
+  it('should render correctly when key changes (from null to valid key)', async () => {
+    // https://github.com/vercel/swr/issues/1836
+    const renderedResults = []
+    const baseKey = createKey()
+    let setData: any = () => {}
+    const Result = ({ query }: { query: string }) => {
+      const { data } = useSWR(
+        query ? `${baseKey}-${query}` : null,
+        key => createResponse(key, { delay: 200 }),
+        {
+          suspense: true
+        }
+      )
+      if (`${data}` !== renderedResults[renderedResults.length - 1]) {
+        if (data === undefined) {
+          renderedResults.push(`${baseKey}-nodata`)
+        } else {
+          renderedResults.push(`${data}`)
+        }
+      }
+      return <div>{data ? data : `${baseKey}-nodata`}</div>
+    }
+    const App = () => {
+      const [query, setQuery] = useState('123')
+      if (setData !== setQuery) {
+        setData = setQuery
+      }
+      return (
+        <>
+          <br />
+          <br />
+          <Suspense fallback={null}>
+            <Result query={query}></Result>
+          </Suspense>
+        </>
+      )
+    }
+
+    renderWithConfig(<App />)
+
+    await screen.findByText(`${baseKey}-123`)
+
+    act(() => setData(''))
+    await screen.findByText(`${baseKey}-nodata`)
+
+    act(() => setData('456'))
+    await screen.findByText(`${baseKey}-456`)
+
+    expect(renderedResults).toEqual([
+      `${baseKey}-123`,
+      `${baseKey}-nodata`,
+      `${baseKey}-456`
+    ])
+  })
+
   it('should render initial data if set', async () => {
     const fetcher = jest.fn(() => 'SWR')
 

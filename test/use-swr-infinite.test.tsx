@@ -1150,4 +1150,44 @@ describe('useSWRInfinite', () => {
     fireEvent.click(screen.getByText('mutate'))
     await screen.findByText('data: B1,B2,B3')
   })
+
+  it('should revalidate when the component is mounted and revalidateOnMount is enabled', async () => {
+    const key = createKey()
+
+    let counter = 0
+
+    function Content() {
+      const { data } = useSWRInfinite(
+        () => key,
+        () => createResponse(++counter),
+        {
+          revalidateOnMount: true,
+          revalidateFirstPage: false,
+          dedupingInterval: 0
+        }
+      )
+      return <div>data: {String(data)}</div>
+    }
+
+    function Page() {
+      const [contentKey, setContentKey] = useState('a')
+      return (
+        <>
+          <Content key={contentKey} />
+          <button
+            onClick={() => {
+              setContentKey('b')
+            }}
+          >
+            mutate
+          </button>
+        </>
+      )
+    }
+    renderWithConfig(<Page />)
+    await screen.findByText('data: 1')
+
+    fireEvent.click(screen.getByText('mutate'))
+    await screen.findByText('data: 2')
+  })
 })
