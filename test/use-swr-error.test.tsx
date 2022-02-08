@@ -142,6 +142,62 @@ describe('useSWR - error', () => {
     screen.getByText('error: 0')
   })
 
+  it('should not retry when shouldRetryOnError function returns false', async () => {
+    const key = createKey()
+    let count = 0
+    function Page() {
+      const { data, error } = useSWR(
+        key,
+        () => createResponse(new Error('error: ' + count++), { delay: 100 }),
+        {
+          onErrorRetry: (_, __, ___, revalidate, revalidateOpts) => {
+            revalidate(revalidateOpts)
+          },
+          dedupingInterval: 0,
+          shouldRetryOnError: () => false
+        }
+      )
+      if (error) return <div>{error.message}</div>
+      return <div>hello, {data}</div>
+    }
+    renderWithConfig(<Page />)
+    screen.getByText('hello,')
+
+    // mount
+    await screen.findByText('error: 0')
+
+    await act(() => sleep(150))
+    screen.getByText('error: 0')
+  })
+
+  it('should retry when shouldRetryOnError function returns true', async () => {
+    const key = createKey()
+    let count = 0
+    function Page() {
+      const { data, error } = useSWR(
+        key,
+        () => createResponse(new Error('error: ' + count++), { delay: 100 }),
+        {
+          onErrorRetry: (_, __, ___, revalidate, revalidateOpts) => {
+            revalidate(revalidateOpts)
+          },
+          dedupingInterval: 0,
+          shouldRetryOnError: () => true
+        }
+      )
+      if (error) return <div>{error.message}</div>
+      return <div>hello, {data}</div>
+    }
+    renderWithConfig(<Page />)
+    screen.getByText('hello,')
+
+    // mount
+    await screen.findByText('error: 0')
+
+    await act(() => sleep(150))
+    screen.getByText('error: 1')
+  })
+
   it('should trigger the onLoadingSlow and onSuccess event', async () => {
     const key = createKey()
     let loadingSlow = null,
