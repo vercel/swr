@@ -52,7 +52,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   // SWR should throw when trying to suspend on the server:
   // https://github.com/vercel/swr/issues/1832
   if (IS_SERVER && suspense) {
-    throw new Error('`suspense: true` is not supported on the server side.')
+    console.warn('Suspense mode is not supported on the server side.')
   }
 
   const [EVENT_REVALIDATORS, STATE_UPDATERS, MUTATION, FETCH] =
