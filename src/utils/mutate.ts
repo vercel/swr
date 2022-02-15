@@ -100,17 +100,13 @@ export const internalMutate = async <Data>(
   // If we should write back the cache after request.
   if (populateCache) {
     if (!error) {
-      try {
-        // Transform the result into data.
-        if (isFunction(populateCache)) {
-          data = populateCache(data)
-        }
-
-        // Only update cached data if there's no error. Data can be `undefined` here.
-        cache.set(key, data)
-      } catch (_) {
-        // Skip populating the cache.
+      // Transform the result into data.
+      if (isFunction(populateCache)) {
+        data = populateCache(data, rollbackData)
       }
+
+      // Only update cached data if there's no error. Data can be `undefined` here.
+      cache.set(key, data)
     }
 
     // Always update or reset the error.
