@@ -1112,4 +1112,59 @@ describe('useSWR - local mutation', () => {
     await sleep(30)
     expect(renderedData).toEqual([undefined, 0, 'bar', 1])
   })
+
+  it('should support transforming the result with `populateCache` before writing back', async () => {
+    const key = createKey()
+    function Page() {
+      const { data, mutate } = useSWR(key, () => 'foo')
+      return (
+        <>
+          <div>data: {String(data)}</div>
+          <button
+            onClick={() =>
+              mutate('bar', {
+                revalidate: false,
+                populateCache: v => '!' + v
+              })
+            }
+          >
+            mutate
+          </button>
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data: foo')
+
+    fireEvent.click(screen.getByText('mutate'))
+    await sleep(30)
+    await screen.findByText('data: !bar')
+  })
+
+  it('should support transforming the result with `populateCache` for async data with optimistic data', async () => {
+    const key = createKey()
+    const renderedData = []
+
+    let mutatePage
+
+    function Page() {
+      const { data, mutate } = useSWR(key, () => 'foo')
+      mutatePage = () =>
+        mutate(new Promise(res => setTimeout(() => res('baz'), 20)), {
+          optimisticData: 'bar',
+          revalidate: false,
+          populateCache: v => '!' + v
+        })
+
+      renderedData.push(data)
+      return null
+    }
+
+    renderWithConfig(<Page />)
+    await act(() => sleep(10))
+    await act(() => mutatePage())
+    await sleep(30)
+    expect(renderedData).toEqual([undefined, 'foo', 'bar', '!baz'])
+  })
 })
