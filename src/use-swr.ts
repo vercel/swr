@@ -90,12 +90,15 @@ export const useSWRHandler = <Data = any, Error = any>(
   const info = cache.get(keyInfo) || {}
   const error = info.error
 
+  const isInitialMount = !initialMountedRef.current
+
   // - Suspense mode and there's stale data for the initial render.
   // - Not suspense mode and there is no fallback data and `revalidateIfStale` is enabled.
   // - `revalidateIfStale` is enabled but `data` is not defined.
-  const shouldRevalidateOnMount = () => {
+  const shouldRevalidate = () => {
     // If `revalidateOnMount` is set, we take the value directly.
-    if (!isUndefined(revalidateOnMount)) return revalidateOnMount
+    if (isInitialMount && !isUndefined(revalidateOnMount))
+      return revalidateOnMount
 
     // If it's paused, we skip revalidation.
     if (getConfig().isPaused()) return false
@@ -115,7 +118,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     if (info.isValidating) return true
 
     // If it's not mounted yet and it should revalidate on mount, revalidate.
-    return !initialMountedRef.current && shouldRevalidateOnMount()
+    return isInitialMount && shouldRevalidate()
   }
   const isValidating = resolveValidating()
 
@@ -378,8 +381,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   useIsomorphicLayoutEffect(() => {
     if (!key) return
 
-    // Not the initial render.
-    const keyChanged = initialMountedRef.current
+    const keyChanged = key !== keyRef.current
     const softRevalidate = revalidate.bind(UNDEFINED, WITH_DEDUPE)
 
     // Expose state updater to global event listeners. So we can update hook's
@@ -449,7 +451,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     }
 
     // Trigger a revalidation.
-    if (shouldRevalidateOnMount()) {
+    if (shouldRevalidate()) {
       if (isUndefined(data) || IS_SERVER) {
         // Revalidate immediately.
         softRevalidate()
@@ -524,6 +526,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     // Always update fetcher and config refs even with the Suspense mode.
     fetcherRef.current = fetcher
     configRef.current = config
+    unmountedRef.current = false
     throw isUndefined(error) ? revalidate(WITH_DEDUPE) : error
   }
 

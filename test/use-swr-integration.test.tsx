@@ -72,6 +72,28 @@ describe('useSWR', () => {
     expect(fetch).not.toHaveBeenCalled()
   })
 
+  it('should call fetch function when revalidateOnMount is false and key has been changed', async () => {
+    const fetch = jest.fn(() => 'SWR')
+
+    function Page() {
+      const [key, setKey] = useState(createKey())
+      const { data } = useSWR(key, fetch, {
+        revalidateOnMount: false
+      })
+      return <div onClick={() => setKey(createKey)}>hello,{data}</div>
+    }
+
+    renderWithConfig(<Page />)
+
+    await screen.findByText('hello,')
+    expect(fetch).not.toHaveBeenCalled()
+
+    // the key has been changed
+    fireEvent.click(screen.getByText('hello,'))
+
+    await screen.findByText('hello,SWR')
+  })
+
   it('should call fetch function when revalidateOnMount is true even if fallbackData is set', async () => {
     const fetch = jest.fn(() => 'SWR')
 
