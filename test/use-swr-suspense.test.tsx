@@ -163,6 +163,31 @@ describe('useSWR - suspense', () => {
     await screen.findByText('hello, error') // get error with cache
   })
 
+  it('should not fetch when cached data is present and `revalidateIfStale` is false', async () => {
+    const key = createKey()
+    mutate(key, 'cached')
+
+    let fetchCount = 0
+
+    function Section() {
+      const { data } = useSWR(key, () => createResponse(++fetchCount), {
+        suspense: true,
+        revalidateIfStale: false
+      })
+      return <div>{data}</div>
+    }
+
+    renderWithGlobalCache(
+      <Suspense fallback={<div>fallback</div>}>
+        <Section />
+      </Suspense>
+    )
+
+    screen.getByText('cached')
+    await act(() => sleep(50)) // Wait to confirm fetch is not triggered
+    expect(fetchCount).toBe(0)
+  })
+
   it('should pause when key changes', async () => {
     const renderedResults = []
     const initialKey = createKey()
