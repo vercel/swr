@@ -120,7 +120,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
 
         let previousPageData = null
         for (let i = 0; i < pageSize; ++i) {
-          const [pageKey, pageArgs] = serialize(getKey(i, previousPageData))
+          const [pageKey, pageArg] = serialize(getKey(i, previousPageData))
 
           if (!pageKey) {
             // `pageKey` is falsy, stop fetching new pages.
@@ -148,7 +148,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
               !config.compare(originalData[i], pageData))
 
           if (fn && shouldFetchPage) {
-            pageData = await fn(...pageArgs)
+            pageData = await fn(pageArg)
             cache.set(pageKey, pageData)
           }
 
