@@ -1,4 +1,4 @@
-import * as revalidateEvents from './constants/revalidate-events'
+import * as revalidateEvents from './constants'
 
 export type FetcherResponse<Data = unknown> = Data | Promise<Data>
 export type BareFetcher<Data = unknown> = (

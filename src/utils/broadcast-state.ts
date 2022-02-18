@@ -1,6 +1,6 @@
 import { Broadcaster } from '../types'
 import { SWRGlobalState, GlobalState } from './global-state'
-import * as revalidateEvents from '../constants/revalidate-events'
+import * as revalidateEvents from '../constants'
 
 export const broadcastState: Broadcaster = (
   cache,

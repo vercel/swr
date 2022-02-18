@@ -3,7 +3,7 @@ import { IS_SERVER } from './env'
 import { UNDEFINED, mergeObjects, noop } from './helper'
 import { internalMutate } from './mutate'
 import { GlobalState, SWRGlobalState } from './global-state'
-import * as revalidateEvents from '../constants/revalidate-events'
+import * as revalidateEvents from '../constants'
 import { RevalidateEvent } from '../types'
 
 import {

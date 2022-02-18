@@ -30,8 +30,16 @@ export const internalMutate = async <Data>(
   const customOptimisticData = options.optimisticData
 
   // Serilaize key
-  const [key, , keyInfo] = serialize(_key)
+  const [key] = serialize(_key)
   if (!key) return
+
+  const setCache = (info: {
+    data?: Data
+    error?: any
+    isValidating?: boolean
+  }) => {
+    cache.set(key, mergeObjects(cache.get(key), info))
+  }
 
   const [, , MUTATION] = SWRGlobalState.get(cache) as GlobalState
 
@@ -63,7 +71,7 @@ export const internalMutate = async <Data>(
     const optimisticData = isFunction(customOptimisticData)
       ? customOptimisticData(rollbackData)
       : customOptimisticData
-    cache.set(key, optimisticData)
+    setCache({ data: optimisticData })
     broadcastState(cache, key, optimisticData)
   }
 
@@ -96,7 +104,7 @@ export const internalMutate = async <Data>(
       // transforming the data.
       populateCache = true
       data = rollbackData
-      cache.set(key, rollbackData)
+      setCache({ data: rollbackData })
     }
   }
 
@@ -109,11 +117,11 @@ export const internalMutate = async <Data>(
       }
 
       // Only update cached data if there's no error. Data can be `undefined` here.
-      cache.set(key, data)
+      setCache({ data })
     }
 
     // Always update or reset the error.
-    cache.set(keyInfo, mergeObjects(cache.get(keyInfo), { error }))
+    setCache({ error })
   }
 
   // Reset the timestamp to mark the mutation has ended.
