@@ -27,7 +27,7 @@ export const internalMutate = async <Data>(
     : options.populateCache
   const revalidate = options.revalidate !== false
   const rollbackOnError = options.rollbackOnError !== false
-  const optimisticData = options.optimisticData
+  const customOptimisticData = options.optimisticData
 
   // Serilaize key
   const [key, , keyInfo] = serialize(_key)
@@ -55,11 +55,14 @@ export const internalMutate = async <Data>(
   // Update global timestamps.
   const beforeMutationTs = getTimestamp()
   MUTATION[key] = [beforeMutationTs, 0]
-  const hasOptimisticData = !isUndefined(optimisticData)
+  const hasCustomOptimisticData = !isUndefined(customOptimisticData)
   const rollbackData = cache.get(key)
 
   // Do optimistic data update.
-  if (hasOptimisticData) {
+  if (hasCustomOptimisticData) {
+    const optimisticData = isFunction(customOptimisticData)
+      ? customOptimisticData(rollbackData)
+      : customOptimisticData
     cache.set(key, optimisticData)
     broadcastState(cache, key, optimisticData)
   }
@@ -88,7 +91,7 @@ export const internalMutate = async <Data>(
     if (beforeMutationTs !== MUTATION[key][0]) {
       if (error) throw error
       return data
-    } else if (error && hasOptimisticData && rollbackOnError) {
+    } else if (error && hasCustomOptimisticData && rollbackOnError) {
       // Rollback. Always populate the cache in this case but without
       // transforming the data.
       populateCache = true
