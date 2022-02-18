@@ -139,12 +139,12 @@ export type Arguments =
 export type Key = Arguments | (() => Arguments)
 
 export type MutatorCallback<Data = any> = (
-  currentValue?: Data
+  currentData?: Data
 ) => Promise<undefined | Data> | undefined | Data
 
 export type MutatorOptions<Data = any> = {
   revalidate?: boolean
-  populateCache?: boolean
+  populateCache?: boolean | ((result: any, currentData: Data) => Data)
   optimisticData?: Data
   rollbackOnError?: boolean
 }

@@ -1112,4 +1112,112 @@ describe('useSWR - local mutation', () => {
     await sleep(30)
     expect(renderedData).toEqual([undefined, 0, 'bar', 1])
   })
+
+  it('should support transforming the result with `populateCache` before writing back', async () => {
+    const key = createKey()
+    function Page() {
+      const { data, mutate } = useSWR(key, () => 'foo')
+      return (
+        <>
+          <div>data: {String(data)}</div>
+          <button
+            onClick={() =>
+              mutate('bar', {
+                revalidate: false,
+                populateCache: v => '!' + v
+              })
+            }
+          >
+            mutate
+          </button>
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data: foo')
+
+    fireEvent.click(screen.getByText('mutate'))
+    await sleep(30)
+    await screen.findByText('data: !bar')
+  })
+
+  it('should support transforming the result with `populateCache` for async data with optimistic data', async () => {
+    const key = createKey()
+    const renderedData = []
+
+    let mutatePage
+
+    function Page() {
+      const { data, mutate } = useSWR(key, () => 'foo')
+      mutatePage = () =>
+        mutate(new Promise(res => setTimeout(() => res('baz'), 20)), {
+          optimisticData: 'bar',
+          revalidate: false,
+          populateCache: v => '!' + v
+        })
+
+      renderedData.push(data)
+      return null
+    }
+
+    renderWithConfig(<Page />)
+    await act(() => sleep(10))
+    await act(() => mutatePage())
+    await sleep(30)
+    expect(renderedData).toEqual([undefined, 'foo', 'bar', '!baz'])
+  })
+
+  it('should pass the original data snapshot to `populateCache` as the second parameter', async () => {
+    const key = createKey()
+    const renderedData = []
+
+    let serverData = ['Apple', 'Banana']
+
+    let appendData
+
+    const sendRequest = newItem => {
+      // @TODO: We use `any` here due to limitation of type inference.
+      return new Promise<any>(res =>
+        setTimeout(() => {
+          // Server capitializes the new item.
+          const modifiedData =
+            newItem.charAt(0).toUpperCase() + newItem.slice(1)
+          serverData = [...serverData, modifiedData]
+          res(modifiedData)
+        }, 20)
+      )
+    }
+
+    function Page() {
+      const { data, mutate } = useSWR(key, () => serverData)
+
+      appendData = () => {
+        return mutate(sendRequest('cherry'), {
+          optimisticData: [...data, 'cherry (optimistic)'],
+          populateCache: (result, currentData) => [
+            ...currentData,
+            result + ' (res)'
+          ],
+          revalidate: true
+        })
+      }
+
+      renderedData.push(data)
+      return null
+    }
+
+    renderWithConfig(<Page />)
+    await act(() => sleep(10))
+    await act(() => appendData())
+    await sleep(30)
+
+    expect(renderedData).toEqual([
+      undefined, // fetching
+      ['Apple', 'Banana'], // initial data
+      ['Apple', 'Banana', 'cherry (optimistic)'], // optimistic data
+      ['Apple', 'Banana', 'Cherry (res)'], // appended server response
+      ['Apple', 'Banana', 'Cherry'] // revalidated data
+    ])
+  })
 })
