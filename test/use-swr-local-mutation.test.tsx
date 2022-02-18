@@ -1038,6 +1038,72 @@ describe('useSWR - local mutation', () => {
     expect(renderedData).toEqual([undefined, 'foo', 'bar', 'baz', 'foo'])
   })
 
+  it('should support optimistic updates via functional `optimisticData`', async () => {
+    const key = createKey()
+    const renderedData = []
+    let mutate
+
+    function Page() {
+      const { data, mutate: boundMutate } = useSWR(key, () =>
+        createResponse('foo', { delay: 20 })
+      )
+      mutate = boundMutate
+      renderedData.push(data)
+      return <div>data: {String(data)}</div>
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data: foo')
+
+    await act(() =>
+      mutate(createResponse('baz', { delay: 20 }), {
+        optimisticData: data => 'functional_' + data
+      })
+    )
+    await sleep(30)
+    expect(renderedData).toEqual([
+      undefined,
+      'foo',
+      'functional_foo',
+      'baz',
+      'foo'
+    ])
+  })
+
+  it('should be able use mutate to manipulate data via functional `optimisticData`', async () => {
+    const key = createKey()
+    const renderedData = []
+
+    function useOptimisticDataMutate(_key, data, fallback) {
+      const { mutate } = useSWRConfig()
+      return () => {
+        return mutate(_key, createResponse(data, { delay: 20 }), {
+          optimisticData() {
+            return fallback
+          }
+        })
+      }
+    }
+
+    function Page() {
+      const mutateWithOptData = useOptimisticDataMutate(key, 'final', 'loading')
+      const { data } = useSWR(key)
+      renderedData.push(data)
+      return (
+        <div>
+          <button onClick={() => mutateWithOptData()}>mutate</button>
+          <div>data: {String(data)}</div>
+        </div>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    fireEvent.click(screen.getByText('mutate'))
+    await sleep(30)
+
+    expect(renderedData).toEqual([undefined, 'loading', 'final'])
+  })
+
   it('should rollback optimistic updates when mutation fails', async () => {
     const key = createKey()
     const renderedData = []
@@ -1152,7 +1218,7 @@ describe('useSWR - local mutation', () => {
       const { data, mutate } = useSWR(key, () => 'foo')
       mutatePage = () =>
         mutate(new Promise(res => setTimeout(() => res('baz'), 20)), {
-          optimisticData: 'bar',
+          optimisticData: () => 'bar',
           revalidate: false,
           populateCache: v => '!' + v
         })
