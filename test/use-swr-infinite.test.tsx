@@ -776,7 +776,9 @@ describe('useSWRInfinite', () => {
     function App() {
       return (
         <SWRConfig
-          value={{ provider: () => new Map([[key, 'initial-cache']]) }}
+          value={{
+            provider: () => new Map([[key, { data: 'initial-cache' }]])
+          }}
         >
           <Page />
         </SWRConfig>
@@ -950,7 +952,7 @@ describe('useSWRInfinite', () => {
     }
 
     renderWithConfig(<Page />, {
-      provider: () => new Map([[key + '-1', 'cached value']])
+      provider: () => new Map([[key + '-1', { data: 'cached value' }]])
     })
 
     screen.getByText('data:')
@@ -973,7 +975,7 @@ describe('useSWRInfinite', () => {
       )
     }
     renderWithConfig(<Page />, {
-      provider: () => new Map([[key + '-1', 'cached value']])
+      provider: () => new Map([[key + '-1', { data: 'cached value' }]])
     })
 
     screen.getByText('data:')

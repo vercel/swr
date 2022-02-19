@@ -128,7 +128,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
           }
 
           // Get the cached page data.
-          let pageData = cache.get(pageKey)
+          let pageData = cache.get(pageKey)?.data
 
           // should fetch (or revalidate) if:
           // - `revalidateAll` is enabled
@@ -149,7 +149,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
 
           if (fn && shouldFetchPage) {
             pageData = await fn(...pageArgs)
-            cache.set(pageKey, pageData)
+            cache.set(pageKey, { ...cache.get(pageKey), data: pageData })
           }
 
           data.push(pageData)
@@ -216,7 +216,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
         const [pageKey] = serialize(getKey(i, previousPageData))
 
         // Get the cached page data.
-        const pageData = pageKey ? cache.get(pageKey) : UNDEFINED
+        const pageData = pageKey ? cache.get(pageKey)?.data : UNDEFINED
 
         // Return the current data if we can't get it from the cache.
         if (isUndefined(pageData)) return dataRef.current

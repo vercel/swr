@@ -383,7 +383,7 @@ export const useSWRHandler = <Data = any, Error = any>(
 
     // Expose state updater to global event listeners. So we can update hook's
     // internal state from the outside.
-    const onStateUpdate: StateUpdateCallback<Data, Error> = state => {
+    const onStateUpdate: StateUpdateCallback<Data, Error> = (state = {}) => {
       setState(
         mergeObjects(
           {
