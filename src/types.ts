@@ -248,11 +248,11 @@ export type RevalidateCallback = <K extends RevalidateEvent>(
   type: K
 ) => RevalidateCallbackReturnType[K]
 
-export type StateUpdateCallback<Data = any, Error = any> = (
-  data?: Data,
-  error?: Error,
+export type StateUpdateCallback<Data = any, Error = any> = (state: {
+  data?: Data
+  error?: Error
   isValidating?: boolean
-) => void
+}) => void
 
 export interface Cache<Data = any> {
   get(key: Key): Data | null | undefined

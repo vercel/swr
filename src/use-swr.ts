@@ -191,13 +191,10 @@ export const useSWRHandler = <Data = any, Error = any>(
       try {
         if (shouldStartNewRequest) {
           // Tell all other hooks to change the `isValidating` state.
-          broadcastState(
-            cache,
-            key,
-            stateRef.current.data,
-            stateRef.current.error,
-            true
-          )
+          broadcastState(cache, key, {
+            ...stateRef.current,
+            isValidating: true
+          })
 
           // If no cache being rendered currently (it shows a blank page),
           // we trigger the loading slow event.
@@ -340,7 +337,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       // Here is the source of the request, need to tell all other hooks to
       // update their states.
       if (isCurrentKeyMounted() && shouldStartNewRequest) {
-        broadcastState(cache, key, newState.data, newState.error, false)
+        broadcastState(cache, key, { ...newState, isValidating: false })
       }
 
       return true
@@ -386,23 +383,19 @@ export const useSWRHandler = <Data = any, Error = any>(
 
     // Expose state updater to global event listeners. So we can update hook's
     // internal state from the outside.
-    const onStateUpdate: StateUpdateCallback<Data, Error> = (
-      updatedData,
-      updatedError,
-      updatedIsValidating
-    ) => {
+    const onStateUpdate: StateUpdateCallback<Data, Error> = state => {
       setState(
         mergeObjects(
           {
-            error: updatedError,
-            isValidating: updatedIsValidating
+            error: state.error,
+            isValidating: state.isValidating
           },
           // Since `setState` only shallowly compares states, we do a deep
           // comparison here.
-          compare(stateRef.current.data, updatedData)
+          compare(stateRef.current.data, state.data)
             ? UNDEFINED
             : {
-                data: updatedData
+                data: state.data
               }
         )
       )
