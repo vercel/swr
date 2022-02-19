@@ -1,5 +1,5 @@
 import { serialize } from './serialize'
-import { isFunction, isUndefined, mergeObjects, UNDEFINED } from './helper'
+import { isFunction, isUndefined, mergeObjects } from './helper'
 import { SWRGlobalState, GlobalState } from './global-state'
 import { broadcastState } from './broadcast-state'
 import { getTimestamp } from './timestamp'
