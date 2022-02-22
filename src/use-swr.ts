@@ -97,13 +97,14 @@ export const useSWRHandler = <Data = any, Error = any>(
     // If it's paused, we skip revalidation.
     if (getConfig().isPaused()) return false
 
-    return suspense
-      ? // Under suspense mode, it will always fetch on render if there is no
-        // stale data so no need to revalidate immediately on mount again.
-        !isUndefined(data)
-      : // If there is no stale data, we need to revalidate on mount;
-        // If `revalidateIfStale` is set to true, we will always revalidate.
-        isUndefined(data) || config.revalidateIfStale
+    // Under suspense mode, it will always fetch on render if there is no
+    // stale data so no need to revalidate immediately on mount again.
+    // If data exists, only revalidate if `revalidateIfStale` is true.
+    if (suspense) return isUndefined(data) ? false : config.revalidateIfStale
+
+    // If there is no stale data, we need to revalidate on mount;
+    // If `revalidateIfStale` is set to true, we will always revalidate.
+    return isUndefined(data) || config.revalidateIfStale
   }
 
   // Resolve the current validating state.
@@ -377,7 +378,9 @@ export const useSWRHandler = <Data = any, Error = any>(
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const boundMutate: SWRResponse<Data, Error>['mutate'] = useCallback(
     // By using `bind` we don't need to modify the size of the rest arguments.
-    internalMutate.bind(UNDEFINED, cache, () => keyRef.current),
+    // Due to https://github.com/microsoft/TypeScript/issues/37181, we have to
+    // cast it to any for now.
+    internalMutate.bind(UNDEFINED, cache, () => keyRef.current) as any,
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   )

@@ -22,10 +22,12 @@ export const internalMutate = async <Data>(
     typeof _opts === 'boolean' ? { revalidate: _opts } : _opts || {}
 
   // Fallback to `true` if it's not explicitly set to `false`
-  let populateCache = options.populateCache !== false
+  let populateCache = isUndefined(options.populateCache)
+    ? true
+    : options.populateCache
   const revalidate = options.revalidate !== false
   const rollbackOnError = options.rollbackOnError !== false
-  const optimisticData = options.optimisticData
+  const customOptimisticData = options.optimisticData
 
   // Serilaize key
   const [key, , keyInfo] = serialize(_key)
@@ -43,7 +45,7 @@ export const internalMutate = async <Data>(
       UNDEFINED,
       UNDEFINED,
       revalidate,
-      populateCache
+      true
     )
   }
 
@@ -53,11 +55,14 @@ export const internalMutate = async <Data>(
   // Update global timestamps.
   const beforeMutationTs = getTimestamp()
   MUTATION[key] = [beforeMutationTs, 0]
-  const hasOptimisticData = !isUndefined(optimisticData)
+  const hasCustomOptimisticData = !isUndefined(customOptimisticData)
   const rollbackData = cache.get(key)
 
   // Do optimistic data update.
-  if (hasOptimisticData) {
+  if (hasCustomOptimisticData) {
+    const optimisticData = isFunction(customOptimisticData)
+      ? customOptimisticData(rollbackData)
+      : customOptimisticData
     cache.set(key, optimisticData)
     broadcastState(cache, key, optimisticData)
   }
@@ -86,19 +91,27 @@ export const internalMutate = async <Data>(
     if (beforeMutationTs !== MUTATION[key][0]) {
       if (error) throw error
       return data
-    } else if (error && hasOptimisticData && rollbackOnError) {
-      // Rollback. Always populate the cache in this case.
+    } else if (error && hasCustomOptimisticData && rollbackOnError) {
+      // Rollback. Always populate the cache in this case but without
+      // transforming the data.
       populateCache = true
       data = rollbackData
       cache.set(key, rollbackData)
     }
   }
 
+  // If we should write back the cache after request.
   if (populateCache) {
     if (!error) {
+      // Transform the result into data.
+      if (isFunction(populateCache)) {
+        data = populateCache(data, rollbackData)
+      }
+
       // Only update cached data if there's no error. Data can be `undefined` here.
       cache.set(key, data)
     }
+
     // Always update or reset the error.
     cache.set(keyInfo, mergeObjects(cache.get(keyInfo), { error }))
   }
@@ -114,7 +127,7 @@ export const internalMutate = async <Data>(
     error,
     UNDEFINED,
     revalidate,
-    populateCache
+    !!populateCache
   )
 
   // Throw error or return data
