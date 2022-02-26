@@ -379,7 +379,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     if (!key) return
 
     const keyChanged = key !== keyRef.current
-    const softRevalidate = revalidate.bind(UNDEFINED, WITH_DEDUPE)
+    const softRevalidate = () => revalidate(WITH_DEDUPE)
 
     // Expose state updater to global event listeners. So we can update hook's
     // internal state from the outside.

@@ -59,21 +59,14 @@ export const initCache = <Data = any>(
       // React's state updates.
       // This avoids some unnecessary revalidations such as
       // https://github.com/vercel/swr/issues/1680.
-      const releaseFocus = opts.initFocus(
-        setTimeout.bind(
-          UNDEFINED,
-          revalidateAllKeys.bind(
-            UNDEFINED,
-            EVENT_REVALIDATORS,
-            revalidateEvents.FOCUS_EVENT
-          )
+      const releaseFocus = opts.initFocus(() =>
+        setTimeout(() =>
+          revalidateAllKeys(EVENT_REVALIDATORS, revalidateEvents.FOCUS_EVENT)
         )
       )
-      const releaseReconnect = opts.initReconnect(
-        setTimeout.bind(
-          UNDEFINED,
-          revalidateAllKeys.bind(
-            UNDEFINED,
+      const releaseReconnect = opts.initReconnect(() =>
+        setTimeout(() =>
+          revalidateAllKeys(
             EVENT_REVALIDATORS,
             revalidateEvents.RECONNECT_EVENT
           )
