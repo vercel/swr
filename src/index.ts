@@ -1,5 +1,7 @@
 // useSWR
 import useSWR from './use-swr'
+
+export { default as useSWR } from './use-swr'
 export default useSWR
 
 // Core APIs
