@@ -1099,7 +1099,7 @@ describe('useSWR - local mutation', () => {
 
     renderWithConfig(<Page />)
     fireEvent.click(screen.getByText('mutate'))
-    await sleep(30)
+    await act(() => sleep(30))
 
     expect(renderedData).toEqual([undefined, 'loading', 'final'])
   })
