@@ -117,11 +117,16 @@ export const useSWRHandler = <Data = any, Error = any>(
   }
   const isValidating = resolveValidating()
 
+  const updatedAtRef = useRef<number | undefined>()
+  const getUpdatedAt = () => updatedAtRef.current
+  const updatedAt = getUpdatedAt()
+
   const [stateRef, stateDependencies, setState] = useStateWithDeps<Data, Error>(
     {
       data,
       error,
-      isValidating
+      isValidating,
+      updatedAt
     },
     unmountedRef
   )
@@ -214,6 +219,9 @@ export const useSWRHandler = <Data = any, Error = any>(
         newData = await newData
 
         if (shouldStartNewRequest) {
+          const now = Date.now()
+          updatedAtRef.current = now
+          newState.updatedAt = now
           // If the request isn't interrupted, clean it up after the
           // deduplication interval.
           setTimeout(cleanupState, config.dedupingInterval)
@@ -337,7 +345,16 @@ export const useSWRHandler = <Data = any, Error = any>(
       // Here is the source of the request, need to tell all other hooks to
       // update their states.
       if (isCurrentKeyMounted() && shouldStartNewRequest) {
-        broadcastState(cache, key, newState.data, newState.error, false)
+        broadcastState(
+          cache,
+          key,
+          newState.data,
+          newState.error,
+          false,
+          false,
+          undefined,
+          newState.updatedAt
+        )
       }
 
       return true
@@ -386,13 +403,19 @@ export const useSWRHandler = <Data = any, Error = any>(
     const onStateUpdate: StateUpdateCallback<Data, Error> = (
       updatedData,
       updatedError,
-      updatedIsValidating
+      updatedIsValidating,
+      nextUpdatedAt
     ) => {
+      updatedAtRef.current = isUndefined(nextUpdatedAt)
+        ? getUpdatedAt()
+        : nextUpdatedAt
+
       setState(
         mergeObjects(
           {
             error: updatedError,
-            isValidating: updatedIsValidating
+            isValidating: updatedIsValidating,
+            updatedAt: getUpdatedAt()
           },
           // Since `setState` only shallowly compares states, we do a deep
           // comparison here.
@@ -443,7 +466,8 @@ export const useSWRHandler = <Data = any, Error = any>(
       setState({
         data,
         error,
-        isValidating
+        isValidating,
+        updatedAt: UNDEFINED
       })
     }
 
@@ -540,6 +564,10 @@ export const useSWRHandler = <Data = any, Error = any>(
     get isValidating() {
       stateDependencies.isValidating = true
       return isValidating
+    },
+    get updatedAt() {
+      stateDependencies.updatedAt = true
+      return getUpdatedAt()
     }
   } as SWRResponse<Data, Error>
 }

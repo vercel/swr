@@ -23,7 +23,8 @@ export const useStateWithDeps = <Data, Error, S = State<Data, Error>>(
   const stateDependenciesRef = useRef<StateDeps>({
     data: false,
     error: false,
-    isValidating: false
+    isValidating: false,
+    updatedAt: false
   })
 
   /**

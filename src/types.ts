@@ -156,13 +156,15 @@ export type Broadcaster<Data = any, Error = any> = (
   error?: Error,
   isValidating?: boolean,
   revalidate?: boolean,
-  populateCache?: boolean
+  populateCache?: boolean,
+  updatedAt?: number
 ) => Promise<Data>
 
 export type State<Data, Error> = {
   data?: Data
   error?: Error
   isValidating?: boolean
+  updatedAt?: number
 }
 
 export type MutatorFn<Data = any> = (
@@ -218,6 +220,7 @@ export interface SWRResponse<Data = any, Error = any> {
   data?: Data
   error?: Error
   mutate: KeyedMutator<Data>
+  updatedAt?: number
   isValidating: boolean
 }
 
@@ -251,7 +254,8 @@ export type RevalidateCallback = <K extends RevalidateEvent>(
 export type StateUpdateCallback<Data = any, Error = any> = (
   data?: Data,
   error?: Error,
-  isValidating?: boolean
+  isValidating?: boolean,
+  updatedAt?: number
 ) => void
 
 export interface Cache<Data = any> {
