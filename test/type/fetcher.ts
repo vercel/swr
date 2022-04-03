@@ -58,20 +58,17 @@ export function useRecord() {
 }
 
 export function useTuple() {
-  useSWR([{ a: '1', b: { c: '3' } }, [1231, '888']], (...keys) => {
+  useSWR([{ a: '1', b: { c: '3' } }, [1231, '888']], keys => {
+    expectType<[{ a: string; b: { c: string } }, (string | number)[]]>(keys)
+    return keys
+  })
+  useSWR(truthy() ? [{ a: '1', b: { c: '3' } }, [1231, '888']] : null, keys => {
     expectType<[{ a: string; b: { c: string } }, (string | number)[]]>(keys)
     return keys
   })
   useSWR(
-    truthy() ? [{ a: '1', b: { c: '3' } }, [1231, '888']] : null,
-    (...keys) => {
-      expectType<[{ a: string; b: { c: string } }, (string | number)[]]>(keys)
-      return keys
-    }
-  )
-  useSWR(
     truthy() ? [{ a: '1', b: { c: '3' } }, [1231, '888']] : false,
-    (...keys) => {
+    keys => {
       expectType<[{ a: string; b: { c: string } }, (string | number)[]]>(keys)
       return keys
     }
@@ -79,7 +76,7 @@ export function useTuple() {
 }
 
 export function useReadonlyTuple() {
-  useSWR([{ a: '1', b: { c: '3' } }, [1231, '888']] as const, (...keys) => {
+  useSWR([{ a: '1', b: { c: '3' } }, [1231, '888']] as const, keys => {
     expectType<
       [
         {
@@ -95,7 +92,7 @@ export function useReadonlyTuple() {
   })
   useSWR(
     truthy() ? ([{ a: '1', b: { c: '3' } }, [1231, '888']] as const) : null,
-    (...keys) => {
+    keys => {
       expectType<
         [
           {
@@ -112,7 +109,7 @@ export function useReadonlyTuple() {
   )
   useSWR(
     truthy() ? ([{ a: '1', b: { c: '3' } }, [1231, '888']] as const) : false,
-    (...keys) => {
+    keys => {
       expectType<
         [
           {
@@ -250,14 +247,14 @@ export function useReturnRecord() {
 export function useReturnTuple() {
   useSWR(
     () => [{ a: '1', b: { c: '3' } }, [1231, '888']],
-    (...keys) => {
+    keys => {
       expectType<[{ a: string; b: { c: string } }, (string | number)[]]>(keys)
       return keys
     }
   )
   useSWR(
     () => (truthy() ? [{ a: '1', b: { c: '3' } }, [1231, '888']] : null),
-    (...keys) => {
+    keys => {
       expectType<[{ a: string; b: { c: string } }, (string | number)[]]>(keys)
       return keys
     }
@@ -265,7 +262,7 @@ export function useReturnTuple() {
 
   useSWR(
     () => (truthy() ? [{ a: '1', b: { c: '3' } }, [1231, '888']] : false),
-    (...keys) => {
+    keys => {
       expectType<[{ a: string; b: { c: string } }, (string | number)[]]>(keys)
       return keys
     }
@@ -273,7 +270,7 @@ export function useReturnTuple() {
 
   useSWRInfinite(
     index => [{ a: '1', b: { c: '3', d: index } }, [1231, '888']],
-    (...keys) => {
+    keys => {
       expectType<[{ a: string; b: { c: string } }, (string | number)[]]>(keys)
       return keys[1]
     }
@@ -282,7 +279,7 @@ export function useReturnTuple() {
   useSWRInfinite(
     index =>
       truthy() ? [{ a: '1', b: { c: '3', d: index } }, [1231, '888']] : null,
-    (...keys) => {
+    keys => {
       expectType<[{ a: string; b: { c: string } }, (string | number)[]]>(keys)
       return keys[1]
     }
@@ -291,7 +288,7 @@ export function useReturnTuple() {
   useSWRInfinite(
     index =>
       truthy() ? [{ a: '1', b: { c: '3', d: index } }, [1231, '888']] : false,
-    (...keys) => {
+    keys => {
       expectType<[{ a: string; b: { c: string } }, (string | number)[]]>(keys)
       return keys[1]
     }
@@ -301,7 +298,7 @@ export function useReturnTuple() {
 export function useReturnReadonlyTuple() {
   useSWR(
     () => [{ a: '1', b: { c: '3' } }, [1231, '888']] as const,
-    (...keys) => {
+    keys => {
       expectType<
         [
           {
@@ -319,9 +316,9 @@ export function useReturnReadonlyTuple() {
   useSWR(
     () =>
       truthy() ? ([{ a: '1', b: { c: '3' } }, [1231, '888']] as const) : null,
-    (...keys) => {
+    keys => {
       expectType<
-        [
+        readonly [
           {
             readonly a: '1'
             readonly b: {
@@ -338,9 +335,9 @@ export function useReturnReadonlyTuple() {
   useSWR(
     () =>
       truthy() ? ([{ a: '1', b: { c: '3' } }, [1231, '888']] as const) : false,
-    (...keys) => {
+    keys => {
       expectType<
-        [
+        readonly [
           {
             readonly a: '1'
             readonly b: {
@@ -356,9 +353,9 @@ export function useReturnReadonlyTuple() {
 
   useSWRInfinite(
     () => [{ a: '1', b: { c: '3' } }, [1231, '888']] as const,
-    (...keys) => {
+    keys => {
       expectType<
-        [
+        readonly [
           {
             readonly a: '1'
             readonly b: {
@@ -374,9 +371,9 @@ export function useReturnReadonlyTuple() {
   useSWRInfinite(
     () =>
       truthy() ? ([{ a: '1', b: { c: '3' } }, [1231, '888']] as const) : null,
-    (...keys) => {
+    keys => {
       expectType<
-        [
+        readonly [
           {
             readonly a: '1'
             readonly b: {
@@ -393,9 +390,9 @@ export function useReturnReadonlyTuple() {
   useSWRInfinite(
     () =>
       truthy() ? ([{ a: '1', b: { c: '3' } }, [1231, '888']] as const) : false,
-    (...keys) => {
+    keys => {
       expectType<
-        [
+        readonly [
           {
             readonly a: '1'
             readonly b: {

@@ -33,6 +33,18 @@ import {
 
 const WITH_DEDUPE = { dedupe: true }
 
+type DefinitelyTruthy<T> = false extends T
+  ? never
+  : 0 extends T
+  ? never
+  : '' extends T
+  ? never
+  : null extends T
+  ? never
+  : undefined extends T
+  ? never
+  : T
+
 export const useSWRHandler = <Data = any, Error = any>(
   _key: Key,
   fetcher: Fetcher<Data> | null,
@@ -55,9 +67,9 @@ export const useSWRHandler = <Data = any, Error = any>(
   // `key` is the identifier of the SWR `data` state, `keyInfo` holds extra
   // states such as `error` and `isValidating` inside,
   // all of them are derived from `_key`.
-  // `fnArgs` is an array of arguments parsed from the key, which will be passed
+  // `fnArg` is the argument/arguments parsed from the key, which will be passed
   // to the fetcher.
-  const [key, fnArgs, keyInfo] = serialize(_key)
+  const [key, fnArg, keyInfo] = serialize(_key)
 
   // If it's the initial render of this hook.
   const initialMountedRef = useRef(false)
@@ -205,7 +217,11 @@ export const useSWRHandler = <Data = any, Error = any>(
           }
 
           // Start the request and save the timestamp.
-          FETCH[key] = [currentFetcher(...fnArgs), getTimestamp()]
+          // Key must be truthly if entering here.
+          FETCH[key] = [
+            currentFetcher(fnArg as DefinitelyTruthy<Key>),
+            getTimestamp()
+          ]
         }
 
         // Wait until the ongoing request is done. Deduplication is also
@@ -342,7 +358,7 @@ export const useSWRHandler = <Data = any, Error = any>(
 
       return true
     },
-    // `setState` is immutable, and `eventsCallback`, `fnArgs`, `keyInfo`,
+    // `setState` is immutable, and `eventsCallback`, `fnArg`, `keyInfo`,
     // and `keyValidating` are depending on `key`, so we can exclude them from
     // the deps array.
     //

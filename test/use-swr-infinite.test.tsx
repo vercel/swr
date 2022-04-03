@@ -74,7 +74,7 @@ describe('useSWRInfinite', () => {
     function Page() {
       const { data, size, setSize } = useSWRInfinite(
         index => [key, index],
-        (_, index) => createResponse(`page ${index}, `)
+        ([_, index]) => createResponse(`page ${index}, `)
       )
 
       useEffect(() => {
@@ -101,7 +101,7 @@ describe('useSWRInfinite', () => {
     function Page() {
       const { data, mutate: boundMutate } = useSWRInfinite(
         index => [key, index],
-        (_, index) => createResponse(`${pageData[index]}, `),
+        ([_, index]) => createResponse(`${pageData[index]}, `),
         {
           initialSize: 3
         }
@@ -212,7 +212,7 @@ describe('useSWRInfinite', () => {
     function Page() {
       const { data, size, setSize } = useSWRInfinite(
         index => [key, index],
-        (_, index) => {
+        ([_, index]) => {
           requests++
           return createResponse(`page ${index}, `)
         }
@@ -262,7 +262,7 @@ describe('useSWRInfinite', () => {
     function Page() {
       const { data, size, setSize } = useSWRInfinite(
         index => [key, index],
-        (_, index) => {
+        ([_, index]) => {
           requests++
           return createResponse(`page ${index}, `)
         },
@@ -315,7 +315,7 @@ describe('useSWRInfinite', () => {
     function Page() {
       const { data, size, setSize } = useSWRInfinite(
         index => [key, index],
-        (_, index) => createResponse(`page ${index}, `)
+        ([_, index]) => createResponse(`page ${index}, `)
       )
 
       return (
@@ -364,7 +364,7 @@ describe('useSWRInfinite', () => {
       const [t, setT] = useState(false)
       const { data, size, setSize } = useSWRInfinite(
         index => [key, index, t ? 'A' : 'B'],
-        (_, index) => createResponse(`page ${index}, `)
+        ([_, index]) => createResponse(`page ${index}, `)
       )
 
       toggle = setT
@@ -403,7 +403,7 @@ describe('useSWRInfinite', () => {
       const [t, setT] = useState(false)
       const { data, size, setSize } = useSWRInfinite(
         index => [key, index, t ? 'A' : 'B'],
-        async (_, index) => createResponse(`page ${index}, `),
+        async ([_, index]) => createResponse(`page ${index}, `),
         {
           persistSize: true
         }
@@ -445,7 +445,7 @@ describe('useSWRInfinite', () => {
     function Comp() {
       const { data, size, setSize } = useSWRInfinite(
         index => [key, index],
-        (_, index) => createResponse(`page ${index}, `)
+        ([_, index]) => createResponse(`page ${index}, `)
       )
 
       return (
@@ -491,7 +491,7 @@ describe('useSWRInfinite', () => {
     function Comp() {
       const { data, size, setSize } = useSWRInfinite(
         index => [key, index],
-        (_, index) => createResponse(`page ${index}, `)
+        ([_, index]) => createResponse(`page ${index}, `)
       )
 
       setters.push(setSize)
@@ -580,7 +580,7 @@ describe('useSWRInfinite', () => {
         index => {
           return [key, `/api?page=${index + 1}`]
         },
-        (_, index) => {
+        ([_, index]) => {
           requests.push(index)
           return createResponse<string[]>(dummyResponses[index])
         },
@@ -621,7 +621,7 @@ describe('useSWRInfinite', () => {
     const useCustomSWRInfinite = () => {
       const { data, setSize, size } = useSWRInfinite(
         index => [key, `/api?page=${index + 1}`],
-        (_, index) => createResponse<string[]>(dummyResponses[index])
+        ([_, index]) => createResponse<string[]>(dummyResponses[index])
       )
       return {
         data: data ? [].concat(...data) : [],
@@ -735,7 +735,7 @@ describe('useSWRInfinite', () => {
     let mutate
     function Comp() {
       mutate = useSWRConfig().mutate
-      const { data, size, setSize } = useSWRInfinite(getKey, (_, index) =>
+      const { data, size, setSize } = useSWRInfinite(getKey, ([_, index]) =>
         createResponse(`page ${index}, `)
       )
       useEffect(() => {
@@ -827,7 +827,7 @@ describe('useSWRInfinite', () => {
     function Comp() {
       const { data, size, setSize } = useSWRInfinite(
         index => [key, index],
-        (_, index) => createResponse(`page ${index}`)
+        ([_, index]) => createResponse(`page ${index}`)
       )
 
       return (
