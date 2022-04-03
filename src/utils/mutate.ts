@@ -1,8 +1,9 @@
 import { serialize } from './serialize'
-import { isFunction, isUndefined, mergeObjects } from './helper'
+import { isFunction, isUndefined } from './helper'
 import { SWRGlobalState, GlobalState } from './global-state'
 import { broadcastState } from './broadcast-state'
 import { getTimestamp } from './timestamp'
+import { createCacheHelper } from './cache'
 
 import { Key, Cache, MutatorCallback, MutatorOptions } from '../types'
 
@@ -33,20 +34,14 @@ export const internalMutate = async <Data>(
   const [key] = serialize(_key)
   if (!key) return
 
-  const setCache = (info: {
-    data?: Data
-    error?: any
-    isValidating?: boolean
-  }) => {
-    cache.set(key, mergeObjects(cache.get(key), info))
-  }
+  const [getCache, setCache] = createCacheHelper<Data>(cache, key)
 
   const [, , MUTATION] = SWRGlobalState.get(cache) as GlobalState
 
   // If there is no new data provided, revalidate the key with current state.
   if (args.length < 3) {
     // Revalidate and broadcast state.
-    return broadcastState(cache, key, cache.get(key), revalidate, true)
+    return broadcastState(cache, key, getCache(), revalidate, true)
   }
 
   let data: any = _data
@@ -57,7 +52,7 @@ export const internalMutate = async <Data>(
   MUTATION[key] = [beforeMutationTs, 0]
 
   const hasOptimisticData = !isUndefined(optimisticData)
-  const originalData = cache.get(key)?.data
+  const originalData = getCache().data
 
   // Do optimistic data update.
   if (hasOptimisticData) {

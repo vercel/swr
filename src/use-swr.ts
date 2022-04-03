@@ -18,6 +18,8 @@ import { broadcastState } from './utils/broadcast-state'
 import { getTimestamp } from './utils/timestamp'
 import { internalMutate } from './utils/mutate'
 import * as revalidateEvents from './constants'
+import { createCacheHelper } from './utils/cache'
+
 import {
   State,
   Fetcher,
@@ -85,14 +87,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   const getConfig = () => configRef.current
   const isActive = () => getConfig().isVisible() && getConfig().isOnline()
 
-  const getCache = () => cache.get(key) || {}
-  const setCache = (info: {
-    data?: Data
-    error?: any
-    isValidating?: boolean
-  }) => {
-    cache.set(key, mergeObjects(cache.get(key), info))
-  }
+  const [getCache, setCache] = createCacheHelper<Data>(cache, key)
 
   // Get the current state that SWR should return.
   const cached = getCache()

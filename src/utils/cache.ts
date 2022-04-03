@@ -4,11 +4,12 @@ import { UNDEFINED, mergeObjects, noop } from './helper'
 import { internalMutate } from './mutate'
 import { GlobalState, SWRGlobalState } from './global-state'
 import * as revalidateEvents from '../constants'
-import { RevalidateEvent } from '../types'
 
 import {
+  Key,
   Cache,
   ScopedMutator,
+  RevalidateEvent,
   RevalidateCallback,
   ProviderConfiguration
 } from '../types'
@@ -98,3 +99,13 @@ export const initCache = <Data = any>(
 
   return [provider, (SWRGlobalState.get(provider) as GlobalState)[4]]
 }
+
+export const createCacheHelper = <Data = any>(cache: Cache, key: Key) =>
+  [
+    // Getter
+    () => cache.get(key) || {},
+    // Setter
+    (info: { data?: Data; error?: any; isValidating?: boolean }) => {
+      cache.set(key, mergeObjects(cache.get(key), info))
+    }
+  ] as const
