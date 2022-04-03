@@ -114,7 +114,7 @@ describe('useSWR - key', () => {
 
     let updateId
 
-    const fetcher = fn => fn()
+    const fetcher = ([fn]) => fn()
 
     function Page() {
       const [id, setId] = React.useState('first')

@@ -33,6 +33,18 @@ import {
 
 const WITH_DEDUPE = { dedupe: true }
 
+type DefinitelyTruthy<T> = false extends T
+  ? never
+  : 0 extends T
+  ? never
+  : '' extends T
+  ? never
+  : null extends T
+  ? never
+  : undefined extends T
+  ? never
+  : T
+
 export const useSWRHandler = <Data = any, Error = any>(
   _key: Key,
   fetcher: Fetcher<Data> | null,
@@ -205,7 +217,11 @@ export const useSWRHandler = <Data = any, Error = any>(
           }
 
           // Start the request and save the timestamp.
-          FETCH[key] = [currentFetcher(fnArg), getTimestamp()]
+          // Key must be truthly if entering here.
+          FETCH[key] = [
+            currentFetcher(fnArg as DefinitelyTruthy<Key>),
+            getTimestamp()
+          ]
         }
 
         // Wait until the ongoing request is done. Deduplication is also
