@@ -337,7 +337,7 @@ export function useReturnReadonlyTuple() {
     {
       fetcher: keys => {
         expectType<
-          [
+          readonly [
             {
               readonly a: '1'
               readonly b: {
@@ -358,7 +358,7 @@ export function useReturnReadonlyTuple() {
     {
       fetcher: keys => {
         expectType<
-          [
+          readonly [
             {
               readonly a: '1'
               readonly b: {
@@ -395,7 +395,7 @@ export function useReturnReadonlyTuple() {
     {
       fetcher: keys => {
         expectType<
-          [
+          readonly [
             {
               readonly a: '1'
               readonly b: {
@@ -416,7 +416,7 @@ export function useReturnReadonlyTuple() {
     {
       fetcher: keys => {
         expectType<
-          [
+          readonly [
             {
               readonly a: '1'
               readonly b: {
