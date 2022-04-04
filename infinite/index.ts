@@ -56,9 +56,10 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
 
     // The serialized key of the first page. This key will be used to store
     // metadata of this SWR infinite hook.
-    let firstPageKey: string | null = null
+    let infiniteKey: string | undefined
     try {
-      firstPageKey = getFirstPageKey(getKey)
+      infiniteKey = getFirstPageKey(getKey)
+      if (infiniteKey) infiniteKey = INFINITE_PREFIX + infiniteKey
     } catch (err) {
       // Not ready yet.
     }
@@ -73,7 +74,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
         // same key.
         $len: number
       }
-    >(cache, firstPageKey)
+    >(cache, infiniteKey)
 
     const resolvePageSize = useCallback((): number => {
       const cachedPageSize = get().$len
@@ -81,7 +82,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
 
       // `cache` isn't allowed to change during the lifecycle
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [firstPageKey, initialSize])
+    }, [infiniteKey, initialSize])
     // keep the last page size to restore it with the persistSize option
     const lastPageSizeRef = useRef<number>(resolvePageSize())
 
@@ -92,21 +93,21 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
         return
       }
 
-      if (firstPageKey) {
+      if (infiniteKey) {
         // If the key has been changed, we keep the current page size if persistSize is enabled
         set({ $len: persistSize ? lastPageSizeRef.current : initialSize })
       }
 
       // `initialSize` isn't allowed to change during the lifecycle
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [firstPageKey])
+    }, [infiniteKey])
 
     // Needs to check didMountRef during mounting, not in the fetcher
     const shouldRevalidateOnMount = revalidateOnMount && !didMountRef.current
 
     // Actual SWR hook to load all pages in one fetcher.
     const swr = useSWRNext<Data[], Error>(
-      firstPageKey ? INFINITE_PREFIX + firstPageKey : null,
+      infiniteKey,
       async () => {
         // get the revalidate context
         const [forceRevalidateAll, originalData] = get().$ctx || []
@@ -184,7 +185,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
         const shouldRevalidate = args[1] !== false
 
         // It is possible that the key is still falsy.
-        if (!firstPageKey) return
+        if (!infiniteKey) return
 
         if (shouldRevalidate) {
           if (!isUndefined(data)) {
@@ -201,7 +202,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
       },
       // swr.mutate is always the same reference
       // eslint-disable-next-line react-hooks/exhaustive-deps
-      [firstPageKey]
+      [infiniteKey]
     )
 
     // Function to load pages data from the cache based on the page size.
@@ -231,7 +232,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
     const setSize = useCallback(
       (arg: number | ((size: number) => number)) => {
         // It is possible that the key is still falsy.
-        if (!firstPageKey) return
+        if (!infiniteKey) return
 
         let size
         if (isFunction(arg)) {
@@ -248,7 +249,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
       },
       // `cache` and `rerender` isn't allowed to change during the lifecycle
       // eslint-disable-next-line react-hooks/exhaustive-deps
-      [firstPageKey, resolvePageSize, mutate]
+      [infiniteKey, resolvePageSize, mutate]
     )
 
     // Use getter functions to avoid unnecessary re-renders caused by triggering

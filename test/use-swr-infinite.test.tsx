@@ -693,6 +693,34 @@ describe('useSWRInfinite', () => {
     await screen.findByText('data:')
   })
 
+  it('should support getKey to return null', async () => {
+    function Page() {
+      const { data, setSize } = useSWRInfinite(
+        () => null,
+        () => 'data'
+      )
+
+      return (
+        <div
+          onClick={() => {
+            // load next page
+            setSize(size => size + 1)
+          }}
+        >
+          data:{data || ''}
+        </div>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('data:')
+    await screen.findByText('data:')
+
+    // load next page
+    fireEvent.click(screen.getByText('data:'))
+    await screen.findByText('data:')
+  })
+
   it('should mutate a cache with `unstable_serialize`', async () => {
     let count = 0
     const key = createKey()
