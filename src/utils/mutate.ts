@@ -17,7 +17,7 @@ export const internalMutate = async <Data>(
 ) => {
   const [cache, _key, _data, _opts] = args
 
-  // When passing as a boolean, it's explicitily used to disable/enable
+  // When passing as a boolean, it's explicitly used to disable/enable
   // revalidation.
   const options =
     typeof _opts === 'boolean' ? { revalidate: _opts } : _opts || {}
@@ -30,7 +30,7 @@ export const internalMutate = async <Data>(
   const revalidate = options.revalidate !== false
   const rollbackOnError = options.rollbackOnError !== false
 
-  // Serilaize key
+  // Serialize key
   const [key] = serialize(_key)
   if (!key) return
 

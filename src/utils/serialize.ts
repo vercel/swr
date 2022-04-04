@@ -13,7 +13,7 @@ export const serialize = (key: Key): [string, Key] => {
     }
   }
 
-  // Use the original key as the argument of fether. This can be a stirng or an
+  // Use the original key as the argument of fetcher. This can be a string or an
   // array of values.
   const args = key
 
