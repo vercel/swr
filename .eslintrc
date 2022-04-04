@@ -47,5 +47,6 @@
     "react-hooks/exhaustive-deps": 1,
     "react/prop-types": 0,
     "testing-library/no-unnecessary-act": 0
-  }
+  },
+  "ignorePatterns": ["dist/", "node_modules", "scripts", "examples"]
 }

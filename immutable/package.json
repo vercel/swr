@@ -4,6 +4,7 @@
   "main": "./dist/index.js",
   "module": "./dist/index.esm.js",
   "types": "./dist/immutable",
+  "exports": "./dist/index.mjs",
   "peerDependencies": {
     "swr": "*",
     "react": "*"

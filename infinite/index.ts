@@ -48,7 +48,8 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
       initialSize = 1,
       revalidateAll = false,
       persistSize = false,
-      revalidateFirstPage = true
+      revalidateFirstPage = true,
+      revalidateOnMount = false
     } = config
 
     // The serialized key of the first page.
@@ -101,6 +102,9 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [firstPageKey])
 
+    // Needs to check didMountRef during mounting, not in the fetcher
+    const shouldRevalidateOnMount = revalidateOnMount && !didMountRef.current
+
     // Actual SWR hook to load all pages in one fetcher.
     const swr = useSWRNext<Data[], Error>(
       firstPageKey ? INFINITE_PREFIX + firstPageKey : null,
@@ -116,7 +120,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
 
         let previousPageData = null
         for (let i = 0; i < pageSize; ++i) {
-          const [pageKey, pageArgs] = serialize(getKey(i, previousPageData))
+          const [pageKey, pageArg] = serialize(getKey(i, previousPageData))
 
           if (!pageKey) {
             // `pageKey` is falsy, stop fetching new pages.
@@ -131,18 +135,20 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
           // - `mutate()` called
           // - the cache is missing
           // - it's the first page and it's not the initial render
+          // - `revalidateOnMount` is enabled and it's on mount
           // - cache for that page has changed
           const shouldFetchPage =
             revalidateAll ||
             forceRevalidateAll ||
             isUndefined(pageData) ||
             (revalidateFirstPage && !i && !isUndefined(dataRef.current)) ||
+            shouldRevalidateOnMount ||
             (originalData &&
               !isUndefined(originalData[i]) &&
               !config.compare(originalData[i], pageData))
 
           if (fn && shouldFetchPage) {
-            pageData = await fn(...pageArgs)
+            pageData = await fn(pageArg)
             cache.set(pageKey, pageData)
           }
 

@@ -3,7 +3,7 @@ import { isFunction } from './helper'
 
 import { Key } from '../types'
 
-export const serialize = (key: Key): [string, any[], string, string] => {
+export const serialize = (key: Key): [string, Key, string] => {
   if (isFunction(key)) {
     try {
       key = key()
@@ -13,20 +13,18 @@ export const serialize = (key: Key): [string, any[], string, string] => {
     }
   }
 
-  const args = [].concat(key as any)
+  // Use the original key as the argument of fether. This can be a stirng or an
+  // array of values.
+  const args = key
 
   // If key is not falsy, or not an empty array, hash it.
   key =
     typeof key == 'string'
       ? key
-      : (Array.isArray(key)
-        ? key.length
-        : key)
+      : (Array.isArray(key) ? key.length : key)
       ? stableHash(key)
       : ''
 
-  const errorKey = key ? '$err$' + key : ''
-  const isValidatingKey = key ? '$req$' + key : ''
-
-  return [key, args, errorKey, isValidatingKey]
+  const infoKey = key ? '$swr$' + key : ''
+  return [key, args, infoKey]
 }

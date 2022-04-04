@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { Suspense, useEffect, useState } from 'react'
 import { fireEvent, act, screen } from '@testing-library/react'
 import { mutate as globalMutate, useSWRConfig, SWRConfig } from 'swr'
 import useSWRInfinite, { unstable_serialize } from 'swr/infinite'
@@ -74,7 +74,7 @@ describe('useSWRInfinite', () => {
     function Page() {
       const { data, size, setSize } = useSWRInfinite(
         index => [key, index],
-        (_, index) => createResponse(`page ${index}, `)
+        ([_, index]) => createResponse(`page ${index}, `)
       )
 
       useEffect(() => {
@@ -101,7 +101,7 @@ describe('useSWRInfinite', () => {
     function Page() {
       const { data, mutate: boundMutate } = useSWRInfinite(
         index => [key, index],
-        (_, index) => createResponse(`${pageData[index]}, `),
+        ([_, index]) => createResponse(`${pageData[index]}, `),
         {
           initialSize: 3
         }
@@ -212,7 +212,7 @@ describe('useSWRInfinite', () => {
     function Page() {
       const { data, size, setSize } = useSWRInfinite(
         index => [key, index],
-        (_, index) => {
+        ([_, index]) => {
           requests++
           return createResponse(`page ${index}, `)
         }
@@ -262,7 +262,7 @@ describe('useSWRInfinite', () => {
     function Page() {
       const { data, size, setSize } = useSWRInfinite(
         index => [key, index],
-        (_, index) => {
+        ([_, index]) => {
           requests++
           return createResponse(`page ${index}, `)
         },
@@ -315,7 +315,7 @@ describe('useSWRInfinite', () => {
     function Page() {
       const { data, size, setSize } = useSWRInfinite(
         index => [key, index],
-        (_, index) => createResponse(`page ${index}, `)
+        ([_, index]) => createResponse(`page ${index}, `)
       )
 
       return (
@@ -364,7 +364,7 @@ describe('useSWRInfinite', () => {
       const [t, setT] = useState(false)
       const { data, size, setSize } = useSWRInfinite(
         index => [key, index, t ? 'A' : 'B'],
-        (_, index) => createResponse(`page ${index}, `)
+        ([_, index]) => createResponse(`page ${index}, `)
       )
 
       toggle = setT
@@ -403,7 +403,7 @@ describe('useSWRInfinite', () => {
       const [t, setT] = useState(false)
       const { data, size, setSize } = useSWRInfinite(
         index => [key, index, t ? 'A' : 'B'],
-        async (_, index) => createResponse(`page ${index}, `),
+        async ([_, index]) => createResponse(`page ${index}, `),
         {
           persistSize: true
         }
@@ -445,7 +445,7 @@ describe('useSWRInfinite', () => {
     function Comp() {
       const { data, size, setSize } = useSWRInfinite(
         index => [key, index],
-        (_, index) => createResponse(`page ${index}, `)
+        ([_, index]) => createResponse(`page ${index}, `)
       )
 
       return (
@@ -491,7 +491,7 @@ describe('useSWRInfinite', () => {
     function Comp() {
       const { data, size, setSize } = useSWRInfinite(
         index => [key, index],
-        (_, index) => createResponse(`page ${index}, `)
+        ([_, index]) => createResponse(`page ${index}, `)
       )
 
       setters.push(setSize)
@@ -580,7 +580,7 @@ describe('useSWRInfinite', () => {
         index => {
           return [key, `/api?page=${index + 1}`]
         },
-        (_, index) => {
+        ([_, index]) => {
           requests.push(index)
           return createResponse<string[]>(dummyResponses[index])
         },
@@ -621,7 +621,7 @@ describe('useSWRInfinite', () => {
     const useCustomSWRInfinite = () => {
       const { data, setSize, size } = useSWRInfinite(
         index => [key, `/api?page=${index + 1}`],
-        (_, index) => createResponse<string[]>(dummyResponses[index])
+        ([_, index]) => createResponse<string[]>(dummyResponses[index])
       )
       return {
         data: data ? [].concat(...data) : [],
@@ -735,7 +735,7 @@ describe('useSWRInfinite', () => {
     let mutate
     function Comp() {
       mutate = useSWRConfig().mutate
-      const { data, size, setSize } = useSWRInfinite(getKey, (_, index) =>
+      const { data, size, setSize } = useSWRInfinite(getKey, ([_, index]) =>
         createResponse(`page ${index}, `)
       )
       useEffect(() => {
@@ -827,7 +827,7 @@ describe('useSWRInfinite', () => {
     function Comp() {
       const { data, size, setSize } = useSWRInfinite(
         index => [key, index],
-        (_, index) => createResponse(`page ${index}`)
+        ([_, index]) => createResponse(`page ${index}`)
       )
 
       return (
@@ -1107,5 +1107,87 @@ describe('useSWRInfinite', () => {
         )
       })
     ).toBeTruthy()
+  })
+
+  // https://github.com/vercel/swr/issues/1776
+  it('should update the getKey reference with the suspense mode', async () => {
+    const keyA = 'keyA' + createKey()
+    const keyB = 'keyB' + createKey()
+
+    const apiData = {
+      [keyA]: ['A1', 'A2', 'A3'],
+      [keyB]: ['B1', 'B2', 'B3']
+    }
+
+    function Page() {
+      const [status, setStatus] = useState('a')
+      const { data, setSize } = useSWRInfinite(
+        () => (status === 'a' ? keyA : keyB),
+        key => createResponse(apiData[key]),
+        { suspense: true }
+      )
+      return (
+        <>
+          <div>data: {String(data)}</div>
+          <button
+            onClick={() => {
+              setStatus('b')
+              setSize(1)
+            }}
+          >
+            mutate
+          </button>
+        </>
+      )
+    }
+    renderWithConfig(
+      <Suspense fallback="loading">
+        <Page />
+      </Suspense>
+    )
+    await screen.findByText('data: A1,A2,A3')
+
+    fireEvent.click(screen.getByText('mutate'))
+    await screen.findByText('data: B1,B2,B3')
+  })
+
+  it('should revalidate when the component is mounted and revalidateOnMount is enabled', async () => {
+    const key = createKey()
+
+    let counter = 0
+
+    function Content() {
+      const { data } = useSWRInfinite(
+        () => key,
+        () => createResponse(++counter),
+        {
+          revalidateOnMount: true,
+          revalidateFirstPage: false,
+          dedupingInterval: 0
+        }
+      )
+      return <div>data: {String(data)}</div>
+    }
+
+    function Page() {
+      const [contentKey, setContentKey] = useState('a')
+      return (
+        <>
+          <Content key={contentKey} />
+          <button
+            onClick={() => {
+              setContentKey('b')
+            }}
+          >
+            mutate
+          </button>
+        </>
+      )
+    }
+    renderWithConfig(<Page />)
+    await screen.findByText('data: 1')
+
+    fireEvent.click(screen.getByText('mutate'))
+    await screen.findByText('data: 2')
   })
 })

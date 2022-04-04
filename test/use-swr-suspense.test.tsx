@@ -163,6 +163,31 @@ describe('useSWR - suspense', () => {
     await screen.findByText('hello, error') // get error with cache
   })
 
+  it('should not fetch when cached data is present and `revalidateIfStale` is false', async () => {
+    const key = createKey()
+    mutate(key, 'cached')
+
+    let fetchCount = 0
+
+    function Section() {
+      const { data } = useSWR(key, () => createResponse(++fetchCount), {
+        suspense: true,
+        revalidateIfStale: false
+      })
+      return <div>{data}</div>
+    }
+
+    renderWithGlobalCache(
+      <Suspense fallback={<div>fallback</div>}>
+        <Section />
+      </Suspense>
+    )
+
+    screen.getByText('cached')
+    await act(() => sleep(50)) // Wait to confirm fetch is not triggered
+    expect(fetchCount).toBe(0)
+  })
+
   it('should pause when key changes', async () => {
     const renderedResults = []
     const initialKey = createKey()
@@ -193,7 +218,7 @@ describe('useSWR - suspense', () => {
     )
 
     await screen.findByText(updatedKey)
-    // fixes https://github.com/zeit/swr/issues/57
+    // fixes https://github.com/vercel/swr/issues/57
     // initialKey' -> undefined -> updatedKey
     expect(renderedResults).toEqual([initialKey, updatedKey])
   })
@@ -230,6 +255,61 @@ describe('useSWR - suspense', () => {
     await screen.findByText('123,2')
 
     expect(renderedResults).toEqual(['123,1', '123,2'])
+  })
+
+  it('should render correctly when key changes (from null to valid key)', async () => {
+    // https://github.com/vercel/swr/issues/1836
+    const renderedResults = []
+    const baseKey = createKey()
+    let setData: any = () => {}
+    const Result = ({ query }: { query: string }) => {
+      const { data } = useSWR(
+        query ? `${baseKey}-${query}` : null,
+        key => createResponse(key, { delay: 200 }),
+        {
+          suspense: true
+        }
+      )
+      if (`${data}` !== renderedResults[renderedResults.length - 1]) {
+        if (data === undefined) {
+          renderedResults.push(`${baseKey}-nodata`)
+        } else {
+          renderedResults.push(`${data}`)
+        }
+      }
+      return <div>{data ? data : `${baseKey}-nodata`}</div>
+    }
+    const App = () => {
+      const [query, setQuery] = useState('123')
+      if (setData !== setQuery) {
+        setData = setQuery
+      }
+      return (
+        <>
+          <br />
+          <br />
+          <Suspense fallback={null}>
+            <Result query={query}></Result>
+          </Suspense>
+        </>
+      )
+    }
+
+    renderWithConfig(<App />)
+
+    await screen.findByText(`${baseKey}-123`)
+
+    act(() => setData(''))
+    await screen.findByText(`${baseKey}-nodata`)
+
+    act(() => setData('456'))
+    await screen.findByText(`${baseKey}-456`)
+
+    expect(renderedResults).toEqual([
+      `${baseKey}-123`,
+      `${baseKey}-nodata`,
+      `${baseKey}-456`
+    ])
   })
 
   it('should render initial data if set', async () => {

@@ -7,16 +7,16 @@ export type BareFetcher<Data = unknown> = (
 export type Fetcher<
   Data = unknown,
   SWRKey extends Key = Key
-> = SWRKey extends () => readonly [...infer Args] | null | undefined | false
-  ? (...args: [...Args]) => FetcherResponse<Data>
+> = SWRKey extends () => readonly [...infer Args]
+  ? (args: Args) => FetcherResponse<Data>
   : SWRKey extends readonly [...infer Args]
-  ? (...args: [...Args]) => FetcherResponse<Data>
+  ? (args: Args) => FetcherResponse<Data>
   : SWRKey extends () => infer Arg | null | undefined | false
-  ? (...args: [Arg]) => FetcherResponse<Data>
+  ? (args: Arg) => FetcherResponse<Data>
   : SWRKey extends null | undefined | false
   ? never
   : SWRKey extends infer Arg
-  ? (...args: [Arg]) => FetcherResponse<Data>
+  ? (args: Arg) => FetcherResponse<Data>
   : never
 
 // Configuration types that are only used internally, not exposed to the user.
@@ -42,7 +42,7 @@ export interface PublicConfiguration<
   revalidateOnReconnect: boolean
   revalidateOnMount?: boolean
   revalidateIfStale: boolean
-  shouldRetryOnError: boolean
+  shouldRetryOnError: boolean | ((err: Error) => boolean)
   suspense?: boolean
   fallbackData?: Data
   fetcher?: Fn
@@ -119,7 +119,7 @@ export interface SWRHook {
   ): SWRResponse<Data, Error>
 }
 
-// Middlewares guarantee that a SWRHook receives a key, fetcher, and config as the argument
+// Middleware guarantee that a SWRHook receives a key, fetcher, and config as the argument
 export type Middleware = (
   useSWRNext: SWRHook
 ) => <Data = any, Error = any>(
@@ -139,13 +139,13 @@ export type Arguments =
 export type Key = Arguments | (() => Arguments)
 
 export type MutatorCallback<Data = any> = (
-  currentValue?: Data
+  currentData?: Data
 ) => Promise<undefined | Data> | undefined | Data
 
 export type MutatorOptions<Data = any> = {
   revalidate?: boolean
-  populateCache?: boolean
-  optimisticData?: Data
+  populateCache?: boolean | ((result: any, currentData: Data) => Data)
+  optimisticData?: Data | ((currentData?: Data) => Data)
   rollbackOnError?: boolean
 }
 
@@ -170,12 +170,26 @@ export type State<Data, Error> = {
   isValidating?: boolean
 }
 
-export type Mutator<Data = any> = (
+export type MutatorFn<Data = any> = (
   cache: Cache,
   key: Key,
   data?: Data | Promise<Data> | MutatorCallback<Data>,
   opts?: boolean | MutatorOptions<Data>
 ) => Promise<Data | undefined>
+
+export type MutatorWrapper<Fn> = Fn extends (
+  ...args: [...infer Parameters]
+) => infer Result
+  ? Parameters[3] extends boolean
+    ? Result
+    : Parameters[3] extends Required<Pick<MutatorOptions, 'populateCache'>>
+    ? Parameters[3]['populateCache'] extends false
+      ? never
+      : Result
+    : Result
+  : never
+
+export type Mutator<Data = any> = MutatorWrapper<MutatorFn<Data>>
 
 export interface ScopedMutator<Data = any> {
   /** This is used for bound mutator */
