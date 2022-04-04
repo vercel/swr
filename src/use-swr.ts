@@ -214,7 +214,7 @@ export const useSWRHandler = <Data = any, Error = any>(
           }
 
           // Start the request and save the timestamp.
-          // Key must be truthly if entering here.
+          // Key must be truthy if entering here.
           FETCH[key] = [
             currentFetcher(fnArg as DefinitelyTruthy<Key>),
             getTimestamp()
@@ -290,7 +290,7 @@ export const useSWRHandler = <Data = any, Error = any>(
           // data and newData are deeply equal
           // it should be safe to broadcast the stale data
           newState.data = stateRef.current.data
-          // At the end of this function, `brocastState` invokes the `onStateUpdate` function,
+          // At the end of this function, `broadcastState` invokes the `onStateUpdate` function,
           // which takes care of avoiding the re-render
         }
 
