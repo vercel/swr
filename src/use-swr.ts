@@ -87,10 +87,10 @@ export const useSWRHandler = <Data = any, Error = any>(
   const getConfig = () => configRef.current
   const isActive = () => getConfig().isVisible() && getConfig().isOnline()
 
-  const [getCache, setCache] = createCacheHelper<Data>(cache, key)
+  const [get, set] = createCacheHelper<Data>(cache, key)
 
   // Get the current state that SWR should return.
-  const cached = getCache()
+  const cached = get()
   const cachedData = cached.data
   const fallback = isUndefined(fallbackData)
     ? config.fallback[key]
@@ -184,7 +184,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       // The new state object when request finishes.
       const newState: State<Data, Error> = { isValidating: false }
       const finishRequestAndUpdateState = () => {
-        setCache({ isValidating: false })
+        set({ isValidating: false })
         // We can only set state if it's safe (still mounted with the same key).
         if (isCurrentKeyMounted()) {
           setState(newState)
@@ -192,7 +192,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       }
 
       // Start fetching. Change the `isValidating` state, update the cache.
-      setCache({ isValidating: true })
+      set({ isValidating: true })
       setState({ isValidating: true })
 
       try {
@@ -205,7 +205,7 @@ export const useSWRHandler = <Data = any, Error = any>(
 
           // If no cache being rendered currently (it shows a blank page),
           // we trigger the loading slow event.
-          if (config.loadingTimeout && isUndefined(getCache().data)) {
+          if (config.loadingTimeout && isUndefined(get().data)) {
             setTimeout(() => {
               if (loading && isCurrentKeyMounted()) {
                 getConfig().onLoadingSlow(key, config)
@@ -248,7 +248,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         }
 
         // Clear error.
-        setCache({ error: UNDEFINED })
+        set({ error: UNDEFINED })
         newState.error = UNDEFINED
 
         // If there're other mutations(s), overlapped with the current revalidation:
@@ -296,8 +296,8 @@ export const useSWRHandler = <Data = any, Error = any>(
 
         // For global state, it's possible that the key has changed.
         // https://github.com/vercel/swr/pull/1058
-        if (!compare(getCache().data, newData)) {
-          setCache({ data: newData })
+        if (!compare(get().data, newData)) {
+          set({ data: newData })
         }
 
         // Trigger the successful callback if it's the original request.
@@ -312,7 +312,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         // Not paused, we continue handling the error. Otherwise discard it.
         if (!getConfig().isPaused()) {
           // Get a new error, don't use deep comparison for errors.
-          setCache({ error: err })
+          set({ error: err })
           newState.error = err as Error
 
           // Error event and retry logic. Only for the actual request, not

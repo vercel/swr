@@ -100,12 +100,19 @@ export const initCache = <Data = any>(
   return [provider, (SWRGlobalState.get(provider) as GlobalState)[4]]
 }
 
-export const createCacheHelper = <Data = any>(cache: Cache, key: Key) =>
+export const createCacheHelper = <Data = any, ExtendedInfo = {}>(
+  cache: Cache,
+  key: Key
+) =>
   [
     // Getter
     () => cache.get(key) || {},
     // Setter
-    (info: { data?: Data; error?: any; isValidating?: boolean }) => {
+    (
+      info: Partial<
+        { data: Data; error: any; isValidating: boolean } | ExtendedInfo
+      >
+    ) => {
       cache.set(key, mergeObjects(cache.get(key), info))
     }
   ] as const

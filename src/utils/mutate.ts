@@ -34,14 +34,14 @@ export const internalMutate = async <Data>(
   const [key] = serialize(_key)
   if (!key) return
 
-  const [getCache, setCache] = createCacheHelper<Data>(cache, key)
+  const [get, set] = createCacheHelper<Data>(cache, key)
 
   const [, , MUTATION] = SWRGlobalState.get(cache) as GlobalState
 
   // If there is no new data provided, revalidate the key with current state.
   if (args.length < 3) {
     // Revalidate and broadcast state.
-    return broadcastState(cache, key, getCache(), revalidate, true)
+    return broadcastState(cache, key, get(), revalidate, true)
   }
 
   let data: any = _data
@@ -52,14 +52,14 @@ export const internalMutate = async <Data>(
   MUTATION[key] = [beforeMutationTs, 0]
 
   const hasOptimisticData = !isUndefined(optimisticData)
-  const originalData = getCache().data
+  const originalData = get().data
 
   // Do optimistic data update.
   if (hasOptimisticData) {
     optimisticData = isFunction(optimisticData)
       ? optimisticData(originalData)
       : optimisticData
-    setCache({ data: optimisticData })
+    set({ data: optimisticData })
     broadcastState(cache, key, { data: optimisticData })
   }
 
@@ -92,7 +92,7 @@ export const internalMutate = async <Data>(
       // transforming the data.
       populateCache = true
       data = originalData
-      setCache({ data: originalData })
+      set({ data: originalData })
     }
   }
 
@@ -105,11 +105,11 @@ export const internalMutate = async <Data>(
       }
 
       // Only update cached data if there's no error. Data can be `undefined` here.
-      setCache({ data })
+      set({ data })
     }
 
     // Always update or reset the error.
-    setCache({ error })
+    set({ error })
   }
 
   // Reset the timestamp to mark the mutation has ended.
