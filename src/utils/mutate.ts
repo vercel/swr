@@ -1,8 +1,9 @@
 import { serialize } from './serialize'
-import { isFunction, isUndefined, mergeObjects, UNDEFINED } from './helper'
+import { isFunction, isUndefined } from './helper'
 import { SWRGlobalState, GlobalState } from './global-state'
 import { broadcastState } from './broadcast-state'
 import { getTimestamp } from './timestamp'
+import { createCacheHelper } from './cache'
 
 import { Key, Cache, MutatorCallback, MutatorOptions } from '../types'
 
@@ -25,28 +26,22 @@ export const internalMutate = async <Data>(
   let populateCache = isUndefined(options.populateCache)
     ? true
     : options.populateCache
+  let optimisticData = options.optimisticData
   const revalidate = options.revalidate !== false
   const rollbackOnError = options.rollbackOnError !== false
-  const customOptimisticData = options.optimisticData
 
   // Serilaize key
-  const [key, , keyInfo] = serialize(_key)
+  const [key] = serialize(_key)
   if (!key) return
+
+  const [get, set] = createCacheHelper<Data>(cache, key)
 
   const [, , MUTATION] = SWRGlobalState.get(cache) as GlobalState
 
   // If there is no new data provided, revalidate the key with current state.
   if (args.length < 3) {
     // Revalidate and broadcast state.
-    return broadcastState(
-      cache,
-      key,
-      cache.get(key),
-      UNDEFINED,
-      UNDEFINED,
-      revalidate,
-      true
-    )
+    return broadcastState(cache, key, get(), revalidate, true)
   }
 
   let data: any = _data
@@ -55,22 +50,23 @@ export const internalMutate = async <Data>(
   // Update global timestamps.
   const beforeMutationTs = getTimestamp()
   MUTATION[key] = [beforeMutationTs, 0]
-  const hasCustomOptimisticData = !isUndefined(customOptimisticData)
-  const rollbackData = cache.get(key)
+
+  const hasOptimisticData = !isUndefined(optimisticData)
+  const originalData = get().data
 
   // Do optimistic data update.
-  if (hasCustomOptimisticData) {
-    const optimisticData = isFunction(customOptimisticData)
-      ? customOptimisticData(rollbackData)
-      : customOptimisticData
-    cache.set(key, optimisticData)
-    broadcastState(cache, key, optimisticData)
+  if (hasOptimisticData) {
+    optimisticData = isFunction(optimisticData)
+      ? optimisticData(originalData)
+      : optimisticData
+    set({ data: optimisticData })
+    broadcastState(cache, key, { data: optimisticData })
   }
 
   if (isFunction(data)) {
     // `data` is a function, call it passing current cache value.
     try {
-      data = (data as MutatorCallback<Data>)(cache.get(key))
+      data = (data as MutatorCallback<Data>)(originalData)
     } catch (err) {
       // If it throws an error synchronously, we shouldn't update the cache.
       error = err
@@ -91,12 +87,12 @@ export const internalMutate = async <Data>(
     if (beforeMutationTs !== MUTATION[key][0]) {
       if (error) throw error
       return data
-    } else if (error && hasCustomOptimisticData && rollbackOnError) {
+    } else if (error && hasOptimisticData && rollbackOnError) {
       // Rollback. Always populate the cache in this case but without
       // transforming the data.
       populateCache = true
-      data = rollbackData
-      cache.set(key, rollbackData)
+      data = originalData
+      set({ data: originalData })
     }
   }
 
@@ -105,15 +101,15 @@ export const internalMutate = async <Data>(
     if (!error) {
       // Transform the result into data.
       if (isFunction(populateCache)) {
-        data = populateCache(data, rollbackData)
+        data = populateCache(data, originalData)
       }
 
       // Only update cached data if there's no error. Data can be `undefined` here.
-      cache.set(key, data)
+      set({ data })
     }
 
     // Always update or reset the error.
-    cache.set(keyInfo, mergeObjects(cache.get(keyInfo), { error }))
+    set({ error })
   }
 
   // Reset the timestamp to mark the mutation has ended.
@@ -123,9 +119,10 @@ export const internalMutate = async <Data>(
   const res = await broadcastState(
     cache,
     key,
-    data,
-    error,
-    UNDEFINED,
+    {
+      data,
+      error
+    },
     revalidate,
     !!populateCache
   )

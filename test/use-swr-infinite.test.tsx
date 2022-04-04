@@ -693,6 +693,34 @@ describe('useSWRInfinite', () => {
     await screen.findByText('data:')
   })
 
+  it('should support getKey to return null', async () => {
+    function Page() {
+      const { data, setSize } = useSWRInfinite(
+        () => null,
+        () => 'data'
+      )
+
+      return (
+        <div
+          onClick={() => {
+            // load next page
+            setSize(size => size + 1)
+          }}
+        >
+          data:{data || ''}
+        </div>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('data:')
+    await screen.findByText('data:')
+
+    // load next page
+    fireEvent.click(screen.getByText('data:'))
+    await screen.findByText('data:')
+  })
+
   it('should mutate a cache with `unstable_serialize`', async () => {
     let count = 0
     const key = createKey()
@@ -776,7 +804,9 @@ describe('useSWRInfinite', () => {
     function App() {
       return (
         <SWRConfig
-          value={{ provider: () => new Map([[key, 'initial-cache']]) }}
+          value={{
+            provider: () => new Map([[key, { data: 'initial-cache' }]])
+          }}
         >
           <Page />
         </SWRConfig>
@@ -950,7 +980,7 @@ describe('useSWRInfinite', () => {
     }
 
     renderWithConfig(<Page />, {
-      provider: () => new Map([[key + '-1', 'cached value']])
+      provider: () => new Map([[key + '-1', { data: 'cached value' }]])
     })
 
     screen.getByText('data:')
@@ -973,7 +1003,7 @@ describe('useSWRInfinite', () => {
       )
     }
     renderWithConfig(<Page />, {
-      provider: () => new Map([[key + '-1', 'cached value']])
+      provider: () => new Map([[key + '-1', { data: 'cached value' }]])
     })
 
     screen.getByText('data:')

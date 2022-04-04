@@ -1,13 +1,11 @@
 import { Broadcaster } from '../types'
 import { SWRGlobalState, GlobalState } from './global-state'
-import * as revalidateEvents from '../constants/revalidate-events'
+import * as revalidateEvents from '../constants'
 
 export const broadcastState: Broadcaster = (
   cache,
   key,
-  data,
-  error,
-  isValidating,
+  state,
   revalidate,
   broadcast = true
 ) => {
@@ -20,7 +18,7 @@ export const broadcastState: Broadcaster = (
   // Cache was populated, update states of all hooks.
   if (broadcast && updaters) {
     for (let i = 0; i < updaters.length; ++i) {
-      updaters[i](data, error, isValidating)
+      updaters[i](state)
     }
   }
 
@@ -31,11 +29,11 @@ export const broadcastState: Broadcaster = (
     delete FETCH[key]
 
     if (revalidators && revalidators[0]) {
-      return revalidators[0](revalidateEvents.MUTATE_EVENT).then(() =>
-        cache.get(key)
+      return revalidators[0](revalidateEvents.MUTATE_EVENT).then(
+        () => cache.get(key).data
       )
     }
   }
 
-  return cache.get(key)
+  return cache.get(key).data
 }
