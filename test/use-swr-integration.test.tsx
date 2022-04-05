@@ -72,6 +72,28 @@ describe('useSWR', () => {
     expect(fetch).not.toHaveBeenCalled()
   })
 
+  it('should call fetch function when revalidateOnMount is false and key has been changed', async () => {
+    const fetch = jest.fn(() => 'SWR')
+
+    function Page() {
+      const [key, setKey] = useState(createKey())
+      const { data } = useSWR(key, fetch, {
+        revalidateOnMount: false
+      })
+      return <div onClick={() => setKey(createKey)}>hello,{data}</div>
+    }
+
+    renderWithConfig(<Page />)
+
+    await screen.findByText('hello,')
+    expect(fetch).not.toHaveBeenCalled()
+
+    // the key has been changed
+    fireEvent.click(screen.getByText('hello,'))
+
+    await screen.findByText('hello,SWR')
+  })
+
   it('should call fetch function when revalidateOnMount is true even if fallbackData is set', async () => {
     const fetch = jest.fn(() => 'SWR')
 
@@ -257,7 +279,10 @@ describe('useSWR', () => {
     const key1 = createKey()
     const key2 = createKey()
     function Page() {
-      const { data: v1 } = useSWR([key1, obj, arr], (a, b, c) => a + b.v + c[0])
+      const { data: v1 } = useSWR(
+        [key1, obj, arr],
+        ([a, b, c]) => a + b.v + c[0]
+      )
 
       // reuse the cache
       const { data: v2 } = useSWR([key1, obj, arr], () => 'not called!')
@@ -265,7 +290,7 @@ describe('useSWR', () => {
       // different object
       const { data: v3 } = useSWR(
         [key2, obj, 'world'],
-        (a, b, c) => a + b.v + c
+        ([a, b, c]) => a + b.v + c
       )
 
       return (
@@ -290,7 +315,7 @@ describe('useSWR', () => {
     function Page() {
       const { data } = useSWR(
         () => [key, obj, arr],
-        (a, b, c) => a + b.v + c[0]
+        ([a, b, c]) => a + b.v + c[0]
       )
 
       return <div>{data}</div>

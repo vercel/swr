@@ -259,7 +259,7 @@ describe('useSWR - refresh', () => {
       version: '1.0'
     })
 
-    const cachedData = customCache.get(key)
+    const cachedData = customCache.get(key)?.data
     expect(cachedData.timestamp.toString()).toEqual('1')
     screen.getByText('1')
   })

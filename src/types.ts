@@ -1,4 +1,4 @@
-import * as revalidateEvents from './constants/revalidate-events'
+import * as revalidateEvents from './constants'
 
 export type FetcherResponse<Data = unknown> = Data | Promise<Data>
 export type BareFetcher<Data = unknown> = (
@@ -7,16 +7,16 @@ export type BareFetcher<Data = unknown> = (
 export type Fetcher<
   Data = unknown,
   SWRKey extends Key = Key
-> = SWRKey extends () => readonly [...infer Args] | null | undefined | false
-  ? (...args: [...Args]) => FetcherResponse<Data>
+> = SWRKey extends () => readonly [...infer Args]
+  ? (args: Args) => FetcherResponse<Data>
   : SWRKey extends readonly [...infer Args]
-  ? (...args: [...Args]) => FetcherResponse<Data>
+  ? (args: Args) => FetcherResponse<Data>
   : SWRKey extends () => infer Arg | null | undefined | false
-  ? (...args: [Arg]) => FetcherResponse<Data>
+  ? (args: Arg) => FetcherResponse<Data>
   : SWRKey extends null | undefined | false
   ? never
   : SWRKey extends infer Arg
-  ? (...args: [Arg]) => FetcherResponse<Data>
+  ? (args: Arg) => FetcherResponse<Data>
   : never
 
 // Configuration types that are only used internally, not exposed to the user.
@@ -139,13 +139,13 @@ export type Arguments =
 export type Key = Arguments | (() => Arguments)
 
 export type MutatorCallback<Data = any> = (
-  currentValue?: Data
+  currentData?: Data
 ) => Promise<undefined | Data> | undefined | Data
 
 export type MutatorOptions<Data = any> = {
   revalidate?: boolean
-  populateCache?: boolean
-  optimisticData?: Data
+  populateCache?: boolean | ((result: any, currentData: Data) => Data)
+  optimisticData?: Data | ((currentData?: Data) => Data)
   rollbackOnError?: boolean
 }
 
@@ -248,11 +248,11 @@ export type RevalidateCallback = <K extends RevalidateEvent>(
   type: K
 ) => RevalidateCallbackReturnType[K]
 
-export type StateUpdateCallback<Data = any, Error = any> = (
-  data?: Data,
-  error?: Error,
+export type StateUpdateCallback<Data = any, Error = any> = (state: {
+  data?: Data
+  error?: Error
   isValidating?: boolean
-) => void
+}) => void
 
 export interface Cache<Data = any> {
   get(key: Key): Data | null | undefined

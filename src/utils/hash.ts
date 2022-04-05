@@ -16,7 +16,7 @@ let counter = 0
 // - Generates short results
 //
 // This is not a serialization function, and the result is not guaranteed to be
-// parsible.
+// parsable.
 export const stableHash = (arg: any): string => {
   const type = typeof arg
   const constructor = arg && arg.constructor

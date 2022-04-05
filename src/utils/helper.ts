@@ -4,7 +4,7 @@ export const noop = () => {}
 // by something else.  Prettier ignore and extra parentheses are necessary here
 // to ensure that tsc doesn't remove the __NOINLINE__ comment.
 // prettier-ignore
-export const UNDEFINED: undefined = (/*#__NOINLINE__*/ noop()) as undefined
+export const UNDEFINED = (/*#__NOINLINE__*/ noop()) as undefined
 
 export const OBJECT = Object
 
