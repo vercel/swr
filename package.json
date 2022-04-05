@@ -102,8 +102,8 @@
     "prettier": "2.5.0",
     "react": "17.0.1",
     "react-dom": "17.0.1",
-    "react-dom-experimental": "npm:react-dom@alpha",
-    "react-experimental": "npm:react@alpha",
+    "react-dom-18": "npm:react-dom@18",
+    "react-18": "npm:react@18",
     "rimraf": "3.0.2",
     "swr": "link:./",
     "typescript": "4.4.3"

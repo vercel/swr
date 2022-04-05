@@ -9,14 +9,12 @@ let React // swc transformer requires to define React at the top
 
 describe('useSWR - concurrent rendering', () => {
   let ReactDOM, act, useSWR, reactRoot, renderWithConfig
-  beforeAll(() => {
+  beforeEach(() => {
     jest.resetModules()
     jest.mock('scheduler', () => require('scheduler/unstable_mock'))
-    jest.mock('react', () => require('react-experimental'))
-    jest.mock('react-dom', () => require('react-dom-experimental'))
-    jest.mock('react-dom/test-utils', () =>
-      require('react-dom-experimental/test-utils')
-    )
+    jest.mock('react', () => require('react-18'))
+    jest.mock('react-dom', () => require('react-dom-18'))
+    jest.mock('react-dom/test-utils', () => require('react-dom-18/test-utils'))
     React = require('react')
     ReactDOM = require('react-dom')
     act = require('react-dom/test-utils').act
