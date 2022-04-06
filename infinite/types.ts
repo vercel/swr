@@ -6,9 +6,7 @@ export type SWRInfiniteFetcher<
   Data = any,
   KeyLoader extends SWRInfiniteKeyLoader = SWRInfiniteKeyLoader
 > = KeyLoader extends (...args: any[]) => any
-  ? ReturnType<KeyLoader> extends readonly [...infer T]
-    ? (args: T) => FetcherResponse<Data>
-    : ReturnType<KeyLoader> extends infer T | null | false | undefined
+  ? ReturnType<KeyLoader> extends infer T | null | false | undefined
     ? (args: T) => FetcherResponse<Data>
     : never
   : never
