@@ -4,7 +4,8 @@ import {
   useContext,
   useState,
   FC,
-  PropsWithChildren
+  PropsWithChildren,
+  ReactNode
 } from 'react'
 import { cache as defaultCache } from './config'
 import { initCache } from './cache'
@@ -26,7 +27,9 @@ const SWRConfig: FC<
       Partial<ProviderConfiguration> & {
         provider?: (cache: Readonly<Cache>) => Cache
       }
-  }>
+  }> & {
+    children?: ReactNode | undefined
+  }
 > = props => {
   const { value } = props
 
