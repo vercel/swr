@@ -26,7 +26,35 @@ describe('useSWR - remote mutation', () => {
     screen.getByText('data')
   })
 
-  it('should trigger request with correct args', async () => {
+  it('should return data from `trigger`', async () => {
+    const key = createKey()
+
+    function Page() {
+      const [data, setData] = React.useState(null)
+      const { trigger } = useSWRMutation(key, () => 'data')
+      return (
+        <button
+          onClick={async () => {
+            setData(await trigger())
+          }}
+        >
+          {data || 'pending'}
+        </button>
+      )
+    }
+
+    render(<Page />)
+
+    // mount
+    await screen.findByText('pending')
+
+    fireEvent.click(screen.getByText('pending'))
+    await waitForNextTick()
+
+    screen.getByText('data')
+  })
+
+  it('should trigger request with the correct argument signature', async () => {
     const key = createKey()
     const fetcher = jest.fn(() => 'data')
 
@@ -301,26 +329,35 @@ describe('useSWR - remote mutation', () => {
     await screen.findByText('data:updated!')
   })
 
-  it('should not trigger request when mutating', async () => {
+  it('should be able to populate the cache with a transformer', async () => {
     const key = createKey()
-    const fn = jest.fn(() => 'data')
 
     function Page() {
-      const { mutate } = useSWRMutation(key, fn)
+      const { data } = useSWR(key, () => 'data')
+      const { trigger } = useSWRMutation(key, (_, { arg }) => arg)
       return (
-        <div>
-          <button onClick={() => mutate()}>mutate</button>
+        <div
+          onClick={() =>
+            trigger('updated!', {
+              populateCache: (v, current) => v + ':' + current
+            })
+          }
+        >
+          data:{data || 'none'}
         </div>
       )
     }
 
     render(<Page />)
 
-    // mount
-    await screen.findByText('mutate')
+    await screen.findByText('data:none')
 
-    fireEvent.click(screen.getByText('mutate'))
-    expect(fn).not.toHaveBeenCalled()
+    // mount
+    await screen.findByText('data:data')
+
+    // mutate
+    fireEvent.click(screen.getByText('data:data'))
+    await screen.findByText('data:updated!:data')
   })
 
   it('should not trigger request when mutating from shared hooks', async () => {
@@ -503,6 +540,108 @@ describe('useSWR - remote mutation', () => {
     await screen.findByText('data:foo')
   })
 
+  it('should be able to turn off auto revalidation', async () => {
+    const key = createKey()
+    const logger = jest.fn()
+
+    function Page() {
+      const { data } = useSWR(
+        key,
+        async () => {
+          await sleep(10)
+          return 'foo'
+        },
+        { revalidateOnMount: false }
+      )
+      const { trigger } = useSWRMutation(
+        key,
+        async () => {
+          await sleep(20)
+          return 'bar'
+        },
+        { revalidate: false }
+      )
+
+      logger(data)
+
+      return (
+        <div>
+          <button onClick={() => trigger(undefined)}>trigger</button>
+          <div>data:{data || 'none'}</div>
+        </div>
+      )
+    }
+
+    render(<Page />)
+
+    // mount
+    await screen.findByText('data:none')
+
+    fireEvent.click(screen.getByText('trigger'))
+    await act(() => sleep(50))
+
+    // It should not trigger revalidation
+    await screen.findByText('data:bar')
+
+    // It should never render `foo`.
+    expect(logger).not.toHaveBeenCalledWith('foo')
+  })
+
+  it('should be able to configure auto revalidation from trigger', async () => {
+    const key = createKey()
+    const logger = jest.fn()
+    let counter = 0
+
+    function Page() {
+      const { data } = useSWR(
+        key,
+        async () => {
+          await sleep(10)
+          return 'foo' + ++counter
+        },
+        { revalidateOnMount: false }
+      )
+      const { trigger } = useSWRMutation(key, async () => {
+        await sleep(20)
+        return 'bar'
+      })
+
+      logger(data)
+
+      return (
+        <div>
+          <button onClick={() => trigger(undefined, { revalidate: false })}>
+            trigger1
+          </button>
+          <button onClick={() => trigger(undefined, { revalidate: true })}>
+            trigger2
+          </button>
+          <div>data:{data || 'none'}</div>
+        </div>
+      )
+    }
+
+    render(<Page />)
+
+    // mount
+    await screen.findByText('data:none')
+
+    fireEvent.click(screen.getByText('trigger1'))
+    await act(() => sleep(50))
+
+    // It should not trigger revalidation
+    await screen.findByText('data:bar')
+
+    // It should never render `foo`.
+    expect(logger).not.toHaveBeenCalledWith('foo')
+
+    fireEvent.click(screen.getByText('trigger2'))
+    await act(() => sleep(50))
+
+    // It should trigger revalidation
+    await screen.findByText('data:foo')
+  })
+
   it('should be able to reset the state', async () => {
     const key = createKey()
 
@@ -625,33 +764,53 @@ describe('useSWR - remote mutation', () => {
     expect(catchError).toBeCalled()
   })
 
-  it('should return the bound mutate', async () => {
+  it('should support optimistic updates', async () => {
     const key = createKey()
 
     function Page() {
       const { data } = useSWR(key, async () => {
         await sleep(10)
-        return 'stale'
+        return ['foo']
       })
-      const { trigger, mutate } = useSWRMutation(key, () => 'new')
+      const { trigger } = useSWRMutation(key, async (_, { arg }) => {
+        await sleep(20)
+        return arg.toUpperCase()
+      })
 
       return (
         <div>
-          <button onClick={() => trigger().then(mutate)}>request</button>
-          {data || 'none'}
+          <button
+            onClick={() =>
+              trigger('bar', {
+                optimisticData: current => [...current, 'bar'],
+                populateCache: (added, current) => [...current, added],
+                revalidate: false
+              })
+            }
+          >
+            trigger
+          </button>
+          <div>data:{JSON.stringify(data)}</div>
         </div>
       )
     }
 
     render(<Page />)
 
-    await screen.findByText('none')
-    // Initial result
-    await screen.findByText('stale')
-    fireEvent.click(screen.getByText('request'))
-    // Mutate
-    await screen.findByText('new')
-    // Revalidate
-    await screen.findByText('stale')
+    // mount
+    await screen.findByText('data:undefined')
+    await screen.findByText('data:["foo"]')
+
+    // optimistic update
+    fireEvent.click(screen.getByText('trigger'))
+    await screen.findByText('data:["foo","bar"]')
+    await act(() => sleep(50))
+    await screen.findByText('data:["foo","BAR"]')
+
+    // 2nd check
+    fireEvent.click(screen.getByText('trigger'))
+    await screen.findByText('data:["foo","BAR","bar"]')
+    await act(() => sleep(50))
+    await screen.findByText('data:["foo","BAR","BAR"]')
   })
 })

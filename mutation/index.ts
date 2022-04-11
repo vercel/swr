@@ -38,54 +38,53 @@ const mutation =
     )
     const currentState = stateRef.current
 
-    // Similar to the global mutate, but bound to the current cache and key.
-    // `cache` isn't allowed to change during the lifecycle.
-    const boundMutate = useCallback(
-      (arg0, arg1) => mutate(serialize(keyRef.current)[0], arg0, arg1),
+    const trigger = useCallback(
+      async (arg, opts?: SWRMutationConfiguration<Data, Error>) => {
+        const [serializedKey, resolvedKey] = serialize(keyRef.current)
+
+        if (!fetcher) {
+          throw new Error('Can’t trigger the mutation: missing fetcher.')
+        }
+        if (!serializedKey) {
+          throw new Error('Can’t trigger the mutation: key isn’t ready.')
+        }
+
+        // Disable cache population by default.
+        const options = Object.assign({ populateCache: false }, config, opts)
+
+        // Trigger a mutation, also track the timestamp. Any mutation that happened
+        // earlier this timestamp should be ignored.
+        const mutationStartedAt = getTimestamp()
+
+        ditchMutationsUntilRef.current = mutationStartedAt
+
+        setState({ isMutating: true })
+
+        try {
+          const data = await mutate<Data>(
+            serializedKey,
+            (fetcher as any)(resolvedKey, { arg }),
+            options
+          )
+
+          // If it's reset after the mutation, we don't broadcast any state change.
+          if (ditchMutationsUntilRef.current <= mutationStartedAt) {
+            setState({ data, isMutating: false })
+            options.onSuccess?.(data as Data, serializedKey, options)
+          }
+          return data
+        } catch (error) {
+          // If it's reset after the mutation, we don't broadcast any state change.
+          if (ditchMutationsUntilRef.current <= mutationStartedAt) {
+            setState({ error: error as Error, isMutating: false })
+            options.onError?.(error as Error, serializedKey, options)
+          }
+          throw error
+        }
+      },
       // eslint-disable-next-line react-hooks/exhaustive-deps
       []
     )
-
-    const trigger = useCallback(async (arg, opts) => {
-      if (!fetcher) {
-        throw new Error('Can’t trigger the mutation: missing fetcher.')
-      }
-
-      const [serializedKey, resolvedKey] = serialize(keyRef.current)
-
-      // Disable cache population by default.
-      const options = Object.assign({ populateCache: false }, config, opts)
-
-      // Trigger a mutation, also track the timestamp. Any mutation that happened
-      // earlier this timestamp should be ignored.
-      const mutationStartedAt = getTimestamp()
-      ditchMutationsUntilRef.current = mutationStartedAt
-
-      setState({ isMutating: true })
-
-      try {
-        const data = await mutate(
-          serializedKey,
-          (fetcher as any)(resolvedKey, { arg }),
-          options
-        )
-
-        // If it's reset after the mutation, we don't broadcast any state change.
-        if (ditchMutationsUntilRef.current <= mutationStartedAt) {
-          setState({ data, isMutating: false })
-          options.onSuccess?.(data, serializedKey, options)
-        }
-        return data
-      } catch (error) {
-        // If it's reset after the mutation, we don't broadcast any state change.
-        if (ditchMutationsUntilRef.current <= mutationStartedAt) {
-          setState({ error: error as Error, isMutating: false })
-          options.onError?.(error, serializedKey, options)
-        }
-        throw error
-      }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
 
     const reset = useCallback(() => {
       ditchMutationsUntilRef.current = getTimestamp()
@@ -97,8 +96,10 @@ const mutation =
       keyRef.current = key
     })
 
+    // We don't return `mutate` here as it can be pretty confusing (e.g. people
+    // calling `mutate` but they actually mean `trigger`).
+    // And also, `mutate` relies on the useSWR hook to exist too.
     return {
-      mutate: boundMutate,
       trigger,
       reset,
       get data() {

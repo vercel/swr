@@ -14,7 +14,7 @@ export const internalMutate = async <Data>(
     undefined | Data | Promise<Data | undefined> | MutatorCallback<Data>,
     undefined | boolean | MutatorOptions<Data>
   ]
-) => {
+): Promise<Data | undefined> => {
   const [cache, _key, _data, _opts] = args
 
   // When passing as a boolean, it's explicitly used to disable/enable

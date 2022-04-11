@@ -45,9 +45,24 @@ export type SWRMutationConfiguration<
     Error,
     MutationFetcher<Data, SWRMutationKey, ExtraArg>
   >,
-  'fetcher' | 'onSuccess' | 'onError'
+  'fetcher'
 > &
-  MutatorOptions<Data>
+  MutatorOptions<Data> & {
+    onSuccess?: (
+      data: Data,
+      key: string,
+      config: Readonly<
+        SWRMutationConfiguration<Data, Error, SWRMutationKey, ExtraArg>
+      >
+    ) => void
+    onError?: (
+      err: Error,
+      key: string,
+      config: Readonly<
+        SWRMutationConfiguration<Data, Error, SWRMutationKey, ExtraArg>
+      >
+    ) => void
+  }
 
 export interface SWRMutationResponse<
   Data = any,
