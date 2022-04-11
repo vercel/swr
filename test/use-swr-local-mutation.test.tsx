@@ -8,7 +8,8 @@ import {
   nextTick,
   createKey,
   renderWithConfig,
-  renderWithGlobalCache
+  renderWithGlobalCache,
+  executeWithoutAct
 } from './utils'
 
 describe('useSWR - local mutation', () => {
@@ -581,8 +582,10 @@ describe('useSWR - local mutation', () => {
     }
   })
 
+  // Note: with React 18, synchronous state updates are automatically batched,
+  // depending on user events. So this test is no longer needed.
   // https://github.com/vercel/swr/pull/1003
-  it('should not dedupe synchronous mutations', async () => {
+  it.skip('should not dedupe synchronous mutations', async () => {
     const mutationRecivedValues = []
     const renderRecivedValues = []
 
@@ -922,7 +925,7 @@ describe('useSWR - local mutation', () => {
     }
 
     renderWithConfig(<Page />)
-    await act(() => sleep(200))
+    await executeWithoutAct(() => sleep(200))
 
     // Only "async3" is left and others were deduped.
     expect(loggedData).toEqual([
@@ -1029,7 +1032,7 @@ describe('useSWR - local mutation', () => {
     renderWithConfig(<Page />)
     await screen.findByText('data: foo')
 
-    await act(() =>
+    await executeWithoutAct(() =>
       mutate(createResponse('baz', { delay: 20 }), {
         optimisticData: 'bar'
       })
@@ -1055,7 +1058,7 @@ describe('useSWR - local mutation', () => {
     renderWithConfig(<Page />)
     await screen.findByText('data: foo')
 
-    await act(() =>
+    await executeWithoutAct(() =>
       mutate(createResponse('baz', { delay: 20 }), {
         optimisticData: data => 'functional_' + data
       })
@@ -1128,7 +1131,7 @@ describe('useSWR - local mutation', () => {
     await screen.findByText('data: 0')
 
     try {
-      await act(() =>
+      await executeWithoutAct(() =>
         mutate(createResponse(new Error('baz'), { delay: 20 }), {
           optimisticData: 'bar'
         })
@@ -1165,7 +1168,7 @@ describe('useSWR - local mutation', () => {
     await screen.findByText('data: 0')
 
     try {
-      await act(() =>
+      await executeWithoutAct(() =>
         mutate(createResponse(new Error('baz'), { delay: 20 }), {
           optimisticData: 'bar',
           rollbackOnError: false
@@ -1229,12 +1232,12 @@ describe('useSWR - local mutation', () => {
 
     renderWithConfig(<Page />)
     await act(() => sleep(10))
-    await act(() => mutatePage())
+    await executeWithoutAct(() => mutatePage())
     await sleep(30)
     expect(renderedData).toEqual([undefined, 'foo', 'bar', '!baz'])
   })
 
-  it('should pass the original data snapshot to `populateCache` as the second parameter', async () => {
+  it.only('should pass the original data snapshot to `populateCache` as the second parameter', async () => {
     const key = createKey()
     const renderedData = []
 
@@ -1274,9 +1277,11 @@ describe('useSWR - local mutation', () => {
     }
 
     renderWithConfig(<Page />)
-    await act(() => sleep(10))
-    await act(() => appendData())
-    await sleep(30)
+    await executeWithoutAct(async () => {
+      await sleep(10)
+      await appendData()
+      await sleep(30)
+    })
 
     expect(renderedData).toEqual([
       undefined, // fetching

@@ -15,7 +15,10 @@ import {
   sleep
 } from './utils'
 
-class ErrorBoundary extends React.Component<{ fallback: ReactNode }> {
+class ErrorBoundary extends React.Component<{
+  fallback: ReactNode
+  children?: React.ReactNode
+}> {
   state = { hasError: false }
   static getDerivedStateFromError() {
     return {
@@ -106,14 +109,19 @@ describe('useSWR - suspense', () => {
 
     await screen.findByText('hello')
   })
+
   it('should throw errors', async () => {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     jest.spyOn(console, 'error').mockImplementation(() => {})
     const key = createKey()
     function Section() {
-      const { data } = useSWR(key, () => createResponse(new Error('error')), {
-        suspense: true
-      })
+      const { data } = useSWR(
+        key,
+        () => createResponse(new Error('error')) as any,
+        {
+          suspense: true
+        }
+      )
       return <div>{data}</div>
     }
 
@@ -129,8 +137,8 @@ describe('useSWR - suspense', () => {
     // hydration
     screen.getByText('fallback')
     await screen.findByText('error boundary')
-    // 1 for js-dom 1 for react-error-boundray
-    expect(console.error).toHaveBeenCalledTimes(2)
+    // 1 for js-dom, 1 for react-error-boundray, and 1 for React 18
+    expect(console.error).toHaveBeenCalledTimes(3)
   })
 
   it('should render cached data with error', async () => {

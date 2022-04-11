@@ -59,8 +59,10 @@ export const internalMutate = async <Data>(
     optimisticData = isFunction(optimisticData)
       ? optimisticData(originalData)
       : optimisticData
-    set({ data: optimisticData })
-    broadcastState(cache, key, { data: optimisticData })
+
+    const optimisticState = { data: optimisticData }
+    set(optimisticState)
+    broadcastState(cache, key, optimisticState)
   }
 
   if (isFunction(data)) {
