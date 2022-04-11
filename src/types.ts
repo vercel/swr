@@ -145,6 +145,11 @@ export type MutatorOptions<Data = any> = {
   rollbackOnError?: boolean
 }
 
+export type MutatorConfig = {
+  revalidate?: boolean
+  populateCache?: boolean
+}
+
 export type Broadcaster<Data = any, Error = any> = (
   cache: Cache<Data>,
   key: string,

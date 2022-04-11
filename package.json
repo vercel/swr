@@ -31,6 +31,12 @@
       "module": "./immutable/dist/index.esm.js",
       "require": "./immutable/dist/index.js",
       "types": "./immutable/dist/immutable/index.d.ts"
+    },
+    "./mutation": {
+      "import": "./mutation/dist/index.mjs",
+      "module": "./mutation/dist/index.esm.js",
+      "require": "./mutation/dist/index.js",
+      "types": "./mutation/dist/mutation/index.d.ts"
     }
   },
   "types": "./dist/index.d.ts",
@@ -38,29 +44,34 @@
     "dist/**",
     "infinite/dist/**",
     "immutable/dist/**",
+    "mutation/dist/**",
     "infinite/package.json",
-    "immutable/package.json"
+    "immutable/package.json",
+    "mutation/package.json"
   ],
   "repository": "github:vercel/swr",
   "homepage": "https://swr.vercel.app",
   "license": "MIT",
   "scripts": {
-    "clean": "rimraf dist infinite/dist immutable/dist",
-    "build": "yarn build:core && yarn build:infinite && yarn build:immutable",
-    "watch": "npm-run-all -p watch:core watch:infinite watch:immutable",
+    "clean": "rimraf dist infinite/dist immutable/dist mutation/dist",
+    "build": "yarn build:core && yarn build:infinite && yarn build:immutable && yarn build:mutation",
+    "watch": "npm-run-all -p watch:core watch:infinite watch:immutable watch:mutation",
     "watch:core": "yarn build:core -w",
     "watch:infinite": "yarn build:infinite -w",
     "watch:immutable": "yarn build:immutable -w",
+    "watch:mutation": "yarn build:mutation -w",
     "build:core": "bunchee src/index.ts --no-sourcemap",
     "build:infinite": "bunchee index.ts --cwd infinite --no-sourcemap",
     "build:immutable": "bunchee index.ts --cwd immutable --no-sourcemap",
+    "build:mutation": "bunchee index.ts --cwd mutation --no-sourcemap",
     "prepublishOnly": "yarn clean && yarn build",
     "publish-beta": "yarn publish --tag beta",
     "types:check": "tsc --noEmit --project tsconfig.check.json && tsc --noEmit -p test",
     "format": "prettier --write ./**/*.{ts,tsx}",
     "lint": "eslint . --ext .ts,.tsx --cache",
     "lint:fix": "yarn lint --fix",
-    "test": "jest --coverage"
+    "coverage": "jest --coverage",
+    "test": "jest"
   },
   "husky": {
     "hooks": {
