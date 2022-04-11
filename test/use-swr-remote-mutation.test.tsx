@@ -559,7 +559,7 @@ describe('useSWR - remote mutation', () => {
           await sleep(20)
           return 'bar'
         },
-        { revalidate: false }
+        { revalidate: false, populateCache: true }
       )
 
       logger(data)
@@ -590,21 +590,24 @@ describe('useSWR - remote mutation', () => {
   it('should be able to configure auto revalidation from trigger', async () => {
     const key = createKey()
     const logger = jest.fn()
-    let counter = 0
 
     function Page() {
       const { data } = useSWR(
         key,
         async () => {
           await sleep(10)
-          return 'foo' + ++counter
+          return 'foo'
         },
         { revalidateOnMount: false }
       )
-      const { trigger } = useSWRMutation(key, async () => {
-        await sleep(20)
-        return 'bar'
-      })
+      const { trigger } = useSWRMutation(
+        key,
+        async () => {
+          await sleep(20)
+          return 'bar'
+        },
+        { populateCache: true }
+      )
 
       logger(data)
 
@@ -798,7 +801,6 @@ describe('useSWR - remote mutation', () => {
     render(<Page />)
 
     // mount
-    await screen.findByText('data:undefined')
     await screen.findByText('data:["foo"]')
 
     // optimistic update
