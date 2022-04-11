@@ -78,7 +78,7 @@ export function useTuple() {
 export function useReadonlyTuple() {
   useSWR([{ a: '1', b: { c: '3' } }, [1231, '888']] as const, keys => {
     expectType<
-      [
+      readonly [
         {
           readonly a: '1'
           readonly b: {
@@ -94,7 +94,7 @@ export function useReadonlyTuple() {
     truthy() ? ([{ a: '1', b: { c: '3' } }, [1231, '888']] as const) : null,
     keys => {
       expectType<
-        [
+        readonly [
           {
             readonly a: '1'
             readonly b: {
@@ -111,7 +111,7 @@ export function useReadonlyTuple() {
     truthy() ? ([{ a: '1', b: { c: '3' } }, [1231, '888']] as const) : false,
     keys => {
       expectType<
-        [
+        readonly [
           {
             readonly a: '1'
             readonly b: {
@@ -300,7 +300,7 @@ export function useReturnReadonlyTuple() {
     () => [{ a: '1', b: { c: '3' } }, [1231, '888']] as const,
     keys => {
       expectType<
-        [
+        readonly [
           {
             readonly a: '1'
             readonly b: {

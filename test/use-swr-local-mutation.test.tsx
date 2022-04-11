@@ -272,7 +272,7 @@ describe('useSWR - local mutation', () => {
 
     // Prefill the cache with data
     renderWithConfig(<Page />, {
-      provider: () => new Map([[key, 'cached data']])
+      provider: () => new Map([[key, { data: 'cached data' }]])
     })
 
     const callback = jest.fn()
@@ -303,7 +303,7 @@ describe('useSWR - local mutation', () => {
     expect(increment).toHaveBeenLastCalledWith(undefined)
     expect(increment).toHaveLastReturnedWith(undefined)
 
-    cache.set(key, 42)
+    cache.set(key, { ...cache.get(key), data: 42 })
 
     await mutate(key, increment, false)
 
@@ -536,12 +536,12 @@ describe('useSWR - local mutation', () => {
     })
 
     screen.getByText(message)
-    const [keyData, , keyInfo] = serialize(key)
+    const [keyInfo] = serialize(key)
     let cacheError = cache.get(keyInfo)?.error
     expect(cacheError.message).toMatchInlineSnapshot(`"${message}"`)
 
     // if mutate throws an error synchronously, the cache shouldn't be updated
-    expect(cache.get(keyData)).toBe(value)
+    expect(cache.get(keyInfo)?.data).toBe(value)
 
     // if mutate succeed, error should be cleared
     await act(() => mutate(key, value, false))
@@ -807,7 +807,7 @@ describe('useSWR - local mutation', () => {
         createResponse('data', { delay: 30 })
       )
       const { cache } = useSWRConfig()
-      const [, , keyInfo] = serialize(key)
+      const [keyInfo] = serialize(key)
       const cacheIsValidating = cache.get(keyInfo)?.isValidating
       return (
         <>

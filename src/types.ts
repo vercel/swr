@@ -1,4 +1,4 @@
-import * as revalidateEvents from './constants/revalidate-events'
+import * as revalidateEvents from './constants'
 
 export type FetcherResponse<Data = unknown> = Data | Promise<Data>
 export type BareFetcher<Data = unknown> = (
@@ -7,11 +7,7 @@ export type BareFetcher<Data = unknown> = (
 export type Fetcher<
   Data = unknown,
   SWRKey extends Key = Key
-> = SWRKey extends () => readonly [...infer Args]
-  ? (args: Args) => FetcherResponse<Data>
-  : SWRKey extends readonly [...infer Args]
-  ? (args: Args) => FetcherResponse<Data>
-  : SWRKey extends () => infer Arg | null | undefined | false
+> = SWRKey extends () => infer Arg | null | undefined | false
   ? (args: Arg) => FetcherResponse<Data>
   : SWRKey extends null | undefined | false
   ? never
@@ -253,11 +249,11 @@ export type RevalidateCallback = <K extends RevalidateEvent>(
   type: K
 ) => RevalidateCallbackReturnType[K]
 
-export type StateUpdateCallback<Data = any, Error = any> = (
-  data?: Data,
-  error?: Error,
+export type StateUpdateCallback<Data = any, Error = any> = (state: {
+  data?: Data
+  error?: Error
   isValidating?: boolean
-) => void
+}) => void
 
 export interface Cache<Data = any> {
   get(key: Key): Data | null | undefined
