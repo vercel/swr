@@ -26,7 +26,7 @@ const mutation =
 
     const keyRef = useRef(key)
     // Ditch all mutation results that happened earlier than this timestamp.
-    const ditchMutationsTilRef = useRef(0)
+    const ditchMutationsUntilRef = useRef(0)
 
     const [stateRef, stateDependencies, setState] = useStateWithDeps(
       {
@@ -46,12 +46,12 @@ const mutation =
       []
     )
 
-    const trigger = useCallback(async (extraArg, opts) => {
+    const trigger = useCallback(async (arg, opts) => {
       if (!fetcher) {
         throw new Error('Can’t trigger the mutation: missing fetcher.')
       }
 
-      const [serializedKey, args] = serialize(keyRef.current)
+      const [serializedKey, resolvedKey] = serialize(keyRef.current)
 
       // Disable cache population by default.
       const options = Object.assign({ populateCache: false }, config, opts)
@@ -59,29 +59,28 @@ const mutation =
       // Trigger a mutation, also track the timestamp. Any mutation that happened
       // earlier this timestamp should be ignored.
       const mutationStartedAt = getTimestamp()
-      ditchMutationsTilRef.current = mutationStartedAt
+      ditchMutationsUntilRef.current = mutationStartedAt
 
       setState({ isMutating: true })
-      args.push(extraArg)
 
       try {
         const data = await mutate(
           serializedKey,
-          (fetcher as any)(...args),
+          (fetcher as any)(resolvedKey, { arg }),
           options
         )
 
         // If it's reset after the mutation, we don't broadcast any state change.
-        if (ditchMutationsTilRef.current <= mutationStartedAt) {
+        if (ditchMutationsUntilRef.current <= mutationStartedAt) {
           setState({ data, isMutating: false })
-          options.onSuccess && options.onSuccess(data, serializedKey, options)
+          options.onSuccess?.(data, serializedKey, options)
         }
         return data
       } catch (error) {
         // If it's reset after the mutation, we don't broadcast any state change.
-        if (ditchMutationsTilRef.current <= mutationStartedAt) {
+        if (ditchMutationsUntilRef.current <= mutationStartedAt) {
           setState({ error: error as Error, isMutating: false })
-          options.onError && options.onError(error, serializedKey, options)
+          options.onError?.(error, serializedKey, options)
         }
         throw error
       }
@@ -89,7 +88,7 @@ const mutation =
     }, [])
 
     const reset = useCallback(() => {
-      ditchMutationsTilRef.current = getTimestamp()
+      ditchMutationsUntilRef.current = getTimestamp()
       setState({ data: UNDEFINED, error: UNDEFINED, isMutating: false })
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])

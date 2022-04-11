@@ -50,7 +50,7 @@ describe('useSWR - remote mutation', () => {
 
     expect(fetcher).toHaveBeenCalled()
     expect(fetcher.mock.calls.length).toBe(1)
-    expect(fetcher.mock.calls[0]).toEqual([key, 'arg0', 'arg1'])
+    expect(fetcher.mock.calls[0]).toEqual([[key, 'arg0'], { arg: 'arg1' }])
   })
 
   it('should call `onSuccess` event', async () => {
@@ -172,7 +172,7 @@ describe('useSWR - remote mutation', () => {
     function Page() {
       const { data, error, trigger } = useSWRMutation(
         key,
-        async (_, shouldReturnValue) => {
+        async (_, { arg: shouldReturnValue }) => {
           await sleep(10)
           if (shouldReturnValue) return 'data'
           throw new Error('error')
@@ -281,7 +281,7 @@ describe('useSWR - remote mutation', () => {
 
     function Page() {
       const { data } = useSWR(key, () => 'data')
-      const { trigger } = useSWRMutation(key, (_, arg) => arg)
+      const { trigger } = useSWRMutation(key, (_, { arg }) => arg)
       return (
         <div onClick={() => trigger('updated!', { populateCache: true })}>
           data:{data || 'none'}

@@ -33,7 +33,8 @@
       "types": "./immutable/dist/immutable/index.d.ts"
     },
     "./mutation": {
-      "import": "./mutation/dist/index.esm.js",
+      "import": "./mutation/dist/index.mjs",
+      "module": "./mutation/dist/index.esm.js",
       "require": "./mutation/dist/index.js",
       "types": "./mutation/dist/mutation/index.d.ts"
     }
@@ -69,7 +70,8 @@
     "format": "prettier --write ./**/*.{ts,tsx}",
     "lint": "eslint . --ext .ts,.tsx --cache",
     "lint:fix": "yarn lint --fix",
-    "test": "jest --coverage"
+    "coverage": "jest --coverage",
+    "test": "jest"
   },
   "husky": {
     "hooks": {
