@@ -75,8 +75,8 @@ const mutation =
           if (ditchMutationsUntilRef.current <= mutationStartedAt) {
             setState({ error: error as Error, isMutating: false })
             options.onError?.(error as Error, serializedKey, options)
+            throw error as Error
           }
-          throw error
         }
       },
       // eslint-disable-next-line react-hooks/exhaustive-deps
