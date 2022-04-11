@@ -28,14 +28,11 @@ const mutation =
     // Ditch all mutation results that happened earlier than this timestamp.
     const ditchMutationsUntilRef = useRef(0)
 
-    const [stateRef, stateDependencies, setState] = useStateWithDeps(
-      {
-        data: UNDEFINED,
-        error: UNDEFINED,
-        isMutating: false
-      },
-      true
-    )
+    const [stateRef, stateDependencies, setState] = useStateWithDeps({
+      data: UNDEFINED,
+      error: UNDEFINED,
+      isMutating: false
+    })
     const currentState = stateRef.current
 
     const trigger = useCallback(

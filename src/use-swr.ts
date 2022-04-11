@@ -131,11 +131,12 @@ export const useSWRHandler = <Data = any, Error = any>(
   }
   const isValidating = resolveValidating()
 
-  const [stateRef, stateDependencies, setState] = useStateWithDeps({
+  const currentState = {
     data,
     error,
     isValidating
-  })
+  }
+  const [stateRef, stateDependencies, setState] = useStateWithDeps(currentState)
 
   // The revalidation function is a carefully crafted wrapper of the original
   // `fetcher`, to correctly handle the many edge cases.
@@ -376,10 +377,11 @@ export const useSWRHandler = <Data = any, Error = any>(
     []
   )
 
-  // Always update fetcher and config refs.
+  // Always update fetcher, config and state refs.
   useIsomorphicLayoutEffect(() => {
     fetcherRef.current = fetcher
     configRef.current = config
+    stateRef.current = currentState
   })
 
   // After mounted or key changed.

@@ -6,8 +6,7 @@ import { useIsomorphicLayoutEffect } from './env'
  * An implementation of state with dependency-tracking.
  */
 export const useStateWithDeps = <S = any>(
-  state: any,
-  asInitialState?: boolean
+  state: any
 ): [
   MutableRefObject<any>,
   Record<keyof S, boolean>,
@@ -75,12 +74,6 @@ export const useStateWithDeps = <S = any>(
   )
 
   useIsomorphicLayoutEffect(() => {
-    // Always update the state reference if it's not used as the initial state
-    // only.
-    if (!asInitialState) {
-      stateRef.current = state
-    }
-
     unmountedRef.current = false
     return () => {
       unmountedRef.current = true
