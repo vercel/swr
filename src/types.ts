@@ -7,11 +7,7 @@ export type BareFetcher<Data = unknown> = (
 export type Fetcher<
   Data = unknown,
   SWRKey extends Key = Key
-> = SWRKey extends () => readonly [...infer Args]
-  ? (args: Args) => FetcherResponse<Data>
-  : SWRKey extends readonly [...infer Args]
-  ? (args: Args) => FetcherResponse<Data>
-  : SWRKey extends () => infer Arg | null | undefined | false
+> = SWRKey extends () => infer Arg | null | undefined | false
   ? (args: Arg) => FetcherResponse<Data>
   : SWRKey extends null | undefined | false
   ? never
@@ -147,6 +143,11 @@ export type MutatorOptions<Data = any> = {
   populateCache?: boolean | ((result: any, currentData: Data) => Data)
   optimisticData?: Data | ((currentData?: Data) => Data)
   rollbackOnError?: boolean
+}
+
+export type MutatorConfig = {
+  revalidate?: boolean
+  populateCache?: boolean
 }
 
 export type Broadcaster<Data = any, Error = any> = (

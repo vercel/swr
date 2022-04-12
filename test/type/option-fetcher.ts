@@ -80,7 +80,7 @@ export function useReadonlyTuple() {
   useSWR([{ a: '1', b: { c: '3' } }, [1231, '888']] as const, {
     fetcher: keys => {
       expectType<
-        [
+        readonly [
           {
             readonly a: '1'
             readonly b: {
@@ -98,7 +98,7 @@ export function useReadonlyTuple() {
     {
       fetcher: keys => {
         expectType<
-          [
+          readonly [
             {
               readonly a: '1'
               readonly b: {
@@ -117,7 +117,7 @@ export function useReadonlyTuple() {
     {
       fetcher: keys => {
         expectType<
-          [
+          readonly [
             {
               readonly a: '1'
               readonly b: {
@@ -318,7 +318,7 @@ export function useReturnReadonlyTuple() {
   useSWR(() => [{ a: '1', b: { c: '3' } }, [1231, '888']] as const, {
     fetcher: keys => {
       expectType<
-        [
+        readonly [
           {
             readonly a: '1'
             readonly b: {
@@ -376,7 +376,7 @@ export function useReturnReadonlyTuple() {
   useSWRInfinite(() => [{ a: '1', b: { c: '3' } }, [1231, '888']] as const, {
     fetcher: keys => {
       expectType<
-        [
+        readonly [
           {
             readonly a: '1'
             readonly b: {

@@ -8,6 +8,7 @@ module.exports = {
     '^swr/infinite$': '<rootDir>/infinite/index.ts',
     '^swr/immutable$': '<rootDir>/immutable/index.ts',
     '^swr/subscription$': '<rootDir>/subscription/index.ts',
+    '^swr/mutation$': '<rootDir>/mutation/index.ts'
   },
   transform: {
     '^.+\\.(t|j)sx?$': '@swc/jest'

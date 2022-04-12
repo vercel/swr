@@ -1,6 +1,6 @@
 {
   "name": "swr",
-  "version": "1.2.2",
+  "version": "2.0.0-beta.0",
   "description": "React Hooks library for remote data fetching",
   "keywords": [
     "swr",
@@ -37,6 +37,12 @@
       "module": "./subscription/dist/index.esm.js",
       "require": "./subscription/dist/index.js",
       "types": "./subscription/dist/subscription/index.d.ts"
+    },
+    "./mutation": {
+      "import": "./mutation/dist/index.mjs",
+      "module": "./mutation/dist/index.esm.js",
+      "require": "./mutation/dist/index.js",
+      "types": "./mutation/dist/mutation/index.d.ts"
     }
   },
   "types": "./dist/index.d.ts",
@@ -44,25 +50,29 @@
     "dist/**",
     "infinite/dist/**",
     "immutable/dist/**",
+    "mutation/dist/**",
     "subscription/dist/**",
     "infinite/package.json",
     "immutable/package.json",
+    "mutation/package.json",
     "subscription/package.json"
   ],
   "repository": "github:vercel/swr",
   "homepage": "https://swr.vercel.app",
   "license": "MIT",
   "scripts": {
-    "clean": "rimraf dist infinite/dist immutable/dist",
-    "build": "yarn build:core && yarn build:infinite && yarn build:immutable && yarn build:subscription",
-    "watch": "npm-run-all -p watch:core watch:infinite watch:immutable",
+    "clean": "rimraf dist infinite/dist immutable/dist mutation/dist subscription/dist",
+    "build": "yarn build:core && yarn build:infinite && yarn build:immutable && yarn build:mutation && yarn build:subscription",
+    "watch": "npm-run-all -p watch:core watch:infinite watch:immutable && yarn watch:mutation",
     "watch:core": "yarn build:core -w",
     "watch:infinite": "yarn build:infinite -w",
     "watch:immutable": "yarn build:immutable -w",
+    "watch:mutation": "yarn build:mutation -w",
     "watch:subscription": "yarn build:subscription -w",
     "build:core": "bunchee src/index.ts --no-sourcemap",
     "build:infinite": "bunchee index.ts --cwd infinite --no-sourcemap",
     "build:immutable": "bunchee index.ts --cwd immutable --no-sourcemap",
+    "build:mutation": "bunchee index.ts --cwd mutation --no-sourcemap",
     "build:subscription": "bunchee index.ts --cwd subscription --no-sourcemap",
     "prepublishOnly": "yarn clean && yarn build",
     "publish-beta": "yarn publish --tag beta",
@@ -70,7 +80,8 @@
     "format": "prettier --write ./**/*.{ts,tsx}",
     "lint": "eslint . --ext .ts,.tsx --cache",
     "lint:fix": "yarn lint --fix",
-    "test": "jest --coverage"
+    "coverage": "jest --coverage",
+    "test": "jest"
   },
   "husky": {
     "hooks": {
