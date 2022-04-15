@@ -258,14 +258,17 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
       size: resolvePageSize(),
       setSize,
       mutate,
-      get error() {
-        return swr.error
-      },
       get data() {
         return swr.data
       },
+      get error() {
+        return swr.error
+      },
       get isValidating() {
         return swr.isValidating
+      },
+      get isFallback() {
+        return swr.isFallback
       }
     } as SWRInfiniteResponse<Data, Error>
   }) as unknown as Middleware

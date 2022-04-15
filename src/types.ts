@@ -216,10 +216,11 @@ export type SWRConfiguration<
 > = Partial<PublicConfiguration<Data, Error, Fn>>
 
 export interface SWRResponse<Data = any, Error = any> {
-  data?: Data
-  error?: Error
+  data: Data | undefined
+  error: Error | undefined
   mutate: KeyedMutator<Data>
   isValidating: boolean
+  isFallback: boolean
 }
 
 export type KeyLoader<Args extends Arguments = Arguments> =

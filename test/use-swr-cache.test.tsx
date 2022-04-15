@@ -198,19 +198,23 @@ describe('useSWR - cache provider', () => {
   it('should support fallback values with custom provider', async () => {
     const key = createKey()
     function Page() {
-      const { data } = useSWR(key, async () => {
+      const { data, isFallback } = useSWR(key, async () => {
         await sleep(10)
         return 'data'
       })
-      return <>{String(data)}</>
+      return (
+        <>
+          {String(data)},{String(isFallback)}
+        </>
+      )
     }
 
     renderWithConfig(<Page />, {
       provider: () => provider,
       fallback: { [key]: 'fallback' }
     })
-    screen.getByText('fallback') // no `undefined`, directly fallback
-    await screen.findByText('data')
+    screen.getByText('fallback,true') // no `undefined`, directly fallback
+    await screen.findByText('data,false')
   })
 
   it('should not return the fallback if cached', async () => {
