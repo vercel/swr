@@ -307,8 +307,11 @@ export const useSWRHandler = <Data = any, Error = any>(
       } catch (err) {
         cleanupState()
 
+        const currentConfig = getConfig()
+        const { shouldRetryOnError } = currentConfig
+
         // Not paused, we continue handling the error. Otherwise discard it.
-        if (!getConfig().isPaused()) {
+        if (!currentConfig.isPaused()) {
           // Get a new error, don't use deep comparison for errors.
           set({ error: err })
           newState.error = err as Error
@@ -316,21 +319,26 @@ export const useSWRHandler = <Data = any, Error = any>(
           // Error event and retry logic. Only for the actual request, not
           // deduped ones.
           if (shouldStartNewRequest && isCurrentKeyMounted()) {
-            getConfig().onError(err, key, config)
+            currentConfig.onError(err, key, currentConfig)
             if (
-              (typeof config.shouldRetryOnError === 'boolean' &&
-                config.shouldRetryOnError) ||
-              (isFunction(config.shouldRetryOnError) &&
-                config.shouldRetryOnError(err as Error))
+              shouldRetryOnError === true ||
+              (isFunction(shouldRetryOnError) &&
+                shouldRetryOnError(err as Error))
             ) {
-              // When retrying, dedupe is always enabled
               if (isActive()) {
-                // If it's active, stop. It will auto revalidate when refocusing
-                // or reconnecting.
-                getConfig().onErrorRetry(err, key, config, revalidate, {
-                  retryCount: (opts.retryCount || 0) + 1,
-                  dedupe: true
-                })
+                // If it's inactive, stop. It will auto revalidate when
+                // refocusing or reconnecting.
+                // When retrying, deduplication is always enabled.
+                currentConfig.onErrorRetry(
+                  err,
+                  key,
+                  currentConfig,
+                  revalidate,
+                  {
+                    retryCount: (opts.retryCount || 0) + 1,
+                    dedupe: true
+                  }
+                )
               }
             }
           }
@@ -546,6 +554,12 @@ export const useSWRHandler = <Data = any, Error = any>(
     get isValidating() {
       stateDependencies.isValidating = true
       return isValidating
+    },
+    get isFallback() {
+      stateDependencies.data = true
+      // `isFallback` is only true when we are displaying a value other than
+      // the cached one.
+      return data !== cachedData
     }
   } as SWRResponse<Data, Error>
 }

@@ -60,7 +60,7 @@
     "watch:infinite": "yarn build:infinite -w",
     "watch:immutable": "yarn build:immutable -w",
     "watch:mutation": "yarn build:mutation -w",
-    "build:core": "bunchee src/index.ts --no-sourcemap",
+    "build:core": "bunchee src/index.ts --no-sourcemap -m",
     "build:infinite": "bunchee index.ts --cwd infinite --no-sourcemap",
     "build:immutable": "bunchee index.ts --cwd immutable --no-sourcemap",
     "build:mutation": "bunchee index.ts --cwd mutation --no-sourcemap",
