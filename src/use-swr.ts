@@ -54,14 +54,14 @@ export const useSWRHandler = <Data = any, Error = any>(
 ) => {
   const {
     cache,
-    laggy,
     compare,
     suspense,
     fallbackData,
     revalidateOnMount,
     refreshInterval,
     refreshWhenHidden,
-    refreshWhenOffline
+    refreshWhenOffline,
+    keepPreviousData
   } = config
 
   const [EVENT_REVALIDATORS, STATE_UPDATERS, MUTATION, FETCH] =
@@ -103,7 +103,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   const laggyDataRef = useRef(data)
 
   const isInitialMount = !initialMountedRef.current
-  const returnedData = laggy ? laggyDataRef.current : data
+  const returnedData = keepPreviousData ? laggyDataRef.current : data
 
   // - Suspense mode and there's stale data for the initial render.
   // - Not suspense mode and there is no fallback data and `revalidateIfStale` is enabled.
