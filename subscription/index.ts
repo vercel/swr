@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import useSWR from 'swr'
 import { withMiddleware } from '../src/utils/with-middleware'
 import { Key, SWRHook, Middleware, SWRConfiguration } from '../src/types'
@@ -29,25 +29,23 @@ export const subscription = (<Data, Error>(useSWRNext: SWRHook) =>
     subscribe: SWRSubscription<Data, Error>,
     config?: SWRConfiguration
   ): SWRSubscriptionResponse<Data, Error> => {
-    const { data, error, mutate } = useSWRNext(key, null, config)
+    const swr = useSWRNext(key, null, config)
 
     const subscribeRef = useRef(subscribe)
-    const mutateRef = useRef(mutate)
 
     useIsomorphicLayoutEffect(() => {
       subscribeRef.current = subscribe
-      mutateRef.current = mutate
     })
 
-    useEffect(() => {
+    useIsomorphicLayoutEffect(() => {
       subscriptions.set(key, (subscriptions.get(key) || 0) + 1)
 
-      const onData = (val?: Data) => mutateRef.current(val, false)
+      const onData = (val?: Data) => swr.mutate(val, false)
       const onError = async (err: any) => {
         // Avoid thrown errors from `mutate`
         // eslint-disable-next-line no-empty
         try {
-          await mutateRef.current(() => {
+          await swr.mutate(() => {
             throw err
           }, false)
         } catch (_) {
@@ -75,9 +73,17 @@ export const subscription = (<Data, Error>(useSWRNext: SWRHook) =>
           }
         })
       }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [key])
 
-    return { data, error }
+    return {
+      get data() {
+        return swr.data
+      },
+      get error() {
+        return swr.error
+      }
+    }
   }) as Middleware
 
 const useSWRSubscription = withMiddleware(
