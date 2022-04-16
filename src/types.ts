@@ -41,6 +41,7 @@ export interface PublicConfiguration<
   revalidateIfStale: boolean
   shouldRetryOnError: boolean | ((err: Error) => boolean)
   suspense?: boolean
+  laggy?: boolean
   fallbackData?: Data
   fetcher?: Fn
   use?: Middleware[]
