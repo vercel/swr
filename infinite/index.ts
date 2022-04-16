@@ -267,8 +267,8 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
       get isValidating() {
         return swr.isValidating
       },
-      get isFallback() {
-        return swr.isFallback
+      get isLoading() {
+        return swr.isLoading
       }
     } as SWRInfiniteResponse<Data, Error>
   }) as unknown as Middleware

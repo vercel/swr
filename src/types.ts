@@ -1,4 +1,5 @@
 import * as revalidateEvents from './constants'
+import { defaultConfig } from './utils/config'
 
 export type FetcherResponse<Data = unknown> = Data | Promise<Data>
 export type BareFetcher<Data = unknown> = (
@@ -121,7 +122,8 @@ export type Middleware = (
 ) => <Data = any, Error = any>(
   key: Key,
   fetcher: BareFetcher<Data> | null,
-  config: SWRConfiguration<Data, Error, BareFetcher<Data>>
+  config: typeof defaultConfig &
+    SWRConfiguration<Data, Error, BareFetcher<Data>>
 ) => SWRResponse<Data, Error>
 
 type ArgumentsTuple = [any, ...unknown[]] | readonly [any, ...unknown[]]
@@ -164,6 +166,7 @@ export type State<Data, Error> = {
   data?: Data
   error?: Error
   isValidating?: boolean
+  isLoading?: boolean
 }
 
 export type MutatorFn<Data = any> = (
@@ -220,7 +223,7 @@ export interface SWRResponse<Data = any, Error = any> {
   error: Error | undefined
   mutate: KeyedMutator<Data>
   isValidating: boolean
-  isFallback: boolean
+  isLoading: boolean
 }
 
 export type KeyLoader<Args extends Arguments = Arguments> =
