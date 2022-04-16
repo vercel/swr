@@ -1242,9 +1242,8 @@ describe('useSWR - local mutation', () => {
 
     let appendData
 
-    const sendRequest = newItem => {
-      // @TODO: We use `any` here due to limitation of type inference.
-      return new Promise<any>(res =>
+    const sendRequest = <Data,>(newItem) => {
+      return new Promise<Data>(res =>
         setTimeout(() => {
           // Server capitializes the new item.
           const modifiedData =
