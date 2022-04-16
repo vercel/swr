@@ -1,6 +1,7 @@
-import { useEffect, useLayoutEffect } from 'react'
+import React, { useEffect, useLayoutEffect } from 'react'
 import { hasRequestAnimationFrame, isWindowDefined } from './helper'
 
+export const IS_REACT_LEGACY = !(React as any).useId
 export const IS_SERVER = !isWindowDefined || 'Deno' in window
 
 // Polyfill requestAnimationFrame
