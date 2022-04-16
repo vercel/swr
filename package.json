@@ -98,7 +98,7 @@
     "@types/react": "17.0.20",
     "@typescript-eslint/eslint-plugin": "5.8.0",
     "@typescript-eslint/parser": "5.8.0",
-    "bunchee": "1.8.2",
+    "bunchee": "1.8.3",
     "eslint": "8.3.0",
     "eslint-config-prettier": "8.3.0",
     "eslint-plugin-jest-dom": "3.9.2",

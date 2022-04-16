@@ -2296,10 +2296,10 @@ builtin-modules@^3.1.0:
   resolved "https://registry.yarnpkg.com/builtin-modules/-/builtin-modules-3.2.0.tgz#45d5db99e7ee5e6bc4f362e008bf917ab5049887"
   integrity sha512-lGzLKcioL90C7wMczpkY0n/oART3MbBa8R9OFGE1rJxoVI86u4WAGfEk8Wjv10eKSyTHVGkSo3bvBylCEtk7LA==
 
-bunchee@1.8.2:
-  version "1.8.2"
-  resolved "https://registry.yarnpkg.com/bunchee/-/bunchee-1.8.2.tgz#7423e40de5635640c7c792322baf1089f51ca3e0"
-  integrity sha512-i8NfUIQcC7VIGbninHTzM/PnEHD+b0pkCcSMVKb5N8nAK6On32f2N3vHczzYk0FcwxuIt27r2zB0yTMErLTfSA==
+bunchee@1.8.3:
+  version "1.8.3"
+  resolved "https://registry.yarnpkg.com/bunchee/-/bunchee-1.8.3.tgz#430f1c741b8d048ce158ee883e2f4389380b13f8"
+  integrity sha512-/kaA+TGhX75AUoGf5u/6KHqYIJjL8UEfCfnVS11cKjZB83NXWZGYMC2/vJhj1CkjBmr3xNoafuiDT6QY0WU7Kw==
   dependencies:
     "@rollup/plugin-babel" "5.2.1"
     "@rollup/plugin-commonjs" "20.0.0"
@@ -6262,6 +6262,7 @@ supports-hyperlinks@^2.0.0:
 
 "swr@link:.":
   version "0.0.0"
+  uid ""
 
 symbol-observable@^1.1.0:
   version "1.2.0"

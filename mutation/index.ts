@@ -15,8 +15,7 @@ import {
   MutationFetcher
 } from './types'
 
-const mutation =
-  <Data, Error>() =>
+const mutation = (<Data, Error>() =>
   (
     key: Key,
     fetcher: MutationFetcher<Data>,
@@ -112,11 +111,8 @@ const mutation =
         return currentState.isMutating
       }
     }
-  }
+  }) as unknown as Middleware
 
-export default withMiddleware(
-  useSWR,
-  mutation as unknown as Middleware
-) as unknown as SWRMutationHook
+export default withMiddleware(useSWR, mutation) as unknown as SWRMutationHook
 
-export { SWRMutationConfiguration, SWRMutationResponse }
+export { SWRMutationConfiguration, SWRMutationResponse, SWRMutationHook }
