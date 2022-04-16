@@ -282,9 +282,3 @@ export {
   SWRInfiniteKeyLoader,
   SWRInfiniteFetcher
 }
-
-// @TODO: remove this in 2.0
-/**
- * @deprecated `InfiniteFetcher` will be renamed to `SWRInfiniteFetcher`.
- */
-export type InfiniteFetcher = SWRInfiniteFetcher
