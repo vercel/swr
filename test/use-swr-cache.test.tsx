@@ -198,13 +198,13 @@ describe('useSWR - cache provider', () => {
   it('should support fallback values with custom provider', async () => {
     const key = createKey()
     function Page() {
-      const { data, isFallback } = useSWR(key, async () => {
+      const { data, isLoading } = useSWR(key, async () => {
         await sleep(10)
         return 'data'
       })
       return (
         <>
-          {String(data)},{String(isFallback)}
+          {String(data)},{String(isLoading)}
         </>
       )
     }

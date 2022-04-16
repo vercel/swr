@@ -10,7 +10,7 @@ import {
 } from './utils'
 
 describe('useSWR - loading', () => {
-  it('should return loading state', async () => {
+  it('should return validating state', async () => {
     let renderCount = 0
     const key = createKey()
     function Page() {
@@ -18,7 +18,30 @@ describe('useSWR - loading', () => {
       renderCount++
       return (
         <div>
-          hello, {data}, {isValidating ? 'loading' : 'ready'}
+          hello, {data}, {isValidating ? 'validating' : 'ready'}
+        </div>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('hello, , validating')
+
+    await screen.findByText('hello, data, ready')
+    //    data       isValidating
+    // -> undefined, true
+    // -> data,      false
+    expect(renderCount).toEqual(2)
+  })
+
+  it('should return loading state', async () => {
+    let renderCount = 0
+    const key = createKey()
+    function Page() {
+      const { data, isLoading } = useSWR(key, () => createResponse('data'))
+      renderCount++
+      return (
+        <div>
+          hello, {data}, {isLoading ? 'loading' : 'ready'}
         </div>
       )
     }
@@ -27,7 +50,7 @@ describe('useSWR - loading', () => {
     screen.getByText('hello, , loading')
 
     await screen.findByText('hello, data, ready')
-    //    data       isValidating
+    //    data       isLoading
     // -> undefined, true
     // -> data,      false
     expect(renderCount).toEqual(2)
@@ -138,10 +161,10 @@ describe('useSWR - loading', () => {
     }
 
     renderWithConfig(<Page />)
-    screen.getByText('data,error,isFallback,isValidating,mutate')
+    screen.getByText('data,error,isLoading,isValidating,mutate')
   })
 
-  it('should sync loading states', async () => {
+  it('should sync validating states', async () => {
     const key = createKey()
     const fetcher = jest.fn()
 
@@ -150,7 +173,7 @@ describe('useSWR - loading', () => {
         fetcher()
         return 'foo'
       })
-      return isValidating ? <>loading</> : <>stopped</>
+      return isValidating ? <>validating</> : <>stopped</>
     }
 
     function Page() {
@@ -162,13 +185,13 @@ describe('useSWR - loading', () => {
     }
 
     renderWithConfig(<Page />)
-    screen.getByText('loading,loading')
+    screen.getByText('validating,validating')
     await nextTick()
     screen.getByText('stopped,stopped')
     expect(fetcher).toBeCalledTimes(1)
   })
 
-  it('should sync all loading states if errored', async () => {
+  it('should sync all validating states if errored', async () => {
     const key = createKey()
 
     function Foo() {
@@ -176,7 +199,7 @@ describe('useSWR - loading', () => {
         throw new Error(key)
       })
 
-      return isValidating ? <>loading</> : <>stopped</>
+      return isValidating ? <>validating</> : <>stopped</>
     }
 
     function Page() {
@@ -188,12 +211,12 @@ describe('useSWR - loading', () => {
     }
 
     renderWithConfig(<Page />)
-    screen.getByText('loading,loading')
+    screen.getByText('validating,validating')
     await nextTick()
     screen.getByText('stopped,stopped')
   })
 
-  it('should sync all loading states if errored but paused', async () => {
+  it('should sync all validating states if errored but paused', async () => {
     const key = createKey()
     let paused = false
 
@@ -207,7 +230,7 @@ describe('useSWR - loading', () => {
         dedupingInterval: 0
       })
 
-      return isValidating ? <>loading</> : <>stopped</>
+      return isValidating ? <>validating</> : <>stopped</>
     }
 
     function Page() {
@@ -222,13 +245,13 @@ describe('useSWR - loading', () => {
     }
 
     renderWithConfig(<Page />)
-    screen.getByText('loading,')
+    screen.getByText('validating,')
     await act(() => sleep(70))
     screen.getByText('stopped,')
 
     fireEvent.click(screen.getByText('start'))
     await act(() => sleep(20))
-    screen.getByText('loading,loading')
+    screen.getByText('validating,validating')
 
     // Pause before it resolves
     paused = true
@@ -236,5 +259,62 @@ describe('useSWR - loading', () => {
 
     // They should both stop
     screen.getByText('stopped,stopped')
+  })
+
+  it('should not trigger loading state when revalidating', async () => {
+    const key = createKey()
+    let renderCount = 0
+    function Page() {
+      const { isLoading, isValidating, mutate } = useSWR(key, () =>
+        createResponse('data', { delay: 10 })
+      )
+      renderCount++
+      return (
+        <div>
+          <div>
+            {isLoading ? 'loading' : 'ready'},
+            {isValidating ? 'validating' : 'ready'}
+          </div>
+          <button onClick={() => mutate()}>revalidate</button>
+        </div>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('loading,validating')
+    await screen.findByText('ready,ready')
+
+    fireEvent.click(screen.getByText('revalidate'))
+    screen.getByText('ready,validating')
+    await screen.findByText('ready,ready')
+
+    // isValidating: true -> false -> true -> false
+    expect(renderCount).toBe(4)
+  })
+
+  it('should trigger loading state when changing the key', async () => {
+    function Page() {
+      const [key, setKey] = React.useState(createKey)
+      const { isLoading, isValidating } = useSWR(key, () =>
+        createResponse('data', { delay: 10 })
+      )
+      return (
+        <div>
+          <div>
+            {isLoading ? 'loading' : 'ready'},
+            {isValidating ? 'validating' : 'ready'}
+          </div>
+          <button onClick={() => setKey(createKey())}>update key</button>
+        </div>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('loading,validating')
+    await screen.findByText('ready,ready')
+
+    fireEvent.click(screen.getByText('update key'))
+    screen.getByText('loading,validating')
+    await screen.findByText('ready,ready')
   })
 })
