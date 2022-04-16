@@ -55,12 +55,13 @@ export const useSWRHandler = <Data = any, Error = any>(
   const {
     cache,
     compare,
-    fallbackData,
     suspense,
+    fallbackData,
     revalidateOnMount,
     refreshInterval,
     refreshWhenHidden,
-    refreshWhenOffline
+    refreshWhenOffline,
+    keepPreviousData
   } = config
 
   const [EVENT_REVALIDATORS, STATE_UPDATERS, MUTATION, FETCH] =
@@ -98,7 +99,15 @@ export const useSWRHandler = <Data = any, Error = any>(
   const data = isUndefined(cachedData) ? fallback : cachedData
   const error = cached.error
 
+  // Use a ref to store previous returned data. Use the inital data as its inital value.
+  const laggyDataRef = useRef(data)
+
   const isInitialMount = !initialMountedRef.current
+  const returnedData = keepPreviousData
+    ? isUndefined(cachedData)
+      ? laggyDataRef.current
+      : cachedData
+    : data
 
   // - Suspense mode and there's stale data for the initial render.
   // - Not suspense mode and there is no fallback data and `revalidateIfStale` is enabled.
@@ -179,8 +188,10 @@ export const useSWRHandler = <Data = any, Error = any>(
         isLoading: false
       }
       const finishRequestAndUpdateState = () => {
+        // Set the global cache.
         setCache(finalState)
-        // We can only set state if it's safe (still mounted with the same key).
+
+        // We can only set the local state if it's safe (still mounted with the same key).
         if (isCurrentKeyMounted()) {
           setState(finalState)
         }
@@ -387,11 +398,17 @@ export const useSWRHandler = <Data = any, Error = any>(
     []
   )
 
-  // Always update fetcher, config and state refs.
+  // Logic for updating refs.
   useIsomorphicLayoutEffect(() => {
     fetcherRef.current = fetcher
     configRef.current = config
     stateRef.current = currentState
+
+    // Handle laggy data updates. If there's cached data of the current key,
+    // it'll be the correct reference.
+    if (!isUndefined(cachedData)) {
+      laggyDataRef.current = cachedData
+    }
   })
 
   // After mounted or key changed.
@@ -518,7 +535,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   }, [refreshInterval, refreshWhenHidden, refreshWhenOffline, key])
 
   // Display debug info in React DevTools.
-  useDebugValue(data)
+  useDebugValue(returnedData)
 
   // In Suspense mode, we can't return the empty `data` state.
   // If there is `error`, the `error` needs to be thrown to the error boundary.
@@ -536,7 +553,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     mutate: boundMutate,
     get data() {
       stateDependencies.data = true
-      return data
+      return returnedData
     },
     get error() {
       stateDependencies.error = true
