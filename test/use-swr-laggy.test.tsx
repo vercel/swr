@@ -160,4 +160,38 @@ describe('useSWR - keep previous data', () => {
       [key2, [key2]]
     ])
   })
+
+  it('should support changing the `keepPreviousData` option', async () => {
+    const loggedData = []
+    const fetcher = k => createResponse(k, { delay: 50 })
+    let keepPreviousData = false
+    function App() {
+      const [key, setKey] = useState(createKey())
+      const { data: laggedData } = useSWR(key, fetcher, {
+        keepPreviousData
+      })
+      loggedData.push([key, laggedData])
+      return <button onClick={() => setKey(createKey())}>change key</button>
+    }
+
+    renderWithConfig(<App />)
+    await act(() => sleep(100))
+    fireEvent.click(screen.getByText('change key'))
+    await act(() => sleep(100))
+    keepPreviousData = true
+    fireEvent.click(screen.getByText('change key'))
+    await act(() => sleep(100))
+
+    const key1 = loggedData[0][0]
+    const key2 = loggedData[2][0]
+    const key3 = loggedData[4][0]
+    expect(loggedData).toEqual([
+      [key1, undefined],
+      [key1, key1],
+      [key2, undefined],
+      [key2, key2],
+      [key3, key2],
+      [key3, key3]
+    ])
+  })
 })
