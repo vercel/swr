@@ -103,7 +103,11 @@ export const useSWRHandler = <Data = any, Error = any>(
   const laggyDataRef = useRef(data)
 
   const isInitialMount = !initialMountedRef.current
-  const returnedData = keepPreviousData ? laggyDataRef.current : data
+  const returnedData = keepPreviousData
+    ? isUndefined(cachedData)
+      ? laggyDataRef.current
+      : cachedData
+    : data
 
   // - Suspense mode and there's stale data for the initial render.
   // - Not suspense mode and there is no fallback data and `revalidateIfStale` is enabled.
@@ -184,8 +188,10 @@ export const useSWRHandler = <Data = any, Error = any>(
         isLoading: false
       }
       const finishRequestAndUpdateState = () => {
+        // Set the global cache.
         setCache(finalState)
-        // We can only set state if it's safe (still mounted with the same key).
+
+        // We can only set the local state if it's safe (still mounted with the same key).
         if (isCurrentKeyMounted()) {
           setState(finalState)
         }
