@@ -6,7 +6,7 @@ import { useIsomorphicLayoutEffect } from '../src/utils/env'
 
 export type SWRSubscription<Data = any, Error = any> = (
   key: Key,
-  callback: (err?: Error, data?: Data) => void
+  { next }: { next: (err?: Error, data?: Data) => void }
 ) => void
 
 export type SWRSubscriptionResponse<Data = any, Error = any> = {
@@ -53,13 +53,13 @@ export const subscription = (<Data, Error>(useSWRNext: SWRHook) =>
         }
       }
 
-      const callback = (_err?: any, _data?: Data) => {
+      const next = (_err?: any, _data?: Data) => {
         if (_err) onError(_err)
         else onData(_data)
       }
 
       if (subscriptions.get(key) === 1) {
-        const dispose = subscribeRef.current(key, callback)
+        const dispose = subscribeRef.current(key, { next })
         disposers.set(key, dispose)
       }
       return () => {
