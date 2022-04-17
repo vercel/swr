@@ -84,11 +84,11 @@ export const subscription = (<Data, Error>(useSWRNext: SWRHook) =>
         return swr.error
       }
     }
-  }) as Middleware
+  }) as unknown as Middleware
 
 const useSWRSubscription = withMiddleware(
   useSWR,
   subscription
 ) as SWRSubscriptionHook
 
-export { useSWRSubscription as unstable_useSWRSubscription }
+export default useSWRSubscription
