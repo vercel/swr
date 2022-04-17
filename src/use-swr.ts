@@ -32,6 +32,7 @@ import {
   StateUpdateCallback,
   RevalidateEvent
 } from './types'
+import { stableHash } from './utils/hash'
 
 const WITH_DEDUPE = { dedupe: true }
 
@@ -55,6 +56,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   const {
     cache,
     compare,
+    hash,
     suspense,
     fallbackData,
     revalidateOnMount,
@@ -72,7 +74,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   // all of them are derived from `_key`.
   // `fnArg` is the argument/arguments parsed from the key, which will be passed
   // to the fetcher.
-  const [key, fnArg] = serialize(_key)
+  const [key, fnArg] = serialize(_key, hash)
 
   // If it's the initial render of this hook.
   const initialMountedRef = useRef(false)
@@ -431,8 +433,8 @@ export const useSWRHandler = <Data = any, Error = any>(
           compare(stateRef.current.data, state.data)
             ? UNDEFINED
             : {
-                data: state.data
-              }
+              data: state.data
+            }
         )
       )
     }
@@ -576,6 +578,6 @@ export const SWRConfig = OBJECT.defineProperty(ConfigProvider, 'default', {
   default: FullConfiguration
 }
 
-export const unstable_serialize = (key: Key) => serialize(key)[0]
+export const unstable_serialize = (key: Key) => serialize(key, stableHash)[0]
 
 export default withArgs<SWRHook>(useSWRHandler)

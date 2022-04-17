@@ -8,7 +8,7 @@ export type BareFetcher<Data = unknown> = (
 export type Fetcher<
   Data = unknown,
   SWRKey extends Key = Key
-> = SWRKey extends () => infer Arg | null | undefined | false
+  > = SWRKey extends () => infer Arg | null | undefined | false
   ? (args: Arg) => FetcherResponse<Data>
   : SWRKey extends null | undefined | false
   ? never
@@ -26,7 +26,7 @@ export interface PublicConfiguration<
   Data = any,
   Error = any,
   Fn extends Fetcher = BareFetcher
-> {
+  > {
   errorRetryInterval: number
   errorRetryCount?: number
   loadingTimeout: number
@@ -72,6 +72,7 @@ export interface PublicConfiguration<
   onDiscarded: (key: string) => void
 
   compare: (a: Data | undefined, b: Data | undefined) => boolean
+  hash: (a: Arguments) => string
 
   isOnline: () => boolean
   isVisible: () => boolean
@@ -121,11 +122,11 @@ export interface SWRHook {
 export type Middleware = (
   useSWRNext: SWRHook
 ) => <Data = any, Error = any>(
-  key: Key,
-  fetcher: BareFetcher<Data> | null,
-  config: typeof defaultConfig &
-    SWRConfiguration<Data, Error, BareFetcher<Data>>
-) => SWRResponse<Data, Error>
+    key: Key,
+    fetcher: BareFetcher<Data> | null,
+    config: typeof defaultConfig &
+      SWRConfiguration<Data, Error, BareFetcher<Data>>
+  ) => SWRResponse<Data, Error>
 
 type ArgumentsTuple = [any, ...unknown[]] | readonly [any, ...unknown[]]
 export type Arguments =
@@ -181,12 +182,12 @@ export type MutatorWrapper<Fn> = Fn extends (
   ...args: [...infer Parameters]
 ) => infer Result
   ? Parameters[3] extends boolean
-    ? Result
-    : Parameters[3] extends Required<Pick<MutatorOptions, 'populateCache'>>
-    ? Parameters[3]['populateCache'] extends false
-      ? never
-      : Result
-    : Result
+  ? Result
+  : Parameters[3] extends Required<Pick<MutatorOptions, 'populateCache'>>
+  ? Parameters[3]['populateCache'] extends false
+  ? never
+  : Result
+  : Result
   : never
 
 export type Mutator<Data = any> = MutatorWrapper<MutatorFn<Data>>
@@ -217,7 +218,7 @@ export type SWRConfiguration<
   Data = any,
   Error = any,
   Fn extends BareFetcher<any> = BareFetcher<any>
-> = Partial<PublicConfiguration<Data, Error, Fn>>
+  > = Partial<PublicConfiguration<Data, Error, Fn>>
 
 export interface SWRResponse<Data = any, Error = any> {
   data: Data | undefined

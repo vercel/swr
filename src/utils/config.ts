@@ -70,6 +70,7 @@ export const defaultConfig: FullConfiguration = mergeObjects(
     // providers
     compare: (currentData: any, newData: any) =>
       stableHash(currentData) == stableHash(newData),
+    hash: (a: any) => stableHash(a),
     isPaused: () => false,
     cache,
     mutate,
