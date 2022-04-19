@@ -21,8 +21,8 @@
       "swr": ["./src/index.ts"],
       "swr/infinite": ["./infinite/index.ts"],
       "swr/immutable": ["./immutable/index.ts"],
-      "swr/subscription": ["subscription/index.ts"],
-      "swr/mutation": ["./mutation/index.ts"]
+      "swr/mutation": ["./mutation/index.ts"],
+      "swr/unstable_subscription": ["subscription/index.ts"]
     },
     "typeRoots": ["./src/types", "./node_modules/@types"]
   },

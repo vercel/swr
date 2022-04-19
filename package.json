@@ -32,7 +32,7 @@
       "require": "./immutable/dist/index.js",
       "types": "./immutable/dist/immutable/index.d.ts"
     },
-    "./subscription": {
+    "./unstable_subscription": {
       "import": "./subscription/dist/index.mjs",
       "module": "./subscription/dist/index.esm.js",
       "require": "./subscription/dist/index.js",

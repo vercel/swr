@@ -1,7 +1,7 @@
 import React from 'react'
 import { act, screen } from '@testing-library/react'
 import { sleep, renderWithConfig } from './utils'
-import useSWRSubscription from 'swr/subscription'
+import useSWRSubscription from 'swr/unstable_subscription'
 
 describe('useSWRSubscription', () => {
   it('should update state when fetcher is a subscription', async () => {
