@@ -1,6 +1,6 @@
-import { useRef, useCallback, useState, MutableRefObject } from 'react'
+import React, { useRef, useCallback, useState, MutableRefObject } from 'react'
 
-import { useIsomorphicLayoutEffect } from './env'
+import { useIsomorphicLayoutEffect, IS_REACT_LEGACY } from './env'
 
 /**
  * An implementation of state with dependency-tracking.
@@ -65,7 +65,11 @@ export const useStateWithDeps = <S = any>(
       }
 
       if (shouldRerender && !unmountedRef.current) {
-        rerender({})
+        if (IS_REACT_LEGACY) {
+          rerender({})
+        } else {
+          ;(React as any).startTransition(() => rerender({}))
+        }
       }
     },
     // config.suspense isn't allowed to change during the lifecycle
