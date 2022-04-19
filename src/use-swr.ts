@@ -552,7 +552,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     // https://github.com/vercel/swr/issues/1832
     if (!IS_REACT_LEGACY && IS_SERVER) {
       throw new Error(
-        'Fallback data is required to use suspense on the server side.'
+        'Fallback data is required when using suspense in SSR.'
       )
     }
 
