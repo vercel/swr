@@ -1,7 +1,12 @@
 import { useCallback, useRef, useDebugValue } from 'react'
 import { defaultConfig } from './utils/config'
 import { SWRGlobalState, GlobalState } from './utils/global-state'
-import { IS_SERVER, rAF, useIsomorphicLayoutEffect } from './utils/env'
+import {
+  IS_REACT_LEGACY,
+  IS_SERVER,
+  rAF,
+  useIsomorphicLayoutEffect
+} from './utils/env'
 import { serialize } from './utils/serialize'
 import {
   isUndefined,
@@ -542,6 +547,15 @@ export const useSWRHandler = <Data = any, Error = any>(
   // If there is no `error`, the `revalidation` promise needs to be thrown to
   // the suspense boundary.
   if (suspense && isUndefined(data) && key) {
+    // SWR should throw when trying to use Suspense on the server with React 18,
+    // without providing any initial data. See:
+    // https://github.com/vercel/swr/issues/1832
+    if (!IS_REACT_LEGACY && IS_SERVER) {
+      throw new Error(
+        'Fallback data is required when using suspense in SSR.'
+      )
+    }
+
     // Always update fetcher and config refs even with the Suspense mode.
     fetcherRef.current = fetcher
     configRef.current = config
