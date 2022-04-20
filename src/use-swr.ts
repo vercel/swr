@@ -178,14 +178,27 @@ export const useSWRHandler = <Data = any, Error = any>(
       // new request should be initiated.
       const shouldStartNewRequest = !FETCH[key] || !opts.dedupe
 
-      // Do unmount check for calls:
-      // If key has changed during the revalidation, or the component has been
-      // unmounted, old dispatch and old event callbacks should not take any
-      // effect.
-      const isCurrentKeyMounted = () =>
-        !unmountedRef.current &&
-        key === keyRef.current &&
-        initialMountedRef.current
+      /* 
+         For React 17
+         Do unmount check for calls:
+         If key has changed during the revalidation, or the component has been
+         unmounted, old dispatch and old event callbacks should not take any
+         effect
+
+        For React 18
+        only check if key has changed
+        https://github.com/reactwg/react-18/discussions/82
+      */
+      const callbackSafeguard = () => {
+        if (IS_REACT_LEGACY) {
+          return (
+            !unmountedRef.current &&
+            key === keyRef.current &&
+            initialMountedRef.current
+          )
+        }
+        return key === keyRef.current
+      }
 
       // The final state object when request finishes.
       const finalState: State<Data, Error> = {
@@ -197,7 +210,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         setCache(finalState)
 
         // We can only set the local state if it's safe (still mounted with the same key).
-        if (isCurrentKeyMounted()) {
+        if (callbackSafeguard()) {
           setState(finalState)
         }
       }
@@ -231,7 +244,7 @@ export const useSWRHandler = <Data = any, Error = any>(
           // we trigger the loading slow event.
           if (config.loadingTimeout && isUndefined(getCache().data)) {
             setTimeout(() => {
-              if (loading && isCurrentKeyMounted()) {
+              if (loading && callbackSafeguard()) {
                 getConfig().onLoadingSlow(key, config)
               }
             }, config.loadingTimeout)
@@ -264,7 +277,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         // The timestamp maybe be `undefined` or a number
         if (!FETCH[key] || FETCH[key][1] !== startAt) {
           if (shouldStartNewRequest) {
-            if (isCurrentKeyMounted()) {
+            if (callbackSafeguard()) {
               getConfig().onDiscarded(key)
             }
           }
@@ -298,7 +311,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         ) {
           finishRequestAndUpdateState()
           if (shouldStartNewRequest) {
-            if (isCurrentKeyMounted()) {
+            if (callbackSafeguard()) {
               getConfig().onDiscarded(key)
             }
           }
@@ -319,7 +332,7 @@ export const useSWRHandler = <Data = any, Error = any>(
 
         // Trigger the successful callback if it's the original request.
         if (shouldStartNewRequest) {
-          if (isCurrentKeyMounted()) {
+          if (callbackSafeguard()) {
             getConfig().onSuccess(newData, key, config)
           }
         }
@@ -336,7 +349,7 @@ export const useSWRHandler = <Data = any, Error = any>(
 
           // Error event and retry logic. Only for the actual request, not
           // deduped ones.
-          if (shouldStartNewRequest && isCurrentKeyMounted()) {
+          if (shouldStartNewRequest && callbackSafeguard()) {
             currentConfig.onError(err, key, currentConfig)
             if (
               shouldRetryOnError === true ||
@@ -371,7 +384,7 @@ export const useSWRHandler = <Data = any, Error = any>(
 
       // Here is the source of the request, need to tell all other hooks to
       // update their states.
-      if (isCurrentKeyMounted() && shouldStartNewRequest) {
+      if (callbackSafeguard() && shouldStartNewRequest) {
         broadcastState(cache, key, finalState)
       }
 
@@ -551,9 +564,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     // without providing any initial data. See:
     // https://github.com/vercel/swr/issues/1832
     if (!IS_REACT_LEGACY && IS_SERVER) {
-      throw new Error(
-        'Fallback data is required when using suspense in SSR.'
-      )
+      throw new Error('Fallback data is required when using suspense in SSR.')
     }
 
     // Always update fetcher and config refs even with the Suspense mode.
