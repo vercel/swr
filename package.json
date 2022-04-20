@@ -96,6 +96,7 @@
     "@testing-library/react": "12.0.0",
     "@type-challenges/utils": "0.1.1",
     "@types/react": "17.0.20",
+    "@types/use-sync-external-store": "^0.0.3",
     "@typescript-eslint/eslint-plugin": "5.8.0",
     "@typescript-eslint/parser": "5.8.0",
     "bunchee": "1.8.3",
@@ -130,5 +131,8 @@
     "singleQuote": true,
     "arrowParens": "avoid",
     "trailingComma": "none"
+  },
+  "dependencies": {
+    "use-sync-external-store": "^1.0.0"
   }
 }
