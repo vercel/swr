@@ -264,4 +264,5 @@ export interface Cache<Data = any> {
   get(key: Key): Data | null | undefined
   set(key: Key, value: Data): void
   delete(key: Key): void
+  [key: string]: any
 }
