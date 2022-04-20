@@ -48,8 +48,37 @@ export const initCache = <Data = any>(
     ) as ScopedMutator<Data>
     let unmount = noop
 
+    const subscriptions: Record<string, (() => void)[]> = {}
+    const subscribe = (key: string, callback: () => void) => {
+      const subs = subscriptions[key] || []
+      subscriptions[key] = subs
+
+      subs.push(callback)
+      return () => {
+        subs.splice(subs.indexOf(callback), 1)
+      }
+    }
+    const setter = (key: string, value: any) => {
+      provider.set(key, value)
+
+      const subs = subscriptions[key]
+      if (subs) {
+        for (let i = 0; i < subs.length; i++) {
+          subs[i]()
+        }
+      }
+    }
+
     // Update the state if it's new, or the provider has been extended.
-    SWRGlobalState.set(provider, [EVENT_REVALIDATORS, {}, {}, {}, mutate])
+    SWRGlobalState.set(provider, [
+      EVENT_REVALIDATORS,
+      {},
+      {},
+      {},
+      mutate,
+      setter,
+      subscribe
+    ])
 
     // This is a new provider, we need to initialize it and setup DOM events
     // listeners for `focus` and `reconnect` actions.
@@ -100,19 +129,24 @@ export const initCache = <Data = any>(
   return [provider, (SWRGlobalState.get(provider) as GlobalState)[4]]
 }
 
+const EMPTY_CACHE = {}
 export const createCacheHelper = <Data = any, ExtendedInfo = {}>(
   cache: Cache,
   key: Key
-) =>
-  [
+) => {
+  const state = SWRGlobalState.get(cache) as GlobalState
+  return [
     // Getter
-    () => cache.get(key) || {},
+    () => cache.get(key) || EMPTY_CACHE,
     // Setter
     (
       info: Partial<
         { data: Data; error: any; isValidating: boolean } | ExtendedInfo
       >
     ) => {
-      cache.set(key, mergeObjects(cache.get(key), info))
-    }
+      state[5](key as string, mergeObjects(cache.get(key), info))
+    },
+    // Subscriber
+    state[6]
   ] as const
+}

@@ -1,4 +1,6 @@
 import { useCallback, useRef, useDebugValue } from 'react'
+import { useSyncExternalStore } from 'use-sync-external-store/shim'
+
 import { defaultConfig } from './utils/config'
 import { SWRGlobalState, GlobalState } from './utils/global-state'
 import {
@@ -93,10 +95,25 @@ export const useSWRHandler = <Data = any, Error = any>(
   const getConfig = () => configRef.current
   const isActive = () => getConfig().isVisible() && getConfig().isOnline()
 
-  const [getCache, setCache] = createCacheHelper<Data>(cache, key)
+  const [getCache, setCache, subscribeCache] = createCacheHelper<Data>(
+    cache,
+    key
+  )
 
   // Get the current state that SWR should return.
-  const cached = getCache()
+  const cached = useSyncExternalStore(
+    useCallback(
+      callback => subscribeCache(key, callback),
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [cache, key]
+    ),
+    useCallback(
+      getCache,
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [cache, key]
+    )
+  )
+
   const cachedData = cached.data
   const fallback = isUndefined(fallbackData)
     ? config.fallback[key]
@@ -551,9 +568,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     // without providing any initial data. See:
     // https://github.com/vercel/swr/issues/1832
     if (!IS_REACT_LEGACY && IS_SERVER) {
-      throw new Error(
-        'Fallback data is required when using suspense in SSR.'
-      )
+      throw new Error('Fallback data is required when using suspense in SSR.')
     }
 
     // Always update fetcher and config refs even with the Suspense mode.
