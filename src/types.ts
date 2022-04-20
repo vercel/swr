@@ -17,8 +17,8 @@ export type Fetcher<
   : never
 
 // Configuration types that are only used internally, not exposed to the user.
-export interface InternalConfiguration {
-  cache: Cache
+export interface InternalConfiguration<T extends Cache = Cache> {
+  cache: T
   mutate: ScopedMutator
 }
 
@@ -77,7 +77,8 @@ export interface PublicConfiguration<
   isVisible: () => boolean
 }
 
-export type FullConfiguration = InternalConfiguration & PublicConfiguration
+export type FullConfiguration<T extends Cache = Cache> =
+  InternalConfiguration<T> & PublicConfiguration
 
 export type ProviderConfiguration = {
   initFocus: (callback: () => void) => (() => void) | void
