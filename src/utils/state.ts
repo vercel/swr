@@ -54,7 +54,7 @@ export const useStateWithDeps = <S = any>(
         // If the property has changed, update the state and mark rerender as
         // needed.
         if (currentState[k] !== payload[k]) {
-          currentState[k] = payload[k]!
+          currentState[k] = payload[k]
 
           // If the property is accessed by the component, a rerender should be
           // triggered.
