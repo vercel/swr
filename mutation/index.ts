@@ -21,7 +21,7 @@ const mutation = (<Data, Error>() =>
     fetcher: MutationFetcher<Data>,
     config: SWRMutationConfiguration<Data, Error> = {}
   ) => {
-    const { mutate } = useSWRConfig()
+    const { mutate, hash } = useSWRConfig()
 
     const keyRef = useRef(key)
     // Ditch all mutation results that happened earlier than this timestamp.
@@ -36,7 +36,7 @@ const mutation = (<Data, Error>() =>
 
     const trigger = useCallback(
       async (arg, opts?: SWRMutationConfiguration<Data, Error>) => {
-        const [serializedKey, resolvedKey] = serialize(keyRef.current)
+        const [serializedKey, resolvedKey] = serialize(keyRef.current, hash)
 
         if (!fetcher) {
           throw new Error('Can’t trigger the mutation: missing fetcher.')

@@ -10,6 +10,7 @@ import {
   renderWithConfig,
   renderWithGlobalCache
 } from './utils'
+import { stableHash } from '../src/utils/hash'
 
 describe('useSWR - local mutation', () => {
   it('should trigger revalidation programmatically', async () => {
@@ -536,7 +537,7 @@ describe('useSWR - local mutation', () => {
     })
 
     screen.getByText(message)
-    const [keyInfo] = serialize(key)
+    const [keyInfo] = serialize(key, stableHash)
     let cacheError = cache.get(keyInfo)?.error
     expect(cacheError.message).toMatchInlineSnapshot(`"${message}"`)
 
@@ -806,8 +807,8 @@ describe('useSWR - local mutation', () => {
       const { data, isValidating } = useSWR(key, () =>
         createResponse('data', { delay: 30 })
       )
-      const { cache } = useSWRConfig()
-      const [keyInfo] = serialize(key)
+      const { cache, hash } = useSWRConfig()
+      const [keyInfo] = serialize(key, hash)
       const cacheIsValidating = cache.get(keyInfo)?.isValidating
       return (
         <>

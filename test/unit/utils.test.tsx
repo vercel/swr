@@ -29,7 +29,7 @@ describe('Utils', () => {
 
   it('should hash arguments correctly', async () => {
     // Empty
-    expect(serialize([])[0]).toEqual('')
+    expect(serialize([], hash)[0]).toEqual('')
 
     // Primitives
     expect(hash(['key'])).toEqual('@"key",')

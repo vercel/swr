@@ -11,7 +11,8 @@ import {
   ScopedMutator,
   RevalidateEvent,
   RevalidateCallback,
-  ProviderConfiguration
+  ProviderConfiguration,
+  SWRConfiguration
 } from '../types'
 
 const revalidateAllKeys = (
@@ -25,7 +26,7 @@ const revalidateAllKeys = (
 
 export const initCache = <Data = any>(
   provider: Cache<Data>,
-  options?: Partial<ProviderConfiguration>
+  options?: Partial<ProviderConfiguration & SWRConfiguration>
 ):
   | [Cache<Data>, ScopedMutator<Data>, () => void]
   | [Cache<Data>, ScopedMutator<Data>]
@@ -44,6 +45,7 @@ export const initCache = <Data = any>(
     const EVENT_REVALIDATORS = {}
     const mutate = internalMutate.bind(
       UNDEFINED,
+      options?.hash,
       provider
     ) as ScopedMutator<Data>
     let unmount = noop

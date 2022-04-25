@@ -7,7 +7,8 @@ import useSWR, {
   SWRHook,
   MutatorCallback,
   Middleware,
-  BareFetcher
+  BareFetcher,
+  Arguments
 } from 'swr'
 
 import { useIsomorphicLayoutEffect } from '../src/utils/env'
@@ -26,12 +27,18 @@ import type {
 
 const INFINITE_PREFIX = '$inf$'
 
-const getFirstPageKey = (getKey: SWRInfiniteKeyLoader) => {
-  return serialize(getKey ? getKey(0, null) : null)[0]
+const getFirstPageKey = (
+  getKey: SWRInfiniteKeyLoader,
+  hash: (a: Arguments) => string
+) => {
+  return serialize(getKey ? getKey(0, null) : null, hash)[0]
 }
 
-export const unstable_serialize = (getKey: SWRInfiniteKeyLoader) => {
-  return INFINITE_PREFIX + getFirstPageKey(getKey)
+export const unstable_serialize = (
+  getKey: SWRInfiniteKeyLoader,
+  hash: (a: Arguments) => string
+) => {
+  return INFINITE_PREFIX + getFirstPageKey(getKey, hash)
 }
 
 export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
@@ -58,7 +65,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
     // metadata of this SWR infinite hook.
     let infiniteKey: string | undefined
     try {
-      infiniteKey = getFirstPageKey(getKey)
+      infiniteKey = getFirstPageKey(getKey, config.hash)
       if (infiniteKey) infiniteKey = INFINITE_PREFIX + infiniteKey
     } catch (err) {
       // Not ready yet.
@@ -119,7 +126,10 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
 
         let previousPageData = null
         for (let i = 0; i < pageSize; ++i) {
-          const [pageKey, pageArg] = serialize(getKey(i, previousPageData))
+          const [pageKey, pageArg] = serialize(
+            getKey(i, previousPageData),
+            config.hash
+          )
 
           if (!pageKey) {
             // `pageKey` is falsy, stop fetching new pages.
@@ -212,7 +222,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
 
       let previousPageData = null
       for (let i = 0; i < pageSize; ++i) {
-        const [pageKey] = serialize(getKey(i, previousPageData))
+        const [pageKey] = serialize(getKey(i, previousPageData), config.hash)
 
         // Get the cached page data.
         const pageData = pageKey ? cache.get(pageKey)?.data : UNDEFINED

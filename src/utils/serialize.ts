@@ -1,9 +1,11 @@
-import { stableHash } from './hash'
 import { isFunction } from './helper'
 
-import { Key } from '../types'
+import { Arguments, Key } from '../types'
 
-export const serialize = (key: Key): [string, Key] => {
+export const serialize = (
+  key: Key,
+  hashFn: (a: Arguments) => string
+): [string, Key] => {
   if (isFunction(key)) {
     try {
       key = key()
@@ -22,7 +24,7 @@ export const serialize = (key: Key): [string, Key] => {
     typeof key == 'string'
       ? key
       : (Array.isArray(key) ? key.length : key)
-      ? stableHash(key)
+      ? hashFn(key)
       : ''
 
   return [key, args]

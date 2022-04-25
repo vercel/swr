@@ -37,6 +37,7 @@ import {
   StateUpdateCallback,
   RevalidateEvent
 } from './types'
+import { stableHash } from './utils/hash'
 
 const WITH_DEDUPE = { dedupe: true }
 
@@ -60,6 +61,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   const {
     cache,
     compare,
+    hash,
     suspense,
     fallbackData,
     revalidateOnMount,
@@ -77,7 +79,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   // all of them are derived from `_key`.
   // `fnArg` is the argument/arguments parsed from the key, which will be passed
   // to the fetcher.
-  const [key, fnArg] = serialize(_key)
+  const [key, fnArg] = serialize(_key, hash)
 
   // If it's the initial render of this hook.
   const initialMountedRef = useRef(false)
@@ -411,7 +413,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     // By using `bind` we don't need to modify the size of the rest arguments.
     // Due to https://github.com/microsoft/TypeScript/issues/37181, we have to
     // cast it to any for now.
-    internalMutate.bind(UNDEFINED, cache, () => keyRef.current) as any,
+    internalMutate.bind(UNDEFINED, hash, cache, () => keyRef.current) as any,
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   )
@@ -601,6 +603,6 @@ export const SWRConfig = OBJECT.defineProperty(ConfigProvider, 'default', {
   default: FullConfiguration
 }
 
-export const unstable_serialize = (key: Key) => serialize(key)[0]
+export const unstable_serialize = (key: Key) => serialize(key, stableHash)[0]
 
 export default withArgs<SWRHook>(useSWRHandler)

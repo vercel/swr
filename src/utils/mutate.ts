@@ -5,17 +5,25 @@ import { broadcastState } from './broadcast-state'
 import { getTimestamp } from './timestamp'
 import { createCacheHelper } from './cache'
 
-import { Key, Cache, MutatorCallback, MutatorOptions } from '../types'
+import {
+  Key,
+  Cache,
+  MutatorCallback,
+  MutatorOptions,
+  Arguments
+} from '../types'
+import { stableHash } from './hash'
 
 export const internalMutate = async <Data>(
   ...args: [
+    undefined | ((a: Arguments) => string),
     Cache,
     Key,
     undefined | Data | Promise<Data | undefined> | MutatorCallback<Data>,
     undefined | boolean | MutatorOptions<Data>
   ]
 ): Promise<Data | undefined> => {
-  const [cache, _key, _data, _opts] = args
+  const [hashFn, cache, _key, _data, _opts] = args
 
   // When passing as a boolean, it's explicitly used to disable/enable
   // revalidation.
@@ -31,7 +39,7 @@ export const internalMutate = async <Data>(
   const rollbackOnError = options.rollbackOnError !== false
 
   // Serialize key
-  const [key] = serialize(_key)
+  const [key] = serialize(_key, hashFn ?? stableHash)
   if (!key) return
 
   const [get, set] = createCacheHelper<Data>(cache, key)

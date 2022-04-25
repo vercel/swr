@@ -10,6 +10,7 @@ import {
   renderWithConfig,
   renderWithGlobalCache
 } from './utils'
+import { stableHash } from '../src/utils/hash'
 
 describe('useSWRInfinite', () => {
   it('should render the first page component', async () => {
@@ -740,13 +741,15 @@ describe('useSWRInfinite', () => {
     await screen.findByText(`data:page-test-${key}-0:1`)
 
     await act(() =>
-      mutate(unstable_serialize(index => `page-test-${key}-${index}`))
+      mutate(
+        unstable_serialize(index => `page-test-${key}-${index}`, stableHash)
+      )
     )
     await screen.findByText(`data:page-test-${key}-0:2`)
 
     await act(() =>
       mutate(
-        unstable_serialize(index => `page-test-${key}-${index}`),
+        unstable_serialize(index => `page-test-${key}-${index}`, stableHash),
         'local-mutation',
         false
       )
@@ -780,7 +783,7 @@ describe('useSWRInfinite', () => {
 
     await act(() =>
       mutate(
-        unstable_serialize(getKey),
+        unstable_serialize(getKey, stableHash),
         data => data.map(value => `(edited)${value}`),
         false
       )
@@ -818,12 +821,14 @@ describe('useSWRInfinite', () => {
 
     await screen.findByText('data:initial-cache')
 
-    await act(() => mutateCustomCache(unstable_serialize(() => key)))
+    await act(() =>
+      mutateCustomCache(unstable_serialize(() => key, stableHash))
+    )
     await screen.findByText('data:response data')
 
     await act(() =>
       mutateCustomCache(
-        unstable_serialize(() => key),
+        unstable_serialize(() => key, stableHash),
         'local-mutation',
         false
       )

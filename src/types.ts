@@ -72,6 +72,7 @@ export interface PublicConfiguration<
   onDiscarded: (key: string) => void
 
   compare: (a: Data | undefined, b: Data | undefined) => boolean
+  hash: (a: Arguments) => string
 
   isOnline: () => boolean
   isVisible: () => boolean

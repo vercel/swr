@@ -383,7 +383,7 @@ describe('useSWR - error', () => {
 
     // mount
     await screen.findByText('hello, error')
-
+    console.log(mutate)
     await act(() => mutate())
     // initial -> first error -> mutate -> receive another error
     // error won't be cleared during revalidation
