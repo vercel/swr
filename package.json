@@ -92,8 +92,8 @@
   "devDependencies": {
     "@swc/core": "1.2.129",
     "@swc/jest": "0.2.17",
-    "@testing-library/jest-dom": "5.16.4",
-    "@testing-library/react": "13.1.1",
+    "@testing-library/jest-dom": "5.14.1",
+    "@testing-library/react": "12.0.0",
     "@type-challenges/utils": "0.1.1",
     "@types/react": "17.0.20",
     "@typescript-eslint/eslint-plugin": "5.8.0",
