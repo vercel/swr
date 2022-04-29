@@ -100,19 +100,42 @@ export const useSWRHandler = <Data = any, Error = any>(
     key
   )
 
+  const stateDependencies = useRef<Record<string, boolean>>({}).current
+
+  const getSnapshot = useCallback(
+    getCache,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [cache, key]
+  )
+
   // Get the current state that SWR should return.
   const cached = useSyncExternalStore(
     useCallback(
-      callback => subscribeCache(key, callback),
+      (callback: () => void) =>
+        subscribeCache(key, (current: any, prev: any) => {
+          stateRef.current = current
+
+          let shouldTriggerCallback = false
+          for (const t in stateDependencies) {
+            if (!compare(current[t], prev[t])) {
+              shouldTriggerCallback = true
+            }
+          }
+
+          if (shouldTriggerCallback) {
+            callback()
+          }
+        }),
       // eslint-disable-next-line react-hooks/exhaustive-deps
       [cache, key]
     ),
-    useCallback(
-      getCache,
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      [cache, key]
-    )
+    getSnapshot,
+    getSnapshot
   )
+
+  const stateRef = useRef<State<Data, Error>>(cached)
+
+  console.log(cached)
 
   const cachedData = cached.data
   const fallback = isUndefined(fallbackData)
@@ -169,7 +192,6 @@ export const useSWRHandler = <Data = any, Error = any>(
     isValidating,
     isLoading
   }
-  const [stateRef, stateDependencies, setState] = useStateWithDeps(currentState)
 
   // The revalidation function is a carefully crafted wrapper of the original
   // `fetcher`, to correctly handle the many edge cases.
@@ -212,11 +234,6 @@ export const useSWRHandler = <Data = any, Error = any>(
       const finishRequestAndUpdateState = () => {
         // Set the global cache.
         setCache(finalState)
-
-        // We can only set the local state if it's safe (still mounted with the same key).
-        if (isCurrentKeyMounted()) {
-          setState(finalState)
-        }
       }
       const cleanupState = () => {
         // Check if it's still the same request before deleting.
@@ -234,7 +251,6 @@ export const useSWRHandler = <Data = any, Error = any>(
         initialState.isLoading = true
       }
       setCache(initialState)
-      setState(initialState)
 
       try {
         if (shouldStartNewRequest) {
@@ -322,17 +338,7 @@ export const useSWRHandler = <Data = any, Error = any>(
           return false
         }
 
-        // Deep compare with latest state to avoid extra re-renders.
-        // For local state, compare and assign.
-        if (!compare(stateRef.current.data, newData)) {
-          finalState.data = newData
-        } else {
-          // `data` and `newData` are deeply equal (serialized value).
-          // So it should be safe to broadcast the stale data to keep referential equality (===).
-          finalState.data = stateRef.current.data
-          // At the end of this function, `broadcastState` invokes the `onStateUpdate` function,
-          // which takes care of avoiding the re-render.
-        }
+        finalState.data = newData
 
         // Trigger the successful callback if it's the original request.
         if (shouldStartNewRequest) {
@@ -442,21 +448,11 @@ export const useSWRHandler = <Data = any, Error = any>(
     // Expose state updater to global event listeners. So we can update hook's
     // internal state from the outside.
     const onStateUpdate: StateUpdateCallback<Data, Error> = (state = {}) => {
-      setState(
-        mergeObjects(
-          {
-            error: state.error,
-            isValidating: state.isValidating
-          },
-          // Since `setState` only shallowly compares states, we do a deep
-          // comparison here.
-          compare(stateRef.current.data, state.data)
-            ? UNDEFINED
-            : {
-                data: state.data
-              }
-        )
-      )
+      setCache({
+        error: state.error,
+        isValidating: state.isValidating,
+        data: state.data
+      })
     }
 
     // Expose revalidators to global event listeners. So we can trigger

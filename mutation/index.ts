@@ -35,7 +35,7 @@ const mutation = (<Data, Error>() =>
     const currentState = stateRef.current
 
     const trigger = useCallback(
-      async (arg, opts?: SWRMutationConfiguration<Data, Error>) => {
+      async (arg: any, opts?: SWRMutationConfiguration<Data, Error>) => {
         const [serializedKey, resolvedKey] = serialize(keyRef.current)
 
         if (!fetcher) {
