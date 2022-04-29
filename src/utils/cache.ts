@@ -1,6 +1,6 @@
 import { defaultConfigOptions } from './web-preset'
 import { IS_SERVER } from './env'
-import { UNDEFINED, mergeObjects, noop } from './helper'
+import { UNDEFINED, mergeObjects, noop, isUndefined } from './helper'
 import { internalMutate } from './mutate'
 import { GlobalState, SWRGlobalState } from './global-state'
 import * as revalidateEvents from '../constants'
@@ -14,6 +14,7 @@ import {
   RevalidateCallback,
   ProviderConfiguration
 } from '../types'
+import { compare } from './config'
 
 const revalidateAllKeys = (
   revalidators: Record<string, RevalidateCallback[]>,
@@ -49,8 +50,12 @@ export const initCache = <Data = any>(
     ) as ScopedMutator<Data>
     let unmount = noop
 
-    const subscriptions: Record<string, (() => void)[]> = {}
-    const subscribe = (key: string, callback: () => void) => {
+    const subscriptions: Record<string, ((current: any, prev: any) => void)[]> =
+      {}
+    const subscribe = (
+      key: string,
+      callback: (current: any, prev: any) => void
+    ) => {
       const subs = subscriptions[key] || []
       subscriptions[key] = subs
 
@@ -59,13 +64,13 @@ export const initCache = <Data = any>(
         subs.splice(subs.indexOf(callback), 1)
       }
     }
-    const setter = (key: string, value: any) => {
+    const setter = (key: string, value: any, prev: any) => {
       provider.set(key, value)
 
       const subs = subscriptions[key]
       if (subs) {
-        for (let i = 0; i < subs.length; i++) {
-          subs[i]()
+        for (let i = subs.length; i--; ) {
+          subs[i](value, prev)
         }
       }
     }
