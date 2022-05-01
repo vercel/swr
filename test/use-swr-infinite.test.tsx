@@ -1253,4 +1253,36 @@ describe('useSWRInfinite', () => {
 
     expect(logger).toEqual([undefined, ['foo-0'], ['foo-1']])
   })
+
+  // https://github.com/vercel/swr/issues/1899
+  it('should not revalidate the resource with bound mutate when options is of Object type', async () => {
+    let t = 0
+    const key = createKey()
+    const fetcher = jest.fn(async () =>
+      createResponse(`foo-${t++}`, { delay: 10 })
+    )
+    const logger = []
+    function Page() {
+      const { data, mutate } = useSWRInfinite(() => key, fetcher, {
+        dedupingInterval: 0
+      })
+      logger.push(data)
+      return (
+        <>
+          <div>data: {String(data)}</div>
+          <button onClick={() => mutate(data, { revalidate: false })}>
+            mutate
+          </button>
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data: foo-0')
+
+    fireEvent.click(screen.getByText('mutate'))
+    expect(fetcher).toBeCalledTimes(1)
+
+    expect(logger).toEqual([undefined, ['foo-0']])
+  })
 })
