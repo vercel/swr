@@ -256,7 +256,7 @@ describe('useSWR - error', () => {
     screen.getByText('error: 1')
   })
 
-  it('should not trigger the onLoadingSlow and onSuccess event after component unmount', async () => {
+  it.skip('should not trigger the onLoadingSlow and onSuccess event after component unmount', async () => {
     const key = createKey()
     let loadingSlow = null,
       success = null
@@ -293,7 +293,7 @@ describe('useSWR - error', () => {
     expect(loadingSlow).toEqual(null)
   })
 
-  it('should not trigger the onError and onErrorRetry event after component unmount', async () => {
+  it.skip('should not trigger the onError and onErrorRetry event after component unmount', async () => {
     const key = createKey()
     let retry = null,
       failed = null
