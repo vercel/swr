@@ -1222,7 +1222,7 @@ describe('useSWRInfinite', () => {
   })
 
   // https://github.com/vercel/swr/issues/1899
-  it('should revalidate the resource with bound mutate when arguments are passed', async () => {
+  it('should revalidate the resource with bound mutate when options is of Object type ', async () => {
     let t = 0
     const key = createKey()
     const fetcher = jest.fn(async () =>
