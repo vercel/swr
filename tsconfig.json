@@ -20,7 +20,8 @@
     "paths": {
       "swr": ["./src/index.ts"],
       "swr/infinite": ["./infinite/index.ts"],
-      "swr/immutable": ["./immutable/index.ts"]
+      "swr/immutable": ["./immutable/index.ts"],
+      "swr/mutation": ["./mutation/index.ts"]
     },
     "typeRoots": ["./src/types", "./node_modules/@types"]
   },

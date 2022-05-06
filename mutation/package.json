@@ -1,0 +1,12 @@
+{
+  "name": "swr-mutation",
+  "version": "0.0.1",
+  "main": "./dist/index.js",
+  "module": "./dist/index.esm.js",
+  "types": "./dist/mutation",
+  "exports": "./dist/index.mjs",
+  "peerDependencies": {
+    "swr": "*",
+    "react": "*"
+  }
+}

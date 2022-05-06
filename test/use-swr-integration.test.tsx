@@ -279,7 +279,10 @@ describe('useSWR', () => {
     const key1 = createKey()
     const key2 = createKey()
     function Page() {
-      const { data: v1 } = useSWR([key1, obj, arr], (a, b, c) => a + b.v + c[0])
+      const { data: v1 } = useSWR(
+        [key1, obj, arr],
+        ([a, b, c]) => a + b.v + c[0]
+      )
 
       // reuse the cache
       const { data: v2 } = useSWR([key1, obj, arr], () => 'not called!')
@@ -287,7 +290,7 @@ describe('useSWR', () => {
       // different object
       const { data: v3 } = useSWR(
         [key2, obj, 'world'],
-        (a, b, c) => a + b.v + c
+        ([a, b, c]) => a + b.v + c
       )
 
       return (
@@ -312,7 +315,7 @@ describe('useSWR', () => {
     function Page() {
       const { data } = useSWR(
         () => [key, obj, arr],
-        (a, b, c) => a + b.v + c[0]
+        ([a, b, c]) => a + b.v + c[0]
       )
 
       return <div>{data}</div>

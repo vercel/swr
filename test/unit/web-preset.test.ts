@@ -78,10 +78,7 @@ function runTests(propertyName) {
       const release = initFocus(fn) as () => void
       const target = global[propertyName]
 
-      // TODO: target?.emit?() breaks prettier, fix prettier format
-      if (target && target.emit) {
-        target.emit(eventName)
-      }
+      target?.emit?.(eventName)
 
       expect(fn).toBeCalledTimes(0)
 

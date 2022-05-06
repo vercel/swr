@@ -6,7 +6,8 @@ module.exports = {
   moduleNameMapper: {
     '^swr$': '<rootDir>/src',
     '^swr/infinite$': '<rootDir>/infinite/index.ts',
-    '^swr/immutable$': '<rootDir>/immutable/index.ts'
+    '^swr/immutable$': '<rootDir>/immutable/index.ts',
+    '^swr/mutation$': '<rootDir>/mutation/index.ts'
   },
   transform: {
     '^.+\\.(t|j)sx?$': '@swc/jest'

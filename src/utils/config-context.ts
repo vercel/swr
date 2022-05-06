@@ -1,4 +1,11 @@
-import { createContext, createElement, useContext, useState, FC } from 'react'
+import {
+  createContext,
+  createElement,
+  useContext,
+  useState,
+  FC,
+  PropsWithChildren
+} from 'react'
 import { cache as defaultCache } from './config'
 import { initCache } from './cache'
 import { mergeConfigs } from './merge-config'
@@ -13,12 +20,14 @@ import {
 
 export const SWRConfigContext = createContext<Partial<FullConfiguration>>({})
 
-const SWRConfig: FC<{
-  value?: SWRConfiguration &
-    Partial<ProviderConfiguration> & {
-      provider?: (cache: Readonly<Cache>) => Cache
-    }
-}> = props => {
+const SWRConfig: FC<
+  PropsWithChildren<{
+    value?: SWRConfiguration &
+      Partial<ProviderConfiguration> & {
+        provider?: (cache: Readonly<Cache>) => Cache
+      }
+  }>
+> = props => {
   const { value } = props
 
   // Extend parent context values and middleware.
