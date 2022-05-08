@@ -1,5 +1,5 @@
 import { useCallback, useRef, useDebugValue } from 'react'
-import { useSyncExternalStore } from 'use-sync-external-store/shim'
+import { useSyncExternalStoreWithSelector } from 'use-sync-external-store/shim/with-selector'
 
 import { defaultConfig } from './utils/config'
 import { SWRGlobalState, GlobalState } from './utils/global-state'
@@ -94,36 +94,42 @@ export const useSWRHandler = <Data = any, Error = any>(
   )
 
   const stateDependencies = useRef<Record<string, boolean>>({}).current
-
+  
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const getSnapshot = useCallback(
     getCache,
+    [cache, key]
+  )
+
+  const isEqual = useCallback(
+    (prev: any, current: any) => {
+      let equal = true
+      for (const t in stateDependencies) {
+        if (!compare(current[t], prev[t])) {
+          equal = false
+        }
+      }
+      return equal
+    },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [cache, key]
   )
 
   // Get the current state that SWR should return.
-  const cached = useSyncExternalStore(
+  const cached = useSyncExternalStoreWithSelector(
     useCallback(
       (callback: () => void) =>
-        subscribeCache(key, (current: any, prev: any) => {
+        subscribeCache(key, (current: any) => {
           stateRef.current = current
-
-          let shouldTriggerCallback = false
-          for (const t in stateDependencies) {
-            if (!compare(current[t], prev[t])) {
-              shouldTriggerCallback = true
-            }
-          }
-
-          if (shouldTriggerCallback) {
-            callback()
-          }
+          callback()
         }),
       // eslint-disable-next-line react-hooks/exhaustive-deps
       [cache, key]
     ),
     getSnapshot,
-    getSnapshot
+    getSnapshot,
+    getSnapshot,
+    isEqual
   )
 
   const stateRef = useRef<State<Data, Error>>(cached)

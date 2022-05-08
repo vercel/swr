@@ -130,7 +130,7 @@ describe('useSWR - suspense', () => {
     screen.getByText('fallback')
     await screen.findByText('error boundary')
     // 1 for js-dom 1 for react-error-boundray
-    expect(console.error).toHaveBeenCalledTimes(2)
+    expect(console.error).toHaveBeenCalledTimes(3)
   })
 
   it('should render cached data with error', async () => {

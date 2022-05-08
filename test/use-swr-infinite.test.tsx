@@ -8,7 +8,8 @@ import {
   createResponse,
   nextTick,
   renderWithConfig,
-  renderWithGlobalCache
+  renderWithGlobalCache,
+  executeWithoutBatching
 } from './utils'
 
 describe('useSWRInfinite', () => {
@@ -563,7 +564,7 @@ describe('useSWRInfinite', () => {
     screen.getByText('data:')
 
     // after 300ms the rendered result should be 3
-    await act(() => sleep(350))
+    await executeWithoutBatching(() => sleep(350))
     screen.getByText('data:3')
   })
 

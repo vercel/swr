@@ -6,24 +6,16 @@ import { createCacheHelper } from './cache'
 export const broadcastState: Broadcaster = (
   cache,
   key,
-  state,
+  _,
   revalidate,
-  broadcast = true
+  __ = true
 ) => {
   const stateResult = SWRGlobalState.get(cache)
   if (stateResult) {
-    const [EVENT_REVALIDATORS, STATE_UPDATERS, , FETCH] = stateResult
+    const [EVENT_REVALIDATORS, , , FETCH] = stateResult
     const revalidators = EVENT_REVALIDATORS[key]
-    const updaters = STATE_UPDATERS[key]
 
     const [get] = createCacheHelper(cache, key)
-
-    // Cache was populated, update states of all hooks.
-    if (broadcast && updaters) {
-      for (let i = 0; i < updaters.length; ++i) {
-        updaters[i](state)
-      }
-    }
 
     // If we also need to revalidate, only do it for the first hook.
     if (revalidate) {
