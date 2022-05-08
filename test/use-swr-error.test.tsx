@@ -17,7 +17,7 @@ describe('useSWR - error', () => {
         createResponse(new Error('error!'))
       )
       if (error) return <div>{error.message}</div>
-      return <div>hello, {data}</div>
+      return <div><>hello, {data}</></div>
     }
 
     renderWithConfig(<Page />)
@@ -37,7 +37,7 @@ describe('useSWR - error', () => {
         { onError: (_, errorKey) => (erroredSWR = errorKey) }
       )
       if (error) return <div>{error.message}</div>
-      return <div>hello, {data}</div>
+      return <div><>hello, {data}</></div>
     }
 
     renderWithConfig(<Page />)
@@ -63,7 +63,7 @@ describe('useSWR - error', () => {
         }
       )
       if (error) return <div>{error.message}</div>
-      return <div>hello, {data}</div>
+      return <div><>hello, {data}</></div>
     }
     renderWithConfig(<Page />)
     screen.getByText('hello,')
@@ -93,7 +93,7 @@ describe('useSWR - error', () => {
         }
       )
       if (error) return <div>{error.message}</div>
-      return <div>hello, {data}</div>
+      return <div><>hello, {data}</></div>
     }
     renderWithConfig(<Page />)
     screen.getByText('hello,')
@@ -130,7 +130,7 @@ describe('useSWR - error', () => {
         }
       )
       if (error) return <div>{error.message}</div>
-      return <div>hello, {data}</div>
+      return <div><>hello, {data}</></div>
     }
     renderWithConfig(<Page />)
     screen.getByText('hello,')
@@ -158,7 +158,7 @@ describe('useSWR - error', () => {
         }
       )
       if (error) return <div>{error.message}</div>
-      return <div>hello, {data}</div>
+      return <div><>hello, {data}</></div>
     }
     renderWithConfig(<Page />)
     screen.getByText('hello,')
@@ -186,7 +186,7 @@ describe('useSWR - error', () => {
         }
       )
       if (error) return <div>{error.message}</div>
-      return <div>hello, {data}</div>
+      return <div><>hello, {data}</></div>
     }
     renderWithConfig(<Page />)
     screen.getByText('hello,')
@@ -241,7 +241,7 @@ describe('useSWR - error', () => {
         }
       )
       if (error) return <div>{error.message}</div>
-      return <div>hello, {data}</div>
+      return <div><>hello, {data}</></div>
     }
 
     renderWithConfig(<Page />)
@@ -307,7 +307,7 @@ describe('useSWR - error', () => {
         },
         dedupingInterval: 0
       })
-      return <div>hello, {data}</div>
+      return <div><>hello, {data}</></div>
     }
 
     function App() {
@@ -344,7 +344,7 @@ describe('useSWR - error', () => {
         }
       )
       if (error) return <div>{error.message}</div>
-      return <div>hello, {data}</div>
+      return <div><>hello, {data}</></div>
     }
 
     renderWithConfig(<Page />)

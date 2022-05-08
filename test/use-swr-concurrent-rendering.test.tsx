@@ -7,7 +7,7 @@ import {
   renderWithConfig
 } from './utils'
 
-import React, { Suspense } from 'react'
+import React from 'react'
 import useSWR from 'swr'
 
 describe('useSWR - concurrent rendering', () => {

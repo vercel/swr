@@ -4,7 +4,7 @@ import useSWR, { SWRConfig } from 'swr'
 import { createKey, renderWithConfig, sleep } from './utils'
 
 // This has to be an async function to wait a microtask to flush updates
-const advanceTimers = async (ms: number) => jest.advanceTimersByTime(ms)
+const advanceTimers = async (ms: number) => jest.advanceTimersByTime(ms) as any
 
 // This test heavily depends on setInterval/setTimeout timers, which makes tests slower and flaky.
 // So we use Jest's fake timers
