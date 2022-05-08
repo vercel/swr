@@ -12,9 +12,9 @@ import useSWR, {
 
 import { useIsomorphicLayoutEffect } from '../src/utils/env'
 import { serialize } from '../src/utils/serialize'
-import { isUndefined, isFunction, UNDEFINED } from '../src/utils/helper'
+import { isUndefined, isFunction, UNDEFINED, createCacheHelper } from '../src/utils/helper'
 import { withMiddleware } from '../src/utils/with-middleware'
-import { createCacheHelper } from '../src/utils/cache'
+
 
 import type {
   SWRInfiniteConfiguration,

@@ -6,7 +6,6 @@ import { GlobalState, SWRGlobalState } from './global-state'
 import * as revalidateEvents from '../constants'
 
 import {
-  Key,
   Cache,
   ScopedMutator,
   RevalidateEvent,
@@ -78,7 +77,6 @@ export const initCache = <Data = any>(
       EVENT_REVALIDATORS,
       {},
       {},
-      {},
       mutate,
       setter,
       subscribe
@@ -130,28 +128,5 @@ export const initCache = <Data = any>(
     return [provider, mutate, unmount]
   }
 
-  return [provider, (SWRGlobalState.get(provider) as GlobalState)[4]]
-}
-
-const EMPTY_CACHE = {}
-export const createCacheHelper = <Data = any, ExtendedInfo = {}>(
-  cache: Cache,
-  key: Key
-) => {
-  const state = SWRGlobalState.get(cache) as GlobalState
-  return [
-    // Getter
-    () => cache.get(key) || EMPTY_CACHE,
-    // Setter
-    (
-      info: Partial<
-        { data: Data; error: any; isValidating: boolean } | ExtendedInfo
-      >
-    ) => {
-      const prev = cache.get(key)
-      state[5](key as string, mergeObjects(prev, info), prev || EMPTY_CACHE)
-    },
-    // Subscriber
-    state[6]
-  ] as const
+  return [provider, (SWRGlobalState.get(provider) as GlobalState)[3]]
 }

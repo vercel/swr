@@ -10,15 +10,14 @@ import {
   useIsomorphicLayoutEffect
 } from './utils/env'
 import { serialize } from './utils/serialize'
-import { isUndefined, UNDEFINED, OBJECT, isFunction } from './utils/helper'
+import { isUndefined, UNDEFINED, OBJECT, isFunction, createCacheHelper } from './utils/helper'
 import ConfigProvider from './utils/config-context'
 import { withArgs } from './utils/resolve-args'
 import { subscribeCallback } from './utils/subscribe-key'
-import { broadcastState } from './utils/broadcast-state'
 import { getTimestamp } from './utils/timestamp'
 import { internalMutate } from './utils/mutate'
 import * as revalidateEvents from './constants'
-import { createCacheHelper } from './utils/cache'
+
 
 import {
   State,
@@ -29,7 +28,6 @@ import {
   FullConfiguration,
   SWRConfiguration,
   SWRHook,
-  StateUpdateCallback,
   RevalidateEvent
 } from './types'
 
@@ -64,8 +62,9 @@ export const useSWRHandler = <Data = any, Error = any>(
     keepPreviousData
   } = config
 
-  const [EVENT_REVALIDATORS, STATE_UPDATERS, MUTATION, FETCH] =
-    SWRGlobalState.get(cache) as GlobalState
+  const [EVENT_REVALIDATORS, MUTATION, FETCH] = SWRGlobalState.get(
+    cache
+  ) as GlobalState
 
   // `key` is the identifier of the SWR `data` state, `keyInfo` holds extra
   // states such as `error` and `isValidating` inside,
@@ -94,12 +93,9 @@ export const useSWRHandler = <Data = any, Error = any>(
   )
 
   const stateDependencies = useRef<Record<string, boolean>>({}).current
-  
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const getSnapshot = useCallback(
-    getCache,
-    [cache, key]
-  )
+  const getSnapshot = useCallback(getCache, [cache, key])
 
   const isEqual = useCallback(
     (prev: any, current: any) => {
@@ -263,12 +259,6 @@ export const useSWRHandler = <Data = any, Error = any>(
 
       try {
         if (shouldStartNewRequest) {
-          // Tell all other hooks to change the `isValidating` state.
-          broadcastState(cache, key, {
-            ...stateRef.current,
-            isValidating: true
-          })
-
           // If no cache being rendered currently (it shows a blank page),
           // we trigger the loading slow event.
           if (config.loadingTimeout && isUndefined(getCache().data)) {
@@ -411,12 +401,6 @@ export const useSWRHandler = <Data = any, Error = any>(
       // Update the current hook's state.
       finishRequestAndUpdateState()
 
-      // Here is the source of the request, need to tell all other hooks to
-      // update their states.
-      if (callbackSafeguard() && shouldStartNewRequest) {
-        broadcastState(cache, key, finalState)
-      }
-
       return true
     },
     // `setState` is immutable, and `eventsCallback`, `fnArg`, and
@@ -463,16 +447,6 @@ export const useSWRHandler = <Data = any, Error = any>(
 
     const softRevalidate = revalidate.bind(UNDEFINED, WITH_DEDUPE)
 
-    // Expose state updater to global event listeners. So we can update hook's
-    // internal state from the outside.
-    const onStateUpdate: StateUpdateCallback<Data, Error> = (state = {}) => {
-      setCache({
-        error: state.error,
-        isValidating: state.isValidating,
-        data: state.data
-      })
-    }
-
     // Expose revalidators to global event listeners. So we can trigger
     // revalidation from the outside.
     let nextFocusRevalidatedAt = 0
@@ -497,7 +471,6 @@ export const useSWRHandler = <Data = any, Error = any>(
       return
     }
 
-    const unsubUpdate = subscribeCallback(key, STATE_UPDATERS, onStateUpdate)
     const unsubEvents = subscribeCallback(key, EVENT_REVALIDATORS, onRevalidate)
 
     // Mark the component as mounted and update corresponding refs.
@@ -521,7 +494,6 @@ export const useSWRHandler = <Data = any, Error = any>(
       // Mark it as unmounted.
       unmountedRef.current = true
 
-      unsubUpdate()
       unsubEvents()
     }
   }, [key])

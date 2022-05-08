@@ -1,3 +1,8 @@
+import { GlobalState, SWRGlobalState } from './global-state'
+import {
+  Key,
+  Cache
+} from '../types'
 export const noop = () => {}
 
 // Using noop() as the undefined value as undefined can possibly be replaced
@@ -19,3 +24,27 @@ export const isWindowDefined = typeof window != STR_UNDEFINED
 export const isDocumentDefined = typeof document != STR_UNDEFINED
 export const hasRequestAnimationFrame = () =>
   isWindowDefined && typeof window['requestAnimationFrame'] != STR_UNDEFINED
+
+
+const EMPTY_CACHE = {}
+export const createCacheHelper = <Data = any, ExtendedInfo = {}>(
+  cache: Cache,
+  key: Key
+) => {
+  const state = SWRGlobalState.get(cache) as GlobalState
+  return [
+    // Getter
+    () => cache.get(key) || EMPTY_CACHE,
+    // Setter
+    (
+      info: Partial<
+        { data: Data; error: any; isValidating: boolean } | ExtendedInfo
+      >
+    ) => {
+      const prev = cache.get(key)
+      state[4](key as string, mergeObjects(prev, info), prev || EMPTY_CACHE)
+    },
+    // Subscriber
+    state[5]
+  ] as const
+}
