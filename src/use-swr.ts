@@ -1,5 +1,5 @@
 import { useCallback, useRef, useDebugValue } from 'react'
-import { useSyncExternalStoreWithSelector } from 'use-sync-external-store/shim/with-selector'
+import { useSyncExternalStoreWithSelector } from 'use-sync-external-store/shim/with-selector.js'
 
 import { defaultConfig } from './utils/config'
 import { SWRGlobalState, GlobalState } from './utils/global-state'
@@ -10,14 +10,19 @@ import {
   useIsomorphicLayoutEffect
 } from './utils/env'
 import { serialize } from './utils/serialize'
-import { isUndefined, UNDEFINED, OBJECT, isFunction, createCacheHelper } from './utils/helper'
+import {
+  isUndefined,
+  UNDEFINED,
+  OBJECT,
+  isFunction,
+  createCacheHelper
+} from './utils/helper'
 import ConfigProvider from './utils/config-context'
 import { withArgs } from './utils/resolve-args'
 import { subscribeCallback } from './utils/subscribe-key'
 import { getTimestamp } from './utils/timestamp'
 import { internalMutate } from './utils/mutate'
 import * as revalidateEvents from './constants'
-
 
 import {
   State,
