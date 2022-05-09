@@ -1,8 +1,5 @@
 import { GlobalState, SWRGlobalState } from './global-state'
-import {
-  Key,
-  Cache
-} from '../types'
+import { Key, Cache } from '../types'
 export const noop = () => {}
 
 // Using noop() as the undefined value as undefined can possibly be replaced
@@ -15,6 +12,7 @@ export const OBJECT = Object
 
 export const isUndefined = (v: any): v is undefined => v === UNDEFINED
 export const isFunction = (v: any): v is Function => typeof v == 'function'
+export const isEmptyCache = (v: any): boolean => v === EMPTY_CACHE
 export const mergeObjects = (a: any, b: any) => OBJECT.assign({}, a, b)
 
 const STR_UNDEFINED = 'undefined'
@@ -24,7 +22,6 @@ export const isWindowDefined = typeof window != STR_UNDEFINED
 export const isDocumentDefined = typeof document != STR_UNDEFINED
 export const hasRequestAnimationFrame = () =>
   isWindowDefined && typeof window['requestAnimationFrame'] != STR_UNDEFINED
-
 
 const EMPTY_CACHE = {}
 export const createCacheHelper = <Data = any, ExtendedInfo = {}>(

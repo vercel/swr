@@ -1,5 +1,5 @@
 import { useCallback, useRef, useDebugValue } from 'react'
-import { useSyncExternalStoreWithSelector } from 'use-sync-external-store/shim/with-selector.js'
+import { useSyncExternalStoreWithSelector } from 'use-sync-external-store/shim/with-selector'
 
 import { defaultConfig } from './utils/config'
 import { SWRGlobalState, GlobalState } from './utils/global-state'
@@ -15,7 +15,8 @@ import {
   UNDEFINED,
   OBJECT,
   isFunction,
-  createCacheHelper
+  createCacheHelper,
+  isEmptyCache
 } from './utils/helper'
 import ConfigProvider from './utils/config-context'
 import { withArgs } from './utils/resolve-args'
@@ -101,13 +102,42 @@ export const useSWRHandler = <Data = any, Error = any>(
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const getSnapshot = useCallback(getCache, [cache, key])
+  const fallback = isUndefined(fallbackData)
+    ? config.fallback[key]
+    : fallbackData
 
+  const selector = (snapshot: any) => {
+    const shouldStartRequest = (() => {
+      if (!key) return false
+      if (!fetcher) return false
+      // If `revalidateOnMount` is set, we take the value directly.
+      if (!isUndefined(revalidateOnMount)) return revalidateOnMount
+      // If it's paused, we skip revalidation.
+      if (getConfig().isPaused()) return false
+      if (suspense) return false
+      return true
+    })()
+    if (!shouldStartRequest) return snapshot
+    if (isEmptyCache(snapshot)) {
+      return {
+        isValidating: true,
+        isLoading: true
+      }
+    }
+    return snapshot
+  }
   const isEqual = useCallback(
     (prev: any, current: any) => {
       let equal = true
       for (const t in stateDependencies) {
         if (!compare(current[t], prev[t])) {
-          equal = false
+          if (t === 'data' && isUndefined(prev[t])) {
+            if (!compare(current[t], fallback)) {
+              equal = false
+            }
+          } else {
+            equal = false
+          }
         }
       }
       return equal
@@ -129,23 +159,20 @@ export const useSWRHandler = <Data = any, Error = any>(
     ),
     getSnapshot,
     getSnapshot,
-    getSnapshot,
+    selector,
     isEqual
   )
 
   const stateRef = useRef<State<Data, Error>>(cached)
-
+  const isInitialMount = !initialMountedRef.current
   const cachedData = cached.data
-  const fallback = isUndefined(fallbackData)
-    ? config.fallback[key]
-    : fallbackData
+
   const data = isUndefined(cachedData) ? fallback : cachedData
   const error = cached.error
 
   // Use a ref to store previous returned data. Use the inital data as its inital value.
   const laggyDataRef = useRef(data)
 
-  const isInitialMount = !initialMountedRef.current
   const returnedData = keepPreviousData
     ? isUndefined(cachedData)
       ? laggyDataRef.current

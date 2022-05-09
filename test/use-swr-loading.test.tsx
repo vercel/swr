@@ -101,7 +101,7 @@ describe('useSWR - loading', () => {
     expect(dataLoaded).toEqual(true)
   })
 
-  it('should avoid extra rerenders when the data is the same', async () => {
+  it('should avoid extra rerenders when the fallback is the same as cache', async () => {
     let renderCount = 0,
       initialDataLoaded = false,
       mutationDataLoaded = false
