@@ -45,7 +45,6 @@ export const initCache = <Data = any>(
       UNDEFINED,
       provider
     ) as ScopedMutator<Data>
-    let unmounted = false
     let unmount = noop
 
     const subscriptions: Record<string, ((current: any, prev: any) => void)[]> =
@@ -63,7 +62,6 @@ export const initCache = <Data = any>(
       }
     }
     const setter = (key: string, value: any, prev: any) => {
-      if (unmounted) return
       provider.set(key, value)
       const subs = subscriptions[key]
       if (subs) {
@@ -84,7 +82,6 @@ export const initCache = <Data = any>(
           setter,
           subscribe
         ])
-        unmounted = false
         if (!IS_SERVER) {
           // When listening to the native events for auto revalidations,
           // we intentionally put a delay (setTimeout) here to make sure they are
@@ -115,7 +112,6 @@ export const initCache = <Data = any>(
           unmount = () => {
             releaseFocus && releaseFocus()
             releaseReconnect && releaseReconnect()
-            unmounted = true
             // When un-mounting, we need to remove the cache provider from the state
             // storage too because it's a side-effect. Otherwise when re-mounting we
             // will not re-register those event listeners.
