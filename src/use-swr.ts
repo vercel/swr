@@ -34,7 +34,9 @@ import {
   FullConfiguration,
   SWRConfiguration,
   SWRHook,
-  RevalidateEvent
+  RevalidateEvent,
+  SWRCacheResult,
+  StateDependencies
 } from './types'
 
 const WITH_DEDUPE = { dedupe: true }
@@ -98,7 +100,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     key
   )
 
-  const stateDependencies = useRef<Record<string, boolean>>({}).current
+  const stateDependencies = useRef<StateDependencies>({}).current
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const getSnapshot = useCallback(getCache, [cache, key])
@@ -106,7 +108,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     ? config.fallback[key]
     : fallbackData
 
-  const selector = (snapshot: any) => {
+  const selector = (snapshot: SWRCacheResult<Data, any>) => {
     const shouldStartRequest = (() => {
       if (!key) return false
       if (!fetcher) return false
@@ -127,9 +129,10 @@ export const useSWRHandler = <Data = any, Error = any>(
     return snapshot
   }
   const isEqual = useCallback(
-    (prev: any, current: any) => {
+    (prev: SWRCacheResult<Data, any>, current: SWRCacheResult<Data, any>) => {
       let equal = true
-      for (const t in stateDependencies) {
+      for (const _ in stateDependencies) {
+        const t = _ as keyof StateDependencies
         if (!compare(current[t], prev[t])) {
           if (t === 'data' && isUndefined(prev[t])) {
             if (!compare(current[t], fallback)) {
@@ -150,7 +153,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   const cached = useSyncExternalStoreWithSelector(
     useCallback(
       (callback: () => void) =>
-        subscribeCache(key, (current: any) => {
+        subscribeCache(key, (current: SWRCacheResult<Data, any>) => {
           stateRef.current = current
           callback()
         }),
@@ -368,7 +371,6 @@ export const useSWRHandler = <Data = any, Error = any>(
           }
           return false
         }
-
         // Deep compare with latest state to avoid extra re-renders.
         // For local state, compare and assign.
         if (!compare(stateRef.current.data, newData)) {
@@ -446,7 +448,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     // So we omit the values from the deps array
     // even though it might cause unexpected behaviors.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [key]
+    [key, cache]
   )
 
   // Similar to the global mutate, but bound to the current cache and key.

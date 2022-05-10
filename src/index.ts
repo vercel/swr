@@ -23,5 +23,6 @@ export type {
   MutatorCallback,
   MutatorOptions,
   Middleware,
-  Arguments
+  Arguments,
+  SWRCacheResult
 } from './types'

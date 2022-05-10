@@ -144,7 +144,9 @@ export type MutatorCallback<Data = any> = (
 
 export type MutatorOptions<Data = any> = {
   revalidate?: boolean
-  populateCache?: boolean | ((result: any, currentData: Data) => Data)
+  populateCache?:
+    | boolean
+    | ((result: any, currentData: Data | undefined) => Data)
   optimisticData?: Data | ((currentData?: Data) => Data)
   rollbackOnError?: boolean
 }
@@ -255,14 +257,22 @@ export type RevalidateCallback = <K extends RevalidateEvent>(
   type: K
 ) => RevalidateCallbackReturnType[K]
 
-export type StateUpdateCallback<Data = any, Error = any> = (state: {
-  data?: Data
-  error?: Error
-  isValidating?: boolean
-}) => void
-
 export interface Cache<Data = any> {
   get(key: Key): Data | null | undefined
   set(key: Key, value: Data): void
   delete(key: Key): void
+}
+
+export interface SWRCacheResult<Data = any, Error = any> {
+  data?: Data
+  error?: Error
+  isValidating?: boolean
+  isLoading?: boolean
+}
+
+export interface StateDependencies {
+  data?: boolean
+  error?: boolean
+  isValidating?: boolean
+  isLoading?: boolean
 }

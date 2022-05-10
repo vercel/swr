@@ -12,16 +12,21 @@ import useSWR, {
 
 import { useIsomorphicLayoutEffect } from '../src/utils/env'
 import { serialize } from '../src/utils/serialize'
-import { isUndefined, isFunction, UNDEFINED, createCacheHelper } from '../src/utils/helper'
+import {
+  isUndefined,
+  isFunction,
+  UNDEFINED,
+  createCacheHelper
+} from '../src/utils/helper'
 import { withMiddleware } from '../src/utils/with-middleware'
-
 
 import type {
   SWRInfiniteConfiguration,
   SWRInfiniteResponse,
   SWRInfiniteHook,
   SWRInfiniteKeyLoader,
-  SWRInfiniteFetcher
+  SWRInfiniteFetcher,
+  SWRInfiniteCacheResult
 } from './types'
 
 const INFINITE_PREFIX = '$inf$'
@@ -66,14 +71,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
 
     const [get, set] = createCacheHelper<
       Data,
-      {
-        // We use cache to pass extra info (context) to fetcher so it can be globally
-        // shared. The key of the context data is based on the first page key.
-        $ctx: [boolean] | [boolean, Data[] | undefined]
-        // Page size is also cached to share the page data between hooks with the
-        // same key.
-        $len: number
-      }
+      SWRInfiniteCacheResult<Data, any>
     >(cache, infiniteKey)
 
     const resolvePageSize = useCallback((): number => {
