@@ -926,6 +926,7 @@ describe('useSWRInfinite', () => {
   })
 
   // https://github.com/vercel/swr/issues/908
+  //TODO: This test trigger act warning
   it('should revalidate first page after mutating', async () => {
     let renderedData
     const key = createKey()
