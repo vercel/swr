@@ -1,7 +1,7 @@
 import { act, screen, fireEvent } from '@testing-library/react'
 import React, { useEffect, useState } from 'react'
 import useSWR, { mutate as globalMutate, useSWRConfig } from 'swr'
-import { serialize } from '../src/utils/serialize'
+import { serialize } from '../_internal/utils/serialize'
 import {
   createResponse,
   sleep,

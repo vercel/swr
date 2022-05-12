@@ -4,7 +4,7 @@ import {
   Arguments,
   BareFetcher,
   SWRCacheResult
-} from 'swr'
+} from 'swr/_internal'
 
 type FetcherResponse<Data = unknown> = Data | Promise<Data>
 

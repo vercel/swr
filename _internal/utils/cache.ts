@@ -2,7 +2,7 @@ import { defaultConfigOptions } from './web-preset'
 import { IS_SERVER } from './env'
 import { UNDEFINED, mergeObjects, noop } from './helper'
 import { internalMutate } from './mutate'
-import { GlobalState, SWRGlobalState } from './global-state'
+import { SWRGlobalState } from './global-state'
 import * as revalidateEvents from '../constants'
 
 import {
@@ -10,7 +10,8 @@ import {
   ScopedMutator,
   RevalidateEvent,
   RevalidateCallback,
-  ProviderConfiguration
+  ProviderConfiguration,
+  GlobalState
 } from '../types'
 
 const revalidateAllKeys = (

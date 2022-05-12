@@ -1,5 +1,5 @@
-import { GlobalState, SWRGlobalState } from './global-state'
-import { Key, Cache, SWRCacheResult } from '../types'
+import { SWRGlobalState } from './global-state'
+import { Key, Cache, SWRCacheResult, GlobalState } from '../types'
 export const noop = () => {}
 
 // Using noop() as the undefined value as undefined can possibly be replaced

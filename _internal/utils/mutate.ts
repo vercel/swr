@@ -1,9 +1,15 @@
 import { serialize } from './serialize'
 import { createCacheHelper, isFunction, isUndefined } from './helper'
-import { SWRGlobalState, GlobalState } from './global-state'
+import { SWRGlobalState } from './global-state'
 import { getTimestamp } from './timestamp'
 import * as revalidateEvents from '../constants'
-import { Key, Cache, MutatorCallback, MutatorOptions } from '../types'
+import {
+  Key,
+  Cache,
+  MutatorCallback,
+  MutatorOptions,
+  GlobalState
+} from '../types'
 
 export const internalMutate = async <Data>(
   ...args: [
