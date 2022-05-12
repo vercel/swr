@@ -20,12 +20,13 @@ export interface SWRInfiniteConfiguration<
   Data = any,
   Error = any,
   Fn extends SWRInfiniteFetcher<Data> = BareFetcher<Data>
-> extends SWRConfiguration<Data[], Error> {
+> extends Omit<SWRConfiguration<Data[], Error>, 'compare'> {
   initialSize?: number
   revalidateAll?: boolean
   persistSize?: boolean
   revalidateFirstPage?: boolean
   fetcher?: Fn
+  compare?: SWRConfiguration<Data, Error>['compare']
 }
 
 export interface SWRInfiniteResponse<Data = any, Error = any>
