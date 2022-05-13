@@ -37,13 +37,12 @@ const onErrorRetry = (
   setTimeout(revalidate, timeout, opts)
 }
 
+const compare = (currentData: any, newData: any) =>
+  stableHash(currentData) == stableHash(newData)
+
 // Default cache provider
-const [cache, mutate] = initCache(new Map()) as [
-  Cache<any>,
-  ScopedMutator<any>,
-  () => {}
-]
-export { cache, mutate }
+const [cache, mutate] = initCache(new Map()) as [Cache<any>, ScopedMutator<any>]
+export { cache, mutate, compare }
 
 // Default config
 export const defaultConfig: FullConfiguration = mergeObjects(
@@ -68,8 +67,7 @@ export const defaultConfig: FullConfiguration = mergeObjects(
     loadingTimeout: slowConnection ? 5000 : 3000,
 
     // providers
-    compare: (currentData: any, newData: any) =>
-      stableHash(currentData) == stableHash(newData),
+    compare,
     isPaused: () => false,
     cache,
     mutate,

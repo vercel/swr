@@ -10,15 +10,16 @@
     "cache",
     "fetch"
   ],
-  "main": "./dist/index.js",
-  "module": "./dist/index.esm.js",
+  "main": "./core/dist/index.js",
+  "module": "./core/dist/index.esm.js",
+  "types": "./core/dist/core/index.d.ts",
   "exports": {
     "./package.json": "./package.json",
     ".": {
-      "import": "./dist/index.mjs",
-      "module": "./dist/index.esm.js",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "import": "./core/dist/index.mjs",
+      "module": "./core/dist/index.esm.js",
+      "require": "./core/dist/index.js",
+      "types": "./core/dist/core/index.d.ts"
     },
     "./infinite": {
       "import": "./infinite/dist/index.mjs",
@@ -37,33 +38,43 @@
       "module": "./mutation/dist/index.esm.js",
       "require": "./mutation/dist/index.js",
       "types": "./mutation/dist/mutation/index.d.ts"
+    },
+    "./_internal": {
+      "import": "./_internal/dist/index.mjs",
+      "module": "./_internal/dist/index.esm.js",
+      "require": "./_internal/dist/index.js",
+      "types": "./_internal/dist/_internal/index.d.ts"
     }
   },
-  "types": "./dist/index.d.ts",
   "files": [
-    "dist/**",
+    "core/dist/**",
     "infinite/dist/**",
     "immutable/dist/**",
     "mutation/dist/**",
+    "_internal/dist/**",
+    "core/dist/package.json",
     "infinite/package.json",
     "immutable/package.json",
-    "mutation/package.json"
+    "mutation/package.json",
+    "_internal/package.json",
+    "package.json"
   ],
   "repository": "github:vercel/swr",
   "homepage": "https://swr.vercel.app",
   "license": "MIT",
   "scripts": {
-    "clean": "rimraf dist infinite/dist immutable/dist mutation/dist",
-    "build": "yarn build:core && yarn build:infinite && yarn build:immutable && yarn build:mutation",
+    "clean": "rimraf core/dist infinite/dist immutable/dist mutation/dist",
+    "build": "yarn build:internal && yarn build:core && yarn build:infinite && yarn build:immutable && yarn build:mutation",
     "watch": "npm-run-all -p watch:core watch:infinite watch:immutable watch:mutation",
     "watch:core": "yarn build:core -w",
     "watch:infinite": "yarn build:infinite -w",
     "watch:immutable": "yarn build:immutable -w",
     "watch:mutation": "yarn build:mutation -w",
-    "build:core": "bunchee src/index.ts --no-sourcemap",
+    "build:core": "bunchee index.ts --cwd core --no-sourcemap",
     "build:infinite": "bunchee index.ts --cwd infinite --no-sourcemap",
     "build:immutable": "bunchee index.ts --cwd immutable --no-sourcemap",
     "build:mutation": "bunchee index.ts --cwd mutation --no-sourcemap",
+    "build:internal": "bunchee index.ts --cwd _internal --no-sourcemap",
     "prepublishOnly": "yarn clean && yarn build",
     "publish-beta": "yarn publish --tag beta",
     "types:check": "tsc --noEmit --project tsconfig.check.json && tsc --noEmit -p test",
@@ -75,8 +86,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged",
-      "pre-push": "yarn types:check"
+      "pre-commit": "lint-staged && yarn types:check"
     }
   },
   "lint-staged": {
@@ -90,12 +100,13 @@
     "tslib": "2.3.0"
   },
   "devDependencies": {
+    "@types/use-sync-external-store": "^0.0.3",
     "@swc/core": "1.2.129",
     "@swc/jest": "0.2.17",
-    "@testing-library/jest-dom": "5.14.1",
-    "@testing-library/react": "12.0.0",
+    "@testing-library/jest-dom": "^5.16.4",
+    "@testing-library/react": "^13.1.1",
     "@type-challenges/utils": "0.1.1",
-    "@types/react": "17.0.20",
+    "@types/react": "^18.0.6",
     "@typescript-eslint/eslint-plugin": "5.8.0",
     "@typescript-eslint/parser": "5.8.0",
     "bunchee": "1.8.3",
@@ -112,10 +123,8 @@
     "next": "^12.1.0",
     "npm-run-all": "4.1.5",
     "prettier": "2.5.0",
-    "react": "17.0.1",
-    "react-18": "npm:react@18",
-    "react-dom": "17.0.1",
-    "react-dom-18": "npm:react-dom@18",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
     "rimraf": "3.0.2",
     "swr": "link:./",
     "typescript": "4.4.3"
@@ -130,5 +139,8 @@
     "singleQuote": true,
     "arrowParens": "avoid",
     "trailingComma": "none"
+  },
+  "dependencies": {
+    "use-sync-external-store": "^1.1.0"
   }
 }

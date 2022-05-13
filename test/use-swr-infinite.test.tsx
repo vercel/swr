@@ -1,6 +1,6 @@
 import React, { Suspense, useEffect, useState } from 'react'
 import { fireEvent, act, screen } from '@testing-library/react'
-import { mutate as globalMutate, useSWRConfig, SWRConfig } from 'swr'
+import useSWR, { mutate as globalMutate, useSWRConfig, SWRConfig } from 'swr'
 import useSWRInfinite, { unstable_serialize } from 'swr/infinite'
 import {
   sleep,
@@ -8,7 +8,8 @@ import {
   createResponse,
   nextTick,
   renderWithConfig,
-  renderWithGlobalCache
+  renderWithGlobalCache,
+  executeWithoutBatching
 } from './utils'
 
 describe('useSWRInfinite', () => {
@@ -563,7 +564,7 @@ describe('useSWRInfinite', () => {
     screen.getByText('data:')
 
     // after 300ms the rendered result should be 3
-    await act(() => sleep(350))
+    await executeWithoutBatching(() => sleep(350))
     screen.getByText('data:3')
   })
 
@@ -925,6 +926,7 @@ describe('useSWRInfinite', () => {
   })
 
   // https://github.com/vercel/swr/issues/908
+  //TODO: This test trigger act warning
   it('should revalidate first page after mutating', async () => {
     let renderedData
     const key = createKey()
@@ -1219,5 +1221,33 @@ describe('useSWRInfinite', () => {
 
     fireEvent.click(screen.getByText('mutate'))
     await screen.findByText('data: 2')
+  })
+
+  it('should share data with useSWR', async () => {
+    const key = createKey()
+    const SWR = () => {
+      const { data } = useSWR(`${key}-${2}`)
+      return <div>swr: {data}</div>
+    }
+    const Page = () => {
+      const { data, setSize, size } = useSWRInfinite(
+        index => `${key}-${index + 1}`,
+        infiniteKey => createResponse(`${infiniteKey},`, { delay: 100 })
+      )
+      return (
+        <>
+          <div onClick={() => setSize(i => i + 1)}>data: {data}</div>
+          <div onClick={() => setSize(i => i + 1)}>size: {size}</div>
+          <SWR></SWR>
+        </>
+      )
+    }
+    renderWithConfig(<Page />)
+    await screen.findByText(`data: ${key}-1,`)
+    await screen.findByText(`swr:`)
+    fireEvent.click(screen.getByText('size: 1'))
+    await screen.findByText(`data: ${key}-1,${key}-2,`)
+    await screen.findByText(`size: 2`)
+    await screen.findByText(`swr: ${key}-2,`)
   })
 })

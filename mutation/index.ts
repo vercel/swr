@@ -1,13 +1,15 @@
 import { useCallback, useRef } from 'react'
-import useSWR, { useSWRConfig, Middleware, Key } from 'swr'
-
-import { serialize } from '../src/utils/serialize'
-import { useStateWithDeps } from '../src/utils/state'
-import { withMiddleware } from '../src/utils/with-middleware'
-import { useIsomorphicLayoutEffect } from '../src/utils/env'
-import { UNDEFINED } from '../src/utils/helper'
-import { getTimestamp } from '../src/utils/timestamp'
-
+import useSWR, { useSWRConfig } from 'swr'
+import {
+  serialize,
+  useStateWithDeps,
+  withMiddleware,
+  useIsomorphicLayoutEffect,
+  UNDEFINED,
+  getTimestamp,
+  Middleware,
+  Key
+} from 'swr/_internal'
 import {
   SWRMutationConfiguration,
   SWRMutationResponse,
@@ -35,7 +37,7 @@ const mutation = (<Data, Error>() =>
     const currentState = stateRef.current
 
     const trigger = useCallback(
-      async (arg, opts?: SWRMutationConfiguration<Data, Error>) => {
+      async (arg: any, opts?: SWRMutationConfiguration<Data, Error>) => {
         const [serializedKey, resolvedKey] = serialize(keyRef.current)
 
         if (!fetcher) {

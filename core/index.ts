@@ -4,8 +4,8 @@ export default useSWR
 
 // Core APIs
 export { SWRConfig, unstable_serialize } from './use-swr'
-export { useSWRConfig } from './utils/use-swr-config'
-export { mutate } from './utils/config'
+export { useSWRConfig } from 'swr/_internal'
+export { mutate } from 'swr/_internal'
 
 // Types
 export type {
@@ -15,13 +15,14 @@ export type {
   Key,
   KeyLoader,
   KeyedMutator,
+  SWRHook,
   SWRResponse,
   Cache,
-  SWRHook,
+  CacheValue,
   BareFetcher,
   Fetcher,
   MutatorCallback,
   MutatorOptions,
   Middleware,
   Arguments
-} from './types'
+} from 'swr/_internal'

@@ -1,6 +1,14 @@
 import * as revalidateEvents from './constants'
 import { defaultConfig } from './utils/config'
 
+export type GlobalState = [
+  Record<string, RevalidateCallback[]>, // EVENT_REVALIDATORS
+  Record<string, [number, number]>, // MUTATION: [ts, end_ts]
+  Record<string, [any, number]>, // FETCH: [data, ts]
+  ScopedMutator, // Mutator
+  (key: string, value: any, prev: any) => void, // Setter
+  (key: string, callback: (current: any, prev: any) => void) => () => void // Subscriber
+]
 export type FetcherResponse<Data = unknown> = Data | Promise<Data>
 export type BareFetcher<Data = unknown> = (
   ...args: any[]
@@ -144,7 +152,9 @@ export type MutatorCallback<Data = any> = (
 
 export type MutatorOptions<Data = any> = {
   revalidate?: boolean
-  populateCache?: boolean | ((result: any, currentData?: Data) => Data)
+  populateCache?:
+    | boolean
+    | ((result: any, currentData: Data | undefined) => Data)
   optimisticData?: Data | ((currentData?: Data) => Data)
   rollbackOnError?: boolean
 }
@@ -255,12 +265,22 @@ export type RevalidateCallback = <K extends RevalidateEvent>(
   type: K
 ) => RevalidateCallbackReturnType[K]
 
-export type StateUpdateCallback<Data = any, Error = any> = (
-  state: State<Data, Error>
-) => void
-
-export interface Cache<Data = any, Error = any> {
-  get(key: Key): State<Data, Error> | undefined
-  set(key: Key, value: State<Data, Error>): void
+export interface Cache<Data = any> {
+  get(key: Key): CacheValue<Data> | undefined
+  set(key: Key, value: Data): void
   delete(key: Key): void
+}
+
+export interface CacheValue<Data = any, Error = any> {
+  data?: Data
+  error?: Error
+  isValidating?: boolean
+  isLoading?: boolean
+}
+
+export interface StateDependencies {
+  data?: boolean
+  error?: boolean
+  isValidating?: boolean
+  isLoading?: boolean
 }

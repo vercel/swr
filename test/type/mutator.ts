@@ -6,7 +6,7 @@ import {
   MutatorCallback,
   Mutator,
   MutatorWrapper
-} from '../../src/types'
+} from '../../_internal/types'
 
 type Case1<Data = any> = MutatorFn<Data>
 type Case2<Data = any> = (

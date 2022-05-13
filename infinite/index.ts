@@ -1,28 +1,32 @@
 // We have to several type castings here because `useSWRInfinite` is a special
 // hook where `key` and return type are not like the normal `useSWR` types.
 
-import { useRef, useState, useCallback } from 'react'
-import useSWR, {
-  SWRConfig,
+import { useRef, useCallback } from 'react'
+import useSWR, { SWRConfig } from 'swr'
+
+import {
+  isUndefined,
+  isFunction,
+  UNDEFINED,
+  createCacheHelper,
   SWRHook,
   MutatorCallback,
   Middleware,
-  BareFetcher
-} from 'swr'
-
-import { useIsomorphicLayoutEffect } from '../src/utils/env'
-import { serialize } from '../src/utils/serialize'
-import { isUndefined, isFunction, UNDEFINED } from '../src/utils/helper'
-import { withMiddleware } from '../src/utils/with-middleware'
-import { createCacheHelper } from '../src/utils/cache'
+  BareFetcher,
+  useIsomorphicLayoutEffect,
+  serialize,
+  withMiddleware
+} from 'swr/_internal'
 
 import type {
   SWRInfiniteConfiguration,
   SWRInfiniteResponse,
   SWRInfiniteHook,
   SWRInfiniteKeyLoader,
-  SWRInfiniteFetcher
+  SWRInfiniteFetcher,
+  SWRInfiniteCacheValue
 } from './types'
+import { useSyncExternalStore } from 'use-sync-external-store/shim'
 
 const INFINITE_PREFIX = '$inf$'
 
@@ -41,7 +45,6 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
     config: Omit<typeof SWRConfig.default, 'fetcher'> &
       Omit<SWRInfiniteConfiguration<Data, Error>, 'fetcher'>
   ): SWRInfiniteResponse<Data, Error> => {
-    const rerender = useState({})[1]
     const didMountRef = useRef<boolean>(false)
     const dataRef = useRef<Data[]>()
 
@@ -64,17 +67,31 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
       // Not ready yet.
     }
 
-    const [get, set] = createCacheHelper<
+    const [get, set, subscribeCache] = createCacheHelper<
       Data,
-      {
-        // We use cache to pass extra info (context) to fetcher so it can be globally
-        // shared. The key of the context data is based on the first page key.
-        $ctx: [boolean] | [boolean, Data[] | undefined]
-        // Page size is also cached to share the page data between hooks with the
-        // same key.
-        $len: number
-      }
+      SWRInfiniteCacheValue<Data, any>
     >(cache, infiniteKey)
+
+    const getSnapshot = useCallback(() => {
+      const size = isUndefined(get().$len) ? initialSize : get().$len
+      return size
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [cache, infiniteKey, initialSize])
+    useSyncExternalStore(
+      useCallback(
+        (callback: () => void) => {
+          if (infiniteKey)
+            return subscribeCache(infiniteKey, () => {
+              callback()
+            })
+          return () => {}
+        },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [cache, infiniteKey]
+      ),
+      getSnapshot,
+      getSnapshot
+    )
 
     const resolvePageSize = useCallback((): number => {
       const cachedPageSize = get().$len
@@ -100,7 +117,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
 
       // `initialSize` isn't allowed to change during the lifecycle
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [infiniteKey])
+    }, [infiniteKey, cache])
 
     // Needs to check didMountRef during mounting, not in the fetcher
     const shouldRevalidateOnMount = revalidateOnMount && !didMountRef.current
@@ -126,8 +143,13 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
             break
           }
 
+          const [getSWRCacahe, setSWRCache] = createCacheHelper<
+            Data,
+            SWRInfiniteCacheValue<Data, any>
+          >(cache, pageKey)
+
           // Get the cached page data.
-          let pageData = cache.get(pageKey)?.data
+          let pageData = getSWRCacahe().data as Data
 
           // should fetch (or revalidate) if:
           // - `revalidateAll` is enabled
@@ -148,9 +170,8 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
 
           if (fn && shouldFetchPage) {
             pageData = await fn(pageArg)
-            cache.set(pageKey, { ...cache.get(pageKey), data: pageData })
+            setSWRCache({ ...getSWRCacahe(), data: pageData })
           }
-
           data.push(pageData)
           previousPageData = pageData
         }
@@ -202,7 +223,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
       },
       // swr.mutate is always the same reference
       // eslint-disable-next-line react-hooks/exhaustive-deps
-      [infiniteKey]
+      [infiniteKey, cache]
     )
 
     // Function to load pages data from the cache based on the page size.
@@ -244,12 +265,11 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
 
         set({ $len: size })
         lastPageSizeRef.current = size
-        rerender({})
         return mutate(resolvePagesFromCache(size))
       },
       // `cache` and `rerender` isn't allowed to change during the lifecycle
       // eslint-disable-next-line react-hooks/exhaustive-deps
-      [infiniteKey, resolvePageSize, mutate]
+      [infiniteKey, resolvePageSize, mutate, cache]
     )
 
     // Use getter functions to avoid unnecessary re-renders caused by triggering
