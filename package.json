@@ -10,16 +10,16 @@
     "cache",
     "fetch"
   ],
-  "main": "./swr/dist/index.js",
-  "module": "./swr/dist/index.esm.js",
-  "types": "./swr/dist/swr/index.d.ts",
+  "main": "./core/dist/index.js",
+  "module": "./core/dist/index.esm.js",
+  "types": "./core/dist/core/index.d.ts",
   "exports": {
     "./package.json": "./package.json",
     ".": {
-      "import": "./swr/dist/index.mjs",
-      "module": "./swr/dist/index.esm.js",
-      "require": "./swr/dist/index.js",
-      "types": "./swr/dist/swr/index.d.ts"
+      "import": "./core/dist/index.mjs",
+      "module": "./core/dist/index.esm.js",
+      "require": "./core/dist/index.js",
+      "types": "./core/dist/core/index.d.ts"
     },
     "./infinite": {
       "import": "./infinite/dist/index.mjs",
@@ -47,12 +47,12 @@
     }
   },
   "files": [
-    "swr/dist/**",
+    "core/dist/**",
     "infinite/dist/**",
     "immutable/dist/**",
     "mutation/dist/**",
     "_internal/dist/**",
-    "swr/dist/package.json",
+    "core/dist/package.json",
     "infinite/package.json",
     "immutable/package.json",
     "mutation/package.json",
@@ -63,14 +63,14 @@
   "homepage": "https://swr.vercel.app",
   "license": "MIT",
   "scripts": {
-    "clean": "rimraf dist infinite/dist immutable/dist mutation/dist",
+    "clean": "rimraf core/dist infinite/dist immutable/dist mutation/dist",
     "build": "yarn build:internal && yarn build:core && yarn build:infinite && yarn build:immutable && yarn build:mutation",
     "watch": "npm-run-all -p watch:core watch:infinite watch:immutable watch:mutation",
     "watch:core": "yarn build:core -w",
     "watch:infinite": "yarn build:infinite -w",
     "watch:immutable": "yarn build:immutable -w",
     "watch:mutation": "yarn build:mutation -w",
-    "build:core": "bunchee index.ts --cwd swr --no-sourcemap",
+    "build:core": "bunchee index.ts --cwd core --no-sourcemap",
     "build:infinite": "bunchee index.ts --cwd infinite --no-sourcemap",
     "build:immutable": "bunchee index.ts --cwd immutable --no-sourcemap",
     "build:mutation": "bunchee index.ts --cwd mutation --no-sourcemap",

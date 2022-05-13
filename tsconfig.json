@@ -18,14 +18,14 @@
     "baseUrl": ".",
     "noEmitOnError": true,
     "paths": {
-      "swr": ["./swr/index.ts"],
+      "swr": ["./core/index.ts"],
       "swr/infinite": ["./infinite/index.ts"],
       "swr/immutable": ["./immutable/index.ts"],
       "swr/mutation": ["./mutation/index.ts"]
     },
-    "typeRoots": ["swr/types", "./node_modules/@types"]
+    "typeRoots": ["./node_modules/@types"]
   },
-  "include": ["swr"],
+  "include": ["core"],
   "exclude": ["./**/dist", "node_modules", "jest.config.js"],
   "watchOptions": {
     "watchFile": "useFsEvents",

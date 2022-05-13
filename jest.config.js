@@ -4,7 +4,7 @@ module.exports = {
   modulePathIgnorePatterns: ['<rootDir>/examples/'],
   setupFilesAfterEnv: ['<rootDir>/test/jest-setup.ts'],
   moduleNameMapper: {
-    '^swr$': '<rootDir>/swr/index.ts',
+    '^swr$': '<rootDir>/core/index.ts',
     '^swr/infinite$': '<rootDir>/infinite/index.ts',
     '^swr/immutable$': '<rootDir>/immutable/index.ts',
     '^swr/mutation$': '<rootDir>/mutation/index.ts',
