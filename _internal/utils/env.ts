@@ -1,7 +1,7 @@
 import React, { useEffect, useLayoutEffect } from 'react'
 import { hasRequestAnimationFrame, isWindowDefined } from './helper'
 
-// @ts-expect-error TODO: should remove this when the default react version is 18
+
 export const IS_REACT_LEGACY = !React.useId
 
 export const IS_SERVER = !isWindowDefined || 'Deno' in window

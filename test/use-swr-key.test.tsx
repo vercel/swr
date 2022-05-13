@@ -1,7 +1,13 @@
 import { act, fireEvent, screen } from '@testing-library/react'
 import React, { useState, useEffect } from 'react'
 import useSWR from 'swr'
-import { createKey, createResponse, renderWithConfig, sleep } from './utils'
+import {
+  createKey,
+  createResponse,
+  executeWithoutBatching,
+  renderWithConfig,
+  sleep
+} from './utils'
 
 describe('useSWR - key', () => {
   it('should respect requests after key has changed', async () => {
@@ -103,24 +109,24 @@ describe('useSWR - key', () => {
   })
 
   it('should revalidate if a function key changes identity', async () => {
-    const closureFunctions: { [key: string]: () => Promise<string> } = {}
+    const closureFunctions: { [key: string]: () => string } = {}
 
     const baseKey = createKey()
     const closureFactory = id => {
       if (closureFunctions[id]) return closureFunctions[id]
-      closureFunctions[id] = () => Promise.resolve(`${baseKey}-${id}`)
+      closureFunctions[id] = () => `${baseKey}-${id}`
       return closureFunctions[id]
     }
 
     let updateId
 
-    const fetcher = ([fn]) => fn()
+    const fetcher = (key: string) => Promise.resolve(key)
 
     function Page() {
       const [id, setId] = React.useState('first')
       updateId = setId
       const fnWithClosure = closureFactory(id)
-      const { data } = useSWR([fnWithClosure], fetcher)
+      const { data } = useSWR(fnWithClosure, fetcher)
 
       return <div>{data}</div>
     }
@@ -133,7 +139,7 @@ describe('useSWR - key', () => {
 
     // update, but don't change the id.
     // Function identity should stay the same, and useSWR should not call the function again.
-    act(() => updateId('first'))
+    executeWithoutBatching(() => updateId('first'))
     await screen.findByText(`${baseKey}-first`)
     expect(closureSpy).toHaveBeenCalledTimes(1)
 

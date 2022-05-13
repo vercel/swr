@@ -10,15 +10,16 @@
     "cache",
     "fetch"
   ],
-  "main": "./dist/index.js",
-  "module": "./dist/index.esm.js",
+  "main": "./core/dist/index.js",
+  "module": "./core/dist/index.esm.js",
+  "types": "./core/dist/core/index.d.ts",
   "exports": {
     "./package.json": "./package.json",
     ".": {
-      "import": "./dist/index.mjs",
-      "module": "./dist/index.esm.js",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "import": "./core/dist/index.mjs",
+      "module": "./core/dist/index.esm.js",
+      "require": "./core/dist/index.js",
+      "types": "./core/dist/core/index.d.ts"
     },
     "./infinite": {
       "import": "./infinite/dist/index.mjs",
@@ -37,33 +38,43 @@
       "module": "./mutation/dist/index.esm.js",
       "require": "./mutation/dist/index.js",
       "types": "./mutation/dist/mutation/index.d.ts"
+    },
+    "./_internal": {
+      "import": "./_internal/dist/index.mjs",
+      "module": "./_internal/dist/index.esm.js",
+      "require": "./_internal/dist/index.js",
+      "types": "./_internal/dist/_internal/index.d.ts"
     }
   },
-  "types": "./dist/index.d.ts",
   "files": [
-    "dist/**",
+    "core/dist/**",
     "infinite/dist/**",
     "immutable/dist/**",
     "mutation/dist/**",
+    "_internal/dist/**",
+    "core/dist/package.json",
     "infinite/package.json",
     "immutable/package.json",
-    "mutation/package.json"
+    "mutation/package.json",
+    "_internal/package.json",
+    "package.json"
   ],
   "repository": "github:vercel/swr",
   "homepage": "https://swr.vercel.app",
   "license": "MIT",
   "scripts": {
-    "clean": "rimraf dist infinite/dist immutable/dist mutation/dist",
-    "build": "yarn build:core && yarn build:infinite && yarn build:immutable && yarn build:mutation",
+    "clean": "rimraf core/dist infinite/dist immutable/dist mutation/dist",
+    "build": "yarn build:internal && yarn build:core && yarn build:infinite && yarn build:immutable && yarn build:mutation",
     "watch": "npm-run-all -p watch:core watch:infinite watch:immutable watch:mutation",
     "watch:core": "yarn build:core -w",
     "watch:infinite": "yarn build:infinite -w",
     "watch:immutable": "yarn build:immutable -w",
     "watch:mutation": "yarn build:mutation -w",
-    "build:core": "bunchee src/index.ts --no-sourcemap",
+    "build:core": "bunchee index.ts --cwd core --no-sourcemap",
     "build:infinite": "bunchee index.ts --cwd infinite --no-sourcemap",
     "build:immutable": "bunchee index.ts --cwd immutable --no-sourcemap",
     "build:mutation": "bunchee index.ts --cwd mutation --no-sourcemap",
+    "build:internal": "bunchee index.ts --cwd _internal --no-sourcemap",
     "prepublishOnly": "yarn clean && yarn build",
     "publish-beta": "yarn publish --tag beta",
     "types:check": "tsc --noEmit --project tsconfig.check.json && tsc --noEmit -p test",

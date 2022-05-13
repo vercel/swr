@@ -6,6 +6,7 @@ interface CustomCache<Data = any> extends Cache<Data> {
 }
 
 export function useTestCache() {
-  expectType<Cache>(useSWRConfig().cache)
+  expectType<Map<string, any>>(useSWRConfig().cache)
+  expectType<Map<string, number>>(useSWRConfig<Map<string, number>>().cache)
   expectType<CustomCache>(useSWRConfig<CustomCache>().cache)
 }

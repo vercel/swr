@@ -1,33 +1,27 @@
 import { useCallback, useRef, useDebugValue } from 'react'
-import { useSyncExternalStore } from 'use-sync-external-store/shim'
+import { useSyncExternalStoreWithSelector } from 'use-sync-external-store/shim/with-selector'
 
-import { defaultConfig } from './utils/config'
-import { SWRGlobalState, GlobalState } from './utils/global-state'
 import {
+  defaultConfig,
   IS_REACT_LEGACY,
   IS_SERVER,
   rAF,
-  useIsomorphicLayoutEffect
-} from './utils/env'
-import { serialize } from './utils/serialize'
-import {
+  useIsomorphicLayoutEffect,
+  SWRGlobalState,
+  GlobalState,
+  serialize,
   isUndefined,
   UNDEFINED,
   OBJECT,
-  mergeObjects,
-  isFunction
-} from './utils/helper'
-import ConfigProvider from './utils/config-context'
-import { useStateWithDeps } from './utils/state'
-import { withArgs } from './utils/resolve-args'
-import { subscribeCallback } from './utils/subscribe-key'
-import { broadcastState } from './utils/broadcast-state'
-import { getTimestamp } from './utils/timestamp'
-import { internalMutate } from './utils/mutate'
-import * as revalidateEvents from './constants'
-import { createCacheHelper } from './utils/cache'
-
-import {
+  isFunction,
+  createCacheHelper,
+  isEmptyCache,
+  SWRConfig as ConfigProvider,
+  withArgs,
+  subscribeCallback,
+  getTimestamp,
+  internalMutate,
+  revalidateEvents,
   State,
   Fetcher,
   Key,
@@ -36,9 +30,10 @@ import {
   FullConfiguration,
   SWRConfiguration,
   SWRHook,
-  StateUpdateCallback,
-  RevalidateEvent
-} from './types'
+  RevalidateEvent,
+  SWRCacheResult,
+  StateDependencies
+} from 'swr/_internal'
 
 const WITH_DEDUPE = { dedupe: true }
 
@@ -71,8 +66,9 @@ export const useSWRHandler = <Data = any, Error = any>(
     keepPreviousData
   } = config
 
-  const [EVENT_REVALIDATORS, STATE_UPDATERS, MUTATION, FETCH] =
-    SWRGlobalState.get(cache) as GlobalState
+  const [EVENT_REVALIDATORS, MUTATION, FETCH] = SWRGlobalState.get(
+    cache
+  ) as GlobalState
 
   // `key` is the identifier of the SWR `data` state, `keyInfo` holds extra
   // states such as `error` and `isValidating` inside,
@@ -100,54 +96,82 @@ export const useSWRHandler = <Data = any, Error = any>(
     key
   )
 
-  const stateDependencies = useRef<Record<string, boolean>>({}).current
+  const stateDependencies = useRef<StateDependencies>({}).current
 
-  const getSnapshot = useCallback(
-    getCache,
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const getSnapshot = useCallback(getCache, [cache, key])
+  const fallback = isUndefined(fallbackData)
+    ? config.fallback[key]
+    : fallbackData
+
+  const selector = (snapshot: SWRCacheResult<Data, any>) => {
+    const shouldStartRequest = (() => {
+      if (!key) return false
+      if (!fetcher) return false
+      // If `revalidateOnMount` is set, we take the value directly.
+      if (!isUndefined(revalidateOnMount)) return revalidateOnMount
+      // If it's paused, we skip revalidation.
+      if (getConfig().isPaused()) return false
+      if (suspense) return false
+      return true
+    })()
+    if (!shouldStartRequest) return snapshot
+    if (isEmptyCache(snapshot)) {
+      return {
+        isValidating: true,
+        isLoading: true
+      }
+    }
+    return snapshot
+  }
+  const isEqual = useCallback(
+    (prev: SWRCacheResult<Data, any>, current: SWRCacheResult<Data, any>) => {
+      let equal = true
+      for (const _ in stateDependencies) {
+        const t = _ as keyof StateDependencies
+        if (!compare(current[t], prev[t])) {
+          if (t === 'data' && isUndefined(prev[t])) {
+            if (!compare(current[t], fallback)) {
+              equal = false
+            }
+          } else {
+            equal = false
+          }
+        }
+      }
+      return equal
+    },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [cache, key]
   )
 
   // Get the current state that SWR should return.
-  const cached = useSyncExternalStore(
+  const cached = useSyncExternalStoreWithSelector(
     useCallback(
       (callback: () => void) =>
-        subscribeCache(key, (current: any, prev: any) => {
+        subscribeCache(key, (current: SWRCacheResult<Data, any>) => {
           stateRef.current = current
-
-          let shouldTriggerCallback = false
-          for (const t in stateDependencies) {
-            if (!compare(current[t], prev[t])) {
-              shouldTriggerCallback = true
-            }
-          }
-
-          if (shouldTriggerCallback) {
-            callback()
-          }
+          callback()
         }),
       // eslint-disable-next-line react-hooks/exhaustive-deps
       [cache, key]
     ),
     getSnapshot,
-    getSnapshot
+    getSnapshot,
+    selector,
+    isEqual
   )
 
   const stateRef = useRef<State<Data, Error>>(cached)
-
-  console.log(cached)
-
+  const isInitialMount = !initialMountedRef.current
   const cachedData = cached.data
-  const fallback = isUndefined(fallbackData)
-    ? config.fallback[key]
-    : fallbackData
+
   const data = isUndefined(cachedData) ? fallback : cachedData
   const error = cached.error
 
   // Use a ref to store previous returned data. Use the inital data as its inital value.
   const laggyDataRef = useRef(data)
 
-  const isInitialMount = !initialMountedRef.current
   const returnedData = keepPreviousData
     ? isUndefined(cachedData)
       ? laggyDataRef.current
@@ -245,7 +269,6 @@ export const useSWRHandler = <Data = any, Error = any>(
         isLoading: false
       }
       const finishRequestAndUpdateState = () => {
-        // Set the global cache.
         setCache(finalState)
       }
       const cleanupState = () => {
@@ -267,12 +290,6 @@ export const useSWRHandler = <Data = any, Error = any>(
 
       try {
         if (shouldStartNewRequest) {
-          // Tell all other hooks to change the `isValidating` state.
-          broadcastState(cache, key, {
-            ...stateRef.current,
-            isValidating: true
-          })
-
           // If no cache being rendered currently (it shows a blank page),
           // we trigger the loading slow event.
           if (config.loadingTimeout && isUndefined(getCache().data)) {
@@ -350,8 +367,17 @@ export const useSWRHandler = <Data = any, Error = any>(
           }
           return false
         }
-
-        finalState.data = newData
+        // Deep compare with latest state to avoid extra re-renders.
+        // For local state, compare and assign.
+        if (!compare(stateRef.current.data, newData)) {
+          finalState.data = newData
+        } else {
+          // `data` and `newData` are deeply equal (serialized value).
+          // So it should be safe to broadcast the stale data to keep referential equality (===).
+          finalState.data = stateRef.current.data
+          // At the end of this function, `broadcastState` invokes the `onStateUpdate` function,
+          // which takes care of avoiding the re-render.
+        }
 
         // Trigger the successful callback if it's the original request.
         if (shouldStartNewRequest) {
@@ -405,12 +431,6 @@ export const useSWRHandler = <Data = any, Error = any>(
       // Update the current hook's state.
       finishRequestAndUpdateState()
 
-      // Here is the source of the request, need to tell all other hooks to
-      // update their states.
-      if (callbackSafeguard() && shouldStartNewRequest) {
-        broadcastState(cache, key, finalState)
-      }
-
       return true
     },
     // `setState` is immutable, and `eventsCallback`, `fnArg`, and
@@ -424,7 +444,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     // So we omit the values from the deps array
     // even though it might cause unexpected behaviors.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [key]
+    [key, cache]
   )
 
   // Similar to the global mutate, but bound to the current cache and key.
@@ -444,7 +464,6 @@ export const useSWRHandler = <Data = any, Error = any>(
     fetcherRef.current = fetcher
     configRef.current = config
     stateRef.current = currentState
-
     // Handle laggy data updates. If there's cached data of the current key,
     // it'll be the correct reference.
     if (!isUndefined(cachedData)) {
@@ -457,27 +476,6 @@ export const useSWRHandler = <Data = any, Error = any>(
     if (!key) return
 
     const softRevalidate = revalidate.bind(UNDEFINED, WITH_DEDUPE)
-
-    // Expose state updater to global event listeners. So we can update hook's
-    // internal state from the outside.
-    const onStateUpdate: StateUpdateCallback<Data, Error> = (state = {}) => {
-      setState(
-        mergeObjects(
-          {
-            error: state.error,
-            isValidating: state.isValidating,
-            isLoading: state.isLoading
-          },
-          // Since `setState` only shallowly compares states, we do a deep
-          // comparison here.
-          compare(stateRef.current.data, state.data)
-            ? UNDEFINED
-            : {
-                data: state.data
-              }
-        )
-      )
-    }
 
     // Expose revalidators to global event listeners. So we can trigger
     // revalidation from the outside.
@@ -503,7 +501,6 @@ export const useSWRHandler = <Data = any, Error = any>(
       return
     }
 
-    const unsubUpdate = subscribeCallback(key, STATE_UPDATERS, onStateUpdate)
     const unsubEvents = subscribeCallback(key, EVENT_REVALIDATORS, onRevalidate)
 
     // Mark the component as mounted and update corresponding refs.
@@ -527,7 +524,6 @@ export const useSWRHandler = <Data = any, Error = any>(
       // Mark it as unmounted.
       unmountedRef.current = true
 
-      unsubUpdate()
       unsubEvents()
     }
   }, [key])

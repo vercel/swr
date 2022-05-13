@@ -4,7 +4,8 @@ import React, {
   Suspense,
   useEffect,
   useReducer,
-  useState
+  useState,
+  PropsWithChildren
 } from 'react'
 import useSWR, { mutate } from 'swr'
 import {
@@ -15,7 +16,7 @@ import {
   sleep
 } from './utils'
 
-class ErrorBoundary extends React.Component<{ fallback: ReactNode }> {
+class ErrorBoundary extends React.Component<PropsWithChildren<{ fallback: ReactNode }>> {
   state = { hasError: false }
   static getDerivedStateFromError() {
     return {
@@ -111,7 +112,7 @@ describe('useSWR - suspense', () => {
     jest.spyOn(console, 'error').mockImplementation(() => {})
     const key = createKey()
     function Section() {
-      const { data } = useSWR(key, () => createResponse(new Error('error')), {
+      const { data } = useSWR<any>(key, () => createResponse(new Error('error')), {
         suspense: true
       })
       return <div>{data}</div>
@@ -130,7 +131,7 @@ describe('useSWR - suspense', () => {
     screen.getByText('fallback')
     await screen.findByText('error boundary')
     // 1 for js-dom 1 for react-error-boundray
-    expect(console.error).toHaveBeenCalledTimes(2)
+    expect(console.error).toHaveBeenCalledTimes(3)
   })
 
   it('should render cached data with error', async () => {

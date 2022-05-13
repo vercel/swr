@@ -1,7 +1,7 @@
 import { act, screen } from '@testing-library/react'
 import React, { useState, useEffect, useRef } from 'react'
 import useSWR, { Middleware, SWRConfig } from 'swr'
-import { withMiddleware } from '../src/utils/with-middleware'
+import { withMiddleware } from '../_internal/utils/with-middleware'
 
 import {
   createResponse,
