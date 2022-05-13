@@ -5,7 +5,7 @@ import { mergeObjects } from './helper'
 import { FullConfiguration, Cache } from '../types'
 
 export const useSWRConfig = <
-  T extends Cache = Map<string, any>
+  T extends Cache = Cache
 >(): FullConfiguration<T> => {
   return mergeObjects(defaultConfig, useContext(SWRConfigContext))
 }
