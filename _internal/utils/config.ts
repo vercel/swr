@@ -41,11 +41,7 @@ const compare = (currentData: any, newData: any) =>
   stableHash(currentData) == stableHash(newData)
 
 // Default cache provider
-const [cache, mutate] = initCache(new Map()) as [
-  Cache<any>,
-  ScopedMutator<any>,
-  () => {}
-]
+const [cache, mutate] = initCache(new Map()) as [Cache<any>, ScopedMutator<any>]
 export { cache, mutate, compare }
 
 // Default config
