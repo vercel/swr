@@ -100,7 +100,7 @@ export const internalMutate = async <Data>(
   if (populateCache) {
     if (!error) {
       // Transform the result into data.
-      if (isFunction(populateCache)) {
+      if (isFunction(populateCache) && originalData) {
         data = populateCache(data, originalData)
       }
 
