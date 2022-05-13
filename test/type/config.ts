@@ -1,4 +1,4 @@
-import { useSWRConfig, Cache } from 'swr'
+import { useSWRConfig, Cache, CacheValue } from 'swr'
 import { expectType } from './utils'
 
 interface CustomCache<Data = any> extends Cache<Data> {
@@ -6,7 +6,9 @@ interface CustomCache<Data = any> extends Cache<Data> {
 }
 
 export function useTestCache() {
-  expectType<Map<string, any>>(useSWRConfig().cache)
-  expectType<Map<string, number>>(useSWRConfig<Map<string, number>>().cache)
+  expectType<Map<string, CacheValue>>(useSWRConfig().cache)
+  expectType<Map<string, CacheValue>>(
+    useSWRConfig<Map<string, CacheValue>>().cache
+  )
   expectType<CustomCache>(useSWRConfig<CustomCache>().cache)
 }

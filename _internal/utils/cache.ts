@@ -7,7 +7,6 @@ import * as revalidateEvents from '../constants'
 
 import {
   Cache,
-  State,
   ScopedMutator,
   RevalidateEvent,
   RevalidateCallback,

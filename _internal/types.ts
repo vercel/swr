@@ -266,7 +266,7 @@ export type RevalidateCallback = <K extends RevalidateEvent>(
 ) => RevalidateCallbackReturnType[K]
 
 export interface Cache<Data = any> {
-  get(key: Key): Data | null | undefined
+  get(key: Key): CacheValue<Data> | undefined
   set(key: Key, value: Data): void
   delete(key: Key): void
 }
