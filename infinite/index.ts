@@ -4,19 +4,22 @@
 import { useRef, useCallback } from 'react'
 import useSWR, { SWRConfig } from 'swr'
 
+import type {
+  SWRHook,
+  MutatorCallback,
+  Middleware,
+  BareFetcher
+} from 'swr/_internal'
+
 import {
   isUndefined,
   isFunction,
   UNDEFINED,
   createCacheHelper,
-  SWRHook,
-  MutatorCallback,
-  Middleware,
-  BareFetcher,
   useIsomorphicLayoutEffect,
   serialize,
   withMiddleware
-} from 'swr/_internal'
+} from './utils'
 
 import type {
   SWRInfiniteConfiguration,

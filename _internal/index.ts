@@ -1,24 +1,62 @@
 import SWRConfig from './utils/config-context'
 import * as revalidateEvents from './constants'
-
-export { SWRConfig, revalidateEvents }
-
-export { initCache } from './utils/cache'
-export { defaultConfig, cache, mutate, compare } from './utils/config'
-export * from './utils/env'
-export { SWRGlobalState } from './utils/global-state'
-export { stableHash } from './utils/hash'
-export * from './utils/helper'
-export { mergeConfigs } from './utils/merge-config'
-export { internalMutate } from './utils/mutate'
-export { normalize } from './utils/normalize-args'
-export { withArgs } from './utils/resolve-args'
-export { serialize } from './utils/serialize'
-export { useStateWithDeps } from './utils/state'
-export { subscribeCallback } from './utils/subscribe-key'
-export { getTimestamp } from './utils/timestamp'
-export { useSWRConfig } from './utils/use-swr-config'
-export { preset, defaultConfigOptions } from './utils/web-preset'
-export { withMiddleware } from './utils/with-middleware'
+import { subscribeCallback } from './utils/subscribe-key'
+import { defaultConfig, cache, mutate } from './utils/config'
+import { SWRGlobalState } from './utils/global-state'
+import { stableHash } from './utils/hash'
+import { internalMutate } from './utils/mutate'
+import { normalize } from './utils/normalize-args'
+import { withArgs } from './utils/resolve-args'
+import { serialize } from './utils/serialize'
+import { useStateWithDeps } from './utils/state'
+import { getTimestamp } from './utils/timestamp'
+import { useSWRConfig } from './utils/use-swr-config'
+import { withMiddleware } from './utils/with-middleware'
+import {
+  IS_REACT_LEGACY,
+  IS_SERVER,
+  rAF,
+  useIsomorphicLayoutEffect
+} from './utils/env'
+import {
+  UNDEFINED,
+  OBJECT,
+  isUndefined,
+  isFunction,
+  isEmptyCache,
+  mergeObjects,
+  createCacheHelper
+} from './utils/helper'
 
 export * from './types'
+export { InternalUtils } from './enums'
+
+export default [
+  serialize,
+  useIsomorphicLayoutEffect,
+  UNDEFINED,
+  subscribeCallback,
+  revalidateEvents,
+  cache,
+  mutate,
+  isUndefined,
+  isFunction,
+  SWRConfig,
+  defaultConfig,
+  SWRGlobalState,
+  stableHash,
+  internalMutate,
+  normalize,
+  withArgs,
+  useStateWithDeps,
+  getTimestamp,
+  useSWRConfig,
+  withMiddleware,
+  IS_REACT_LEGACY,
+  IS_SERVER,
+  rAF,
+  OBJECT,
+  isEmptyCache,
+  mergeObjects,
+  createCacheHelper
+] as const

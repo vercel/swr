@@ -1,39 +1,40 @@
 import { useCallback, useRef, useDebugValue } from 'react'
 import { useSyncExternalStoreWithSelector } from 'use-sync-external-store/shim/with-selector'
-
+import type {
+  Key,
+  Fetcher,
+  GlobalState,
+  SWRConfiguration,
+  StateDependencies,
+  CacheValue,
+  State,
+  RevalidatorOptions,
+  SWRResponse,
+  RevalidateEvent,
+  FullConfiguration,
+  SWRHook
+} from 'swr/_internal'
 import {
   defaultConfig,
+  SWRGlobalState,
+  serialize,
+  createCacheHelper,
+  isUndefined,
+  isEmptyCache,
   IS_REACT_LEGACY,
   IS_SERVER,
-  rAF,
-  useIsomorphicLayoutEffect,
-  SWRGlobalState,
-  GlobalState,
-  serialize,
-  isUndefined,
   UNDEFINED,
   OBJECT,
-  isFunction,
-  createCacheHelper,
-  isEmptyCache,
-  SWRConfig as ConfigProvider,
-  withArgs,
-  subscribeCallback,
   getTimestamp,
+  isFunction,
+  withArgs,
   internalMutate,
   revalidateEvents,
-  State,
-  Fetcher,
-  Key,
-  SWRResponse,
-  RevalidatorOptions,
-  FullConfiguration,
-  SWRConfiguration,
-  SWRHook,
-  RevalidateEvent,
-  CacheValue,
-  StateDependencies
-} from 'swr/_internal'
+  useIsomorphicLayoutEffect,
+  subscribeCallback,
+  rAF,
+  ConfigProvider
+} from './utils'
 
 const WITH_DEDUPE = { dedupe: true }
 

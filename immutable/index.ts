@@ -1,5 +1,5 @@
 import useSWR, { Middleware } from 'swr'
-import { withMiddleware } from 'swr/_internal'
+import { withMiddleware } from './utils'
 
 export const immutable: Middleware = useSWRNext => (key, fetcher, config) => {
   // Always override all revalidate options.

@@ -1,16 +1,17 @@
 import { useCallback, useRef } from 'react'
 import useSWR, { useSWRConfig } from 'swr'
+
 import {
   serialize,
   useStateWithDeps,
   withMiddleware,
   useIsomorphicLayoutEffect,
   UNDEFINED,
-  getTimestamp,
-  Middleware,
-  Key
-} from 'swr/_internal'
-import {
+  getTimestamp
+} from './utils'
+
+import type { Middleware, Key } from 'swr/_internal'
+import type {
   SWRMutationConfiguration,
   SWRMutationResponse,
   SWRMutationHook,
