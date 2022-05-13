@@ -1,5 +1,5 @@
 import SWRConfig from './utils/config-context'
-import * as revalidateEvents from './constants'
+import { FOCUS_EVENT, RECONNECT_EVENT, MUTATE_EVENT } from './constants'
 import { subscribeCallback } from './utils/subscribe-key'
 import { defaultConfig, cache, mutate } from './utils/config'
 import { SWRGlobalState } from './utils/global-state'
@@ -36,7 +36,9 @@ export default [
   useIsomorphicLayoutEffect,
   UNDEFINED,
   subscribeCallback,
-  revalidateEvents,
+  FOCUS_EVENT,
+  RECONNECT_EVENT,
+  MUTATE_EVENT,
   cache,
   mutate,
   isUndefined,
