@@ -24,7 +24,7 @@ import type {
   SWRInfiniteHook,
   SWRInfiniteKeyLoader,
   SWRInfiniteFetcher,
-  SWRInfiniteCacheResult
+  SWRInfiniteCacheValue
 } from './types'
 import { useSyncExternalStore } from 'use-sync-external-store/shim'
 
@@ -69,7 +69,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
 
     const [get, set, subscribeCache] = createCacheHelper<
       Data,
-      SWRInfiniteCacheResult<Data, any>
+      SWRInfiniteCacheValue<Data, any>
     >(cache, infiniteKey)
 
     const getSnapshot = useCallback(() => {
@@ -145,7 +145,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
 
           const [getSWRCacahe, setSWRCache] = createCacheHelper<
             Data,
-            SWRInfiniteCacheResult<Data, any>
+            SWRInfiniteCacheValue<Data, any>
           >(cache, pageKey)
 
           // Get the cached page data.

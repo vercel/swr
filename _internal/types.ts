@@ -271,7 +271,7 @@ export interface Cache<Data = any> {
   delete(key: Key): void
 }
 
-export interface SWRCacheResult<Data = any, Error = any> {
+export interface CacheValue<Data = any, Error = any> {
   data?: Data
   error?: Error
   isValidating?: boolean

@@ -15,14 +15,14 @@ export type {
   Key,
   KeyLoader,
   KeyedMutator,
+  SWRHook,
   SWRResponse,
   Cache,
-  SWRHook,
+  CacheValue,
   BareFetcher,
   Fetcher,
   MutatorCallback,
   MutatorOptions,
   Middleware,
-  Arguments,
-  SWRCacheResult
+  Arguments
 } from 'swr/_internal'
