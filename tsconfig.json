@@ -12,7 +12,7 @@
     "noUnusedParameters": true,
     "strictBindCallApply": true,
     "outDir": "./dist",
-    "rootDir": "swr",
+    "rootDir": "core",
     "strict": true,
     "target": "es5",
     "baseUrl": ".",
