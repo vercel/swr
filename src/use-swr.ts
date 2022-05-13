@@ -178,7 +178,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       // new request should be initiated.
       const shouldStartNewRequest = !FETCH[key] || !opts.dedupe
 
-      /* 
+      /*
          For React 17
          Do unmount check for calls:
          If key has changed during the revalidation, or the component has been
@@ -442,7 +442,8 @@ export const useSWRHandler = <Data = any, Error = any>(
         mergeObjects(
           {
             error: state.error,
-            isValidating: state.isValidating
+            isValidating: state.isValidating,
+            isLoading: state.isLoading
           },
           // Since `setState` only shallowly compares states, we do a deep
           // comparison here.

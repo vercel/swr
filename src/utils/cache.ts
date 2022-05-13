@@ -8,6 +8,7 @@ import * as revalidateEvents from '../constants'
 import {
   Key,
   Cache,
+  State,
   ScopedMutator,
   RevalidateEvent,
   RevalidateCallback,
@@ -106,13 +107,9 @@ export const createCacheHelper = <Data = any, ExtendedInfo = {}>(
 ) =>
   [
     // Getter
-    () => cache.get(key) || {},
+    () => (cache.get(key) || {}) as State<Data, any> & Partial<ExtendedInfo>,
     // Setter
-    (
-      info: Partial<
-        { data: Data; error: any; isValidating: boolean } | ExtendedInfo
-      >
-    ) => {
+    (info: Partial<State<Data, any> | ExtendedInfo>) => {
       cache.set(key, mergeObjects(cache.get(key), info))
     }
   ] as const

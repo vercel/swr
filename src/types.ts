@@ -144,7 +144,7 @@ export type MutatorCallback<Data = any> = (
 
 export type MutatorOptions<Data = any> = {
   revalidate?: boolean
-  populateCache?: boolean | ((result: any, currentData: Data) => Data)
+  populateCache?: boolean | ((result: any, currentData?: Data) => Data)
   optimisticData?: Data | ((currentData?: Data) => Data)
   rollbackOnError?: boolean
 }
@@ -255,14 +255,12 @@ export type RevalidateCallback = <K extends RevalidateEvent>(
   type: K
 ) => RevalidateCallbackReturnType[K]
 
-export type StateUpdateCallback<Data = any, Error = any> = (state: {
-  data?: Data
-  error?: Error
-  isValidating?: boolean
-}) => void
+export type StateUpdateCallback<Data = any, Error = any> = (
+  state: State<Data, Error>
+) => void
 
-export interface Cache<Data = any> {
-  get(key: Key): Data | null | undefined
-  set(key: Key, value: Data): void
+export interface Cache<Data = any, Error = any> {
+  get(key: Key): State<Data, Error> | undefined
+  set(key: Key, value: State<Data, Error>): void
   delete(key: Key): void
 }
