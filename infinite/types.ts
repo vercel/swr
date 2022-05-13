@@ -3,7 +3,7 @@ import {
   SWRResponse,
   Arguments,
   BareFetcher,
-  CacheValue
+  State
 } from 'swr/_internal'
 
 type FetcherResponse<Data = unknown> = Data | Promise<Data>
@@ -119,7 +119,7 @@ export interface SWRInfiniteHook {
 }
 
 export interface SWRInfiniteCacheValue<Data = any, Error = any>
-  extends CacheValue<Data, Error> {
+  extends State<Data, Error> {
   // We use cache to pass extra info (context) to fetcher so it can be globally
   // shared. The key of the context data is based on the first page key.
   $ctx?: [boolean] | [boolean, Data[] | undefined]

@@ -174,7 +174,7 @@ export type Broadcaster<Data = any, Error = any> = (
   populateCache?: boolean
 ) => Promise<Data>
 
-export type State<Data, Error> = {
+export type State<Data = any, Error = any> = {
   data?: Data
   error?: Error
   isValidating?: boolean
@@ -266,16 +266,9 @@ export type RevalidateCallback = <K extends RevalidateEvent>(
 ) => RevalidateCallbackReturnType[K]
 
 export interface Cache<Data = any> {
-  get(key: Key): CacheValue<Data> | undefined
-  set(key: Key, value: Data): void
+  get(key: Key): State<Data> | undefined
+  set(key: Key, value: State<Data>): void
   delete(key: Key): void
-}
-
-export interface CacheValue<Data = any, Error = any> {
-  data?: Data
-  error?: Error
-  isValidating?: boolean
-  isLoading?: boolean
 }
 
 export interface StateDependencies {

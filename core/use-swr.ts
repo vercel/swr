@@ -31,7 +31,6 @@ import {
   SWRConfiguration,
   SWRHook,
   RevalidateEvent,
-  CacheValue,
   StateDependencies
 } from 'swr/_internal'
 
@@ -104,7 +103,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     ? config.fallback[key]
     : fallbackData
 
-  const selector = (snapshot: CacheValue<Data, any>) => {
+  const selector = (snapshot: State<Data, any>) => {
     const shouldStartRequest = (() => {
       if (!key) return false
       if (!fetcher) return false
@@ -125,7 +124,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     return snapshot
   }
   const isEqual = useCallback(
-    (prev: CacheValue<Data, any>, current: CacheValue<Data, any>) => {
+    (prev: State<Data, any>, current: State<Data, any>) => {
       let equal = true
       for (const _ in stateDependencies) {
         const t = _ as keyof StateDependencies
@@ -149,7 +148,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   const cached = useSyncExternalStoreWithSelector(
     useCallback(
       (callback: () => void) =>
-        subscribeCache(key, (current: CacheValue<Data, any>) => {
+        subscribeCache(key, (current: State<Data, any>) => {
           stateRef.current = current
           callback()
         }),
