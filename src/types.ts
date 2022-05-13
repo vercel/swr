@@ -144,7 +144,7 @@ export type MutatorCallback<Data = any> = (
 
 export type MutatorOptions<Data = any> = {
   revalidate?: boolean
-  populateCache?: boolean | ((result: any, currentData: Data) => Data)
+  populateCache?: boolean | ((result: any, currentData?: Data) => Data)
   optimisticData?: Data | ((currentData?: Data) => Data)
   rollbackOnError?: boolean
 }
