@@ -15,7 +15,8 @@ import {
   BareFetcher,
   useIsomorphicLayoutEffect,
   serialize,
-  withMiddleware
+  withMiddleware,
+  MutatorOptions
 } from 'swr/_internal'
 
 import type {
