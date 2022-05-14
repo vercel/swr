@@ -18,11 +18,11 @@ export type {
   SWRHook,
   SWRResponse,
   Cache,
-  CacheValue,
   BareFetcher,
   Fetcher,
   MutatorCallback,
   MutatorOptions,
   Middleware,
-  Arguments
+  Arguments,
+  State
 } from 'swr/_internal'
