@@ -27,7 +27,7 @@ import type {
   SWRInfiniteFetcher,
   SWRInfiniteCacheValue
 } from './types'
-import { useSyncExternalStore } from 'use-sync-external-store/shim'
+import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js'
 
 const INFINITE_PREFIX = '$inf$'
 
