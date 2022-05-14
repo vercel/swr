@@ -1,5 +1,5 @@
 import { SWRGlobalState } from './global-state'
-import { Key, Cache, CacheValue, GlobalState } from '../types'
+import { Key, Cache, State, GlobalState } from '../types'
 export const noop = () => {}
 
 // Using noop() as the undefined value as undefined can possibly be replaced
@@ -24,7 +24,7 @@ export const hasRequestAnimationFrame = () =>
   isWindowDefined && typeof window['requestAnimationFrame'] != STR_UNDEFINED
 
 const EMPTY_CACHE = {}
-export const createCacheHelper = <Data = any, T = CacheValue<Data, any>>(
+export const createCacheHelper = <Data = any, T = State<Data, any>>(
   cache: Cache,
   key: Key
 ) => {
