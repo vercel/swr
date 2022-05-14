@@ -7,7 +7,8 @@ import useSWR, {
   SWRHook,
   MutatorCallback,
   Middleware,
-  BareFetcher
+  BareFetcher,
+  MutatorOptions
 } from 'swr'
 
 import { useIsomorphicLayoutEffect } from '../src/utils/env'
@@ -176,14 +177,15 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
           | [undefined | Data[] | Promise<Data[]> | MutatorCallback<Data[]>]
           | [
               undefined | Data[] | Promise<Data[]> | MutatorCallback<Data[]>,
-              boolean
+              undefined | boolean | MutatorOptions<Data>
             ]
       ) => {
         const data = args[0]
-        
+
         // When passing as a boolean, it's explicitly used to disable/enable
         // revalidation.
-        const options = typeof args[1] === 'boolean' ? {revalidate: args[1]} : args[1] || {}
+        const options =
+          typeof args[1] === 'boolean' ? { revalidate: args[1] } : args[1] || {}
 
         // Default to true.
         const shouldRevalidate = options.revalidate !== false
