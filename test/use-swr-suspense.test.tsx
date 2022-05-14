@@ -16,7 +16,9 @@ import {
   sleep
 } from './utils'
 
-class ErrorBoundary extends React.Component<PropsWithChildren<{ fallback: ReactNode }>> {
+class ErrorBoundary extends React.Component<
+  PropsWithChildren<{ fallback: ReactNode }>
+> {
   state = { hasError: false }
   static getDerivedStateFromError() {
     return {
@@ -112,9 +114,13 @@ describe('useSWR - suspense', () => {
     jest.spyOn(console, 'error').mockImplementation(() => {})
     const key = createKey()
     function Section() {
-      const { data } = useSWR<any>(key, () => createResponse(new Error('error')), {
-        suspense: true
-      })
+      const { data } = useSWR<any>(
+        key,
+        () => createResponse(new Error('error')),
+        {
+          suspense: true
+        }
+      )
       return <div>{data}</div>
     }
 

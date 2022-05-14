@@ -15,7 +15,8 @@ import {
   BareFetcher,
   useIsomorphicLayoutEffect,
   serialize,
-  withMiddleware
+  withMiddleware,
+  MutatorOptions
 } from 'swr/_internal'
 
 import type {
@@ -197,13 +198,18 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
           | [undefined | Data[] | Promise<Data[]> | MutatorCallback<Data[]>]
           | [
               undefined | Data[] | Promise<Data[]> | MutatorCallback<Data[]>,
-              boolean
+              undefined | boolean | MutatorOptions<Data>
             ]
       ) => {
         const data = args[0]
 
+        // When passing as a boolean, it's explicitly used to disable/enable
+        // revalidation.
+        const options =
+          typeof args[1] === 'boolean' ? { revalidate: args[1] } : args[1] || {}
+
         // Default to true.
-        const shouldRevalidate = args[1] !== false
+        const shouldRevalidate = options.revalidate !== false
 
         // It is possible that the key is still falsy.
         if (!infiniteKey) return

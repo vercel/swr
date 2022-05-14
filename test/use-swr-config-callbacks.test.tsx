@@ -57,7 +57,9 @@ describe('useSWR - config callbacks', () => {
         )
       return (
         <div onClick={() => mutate()}>
-          <>hello, {data}, {props.text}</>
+          <>
+            hello, {data}, {props.text}
+          </>
         </div>
       )
     }
@@ -100,7 +102,9 @@ describe('useSWR - config callbacks', () => {
       if (error) return <div title={props.text}>{error.message}</div>
       return (
         <div>
-          <>hello, {data}, {props.text}</>
+          <>
+            hello, {data}, {props.text}
+          </>
         </div>
       )
     }

@@ -1183,7 +1183,7 @@ describe('useSWRInfinite', () => {
     await screen.findByText('data: B1,B2,B3')
   })
 
-  it('should revalidate when the component is mounted and revalidateOnMount is enabled', async () => {
+  it('should revalidate the resource with bound mutate when arguments are passed', async () => {
     const key = createKey()
 
     let counter = 0
@@ -1221,6 +1221,71 @@ describe('useSWRInfinite', () => {
 
     fireEvent.click(screen.getByText('mutate'))
     await screen.findByText('data: 2')
+  })
+
+  // https://github.com/vercel/swr/issues/1899
+  it('should revalidate the resource with bound mutate when options is of Object type ', async () => {
+    let t = 0
+    const key = createKey()
+    const fetcher = jest.fn(async () =>
+      createResponse(`foo-${t++}`, { delay: 10 })
+    )
+    const logger = []
+    function Page() {
+      const { data, mutate } = useSWRInfinite(() => key, fetcher, {
+        dedupingInterval: 0
+      })
+      logger.push(data)
+      return (
+        <>
+          <div>data: {String(data)}</div>
+          <button onClick={() => mutate(data, { revalidate: true })}>
+            mutate
+          </button>
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data: foo-0')
+
+    fireEvent.click(screen.getByText('mutate'))
+    await screen.findByText('data: foo-1')
+    expect(fetcher).toBeCalledTimes(2)
+
+    expect(logger).toEqual([undefined, ['foo-0'], ['foo-1']])
+  })
+
+  // https://github.com/vercel/swr/issues/1899
+  it('should not revalidate the resource with bound mutate when options is of Object type', async () => {
+    let t = 0
+    const key = createKey()
+    const fetcher = jest.fn(async () =>
+      createResponse(`foo-${t++}`, { delay: 10 })
+    )
+    const logger = []
+    function Page() {
+      const { data, mutate } = useSWRInfinite(() => key, fetcher, {
+        dedupingInterval: 0
+      })
+      logger.push(data)
+      return (
+        <>
+          <div>data: {String(data)}</div>
+          <button onClick={() => mutate(data, { revalidate: false })}>
+            mutate
+          </button>
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data: foo-0')
+
+    fireEvent.click(screen.getByText('mutate'))
+    expect(fetcher).toBeCalledTimes(1)
+
+    expect(logger).toEqual([undefined, ['foo-0']])
   })
 
   it('should share data with useSWR', async () => {
