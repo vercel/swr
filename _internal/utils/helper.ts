@@ -1,5 +1,7 @@
 import { SWRGlobalState } from './global-state'
 import { Key, Cache, State, GlobalState } from '../types'
+
+const EMPTY_CACHE = {}
 export const noop = () => {}
 
 // Using noop() as the undefined value as undefined can possibly be replaced
@@ -23,7 +25,6 @@ export const isDocumentDefined = typeof document != STR_UNDEFINED
 export const hasRequestAnimationFrame = () =>
   isWindowDefined && typeof window['requestAnimationFrame'] != STR_UNDEFINED
 
-const EMPTY_CACHE = {}
 export const createCacheHelper = <Data = any, T = State<Data, any>>(
   cache: Cache,
   key: Key
@@ -41,3 +42,6 @@ export const createCacheHelper = <Data = any, T = State<Data, any>>(
     state[5]
   ] as const
 }
+
+// Extend a SWR object without triggering its getters.
+export const extendSWR = () => {}
