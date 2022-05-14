@@ -42,6 +42,3 @@ export const createCacheHelper = <Data = any, T = State<Data, any>>(
     state[5]
   ] as const
 }
-
-// Extend a SWR object without triggering its getters.
-export const extendSWR = () => {}
