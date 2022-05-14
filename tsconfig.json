@@ -12,21 +12,21 @@
     "noUnusedParameters": true,
     "strictBindCallApply": true,
     "outDir": "./dist",
-    "rootDir": "src",
+    "rootDir": "core",
     "strict": true,
     "target": "es5",
     "baseUrl": ".",
     "noEmitOnError": true,
     "paths": {
-      "swr": ["./src/index.ts"],
+      "swr": ["./core/index.ts"],
       "swr/infinite": ["./infinite/index.ts"],
       "swr/immutable": ["./immutable/index.ts"],
       "swr/mutation": ["./mutation/index.ts"]
     },
-    "typeRoots": ["./src/types", "./node_modules/@types"]
+    "typeRoots": ["./node_modules/@types"]
   },
-  "include": ["src"],
-  "exclude": ["./**/dist", "node_modules"],
+  "include": ["core"],
+  "exclude": ["./**/dist", "node_modules", "jest.config.js"],
   "watchOptions": {
     "watchFile": "useFsEvents",
     "watchDirectory": "useFsEvents",

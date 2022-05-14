@@ -1,11 +1,15 @@
 import { serialize } from './serialize'
-import { isFunction, isUndefined } from './helper'
-import { SWRGlobalState, GlobalState } from './global-state'
-import { broadcastState } from './broadcast-state'
+import { createCacheHelper, isFunction, isUndefined } from './helper'
+import { SWRGlobalState } from './global-state'
 import { getTimestamp } from './timestamp'
-import { createCacheHelper } from './cache'
-
-import { Key, Cache, MutatorCallback, MutatorOptions } from '../types'
+import * as revalidateEvents from '../constants'
+import {
+  Key,
+  Cache,
+  MutatorCallback,
+  MutatorOptions,
+  GlobalState
+} from '../types'
 
 export const internalMutate = async <Data>(
   ...args: [
@@ -35,13 +39,27 @@ export const internalMutate = async <Data>(
   if (!key) return
 
   const [get, set] = createCacheHelper<Data>(cache, key)
-
-  const [, , MUTATION] = SWRGlobalState.get(cache) as GlobalState
-
+  const [EVENT_REVALIDATORS, MUTATION, FETCH] = SWRGlobalState.get(
+    cache
+  ) as GlobalState
+  const revalidators = EVENT_REVALIDATORS[key]
+  const startRevalidate = async () => {
+    if (revalidate) {
+      // Invalidate the key by deleting the concurrent request markers so new
+      // requests will not be deduped.
+      delete FETCH[key]
+      if (revalidators && revalidators[0]) {
+        return revalidators[0](revalidateEvents.MUTATE_EVENT).then(
+          () => get().data
+        )
+      }
+    }
+    return get().data
+  }
   // If there is no new data provided, revalidate the key with current state.
   if (args.length < 3) {
     // Revalidate and broadcast state.
-    return broadcastState(cache, key, get(), revalidate, true)
+    return startRevalidate()
   }
 
   let data: any = _data
@@ -60,7 +78,6 @@ export const internalMutate = async <Data>(
       ? optimisticData(originalData)
       : optimisticData
     set({ data: optimisticData })
-    broadcastState(cache, key, { data: optimisticData })
   }
 
   if (isFunction(data)) {
@@ -116,16 +133,7 @@ export const internalMutate = async <Data>(
   MUTATION[key][1] = getTimestamp()
 
   // Update existing SWR Hooks' internal states:
-  const res = await broadcastState(
-    cache,
-    key,
-    {
-      data,
-      error
-    },
-    revalidate,
-    !!populateCache
-  )
+  const res = await startRevalidate()
 
   // Throw error or return data
   if (error) throw error

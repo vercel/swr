@@ -235,7 +235,7 @@ describe('useSWR - cache provider', () => {
     await screen.findByText('data')
   })
 
-  it.skip('should be able to extend the parent cache', async () => {
+  it('should be able to extend the parent cache', async () => {
     let parentCache
 
     const key = createKey()

@@ -6,7 +6,8 @@ import {
   createKey,
   sleep,
   renderWithConfig,
-  nextTick
+  nextTick,
+  executeWithoutBatching
 } from './utils'
 
 describe('useSWR - loading', () => {
@@ -94,13 +95,13 @@ describe('useSWR - loading', () => {
     renderWithConfig(<Page />)
     screen.getByText('hello')
 
-    await act(() => sleep(100)) // wait
+    await executeWithoutBatching(() => sleep(100)) // wait
     // it doesn't re-render, but fetch was triggered
     expect(renderCount).toEqual(1)
     expect(dataLoaded).toEqual(true)
   })
 
-  it('should avoid extra rerenders is the data is the `same`', async () => {
+  it('should avoid extra rerenders when the fallback is the same as cache', async () => {
     let renderCount = 0,
       initialDataLoaded = false,
       mutationDataLoaded = false
@@ -246,16 +247,16 @@ describe('useSWR - loading', () => {
 
     renderWithConfig(<Page />)
     screen.getByText('validating,')
-    await act(() => sleep(70))
+    await executeWithoutBatching(() => sleep(70))
     screen.getByText('stopped,')
 
     fireEvent.click(screen.getByText('start'))
-    await act(() => sleep(20))
+    await executeWithoutBatching(() => sleep(20))
     screen.getByText('validating,validating')
 
     // Pause before it resolves
     paused = true
-    await act(() => sleep(50))
+    await executeWithoutBatching(() => sleep(50))
 
     // They should both stop
     screen.getByText('stopped,stopped')

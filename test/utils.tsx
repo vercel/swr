@@ -3,7 +3,7 @@ import React from 'react'
 import { SWRConfig } from 'swr'
 
 export function sleep(time: number) {
-  return new Promise(resolve => setTimeout(resolve, time))
+  return new Promise<void>(resolve => setTimeout(resolve, time))
 }
 
 export const createResponse = <T,>(
@@ -58,4 +58,13 @@ export const mockVisibilityHidden = () => {
   const mockVisibilityState = jest.spyOn(document, 'visibilityState', 'get')
   mockVisibilityState.mockImplementation(() => 'hidden')
   return () => mockVisibilityState.mockRestore()
+}
+
+// Using `act()` will cause React 18 to batch updates.
+// https://github.com/reactwg/react-18/discussions/102
+export async function executeWithoutBatching(fn: () => any) {
+  const prev = global.IS_REACT_ACT_ENVIRONMENT
+  global.IS_REACT_ACT_ENVIRONMENT = false
+  await fn()
+  global.IS_REACT_ACT_ENVIRONMENT = prev
 }

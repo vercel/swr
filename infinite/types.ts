@@ -1,4 +1,10 @@
-import { SWRConfiguration, SWRResponse, Arguments, BareFetcher } from 'swr'
+import {
+  SWRConfiguration,
+  SWRResponse,
+  Arguments,
+  BareFetcher,
+  CacheValue
+} from 'swr/_internal'
 
 type FetcherResponse<Data = unknown> = Data | Promise<Data>
 
@@ -110,4 +116,14 @@ export interface SWRInfiniteHook {
     fetcher: BareFetcher<Data> | null,
     config: SWRInfiniteConfiguration<Data, Error, BareFetcher<Data>> | undefined
   ): SWRInfiniteResponse<Data, Error>
+}
+
+export interface SWRInfiniteCacheValue<Data = any, Error = any>
+  extends CacheValue<Data, Error> {
+  // We use cache to pass extra info (context) to fetcher so it can be globally
+  // shared. The key of the context data is based on the first page key.
+  $ctx?: [boolean] | [boolean, Data[] | undefined]
+  // Page size is also cached to share the page data between hooks with the
+  // same key.
+  $len?: number
 }

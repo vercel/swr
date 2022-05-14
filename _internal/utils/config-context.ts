@@ -50,10 +50,12 @@ const SWRConfig: FC<
   }
 
   // Unsubscribe events.
-  useIsomorphicLayoutEffect(
-    () => (cacheContext ? cacheContext[2] : UNDEFINED),
-    []
-  )
+  useIsomorphicLayoutEffect(() => {
+    if (cacheContext) {
+      cacheContext[2] && cacheContext[2]()
+      return cacheContext[3]
+    }
+  }, [])
 
   return createElement(
     SWRConfigContext.Provider,
