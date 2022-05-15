@@ -30,7 +30,7 @@ import type {
 import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js'
 
 const INFINITE_PREFIX = '$inf$'
-const EMPTY_PROMISE = Promise.resolve(UNDEFINED)
+const EMPTY_PROMISE = Promise.resolve() as Promise<undefined>
 
 const getFirstPageKey = (getKey: SWRInfiniteKeyLoader) => {
   return serialize(getKey ? getKey(0, null) : null)[0]
