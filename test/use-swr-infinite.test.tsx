@@ -925,6 +925,21 @@ describe('useSWRInfinite', () => {
     await screen.findByText('size: 3')
   })
 
+  it('setSize should return a promise', async () => {
+    let _setSize
+    function Comp() {
+      const { setSize } = useSWRInfinite(
+        () => null,
+        () => createResponse('')
+      )
+
+      _setSize = setSize
+      return null
+    }
+    renderWithConfig(<Comp />)
+    expect(_setSize()).toBeInstanceOf(Promise)
+  })
+
   // https://github.com/vercel/swr/issues/908
   //TODO: This test trigger act warning
   it('should revalidate first page after mutating', async () => {

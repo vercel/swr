@@ -19,7 +19,7 @@ export const withArgs = <SWRType>(hook: any) => {
     let next = hook
     const { use } = config
     if (use) {
-      for (let i = use.length; i-- > 0; ) {
+      for (let i = use.length; i--; ) {
         next = use[i](next)
       }
     }

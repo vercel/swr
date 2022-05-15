@@ -30,6 +30,7 @@ import type {
 import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js'
 
 const INFINITE_PREFIX = '$inf$'
+const EMPTY_PROMISE = Promise.resolve() as Promise<undefined>
 
 const getFirstPageKey = (getKey: SWRInfiniteKeyLoader) => {
   return serialize(getKey ? getKey(0, null) : null)[0]
@@ -192,27 +193,21 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
     }, [swr.data])
 
     const mutate = useCallback(
-      (
-        ...args:
-          | []
-          | [undefined | Data[] | Promise<Data[]> | MutatorCallback<Data[]>]
-          | [
-              undefined | Data[] | Promise<Data[]> | MutatorCallback<Data[]>,
-              undefined | boolean | MutatorOptions<Data>
-            ]
-      ) => {
-        const data = args[0]
-
+      // eslint-disable-next-line func-names
+      function (
+        data?: undefined | Data[] | Promise<Data[]> | MutatorCallback<Data[]>,
+        opts?: undefined | boolean | MutatorOptions<Data[]>
+      ) {
         // When passing as a boolean, it's explicitly used to disable/enable
         // revalidation.
         const options =
-          typeof args[1] === 'boolean' ? { revalidate: args[1] } : args[1] || {}
+          typeof opts === 'boolean' ? { revalidate: opts } : opts || {}
 
         // Default to true.
         const shouldRevalidate = options.revalidate !== false
 
         // It is possible that the key is still falsy.
-        if (!infiniteKey) return
+        if (!infiniteKey) return EMPTY_PROMISE
 
         if (shouldRevalidate) {
           if (!isUndefined(data)) {
@@ -225,7 +220,9 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
           }
         }
 
-        return args.length ? swr.mutate(data, shouldRevalidate) : swr.mutate()
+        return arguments.length
+          ? swr.mutate(data, shouldRevalidate)
+          : swr.mutate()
       },
       // swr.mutate is always the same reference
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -259,7 +256,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
     const setSize = useCallback(
       (arg: number | ((size: number) => number)) => {
         // It is possible that the key is still falsy.
-        if (!infiniteKey) return
+        if (!infiniteKey) return EMPTY_PROMISE
 
         let size
         if (isFunction(arg)) {
@@ -267,7 +264,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
         } else if (typeof arg == 'number') {
           size = arg
         }
-        if (typeof size != 'number') return
+        if (typeof size != 'number') return EMPTY_PROMISE
 
         set({ $len: size })
         lastPageSizeRef.current = size
@@ -296,7 +293,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
       get isLoading() {
         return swr.isLoading
       }
-    } as SWRInfiniteResponse<Data, Error>
+    }
   }) as unknown as Middleware
 
 export default withMiddleware(useSWR, infinite) as SWRInfiniteHook
