@@ -23,7 +23,8 @@
       "swr/immutable": ["./immutable/index.ts"],
       "swr/mutation": ["./mutation/index.ts"]
     },
-    "typeRoots": ["./node_modules/@types"]
+    "typeRoots": ["./node_modules/@types"],
+    "incremental": true
   },
   "include": ["core"],
   "exclude": ["./**/dist", "node_modules", "jest.config.js"],

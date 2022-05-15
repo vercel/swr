@@ -77,12 +77,12 @@
     "build:internal": "bunchee index.ts --cwd _internal --no-sourcemap",
     "prepublishOnly": "yarn clean && yarn build",
     "publish-beta": "yarn publish --tag beta",
-    "types:check": "tsc --noEmit --project tsconfig.check.json && tsc --noEmit -p test",
+    "types:check": "tsc --noEmit --project tsconfig.check.json",
     "format": "prettier --write ./**/*.{ts,tsx}",
     "lint": "eslint . --ext .ts,.tsx --cache",
     "lint:fix": "yarn lint --fix",
     "coverage": "jest --coverage",
-    "test": "jest"
+    "test": "jest && tsc --noEmit -p test"
   },
   "husky": {
     "hooks": {
