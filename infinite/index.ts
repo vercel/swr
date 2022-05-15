@@ -220,10 +220,6 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
           }
         }
 
-        // We are using `arguments` here because there's no other way around to
-        // tell if an argument is missing or `undefined`. It will be compiled to
-        // `arguments` anyways.
-        // @ts-ignore
         return arguments.length
           ? swr.mutate(data, shouldRevalidate)
           : swr.mutate()
