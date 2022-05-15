@@ -86,7 +86,7 @@ export const internalMutate = async <Data>(
   // Do optimistic data update.
   if (hasOptimisticData) {
     optimisticData = isFunction(optimisticData)
-      ? optimisticData(currentData)
+      ? optimisticData(originalData)
       : optimisticData
     set({ data: optimisticData, _o: originalData })
   }
@@ -94,7 +94,7 @@ export const internalMutate = async <Data>(
   if (isFunction(data)) {
     // `data` is a function, call it passing current cache value.
     try {
-      data = (data as MutatorCallback<Data>)(currentData)
+      data = (data as MutatorCallback<Data>)(originalData)
     } catch (err) {
       // If it throws an error synchronously, we shouldn't update the cache.
       error = err
@@ -129,7 +129,7 @@ export const internalMutate = async <Data>(
     if (!error) {
       // Transform the result into data.
       if (isFunction(populateCache)) {
-        data = populateCache(data, currentData)
+        data = populateCache(data, originalData)
       }
 
       // Only update cached data if there's no error. Data can be `undefined` here.

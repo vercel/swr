@@ -1193,9 +1193,9 @@ describe('useSWR - local mutation', () => {
     // It should revert to `0` instead of `1` at the end.
     expect(renderedData).toEqual([undefined, 0, 1, 2, 0])
 
-    // It should receive the latest displayed data instead of the original data.
-    expect(previousValue).toBe(1)
-    expect(previousValue2).toBe(1)
+    // It should receive the original displayed data instead of current displayed data.
+    expect(previousValue).toBe(0)
+    expect(previousValue2).toBe(0)
   })
 
   it('should not rollback optimistic updates if `rollbackOnError`', async () => {
