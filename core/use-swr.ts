@@ -1,5 +1,5 @@
 import { useCallback, useRef, useDebugValue } from 'react'
-import { useSyncExternalStoreWithSelector } from 'use-sync-external-store/with-selector.js'
+import { useSyncExternalStoreWithSelector } from 'use-sync-external-store/shim/with-selector.js'
 
 import {
   defaultConfig,
