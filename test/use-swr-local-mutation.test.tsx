@@ -1186,7 +1186,7 @@ describe('useSWR - local mutation', () => {
         }
       )
       return Promise.all([p1, p2])
-    })
+    }).catch(_e => {})
 
     await sleep(30)
 
