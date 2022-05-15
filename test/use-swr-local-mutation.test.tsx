@@ -1142,6 +1142,62 @@ describe('useSWR - local mutation', () => {
     expect(renderedData).toEqual([undefined, 0, 'bar', 0, 1])
   })
 
+  it('should not revert to optimistic data when rolling back', async () => {
+    const key = createKey()
+    const renderedData = []
+    let mutate
+    let previousValue
+    let previousValue2
+
+    function Page() {
+      const { data, mutate: boundMutate } = useSWR(key, () =>
+        createResponse(0, { delay: 20 })
+      )
+      mutate = boundMutate
+
+      if (
+        !renderedData.length ||
+        renderedData[renderedData.length - 1] !== data
+      ) {
+        renderedData.push(data)
+      }
+
+      return <div>data: {String(data)}</div>
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data: 0')
+
+    await executeWithoutBatching(async () => {
+      const p1 = mutate(createResponse(new Error(), { delay: 20 }), {
+        optimisticData: 1
+      })
+      await sleep(10)
+      const p2 = mutate(
+        v => {
+          previousValue = v
+          return createResponse(new Error(), { delay: 20 })
+        },
+        {
+          optimisticData: v => {
+            previousValue2 = v
+            return 2
+          }
+        }
+      )
+      return Promise.all([p1, p2])
+    }).catch(_e => {})
+
+    await sleep(30)
+
+    // It should revert to `0` instead of `1` at the end.
+    expect(renderedData).toEqual([undefined, 0, 1, 2, 0])
+
+    // It should receive the original displayed data instead of current displayed data.
+    expect(previousValue).toBe(0)
+    expect(previousValue2).toBe(0)
+  })
+
   it('should not rollback optimistic updates if `rollbackOnError`', async () => {
     const key = createKey()
     const renderedData = []
