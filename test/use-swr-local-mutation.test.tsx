@@ -1039,7 +1039,7 @@ describe('useSWR - local mutation', () => {
     expect(renderedData).toEqual([undefined, 'foo', 'bar', 'baz', 'foo'])
   })
 
-  it('should support optimistic updates via functional `optimisticData`', async () => {
+  it('should support optimistic updates via function `optimisticData`', async () => {
     const key = createKey()
     const renderedData = []
     let mutate
@@ -1058,20 +1058,20 @@ describe('useSWR - local mutation', () => {
 
     await executeWithoutBatching(() =>
       mutate(createResponse('baz', { delay: 20 }), {
-        optimisticData: data => 'functional_' + data
+        optimisticData: data => 'function_' + data
       })
     )
     await sleep(30)
     expect(renderedData).toEqual([
       undefined,
       'foo',
-      'functional_foo',
+      'function_foo',
       'baz',
       'foo'
     ])
   })
 
-  it('should be able use mutate to manipulate data via functional `optimisticData`', async () => {
+  it('should be able use mutate to manipulate data via function `optimisticData`', async () => {
     const key = createKey()
     const renderedData = []
 
@@ -1103,6 +1103,37 @@ describe('useSWR - local mutation', () => {
     await act(() => sleep(30))
 
     expect(renderedData).toEqual([undefined, 'loading', 'final'])
+  })
+
+  it('should prevent race conditions with optimistic UI', async () => {
+    const key = createKey()
+    const renderedData = []
+    let mutate
+
+    function Page() {
+      const { data, mutate: boundMutate } = useSWR(key, () => Math.random(), {
+        refreshInterval: 10,
+        dedupingInterval: 0
+      })
+      mutate = boundMutate
+      renderedData.push(data)
+      return <div>data: {String(data)}</div>
+    }
+
+    renderWithConfig(<Page />)
+
+    await sleep(20)
+    await executeWithoutBatching(() =>
+      mutate(createResponse('end', { delay: 50 }), {
+        optimisticData: 'start'
+      })
+    )
+    await sleep(20)
+
+    // There can never be any changes during a mutation — it should be atomic.
+    expect(renderedData.indexOf('end') - renderedData.indexOf('start')).toEqual(
+      1
+    )
   })
 
   it('should rollback optimistic updates when mutation fails', async () => {
