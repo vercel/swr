@@ -1,4 +1,5 @@
 import { Equal, Expect } from '@type-challenges/utils'
+import useSWR from 'swr'
 
 import {
   MutatorFn,
@@ -54,3 +55,15 @@ export type TestCasesForMutator = [
   Expect<Equal<MutatorWrapper<Case5<{}>>, never>>,
   Expect<Equal<MutatorWrapper<Case6<{}>>, Promise<{} | undefined>>>
 ]
+
+export function useMutatorTypes() {
+  const { mutate } = useSWR<string>('')
+
+  mutate(async () => '1')
+
+  // @ts-expect-error
+  mutate(async () => 1)
+
+  // FIXME: this should work.
+  // mutate(async () => 1, { populateCache: false })
+}
