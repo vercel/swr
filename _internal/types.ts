@@ -1,5 +1,14 @@
 import * as revalidateEvents from './constants'
+import { defaultConfig } from './utils/config'
 
+export type GlobalState = [
+  Record<string, RevalidateCallback[]>, // EVENT_REVALIDATORS
+  Record<string, [number, number]>, // MUTATION: [ts, end_ts]
+  Record<string, [any, number]>, // FETCH: [data, ts]
+  ScopedMutator, // Mutator
+  (key: string, value: any, prev: any) => void, // Setter
+  (key: string, callback: (current: any, prev: any) => void) => () => void // Subscriber
+]
 export type FetcherResponse<Data = unknown> = Data | Promise<Data>
 export type BareFetcher<Data = unknown> = (
   ...args: any[]
@@ -16,8 +25,8 @@ export type Fetcher<
   : never
 
 // Configuration types that are only used internally, not exposed to the user.
-export interface InternalConfiguration {
-  cache: Cache
+export interface InternalConfiguration<T extends Cache = Cache> {
+  cache: T
   mutate: ScopedMutator
 }
 
@@ -39,6 +48,7 @@ export interface PublicConfiguration<
   revalidateOnMount?: boolean
   revalidateIfStale: boolean
   shouldRetryOnError: boolean | ((err: Error) => boolean)
+  keepPreviousData?: boolean
   suspense?: boolean
   fallbackData?: Data
   fetcher?: Fn
@@ -75,7 +85,8 @@ export interface PublicConfiguration<
   isVisible: () => boolean
 }
 
-export type FullConfiguration = InternalConfiguration & PublicConfiguration
+export type FullConfiguration<T extends Cache = Cache> =
+  InternalConfiguration<T> & PublicConfiguration
 
 export type ProviderConfiguration = {
   initFocus: (callback: () => void) => (() => void) | void
@@ -121,7 +132,8 @@ export type Middleware = (
 ) => <Data = any, Error = any>(
   key: Key,
   fetcher: BareFetcher<Data> | null,
-  config: SWRConfiguration<Data, Error, BareFetcher<Data>>
+  config: typeof defaultConfig &
+    SWRConfiguration<Data, Error, BareFetcher<Data>>
 ) => SWRResponse<Data, Error>
 
 type ArgumentsTuple = [any, ...unknown[]] | readonly [any, ...unknown[]]
@@ -140,7 +152,9 @@ export type MutatorCallback<Data = any> = (
 
 export type MutatorOptions<Data = any> = {
   revalidate?: boolean
-  populateCache?: boolean | ((result: any, currentData: Data) => Data)
+  populateCache?:
+    | boolean
+    | ((result: any, currentData: Data | undefined) => Data)
   optimisticData?: Data | ((currentData?: Data) => Data)
   rollbackOnError?: boolean
 }
@@ -160,10 +174,11 @@ export type Broadcaster<Data = any, Error = any> = (
   populateCache?: boolean
 ) => Promise<Data>
 
-export type State<Data, Error> = {
+export type State<Data = any, Error = any> = {
   data?: Data
   error?: Error
   isValidating?: boolean
+  isLoading?: boolean
 }
 
 export type MutatorFn<Data = any> = (
@@ -216,10 +231,11 @@ export type SWRConfiguration<
 > = Partial<PublicConfiguration<Data, Error, Fn>>
 
 export interface SWRResponse<Data = any, Error = any> {
-  data?: Data
-  error?: Error
+  data: Data | undefined
+  error: Error | undefined
   mutate: KeyedMutator<Data>
   isValidating: boolean
+  isLoading: boolean
 }
 
 export type KeyLoader<Args extends Arguments = Arguments> =
@@ -249,14 +265,15 @@ export type RevalidateCallback = <K extends RevalidateEvent>(
   type: K
 ) => RevalidateCallbackReturnType[K]
 
-export type StateUpdateCallback<Data = any, Error = any> = (state: {
-  data?: Data
-  error?: Error
-  isValidating?: boolean
-}) => void
-
 export interface Cache<Data = any> {
-  get(key: Key): Data | null | undefined
-  set(key: Key, value: Data): void
+  get(key: Key): State<Data> | undefined
+  set(key: Key, value: State<Data>): void
   delete(key: Key): void
+}
+
+export interface StateDependencies {
+  data?: boolean
+  error?: boolean
+  isValidating?: boolean
+  isLoading?: boolean
 }

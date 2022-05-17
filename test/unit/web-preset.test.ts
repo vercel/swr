@@ -45,7 +45,7 @@ function runTests(propertyName) {
         globalSpy.document.mockImplementation(() => target)
       }
 
-      webPreset = require('../../src/utils/web-preset')
+      webPreset = require('../../_internal/utils/web-preset')
       initFocus = webPreset.defaultConfigOptions.initFocus
 
       const fn = jest.fn()
@@ -71,17 +71,14 @@ function runTests(propertyName) {
         globalSpy.document.mockImplementation(() => undefined)
       }
 
-      webPreset = require('../../src/utils/web-preset')
+      webPreset = require('../../_internal/utils/web-preset')
       initFocus = webPreset.defaultConfigOptions.initFocus
 
       const fn = jest.fn()
       const release = initFocus(fn) as () => void
       const target = global[propertyName]
 
-      // TODO: target?.emit?() breaks prettier, fix prettier format
-      if (target && target.emit) {
-        target.emit(eventName)
-      }
+      target?.emit?.(eventName)
 
       expect(fn).toBeCalledTimes(0)
 

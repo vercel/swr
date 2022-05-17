@@ -1,8 +1,13 @@
 import { useRef } from 'react'
 import useSWR from 'swr'
-import { withMiddleware } from '../src/utils/with-middleware'
-import { Key, SWRHook, Middleware, SWRConfiguration } from '../src/types'
-import { useIsomorphicLayoutEffect } from '../src/utils/env'
+import {
+  withMiddleware,
+  Key,
+  SWRHook,
+  Middleware,
+  SWRConfiguration,
+  useIsomorphicLayoutEffect
+} from 'swr/_internal'
 
 export type SWRSubscription<Data = any, Error = any> = (
   key: Key,

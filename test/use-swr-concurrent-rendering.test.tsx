@@ -1,44 +1,16 @@
-// This file includes some basic test cases for React Concurrent Mode.
-// Due to the nature of global cache, the current SWR implementation will not
-// be perfectly consistent in Concurrent rendering in every intermediate state.
-// Only eventual consistency is guaranteed.
+import { screen, fireEvent, act } from '@testing-library/react'
+import {
+  createKey,
+  createResponse,
+  sleep,
+  executeWithoutBatching,
+  renderWithConfig
+} from './utils'
 
-import { screen, fireEvent } from '@testing-library/react'
-import { createKey, createResponse, sleep } from './utils'
-let React // swc transformer requires to define React at the top
+import React from 'react'
+import useSWR from 'swr'
 
 describe('useSWR - concurrent rendering', () => {
-  let ReactDOM, act, useSWR, reactRoot, renderWithConfig
-  beforeEach(() => {
-    jest.resetModules()
-    jest.mock('scheduler', () => require('scheduler/unstable_mock'))
-    jest.mock('react', () => require('react-18'))
-    jest.mock('react-dom', () => require('react-dom-18'))
-    jest.mock('react-dom/test-utils', () => require('react-dom-18/test-utils'))
-    React = require('react')
-    ReactDOM = require('react-dom')
-    act = require('react-dom/test-utils').act
-    useSWR = require('swr').default
-    const SWRConfig = require('swr').SWRConfig
-
-    const root = document.createElement('div')
-    document.body.appendChild(root)
-    reactRoot = ReactDOM.createRoot(root)
-
-    renderWithConfig = (element, config) =>
-      act(() =>
-        // eslint-disable-next-line testing-library/no-render-in-setup
-        reactRoot.render(
-          <SWRConfig value={{ provider: () => new Map(), ...config }}>
-            {element}
-          </SWRConfig>
-        )
-      )
-  })
-  afterEach(() => {
-    act(() => reactRoot.unmount())
-  })
-
   it('should fetch data in concurrent rendering', async () => {
     const key = createKey()
     function Page() {
@@ -96,5 +68,60 @@ describe('useSWR - concurrent rendering', () => {
     // Transition end
     await act(() => sleep(120))
     screen.getByText(`isPending:0,data:${newKey}`)
+  })
+
+  // https://codesandbox.io/s/concurrent-swr-case-ii-lr6x4u
+  it.skip('should do state updates in transitions', async () => {
+    const key1 = createKey()
+    const key2 = createKey()
+
+    const log = []
+
+    function Counter() {
+      const [count, setCount] = React.useState(0)
+
+      React.useEffect(() => {
+        const interval = setInterval(() => {
+          setCount(x => x + 1)
+        }, 20)
+        return () => clearInterval(interval)
+      }, [])
+
+      log.push(count)
+
+      return <>{count}</>
+    }
+
+    function Body() {
+      useSWR(key2, () => createResponse(true, { delay: 1000 }), {
+        revalidateOnFocus: false,
+        revalidateOnReconnect: false,
+        dedupingInterval: 0,
+        suspense: true
+      })
+      return null
+    }
+
+    function Page() {
+      const { data } = useSWR(key1, () => createResponse(true, { delay: 50 }), {
+        revalidateOnFocus: false,
+        revalidateOnReconnect: false,
+        dedupingInterval: 0
+      })
+
+      return (
+        <>
+          <Counter />
+          {data ? <Body /> : null}
+        </>
+      )
+    }
+
+    await executeWithoutBatching(async () => {
+      renderWithConfig(<Page />)
+      await sleep(500)
+    })
+
+    console.log(log)
   })
 })

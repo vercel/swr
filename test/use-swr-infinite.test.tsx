@@ -1,6 +1,6 @@
 import React, { Suspense, useEffect, useState } from 'react'
 import { fireEvent, act, screen } from '@testing-library/react'
-import { mutate as globalMutate, useSWRConfig, SWRConfig } from 'swr'
+import useSWR, { mutate as globalMutate, useSWRConfig, SWRConfig } from 'swr'
 import useSWRInfinite, { unstable_serialize } from 'swr/infinite'
 import {
   sleep,
@@ -8,7 +8,8 @@ import {
   createResponse,
   nextTick,
   renderWithConfig,
-  renderWithGlobalCache
+  renderWithGlobalCache,
+  executeWithoutBatching
 } from './utils'
 
 describe('useSWRInfinite', () => {
@@ -563,7 +564,7 @@ describe('useSWRInfinite', () => {
     screen.getByText('data:')
 
     // after 300ms the rendered result should be 3
-    await act(() => sleep(350))
+    await executeWithoutBatching(() => sleep(350))
     screen.getByText('data:3')
   })
 
@@ -924,7 +925,23 @@ describe('useSWRInfinite', () => {
     await screen.findByText('size: 3')
   })
 
+  it('setSize should return a promise', async () => {
+    let _setSize
+    function Comp() {
+      const { setSize } = useSWRInfinite(
+        () => null,
+        () => createResponse('')
+      )
+
+      _setSize = setSize
+      return null
+    }
+    renderWithConfig(<Comp />)
+    expect(_setSize()).toBeInstanceOf(Promise)
+  })
+
   // https://github.com/vercel/swr/issues/908
+  //TODO: This test trigger act warning
   it('should revalidate first page after mutating', async () => {
     let renderedData
     const key = createKey()
@@ -1181,7 +1198,7 @@ describe('useSWRInfinite', () => {
     await screen.findByText('data: B1,B2,B3')
   })
 
-  it('should revalidate when the component is mounted and revalidateOnMount is enabled', async () => {
+  it('should revalidate the resource with bound mutate when arguments are passed', async () => {
     const key = createKey()
 
     let counter = 0
@@ -1219,5 +1236,98 @@ describe('useSWRInfinite', () => {
 
     fireEvent.click(screen.getByText('mutate'))
     await screen.findByText('data: 2')
+  })
+
+  // https://github.com/vercel/swr/issues/1899
+  it('should revalidate the resource with bound mutate when options is of Object type ', async () => {
+    let t = 0
+    const key = createKey()
+    const fetcher = jest.fn(async () =>
+      createResponse(`foo-${t++}`, { delay: 10 })
+    )
+    const logger = []
+    function Page() {
+      const { data, mutate } = useSWRInfinite(() => key, fetcher, {
+        dedupingInterval: 0
+      })
+      logger.push(data)
+      return (
+        <>
+          <div>data: {String(data)}</div>
+          <button onClick={() => mutate(data, { revalidate: true })}>
+            mutate
+          </button>
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data: foo-0')
+
+    fireEvent.click(screen.getByText('mutate'))
+    await screen.findByText('data: foo-1')
+    expect(fetcher).toBeCalledTimes(2)
+
+    expect(logger).toEqual([undefined, ['foo-0'], ['foo-1']])
+  })
+
+  // https://github.com/vercel/swr/issues/1899
+  it('should not revalidate the resource with bound mutate when options is of Object type', async () => {
+    let t = 0
+    const key = createKey()
+    const fetcher = jest.fn(async () =>
+      createResponse(`foo-${t++}`, { delay: 10 })
+    )
+    const logger = []
+    function Page() {
+      const { data, mutate } = useSWRInfinite(() => key, fetcher, {
+        dedupingInterval: 0
+      })
+      logger.push(data)
+      return (
+        <>
+          <div>data: {String(data)}</div>
+          <button onClick={() => mutate(data, { revalidate: false })}>
+            mutate
+          </button>
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data: foo-0')
+
+    fireEvent.click(screen.getByText('mutate'))
+    expect(fetcher).toBeCalledTimes(1)
+
+    expect(logger).toEqual([undefined, ['foo-0']])
+  })
+
+  it('should share data with useSWR', async () => {
+    const key = createKey()
+    const SWR = () => {
+      const { data } = useSWR(`${key}-${2}`)
+      return <div>swr: {data}</div>
+    }
+    const Page = () => {
+      const { data, setSize, size } = useSWRInfinite(
+        index => `${key}-${index + 1}`,
+        infiniteKey => createResponse(`${infiniteKey},`, { delay: 100 })
+      )
+      return (
+        <>
+          <div onClick={() => setSize(i => i + 1)}>data: {data}</div>
+          <div onClick={() => setSize(i => i + 1)}>size: {size}</div>
+          <SWR></SWR>
+        </>
+      )
+    }
+    renderWithConfig(<Page />)
+    await screen.findByText(`data: ${key}-1,`)
+    await screen.findByText(`swr:`)
+    fireEvent.click(screen.getByText('size: 1'))
+    await screen.findByText(`data: ${key}-1,${key}-2,`)
+    await screen.findByText(`size: 2`)
+    await screen.findByText(`swr: ${key}-2,`)
   })
 })

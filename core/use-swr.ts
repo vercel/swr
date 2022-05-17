@@ -1,26 +1,27 @@
 import { useCallback, useRef, useDebugValue } from 'react'
-import { defaultConfig } from './utils/config'
-import { SWRGlobalState, GlobalState } from './utils/global-state'
-import { IS_SERVER, rAF, useIsomorphicLayoutEffect } from './utils/env'
-import { serialize } from './utils/serialize'
+import { useSyncExternalStoreWithSelector } from 'use-sync-external-store/shim/with-selector.js'
+
 import {
+  defaultConfig,
+  IS_REACT_LEGACY,
+  IS_SERVER,
+  rAF,
+  useIsomorphicLayoutEffect,
+  SWRGlobalState,
+  GlobalState,
+  serialize,
   isUndefined,
   UNDEFINED,
   OBJECT,
-  mergeObjects,
-  isFunction
-} from './utils/helper'
-import ConfigProvider from './utils/config-context'
-import { useStateWithDeps } from './utils/state'
-import { withArgs } from './utils/resolve-args'
-import { subscribeCallback } from './utils/subscribe-key'
-import { broadcastState } from './utils/broadcast-state'
-import { getTimestamp } from './utils/timestamp'
-import { internalMutate } from './utils/mutate'
-import * as revalidateEvents from './constants'
-import { createCacheHelper } from './utils/cache'
-
-import {
+  isFunction,
+  createCacheHelper,
+  isEmptyCache,
+  SWRConfig as ConfigProvider,
+  withArgs,
+  subscribeCallback,
+  getTimestamp,
+  internalMutate,
+  revalidateEvents,
   State,
   Fetcher,
   Key,
@@ -29,9 +30,9 @@ import {
   FullConfiguration,
   SWRConfiguration,
   SWRHook,
-  StateUpdateCallback,
-  RevalidateEvent
-} from './types'
+  RevalidateEvent,
+  StateDependencies
+} from 'swr/_internal'
 
 const WITH_DEDUPE = { dedupe: true }
 
@@ -55,16 +56,18 @@ export const useSWRHandler = <Data = any, Error = any>(
   const {
     cache,
     compare,
-    fallbackData,
     suspense,
+    fallbackData,
     revalidateOnMount,
     refreshInterval,
     refreshWhenHidden,
-    refreshWhenOffline
+    refreshWhenOffline,
+    keepPreviousData
   } = config
 
-  const [EVENT_REVALIDATORS, STATE_UPDATERS, MUTATION, FETCH] =
-    SWRGlobalState.get(cache) as GlobalState
+  const [EVENT_REVALIDATORS, MUTATION, FETCH] = SWRGlobalState.get(
+    cache
+  ) as GlobalState
 
   // `key` is the identifier of the SWR `data` state, `keyInfo` holds extra
   // states such as `error` and `isValidating` inside,
@@ -87,23 +90,97 @@ export const useSWRHandler = <Data = any, Error = any>(
   const getConfig = () => configRef.current
   const isActive = () => getConfig().isVisible() && getConfig().isOnline()
 
-  const [get, set] = createCacheHelper<Data>(cache, key)
+  const [getCache, setCache, subscribeCache] = createCacheHelper<Data>(
+    cache,
+    key
+  )
 
-  // Get the current state that SWR should return.
-  const cached = get()
-  const cachedData = cached.data
+  const stateDependencies = useRef<StateDependencies>({}).current
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const getSnapshot = useCallback(getCache, [cache, key])
   const fallback = isUndefined(fallbackData)
     ? config.fallback[key]
     : fallbackData
+
+  const selector = (snapshot: State<Data, any>) => {
+    const shouldStartRequest = (() => {
+      if (!key) return false
+      if (!fetcher) return false
+      // If `revalidateOnMount` is set, we take the value directly.
+      if (!isUndefined(revalidateOnMount)) return revalidateOnMount
+      // If it's paused, we skip revalidation.
+      if (getConfig().isPaused()) return false
+      if (suspense) return false
+      return true
+    })()
+    if (!shouldStartRequest) return snapshot
+    if (isEmptyCache(snapshot)) {
+      return {
+        isValidating: true,
+        isLoading: true
+      }
+    }
+    return snapshot
+  }
+  const isEqual = useCallback(
+    (prev: State<Data, any>, current: State<Data, any>) => {
+      let equal = true
+      for (const _ in stateDependencies) {
+        const t = _ as keyof StateDependencies
+        if (!compare(current[t], prev[t])) {
+          if (t === 'data' && isUndefined(prev[t])) {
+            if (!compare(current[t], fallback)) {
+              equal = false
+            }
+          } else {
+            equal = false
+          }
+        }
+      }
+      return equal
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [cache, key]
+  )
+
+  // Get the current state that SWR should return.
+  const cached = useSyncExternalStoreWithSelector(
+    useCallback(
+      (callback: () => void) =>
+        subscribeCache(key, (current: State<Data, any>) => {
+          stateRef.current = current
+          callback()
+        }),
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [cache, key]
+    ),
+    getSnapshot,
+    getSnapshot,
+    selector,
+    isEqual
+  )
+
+  const stateRef = useRef<State<Data, Error>>(cached)
+  const isInitialMount = !initialMountedRef.current
+  const cachedData = cached.data
+
   const data = isUndefined(cachedData) ? fallback : cachedData
   const error = cached.error
 
-  const isInitialMount = !initialMountedRef.current
+  // Use a ref to store previous returned data. Use the inital data as its inital value.
+  const laggyDataRef = useRef(data)
+
+  const returnedData = keepPreviousData
+    ? isUndefined(cachedData)
+      ? laggyDataRef.current
+      : cachedData
+    : data
 
   // - Suspense mode and there's stale data for the initial render.
   // - Not suspense mode and there is no fallback data and `revalidateIfStale` is enabled.
   // - `revalidateIfStale` is enabled but `data` is not defined.
-  const shouldRevalidate = () => {
+  const shouldDoInitialRevalidation = (() => {
     // If `revalidateOnMount` is set, we take the value directly.
     if (isInitialMount && !isUndefined(revalidateOnMount))
       return revalidateOnMount
@@ -119,24 +196,25 @@ export const useSWRHandler = <Data = any, Error = any>(
     // If there is no stale data, we need to revalidate on mount;
     // If `revalidateIfStale` is set to true, we will always revalidate.
     return isUndefined(data) || config.revalidateIfStale
-  }
+  })()
 
-  // Resolve the current validating state.
-  const resolveValidating = () => {
-    if (!key || !fetcher) return false
-    if (cached.isValidating) return true
-
-    // If it's not mounted yet and it should revalidate on mount, revalidate.
-    return isInitialMount && shouldRevalidate()
-  }
-  const isValidating = resolveValidating()
+  // Resolve the default validating state:
+  // If it's able to validate, and it should revalidate on mount, this will be true.
+  const defaultValidatingState = !!(
+    key &&
+    fetcher &&
+    isInitialMount &&
+    shouldDoInitialRevalidation
+  )
+  const isValidating = cached.isValidating || defaultValidatingState
+  const isLoading = cached.isLoading || defaultValidatingState
 
   const currentState = {
     data,
     error,
-    isValidating
+    isValidating,
+    isLoading
   }
-  const [stateRef, stateDependencies, setState] = useStateWithDeps(currentState)
 
   // The revalidation function is a carefully crafted wrapper of the original
   // `fetcher`, to correctly handle the many edge cases.
@@ -162,15 +240,36 @@ export const useSWRHandler = <Data = any, Error = any>(
       // new request should be initiated.
       const shouldStartNewRequest = !FETCH[key] || !opts.dedupe
 
-      // Do unmount check for calls:
-      // If key has changed during the revalidation, or the component has been
-      // unmounted, old dispatch and old event callbacks should not take any
-      // effect.
-      const isCurrentKeyMounted = () =>
-        !unmountedRef.current &&
-        key === keyRef.current &&
-        initialMountedRef.current
+      /*
+         For React 17
+         Do unmount check for calls:
+         If key has changed during the revalidation, or the component has been
+         unmounted, old dispatch and old event callbacks should not take any
+         effect
 
+        For React 18
+        only check if key has changed
+        https://github.com/reactwg/react-18/discussions/82
+      */
+      const callbackSafeguard = () => {
+        if (IS_REACT_LEGACY) {
+          return (
+            !unmountedRef.current &&
+            key === keyRef.current &&
+            initialMountedRef.current
+          )
+        }
+        return key === keyRef.current
+      }
+
+      // The final state object when request finishes.
+      const finalState: State<Data, Error> = {
+        isValidating: false,
+        isLoading: false
+      }
+      const finishRequestAndUpdateState = () => {
+        setCache(finalState)
+      }
       const cleanupState = () => {
         // Check if it's still the same request before deleting.
         const requestInfo = FETCH[key]
@@ -179,33 +278,22 @@ export const useSWRHandler = <Data = any, Error = any>(
         }
       }
 
-      // The new state object when request finishes.
-      const newState: State<Data, Error> = { isValidating: false }
-      const finishRequestAndUpdateState = () => {
-        set({ isValidating: false })
-        // We can only set state if it's safe (still mounted with the same key).
-        if (isCurrentKeyMounted()) {
-          setState(newState)
-        }
-      }
-
       // Start fetching. Change the `isValidating` state, update the cache.
-      set({ isValidating: true })
-      setState({ isValidating: true })
+      const initialState: State<Data, Error> = { isValidating: true }
+      // It is in the `isLoading` state, if and only if there is no cached data.
+      // This bypasses fallback data and laggy data.
+      if (isUndefined(getCache().data)) {
+        initialState.isLoading = true
+      }
+      setCache(initialState)
 
       try {
         if (shouldStartNewRequest) {
-          // Tell all other hooks to change the `isValidating` state.
-          broadcastState(cache, key, {
-            ...stateRef.current,
-            isValidating: true
-          })
-
           // If no cache being rendered currently (it shows a blank page),
           // we trigger the loading slow event.
-          if (config.loadingTimeout && isUndefined(get().data)) {
+          if (config.loadingTimeout && isUndefined(getCache().data)) {
             setTimeout(() => {
-              if (loading && isCurrentKeyMounted()) {
+              if (loading && callbackSafeguard()) {
                 getConfig().onLoadingSlow(key, config)
               }
             }, config.loadingTimeout)
@@ -238,7 +326,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         // The timestamp maybe be `undefined` or a number
         if (!FETCH[key] || FETCH[key][1] !== startAt) {
           if (shouldStartNewRequest) {
-            if (isCurrentKeyMounted()) {
+            if (callbackSafeguard()) {
               getConfig().onDiscarded(key)
             }
           }
@@ -246,8 +334,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         }
 
         // Clear error.
-        set({ error: UNDEFINED })
-        newState.error = UNDEFINED
+        finalState.error = UNDEFINED
 
         // If there're other mutations(s), overlapped with the current revalidation:
         // case 1:
@@ -273,64 +360,64 @@ export const useSWRHandler = <Data = any, Error = any>(
         ) {
           finishRequestAndUpdateState()
           if (shouldStartNewRequest) {
-            if (isCurrentKeyMounted()) {
+            if (callbackSafeguard()) {
               getConfig().onDiscarded(key)
             }
           }
           return false
         }
-
         // Deep compare with latest state to avoid extra re-renders.
         // For local state, compare and assign.
         if (!compare(stateRef.current.data, newData)) {
-          newState.data = newData
+          finalState.data = newData
         } else {
-          // data and newData are deeply equal
-          // it should be safe to broadcast the stale data
-          newState.data = stateRef.current.data
+          // `data` and `newData` are deeply equal (serialized value).
+          // So it should be safe to broadcast the stale data to keep referential equality (===).
+          finalState.data = stateRef.current.data
           // At the end of this function, `broadcastState` invokes the `onStateUpdate` function,
-          // which takes care of avoiding the re-render
-        }
-
-        // For global state, it's possible that the key has changed.
-        // https://github.com/vercel/swr/pull/1058
-        if (!compare(get().data, newData)) {
-          set({ data: newData })
+          // which takes care of avoiding the re-render.
         }
 
         // Trigger the successful callback if it's the original request.
         if (shouldStartNewRequest) {
-          if (isCurrentKeyMounted()) {
+          if (callbackSafeguard()) {
             getConfig().onSuccess(newData, key, config)
           }
         }
       } catch (err) {
         cleanupState()
 
+        const currentConfig = getConfig()
+        const { shouldRetryOnError } = currentConfig
+
         // Not paused, we continue handling the error. Otherwise discard it.
-        if (!getConfig().isPaused()) {
+        if (!currentConfig.isPaused()) {
           // Get a new error, don't use deep comparison for errors.
-          set({ error: err })
-          newState.error = err as Error
+          finalState.error = err as Error
 
           // Error event and retry logic. Only for the actual request, not
           // deduped ones.
-          if (shouldStartNewRequest && isCurrentKeyMounted()) {
-            getConfig().onError(err, key, config)
+          if (shouldStartNewRequest && callbackSafeguard()) {
+            currentConfig.onError(err, key, currentConfig)
             if (
-              (typeof config.shouldRetryOnError === 'boolean' &&
-                config.shouldRetryOnError) ||
-              (isFunction(config.shouldRetryOnError) &&
-                config.shouldRetryOnError(err as Error))
+              shouldRetryOnError === true ||
+              (isFunction(shouldRetryOnError) &&
+                shouldRetryOnError(err as Error))
             ) {
-              // When retrying, dedupe is always enabled
               if (isActive()) {
-                // If it's active, stop. It will auto revalidate when refocusing
-                // or reconnecting.
-                getConfig().onErrorRetry(err, key, config, revalidate, {
-                  retryCount: (opts.retryCount || 0) + 1,
-                  dedupe: true
-                })
+                // If it's inactive, stop. It will auto revalidate when
+                // refocusing or reconnecting.
+                // When retrying, deduplication is always enabled.
+                currentConfig.onErrorRetry(
+                  err,
+                  key,
+                  currentConfig,
+                  revalidate,
+                  {
+                    retryCount: (opts.retryCount || 0) + 1,
+                    dedupe: true
+                  }
+                )
               }
             }
           }
@@ -342,12 +429,6 @@ export const useSWRHandler = <Data = any, Error = any>(
 
       // Update the current hook's state.
       finishRequestAndUpdateState()
-
-      // Here is the source of the request, need to tell all other hooks to
-      // update their states.
-      if (isCurrentKeyMounted() && shouldStartNewRequest) {
-        broadcastState(cache, key, { ...newState, isValidating: false })
-      }
 
       return true
     },
@@ -362,7 +443,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     // So we omit the values from the deps array
     // even though it might cause unexpected behaviors.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [key]
+    [key, cache]
   )
 
   // Similar to the global mutate, but bound to the current cache and key.
@@ -377,39 +458,23 @@ export const useSWRHandler = <Data = any, Error = any>(
     []
   )
 
-  // Always update fetcher, config and state refs.
+  // Logic for updating refs.
   useIsomorphicLayoutEffect(() => {
     fetcherRef.current = fetcher
     configRef.current = config
     stateRef.current = currentState
+    // Handle laggy data updates. If there's cached data of the current key,
+    // it'll be the correct reference.
+    if (!isUndefined(cachedData)) {
+      laggyDataRef.current = cachedData
+    }
   })
 
   // After mounted or key changed.
   useIsomorphicLayoutEffect(() => {
     if (!key) return
 
-    const keyChanged = key !== keyRef.current
     const softRevalidate = revalidate.bind(UNDEFINED, WITH_DEDUPE)
-
-    // Expose state updater to global event listeners. So we can update hook's
-    // internal state from the outside.
-    const onStateUpdate: StateUpdateCallback<Data, Error> = (state = {}) => {
-      setState(
-        mergeObjects(
-          {
-            error: state.error,
-            isValidating: state.isValidating
-          },
-          // Since `setState` only shallowly compares states, we do a deep
-          // comparison here.
-          compare(stateRef.current.data, state.data)
-            ? UNDEFINED
-            : {
-                data: state.data
-              }
-        )
-      )
-    }
 
     // Expose revalidators to global event listeners. So we can trigger
     // revalidation from the outside.
@@ -435,7 +500,6 @@ export const useSWRHandler = <Data = any, Error = any>(
       return
     }
 
-    const unsubUpdate = subscribeCallback(key, STATE_UPDATERS, onStateUpdate)
     const unsubEvents = subscribeCallback(key, EVENT_REVALIDATORS, onRevalidate)
 
     // Mark the component as mounted and update corresponding refs.
@@ -443,18 +507,8 @@ export const useSWRHandler = <Data = any, Error = any>(
     keyRef.current = key
     initialMountedRef.current = true
 
-    // When `key` updates, reset the state to the initial value
-    // and trigger a rerender if necessary.
-    if (keyChanged) {
-      setState({
-        data,
-        error,
-        isValidating
-      })
-    }
-
     // Trigger a revalidation.
-    if (shouldRevalidate()) {
+    if (shouldDoInitialRevalidation) {
       if (isUndefined(data) || IS_SERVER) {
         // Revalidate immediately.
         softRevalidate()
@@ -469,10 +523,9 @@ export const useSWRHandler = <Data = any, Error = any>(
       // Mark it as unmounted.
       unmountedRef.current = true
 
-      unsubUpdate()
       unsubEvents()
     }
-  }, [key, revalidate])
+  }, [key])
 
   // Polling
   useIsomorphicLayoutEffect(() => {
@@ -516,16 +569,23 @@ export const useSWRHandler = <Data = any, Error = any>(
         timer = -1
       }
     }
-  }, [refreshInterval, refreshWhenHidden, refreshWhenOffline, revalidate])
+  }, [refreshInterval, refreshWhenHidden, refreshWhenOffline, key])
 
   // Display debug info in React DevTools.
-  useDebugValue(data)
+  useDebugValue(returnedData)
 
   // In Suspense mode, we can't return the empty `data` state.
   // If there is `error`, the `error` needs to be thrown to the error boundary.
   // If there is no `error`, the `revalidation` promise needs to be thrown to
   // the suspense boundary.
   if (suspense && isUndefined(data) && key) {
+    // SWR should throw when trying to use Suspense on the server with React 18,
+    // without providing any initial data. See:
+    // https://github.com/vercel/swr/issues/1832
+    if (!IS_REACT_LEGACY && IS_SERVER) {
+      throw new Error('Fallback data is required when using suspense in SSR.')
+    }
+
     // Always update fetcher and config refs even with the Suspense mode.
     fetcherRef.current = fetcher
     configRef.current = config
@@ -537,7 +597,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     mutate: boundMutate,
     get data() {
       stateDependencies.data = true
-      return data
+      return returnedData
     },
     get error() {
       stateDependencies.error = true
@@ -546,6 +606,10 @@ export const useSWRHandler = <Data = any, Error = any>(
     get isValidating() {
       stateDependencies.isValidating = true
       return isValidating
+    },
+    get isLoading() {
+      stateDependencies.isLoading = true
+      return isLoading
     }
   } as SWRResponse<Data, Error>
 }

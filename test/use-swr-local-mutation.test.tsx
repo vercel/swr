@@ -1,14 +1,15 @@
 import { act, screen, fireEvent } from '@testing-library/react'
 import React, { useEffect, useState } from 'react'
 import useSWR, { mutate as globalMutate, useSWRConfig } from 'swr'
-import { serialize } from '../src/utils/serialize'
+import { serialize } from '../_internal/utils/serialize'
 import {
   createResponse,
   sleep,
   nextTick,
   createKey,
   renderWithConfig,
-  renderWithGlobalCache
+  renderWithGlobalCache,
+  executeWithoutBatching
 } from './utils'
 
 describe('useSWR - local mutation', () => {
@@ -582,7 +583,7 @@ describe('useSWR - local mutation', () => {
   })
 
   // https://github.com/vercel/swr/pull/1003
-  it('should not dedupe synchronous mutations', async () => {
+  it.skip('should not dedupe synchronous mutations', async () => {
     const mutationRecivedValues = []
     const renderRecivedValues = []
 
@@ -612,7 +613,7 @@ describe('useSWR - local mutation', () => {
 
     renderWithConfig(<Component />)
 
-    await act(() => sleep(50))
+    await executeWithoutBatching(() => sleep(50))
     expect(mutationRecivedValues).toEqual([0, 1])
     expect(renderRecivedValues).toEqual([undefined, 0, 1, 2])
   })
@@ -922,7 +923,7 @@ describe('useSWR - local mutation', () => {
     }
 
     renderWithConfig(<Page />)
-    await act(() => sleep(200))
+    await executeWithoutBatching(() => sleep(200))
 
     // Only "async3" is left and others were deduped.
     expect(loggedData).toEqual([
@@ -1029,7 +1030,7 @@ describe('useSWR - local mutation', () => {
     renderWithConfig(<Page />)
     await screen.findByText('data: foo')
 
-    await act(() =>
+    await executeWithoutBatching(() =>
       mutate(createResponse('baz', { delay: 20 }), {
         optimisticData: 'bar'
       })
@@ -1038,7 +1039,7 @@ describe('useSWR - local mutation', () => {
     expect(renderedData).toEqual([undefined, 'foo', 'bar', 'baz', 'foo'])
   })
 
-  it('should support optimistic updates via functional `optimisticData`', async () => {
+  it('should support optimistic updates via function `optimisticData`', async () => {
     const key = createKey()
     const renderedData = []
     let mutate
@@ -1055,22 +1056,22 @@ describe('useSWR - local mutation', () => {
     renderWithConfig(<Page />)
     await screen.findByText('data: foo')
 
-    await act(() =>
+    await executeWithoutBatching(() =>
       mutate(createResponse('baz', { delay: 20 }), {
-        optimisticData: data => 'functional_' + data
+        optimisticData: data => 'function_' + data
       })
     )
     await sleep(30)
     expect(renderedData).toEqual([
       undefined,
       'foo',
-      'functional_foo',
+      'function_foo',
       'baz',
       'foo'
     ])
   })
 
-  it('should be able use mutate to manipulate data via functional `optimisticData`', async () => {
+  it('should be able use mutate to manipulate data via function `optimisticData`', async () => {
     const key = createKey()
     const renderedData = []
 
@@ -1104,6 +1105,37 @@ describe('useSWR - local mutation', () => {
     expect(renderedData).toEqual([undefined, 'loading', 'final'])
   })
 
+  it('should prevent race conditions with optimistic UI', async () => {
+    const key = createKey()
+    const renderedData = []
+    let mutate
+
+    function Page() {
+      const { data, mutate: boundMutate } = useSWR(key, () => Math.random(), {
+        refreshInterval: 10,
+        dedupingInterval: 0
+      })
+      mutate = boundMutate
+      renderedData.push(data)
+      return <div>data: {String(data)}</div>
+    }
+
+    renderWithConfig(<Page />)
+
+    await sleep(20)
+    await executeWithoutBatching(() =>
+      mutate(createResponse('end', { delay: 50 }), {
+        optimisticData: 'start'
+      })
+    )
+    await sleep(20)
+
+    // There can never be any changes during a mutation — it should be atomic.
+    expect(renderedData.indexOf('end') - renderedData.indexOf('start')).toEqual(
+      1
+    )
+  })
+
   it('should rollback optimistic updates when mutation fails', async () => {
     const key = createKey()
     const renderedData = []
@@ -1128,7 +1160,7 @@ describe('useSWR - local mutation', () => {
     await screen.findByText('data: 0')
 
     try {
-      await act(() =>
+      await executeWithoutBatching(() =>
         mutate(createResponse(new Error('baz'), { delay: 20 }), {
           optimisticData: 'bar'
         })
@@ -1139,6 +1171,62 @@ describe('useSWR - local mutation', () => {
 
     await sleep(30)
     expect(renderedData).toEqual([undefined, 0, 'bar', 0, 1])
+  })
+
+  it('should not revert to optimistic data when rolling back', async () => {
+    const key = createKey()
+    const renderedData = []
+    let mutate
+    let previousValue
+    let previousValue2
+
+    function Page() {
+      const { data, mutate: boundMutate } = useSWR(key, () =>
+        createResponse(0, { delay: 20 })
+      )
+      mutate = boundMutate
+
+      if (
+        !renderedData.length ||
+        renderedData[renderedData.length - 1] !== data
+      ) {
+        renderedData.push(data)
+      }
+
+      return <div>data: {String(data)}</div>
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data: 0')
+
+    await executeWithoutBatching(async () => {
+      const p1 = mutate(createResponse(new Error(), { delay: 20 }), {
+        optimisticData: 1
+      })
+      await sleep(10)
+      const p2 = mutate(
+        v => {
+          previousValue = v
+          return createResponse(new Error(), { delay: 20 })
+        },
+        {
+          optimisticData: v => {
+            previousValue2 = v
+            return 2
+          }
+        }
+      )
+      return Promise.all([p1, p2])
+    }).catch(_e => {})
+
+    await sleep(30)
+
+    // It should revert to `0` instead of `1` at the end.
+    expect(renderedData).toEqual([undefined, 0, 1, 2, 0])
+
+    // It should receive the original displayed data instead of current displayed data.
+    expect(previousValue).toBe(0)
+    expect(previousValue2).toBe(0)
   })
 
   it('should not rollback optimistic updates if `rollbackOnError`', async () => {
@@ -1165,7 +1253,7 @@ describe('useSWR - local mutation', () => {
     await screen.findByText('data: 0')
 
     try {
-      await act(() =>
+      await executeWithoutBatching(() =>
         mutate(createResponse(new Error('baz'), { delay: 20 }), {
           optimisticData: 'bar',
           rollbackOnError: false
@@ -1228,9 +1316,11 @@ describe('useSWR - local mutation', () => {
     }
 
     renderWithConfig(<Page />)
+
     await act(() => sleep(10))
-    await act(() => mutatePage())
+    await executeWithoutBatching(() => mutatePage())
     await sleep(30)
+
     expect(renderedData).toEqual([undefined, 'foo', 'bar', '!baz'])
   })
 
@@ -1242,9 +1332,8 @@ describe('useSWR - local mutation', () => {
 
     let appendData
 
-    const sendRequest = newItem => {
-      // @TODO: We use `any` here due to limitation of type inference.
-      return new Promise<any>(res =>
+    const sendRequest = <Data,>(newItem) => {
+      return new Promise<Data>(res =>
         setTimeout(() => {
           // Server capitializes the new item.
           const modifiedData =
@@ -1274,9 +1363,11 @@ describe('useSWR - local mutation', () => {
     }
 
     renderWithConfig(<Page />)
-    await act(() => sleep(10))
-    await act(() => appendData())
-    await sleep(30)
+    await executeWithoutBatching(async () => {
+      await sleep(10)
+      await appendData()
+      await sleep(30)
+    })
 
     expect(renderedData).toEqual([
       undefined, // fetching

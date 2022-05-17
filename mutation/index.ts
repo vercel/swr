@@ -1,13 +1,15 @@
 import { useCallback, useRef } from 'react'
-import useSWR, { useSWRConfig, Middleware, Key } from 'swr'
-
-import { serialize } from '../src/utils/serialize'
-import { useStateWithDeps } from '../src/utils/state'
-import { withMiddleware } from '../src/utils/with-middleware'
-import { useIsomorphicLayoutEffect } from '../src/utils/env'
-import { UNDEFINED } from '../src/utils/helper'
-import { getTimestamp } from '../src/utils/timestamp'
-
+import useSWR, { useSWRConfig } from 'swr'
+import {
+  serialize,
+  useStateWithDeps,
+  withMiddleware,
+  useIsomorphicLayoutEffect,
+  UNDEFINED,
+  getTimestamp,
+  Middleware,
+  Key
+} from 'swr/_internal'
 import {
   SWRMutationConfiguration,
   SWRMutationResponse,
@@ -15,8 +17,7 @@ import {
   MutationFetcher
 } from './types'
 
-const mutation =
-  <Data, Error>() =>
+const mutation = (<Data, Error>() =>
   (
     key: Key,
     fetcher: MutationFetcher<Data>,
@@ -36,7 +37,7 @@ const mutation =
     const currentState = stateRef.current
 
     const trigger = useCallback(
-      async (arg, opts?: SWRMutationConfiguration<Data, Error>) => {
+      async (arg: any, opts?: SWRMutationConfiguration<Data, Error>) => {
         const [serializedKey, resolvedKey] = serialize(keyRef.current)
 
         if (!fetcher) {
@@ -112,11 +113,8 @@ const mutation =
         return currentState.isMutating
       }
     }
-  }
+  }) as unknown as Middleware
 
-export default withMiddleware(
-  useSWR,
-  mutation as unknown as Middleware
-) as unknown as SWRMutationHook
+export default withMiddleware(useSWR, mutation) as unknown as SWRMutationHook
 
-export { SWRMutationConfiguration, SWRMutationResponse }
+export { SWRMutationConfiguration, SWRMutationResponse, SWRMutationHook }
