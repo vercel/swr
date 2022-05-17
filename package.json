@@ -73,7 +73,7 @@
   "scripts": {
     "clean": "rimraf core/dist infinite/dist immutable/dist mutation/dist",
     "build": "yarn build:internal && yarn build:core && yarn build:infinite && yarn build:immutable && yarn build:mutation && yarn build:subscription",
-    "watch": "npm-run-all -p watch:core watch:infinite watch:immutable watch:mutation",
+    "watch": "npm-run-all -p watch:core watch:infinite watch:immutable watch:mutation watch:subscription",
     "watch:core": "yarn build:core -w",
     "watch:infinite": "yarn build:infinite -w",
     "watch:immutable": "yarn build:immutable -w",

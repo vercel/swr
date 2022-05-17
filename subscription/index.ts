@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useCallback, useRef } from 'react'
 import useSWR from 'swr'
 import {
   withMiddleware,
@@ -8,6 +8,7 @@ import {
   SWRConfiguration,
   useIsomorphicLayoutEffect
 } from 'swr/_internal'
+import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js'
 
 export type SWRSubscription<Data = any, Error = any> = (
   key: Key,
@@ -35,14 +36,13 @@ export const subscription = (<Data, Error>(useSWRNext: SWRHook) =>
     config?: SWRConfiguration
   ): SWRSubscriptionResponse<Data, Error> => {
     const swr = useSWRNext(key, null, config)
-
     const subscribeRef = useRef(subscribe)
 
     useIsomorphicLayoutEffect(() => {
       subscribeRef.current = subscribe
     })
 
-    useIsomorphicLayoutEffect(() => {
+    const subscribeCallback = useCallback(() => {
       subscriptions.set(key, (subscriptions.get(key) || 0) + 1)
 
       const onData = (val?: Data) => swr.mutate(val, false)
@@ -80,6 +80,10 @@ export const subscription = (<Data, Error>(useSWRNext: SWRHook) =>
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [key])
+
+    const getSnapshot = useCallback(() => disposers.size, [])
+
+    useSyncExternalStore(subscribeCallback, getSnapshot)
 
     return {
       get data() {
