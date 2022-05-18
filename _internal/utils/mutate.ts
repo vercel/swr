@@ -42,8 +42,8 @@ export const internalMutate = async <Data>(
   const [get, set] = createCacheHelper<
     Data,
     State<Data, any> & {
-      // The original data.
-      _o?: Data
+      // The previously committed data.
+      _c?: Data
     }
   >(cache, key)
   const [EVENT_REVALIDATORS, MUTATION, FETCH] = SWRGlobalState.get(
@@ -80,21 +80,27 @@ export const internalMutate = async <Data>(
 
   const hasOptimisticData = !isUndefined(optimisticData)
   const state = get()
-  const currentData = state.data
-  const originalData = isUndefined(state._o) ? currentData : state._o
+
+  // `displayedData` is the current value on screen. It could be the optimistic value
+  // that is going to be overridden by a `committedData`, or get reverted back.
+  // `committedData` is the validated value that comes from a fetch or mutation.
+  const displayedData = state.data
+  const committedData = isUndefined(state._c) ? displayedData : state._c
 
   // Do optimistic data update.
   if (hasOptimisticData) {
     optimisticData = isFunction(optimisticData)
-      ? optimisticData(originalData)
+      ? optimisticData(committedData)
       : optimisticData
-    set({ data: optimisticData, _o: originalData })
+
+    // When we set optimistic data, backup the current committedData data in `_c`.
+    set({ data: optimisticData, _c: committedData })
   }
 
   if (isFunction(data)) {
     // `data` is a function, call it passing current cache value.
     try {
-      data = (data as MutatorCallback<Data>)(originalData)
+      data = (data as MutatorCallback<Data>)(committedData)
     } catch (err) {
       // If it throws an error synchronously, we shouldn't update the cache.
       error = err
@@ -119,8 +125,10 @@ export const internalMutate = async <Data>(
       // Rollback. Always populate the cache in this case but without
       // transforming the data.
       populateCache = true
-      data = originalData
-      set({ data: originalData })
+      data = committedData
+
+      // Reset data to be the latest committed data, and clear the `_c` value.
+      set({ data, _c: UNDEFINED })
     }
   }
 
@@ -129,15 +137,15 @@ export const internalMutate = async <Data>(
     if (!error) {
       // Transform the result into data.
       if (isFunction(populateCache)) {
-        data = populateCache(data, originalData)
+        data = populateCache(data, committedData)
       }
 
       // Only update cached data if there's no error. Data can be `undefined` here.
-      set({ data })
+      set({ data, _c: UNDEFINED })
     }
 
-    // Always update or reset the error and original data field.
-    set({ error, _o: UNDEFINED })
+    // Always update error and original data here.
+    set({ error })
   }
 
   // Reset the timestamp to mark the mutation has ended.
@@ -145,6 +153,10 @@ export const internalMutate = async <Data>(
 
   // Update existing SWR Hooks' internal states:
   const res = await startRevalidate()
+
+  // The mutation and revalidation are ended, we can clear it since the data is
+  // not an optimistic value anymore.
+  set({ _c: UNDEFINED })
 
   // Throw error or return data
   if (error) throw error

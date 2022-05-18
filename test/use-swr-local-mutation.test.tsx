@@ -1229,6 +1229,120 @@ describe('useSWR - local mutation', () => {
     expect(previousValue2).toBe(0)
   })
 
+  it('should rollback to the original value after multiple mutations', async () => {
+    const key = createKey()
+    const renderedData = []
+    let mutate
+    let serverData = 'foo'
+
+    function Page() {
+      const { data, mutate: boundMutate } = useSWR(key, () =>
+        createResponse(serverData, { delay: 20 })
+      )
+      mutate = boundMutate
+      if (
+        !renderedData.length ||
+        renderedData[renderedData.length - 1] !== data
+      ) {
+        renderedData.push(data)
+      }
+      return <div>data: {String(data)}</div>
+    }
+
+    // data == "foo"
+    renderWithConfig(<Page />)
+    await screen.findByText('data: foo')
+
+    // data == "bar"
+    await executeWithoutBatching(async () => {
+      await mutate(
+        createResponse('bar', { delay: 20 }).then(r => (serverData = r)),
+        {
+          optimisticData: 'bar',
+          populateCache: false
+        }
+      )
+    })
+
+    try {
+      // data == "baz", then reverted back to "bar"
+      await executeWithoutBatching(() =>
+        mutate(createResponse(new Error(), { delay: 20 }), {
+          optimisticData: 'baz',
+          revalidate: false
+        })
+      )
+    } catch (_) {
+      // Ignore
+    }
+
+    await sleep(30)
+    expect(renderedData).toEqual([undefined, 'foo', 'bar', 'baz', 'bar'])
+  })
+
+  it('should rollback to the original value after multiple mutations (2)', async () => {
+    const key = createKey()
+    const renderedData = []
+    let mutate
+    let serverData = 'foo'
+
+    function Page() {
+      const { data, mutate: boundMutate } = useSWR(key, () =>
+        createResponse(serverData, { delay: 20 })
+      )
+      mutate = boundMutate
+      if (
+        !renderedData.length ||
+        renderedData[renderedData.length - 1] !== data
+      ) {
+        renderedData.push(data)
+      }
+      return <div>data: {String(data)}</div>
+    }
+
+    // data == "foo"
+    renderWithConfig(<Page />)
+    await screen.findByText('data: foo')
+
+    // Here m1 and m2 have overlap and m1 will be discarded.
+    await executeWithoutBatching(async () => {
+      const m1 = mutate(
+        createResponse('bar', { delay: 30 }).then(r => (serverData = r)),
+        {
+          optimisticData: 'bar',
+          populateCache: false
+        }
+      )
+
+      await sleep(10)
+
+      const m2 = mutate(
+        createResponse('baz', { delay: 30 }).then(r => (serverData = r))
+      )
+
+      await m1
+      await m2
+    })
+
+    try {
+      // data == "qux", then reverted back to "baz"
+      await executeWithoutBatching(() =>
+        mutate(createResponse(new Error(), { delay: 20 }), {
+          optimisticData: 'qux',
+          revalidate: false
+        })
+      )
+    } catch (_) {
+      // Ignore
+    }
+
+    // data: "foo" -> "bar" -> "baz" -> "qux" -> "baz"
+    //                 ^ optimistic      ^ error
+
+    await sleep(30)
+    expect(renderedData).toEqual([undefined, 'foo', 'bar', 'baz', 'qux', 'baz'])
+  })
+
   it('should not rollback optimistic updates if `rollbackOnError`', async () => {
     const key = createKey()
     const renderedData = []

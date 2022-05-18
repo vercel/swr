@@ -61,6 +61,7 @@ const mutation = (<Data, Error>() =>
         try {
           const data = await mutate<Data>(
             serializedKey,
+            // FIXME: Error shouldn't be broadcasted here.
             (fetcher as any)(resolvedKey, { arg }),
             options
           )
