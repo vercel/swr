@@ -1,14 +1,14 @@
-import { useCallback, useRef } from 'react'
+import { useRef } from 'react'
 import useSWR from 'swr'
 import {
   withMiddleware,
   Key,
   SWRHook,
   Middleware,
+  serialize,
   SWRConfiguration,
   useIsomorphicLayoutEffect
 } from 'swr/_internal'
-import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js'
 
 export type SWRSubscription<Data = any, Error = any> = (
   key: Key,
@@ -31,10 +31,11 @@ const disposers = new Map()
 
 export const subscription = (<Data, Error>(useSWRNext: SWRHook) =>
   (
-    key: Key,
+    _key: Key,
     subscribe: SWRSubscription<Data, Error>,
     config?: SWRConfiguration
   ): SWRSubscriptionResponse<Data, Error> => {
+    const [key] = serialize(_key)
     const swr = useSWRNext(key, null, config)
     const subscribeRef = useRef(subscribe)
 
@@ -42,7 +43,7 @@ export const subscription = (<Data, Error>(useSWRNext: SWRHook) =>
       subscribeRef.current = subscribe
     })
 
-    const subscribeCallback = useCallback(() => {
+    useIsomorphicLayoutEffect(() => {
       subscriptions.set(key, (subscriptions.get(key) || 0) + 1)
 
       const onData = (val?: Data) => swr.mutate(val, false)
@@ -80,10 +81,6 @@ export const subscription = (<Data, Error>(useSWRNext: SWRHook) =>
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [key])
-
-    const getSnapshot = useCallback(() => disposers.size, [])
-
-    useSyncExternalStore(subscribeCallback, getSnapshot)
 
     return {
       get data() {
