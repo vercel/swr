@@ -148,8 +148,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   const cached = useSyncExternalStoreWithSelector(
     useCallback(
       (callback: () => void) =>
-        subscribeCache(key, (current: State<Data, any>) => {
-          stateRef.current = current
+        subscribeCache(key, () => {
           callback()
         }),
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -161,7 +160,6 @@ export const useSWRHandler = <Data = any, Error = any>(
     isEqual
   )
 
-  const stateRef = useRef<State<Data, Error>>(cached)
   const isInitialMount = !initialMountedRef.current
   const cachedData = cached.data
 
@@ -208,13 +206,6 @@ export const useSWRHandler = <Data = any, Error = any>(
   )
   const isValidating = cached.isValidating || defaultValidatingState
   const isLoading = cached.isLoading || defaultValidatingState
-
-  const currentState = {
-    data,
-    error,
-    isValidating,
-    isLoading
-  }
 
   // The revalidation function is a carefully crafted wrapper of the original
   // `fetcher`, to correctly handle the many edge cases.
@@ -368,15 +359,11 @@ export const useSWRHandler = <Data = any, Error = any>(
         }
         // Deep compare with latest state to avoid extra re-renders.
         // For local state, compare and assign.
-        if (!compare(stateRef.current.data, newData)) {
-          finalState.data = newData
-        } else {
-          // `data` and `newData` are deeply equal (serialized value).
-          // So it should be safe to broadcast the stale data to keep referential equality (===).
-          finalState.data = stateRef.current.data
-          // At the end of this function, `broadcastState` invokes the `onStateUpdate` function,
-          // which takes care of avoiding the re-render.
-        }
+        const cacheData = getCache().data
+
+        // Since the compare fn could be custom fn
+        // cacheData might be different from newData even when compare fn returns True
+        finalState.data = compare(cacheData, newData) ? cacheData : newData
 
         // Trigger the successful callback if it's the original request.
         if (shouldStartNewRequest) {
@@ -462,7 +449,6 @@ export const useSWRHandler = <Data = any, Error = any>(
   useIsomorphicLayoutEffect(() => {
     fetcherRef.current = fetcher
     configRef.current = config
-    stateRef.current = currentState
     // Handle laggy data updates. If there's cached data of the current key,
     // it'll be the correct reference.
     if (!isUndefined(cachedData)) {
@@ -550,7 +536,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       // Check if it's OK to execute:
       // Only revalidate when the page is visible, online and not errored.
       if (
-        !stateRef.current.error &&
+        !getCache().error &&
         (refreshWhenHidden || getConfig().isVisible()) &&
         (refreshWhenOffline || getConfig().isOnline())
       ) {
