@@ -126,6 +126,9 @@ export const internalMutate = async <Data>(
 
   // If we should write back the cache after request.
   if (populateCache) {
+    // Always update or reset the error.
+    const newState: State = { error }
+
     if (!error) {
       // Transform the result into data.
       if (isFunction(populateCache)) {
@@ -133,11 +136,10 @@ export const internalMutate = async <Data>(
       }
 
       // Only update cached data if there's no error. Data can be `undefined` here.
-      set({ data })
+      newState.data = data
     }
 
-    // Always update or reset the error and original data field.
-    set({ error, _o: UNDEFINED })
+    set(newState)
   }
 
   // Reset the timestamp to mark the mutation has ended.
@@ -145,6 +147,10 @@ export const internalMutate = async <Data>(
 
   // Update existing SWR Hooks' internal states:
   const res = await startRevalidate()
+
+  // The mutation and revalidation are ended, we can reset the original data since
+  // the data is not an optimistic value anymore.
+  set({ _o: UNDEFINED })
 
   // Throw error or return data
   if (error) throw error
