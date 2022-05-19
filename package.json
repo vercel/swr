@@ -88,7 +88,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged && yarn types:check"
+      "pre-commit": "lint-staged && pnpm types:check"
     }
   },
   "lint-staged": {
