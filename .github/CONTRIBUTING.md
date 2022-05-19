@@ -27,7 +27,7 @@ To run SWR locally, you can start it with any example in `examples` folder. You 
 First of all, build SWR assets
 
 ```sh
-yarn watch
+pnpm watch
 ```
 
 Install dependency of the target example, for instance `examples/basic`:
@@ -35,15 +35,15 @@ Install dependency of the target example, for instance `examples/basic`:
 
 ```sh
 # by default it will run next dev for the example
-yarn next dev examples/basic
+pnpm next dev examples/basic
 ```
 
 All examples are built with Next.js, so Next.js commands are all supported:
 
 ```sh
 # if you want to build and start
-yarn next build examples/basic
-yarn next start examples/basic
+pnpm next build examples/basic
+pnpm next start examples/basic
 ```
 ## Update Documentation
 
