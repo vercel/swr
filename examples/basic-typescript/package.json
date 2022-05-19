@@ -7,7 +7,7 @@
     "next": "latest",
     "react": "18.1.0",
     "react-dom": "18.1.0",
-    "swr": "^2.0.0"
+    "swr": "latest"
   },
   "scripts": {
     "dev": "next",
