@@ -5,7 +5,7 @@ import {
   sleep,
   executeWithoutBatching,
   renderWithConfig
-} from './utils'
+} from './render-utils'
 
 import React from 'react'
 import useSWR from 'swr'

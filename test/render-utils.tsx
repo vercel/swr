@@ -1,33 +1,13 @@
 import { act, fireEvent, render } from '@testing-library/react'
 import React from 'react'
 import { SWRConfig } from 'swr'
-
-export function sleep(time: number) {
-  return new Promise<void>(resolve => setTimeout(resolve, time))
-}
-
-export const createResponse = <T,>(
-  response: T,
-  { delay } = { delay: 10 }
-): Promise<T> =>
-  new Promise((resolve, reject) =>
-    setTimeout(() => {
-      if (response instanceof Error) {
-        reject(response)
-      } else {
-        resolve(response)
-      }
-    }, delay)
-  )
-
+import { sleep } from './common-utils'
 export const nextTick = () => act(() => sleep(1))
 
 export const focusOn = (element: any) =>
   act(async () => {
     fireEvent.focus(element)
   })
-
-export const createKey = () => 'swr-key-' + ~~(Math.random() * 1e7)
 
 const _renderWithConfig = (
   element: React.ReactElement,
@@ -68,3 +48,5 @@ export async function executeWithoutBatching(fn: () => any) {
   await fn()
   global.IS_REACT_ACT_ENVIRONMENT = prev
 }
+
+export * from './common-utils'

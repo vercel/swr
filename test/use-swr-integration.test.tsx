@@ -8,7 +8,7 @@ import {
   renderWithConfig,
   createKey,
   renderWithGlobalCache
-} from './utils'
+} from './render-utils'
 
 describe('useSWR', () => {
   const sharedKey = createKey()

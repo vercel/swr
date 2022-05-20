@@ -8,7 +8,7 @@ import {
   nextTick as waitForNextTick,
   focusOn,
   renderWithConfig
-} from './utils'
+} from './render-utils'
 
 const focusWindow = () => focusOn(window)
 

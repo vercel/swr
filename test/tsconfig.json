@@ -2,9 +2,9 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "rootDir": "..",
-    "strict": false
+    "strict": false,
+    "skipLibCheck": true
   },
   "include": [".", "./jest-setup.ts"],
-  // This file need "strict": true
   "exclude": ["./type"]
 }

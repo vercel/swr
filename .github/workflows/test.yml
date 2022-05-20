@@ -36,8 +36,9 @@ jobs:
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
-
       - run: pnpm install
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
       - run: pnpm lint
       - run: pnpm build
       - run: pnpm types:check
@@ -45,3 +46,6 @@ jobs:
       - run: pnpm test
         env:
           CI: true
+      - name: Install Playwright
+        run: npx playwright install --with-deps
+      - run: pnpm test-ct

@@ -1,7 +1,11 @@
 import { act, screen } from '@testing-library/react'
 import React from 'react'
 import useSWR, { mutate } from 'swr'
-import { createKey, createResponse, renderWithGlobalCache } from './utils'
+import {
+  createKey,
+  createResponse,
+  renderWithGlobalCache
+} from './render-utils'
 
 describe('useSWR - context configs', () => {
   it('mutate before mount should not block rerender', async () => {
@@ -9,7 +13,9 @@ describe('useSWR - context configs', () => {
     const fetcher = () => createResponse('data')
     const key = createKey()
 
-    await act(async () => { await mutate(key, prefetch) })
+    await act(async () => {
+      await mutate(key, prefetch)
+    })
 
     function Page() {
       const { data } = useSWR(key, fetcher)

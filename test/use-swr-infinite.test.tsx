@@ -10,7 +10,7 @@ import {
   renderWithConfig,
   renderWithGlobalCache,
   executeWithoutBatching
-} from './utils'
+} from './render-utils'
 
 describe('useSWRInfinite', () => {
   it('should render the first page component', async () => {

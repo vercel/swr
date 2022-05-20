@@ -1,7 +1,12 @@
 import { act, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 import useSWR from 'swr'
-import { sleep, createResponse, renderWithConfig, createKey } from './utils'
+import {
+  sleep,
+  createResponse,
+  renderWithConfig,
+  createKey
+} from './render-utils'
 
 describe('useSWR - config callbacks', () => {
   it('should trigger the onSuccess event with the latest version of the onSuccess callback', async () => {

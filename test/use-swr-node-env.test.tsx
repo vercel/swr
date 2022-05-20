@@ -9,7 +9,7 @@ import React from 'react'
 import { renderToString } from 'react-dom/server'
 import useSWR from '../core'
 import useSWRImmutable from '../immutable'
-import { createKey } from './utils'
+import { createKey } from './render-utils'
 import { IS_SERVER } from '../_internal/utils/env'
 
 describe('useSWR', () => {

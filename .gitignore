@@ -15,3 +15,6 @@ coverage
 */**/.turbo
 .turbo
 .rollup.cache
+/test-results/
+/playwright-report/
+/playwright/.cache/

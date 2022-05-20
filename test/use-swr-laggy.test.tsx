@@ -3,7 +3,12 @@ import React, { useState } from 'react'
 import useSWR from 'swr'
 import useSWRInfinite from 'swr/infinite'
 
-import { createKey, createResponse, renderWithConfig, sleep } from './utils'
+import {
+  createKey,
+  createResponse,
+  renderWithConfig,
+  sleep
+} from './render-utils'
 
 describe('useSWR - keep previous data', () => {
   it('should keep previous data when key changes when `keepPreviousData` is enabled', async () => {

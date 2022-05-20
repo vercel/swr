@@ -6,7 +6,7 @@ import {
   renderWithConfig,
   createKey,
   mockVisibilityHidden
-} from './utils'
+} from './render-utils'
 
 describe('useSWR - reconnect', () => {
   it('should revalidate on reconnect by default', async () => {
