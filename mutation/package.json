@@ -5,6 +5,13 @@
   "module": "./dist/index.esm.js",
   "types": "./dist/mutation",
   "exports": "./dist/index.mjs",
+  "private": true,
+  "scripts": {
+    "watch": "bunchee index.ts --no-sourcemap -w",
+    "build": "bunchee index.ts --no-sourcemap",
+    "types:check": "tsc --noEmit",
+    "clean": "rimraf dist"
+  },
   "peerDependencies": {
     "swr": "*",
     "react": "*"
