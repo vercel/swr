@@ -8,7 +8,7 @@ import {
   createKey,
   renderWithConfig,
   nextTick
-} from './utils'
+} from './render-utils'
 
 describe('useSWR - revalidate', () => {
   it('should rerender after triggering revalidation', async () => {

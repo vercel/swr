@@ -7,7 +7,7 @@ import {
   executeWithoutBatching,
   renderWithConfig,
   sleep
-} from './utils'
+} from './render-utils'
 
 describe('useSWR - key', () => {
   it('should respect requests after key has changed', async () => {

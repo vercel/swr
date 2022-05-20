@@ -12,7 +12,11 @@ describe('useSWR - devtools', () => {
       }
     // @ts-expect-error
     window.__SWR_DEVTOOLS_USE__ = [middleware]
-    ;({ createKey, createResponse, renderWithConfig } = require('./utils'))
+    ;({
+      createKey,
+      createResponse,
+      renderWithConfig
+    } = require('./render-utils'))
     useSWR = require('swr').default
   })
   it('window.__SWR_DEVTOOLS_USE__ should be set as middleware', async () => {

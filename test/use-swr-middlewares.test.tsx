@@ -10,7 +10,7 @@ import {
   createKey,
   nextTick,
   renderWithConfig
-} from './utils'
+} from './render-utils'
 
 describe('useSWR - middleware', () => {
   it('should use middleware', async () => {

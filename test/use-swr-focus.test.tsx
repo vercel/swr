@@ -7,7 +7,7 @@ import {
   focusOn,
   renderWithConfig,
   createKey
-} from './utils'
+} from './render-utils'
 
 const focusWindow = () => focusOn(window)
 

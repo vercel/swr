@@ -13,3 +13,6 @@ package-lock.json
 *.tsbuildinfo
 coverage
 .rollup.cache
+/test-results/
+/playwright-report/
+/playwright/.cache/

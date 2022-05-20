@@ -10,7 +10,7 @@ import { renderToString } from 'react-dom/server'
 import useSWR from 'swr'
 import useSWRImmutable from 'swr/immutable'
 import { IS_SERVER } from 'swr/_internal'
-import { createKey } from './utils'
+import { createKey } from './render-utils'
 
 describe('useSWR', () => {
   it('env IS_SERVER is true in node env', () => {

@@ -6,7 +6,7 @@ import {
   focusOn,
   createKey,
   renderWithConfig
-} from './utils'
+} from './render-utils'
 
 const focusWindow = () => focusOn(window)
 const dispatchWindowEvent = event =>

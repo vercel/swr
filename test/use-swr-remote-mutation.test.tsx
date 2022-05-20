@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import React from 'react'
 import useSWR from 'swr'
 import useSWRMutation from 'swr/mutation'
-import { createKey, sleep, nextTick } from './utils'
+import { createKey, sleep, nextTick } from './render-utils'
 
 const waitForNextTick = () => act(() => sleep(1))
 

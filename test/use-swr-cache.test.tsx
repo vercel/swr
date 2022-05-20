@@ -9,7 +9,7 @@ import {
   focusOn,
   renderWithConfig,
   renderWithGlobalCache
-} from './utils'
+} from './render-utils'
 
 describe('useSWR - cache provider', () => {
   let provider

@@ -8,7 +8,7 @@ import {
   renderWithConfig,
   renderWithGlobalCache,
   sleep
-} from './utils'
+} from './render-utils'
 
 class ErrorBoundary extends React.Component<
   PropsWithChildren<{ fallback: ReactNode }>

@@ -2,7 +2,11 @@ import { act, screen, fireEvent } from '@testing-library/react'
 import React, { useEffect, useState } from 'react'
 import type { Middleware } from 'swr'
 import useSWR, { SWRConfig, useSWRConfig } from 'swr'
-import { renderWithConfig, createKey, renderWithGlobalCache } from './utils'
+import {
+  renderWithConfig,
+  createKey,
+  renderWithGlobalCache
+} from './render-utils'
 
 describe('useSWR - configs', () => {
   it('should read the config fallback from the context', async () => {

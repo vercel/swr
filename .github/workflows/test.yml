@@ -29,3 +29,13 @@ jobs:
       - run: pnpm build
         env:
           CI: true
+      - name: Install Playwright
+        run: npx playwright install --with-deps
+      - run: pnpm test-ct
+      - name: Upload playwright test results
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 30

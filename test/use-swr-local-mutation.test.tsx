@@ -11,7 +11,7 @@ import {
   renderWithConfig,
   renderWithGlobalCache,
   executeWithoutBatching
-} from './utils'
+} from './render-utils'
 
 describe('useSWR - local mutation', () => {
   it('should trigger revalidation programmatically', async () => {

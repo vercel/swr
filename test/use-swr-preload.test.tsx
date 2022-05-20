@@ -1,7 +1,12 @@
 import { act, fireEvent, screen } from '@testing-library/react'
 import React, { Suspense, useEffect, useState } from 'react'
 import useSWR, { preload, useSWRConfig } from 'swr'
-import { createKey, createResponse, renderWithConfig, sleep } from './utils'
+import {
+  createKey,
+  createResponse,
+  renderWithConfig,
+  sleep
+} from './render-utils'
 
 describe('useSWR - preload', () => {
   it('preload the fetcher function', async () => {

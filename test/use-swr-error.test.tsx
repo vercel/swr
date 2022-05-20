@@ -7,7 +7,7 @@ import {
   createKey,
   renderWithConfig,
   mockVisibilityHidden
-} from './utils'
+} from './render-utils'
 
 describe('useSWR - error', () => {
   it('should handle errors', async () => {

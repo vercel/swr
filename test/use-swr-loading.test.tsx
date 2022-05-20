@@ -8,7 +8,7 @@ import {
   renderWithConfig,
   nextTick,
   executeWithoutBatching
-} from './utils'
+} from './render-utils'
 
 describe('useSWR - loading', () => {
   it('should return validating state', async () => {

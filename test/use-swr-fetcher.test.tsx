@@ -1,7 +1,7 @@
 import { act, fireEvent, screen } from '@testing-library/react'
 import React, { Suspense, useState } from 'react'
 import useSWR from 'swr'
-import { createKey, renderWithConfig, nextTick } from './utils'
+import { createKey, renderWithConfig, nextTick } from './render-utils'
 
 describe('useSWR - fetcher', () => {
   // https://github.com/vercel/swr/issues/1131
