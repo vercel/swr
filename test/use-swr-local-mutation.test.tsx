@@ -59,7 +59,7 @@ describe('useSWR - local mutation', () => {
             setJob('chef')
           }}
         >
-          {name}:{job}
+          {`${name}:${job}`}
         </span>
       )
     }
@@ -293,9 +293,9 @@ describe('useSWR - local mutation', () => {
 
     renderWithConfig(<App />)
 
-    const increment = jest.fn(currentValue =>
-      currentValue == null ? undefined : currentValue + 1
-    )
+    const increment = jest.fn(currentValue => {
+      return currentValue == null ? undefined : currentValue + 1
+    })
 
     const key = createKey()
     await mutate(key, increment, false)
@@ -329,11 +329,12 @@ describe('useSWR - local mutation', () => {
     expect(globalMutate(null, Promise.resolve('data'))).resolves.toBe(undefined)
 
     // throw the error if promise rejected
+    const e = new Error('error')
     expect(
       globalMutate(() => {
-        throw new Error('error')
+        throw e
       }, Promise.resolve('data'))
-    ).resolves.toBe(undefined)
+    ).rejects.toEqual(e)
   })
 
   it('should get bound mutate from useSWR', async () => {
