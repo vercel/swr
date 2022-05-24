@@ -11,7 +11,8 @@ import {
   RevalidateEvent,
   RevalidateCallback,
   ProviderConfiguration,
-  GlobalState
+  GlobalState,
+  Arguments
 } from '../types'
 
 const revalidateAllKeys = (
@@ -42,10 +43,16 @@ export const initCache = <Data = any>(
     // If there's no global state bound to the provider, create a new one with the
     // new mutate function.
     const EVENT_REVALIDATORS = {}
-    const mutate = internalMutate.bind(
-      UNDEFINED,
-      provider
-    ) as ScopedMutator<Data>
+    // @ts-ignore
+    const mutate = async (key: Arguments, ...args) => {
+      const res = await internalMutate(
+        provider,
+        key,
+        // @ts-ignore
+        ...args
+      )
+      return res[0]
+    } // as ScopedMutator<Data>
     let unmount = noop
 
     const subscriptions: Record<string, ((current: any, prev: any) => void)[]> =
@@ -79,6 +86,7 @@ export const initCache = <Data = any>(
           EVENT_REVALIDATORS,
           {},
           {},
+          // @ts-ignore
           mutate,
           setter,
           subscribe

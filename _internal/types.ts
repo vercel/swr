@@ -1,6 +1,8 @@
 import * as revalidateEvents from './constants'
 import { defaultConfig } from './utils/config'
 
+export type Falsy = undefined | null | false
+
 export type GlobalState = [
   Record<string, RevalidateCallback[]>, // EVENT_REVALIDATORS
   Record<string, [number, number]>, // MUTATION: [ts, end_ts]
@@ -266,6 +268,7 @@ export type RevalidateCallback = <K extends RevalidateEvent>(
 ) => RevalidateCallbackReturnType[K]
 
 export interface Cache<Data = any> {
+  keys(): IterableIterator<string>
   get(key: Key): State<Data> | undefined
   set(key: Key, value: State<Data>): void
   delete(key: Key): void
