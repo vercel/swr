@@ -260,6 +260,7 @@ describe('useSWR - cache provider', () => {
             }
             return v
           },
+          keys: () => parentCache_.keys(),
           delete: k => parentCache_.delete(k)
         }
       }
