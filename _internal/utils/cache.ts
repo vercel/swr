@@ -43,11 +43,10 @@ export const initCache = <Data = any>(
     // new mutate function.
     const EVENT_REVALIDATORS = {}
 
-    const mutate = (async (...args: Parameters<typeof boundProviderMutate>) => {
-      const boundProviderMutate = internalMutate.bind(UNDEFINED, provider)
-      const res = await boundProviderMutate(...args)
-      return res[0]
-    }) as ScopedMutator<Data>
+    const mutate = internalMutate.bind(
+      UNDEFINED,
+      provider
+    ) as ScopedMutator<Data>
     let unmount = noop
 
     const subscriptions: Record<string, ((current: any, prev: any) => void)[]> =

@@ -293,9 +293,9 @@ describe('useSWR - local mutation', () => {
 
     renderWithConfig(<App />)
 
-    const increment = jest.fn(currentValue => {
-      return currentValue == null ? undefined : currentValue + 1
-    })
+    const increment = jest.fn(currentValue =>
+      currentValue == null ? undefined : currentValue + 1
+    )
 
     const key = createKey()
     await mutate(key, increment, false)
@@ -1491,5 +1491,65 @@ describe('useSWR - local mutation', () => {
       ['Apple', 'Banana', 'Cherry (res)'], // appended server response
       ['Apple', 'Banana', 'Cherry'] // revalidated data
     ])
+  })
+
+  it('should support key filter as first argument', async () => {
+    const key = createKey()
+    let mutationResults = []
+
+    function Page() {
+      const { data: data1 } = useSWR(key + 'first', v => v)
+      const { data: data2 } = useSWR(key + 'second', v => v)
+      const { mutate } = useSWRConfig()
+      return (
+        <div>
+          <span
+            data-testid="mutator-filter-all"
+            onClick={async () => {
+              mutationResults = await mutate(
+                k => k.startsWith(key),
+                data => {
+                  return 'value-' + data.replace(key, '')
+                },
+                false
+              )
+            }}
+          />
+          <span
+            data-testid="mutator-filter-one"
+            onClick={async () => {
+              mutationResults = await mutate(
+                k => k.includes('first'),
+                () => 'value-first-g0',
+                false
+              )
+            }}
+          />
+          <p>first:{data1}</p>
+          <p>second:{data2}</p>
+        </div>
+      )
+    }
+    renderWithConfig(<Page />)
+
+    screen.getByText('first:')
+    screen.getByText('second:')
+
+    await nextTick()
+
+    // filter and mutate `first` and `second`
+    fireEvent.click(screen.getByTestId('mutator-filter-all'))
+
+    await screen.findByText('first:value-first')
+    await screen.findByText('second:value-second')
+
+    expect(mutationResults).toEqual(['value-first', 'value-second'])
+
+    // only filter and mutate `first`
+    fireEvent.click(screen.getByTestId('mutator-filter-one'))
+    await screen.findByText('first:value-first-g0')
+    await screen.findByText('second:value-second')
+
+    expect(mutationResults).toEqual(['value-first-g0'])
   })
 })

@@ -4,7 +4,6 @@ import { SWRGlobalState } from './global-state'
 import { getTimestamp } from './timestamp'
 import * as revalidateEvents from '../constants'
 import {
-  // Key,
   Cache,
   MutatorCallback,
   MutatorOptions,
@@ -31,7 +30,6 @@ export const internalMutate = async <Data>(
   let keyFilter: KeyFilter
   if (typeof _keyFilter !== 'function') {
     const [serializedKey] = serialize(_keyFilter)
-    // keyFilter = (_key?: string) => _key === serializedKey
     matchedKeys = [serializedKey]
   } else {
     keyFilter = _keyFilter as KeyFilter
