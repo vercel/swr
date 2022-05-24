@@ -142,6 +142,10 @@
     "arrowParens": "avoid",
     "trailingComma": "none"
   },
+  "engines": {
+    "node": ">= 14",
+    "pnpm": ">= 7"
+  },
   "dependencies": {
     "use-sync-external-store": "^1.1.0"
   }
