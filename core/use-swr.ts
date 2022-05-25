@@ -276,10 +276,10 @@ export const useSWRHandler = <Data = any, Error = any>(
       if (isUndefined(getCache().data)) {
         initialState.isLoading = true
       }
-      setCache(initialState)
-
       try {
         if (shouldStartNewRequest) {
+          // TODO: should add a test case for this https://github.com/vercel/swr/issues/1974
+          setCache(initialState)
           // If no cache being rendered currently (it shows a blank page),
           // we trigger the loading slow event.
           if (config.loadingTimeout && isUndefined(getCache().data)) {
