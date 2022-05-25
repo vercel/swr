@@ -9,7 +9,6 @@ import {
   MutatorOptions,
   GlobalState,
   State,
-  Falsy,
   Arguments
 } from '../types'
 
@@ -18,26 +17,12 @@ type KeyFilter = (key?: string) => boolean
 export const internalMutate = async <Data>(
   ...args: [
     Cache,
-    KeyFilter | Arguments | Falsy,
+    KeyFilter | Arguments,
     undefined | Data | Promise<Data | undefined> | MutatorCallback<Data>,
     undefined | boolean | MutatorOptions<Data>
   ]
-): Promise<(Data | undefined)[]> => {
-  const [cache, _keyFilter, _data, _opts] = args
-  if (!_keyFilter) return Promise.resolve([])
-  let matchedKeys: string[]
-
-  let keyFilter: KeyFilter
-  if (typeof _keyFilter !== 'function') {
-    const [serializedKey] = serialize(_keyFilter)
-    matchedKeys = [serializedKey]
-  } else {
-    keyFilter = _keyFilter as KeyFilter
-    matchedKeys = []
-    for (const _key of cache.keys()) {
-      if (keyFilter(_key)) matchedKeys.push(_key)
-    }
-  }
+): Promise<(Data | undefined)[] | Data | undefined> => {
+  const [cache, _key, _data, _opts] = args
 
   // When passing as a boolean, it's explicitly used to disable/enable
   // revalidation.
@@ -51,6 +36,21 @@ export const internalMutate = async <Data>(
   let optimisticData = options.optimisticData
   const revalidate = options.revalidate !== false
   const rollbackOnError = options.rollbackOnError !== false
+
+  if (!_key) return
+
+  // If 2nd arg is key filter, return the mutation results of filtered keys
+  if (isFunction(_key)) {
+    const keyFilter: KeyFilter = _key
+    const matchedKeys = []
+    for (const k of cache.keys()) {
+      if (keyFilter(k)) matchedKeys.push(k)
+    }
+    return await Promise.all(matchedKeys.map(mutateByKey))
+  }
+
+  const [serializedKey] = serialize(_key)
+  return await mutateByKey(serializedKey)
 
   async function mutateByKey(key: string): Promise<Data | undefined> {
     const [get, set] = createCacheHelper<
@@ -175,5 +175,4 @@ export const internalMutate = async <Data>(
     if (error) throw error
     return populateCache ? res : data
   }
-  return await Promise.all(matchedKeys.map(_key => mutateByKey(_key)))
 }
