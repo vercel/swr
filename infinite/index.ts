@@ -3,7 +3,7 @@
 
 import { useRef, useCallback } from 'react'
 import useSWR, { SWRConfig } from 'swr'
-
+import { mergeObjects } from 'swr/_internal'
 import {
   isUndefined,
   isFunction,
@@ -172,7 +172,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
 
           if (fn && shouldFetchPage) {
             pageData = await fn(pageArg)
-            setSWRCache({ ...getSWRCacahe(), data: pageData })
+            setSWRCache(mergeObjects(getSWRCacahe(), { data: pageData }))
           }
           data.push(pageData)
           previousPageData = pageData
