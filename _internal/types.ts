@@ -205,15 +205,8 @@ export type MutatorWrapper<Fn> = Fn extends (
 export type Mutator<Data = any> = MutatorWrapper<MutatorFn<Data>>
 
 export interface ScopedMutator<Data = any> {
-  /** This is used for bound mutator */
-  (
-    key: Key,
-    data?: Data | Promise<Data> | MutatorCallback<Data>,
-    opts?: boolean | MutatorOptions<Data>
-  ): Promise<Data | undefined>
-  /** This is used for global mutator */
-  <T = any>(
-    key: Key,
+  <T = Data>(
+    match: ((key: string) => boolean) | Arguments,
     data?: T | Promise<T> | MutatorCallback<T>,
     opts?: boolean | MutatorOptions<Data>
   ): Promise<T | undefined>
@@ -223,7 +216,6 @@ export type KeyedMutator<Data> = (
   data?: Data | Promise<Data> | MutatorCallback<Data>,
   opts?: boolean | MutatorOptions<Data>
 ) => Promise<Data | undefined>
-
 // Public types
 
 export type SWRConfiguration<
