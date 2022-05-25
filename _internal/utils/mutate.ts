@@ -14,14 +14,14 @@ import {
 
 type KeyFilter = (key?: string) => boolean
 
-export const internalMutate = async <Data>(
+export async function internalMutate<Data>(
   ...args: [
     Cache,
     KeyFilter | Arguments,
     undefined | Data | Promise<Data | undefined> | MutatorCallback<Data>,
     undefined | boolean | MutatorOptions<Data>
   ]
-): Promise<(Data | undefined)[] | Data | undefined> => {
+): Promise<(Data | undefined)[] | Data | undefined> {
   const [cache, _key, _data, _opts] = args
 
   // When passing as a boolean, it's explicitly used to disable/enable
@@ -41,16 +41,16 @@ export const internalMutate = async <Data>(
 
   // If 2nd arg is key filter, return the mutation results of filtered keys
   if (isFunction(_key)) {
-    const keyFilter: KeyFilter = _key
+    const keyFilter = _key
     const matchedKeys = []
     for (const k of cache.keys()) {
       if (keyFilter(k)) matchedKeys.push(k)
     }
     return await Promise.all(matchedKeys.map(mutateByKey))
+  } else {
+    const [serializedKey] = serialize(_key)
+    return await mutateByKey(serializedKey)
   }
-
-  const [serializedKey] = serialize(_key)
-  return await mutateByKey(serializedKey)
 
   async function mutateByKey(key: string): Promise<Data | undefined> {
     const [get, set] = createCacheHelper<
