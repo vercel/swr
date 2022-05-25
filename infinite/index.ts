@@ -172,7 +172,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
 
           if (fn && shouldFetchPage) {
             pageData = await fn(pageArg)
-            setSWRCache({ ...getSWRCacahe(), data: pageData })
+            setSWRCache(Object.assign({}, getSWRCacahe(), { data: pageData }))
           }
           data.push(pageData)
           previousPageData = pageData
