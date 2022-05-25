@@ -13,7 +13,11 @@ export const UNDEFINED = (/*#__NOINLINE__*/ noop()) as undefined
 export const OBJECT = Object
 
 export const isUndefined = (v: any): v is undefined => v === UNDEFINED
-export const isFunction = (v: any): v is Function => typeof v == 'function'
+export const isFunction = <
+  T extends (...args: any[]) => any = (...args: any[]) => any
+>(
+  v: unknown
+): v is T => typeof v == 'function'
 export const isEmptyCache = (v: any): boolean => v === EMPTY_CACHE
 export const mergeObjects = (a: any, b: any) => OBJECT.assign({}, a, b)
 

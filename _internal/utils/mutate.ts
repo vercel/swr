@@ -16,14 +16,13 @@ type KeyFilter = (key?: string) => boolean
 
 export async function internalMutate<Data>(
   ...args: [
-    Cache,
-    KeyFilter | Arguments,
-    undefined | Data | Promise<Data | undefined> | MutatorCallback<Data>,
-    undefined | boolean | MutatorOptions<Data>
+    cache: Cache,
+    _key: KeyFilter | Arguments,
+    _data?: Data | Promise<Data | undefined> | MutatorCallback<Data>,
+    _opts?: boolean | MutatorOptions<Data>
   ]
 ): Promise<(Data | undefined)[] | Data | undefined> {
   const [cache, _key, _data, _opts] = args
-
   // When passing as a boolean, it's explicitly used to disable/enable
   // revalidation.
   const options =
