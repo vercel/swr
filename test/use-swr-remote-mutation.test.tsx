@@ -815,4 +815,38 @@ describe('useSWR - remote mutation', () => {
     await act(() => sleep(50))
     await screen.findByText('data:["foo","BAR","BAR"]')
   })
+
+  it('should clear error after successful trigger', async () => {
+    const key = createKey()
+
+    let arg = false
+
+    function Page() {
+      const { error, trigger } = useSWRMutation(
+        key,
+        async (_, { arg: shouldReturnValue }) => {
+          await sleep(10)
+          if (shouldReturnValue) return ['foo']
+          throw new Error('error')
+        }
+      )
+
+      return (
+        <div>
+          <button onClick={() => trigger(arg).catch(() => {})}>trigger</button>
+          <div>Error: {error ? error.message : 'none'}</div>
+        </div>
+      )
+    }
+
+    render(<Page />)
+
+    fireEvent.click(screen.getByText('trigger'))
+    await screen.findByText('Error: error')
+
+    arg = true
+
+    fireEvent.click(screen.getByText('trigger'))
+    await screen.findByText('Error: none')
+  })
 })
