@@ -1495,7 +1495,8 @@ describe('useSWR - local mutation', () => {
 
   it('should support key filter as first argument', async () => {
     const key = createKey()
-    let mutationResults = []
+    const mutationAllResults = []
+    const mutationOneResults = []
 
     function Page() {
       const { data: data1 } = useSWR(key + 'first', v => v)
@@ -1506,23 +1507,25 @@ describe('useSWR - local mutation', () => {
           <span
             data-testid="mutator-filter-all"
             onClick={async () => {
-              mutationResults = await mutate(
+              const res = await mutate(
                 k => k.startsWith(key),
                 data => {
                   return 'value-' + data.replace(key, '')
                 },
                 false
               )
+              mutationAllResults.push(...res)
             }}
           />
           <span
             data-testid="mutator-filter-one"
             onClick={async () => {
-              mutationResults = await mutate(
+              const res = await mutate(
                 k => k.includes('first'),
                 () => 'value-first-g0',
                 false
               )
+              mutationOneResults.push(...res)
             }}
           />
           <p>first:{data1}</p>
@@ -1539,17 +1542,20 @@ describe('useSWR - local mutation', () => {
 
     // filter and mutate `first` and `second`
     fireEvent.click(screen.getByTestId('mutator-filter-all'))
+    await nextTick()
 
     await screen.findByText('first:value-first')
     await screen.findByText('second:value-second')
 
-    expect(mutationResults).toEqual(['value-first', 'value-second'])
+    expect(mutationAllResults).toEqual(['value-first', 'value-second'])
 
     // only filter and mutate `first`
     fireEvent.click(screen.getByTestId('mutator-filter-one'))
+    await nextTick()
+
     await screen.findByText('first:value-first-g0')
     await screen.findByText('second:value-second')
 
-    expect(mutationResults).toEqual(['value-first-g0'])
+    expect(mutationOneResults).toEqual(['value-first-g0'])
   })
 })
