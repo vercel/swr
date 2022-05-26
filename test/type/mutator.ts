@@ -71,15 +71,42 @@ export function useMutatorTypes() {
 
 export function useConfigMutate() {
   const { mutate } = useSWRConfig()
-  mutate<number>(
-    (key: string) => {
-      expectType<string>(key)
-      return key.startsWith('swr')
-    },
-    data => {
-      expectType<number | undefined>(data)
-      return 0
-    }
+  expect<Promise<Array<any>>>(
+    mutate(
+      key => {
+        expectType<string>(key)
+        return key.startsWith('swr')
+      },
+      data => {
+        expectType<number | undefined>(data)
+        return 0
+      }
+    )
+  )
+
+  expect<Promise<any>>(
+    mutate('string', data => {
+      expectType<string | undefined>(data)
+      return '0'
+    })
+  )
+  expect<Promise<Array<number | undefined>>>(
+    mutate<number>(
+      key => {
+        expectType<string>(key)
+        return key.startsWith('swr')
+      },
+      data => {
+        expectType<number | undefined>(data)
+        return 0
+      }
+    )
+  )
+  expect<Promise<string | undefined>>(
+    mutate<string>('string', data => {
+      expectType<string | undefined>(data)
+      return '0'
+    })
   )
   mutate<string>('string', data => {
     expectType<string | undefined>(data)
