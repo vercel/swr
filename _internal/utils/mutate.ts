@@ -12,7 +12,8 @@ import {
   Arguments
 } from '../types'
 
-type KeyFilter = (key?: string) => boolean
+type ValidKey = Omit<Arguments, 'null' | 'undefined'>
+type KeyFilter = (key?: ValidKey) => boolean
 
 export async function internalMutate<Data>(
   cache: Cache,
@@ -50,11 +51,13 @@ export async function internalMutate<Data>(
 
   if (!_key) return
 
+  const KEYS = (SWRGlobalState.get(cache) as GlobalState)[6]
+
   // If 2nd arg is key filter, return the mutation results of filtered keys
   if (isFunction(_key)) {
     const keyFilter = _key
     const matchedKeys = []
-    for (const k of cache.keys()) {
+    for (const k of KEYS.values()) {
       if (keyFilter(k)) matchedKeys.push(k)
     }
     return await Promise.all(matchedKeys.map(mutateByKey))
@@ -63,7 +66,8 @@ export async function internalMutate<Data>(
     return await mutateByKey(serializedKey)
   }
 
-  async function mutateByKey(key: string): Promise<Data | undefined> {
+  async function mutateByKey(_k: ValidKey): Promise<Data | undefined> {
+    const [key] = serialize(_k)
     const [get, set] = createCacheHelper<
       Data,
       State<Data, any> & {

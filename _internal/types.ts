@@ -10,7 +10,8 @@ export type GlobalState = [
   Record<string, FetcherResponse<any>>, // PRELOAD
   ScopedMutator, // Mutator
   (key: string, value: any, prev: any) => void, // Setter
-  (key: string, callback: (current: any, prev: any) => void) => () => void // Subscriber
+  (key: string, callback: (current: any, prev: any) => void) => () => void, // Subscriber
+  Set<Omit<Arguments, 'null' | 'undefined'>> // Keys
 ]
 export type FetcherResponse<Data = unknown> = Data | Promise<Data>
 export type BareFetcher<Data = unknown> = (
@@ -207,7 +208,7 @@ export type Mutator<Data = any> = MutatorWrapper<MutatorFn<Data>>
 
 export interface ScopedMutator<Data = any> {
   <T = Data>(
-    match: ((key: string) => boolean),
+    match: (key: string) => boolean,
     data?: T | Promise<T> | MutatorCallback<T>,
     opts?: boolean | MutatorOptions<Data>
   ): Promise<Array<T | undefined>>
@@ -271,7 +272,6 @@ export type RevalidateCallback = <K extends RevalidateEvent>(
 ) => RevalidateCallbackReturnType[K]
 
 export interface Cache<Data = any> {
-  keys(): IterableIterator<string>
   get(key: Key): State<Data> | undefined
   set(key: Key, value: State<Data>): void
   delete(key: Key): void

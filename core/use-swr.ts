@@ -67,7 +67,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     keepPreviousData
   } = config
 
-  const [EVENT_REVALIDATORS, MUTATION, FETCH] = SWRGlobalState.get(
+  const [EVENT_REVALIDATORS, MUTATION, FETCH, , , , KEYS] = SWRGlobalState.get(
     cache
   ) as GlobalState
 
@@ -458,6 +458,13 @@ export const useSWRHandler = <Data = any, Error = any>(
       laggyDataRef.current = cachedData
     }
   })
+
+  useIsomorphicLayoutEffect(() => {
+    if (_key && key) KEYS.add(_key)
+    return () => {
+      if (_key && key) KEYS.delete(_key)
+    }
+  }, [_key])
 
   // After mounted or key changed.
   useIsomorphicLayoutEffect(() => {

@@ -334,7 +334,7 @@ describe('useSWR - local mutation', () => {
       globalMutate(() => {
         throw e
       }, Promise.resolve('data'))
-    ).rejects.toEqual(e)
+    ).resolves.toEqual([])
   })
 
   it('should get bound mutate from useSWR', async () => {
