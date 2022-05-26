@@ -15,7 +15,7 @@ importers:
       '@types/use-sync-external-store': ^0.0.3
       '@typescript-eslint/eslint-plugin': 5.25.0
       '@typescript-eslint/parser': 5.25.0
-      bunchee: 1.8.4
+      bunchee: 1.8.5
       eslint: 8.15.0
       eslint-config-prettier: 8.5.0
       eslint-plugin-jest-dom: 4.0.1
@@ -50,7 +50,7 @@ importers:
       '@types/use-sync-external-store': 0.0.3
       '@typescript-eslint/eslint-plugin': 5.25.0_qo2hgs5jt7x2a3p77h2rutcdae
       '@typescript-eslint/parser': 5.25.0_hcfsmds2fshutdssjqluwm76uu
-      bunchee: 1.8.4_typescript@4.6.4
+      bunchee: 1.8.5_typescript@4.6.4
       eslint: 8.15.0
       eslint-config-prettier: 8.5.0_eslint@8.15.0
       eslint-plugin-jest-dom: 4.0.1_eslint@8.15.0
@@ -1801,11 +1801,11 @@ packages:
       rollup: 2.74.1
     dev: true
 
-  /@rollup/plugin-commonjs/22.0.0_rollup@2.74.1:
-    resolution: {integrity: sha512-Ktvf2j+bAO+30awhbYoCaXpBcyPmJbaEUYClQns/+6SNCYFURbvBiNbWgHITEsIgDDWCDUclWRKEuf8cwZCFoQ==}
-    engines: {node: '>= 12.0.0'}
+  /@rollup/plugin-commonjs/21.1.0_rollup@2.74.1:
+    resolution: {integrity: sha512-6ZtHx3VHIp2ReNNDxHjuUml6ur+WcQ28N1yHgCQwsbNkQg2suhxGMDQGJOn/KuDxKtd1xuZP5xSTwBA4GQ8hbA==}
+    engines: {node: '>= 8.0.0'}
     peerDependencies:
-      rollup: ^2.68.0
+      rollup: ^2.38.3
     dependencies:
       '@rollup/pluginutils': 3.1.0_rollup@2.74.1
       commondir: 1.0.1
@@ -2820,8 +2820,8 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  /bunchee/1.8.4_typescript@4.6.4:
-    resolution: {integrity: sha512-dcAgeGRgbvqCPrLEp4sR1mqcuOh7zeeANFWHLKsS37jhrnanuFWoBp27pLbgj+SguHa6AOsF5sYcNPc0szU+Mw==}
+  /bunchee/1.8.5_typescript@4.6.4:
+    resolution: {integrity: sha512-zZuKfZBHoDnc9brSh59+p8ezn64W6OpJILkVSFw2d6+QLJIAG2Dha0QiOA2+kYwDflyyoea3CBbTMlvS0gekqg==}
     hasBin: true
     peerDependencies:
       typescript: '>= 3.7.0'
@@ -2830,7 +2830,7 @@ packages:
         optional: true
     dependencies:
       '@rollup/plugin-babel': 5.2.1_rollup@2.74.1
-      '@rollup/plugin-commonjs': 22.0.0_rollup@2.74.1
+      '@rollup/plugin-commonjs': 21.1.0_rollup@2.74.1
       '@rollup/plugin-json': 4.0.2_rollup@2.74.1
       '@rollup/plugin-node-resolve': 13.3.0_rollup@2.74.1
       '@rollup/plugin-typescript': 8.2.3_ohebur6j7zsgwcwqanwsdawjnq
@@ -3048,7 +3048,7 @@ packages:
     dev: true
 
   /commondir/1.0.1:
-    resolution: {integrity: sha1-3dgA2gxmEnOTzKWVDqloo6rxJTs=}
+    resolution: {integrity: sha512-W9pAhw0ja1Edb5GVdIF1mjZw/ASI0AlShXM83UUGe2DVr5TdAPEA1OA8m/g8zWp9x6On7gqufY+FatDbC3MDQg==}
     dev: true
 
   /component-emitter/1.3.0:
