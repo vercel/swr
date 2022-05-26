@@ -1,7 +1,8 @@
 import * as revalidateEvents from './constants'
 import { defaultConfig } from './utils/config'
 
-export type Falsy = undefined | null | false
+type Falsy = null | undefined | false
+export type TruthyKey = Exclude<Arguments, Falsy>
 
 export type GlobalState = [
   Record<string, RevalidateCallback[]>, // EVENT_REVALIDATORS
@@ -11,7 +12,7 @@ export type GlobalState = [
   ScopedMutator, // Mutator
   (key: string, value: any, prev: any) => void, // Setter
   (key: string, callback: (current: any, prev: any) => void) => () => void, // Subscriber
-  Set<Omit<Arguments, 'null' | 'undefined'>> // Keys
+  Set<TruthyKey> // Keys
 ]
 export type FetcherResponse<Data = unknown> = Data | Promise<Data>
 export type BareFetcher<Data = unknown> = (

@@ -9,11 +9,11 @@ import {
   MutatorOptions,
   GlobalState,
   State,
-  Arguments
+  Arguments,
+  TruthyKey
 } from '../types'
 
-type ValidKey = Omit<Arguments, 'null' | 'undefined'>
-type KeyFilter = (key?: ValidKey) => boolean
+type KeyFilter = (key?: TruthyKey) => boolean
 
 export async function internalMutate<Data>(
   cache: Cache,
@@ -66,7 +66,7 @@ export async function internalMutate<Data>(
     return await mutateByKey(serializedKey)
   }
 
-  async function mutateByKey(_k: ValidKey): Promise<Data | undefined> {
+  async function mutateByKey(_k: TruthyKey): Promise<Data | undefined> {
     const [key] = serialize(_k)
     const [get, set] = createCacheHelper<
       Data,
