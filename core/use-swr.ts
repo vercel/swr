@@ -441,7 +441,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     // Due to https://github.com/microsoft/TypeScript/issues/37181, we have to
     // cast it to any for now.
     async (...args) => {
-      return (await internalMutate(cache, keyRef.current, ...args)) as Data
+      return internalMutate<Data>(cache, keyRef.current, ...args)
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
