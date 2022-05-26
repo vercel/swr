@@ -229,7 +229,6 @@ export type KeyedMutator<Data> = (
   data?: Data | Promise<Data> | MutatorCallback<Data>,
   opts?: boolean | MutatorOptions<Data>
 ) => Promise<Data | undefined>
-// Public types
 
 export type SWRConfiguration<
   Data = any,

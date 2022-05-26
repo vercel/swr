@@ -441,9 +441,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     // By using `bind` we don't need to modify the size of the rest arguments.
     // Due to https://github.com/microsoft/TypeScript/issues/37181, we have to
     // cast it to any for now.
-    async (...args) => {
-      return internalMutate<Data>(cache, keyRef.current, ...args)
-    },
+    internalMutate.bind(UNDEFINED, cache, keyRef.current) as any,
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   )
@@ -460,9 +458,10 @@ export const useSWRHandler = <Data = any, Error = any>(
   })
 
   useIsomorphicLayoutEffect(() => {
-    if (_key && key) KEYS.add(_key)
+    const isTruthyKey = _key && key && !isFunction(_key)
+    if (isTruthyKey) KEYS.add(_key)
     return () => {
-      if (_key && key) KEYS.delete(_key)
+      if (isTruthyKey) KEYS.delete(_key)
     }
   }, [_key])
 
