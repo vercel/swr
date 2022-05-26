@@ -459,11 +459,8 @@ export const useSWRHandler = <Data = any, Error = any>(
 
   useIsomorphicLayoutEffect(() => {
     const isTruthyKey = _key && key && !isFunction(_key)
-    if (isTruthyKey) KEYS.add(_key)
-    return () => {
-      if (isTruthyKey) KEYS.delete(_key)
-    }
-  }, [_key])
+    if (isTruthyKey && !KEYS.has(_key)) KEYS.add(_key)
+  }, [key])
 
   // After mounted or key changed.
   useIsomorphicLayoutEffect(() => {
