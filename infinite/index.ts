@@ -145,13 +145,13 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
             break
           }
 
-          const [getSWRCacahe, setSWRCache] = createCacheHelper<
+          const [getSWRCache, setSWRCache] = createCacheHelper<
             Data,
             SWRInfiniteCacheValue<Data, any>
           >(cache, pageKey)
 
           // Get the cached page data.
-          let pageData = getSWRCacahe().data as Data
+          let pageData = getSWRCache().data as Data
 
           // should fetch (or revalidate) if:
           // - `revalidateAll` is enabled
@@ -172,7 +172,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
 
           if (fn && shouldFetchPage) {
             pageData = await fn(pageArg)
-            setSWRCache(mergeObjects(getSWRCacahe(), { data: pageData }))
+            setSWRCache(mergeObjects(getSWRCache(), { data: pageData }))
           }
           data.push(pageData)
           previousPageData = pageData
