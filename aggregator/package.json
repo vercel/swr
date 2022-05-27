@@ -1,0 +1,20 @@
+{
+  "name": "swr-aggregator",
+  "version": "0.0.1",
+  "main": "./dist/index.js",
+  "module": "./dist/index.esm.js",
+  "types": "./dist/aggregator",
+  "exports": "./dist/index.mjs",
+  "private": true,
+  "scripts": {
+    "watch": "bunchee index.tsx --no-sourcemap -w",
+    "build": "bunchee index.tsx --no-sourcemap",
+    "types:check": "tsc --noEmit",
+    "clean": "rimraf dist"
+  },
+  "peerDependencies": {
+    "swr": "*",
+    "react": "*",
+    "use-sync-external-store": "*"
+  }
+}

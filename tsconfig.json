@@ -21,7 +21,8 @@
       "swr": ["./core/index.ts"],
       "swr/infinite": ["./infinite/index.ts"],
       "swr/immutable": ["./immutable/index.ts"],
-      "swr/mutation": ["./mutation/index.ts"]
+      "swr/mutation": ["./mutation/index.ts"],
+      "swr/aggregator": ["./aggregator/index.ts"],
     },
     "typeRoots": ["./node_modules/@types"],
     "incremental": true

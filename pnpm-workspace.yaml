@@ -1,6 +1,7 @@
 packages:
-  - '_internal'
-  - 'core'
-  - 'immutable'
-  - 'infinite'
-  - 'mutation'
+  - "_internal"
+  - "core"
+  - "immutable"
+  - "infinite"
+  - "mutation"
+  - "aggregator"
