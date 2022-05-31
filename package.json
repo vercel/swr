@@ -64,6 +64,8 @@
   "homepage": "https://swr.vercel.app",
   "license": "MIT",
   "scripts": {
+    "csb:install": "pnpm i -g pnpm@7",
+    "csb:build": "pnpm install && pnpm build",
     "clean": "turbo run clean",
     "build": "turbo run build",
     "watch": "turbo run watch --parallel",
@@ -141,6 +143,9 @@
     "singleQuote": true,
     "arrowParens": "avoid",
     "trailingComma": "none"
+  },
+  "engines": {
+    "pnpm": "7"
   },
   "dependencies": {
     "use-sync-external-store": "^1.1.0"
