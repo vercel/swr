@@ -64,7 +64,7 @@
   "homepage": "https://swr.vercel.app",
   "license": "MIT",
   "scripts": {
-    "csb:install": "corepack prepare pnpm@7.1.0 --activate",
+    "csb:install": "pnpm i -g pnpm",
     "csb:build": "pnpm install && pnpm build",
     "clean": "turbo run clean",
     "build": "turbo run build",
