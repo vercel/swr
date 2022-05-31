@@ -2,5 +2,5 @@
   "buildCommand": "build",
   "sandboxes": ["swr-basic-p7dg6", "swr-states-4une7", "swr-infinite-jb5bm", "swr-ssr-j9b2y"],
   "node": "16",
-  "install": "corepack prepare pnpm@7 --activate"
+  "install": "pnpm i -g pnpm@7"
 }
