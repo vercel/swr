@@ -64,7 +64,7 @@
   "homepage": "https://swr.vercel.app",
   "license": "MIT",
   "scripts": {
-    "csb:install": "pnpm i -g pnpm",
+    "csb:install": "pnpm i -g pnpm@7",
     "csb:build": "pnpm install && pnpm build",
     "clean": "turbo run clean",
     "build": "turbo run build",
