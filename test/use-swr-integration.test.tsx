@@ -1,5 +1,5 @@
 import { act, screen, fireEvent } from '@testing-library/react'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Profiler } from 'react'
 import useSWR from 'swr'
 import {
   createResponse,
@@ -431,5 +431,41 @@ describe('useSWR', () => {
     fireEvent.click(screen.getByText('toggle'))
     await act(() => sleep(20))
     screen.getByText('data: 1')
+  })
+  it('Nested SWR hook should only do loading once', async () => {
+    const key = createKey()
+    let count = 0
+    const ChildComponent = () => {
+      const { data } = useSWR(key, (_) => createResponse(_, { delay: 100 }))
+      return (
+        <div id="child">
+          {data}
+        </div>
+      )
+    }
+    const NestedRender = () => {
+      const { data, isValidating } = useSWR(key, (_) => createResponse(_, { delay: 50 }))
+      if (isValidating) {
+        return <div>loading</div>
+      }
+      return (
+        <div>
+          <div id="parent">{data}</div>
+          <ChildComponent></ChildComponent>
+        </div>
+      )
+    }
+    const Page = () => (
+      <Profiler id={key} onRender={() => {
+        count += 1
+      }}>
+        <NestedRender></NestedRender>
+      </Profiler>
+    )
+    renderWithConfig(<Page />)
+    await screen.findByText(`loading`)
+    await screen.findAllByText(key)
+    await act(() => sleep(150))
+    expect(count).toBe(2)
   })
 })
