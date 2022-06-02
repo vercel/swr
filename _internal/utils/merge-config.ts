@@ -20,5 +20,14 @@ export const mergeConfigs = (
     }
   }
 
+  if (
+    typeof window !== 'undefined' &&
+    // @ts-expect-error
+    Array.isArray(window.__SWR_DEVTOOLS_USE__)
+  ) {
+    // @ts-expect-error
+    v.use = window.__SWR_DEVTOOLS_USE__.concat(v.use ?? [])
+  }
+
   return v
 }
