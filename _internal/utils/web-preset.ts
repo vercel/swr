@@ -57,9 +57,13 @@ const initReconnect = (callback: () => void) => {
   }
 }
 
+// @ts-expect-error
+const use = isWindowDefined ? window.__SWR_DEVTOOLS_USE__ : []
+
 export const preset = {
   isOnline,
-  isVisible
+  isVisible,
+  use
 } as const
 
 export const defaultConfigOptions: ProviderConfiguration = {
