@@ -1558,4 +1558,54 @@ describe('useSWR - local mutation', () => {
 
     expect(mutationOneResults).toEqual(['value-first-g0'])
   })
+
+  it('should remove all key value pairs when clear cache through key filter', async () => {
+    const key = createKey()
+    const mutationOneResults = []
+
+    function Page() {
+      const { data: data1 } = useSWR(key + 'first')
+      const { data: data2 } = useSWR(key + 'second')
+      const { mutate } = useSWRConfig()
+      return (
+        <div>
+          <span
+            data-testid="mutator-filter-all"
+            onClick={async () => {
+              const promises = ['first', 'second'].map(async name => {
+                await mutate(key + name, `value-${name}`, false)
+              })
+              await Promise.all(promises)
+            }}
+          />
+          <span
+            data-testid="clear-all"
+            onClick={async () => {
+              const res = await mutate(() => true, undefined, false)
+              mutationOneResults.push(...res)
+            }}
+          />
+          <p>first:{data1}</p>
+          <p>second:{data2}</p>
+        </div>
+      )
+    }
+    renderWithConfig(<Page />)
+
+    // add and mutate `first` and `second`
+    fireEvent.click(screen.getByTestId('mutator-filter-all'))
+    await nextTick()
+
+    await screen.findByText('first:value-first')
+    await screen.findByText('second:value-second')
+
+    // reset all keys to undefined
+    fireEvent.click(screen.getByTestId('clear-all'))
+    await nextTick()
+
+    await screen.findByText('first:')
+    await screen.findByText('second:')
+
+    expect(mutationOneResults).toEqual([undefined])
+  })
 })

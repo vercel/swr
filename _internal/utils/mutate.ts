@@ -49,8 +49,6 @@ export async function internalMutate<Data>(
   const revalidate = options.revalidate !== false
   const rollbackOnError = options.rollbackOnError !== false
 
-  if (!_key) return
-
   const KEYS = (SWRGlobalState.get(cache) as GlobalState)[6]
 
   // If 2nd arg is key filter, return the mutation results of filtered keys
@@ -63,6 +61,7 @@ export async function internalMutate<Data>(
     return await Promise.all(matchedKeys.map(mutateByKey))
   } else {
     const [serializedKey] = serialize(_key)
+    if (!serializedKey) return
     return await mutateByKey(serializedKey)
   }
 
