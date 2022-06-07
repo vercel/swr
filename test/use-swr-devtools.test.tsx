@@ -1,9 +1,8 @@
 import { screen } from '@testing-library/react'
 import React from 'react'
-import { createKey, createResponse, renderWithConfig } from './utils'
 
 describe('useSWR - devtools', () => {
-  let useSWR
+  let useSWR, createKey, createResponse, renderWithConfig
   beforeEach(() => {
     const middleware =
       useSWRNext =>
@@ -13,6 +12,7 @@ describe('useSWR - devtools', () => {
       }
     // @ts-expect-error
     window.__SWR_DEVTOOLS_USE__ = [middleware]
+    ;({ createKey, createResponse, renderWithConfig } = require('./utils'))
     useSWR = require('swr').default
   })
   it('window.__SWR_DEVTOOLS_USE__ should be set as middlewares', async () => {
