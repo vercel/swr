@@ -8,7 +8,8 @@ import type {
 } from '../types'
 import { stableHash } from './hash'
 import { initCache } from './cache'
-import { preset } from './web-preset'
+import { preset as webPreset } from './web-preset'
+import { preset as devtoolsPreset } from './devtools'
 import { slowConnection } from './env'
 import { isUndefined, noop, mergeObjects } from './helper'
 
@@ -73,6 +74,6 @@ export const defaultConfig: FullConfiguration = mergeObjects(
     mutate,
     fallback: {}
   },
-  // use web preset by default
-  preset
+  // use web and devtools preset by default
+  mergeObjects(webPreset, devtoolsPreset)
 )

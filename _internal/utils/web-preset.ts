@@ -1,4 +1,3 @@
-import React from 'react'
 import { ProviderConfiguration } from '../types'
 import { isUndefined, noop, isWindowDefined, isDocumentDefined } from './helper'
 
@@ -58,17 +57,9 @@ const initReconnect = (callback: () => void) => {
   }
 }
 
-// @ts-expect-error
-const use = isWindowDefined ? window.__SWR_DEVTOOLS_USE__ : []
-if (isWindowDefined) {
-  // @ts-expect-error
-  window.__SWR_DEVTOOLS_REACT__ = React
-}
-
 export const preset = {
   isOnline,
-  isVisible,
-  use
+  isVisible
 } as const
 
 export const defaultConfigOptions: ProviderConfiguration = {

@@ -1,5 +1,6 @@
 import SWRConfig from './utils/config-context'
 import * as revalidateEvents from './constants'
+import { setupDevTools } from './utils/devtools'
 
 export { SWRConfig, revalidateEvents }
 
@@ -22,3 +23,5 @@ export { preset, defaultConfigOptions } from './utils/web-preset'
 export { withMiddleware } from './utils/with-middleware'
 
 export * from './types'
+
+setupDevTools()
