@@ -24,4 +24,8 @@ describe('useSWR - devtools', () => {
     renderWithConfig(<Page />)
     await screen.findByText('data: middleware')
   })
+  it('window.__SWR_DEVTOOLS_REACT__ should be the same reference with React', () => {
+    // @ts-expect-error
+    expect(window.__SWR_DEVTOOLS_REACT__).toBe(React)
+  })
 })
