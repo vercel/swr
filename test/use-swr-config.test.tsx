@@ -143,4 +143,44 @@ describe('useSWR - configs', () => {
     expect(config.fallback).toEqual({ a: 2, b: 1, c: 2 })
     expect(config.use).toEqual([middleware1, middleware2])
   })
+
+  it('should ignore parent config when value is functional', async () => {
+    let config
+
+    function Page() {
+      config = useSWRConfig()
+      return null
+    }
+
+    const middleware1: Middleware = useSWRNext => (k, f, c) =>
+      useSWRNext(k, f, c)
+    const middleware2: Middleware = useSWRNext => (k, f, c) =>
+      useSWRNext(k, f, c)
+
+    renderWithConfig(
+      <SWRConfig
+        value={{
+          dedupingInterval: 1,
+          refreshInterval: 1,
+          fallback: { a: 1, b: 1 },
+          use: [middleware1]
+        }}
+      >
+        <SWRConfig
+          value={parentConfig => ({
+            dedupingInterval: 2 + parentConfig.dedupingInterval,
+            fallback: { a: 2, c: 2 },
+            use: [middleware2]
+          })}
+        >
+          <Page />
+        </SWRConfig>
+      </SWRConfig>
+    )
+
+    expect(config.dedupingInterval).toEqual(3)
+    expect(config.refreshInterval).toEqual(undefined)
+    expect(config.fallback).toEqual({ a: 2, c: 2 })
+    expect(config.use).toEqual([middleware2])
+  })
 })
