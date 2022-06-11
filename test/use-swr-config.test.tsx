@@ -89,7 +89,7 @@ describe('useSWR - configs', () => {
   })
 
   it('should expose default config as static property on SWRConfig', () => {
-    expect(SWRConfig.default).toBeDefined()
+    expect(SWRConfig.defaultValue).toBeDefined()
   })
 
   it('should expose the default config from useSWRConfig', () => {
@@ -101,7 +101,7 @@ describe('useSWR - configs', () => {
     }
 
     renderWithGlobalCache(<Page />)
-    expect(SWRConfig.default).toEqual(config)
+    expect(SWRConfig.defaultValue).toEqual(config)
   })
 
   it('should expose the correctly extended config from useSWRConfig', () => {

@@ -44,7 +44,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
   (
     getKey: SWRInfiniteKeyLoader,
     fn: BareFetcher<Data> | null,
-    config: Omit<typeof SWRConfig.default, 'fetcher'> &
+    config: Omit<typeof SWRConfig.defaultValue, 'fetcher'> &
       Omit<SWRInfiniteConfiguration<Data, Error>, 'fetcher'>
   ): SWRInfiniteResponse<Data, Error> => {
     const didMountRef = useRef<boolean>(false)
