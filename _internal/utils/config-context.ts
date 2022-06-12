@@ -35,8 +35,8 @@ const SWRConfig: FC<
   const isFunctionalConfig = isFunction(value)
   const config = isFunctionalConfig ? value(parentConfig) : value
   // Extend parent context values and middleware.
-  const extendedConfig = isFunctionalConfig // typeof value === 'function'
-    ? config!
+  const extendedConfig = isFunctionalConfig
+    ? config
     : mergeConfigs(parentConfig, config)
 
   // Should not use the inherited provider.
