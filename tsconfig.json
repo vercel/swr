@@ -21,6 +21,7 @@
       "swr": ["./core/index.ts"],
       "swr/infinite": ["./infinite/index.ts"],
       "swr/immutable": ["./immutable/index.ts"],
+      "swr/prelaod": ["./preload/index.ts"],
       "swr/mutation": ["./mutation/index.ts"]
     },
     "typeRoots": ["./node_modules/@types"],
