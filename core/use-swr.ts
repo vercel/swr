@@ -599,10 +599,10 @@ export const useSWRHandler = <Data = any, Error = any>(
   } as SWRResponse<Data, Error>
 }
 
-export const SWRConfig = OBJECT.defineProperty(ConfigProvider, 'default', {
+export const SWRConfig = OBJECT.defineProperty(ConfigProvider, 'defaultValue', {
   value: defaultConfig
 }) as typeof ConfigProvider & {
-  default: FullConfiguration
+  defaultValue: FullConfiguration
 }
 
 export const unstable_serialize = (key: Key) => serialize(key)[0]

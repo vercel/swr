@@ -264,7 +264,7 @@ describe('useSWR - cache provider', () => {
         }
       }
     })
-    expect(parentCache).toBe(SWRConfig.default.cache)
+    expect(parentCache).toBe(SWRConfig.defaultValue.cache)
 
     screen.getByText('undefined')
     await screen.findByText('data-extended')
@@ -351,7 +351,7 @@ describe('useSWR - global cache', () => {
     }
 
     renderWithGlobalCache(<Page />)
-    expect(localCache).toBe(SWRConfig.default.cache)
+    expect(localCache).toBe(SWRConfig.defaultValue.cache)
     expect(localMutate).toBe(globalMutate)
   })
 
