@@ -13,16 +13,19 @@ export function useTestCache() {
 }
 
 export function useCustomSWRConfig() {
+  // @ts-expect-error
+  const nullElement = <SWRConfig value={null} />
+
+  // @ts-expect-error
+  const functionalNullElement = <SWRConfig value={() => null} />
   return (
     <>
       <SWRConfig value={() => ({})} />
       <SWRConfig value={undefined} />
 
       {/* null is not acceptable */}
-      {/* @ts-expect-error */}
-      <SWRConfig value={null} />
-      {/* @ts-expect-error */}
-      <SWRConfig value={() => null} />
+      {nullElement}
+      {functionalNullElement}
     </>
   )
 }
