@@ -19,7 +19,7 @@ export const withArgs = <SWRType>(hook: any) => {
     // Apply middleware
     let next = hook
     const { use } = config
-    const middlewares = BUILT_IN_MIDDLEWARES.concat(use || [])
+    const middlewares = (use || []).concat(BUILT_IN_MIDDLEWARES)
     for (let i = middlewares.length; i--; ) {
       next = middlewares[i](next)
     }
