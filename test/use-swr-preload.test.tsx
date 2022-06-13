@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/react'
 import React, { Suspense } from 'react'
-import useSWR, { prefetch } from 'swr/preload'
+import useSWR, { prefetch } from 'swr'
 import { createKey, createResponse, renderWithConfig, sleep } from './utils'
 
 describe('useSWR - preload', () => {
