@@ -4,4 +4,3 @@ packages:
   - 'immutable'
   - 'infinite'
   - 'mutation'
-  - 'preload'

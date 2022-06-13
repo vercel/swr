@@ -34,12 +34,6 @@
       "require": "./immutable/dist/index.js",
       "types": "./immutable/dist/immutable/index.d.ts"
     },
-    "./preload": {
-      "import": "./preload/dist/index.mjs",
-      "module": "./preload/dist/index.esm.js",
-      "require": "./preload/dist/index.js",
-      "types": "./preload/dist/preload/index.d.ts"
-    },
     "./mutation": {
       "import": "./mutation/dist/index.mjs",
       "module": "./mutation/dist/index.esm.js",
@@ -57,13 +51,11 @@
     "core/dist/**",
     "infinite/dist/**",
     "immutable/dist/**",
-    "preload/dist/**",
     "mutation/dist/**",
     "_internal/dist/**",
     "core/package.json",
     "infinite/package.json",
     "immutable/package.json",
-    "preload/package.json",
     "mutation/package.json",
     "_internal/package.json",
     "package.json"
@@ -81,13 +73,11 @@
     "watch:core": "turbo run watch --filter=swr-core",
     "watch:infinite": "turbo run watch --filter=swr-inifinite",
     "watch:immutable": "turbo run watch --filter=swr-immutable",
-    "watch:preload": "turbo run watch --filter=swr-preload",
     "watch:mutation": "turbo run watch --filter=swr-mutation",
     "watch:internal": "turbo run watch --filter=swr-internal",
     "build:core": "turbo run build --filter=swr-core",
     "build:infinite": "turbo run build --filter=swr-infinite",
     "build:immutable": "turbo run build --filter=swr-immutable",
-    "build:preload": "turbo run build --filter=swr-preload",
     "build:mutation": "turbo run build --filter=swr-mutation",
     "build:internal": "turbo run build --filter=swr-internal",
     "prepublishOnly": "pnpm clean && pnpm build",
