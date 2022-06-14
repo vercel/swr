@@ -3,14 +3,14 @@ import { serialize } from './serialize'
 
 const preloadMap = new Map<string, Promise<any>>()
 
-export const prefetch = (key: Key, fetcher: BareFetcher<any>) => {
+export const preload = (key: Key, fetcher: BareFetcher<any>) => {
   const promise = fetcher(key)
   const keyString = serialize(key)[0]
   preloadMap.set(keyString, promise)
   return promise
 }
 
-export const preload: Middleware = useSWRNext => (key, fetcher_, config) => {
+export const middleware: Middleware = useSWRNext => (key, fetcher_, config) => {
   const fetcher =
     fetcher_ == null
       ? null

@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/react'
 import React, { Suspense } from 'react'
-import useSWR, { prefetch } from 'swr'
+import useSWR, { preload } from 'swr'
 import { createKey, createResponse, renderWithConfig, sleep } from './utils'
 
 describe('useSWR - preload', () => {
@@ -14,7 +14,7 @@ describe('useSWR - preload', () => {
       return createResponse('foo')
     }
 
-    prefetch(key, fetcher)
+    preload(key, fetcher)
 
     expect(count).toBe(1)
 
@@ -38,7 +38,7 @@ describe('useSWR - preload', () => {
       return createResponse('foo')
     }
 
-    prefetch(key, fetcher)
+    preload(key, fetcher)
 
     expect(count).toBe(1)
 
@@ -66,8 +66,8 @@ describe('useSWR - preload', () => {
     const fetcher1 = () => response1
     const fetcher2 = () => response2
 
-    prefetch(key1, fetcher1)
-    prefetch(key2, fetcher2)
+    preload(key1, fetcher1)
+    preload(key2, fetcher2)
 
     function Page() {
       const { data: data1 } = useSWR(key1, fetcher1, { suspense: true })
