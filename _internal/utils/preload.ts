@@ -14,12 +14,15 @@ export const middleware: Middleware = useSWRNext => (key, fetcher_, config) => {
   const fetcher =
     fetcher_ == null
       ? null
-      : async (...args: any[]) => {
+      : // fetcher might be a sync function, so this should not be an async function
+        (...args: any[]) => {
           const keyString = serialize(key)[0]
           const promise = preloadMap.get(keyString)
           if (promise) {
-            await promise
-            preloadMap.delete(keyString)
+            promise.then(result => {
+              preloadMap.delete(keyString)
+              return result
+            })
             return promise
           }
           return fetcher_(...args)
