@@ -19,9 +19,8 @@ export const middleware: Middleware = useSWRNext => (key, fetcher_, config) => {
           const keyString = serialize(key)[0]
           const promise = preloadMap.get(keyString)
           if (promise) {
-            promise.then(result => {
+            promise.finally(() => {
               preloadMap.delete(keyString)
-              return result
             })
             return promise
           }
