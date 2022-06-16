@@ -1122,13 +1122,13 @@ describe('useSWR - local mutation', () => {
 
     renderWithConfig(<Page />)
 
-    await sleep(20)
+    await act(() => sleep(20))
     await executeWithoutBatching(() =>
       mutate(createResponse('end', { delay: 50 }), {
         optimisticData: 'start'
       })
     )
-    await sleep(20)
+    await act(() => sleep(20))
 
     // There can never be any changes during a mutation — it should be atomic.
     expect(renderedData.indexOf('end') - renderedData.indexOf('start')).toEqual(
