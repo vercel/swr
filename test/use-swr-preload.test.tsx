@@ -149,7 +149,7 @@ describe('useSWR - preload', () => {
 
     const { rerender } = renderWithConfig(<Page />)
     expect(renderCount).toBe(1)
-    // rerender after the deduping interval
+    // rerender when the preloading is in-flight, and the deduping interval is over
     await act(() => sleep(10))
     rerender(<Page />)
     expect(renderCount).toBe(2)
