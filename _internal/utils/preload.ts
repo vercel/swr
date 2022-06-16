@@ -1,9 +1,9 @@
-import { Middleware, Key, BareFetcher } from '../types'
+import { Middleware, Key, BareFetcher, FetcherResponse } from '../types'
 import { serialize } from './serialize'
 
-const REQUEST = new Map<string, Promise<any>>()
+const REQUEST = new Map<string, FetcherResponse<any>>()
 
-export const preload = (key_: Key, fetcher: BareFetcher<any>) => {
+export const preload = <Data = any>(key_: Key, fetcher: BareFetcher<Data>) => {
   const req = fetcher(key_)
   const key = serialize(key_)[0]
   REQUEST.set(key, req)
