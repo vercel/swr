@@ -1,12 +1,13 @@
-import { Middleware, Key, BareFetcher, FetcherResponse } from '../types'
+import { Middleware, Key, BareFetcher, GlobalState } from '../types'
 import { serialize } from './serialize'
-
-const REQUEST = new Map<string, FetcherResponse<any>>()
+import { cache } from './config'
+import { SWRGlobalState } from './global-state'
 
 export const preload = <Data = any>(key_: Key, fetcher: BareFetcher<Data>) => {
   const req = fetcher(key_)
   const key = serialize(key_)[0]
-  REQUEST.set(key, req)
+  const [, , , PRELOAD] = SWRGlobalState.get(cache) as GlobalState
+  PRELOAD[key] = req
   return req
 }
 
@@ -17,9 +18,10 @@ export const middleware: Middleware =
       fetcher_ &&
       ((...args: any[]) => {
         const key = serialize(key_)[0]
-        const req = REQUEST.get(key)
+        const [, , , PRELOAD] = SWRGlobalState.get(cache) as GlobalState
+        const req = PRELOAD[key]
         if (req) {
-          REQUEST.delete(key)
+          delete PRELOAD[key]
           return req
         }
         return fetcher_(...args)
