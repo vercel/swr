@@ -31,7 +31,7 @@ export interface SWRAggregatorConfiguration<
   OriginKey extends Arguments = Arguments
 > extends SWRConfiguration<Data, Error> {
   children: (
-    items: SWRResponse<Data, Error>,
+    value: SWRResponse<Data, Error>,
     index: number,
     array: SWRArray<Data, Error, OriginKey>
   ) => React.ReactElement<any, any> | null
