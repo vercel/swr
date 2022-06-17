@@ -10,15 +10,8 @@ function Index() {
   ])
   const { data, items, mutate } = useSWRAggregator(keys, fetch, {
     keepPreviousData: true,
-    children: (item, collection, index) => {
-      
-      console.log(
-        'item data',
-        item.data,
-        item.error,
-        item.isLoading,
-        item.isValidating
-      )
+    children: (item, index, array) => {
+      console.log(item.data)
       return <div>{item.data ? item.data : 'loading'}</div>
     }
   })

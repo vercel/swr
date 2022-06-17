@@ -1,4 +1,4 @@
-import React, { useRef, useMemo, memo } from 'react'
+import React, { useRef, useMemo } from 'react'
 import useSWR, { unstable_serialize } from 'swr'
 import {
   createCacheHelper,
@@ -8,26 +8,49 @@ import {
   isUndefined,
   useIsomorphicLayoutEffect,
   mergeObjects,
-  MutatorOptions,
-  MutatorCallback,
   Arguments,
   RevalidatorOptions,
   SWRGlobalState,
   getTimestamp,
   GlobalState,
   BareFetcher,
-  defaultConfig
+  defaultConfig,
+  SWRResponse
 } from 'swr/_internal'
 
 import type {
-  SWRItemProps,
   SWRAggregatorConfiguration,
   SWRAggregator,
-  SWRCollection
+  SWRArray
 } from './types'
 
 const defaultChildren = () => {
   return null
+}
+interface Props<Key extends Arguments, Data = any> {
+  _key: Key
+  fetcherRef: React.RefObject<BareFetcher<Data>>
+  children: (
+    items: SWRResponse<Data, Error>,
+    index: number
+  ) => React.ReactElement<any, any> | null
+  index: number
+}
+const SWRAggregatorItem = <Key extends Arguments, Data = any>({
+  _key,
+  index,
+  fetcherRef,
+  children = defaultChildren
+}: Props<Key, Data>) => {
+  const item = useSWR(_key, async (key: any) => {
+    const currentFetcher = fetcherRef.current
+    if (!currentFetcher) {
+      throw new Error('No fetcher found')
+    }
+    const data = await currentFetcher(key)
+    return data
+  })
+  return children(item, index)
 }
 
 export const aggregator = (<Data, Error, Key extends Arguments = Arguments>(
@@ -110,35 +133,8 @@ export const aggregator = (<Data, Error, Key extends Arguments = Arguments>(
       return Promise.all(keys.map((___, i) => revalidate(i)))
     }
     const swr = useSWRNext(_keys, () => fetch({ dedupe: true }), config)
-    const SWRAggregatorItem = useMemo(() => {
-      const Component = memo(({ index }: { index: number }) => {
-        const item = useSWR(_keys[index], async () => {
-          const currentFetcher = fetcherRef.current
-          const data = await currentFetcher(_keys[index])
-          swr.mutate()
-          return data
-        })
-        const children = configRef.current.children || defaultChildren
-        return children(item, swr, index)
-      })
-      Component.displayName = 'SWRAggregatorItem'
-      return Component
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [keys, swr])
-    const item = (key: any, index: number) => (
-      <SWRAggregatorItem key={key} index={index} />
-    )
-    useIsomorphicLayoutEffect(() => {
-      fetcherRef.current = fetcher
-      configRef.current = config
-    })
-    return {
-      items: keys.map(item),
-      mutate: (
-        data: Data[] | Promise<Data[]> | MutatorCallback<Data[]> = () =>
-          fetch({ dedupe: false }),
-        opt: boolean | MutatorOptions<Data[]> = false
-      ) => swr.mutate(data, opt),
+    const result = {
+      mutate: swr.mutate,
       get data() {
         return swr.data?.map((v: any, i: number) =>
           mergeObjects(v, {
@@ -154,13 +150,26 @@ export const aggregator = (<Data, Error, Key extends Arguments = Arguments>(
         return swr.isValidating
       }
     }
+    const item = (key: string, index: number) => (
+      <SWRAggregatorItem
+        key={key}
+        _key={_keys[index]}
+        index={index}
+        fetcherRef={fetcherRef}
+      >
+        {(v: SWRResponse<Data>, i: number) => config.children(v, i, result)}
+      </SWRAggregatorItem>
+    )
+
+    useIsomorphicLayoutEffect(() => {
+      fetcherRef.current = fetcher
+      configRef.current = config
+    })
+    return mergeObjects(result, {
+      items: keys.map(item)
+    })
   }) as unknown as Middleware
 
 export default withMiddleware(useSWR, aggregator) as unknown as SWRAggregator
 
-export {
-  SWRItemProps,
-  SWRAggregatorConfiguration,
-  SWRAggregator,
-  SWRCollection
-}
+export { SWRAggregatorConfiguration, SWRAggregator, SWRArray }

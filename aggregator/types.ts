@@ -9,7 +9,7 @@ import {
 
 export type Keys<T extends Arguments = Arguments> = T[]
 
-export interface SWRCollection<
+export interface SWRArray<
   Data = any,
   Error = any,
   Key extends Arguments = Arguments
@@ -25,12 +25,6 @@ export interface SWRCollection<
   isLoading: boolean
 }
 
-export interface SWRItemProps<Data = any, Key extends Arguments = Arguments> {
-  keys: Key[]
-  fetcher: BareFetcher<Data>
-  index: number
-}
-
 export interface SWRAggregatorConfiguration<
   Data = any,
   Error = any,
@@ -38,8 +32,8 @@ export interface SWRAggregatorConfiguration<
 > extends SWRConfiguration<Data, Error> {
   children: (
     items: SWRResponse<Data, Error>,
-    collection: SWRCollection<Data, Error, OriginKey>,
-    index: number
+    index: number,
+    array: SWRArray<Data, Error, OriginKey>
   ) => React.ReactElement<any, any> | null
 }
 
@@ -47,7 +41,7 @@ interface AggregatorResult<
   Data = any,
   Error = any,
   Key extends Arguments = Arguments
-> extends SWRCollection<Data, Error, Key> {
+> extends SWRArray<Data, Error, Key> {
   items: Array<JSX.Element | null>
 }
 

@@ -436,15 +436,13 @@ describe('useSWR', () => {
     const key = createKey()
     let count = 0
     const ChildComponent = () => {
-      const { data } = useSWR(key, (_) => createResponse(_, { delay: 100 }))
-      return (
-        <div id="child">
-          {data}
-        </div>
-      )
+      const { data } = useSWR(key, _ => createResponse(_, { delay: 100 }))
+      return <div id="child">{data}</div>
     }
     const NestedRender = () => {
-      const { data, isValidating } = useSWR(key, (_) => createResponse(_, { delay: 50 }))
+      const { data, isValidating } = useSWR(key, _ =>
+        createResponse(_, { delay: 50 })
+      )
       if (isValidating) {
         return <div>loading</div>
       }
@@ -456,9 +454,12 @@ describe('useSWR', () => {
       )
     }
     const Page = () => (
-      <Profiler id={key} onRender={() => {
-        count += 1
-      }}>
+      <Profiler
+        id={key}
+        onRender={() => {
+          count += 1
+        }}
+      >
         <NestedRender></NestedRender>
       </Profiler>
     )
