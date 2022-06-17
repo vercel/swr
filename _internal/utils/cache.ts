@@ -79,6 +79,7 @@ export const initCache = <Data = any>(
           EVENT_REVALIDATORS,
           {},
           {},
+          {},
           mutate,
           setter,
           subscribe
@@ -132,5 +133,5 @@ export const initCache = <Data = any>(
     return [provider, mutate, initProvider, unmount]
   }
 
-  return [provider, (SWRGlobalState.get(provider) as GlobalState)[3]]
+  return [provider, (SWRGlobalState.get(provider) as GlobalState)[4]]
 }

@@ -103,4 +103,27 @@ describe('useSWR - fetcher', () => {
     // Should fetch with the new fetcher.
     await screen.findByText('data:bar')
   })
+
+  it('should be able to pass falsy values to the fetcher', () => {
+    const key = createKey()
+
+    function Page({ fetcher }) {
+      const { data } = useSWR(key, fetcher)
+
+      return (
+        <div>
+          <p>data:{data}</p>
+        </div>
+      )
+    }
+
+    const { rerender } = renderWithConfig(<Page fetcher={null} />)
+    screen.getByText('data:')
+
+    rerender(<Page fetcher={undefined} />)
+    screen.getByText('data:')
+
+    rerender(<Page fetcher={false} />)
+    screen.getByText('data:')
+  })
 })

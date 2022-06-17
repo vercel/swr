@@ -36,9 +36,9 @@ export const createCacheHelper = <Data = any, T = State<Data, any>>(
     // Setter
     (info: T) => {
       const prev = cache.get(key)
-      state[4](key as string, mergeObjects(prev, info), prev || EMPTY_CACHE)
+      state[5](key as string, mergeObjects(prev, info), prev || EMPTY_CACHE)
     },
     // Subscriber
-    state[5]
+    state[6]
   ] as const
 }
