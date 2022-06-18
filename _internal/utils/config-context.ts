@@ -9,7 +9,7 @@ import {
 import { cache as defaultCache } from './config'
 import { initCache } from './cache'
 import { mergeConfigs } from './merge-config'
-import { UNDEFINED, mergeObjects } from './helper'
+import { UNDEFINED, mergeObjects, isFunction } from './helper'
 import { useIsomorphicLayoutEffect } from './env'
 import {
   SWRConfiguration,
@@ -18,35 +18,44 @@ import {
   Cache
 } from '../types'
 
+type Config = SWRConfiguration &
+  Partial<ProviderConfiguration> & {
+    provider?: (cache: Readonly<Cache>) => Cache
+  }
+
 export const SWRConfigContext = createContext<Partial<FullConfiguration>>({})
 
 const SWRConfig: FC<
   PropsWithChildren<{
-    value?: SWRConfiguration &
-      Partial<ProviderConfiguration> & {
-        provider?: (cache: Readonly<Cache>) => Cache
-      }
+    value?: Config | ((parentConfig?: Config) => Config)
   }>
 > = props => {
   const { value } = props
-
+  const parentConfig = useContext(SWRConfigContext)
+  const isFunctionalConfig = isFunction(value)
+  const config = isFunctionalConfig ? value(parentConfig) : value
   // Extend parent context values and middleware.
-  const extendedConfig = mergeConfigs(useContext(SWRConfigContext), value)
+  const extendedConfig = isFunctionalConfig
+    ? config
+    : mergeConfigs(parentConfig, config)
 
   // Should not use the inherited provider.
-  const provider = value && value.provider
+  const provider = config && config.provider
 
   // Use a lazy initialized state to create the cache on first access.
   const [cacheContext] = useState(() =>
     provider
-      ? initCache(provider(extendedConfig.cache || defaultCache), value)
+      ? initCache(
+          provider((extendedConfig as any).cache || defaultCache),
+          config
+        )
       : UNDEFINED
   )
 
   // Override the cache if a new provider is given.
   if (cacheContext) {
-    extendedConfig.cache = cacheContext[0]
-    extendedConfig.mutate = cacheContext[1]
+    ;(extendedConfig as any).cache = cacheContext[0]
+    ;(extendedConfig as any).mutate = cacheContext[1]
   }
 
   // Unsubscribe events.

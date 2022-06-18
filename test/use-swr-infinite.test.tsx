@@ -941,22 +941,15 @@ describe('useSWRInfinite', () => {
   })
 
   // https://github.com/vercel/swr/issues/908
-  //TODO: This test trigger act warning
   it('should revalidate first page after mutating', async () => {
-    let renderedData
     const key = createKey()
     let v = 'old'
 
     function Page() {
-      const {
-        data,
-        size,
-        mutate: boundMutate
-      } = useSWRInfinite(
+      const { data, mutate: boundMutate } = useSWRInfinite(
         i => [key, i],
-        () => v
+        () => createResponse(v)
       )
-      renderedData = data
 
       return (
         <div>
@@ -968,19 +961,16 @@ describe('useSWRInfinite', () => {
           >
             mutate
           </button>
-          <p>size=${size}</p>
+          <p>data:{data}</p>
         </div>
       )
     }
 
     renderWithConfig(<Page />)
 
-    await screen.findByText('mutate')
-    await nextTick()
-    expect(renderedData).toEqual(['old'])
+    await screen.findByText('data:old')
     fireEvent.click(screen.getByText('mutate'))
-    await nextTick()
-    expect(renderedData).toEqual(['new'])
+    await screen.findByText('data:new')
   })
 
   it('should reuse cached value for new pages', async () => {
