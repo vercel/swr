@@ -9,16 +9,17 @@ import {
   isFunction,
   UNDEFINED,
   createCacheHelper,
+  useIsomorphicLayoutEffect,
+  serialize,
+  withMiddleware
+} from 'swr/_internal'
+import type {
+  BareFetcher,
   SWRHook,
   MutatorCallback,
   Middleware,
-  BareFetcher,
-  useIsomorphicLayoutEffect,
-  serialize,
-  withMiddleware,
   MutatorOptions
 } from 'swr/_internal'
-
 import type {
   SWRInfiniteConfiguration,
   SWRInfiniteResponse,
