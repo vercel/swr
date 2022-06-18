@@ -26,6 +26,30 @@ describe('useSWR - preload', () => {
     expect(count).toBe(1)
   })
 
+  it('should avoid preloading the resource multiple times', async () => {
+    const key = createKey()
+    let count = 0
+
+    const fetcher = () => {
+      ++count
+      return createResponse('foo')
+    }
+
+    function Page() {
+      const { data } = useSWR(key, fetcher)
+      return <div>data:{data}</div>
+    }
+
+    preload(key, fetcher)
+    preload(key, fetcher)
+    preload(key, fetcher)
+    expect(count).toBe(1)
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data:foo')
+    expect(count).toBe(1)
+  })
+
   it('preload the fetcher function with the suspense mode', async () => {
     const key = createKey()
     let count = 0
