@@ -23,3 +23,5 @@ export { withMiddleware } from './utils/with-middleware'
 export { preload } from './utils/preload'
 
 export * from './types'
+
+export const WITH_DEDUPE = { dedupe: true }

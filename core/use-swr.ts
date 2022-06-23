@@ -31,22 +31,10 @@ import {
   SWRConfiguration,
   SWRHook,
   RevalidateEvent,
-  StateDependencies
+  StateDependencies,
+  DefinitelyTruthy,
+  WITH_DEDUPE
 } from 'swr/_internal'
-
-const WITH_DEDUPE = { dedupe: true }
-
-type DefinitelyTruthy<T> = false extends T
-  ? never
-  : 0 extends T
-  ? never
-  : '' extends T
-  ? never
-  : null extends T
-  ? never
-  : undefined extends T
-  ? never
-  : T
 
 export const useSWRHandler = <Data = any, Error = any>(
   _key: Key,
