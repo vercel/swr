@@ -318,4 +318,23 @@ describe('useSWR - loading', () => {
     screen.getByText('loading,validating')
     await screen.findByText('ready,ready')
   })
+  it('isLoading and isValidating should always respect cache value', async () => {
+    const key = createKey()
+    const Page = () => {
+      const { data } = useSWR(key, () => createResponse('result', { delay: 10 }))
+      const { data: response } = useSWR(data, () => createResponse('data', { delay: 10 }))
+      // eslint-disable-next-line react/display-name
+      const Component = ((_: any) => () => {
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        const { data: result, isLoading, isValidating } = useSWR(key, () => createResponse('result', { delay: 10 }))
+        return (
+          <div>{`result is ${result ? result : 'null'},${isLoading},${isValidating}`}</div>
+        )
+      })(response)
+      return <Component></Component>
+    }
+    renderWithConfig(<Page />)
+    screen.getByText('result is null,true,true')
+    await screen.findByText('result is result,false,false')
+  })
 })
