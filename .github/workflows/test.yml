@@ -41,6 +41,7 @@ jobs:
       - run: pnpm types:check
       - run: pnpm lint
       - run: pnpm build
+      - run: pnpm test-typing
       - run: pnpm test
         env:
           CI: true

@@ -86,7 +86,8 @@
     "lint": "eslint . --ext .ts,.tsx --cache",
     "lint:fix": "pnpm lint --fix",
     "coverage": "jest --coverage",
-    "test": "tsc --noEmit -p test && jest"
+    "test-typing": "tsc --noEmit -p test/type/tsconfig.json && tsc --noEmit -p test/tsconfig.json",
+    "test": "jest"
   },
   "husky": {
     "hooks": {

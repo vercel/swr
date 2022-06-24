@@ -6,5 +6,5 @@
   },
   "include": [".", "./jest-setup.ts"],
   // This file need "strict": true
-  "exclude": ["./type/mutator.ts"]
+  "exclude": ["./type"]
 }

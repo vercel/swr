@@ -13,12 +13,18 @@ export function useTestCache() {
 }
 
 export function useCustomSWRConfig() {
+  const noNull = [
+    // @ts-expect-error
+    <SWRConfig key={'null'} value={null} />,
+    // @ts-expect-error
+    <SWRConfig key={'callback-return-null'} value={() => null} />
+  ]
+
   return (
     <>
-      <SWRConfig value={null} />
+      {noNull}
       <SWRConfig value={undefined} />
       <SWRConfig value={() => ({})} />
-      <SWRConfig value={() => null} />
 
       <SWRConfig
         // @ts-expect-error

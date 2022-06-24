@@ -21,7 +21,9 @@ import {
   subscribeCallback,
   getTimestamp,
   internalMutate,
-  revalidateEvents,
+  revalidateEvents
+} from 'swr/_internal'
+import type {
   State,
   Fetcher,
   Key,

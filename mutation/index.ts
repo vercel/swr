@@ -10,7 +10,7 @@ import {
   Middleware,
   Key
 } from 'swr/_internal'
-import {
+import type {
   SWRMutationConfiguration,
   SWRMutationResponse,
   SWRMutationHook,
