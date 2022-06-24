@@ -204,8 +204,8 @@ export const useSWRHandler = <Data = any, Error = any>(
     isInitialMount &&
     shouldDoInitialRevalidation
   )
-  const isValidating = cached.isValidating || defaultValidatingState
-  const isLoading = cached.isLoading || defaultValidatingState
+  const isValidating = isUndefined(cached.isValidating) ? defaultValidatingState : cached.isValidating
+  const isLoading = isUndefined(cached.isLoading) ? defaultValidatingState : cached.isLoading
 
   // The revalidation function is a carefully crafted wrapper of the original
   // `fetcher`, to correctly handle the many edge cases.
