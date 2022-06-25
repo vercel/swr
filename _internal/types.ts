@@ -1,9 +1,6 @@
 import * as revalidateEvents from './constants'
 import { defaultConfig } from './utils/config'
 
-type Falsy = null | undefined | false
-export type TruthyKey = Exclude<Arguments, Falsy>
-
 export type GlobalState = [
   Record<string, RevalidateCallback[]>, // EVENT_REVALIDATORS
   Record<string, [number, number]>, // MUTATION: [ts, end_ts]
@@ -11,8 +8,7 @@ export type GlobalState = [
   Record<string, FetcherResponse<any>>, // PRELOAD
   ScopedMutator, // Mutator
   (key: string, value: any, prev: any) => void, // Setter
-  (key: string, callback: (current: any, prev: any) => void) => () => void, // Subscriber
-  Set<TruthyKey> // Keys
+  (key: string, callback: (current: any, prev: any) => void) => () => void // Subscriber
 ]
 export type FetcherResponse<Data = unknown> = Data | Promise<Data>
 export type BareFetcher<Data = unknown> = (
@@ -184,6 +180,7 @@ export type State<Data = any, Error = any> = {
   error?: Error
   isValidating?: boolean
   isLoading?: boolean
+  key?: Key
 }
 
 export type MutatorFn<Data = any> = (
@@ -272,6 +269,7 @@ export type RevalidateCallback = <K extends RevalidateEvent>(
 ) => RevalidateCallbackReturnType[K]
 
 export interface Cache<Data = any> {
+  keys(): IterableIterator<Key>
   get(key: Key): State<Data> | undefined
   set(key: Key, value: State<Data>): void
   delete(key: Key): void

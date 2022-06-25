@@ -15,7 +15,7 @@ import {
   OBJECT,
   isFunction,
   createCacheHelper,
-  isEmptyCache,
+  isEmptyCacheState,
   SWRConfig as ConfigProvider,
   withArgs,
   subscribeCallback,
@@ -67,7 +67,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     keepPreviousData
   } = config
 
-  const [EVENT_REVALIDATORS, MUTATION, FETCH, , , , KEYS] = SWRGlobalState.get(
+  const [EVENT_REVALIDATORS, MUTATION, FETCH] = SWRGlobalState.get(
     cache
   ) as GlobalState
 
@@ -87,6 +87,7 @@ export const useSWRHandler = <Data = any, Error = any>(
 
   // Refs to keep the key and config.
   const keyRef = useRef(key)
+  const originKeyRef = useRef(_key)
   const fetcherRef = useRef(fetcher)
   const configRef = useRef(config)
   const getConfig = () => configRef.current
@@ -117,7 +118,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       return true
     })()
     if (!shouldStartRequest) return snapshot
-    if (isEmptyCache(snapshot)) {
+    if (isEmptyCacheState(snapshot)) {
       return {
         isValidating: true,
         isLoading: true
@@ -206,8 +207,12 @@ export const useSWRHandler = <Data = any, Error = any>(
     isInitialMount &&
     shouldDoInitialRevalidation
   )
-  const isValidating = isUndefined(cached.isValidating) ? defaultValidatingState : cached.isValidating
-  const isLoading = isUndefined(cached.isLoading) ? defaultValidatingState : cached.isLoading
+  const isValidating = isUndefined(cached.isValidating)
+    ? defaultValidatingState
+    : cached.isValidating
+  const isLoading = isUndefined(cached.isLoading)
+    ? defaultValidatingState
+    : cached.isLoading
 
   // The revalidation function is a carefully crafted wrapper of the original
   // `fetcher`, to correctly handle the many edge cases.
@@ -441,11 +446,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     // By using `bind` we don't need to modify the size of the rest arguments.
     // Due to https://github.com/microsoft/TypeScript/issues/37181, we have to
     // cast it to any for now.
-    internalMutate.bind(
-      UNDEFINED,
-      cache,
-      (k: string) => k === keyRef.current
-    ) as any,
+    internalMutate.bind(UNDEFINED, cache, keyRef.current) as any,
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   )
@@ -460,11 +461,6 @@ export const useSWRHandler = <Data = any, Error = any>(
       laggyDataRef.current = cachedData
     }
   })
-
-  useIsomorphicLayoutEffect(() => {
-    const isTruthyKey = _key && key && !isFunction(_key)
-    if (isTruthyKey && !KEYS.has(_key)) KEYS.add(_key)
-  }, [key])
 
   // After mounted or key changed.
   useIsomorphicLayoutEffect(() => {
@@ -501,6 +497,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     // Mark the component as mounted and update corresponding refs.
     unmountedRef.current = false
     keyRef.current = key
+    originKeyRef.current = _key
     initialMountedRef.current = true
 
     // Trigger a revalidation.

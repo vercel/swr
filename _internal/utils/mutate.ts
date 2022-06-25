@@ -10,10 +10,14 @@ import {
   GlobalState,
   State,
   Arguments,
-  TruthyKey
+  Key
 } from '../types'
 
-type KeyFilter = (key?: TruthyKey) => boolean
+type KeyFilter = (key?: Key) => boolean
+type MutateState<Data> = State<Data, any> & {
+  // The previously committed data.
+  _c?: Data
+}
 
 export async function internalMutate<Data>(
   cache: Cache,
@@ -36,6 +40,7 @@ export async function internalMutate<Data>(
   ]
 ): Promise<any> {
   const [cache, _key, _data, _opts] = args
+
   // When passing as a boolean, it's explicitly used to disable/enable
   // revalidation.
   const options =
@@ -49,31 +54,22 @@ export async function internalMutate<Data>(
   const revalidate = options.revalidate !== false
   const rollbackOnError = options.rollbackOnError !== false
 
-  const KEYS = (SWRGlobalState.get(cache) as GlobalState)[6]
-
   // If 2nd arg is key filter, return the mutation results of filtered keys
   if (isFunction(_key)) {
     const keyFilter = _key
-    const matchedKeys = []
-    for (const k of KEYS.values()) {
-      if (keyFilter(k)) matchedKeys.push(k)
+    const matchedKeys: Key[] = []
+    for (const originKey of cache.keys()) {
+      if (keyFilter(originKey)) matchedKeys.push(originKey)
     }
     return await Promise.all(matchedKeys.map(mutateByKey))
-  } else {
-    const [serializedKey] = serialize(_key)
-    if (!serializedKey) return
-    return await mutateByKey(serializedKey)
   }
+  return await mutateByKey(_key)
 
-  async function mutateByKey(_k: TruthyKey): Promise<Data | undefined> {
+  async function mutateByKey(_k: Key): Promise<Data | undefined> {
+    // Serialize key
     const [key] = serialize(_k)
-    const [get, set] = createCacheHelper<
-      Data,
-      State<Data, any> & {
-        // The previously committed data.
-        _c?: Data
-      }
-    >(cache, key)
+    if (!key) return
+    const [get, set] = createCacheHelper<Data, MutateState<Data>>(cache, key)
     const [EVENT_REVALIDATORS, MUTATION, FETCH] = SWRGlobalState.get(
       cache
     ) as GlobalState
@@ -159,6 +155,7 @@ export async function internalMutate<Data>(
         set({ data, _c: UNDEFINED })
       }
     }
+
     // If we should write back the cache after request.
     if (populateCache) {
       if (!error) {

@@ -1,7 +1,6 @@
 import { SWRGlobalState } from './global-state'
-import { Key, Cache, State, GlobalState } from '../types'
+import type { Key, Cache, State, GlobalState } from '../types'
 
-const EMPTY_CACHE = {}
 export const noop = () => {}
 
 // Using noop() as the undefined value as undefined can possibly be replaced
@@ -18,8 +17,11 @@ export const isFunction = <
 >(
   v: unknown
 ): v is T => typeof v == 'function'
-export const isEmptyCache = (v: any): boolean => v === EMPTY_CACHE
 export const mergeObjects = (a: any, b: any) => OBJECT.assign({}, a, b)
+export const isEmptyCacheState = (v: State<any, any>): boolean => {
+  const keys = Object.keys(v)
+  return keys.length === 1 && keys[0] === 'key'
+}
 
 const STR_UNDEFINED = 'undefined'
 
@@ -34,13 +36,14 @@ export const createCacheHelper = <Data = any, T = State<Data, any>>(
   key: Key
 ) => {
   const state = SWRGlobalState.get(cache) as GlobalState
+  const emptyCache = { key }
   return [
     // Getter
-    () => (cache.get(key) || EMPTY_CACHE) as T,
+    () => (cache.get(key) || emptyCache) as T,
     // Setter
     (info: T) => {
-      const prev = cache.get(key)
-      state[5](key as string, mergeObjects(prev, info), prev || EMPTY_CACHE)
+      const prev = cache.get(key) || emptyCache
+      state[5](key as string, mergeObjects(prev, info), prev)
     },
     // Subscriber
     state[6]

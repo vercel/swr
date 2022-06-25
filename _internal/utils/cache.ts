@@ -83,8 +83,7 @@ export const initCache = <Data = any>(
           {},
           mutate,
           setter,
-          subscribe,
-          new Set()
+          subscribe
         ])
         if (!IS_SERVER) {
           // When listening to the native events for auto revalidations,
