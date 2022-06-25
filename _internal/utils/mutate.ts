@@ -58,8 +58,8 @@ export async function internalMutate<Data>(
   if (isFunction(_key)) {
     const keyFilter = _key
     const matchedKeys: Key[] = []
-    for (const originKey of cache.keys()) {
-      if (keyFilter(originKey)) matchedKeys.push(originKey)
+    for (const state of cache.values()) {
+      if (keyFilter(state.key)) matchedKeys.push(state.key)
     }
     return await Promise.all(matchedKeys.map(mutateByKey))
   }

@@ -269,7 +269,7 @@ export type RevalidateCallback = <K extends RevalidateEvent>(
 ) => RevalidateCallbackReturnType[K]
 
 export interface Cache<Data = any> {
-  keys(): IterableIterator<Key>
+  values(): IterableIterator<State<Data, any>>
   get(key: Key): State<Data> | undefined
   set(key: Key, value: State<Data>): void
   delete(key: Key): void
