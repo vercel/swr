@@ -13,7 +13,7 @@ import {
   Key
 } from '../types'
 
-type KeyFilter = (key?: Key) => boolean
+type KeyFilter = (key?: Arguments) => boolean
 type MutateState<Data> = State<Data, any> & {
   // The previously committed data.
   _c?: Data

@@ -206,20 +206,15 @@ export type Mutator<Data = any> = MutatorWrapper<MutatorFn<Data>>
 
 export interface ScopedMutator<Data = any> {
   <T = Data>(
-    match: (key: string) => boolean,
+    matcher: (key?: Arguments) => boolean,
     data?: T | Promise<T> | MutatorCallback<T>,
     opts?: boolean | MutatorOptions<Data>
   ): Promise<Array<T | undefined>>
   <T = Data>(
-    match: Arguments,
+    key: Arguments,
     data?: T | Promise<T> | MutatorCallback<T>,
     opts?: boolean | MutatorOptions<Data>
   ): Promise<T | undefined>
-  <T = Data>(
-    match: ((key: string) => boolean) | Arguments,
-    data?: T | Promise<T> | MutatorCallback<T>,
-    opts?: boolean | MutatorOptions<Data>
-  ): Promise<any>
 }
 
 export type KeyedMutator<Data> = (

@@ -6,7 +6,8 @@ import {
   Key,
   MutatorCallback,
   Mutator,
-  MutatorWrapper
+  MutatorWrapper,
+  Arguments
 } from '../../_internal/types'
 import { expectType } from './utils'
 
@@ -74,8 +75,8 @@ export function useConfigMutate() {
   expect<Promise<Array<any>>>(
     mutate(
       key => {
-        expectType<string>(key)
-        return key.startsWith('swr')
+        expectType<Arguments>(key)
+        return typeof key === 'string' && key.startsWith('swr')
       },
       data => {
         expectType<number | undefined>(data)
@@ -90,11 +91,12 @@ export function useConfigMutate() {
       return '0'
     })
   )
+
   expect<Promise<Array<number | undefined>>>(
     mutate<number>(
       key => {
-        expectType<string>(key)
-        return key.startsWith('swr')
+        expectType<Arguments>(key)
+        return typeof key === 'string' && key.startsWith('swr')
       },
       data => {
         expectType<number | undefined>(data)
@@ -102,12 +104,14 @@ export function useConfigMutate() {
       }
     )
   )
+
   expect<Promise<string | undefined>>(
     mutate<string>('string', data => {
       expectType<string | undefined>(data)
       return '0'
     })
   )
+
   mutate<string>('string', data => {
     expectType<string | undefined>(data)
     return '0'
