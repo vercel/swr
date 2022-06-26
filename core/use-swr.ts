@@ -107,35 +107,6 @@ export const useSWRHandler = <Data = any, Error = any>(
     ? config.fallback[key]
     : fallbackData
 
-  const selector = (state: State<Data, any>) => {
-    const shouldStartRequest = (() => {
-      if (!key) return false
-      if (!fetcher) return false
-      // If `revalidateOnMount` is set, we take the value directly.
-      if (!isUndefined(revalidateOnMount)) return revalidateOnMount
-      // If it's paused, we skip revalidation.
-      if (getConfig().isPaused()) return false
-      if (suspense) return false
-      return true
-    })()
-
-    // We only select the needed fields from the state.
-    const snapshot = mergeObjects(state)
-    delete snapshot._k
-
-    if (!shouldStartRequest) {
-      return snapshot
-    }
-
-    return Object.assign(
-      {
-        isValidating: true,
-        isLoading: true
-      },
-      snapshot
-    )
-  }
-
   const isEqual = (prev: State<Data, any>, current: State<Data, any>) => {
     let equal = true
     for (const _ in stateDependencies) {
@@ -154,11 +125,41 @@ export const useSWRHandler = <Data = any, Error = any>(
   }
 
   const getSnapshot = useMemo(() => {
-    let memorizedSnapshot = selector(getCache())
+    const shouldStartRequest = (() => {
+      if (!key) return false
+      if (!fetcher) return false
+      // If `revalidateOnMount` is set, we take the value directly.
+      if (!isUndefined(revalidateOnMount)) return revalidateOnMount
+      // If it's paused, we skip revalidation.
+      if (getConfig().isPaused()) return false
+      if (suspense) return false
+      return true
+    })()
+
+    const getSelectedCache = () => {
+      const state = getCache()
+
+      // We only select the needed fields from the state.
+      const snapshot = mergeObjects(state)
+      delete snapshot._k
+
+      if (!shouldStartRequest) {
+        return snapshot
+      }
+
+      return Object.assign(
+        {
+          isValidating: true,
+          isLoading: true
+        },
+        snapshot
+      )
+    }
+
+    let memorizedSnapshot = getSelectedCache()
 
     return () => {
-      const snapshot = selector(getCache())
-
+      const snapshot = getSelectedCache()
       return isEqual(snapshot, memorizedSnapshot)
         ? memorizedSnapshot
         : (memorizedSnapshot = snapshot)
