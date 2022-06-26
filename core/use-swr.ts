@@ -164,6 +164,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         ? memorizedSnapshot
         : (memorizedSnapshot = snapshot)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cache, key])
 
   // Get the current state that SWR should return.
