@@ -15,7 +15,7 @@ import {
   OBJECT,
   isFunction,
   createCacheHelper,
-  isEmptyCacheState,
+  isEmptyCache,
   SWRConfig as ConfigProvider,
   withArgs,
   subscribeCallback,
@@ -87,16 +87,18 @@ export const useSWRHandler = <Data = any, Error = any>(
 
   // Refs to keep the key and config.
   const keyRef = useRef(key)
-  const originKeyRef = useRef(_key)
   const fetcherRef = useRef(fetcher)
   const configRef = useRef(config)
   const getConfig = () => configRef.current
   const isActive = () => getConfig().isVisible() && getConfig().isOnline()
 
-  const [getCache, setCache, subscribeCache] = createCacheHelper<Data>(
-    cache,
-    key
-  )
+  const [getCache, setCache, subscribeCache] = createCacheHelper<
+    Data,
+    State<Data, any> & {
+      // The original key arguments.
+      _k?: Key
+    }
+  >(cache, key)
 
   const stateDependencies = useRef<StateDependencies>({}).current
 
@@ -118,7 +120,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       return true
     })()
     if (!shouldStartRequest) return snapshot
-    if (isEmptyCacheState(snapshot)) {
+    if (isEmptyCache(snapshot)) {
       return {
         isValidating: true,
         isLoading: true
@@ -497,8 +499,10 @@ export const useSWRHandler = <Data = any, Error = any>(
     // Mark the component as mounted and update corresponding refs.
     unmountedRef.current = false
     keyRef.current = key
-    originKeyRef.current = _key
     initialMountedRef.current = true
+
+    // Keep the original key in the cache.
+    setCache({ _k: fnArg })
 
     // Trigger a revalidation.
     if (shouldDoInitialRevalidation) {

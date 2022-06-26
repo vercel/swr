@@ -251,7 +251,6 @@ describe('useSWR - cache provider', () => {
       provider: parentCache_ => {
         parentCache = parentCache_
         return {
-          values: () => parentCache.values(),
           set: (k, v) => parentCache_.set(k, v),
           get: k => {
             // We append `-extended` to the value returned by the parent cache.

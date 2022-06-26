@@ -1608,4 +1608,38 @@ describe('useSWR - local mutation', () => {
 
     expect(mutationOneResults).toEqual([undefined])
   })
+
+  it('should pass the original key to the key filter', async () => {
+    const key = createKey()
+    const keys = []
+
+    function Page() {
+      useSWR([key, 'first'])
+      useSWR([key, 'second'])
+      useSWR(key)
+      const { mutate } = useSWRConfig()
+      return (
+        <span
+          data-testid="mutator-filter-all"
+          onClick={() => {
+            mutate(
+              k => {
+                keys.push(k)
+                return false
+              },
+              undefined,
+              false
+            )
+          }}
+        />
+      )
+    }
+    renderWithConfig(<Page />)
+
+    // add and mutate `first` and `second`
+    fireEvent.click(screen.getByTestId('mutator-filter-all'))
+    await nextTick()
+
+    expect(keys).toEqual([[key, 'first'], [key, 'second'], key])
+  })
 })

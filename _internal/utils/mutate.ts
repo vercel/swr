@@ -54,16 +54,20 @@ export async function internalMutate<Data>(
   const revalidate = options.revalidate !== false
   const rollbackOnError = options.rollbackOnError !== false
 
-  // If 2nd arg is key filter, return the mutation results of filtered keys
+  // If the second argument is a key filter, return the mutation results for all
+  // filtered keys.
   if (isFunction(_key)) {
     const keyFilter = _key
     const matchedKeys: Key[] = []
-    for (const state of cache.values()) {
-      if (keyFilter(state.key)) matchedKeys.push(state.key)
+    for (const key of cache.keys()) {
+      if (keyFilter((cache.get(key) as { _k: any })._k)) {
+        matchedKeys.push(key)
+      }
     }
-    return await Promise.all(matchedKeys.map(mutateByKey))
+    return Promise.all(matchedKeys.map(mutateByKey))
   }
-  return await mutateByKey(_key)
+
+  return mutateByKey(_key)
 
   async function mutateByKey(_k: Key): Promise<Data | undefined> {
     // Serialize key
