@@ -15,7 +15,7 @@ describe('useSWR - devtools', () => {
     ;({ createKey, createResponse, renderWithConfig } = require('./utils'))
     useSWR = require('swr').default
   })
-  it('window.__SWR_DEVTOOLS_USE__ should be set as middlewares', async () => {
+  it('window.__SWR_DEVTOOLS_USE__ should be set as middleware', async () => {
     const key = createKey()
     function Page() {
       const { data } = useSWR(key, () => createResponse('ok'))
