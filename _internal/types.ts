@@ -204,15 +204,13 @@ export type MutatorWrapper<Fn> = Fn extends (
 export type Mutator<Data = any> = MutatorWrapper<MutatorFn<Data>>
 
 export interface ScopedMutator<Data = any> {
-  /** This is used for bound mutator */
-  (
-    key: Key,
-    data?: Data | Promise<Data> | MutatorCallback<Data>,
+  <T = Data>(
+    matcher: (key?: Arguments) => boolean,
+    data?: T | Promise<T> | MutatorCallback<T>,
     opts?: boolean | MutatorOptions<Data>
-  ): Promise<Data | undefined>
-  /** This is used for global mutator */
-  <T = any>(
-    key: Key,
+  ): Promise<Array<T | undefined>>
+  <T = Data>(
+    key: Arguments,
     data?: T | Promise<T> | MutatorCallback<T>,
     opts?: boolean | MutatorOptions<Data>
   ): Promise<T | undefined>
@@ -222,8 +220,6 @@ export type KeyedMutator<Data> = (
   data?: Data | Promise<Data> | MutatorCallback<Data>,
   opts?: boolean | MutatorOptions<Data>
 ) => Promise<Data | undefined>
-
-// Public types
 
 export type SWRConfiguration<
   Data = any,
@@ -267,6 +263,7 @@ export type RevalidateCallback = <K extends RevalidateEvent>(
 ) => RevalidateCallbackReturnType[K]
 
 export interface Cache<Data = any> {
+  keys(): IterableIterator<string>
   get(key: Key): State<Data> | undefined
   set(key: Key, value: State<Data>): void
   delete(key: Key): void

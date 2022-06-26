@@ -432,34 +432,36 @@ describe('useSWR', () => {
     await act(() => sleep(20))
     screen.getByText('data: 1')
   })
+
   it('Nested SWR hook should only do loading once', async () => {
     const key = createKey()
     let count = 0
     const ChildComponent = () => {
-      const { data } = useSWR(key, (_) => createResponse(_, { delay: 100 }))
-      return (
-        <div id="child">
-          {data}
-        </div>
-      )
+      const { data } = useSWR(key, _ => createResponse(_, { delay: 100 }))
+      return <div id="child">{data}</div>
     }
     const NestedRender = () => {
-      const { data, isValidating } = useSWR(key, (_) => createResponse(_, { delay: 50 }))
+      const { data, isValidating } = useSWR(key, _ =>
+        createResponse(_, { delay: 50 })
+      )
       if (isValidating) {
         return <div>loading</div>
       }
       return (
         <div>
           <div id="parent">{data}</div>
-          <ChildComponent></ChildComponent>
+          <ChildComponent />
         </div>
       )
     }
     const Page = () => (
-      <Profiler id={key} onRender={() => {
-        count += 1
-      }}>
-        <NestedRender></NestedRender>
+      <Profiler
+        id={key}
+        onRender={() => {
+          count += 1
+        }}
+      >
+        <NestedRender />
       </Profiler>
     )
     renderWithConfig(<Page />)

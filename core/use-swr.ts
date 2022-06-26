@@ -1,5 +1,5 @@
-import { useCallback, useRef, useDebugValue } from 'react'
-import { useSyncExternalStoreWithSelector } from 'use-sync-external-store/shim/with-selector.js'
+import { useCallback, useRef, useDebugValue, useMemo } from 'react'
+import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js'
 
 import {
   defaultConfig,
@@ -15,13 +15,13 @@ import {
   OBJECT,
   isFunction,
   createCacheHelper,
-  isEmptyCache,
   SWRConfig as ConfigProvider,
   withArgs,
   subscribeCallback,
   getTimestamp,
   internalMutate,
-  revalidateEvents
+  revalidateEvents,
+  mergeObjects
 } from 'swr/_internal'
 import type {
   State,
@@ -92,20 +92,39 @@ export const useSWRHandler = <Data = any, Error = any>(
   const getConfig = () => configRef.current
   const isActive = () => getConfig().isVisible() && getConfig().isOnline()
 
-  const [getCache, setCache, subscribeCache] = createCacheHelper<Data>(
-    cache,
-    key
-  )
+  const [getCache, setCache, subscribeCache] = createCacheHelper<
+    Data,
+    State<Data, any> & {
+      // The original key arguments.
+      _k?: Key
+    }
+  >(cache, key)
 
   const stateDependencies = useRef<StateDependencies>({}).current
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const getSnapshot = useCallback(getCache, [cache, key])
   const fallback = isUndefined(fallbackData)
     ? config.fallback[key]
     : fallbackData
 
-  const selector = (snapshot: State<Data, any>) => {
+  const isEqual = (prev: State<Data, any>, current: State<Data, any>) => {
+    let equal = true
+    for (const _ in stateDependencies) {
+      const t = _ as keyof StateDependencies
+      if (!compare(current[t], prev[t])) {
+        if (t === 'data' && isUndefined(prev[t])) {
+          if (!compare(current[t], fallback)) {
+            equal = false
+          }
+        } else {
+          equal = false
+        }
+      }
+    }
+    return equal
+  }
+
+  const getSnapshot = useMemo(() => {
     const shouldStartRequest = (() => {
       if (!key) return false
       if (!fetcher) return false
@@ -116,50 +135,53 @@ export const useSWRHandler = <Data = any, Error = any>(
       if (suspense) return false
       return true
     })()
-    if (!shouldStartRequest) return snapshot
-    if (isEmptyCache(snapshot)) {
-      return {
-        isValidating: true,
-        isLoading: true
+
+    const getSelectedCache = () => {
+      const state = getCache()
+
+      // We only select the needed fields from the state.
+      const snapshot = mergeObjects(state)
+      delete snapshot._k
+
+      if (!shouldStartRequest) {
+        return snapshot
       }
+
+      return Object.assign(
+        {
+          isValidating: true,
+          isLoading: true
+        },
+        snapshot
+      )
     }
-    return snapshot
-  }
-  const isEqual = useCallback(
-    (prev: State<Data, any>, current: State<Data, any>) => {
-      let equal = true
-      for (const _ in stateDependencies) {
-        const t = _ as keyof StateDependencies
-        if (!compare(current[t], prev[t])) {
-          if (t === 'data' && isUndefined(prev[t])) {
-            if (!compare(current[t], fallback)) {
-              equal = false
-            }
-          } else {
-            equal = false
-          }
-        }
-      }
-      return equal
-    },
+
+    let memorizedSnapshot = getSelectedCache()
+
+    return () => {
+      const snapshot = getSelectedCache()
+      return isEqual(snapshot, memorizedSnapshot)
+        ? memorizedSnapshot
+        : (memorizedSnapshot = snapshot)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [cache, key]
-  )
+  }, [cache, key])
 
   // Get the current state that SWR should return.
-  const cached = useSyncExternalStoreWithSelector(
+  const cached = useSyncExternalStore(
     useCallback(
       (callback: () => void) =>
-        subscribeCache(key, () => {
-          callback()
-        }),
+        subscribeCache(
+          key,
+          (prev: State<Data, any>, current: State<Data, any>) => {
+            if (!isEqual(prev, current)) callback()
+          }
+        ),
       // eslint-disable-next-line react-hooks/exhaustive-deps
       [cache, key]
     ),
     getSnapshot,
-    getSnapshot,
-    selector,
-    isEqual
+    getSnapshot
   )
 
   const isInitialMount = !initialMountedRef.current
@@ -206,8 +228,12 @@ export const useSWRHandler = <Data = any, Error = any>(
     isInitialMount &&
     shouldDoInitialRevalidation
   )
-  const isValidating = isUndefined(cached.isValidating) ? defaultValidatingState : cached.isValidating
-  const isLoading = isUndefined(cached.isLoading) ? defaultValidatingState : cached.isLoading
+  const isValidating = isUndefined(cached.isValidating)
+    ? defaultValidatingState
+    : cached.isValidating
+  const isLoading = isUndefined(cached.isLoading)
+    ? defaultValidatingState
+    : cached.isLoading
 
   // The revalidation function is a carefully crafted wrapper of the original
   // `fetcher`, to correctly handle the many edge cases.
@@ -438,10 +464,10 @@ export const useSWRHandler = <Data = any, Error = any>(
   // `cache` isn't allowed to change during the lifecycle.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const boundMutate: SWRResponse<Data, Error>['mutate'] = useCallback(
-    // By using `bind` we don't need to modify the size of the rest arguments.
-    // Due to https://github.com/microsoft/TypeScript/issues/37181, we have to
-    // cast it to any for now.
-    internalMutate.bind(UNDEFINED, cache, () => keyRef.current) as any,
+    // Use callback to make sure `keyRef.current` returns latest result every time
+    (...args) => {
+      return internalMutate(cache, keyRef.current, ...args)
+    },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   )
@@ -493,6 +519,9 @@ export const useSWRHandler = <Data = any, Error = any>(
     unmountedRef.current = false
     keyRef.current = key
     initialMountedRef.current = true
+
+    // Keep the original key in the cache.
+    setCache({ _k: fnArg })
 
     // Trigger a revalidation.
     if (shouldDoInitialRevalidation) {

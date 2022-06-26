@@ -1,13 +1,15 @@
 import { Equal, Expect } from '@type-challenges/utils'
-import useSWR from 'swr'
+import useSWR, { useSWRConfig } from 'swr'
 
 import {
   MutatorFn,
   Key,
   MutatorCallback,
   Mutator,
-  MutatorWrapper
+  MutatorWrapper,
+  Arguments
 } from '../../_internal/types'
+import { expectType } from './utils'
 
 type Case1<Data = any> = MutatorFn<Data>
 type Case2<Data = any> = (
@@ -66,4 +68,52 @@ export function useMutatorTypes() {
 
   // FIXME: this should work.
   // mutate(async () => 1, { populateCache: false })
+}
+
+export function useConfigMutate() {
+  const { mutate } = useSWRConfig()
+  expect<Promise<Array<any>>>(
+    mutate(
+      key => {
+        expectType<Arguments>(key)
+        return typeof key === 'string' && key.startsWith('swr')
+      },
+      data => {
+        expectType<number | undefined>(data)
+        return 0
+      }
+    )
+  )
+
+  expect<Promise<any>>(
+    mutate('string', data => {
+      expectType<string | undefined>(data)
+      return '0'
+    })
+  )
+
+  expect<Promise<Array<number | undefined>>>(
+    mutate<number>(
+      key => {
+        expectType<Arguments>(key)
+        return typeof key === 'string' && key.startsWith('swr')
+      },
+      data => {
+        expectType<number | undefined>(data)
+        return 0
+      }
+    )
+  )
+
+  expect<Promise<string | undefined>>(
+    mutate<string>('string', data => {
+      expectType<string | undefined>(data)
+      return '0'
+    })
+  )
+
+  mutate<string>('string', data => {
+    expectType<string | undefined>(data)
+    return '0'
+  })
 }
