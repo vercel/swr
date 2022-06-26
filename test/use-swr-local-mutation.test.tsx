@@ -1508,7 +1508,7 @@ describe('useSWR - local mutation', () => {
             data-testid="mutator-filter-all"
             onClick={async () => {
               const res = await mutate(
-                k => k.startsWith(key),
+                k => typeof k === 'string' && k.startsWith(key),
                 data => {
                   return 'value-' + data.replace(key, '')
                 },
@@ -1521,7 +1521,7 @@ describe('useSWR - local mutation', () => {
             data-testid="mutator-filter-one"
             onClick={async () => {
               const res = await mutate(
-                k => k.includes('first'),
+                k => typeof k === 'string' && k.includes('first'),
                 () => 'value-first-g0',
                 false
               )
