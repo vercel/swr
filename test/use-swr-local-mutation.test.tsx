@@ -1,6 +1,7 @@
 import { act, screen, fireEvent } from '@testing-library/react'
 import React, { useEffect, useState } from 'react'
 import useSWR, { mutate as globalMutate, useSWRConfig } from 'swr'
+import useSWRInfinite from 'swr/infinite'
 import { serialize } from '../_internal/utils/serialize'
 import {
   createResponse,
@@ -1641,5 +1642,50 @@ describe('useSWR - local mutation', () => {
     await nextTick()
 
     expect(keys).toEqual([[key, 'first'], [key, 'second'], key])
+  })
+
+  it('should skip speicla useSWRInfinite keys', async () => {
+    const key = createKey()
+    const keys = []
+
+    function Page() {
+      useSWR([key, 'first'])
+      useSWR([key, 'second'])
+      useSWR(key)
+      useSWRInfinite(
+        i => [key, 'inf', i],
+        k => k,
+        { initialSize: 2 }
+      )
+      const { mutate } = useSWRConfig()
+      return (
+        <span
+          data-testid="mutator-filter-all"
+          onClick={() => {
+            mutate(
+              k => {
+                keys.push(k)
+                return false
+              },
+              undefined,
+              false
+            )
+          }}
+        />
+      )
+    }
+    renderWithConfig(<Page />)
+    await nextTick()
+
+    // add and mutate `first` and `second`
+    fireEvent.click(screen.getByTestId('mutator-filter-all'))
+
+    expect(keys).toEqual([
+      [key, 'first'],
+      [key, 'second'],
+      key,
+      [key, 'inf', 0],
+      [key, 'inf', 1]
+    ])
   })
 })
