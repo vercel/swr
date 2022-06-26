@@ -1,15 +1,16 @@
 import React from 'react'
 import { isWindowDefined } from './helper'
 
-export const use =
-  // @ts-expect-error
-  isWindowDefined && window.__SWR_DEVTOOLS_USE__
-    ? // @ts-expect-error
-      window.__SWR_DEVTOOLS_USE__
-    : []
+// @ts-expect-error
+const enableDevtools = isWindowDefined && window.__SWR_DEVTOOLS_USE__
+
+export const use = enableDevtools
+  ? // @ts-expect-error
+    window.__SWR_DEVTOOLS_USE__
+  : []
 
 export const setupDevTools = () => {
-  if (isWindowDefined) {
+  if (enableDevtools) {
     // @ts-expect-error
     window.__SWR_DEVTOOLS_REACT__ = React
   }
