@@ -1,5 +1,5 @@
-import { useCallback, useRef, useDebugValue } from 'react'
-import { useSyncExternalStoreWithSelector } from 'use-sync-external-store/shim/with-selector.js'
+import { useCallback, useRef, useDebugValue, useMemo } from 'react'
+import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js'
 
 import {
   defaultConfig,
@@ -15,13 +15,13 @@ import {
   OBJECT,
   isFunction,
   createCacheHelper,
-  isEmptyCache,
   SWRConfig as ConfigProvider,
   withArgs,
   subscribeCallback,
   getTimestamp,
   internalMutate,
-  revalidateEvents
+  revalidateEvents,
+  mergeObjects
 } from 'swr/_internal'
 import type {
   State,
@@ -103,12 +103,11 @@ export const useSWRHandler = <Data = any, Error = any>(
   const stateDependencies = useRef<StateDependencies>({}).current
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const getSnapshot = useCallback(getCache, [cache, key])
   const fallback = isUndefined(fallbackData)
     ? config.fallback[key]
     : fallbackData
 
-  const selector = (snapshot: State<Data, any>) => {
+  const selector = (state: State<Data, any>) => {
     const shouldStartRequest = (() => {
       if (!key) return false
       if (!fetcher) return false
@@ -119,50 +118,68 @@ export const useSWRHandler = <Data = any, Error = any>(
       if (suspense) return false
       return true
     })()
-    if (!shouldStartRequest) return snapshot
-    if (isEmptyCache(snapshot)) {
-      return {
+
+    // We only select the needed fields from the state.
+    const snapshot = mergeObjects(state)
+    delete snapshot._k
+
+    if (!shouldStartRequest) {
+      return snapshot
+    }
+
+    return Object.assign(
+      {
         isValidating: true,
         isLoading: true
-      }
-    }
-    return snapshot
+      },
+      snapshot
+    )
   }
-  const isEqual = useCallback(
-    (prev: State<Data, any>, current: State<Data, any>) => {
-      let equal = true
-      for (const _ in stateDependencies) {
-        const t = _ as keyof StateDependencies
-        if (!compare(current[t], prev[t])) {
-          if (t === 'data' && isUndefined(prev[t])) {
-            if (!compare(current[t], fallback)) {
-              equal = false
-            }
-          } else {
+
+  const isEqual = (prev: State<Data, any>, current: State<Data, any>) => {
+    let equal = true
+    for (const _ in stateDependencies) {
+      const t = _ as keyof StateDependencies
+      if (!compare(current[t], prev[t])) {
+        if (t === 'data' && isUndefined(prev[t])) {
+          if (!compare(current[t], fallback)) {
             equal = false
           }
+        } else {
+          equal = false
         }
       }
-      return equal
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [cache, key]
-  )
+    }
+    return equal
+  }
+
+  const getSnapshot = useMemo(() => {
+    let memorizedSnapshot = selector(getCache())
+
+    return () => {
+      const snapshot = selector(getCache())
+
+      return isEqual(snapshot, memorizedSnapshot)
+        ? memorizedSnapshot
+        : (memorizedSnapshot = snapshot)
+    }
+  }, [cache, key])
 
   // Get the current state that SWR should return.
-  const cached = useSyncExternalStoreWithSelector(
+  const cached = useSyncExternalStore(
     useCallback(
       (callback: () => void) =>
-        subscribeCache(key, () => {
-          callback()
-        }),
+        subscribeCache(
+          key,
+          (prev: State<Data, any>, current: State<Data, any>) => {
+            if (!isEqual(prev, current)) callback()
+          }
+        ),
       // eslint-disable-next-line react-hooks/exhaustive-deps
       [cache, key]
     ),
     getSnapshot,
-    getSnapshot,
-    selector,
-    isEqual
+    getSnapshot
   )
 
   const isInitialMount = !initialMountedRef.current

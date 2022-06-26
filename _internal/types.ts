@@ -180,7 +180,6 @@ export type State<Data = any, Error = any> = {
   error?: Error
   isValidating?: boolean
   isLoading?: boolean
-  key?: Key
 }
 
 export type MutatorFn<Data = any> = (

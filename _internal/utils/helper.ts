@@ -18,8 +18,7 @@ export const isFunction = <
 >(
   v: unknown
 ): v is T => typeof v == 'function'
-export const mergeObjects = (a: any, b: any) => OBJECT.assign({}, a, b)
-export const isEmptyCache = (v: any): boolean => v === EMPTY_CACHE
+export const mergeObjects = (a: any, b?: any) => OBJECT.assign({}, a, b)
 
 const STR_UNDEFINED = 'undefined'
 
