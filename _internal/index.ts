@@ -1,11 +1,11 @@
 import SWRConfig from './utils/config-context'
 import * as revalidateEvents from './constants'
-import { setupDevTools } from './utils/devtools'
 
 export { SWRConfig, revalidateEvents }
 
 export { initCache } from './utils/cache'
 export { defaultConfig, cache, mutate, compare } from './utils/config'
+import { setupDevTools } from './utils/devtools'
 export * from './utils/env'
 export { SWRGlobalState } from './utils/global-state'
 export { stableHash } from './utils/hash'
