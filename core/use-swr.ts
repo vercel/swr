@@ -190,7 +190,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   const data = isUndefined(cachedData) ? fallback : cachedData
   const error = cached.error
 
-  // Use a ref to store previous returned data. Use the inital data as its inital value.
+  // Use a ref to store previous returned data. Use the initial data as its initial value.
   const laggyDataRef = useRef(data)
 
   const returnedData = keepPreviousData
