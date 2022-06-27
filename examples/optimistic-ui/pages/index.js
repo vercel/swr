@@ -60,7 +60,7 @@ export default function App() {
                   populateCache: newItem => {
                     setState(
                       <span className="success">
-                        Succesfully mutated the resource and populated cache.
+                        Successfully mutated the resource and populated cache.
                         Revalidating...
                       </span>
                     )
