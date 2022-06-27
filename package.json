@@ -1,6 +1,6 @@
 {
   "name": "swr",
-  "version": "2.0.0-beta.3",
+  "version": "2.0.0-beta.5",
   "description": "React Hooks library for remote data fetching",
   "keywords": [
     "swr",
@@ -86,7 +86,8 @@
     "lint": "eslint . --ext .ts,.tsx --cache",
     "lint:fix": "pnpm lint --fix",
     "coverage": "jest --coverage",
-    "test": "tsc --noEmit -p test && jest"
+    "test-typing": "tsc --noEmit -p test/type/tsconfig.json && tsc --noEmit -p test/tsconfig.json",
+    "test": "jest"
   },
   "husky": {
     "hooks": {

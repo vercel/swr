@@ -866,7 +866,7 @@ describe('useSWRInfinite', () => {
           <div
             onClick={() => {
               // load next page
-              // @ts-ignore
+              // @ts-expect-error
               setSize('2')
             }}
           >

@@ -1,12 +1,16 @@
-import { Middleware, Key, BareFetcher, GlobalState } from '../types'
+import type { Middleware, Key, BareFetcher, GlobalState } from '../types'
 import { serialize } from './serialize'
 import { cache } from './config'
 import { SWRGlobalState } from './global-state'
 
 export const preload = <Data = any>(key_: Key, fetcher: BareFetcher<Data>) => {
-  const req = fetcher(key_)
   const key = serialize(key_)[0]
   const [, , , PRELOAD] = SWRGlobalState.get(cache) as GlobalState
+
+  // Prevent preload to be called multiple times before used.
+  if (PRELOAD[key]) return PRELOAD[key]
+
+  const req = fetcher(key_)
   PRELOAD[key] = req
   return req
 }

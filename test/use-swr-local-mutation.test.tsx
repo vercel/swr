@@ -1,6 +1,7 @@
 import { act, screen, fireEvent } from '@testing-library/react'
 import React, { useEffect, useState } from 'react'
 import useSWR, { mutate as globalMutate, useSWRConfig } from 'swr'
+import useSWRInfinite from 'swr/infinite'
 import { serialize } from '../_internal/utils/serialize'
 import {
   createResponse,
@@ -59,7 +60,7 @@ describe('useSWR - local mutation', () => {
             setJob('chef')
           }}
         >
-          {name}:{job}
+          {`${name}:${job}`}
         </span>
       )
     }
@@ -329,11 +330,12 @@ describe('useSWR - local mutation', () => {
     expect(globalMutate(null, Promise.resolve('data'))).resolves.toBe(undefined)
 
     // throw the error if promise rejected
+    const e = new Error('error')
     expect(
       globalMutate(() => {
-        throw new Error('error')
+        throw e
       }, Promise.resolve('data'))
-    ).resolves.toBe(undefined)
+    ).rejects.toEqual(e)
   })
 
   it('should get bound mutate from useSWR', async () => {
@@ -1489,6 +1491,201 @@ describe('useSWR - local mutation', () => {
       ['Apple', 'Banana', 'cherry (optimistic)'], // optimistic data
       ['Apple', 'Banana', 'Cherry (res)'], // appended server response
       ['Apple', 'Banana', 'Cherry'] // revalidated data
+    ])
+  })
+
+  it('should support key filter as first argument', async () => {
+    const key = createKey()
+    const mutationAllResults = []
+    const mutationOneResults = []
+
+    function Page() {
+      const { data: data1 } = useSWR(key + 'first', v => v)
+      const { data: data2 } = useSWR(key + 'second', v => v)
+      const { mutate } = useSWRConfig()
+      return (
+        <div>
+          <span
+            data-testid="mutator-filter-all"
+            onClick={async () => {
+              const res = await mutate(
+                k => typeof k === 'string' && k.startsWith(key),
+                data => {
+                  return 'value-' + data.replace(key, '')
+                },
+                false
+              )
+              mutationAllResults.push(...res)
+            }}
+          />
+          <span
+            data-testid="mutator-filter-one"
+            onClick={async () => {
+              const res = await mutate(
+                k => typeof k === 'string' && k.includes('first'),
+                () => 'value-first-g0',
+                false
+              )
+              mutationOneResults.push(...res)
+            }}
+          />
+          <p>first:{data1}</p>
+          <p>second:{data2}</p>
+        </div>
+      )
+    }
+    renderWithConfig(<Page />)
+
+    screen.getByText('first:')
+    screen.getByText('second:')
+
+    await nextTick()
+
+    // filter and mutate `first` and `second`
+    fireEvent.click(screen.getByTestId('mutator-filter-all'))
+    await nextTick()
+
+    await screen.findByText('first:value-first')
+    await screen.findByText('second:value-second')
+
+    expect(mutationAllResults).toEqual(['value-first', 'value-second'])
+
+    // only filter and mutate `first`
+    fireEvent.click(screen.getByTestId('mutator-filter-one'))
+    await nextTick()
+
+    await screen.findByText('first:value-first-g0')
+    await screen.findByText('second:value-second')
+
+    expect(mutationOneResults).toEqual(['value-first-g0'])
+  })
+
+  it('should remove all key value pairs when clear cache through key filter', async () => {
+    const key = createKey()
+    const mutationOneResults = []
+
+    function Page() {
+      const { data: data1 } = useSWR(key + 'first')
+      const { data: data2 } = useSWR(key + 'second')
+      const { mutate } = useSWRConfig()
+      return (
+        <div>
+          <span
+            data-testid="mutator-filter-all"
+            onClick={async () => {
+              const promises = ['first', 'second'].map(async name => {
+                await mutate(key + name, `value-${name}`, false)
+              })
+              await Promise.all(promises)
+            }}
+          />
+          <span
+            data-testid="clear-all"
+            onClick={async () => {
+              const res = await mutate(() => true, undefined, false)
+              mutationOneResults.push(...res)
+            }}
+          />
+          <p>first:{data1}</p>
+          <p>second:{data2}</p>
+        </div>
+      )
+    }
+    renderWithConfig(<Page />)
+
+    // add and mutate `first` and `second`
+    fireEvent.click(screen.getByTestId('mutator-filter-all'))
+    await nextTick()
+
+    await screen.findByText('first:value-first')
+    await screen.findByText('second:value-second')
+
+    // reset all keys to undefined
+    fireEvent.click(screen.getByTestId('clear-all'))
+    await nextTick()
+
+    await screen.findByText('first:')
+    await screen.findByText('second:')
+
+    expect(mutationOneResults).toEqual([undefined])
+  })
+
+  it('should pass the original key to the key filter', async () => {
+    const key = createKey()
+    const keys = []
+
+    function Page() {
+      useSWR([key, 'first'])
+      useSWR([key, 'second'])
+      useSWR(key)
+      const { mutate } = useSWRConfig()
+      return (
+        <span
+          data-testid="mutator-filter-all"
+          onClick={() => {
+            mutate(
+              k => {
+                keys.push(k)
+                return false
+              },
+              undefined,
+              false
+            )
+          }}
+        />
+      )
+    }
+    renderWithConfig(<Page />)
+
+    // add and mutate `first` and `second`
+    fireEvent.click(screen.getByTestId('mutator-filter-all'))
+    await nextTick()
+
+    expect(keys).toEqual([[key, 'first'], [key, 'second'], key])
+  })
+
+  it('should skip speicla useSWRInfinite keys', async () => {
+    const key = createKey()
+    const keys = []
+
+    function Page() {
+      useSWR([key, 'first'])
+      useSWR([key, 'second'])
+      useSWR(key)
+      useSWRInfinite(
+        i => [key, 'inf', i],
+        k => k,
+        { initialSize: 2 }
+      )
+      const { mutate } = useSWRConfig()
+      return (
+        <span
+          data-testid="mutator-filter-all"
+          onClick={() => {
+            mutate(
+              k => {
+                keys.push(k)
+                return false
+              },
+              undefined,
+              false
+            )
+          }}
+        />
+      )
+    }
+    renderWithConfig(<Page />)
+    await nextTick()
+
+    // add and mutate `first` and `second`
+    fireEvent.click(screen.getByTestId('mutator-filter-all'))
+
+    expect(keys).toEqual([
+      [key, 'first'],
+      [key, 'second'],
+      key,
+      [key, 'inf', 0],
+      [key, 'inf', 1]
     ])
   })
 })

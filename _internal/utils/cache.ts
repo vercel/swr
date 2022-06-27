@@ -42,6 +42,7 @@ export const initCache = <Data = any>(
     // If there's no global state bound to the provider, create a new one with the
     // new mutate function.
     const EVENT_REVALIDATORS = {}
+
     const mutate = internalMutate.bind(
       UNDEFINED,
       provider
@@ -58,16 +59,14 @@ export const initCache = <Data = any>(
       subscriptions[key] = subs
 
       subs.push(callback)
-      return () => {
-        subs.splice(subs.indexOf(callback), 1)
-      }
+      return () => subs.splice(subs.indexOf(callback), 1)
     }
     const setter = (key: string, value: any, prev: any) => {
       provider.set(key, value)
       const subs = subscriptions[key]
       if (subs) {
         for (let i = subs.length; i--; ) {
-          subs[i](value, prev)
+          subs[i](prev, value)
         }
       }
     }

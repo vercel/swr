@@ -9,7 +9,7 @@ describe('useSWR - context configs', () => {
     const fetcher = () => createResponse('data')
     const key = createKey()
 
-    await act(() => mutate(key, prefetch))
+    await act(async () => { await mutate(key, prefetch) })
 
     function Page() {
       const { data } = useSWR(key, fetcher)
