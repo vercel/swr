@@ -3,4 +3,5 @@ packages:
   - 'core'
   - 'immutable'
   - 'infinite'
+  - 'list'
   - 'mutation'
