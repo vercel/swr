@@ -1,4 +1,4 @@
-import { ProviderConfiguration } from '../types'
+import type { ProviderConfiguration } from '../types'
 import { isUndefined, noop, isWindowDefined, isDocumentDefined } from './helper'
 
 /**

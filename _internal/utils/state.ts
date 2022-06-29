@@ -1,4 +1,5 @@
-import React, { useRef, useCallback, useState, MutableRefObject } from 'react'
+import type { MutableRefObject } from 'react'
+import React, { useRef, useCallback, useState } from 'react'
 
 import { useIsomorphicLayoutEffect, IS_REACT_LEGACY } from './env'
 

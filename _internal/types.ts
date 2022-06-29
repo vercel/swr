@@ -1,5 +1,5 @@
-import * as revalidateEvents from './constants'
-import { defaultConfig } from './utils/config'
+import type * as revalidateEvents from './constants'
+import type { defaultConfig } from './utils/config'
 
 export type GlobalState = [
   Record<string, RevalidateCallback[]>, // EVENT_REVALIDATORS

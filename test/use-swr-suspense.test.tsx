@@ -1,12 +1,6 @@
 import { act, fireEvent, screen } from '@testing-library/react'
-import React, {
-  ReactNode,
-  Suspense,
-  useEffect,
-  useReducer,
-  useState,
-  PropsWithChildren
-} from 'react'
+import type { ReactNode, PropsWithChildren } from 'react'
+import React, { Suspense, useEffect, useReducer, useState } from 'react'
 import useSWR, { mutate } from 'swr'
 import {
   createKey,
