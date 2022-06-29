@@ -1,5 +1,5 @@
 import { mergeObjects } from './helper'
-import { FullConfiguration } from '../types'
+import type { FullConfiguration } from '../types'
 
 export const mergeConfigs = (
   a: Partial<FullConfiguration>,

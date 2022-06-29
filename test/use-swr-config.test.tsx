@@ -1,6 +1,7 @@
 import { act, screen, fireEvent } from '@testing-library/react'
 import React, { useEffect, useState } from 'react'
-import useSWR, { SWRConfig, useSWRConfig, Middleware } from 'swr'
+import type { Middleware } from 'swr'
+import useSWR, { SWRConfig, useSWRConfig } from 'swr'
 import { renderWithConfig, createKey, renderWithGlobalCache } from './utils'
 
 describe('useSWR - configs', () => {

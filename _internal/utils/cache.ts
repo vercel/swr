@@ -5,7 +5,7 @@ import { internalMutate } from './mutate'
 import { SWRGlobalState } from './global-state'
 import * as revalidateEvents from '../constants'
 
-import {
+import type {
   Cache,
   ScopedMutator,
   RevalidateEvent,

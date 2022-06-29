@@ -1,5 +1,6 @@
 import React from 'react'
-import { useSWRConfig, SWRConfig, Cache, State } from 'swr'
+import type { Cache, State } from 'swr'
+import { useSWRConfig, SWRConfig } from 'swr'
 import { expectType } from './utils'
 
 interface CustomCache<Data = any> extends Cache<Data> {

@@ -1,17 +1,11 @@
-import {
-  createContext,
-  createElement,
-  useContext,
-  useState,
-  FC,
-  PropsWithChildren
-} from 'react'
+import type { FC, PropsWithChildren } from 'react'
+import { createContext, createElement, useContext, useState } from 'react'
 import { cache as defaultCache } from './config'
 import { initCache } from './cache'
 import { mergeConfigs } from './merge-config'
 import { UNDEFINED, mergeObjects, isFunction } from './helper'
 import { useIsomorphicLayoutEffect } from './env'
-import {
+import type {
   SWRConfiguration,
   FullConfiguration,
   ProviderConfiguration,

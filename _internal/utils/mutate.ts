@@ -3,7 +3,7 @@ import { createCacheHelper, isFunction, isUndefined, UNDEFINED } from './helper'
 import { SWRGlobalState } from './global-state'
 import { getTimestamp } from './timestamp'
 import * as revalidateEvents from '../constants'
-import {
+import type {
   Cache,
   MutatorCallback,
   MutatorOptions,

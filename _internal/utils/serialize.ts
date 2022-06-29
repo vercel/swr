@@ -1,7 +1,7 @@
 import { stableHash } from './hash'
 import { isFunction } from './helper'
 
-import { Key } from '../types'
+import type { Key } from '../types'
 
 export const serialize = (key: Key): [string, Key] => {
   if (isFunction(key)) {

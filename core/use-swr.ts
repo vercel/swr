@@ -8,7 +8,6 @@ import {
   rAF,
   useIsomorphicLayoutEffect,
   SWRGlobalState,
-  GlobalState,
   serialize,
   isUndefined,
   UNDEFINED,
@@ -33,7 +32,8 @@ import type {
   SWRConfiguration,
   SWRHook,
   RevalidateEvent,
-  StateDependencies
+  StateDependencies,
+  GlobalState
 } from 'swr/_internal'
 
 const WITH_DEDUPE = { dedupe: true }
