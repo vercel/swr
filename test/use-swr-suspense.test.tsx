@@ -397,4 +397,104 @@ describe('useSWR - suspense', () => {
 
     await screen.findByText('SWR')
   })
+
+  it('should not throw before accessing data', async () => {
+    const key = createKey()
+
+    let shouldBeSet = null
+    let shouldBeSetAfterResponse = null
+
+    function Section() {
+      const request = useSWR(key, () => createResponse('SWR'), {
+        suspense: true
+      })
+
+      shouldBeSet = true
+
+      const data = request.data
+
+      shouldBeSetAfterResponse = true
+
+      return <div>{data}</div>
+    }
+
+    renderWithConfig(
+      <Suspense fallback={<div>fallback</div>}>
+        <Section />
+      </Suspense>
+    )
+
+    // starts as null and set before data is accessed
+    expect(shouldBeSet).not.toBeNull()
+    // starts as null
+    expect(shouldBeSetAfterResponse).toBeNull()
+
+    screen.getByText('fallback')
+    await screen.findByText('SWR')
+
+    // starts as null, but is set once response comes back
+    expect(shouldBeSetAfterResponse).not.toBeNull()
+  })
+
+  it('should start fetching multiple keys if accessing data later', async () => {
+    const key1 = createKey()
+    const key2 = createKey()
+    function Section() {
+      const v1 = useSWR<number>(key1, () => createResponse(1, { delay: 50 }), {
+        suspense: true
+      })
+      const v2 = useSWR<number>(key2, () => createResponse(2, { delay: 50 }), {
+        suspense: true
+      })
+      return <div>{v1.data + v2.data}</div>
+    }
+
+    renderWithConfig(
+      <Suspense fallback={<div>fallback</div>}>
+        <Section />
+      </Suspense>
+    )
+
+    // hydration
+    screen.getByText('fallback')
+    await act(() => sleep(70))
+    screen.getByText('3')
+  })
+
+  it('should work in parallel with dependency fetching', async () => {
+    const key1 = createKey()
+    const key2 = createKey()
+    const dependencyKey = createKey()
+    function Section() {
+      const v1 = useSWR<number>(key1, () => createResponse(1, { delay: 50 }), {
+        suspense: true
+      })
+      const v1Dependency = useSWR<number>(
+        () => `${dependencyKey}${v1.data}`,
+        () => createResponse(1, { delay: 50 }),
+        {
+          suspense: true
+        }
+      )
+      const v2 = useSWR<number>(key2, () => createResponse(2, { delay: 50 }), {
+        suspense: true
+      })
+      return <div>{v1.data + v2.data + v1Dependency.data}</div>
+    }
+
+    renderWithConfig(
+      <Suspense fallback={<div>fallback</div>}>
+        <Section />
+      </Suspense>
+    )
+
+    // hydration
+    screen.getByText('fallback')
+    await act(() => sleep(70))
+    // now v1 and v2 should have resolved, but the v1 dependency should throw
+    screen.getByText('fallback')
+    await act(() => sleep(70))
+    // all should be fetched and added together
+    screen.getByText('4')
+  })
 })
