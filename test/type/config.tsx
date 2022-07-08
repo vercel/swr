@@ -1,10 +1,10 @@
 import React from 'react'
-import type { State } from 'swr'
+import type { Cache } from 'swr'
 import { useSWRConfig, SWRConfig } from 'swr'
 import { expectType } from './utils'
 
 export function useTestCache() {
-  expectType<Map<string, State>>(useSWRConfig().cache)
+  expectType<Cache<any>>(useSWRConfig().cache)
 }
 
 export function useCustomSWRConfig() {
