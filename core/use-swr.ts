@@ -590,24 +590,30 @@ export const useSWRHandler = <Data = any, Error = any>(
   // Display debug info in React DevTools.
   useDebugValue(returnedData)
 
-  const suspenseGuard = () => {
-    // In Suspense mode, we can't return the empty `data` state.
-    // If there is `error`, the `error` needs to be thrown to the error boundary.
-    // If there is no `error`, the `revalidation` promise needs to be thrown to
-    // the suspense boundary.
-    if (suspense && isUndefined(data) && key) {
-      // SWR should throw when trying to use Suspense on the server with React 18,
-      // without providing any initial data. See:
-      // https://github.com/vercel/swr/issues/1832
-      if (!IS_REACT_LEGACY && IS_SERVER) {
-        throw new Error('Fallback data is required when using suspense in SSR.')
-      }
+  let suspenseToThrow: Promise<boolean> | any | undefined
 
-      // Always update fetcher and config refs even with the Suspense mode.
-      fetcherRef.current = fetcher
-      configRef.current = config
-      unmountedRef.current = false
-      throw isUndefined(error) ? revalidate(WITH_DEDUPE) : error
+  // In Suspense mode, we can't return the empty `data` state.
+  // If there is `error`, the `error` needs to be thrown to the error boundary.
+  // If there is no `error`, the `revalidation` promise needs to be thrown to
+  // the suspense boundary.
+  if (suspense && isUndefined(data) && key) {
+    // SWR should throw when trying to use Suspense on the server with React 18,
+    // without providing any initial data. See:
+    // https://github.com/vercel/swr/issues/1832
+    if (!IS_REACT_LEGACY && IS_SERVER) {
+      throw new Error('Fallback data is required when using suspense in SSR.')
+    }
+
+    // Always update fetcher and config refs even with the Suspense mode.
+    fetcherRef.current = fetcher
+    configRef.current = config
+    unmountedRef.current = false
+    suspenseToThrow = isUndefined(error) ? revalidate(WITH_DEDUPE) : error
+  }
+
+  const suspenseGuard = () => {
+    if (suspenseToThrow) {
+      throw suspenseToThrow
     }
   }
 
