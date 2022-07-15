@@ -6,7 +6,9 @@ export const IS_REACT_LEGACY = !React.useId
 export const IS_SERVER = !isWindowDefined || 'Deno' in window
 
 // Polyfill requestAnimationFrame
-export const rAF = (f: (...args: any[]) => void) =>
+export const rAF = (
+  f: (...args: any[]) => void
+): number | ReturnType<typeof setTimeout> =>
   hasRequestAnimationFrame()
     ? window['requestAnimationFrame'](f)
     : setTimeout(f, 1)
