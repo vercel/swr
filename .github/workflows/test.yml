@@ -38,9 +38,9 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - run: pnpm install
-      - run: pnpm types:check
       - run: pnpm lint
       - run: pnpm build
+      - run: pnpm types:check
       - run: pnpm test-typing
       - run: pnpm test
         env:
