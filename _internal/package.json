@@ -1,6 +1,4 @@
 {
-  "name": "swr-internal",
-  "version": "0.0.1",
   "main": "./dist/index.js",
   "module": "./dist/index.esm.js",
   "types": "./dist/_internal",
