@@ -1,5 +1,4 @@
 {
-  "name": "swr-internal",
   "main": "./dist/index.js",
   "module": "./dist/index.esm.js",
   "types": "./dist/_internal",
