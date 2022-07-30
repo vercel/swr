@@ -27,4 +27,4 @@ npm run dev
 
 ## The Idea behind the Example
 
-Basic authentication example showing how the revalidate on focus feature works and to trigger a revalidation in a per hook call basis.
+Basic authentication example showing how the revalidate on focus feature works and to trigger a revalidation on a per-hook call basis.

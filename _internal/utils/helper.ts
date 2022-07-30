@@ -4,7 +4,7 @@ import type { Key, Cache, State, GlobalState } from '../types'
 const EMPTY_CACHE = {}
 export const noop = () => {}
 
-// Using noop() as the undefined value as undefined can possibly be replaced
+// Using noop() as the undefined value as undefined can be replaced
 // by something else. Prettier ignore and extra parentheses are necessary here
 // to ensure that tsc doesn't remove the __NOINLINE__ comment.
 // prettier-ignore
@@ -22,7 +22,7 @@ export const mergeObjects = (a: any, b?: any) => OBJECT.assign({}, a, b)
 
 const STR_UNDEFINED = 'undefined'
 
-// NOTE: Use function to guarantee it's re-evaluated between jsdom and node runtime for tests.
+// NOTE: Use the function to guarantee it's re-evaluated between jsdom and node runtime for tests.
 export const isWindowDefined = typeof window != STR_UNDEFINED
 export const isDocumentDefined = typeof document != STR_UNDEFINED
 export const hasRequestAnimationFrame = () =>

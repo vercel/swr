@@ -52,7 +52,7 @@ describe('useSWR - immutable', () => {
     // mount <Component/> by clicking the button
     fireEvent.click(screen.getByText('mount component'))
 
-    // wait for rerender
+    // wait for rerenderinging
     await screen.findByText('data: 1')
   })
 
@@ -95,7 +95,7 @@ describe('useSWR - immutable', () => {
     // mount <Component/> by clicking the button
     fireEvent.click(screen.getByText('mount component'))
 
-    // wait for rerender
+    // wait for rerendering
     await act(() => sleep(50))
     await screen.findByText('data: 0')
   })
@@ -140,7 +140,7 @@ describe('useSWR - immutable', () => {
     await waitForNextTick()
     await focusWindow()
 
-    // wait for rerender
+    // wait for rerendering
     await act(() => sleep(50))
     await screen.findByText('data: 0')
   })
@@ -170,19 +170,19 @@ describe('useSWR - immutable', () => {
     // Ready
     await screen.findByText(`data: ${key}0`)
 
-    // Toggle key by clicking the button
+    // Toggle the key by clicking the button
     fireEvent.click(screen.getByText(`data: ${key}0`))
     await screen.findByText(`data: ${key}1`)
 
     await waitForNextTick()
 
-    // Toggle key again by clicking the button
+    // Toggle the key again by clicking the button
     fireEvent.click(screen.getByText(`data: ${key}1`))
     await screen.findByText(`data: ${key}0`)
 
     await waitForNextTick()
 
-    // Toggle key by clicking the button
+    // Toggle the key by clicking the button
     fireEvent.click(screen.getByText(`data: ${key}0`))
     await screen.findByText(`data: ${key}1`)
 

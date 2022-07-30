@@ -27,4 +27,4 @@ npm run dev
 
 ## The Idea behind the Example
 
-Show a basic usage of SWR fetching data from an API in two different pages.
+Show a basic usage of SWR fetching data from an API on two different pages.

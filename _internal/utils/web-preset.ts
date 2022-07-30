@@ -2,10 +2,10 @@ import type { ProviderConfiguration } from '../types'
 import { isUndefined, noop, isWindowDefined, isDocumentDefined } from './helper'
 
 /**
- * Due to bug https://bugs.chromium.org/p/chromium/issues/detail?id=678075,
+ * Due to the bug https://bugs.chromium.org/p/chromium/issues/detail?id=678075,
  * it's not reliable to detect if the browser is currently online or offline
  * based on `navigator.onLine`.
- * As a work around, we always assume it's online on first load, and change
+ * As a workaround, we always assume it's online on the first load, and change
  * the status upon `online` or `offline` events.
  */
 let online = true

@@ -49,8 +49,8 @@ const mutation = (<Data, Error>() =>
         // Disable cache population by default.
         const options = Object.assign({ populateCache: false }, config, opts)
 
-        // Trigger a mutation, also track the timestamp. Any mutation that happened
-        // earlier this timestamp should be ignored.
+        // Trigger a mutation, and also track the timestamp. Any mutation that happened
+        // earlier this timestamp should been ignored.
         const mutationStartedAt = getTimestamp()
 
         ditchMutationsUntilRef.current = mutationStartedAt
@@ -96,7 +96,7 @@ const mutation = (<Data, Error>() =>
 
     // We don't return `mutate` here as it can be pretty confusing (e.g. people
     // calling `mutate` but they actually mean `trigger`).
-    // And also, `mutate` relies on the useSWR hook to exist too.
+    // And also, `mutate` relies on the useSWR hook to existing too.
     return {
       trigger,
       reset,

@@ -31,10 +31,10 @@ export const initCache = <Data = any>(
   | [Cache<Data>, ScopedMutator<Data>]
   | undefined => {
   // The global state for a specific provider will be used to deduplicate
-  // requests and store listeners. As well as a mutate function that bound to
+  // requests and store listeners. As well as a mutate function that is bound to
   // the cache.
 
-  // Provider's global state might be already initialized. Let's try to get the
+  // The provider's global state might be already initialized. Let's try to get the
   // global state associated with the provider first.
   if (!SWRGlobalState.has(provider)) {
     const opts = mergeObjects(defaultConfigOptions, options)
@@ -73,7 +73,7 @@ export const initCache = <Data = any>(
 
     const initProvider = () => {
       if (!SWRGlobalState.has(provider)) {
-        // Update the state if it's new, or the provider has been extended.
+        // Update the state if it's new, or if the provider has been extended.
         SWRGlobalState.set(provider, [
           EVENT_REVALIDATORS,
           {},
@@ -86,7 +86,7 @@ export const initCache = <Data = any>(
         if (!IS_SERVER) {
           // When listening to the native events for auto revalidations,
           // we intentionally put a delay (setTimeout) here to make sure they are
-          // fired after immediate JavaScript executions, which can possibly be
+          // fired after immediate JavaScript executions, which can be
           // React's state updates.
           // This avoids some unnecessary revalidations such as
           // https://github.com/vercel/swr/issues/1680.
@@ -114,7 +114,7 @@ export const initCache = <Data = any>(
             releaseFocus && releaseFocus()
             releaseReconnect && releaseReconnect()
             // When un-mounting, we need to remove the cache provider from the state
-            // storage too because it's a side-effect. Otherwise when re-mounting we
+            // storage too because it's a side-effect. Otherwise, when re-mounting we
             // will not re-register those event listeners.
             SWRGlobalState.delete(provider)
           }

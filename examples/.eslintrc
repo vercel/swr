@@ -1,2 +1,2 @@
-// next is loading eslintrc from root directory, adding this to avoid eslint rules been overridden
+// next is loading eslintrc from the root directory, adding this to avoid eslint rules being overridden
 {}
