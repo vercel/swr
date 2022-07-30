@@ -38,7 +38,7 @@ describe('useSWR - key', () => {
     screen.getByText('data:short request') // should be a "short request" still
 
     // manually trigger a re-render from outside
-    // this triggers a re-render and reads access to `swr.data`
+    // this triggers a re-render and a read access to `swr.data`
     // but the result should still be a "short request"
     act(() => rerender(x => x + 1))
     screen.getByText('data:short request')
