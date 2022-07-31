@@ -52,7 +52,7 @@ describe('useSWR - immutable', () => {
     // mount <Component/> by clicking the button
     fireEvent.click(screen.getByText('mount component'))
 
-    // wait for rerenderinging
+    // wait for rerender
     await screen.findByText('data: 1')
   })
 
@@ -95,7 +95,7 @@ describe('useSWR - immutable', () => {
     // mount <Component/> by clicking the button
     fireEvent.click(screen.getByText('mount component'))
 
-    // wait for rerendering
+    // wait for rerender
     await act(() => sleep(50))
     await screen.findByText('data: 0')
   })
@@ -140,7 +140,7 @@ describe('useSWR - immutable', () => {
     await waitForNextTick()
     await focusWindow()
 
-    // wait for rerendering
+    // wait for rerender
     await act(() => sleep(50))
     await screen.findByText('data: 0')
   })

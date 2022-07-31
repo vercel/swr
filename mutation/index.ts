@@ -96,7 +96,7 @@ const mutation = (<Data, Error>() =>
 
     // We don't return `mutate` here as it can be pretty confusing (e.g. people
     // calling `mutate` but they actually mean `trigger`).
-    // And also, `mutate` relies on the useSWR hook to existing too.
+    // And also, `mutate` relies on the useSWR hook to exist too.
     return {
       trigger,
       reset,

@@ -35,7 +35,7 @@ describe('useSWR - key', () => {
     await screen.findByText('data:short request')
 
     await act(() => sleep(100)) // wait 100ms until "long request" finishes
-    screen.getByText('data:short request') // should be a "short request" still
+    screen.getByText('data:short request') // should be "short request" still
 
     // manually trigger a re-render from outside
     // this triggers a re-render and a read access to `swr.data`
