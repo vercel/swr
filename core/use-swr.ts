@@ -638,4 +638,17 @@ export const SWRConfig = OBJECT.defineProperty(ConfigProvider, 'defaultValue', {
 
 export const unstable_serialize = (key: Key) => serialize(key)[0]
 
+/**
+ * @link https://swr.vercel.app/
+ * @example
+ * ```jsx
+ * import useSWR from 'swr'
+ * function Profile() {
+ *   const { data, error } = useSWR('/api/user', fetcher)
+ *   if (error) return <div>failed to load</div>
+ *   if (!data) return <div>loading...</div>
+ *   return <div>hello {data.name}!</div>
+ * }
+ * ```
+ */
 export default withArgs<SWRHook>(useSWRHandler)
