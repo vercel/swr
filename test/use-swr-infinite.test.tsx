@@ -480,7 +480,7 @@ describe('useSWRInfinite', () => {
     act(() => toggle(v => !v))
     await screen.findByText('hide')
 
-    // remount should still have 2 pages
+    // remount, it should still have 2 pages
     act(() => toggle(v => !v))
     await screen.findByText('data:page 0, page 1,')
   })

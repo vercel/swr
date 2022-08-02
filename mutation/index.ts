@@ -50,7 +50,7 @@ const mutation = (<Data, Error>() =>
         const options = Object.assign({ populateCache: false }, config, opts)
 
         // Trigger a mutation, and also track the timestamp. Any mutation that happened
-        // earlier this timestamp should been ignored.
+        // earlier this timestamp should be ignored.
         const mutationStartedAt = getTimestamp()
 
         ditchMutationsUntilRef.current = mutationStartedAt

@@ -27,4 +27,4 @@ npm run dev
 
 ## The Idea behind the Example
 
-Show a basic usage of SWR fetching using Axios and a request object.
+Show a basic usage of SWR fetching using axios and a request object.

@@ -27,7 +27,7 @@ npm run dev
 
 ## The Idea behind the Example
 
-This example showcases multiple ways to prefetch data to be used by SWR later.
+This example shows multiple ways to prefetch data to be used by SWR later.
 
 - Use a `<link preload>` to get the browser to load the data while rendering the HTML
 - If in a browser, run the fetch + mutate outside the component

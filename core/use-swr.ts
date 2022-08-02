@@ -215,13 +215,13 @@ export const useSWRHandler = <Data = any, Error = any>(
     // If data exists, only revalidate if `revalidateIfStale` is true.
     if (suspense) return isUndefined(data) ? false : config.revalidateIfStale
 
-    // If there is no stale data, we need to revalidate on the mount;
+    // If there is no stale data, we need to revalidate when mount;
     // If `revalidateIfStale` is set to true, we will always revalidate.
     return isUndefined(data) || config.revalidateIfStale
   })()
 
   // Resolve the default validating state:
-  // If it's able to validate, and it should revalidate on the mount, this will be true.
+  // If it's able to validate, and it should revalidate when mount, this will be true.
   const defaultValidatingState = !!(
     key &&
     fetcher &&
@@ -297,7 +297,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         }
       }
 
-      // Start fetching. Change the `isValidating` state, and update the cache.
+      // Start fetching. Change the `isValidating` state, update the cache.
       const initialState: State<Data, Error> = { isValidating: true }
       // It is in the `isLoading` state, if and only if there is no cached data.
       // This bypasses fallback data and laggy data.
