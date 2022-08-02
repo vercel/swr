@@ -7,7 +7,7 @@ function shouldFail() {
 export default function api(req, res) {
   if (req.method === 'POST') {
     const body = JSON.parse(req.body)
-    // sometimes it will fail, this will cause a regression on the UI
+    // sometimes it will fail, and this will cause a regression in the UI
     if (!shouldFail()) {
       data.push(body.text);
     }
