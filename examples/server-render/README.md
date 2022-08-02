@@ -27,6 +27,6 @@ npm run dev
 
 ## The Idea behind the Example
 
-This examples show how to combine Next.js getServerSideProps with the SWR `fallbackData` option to support Server-Side Rendering.
+This example shows how to combine Next.js getServerSideProps with the SWR `fallbackData` option to support Server-Side Rendering.
 
 The application will fetch the data server-side and then receive it as props, that data will be passed as `fallbackData` to SWR, once the application starts client-side SWR will revalidate it against the API and update the DOM, if it's required, with the new data.

@@ -190,7 +190,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   const data = isUndefined(cachedData) ? fallback : cachedData
   const error = cached.error
 
-  // Use a ref to store previous returned data. Use the initial data as its initial value.
+  // Use a ref to store previously returned data. Use the initial data as its initial value.
   const laggyDataRef = useRef(data)
 
   const returnedData = keepPreviousData
@@ -211,17 +211,17 @@ export const useSWRHandler = <Data = any, Error = any>(
     if (getConfig().isPaused()) return false
 
     // Under suspense mode, it will always fetch on render if there is no
-    // stale data so no need to revalidate immediately on mount again.
+    // stale data so no need to revalidate immediately mount it again.
     // If data exists, only revalidate if `revalidateIfStale` is true.
     if (suspense) return isUndefined(data) ? false : config.revalidateIfStale
 
-    // If there is no stale data, we need to revalidate on mount;
+    // If there is no stale data, we need to revalidate when mount;
     // If `revalidateIfStale` is set to true, we will always revalidate.
     return isUndefined(data) || config.revalidateIfStale
   })()
 
   // Resolve the default validating state:
-  // If it's able to validate, and it should revalidate on mount, this will be true.
+  // If it's able to validate, and it should revalidate when mount, this will be true.
   const defaultValidatingState = !!(
     key &&
     fetcher &&
@@ -281,7 +281,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         return key === keyRef.current
       }
 
-      // The final state object when request finishes.
+      // The final state object when the request finishes.
       const finalState: State<Data, Error> = {
         isValidating: false,
         isLoading: false
@@ -290,7 +290,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         setCache(finalState)
       }
       const cleanupState = () => {
-        // Check if it's still the same request before deleting.
+        // Check if it's still the same request before deleting it.
         const requestInfo = FETCH[key]
         if (requestInfo && requestInfo[1] === startAt) {
           delete FETCH[key]
@@ -307,7 +307,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       try {
         if (shouldStartNewRequest) {
           setCache(initialState)
-          // If no cache being rendered currently (it shows a blank page),
+          // If no cache is being rendered currently (it shows a blank page),
           // we trigger the loading slow event.
           if (config.loadingTimeout && isUndefined(getCache().data)) {
             setTimeout(() => {
@@ -354,7 +354,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         // Clear error.
         finalState.error = UNDEFINED
 
-        // If there're other mutations(s), overlapped with the current revalidation:
+        // If there're other mutations(s), that overlapped with the current revalidation:
         // case 1:
         //   req------------------>res
         //       mutate------>end
@@ -384,7 +384,7 @@ export const useSWRHandler = <Data = any, Error = any>(
           }
           return false
         }
-        // Deep compare with latest state to avoid extra re-renders.
+        // Deep compare with the latest state to avoid extra re-renders.
         // For local state, compare and assign.
         const cacheData = getCache().data
 
@@ -404,7 +404,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         const currentConfig = getConfig()
         const { shouldRetryOnError } = currentConfig
 
-        // Not paused, we continue handling the error. Otherwise discard it.
+        // Not paused, we continue handling the error. Otherwise, discard it.
         if (!currentConfig.isPaused()) {
           // Get a new error, don't use deep comparison for errors.
           finalState.error = err as Error
@@ -419,7 +419,7 @@ export const useSWRHandler = <Data = any, Error = any>(
                 shouldRetryOnError(err as Error))
             ) {
               if (isActive()) {
-                // If it's inactive, stop. It will auto revalidate when
+                // If it's inactive, stop. It will auto-revalidate when
                 // refocusing or reconnecting.
                 // When retrying, deduplication is always enabled.
                 currentConfig.onErrorRetry(
@@ -460,7 +460,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     [key, cache]
   )
 
-  // Similar to the global mutate, but bound to the current cache and key.
+  // Similar to the global mutate but bound to the current cache and key.
   // `cache` isn't allowed to change during the lifecycle.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const boundMutate: SWRResponse<Data, Error>['mutate'] = useCallback(
@@ -472,7 +472,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     []
   )
 
-  // Logic for updating refs.
+  // The logic for updating refs.
   useIsomorphicLayoutEffect(() => {
     fetcherRef.current = fetcher
     configRef.current = config
@@ -554,7 +554,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         ? refreshInterval(data)
         : refreshInterval
 
-      // We only start next interval if `refreshInterval` is not 0, and:
+      // We only start the next interval if `refreshInterval` is not 0, and:
       // - `force` is true, which is the start of polling
       // - or `timer` is not 0, which means the effect wasn't canceled
       if (interval && timer !== -1) {
@@ -564,7 +564,7 @@ export const useSWRHandler = <Data = any, Error = any>(
 
     function execute() {
       // Check if it's OK to execute:
-      // Only revalidate when the page is visible, online and not errored.
+      // Only revalidate when the page is visible, online, and not errored.
       if (
         !getCache().error &&
         (refreshWhenHidden || getConfig().isVisible()) &&
@@ -572,7 +572,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       ) {
         revalidate(WITH_DEDUPE).then(next)
       } else {
-        // Schedule next interval to check again.
+        // Schedule the next interval to check again.
         next()
       }
     }
@@ -591,7 +591,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   useDebugValue(returnedData)
 
   // In Suspense mode, we can't return the empty `data` state.
-  // If there is `error`, the `error` needs to be thrown to the error boundary.
+  // If there is an `error`, the `error` needs to be thrown to the error boundary.
   // If there is no `error`, the `revalidation` promise needs to be thrown to
   // the suspense boundary.
   if (suspense && isUndefined(data) && key) {
