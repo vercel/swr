@@ -211,7 +211,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     if (getConfig().isPaused()) return false
 
     // Under suspense mode, it will always fetch on render if there is no
-    // stale data so no need to revalidate immediately on the mount again.
+    // stale data so no need to revalidate immediately mount it again.
     // If data exists, only revalidate if `revalidateIfStale` is true.
     if (suspense) return isUndefined(data) ? false : config.revalidateIfStale
 
