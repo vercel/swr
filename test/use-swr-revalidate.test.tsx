@@ -117,7 +117,7 @@ describe('useSWR - revalidate', () => {
 
     fireEvent.click(screen.getByText('true'))
     await act(() => sleep(70))
-    // first revalidation is over, second revalidation is still in progress
+    // the first revalidation is over, the second revalidation is still in progress
     screen.getByText('true')
 
     await act(() => sleep(70))

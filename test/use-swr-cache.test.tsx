@@ -231,7 +231,7 @@ describe('useSWR - cache provider', () => {
       provider: () => new Map([[key, { data: 'cache' }]]),
       fallback: { [key]: 'fallback' }
     })
-    screen.getByText('cache') // no `undefined`, directly from cache
+    screen.getByText('cache') // no `undefined`, directly from the cache
     await screen.findByText('data')
   })
 

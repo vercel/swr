@@ -170,19 +170,19 @@ describe('useSWR - immutable', () => {
     // Ready
     await screen.findByText(`data: ${key}0`)
 
-    // Toggle key by clicking the button
+    // Toggle the key by clicking the button
     fireEvent.click(screen.getByText(`data: ${key}0`))
     await screen.findByText(`data: ${key}1`)
 
     await waitForNextTick()
 
-    // Toggle key again by clicking the button
+    // Toggle the key again by clicking the button
     fireEvent.click(screen.getByText(`data: ${key}1`))
     await screen.findByText(`data: ${key}0`)
 
     await waitForNextTick()
 
-    // Toggle key by clicking the button
+    // Toggle the key by clicking the button
     fireEvent.click(screen.getByText(`data: ${key}0`))
     await screen.findByText(`data: ${key}1`)
 

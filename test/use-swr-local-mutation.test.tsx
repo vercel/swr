@@ -114,7 +114,7 @@ describe('useSWR - local mutation', () => {
     // hydration
     screen.getByText('data:')
 
-    //mount
+    // mount
     await screen.findByText('data: 0')
 
     act(() => {
@@ -145,7 +145,7 @@ describe('useSWR - local mutation', () => {
     // hydration
     screen.getByText('data:')
 
-    //mount
+    // mount
     await screen.findByText('data: 0')
     act(() => {
       // mutate and revalidate
@@ -169,7 +169,7 @@ describe('useSWR - local mutation', () => {
     // hydration
     screen.getByText('data:')
 
-    //mount
+    // mount
     await screen.findByText('data: truth')
 
     act(() => {
@@ -198,7 +198,7 @@ describe('useSWR - local mutation', () => {
     // hydration
     screen.getByText('data:')
 
-    //mount
+    // mount
     await screen.findByText('data: 0')
 
     await nextTick()
@@ -224,7 +224,7 @@ describe('useSWR - local mutation', () => {
     // hydration
     screen.getByText('data:')
 
-    //mount
+    // mount
     await screen.findByText('data: 0')
 
     await nextTick()
@@ -252,7 +252,7 @@ describe('useSWR - local mutation', () => {
     // hydration
     screen.getByText('data:')
 
-    //mount
+    // mount
     await screen.findByText('data: 0')
 
     act(() => {
@@ -316,20 +316,20 @@ describe('useSWR - local mutation', () => {
 
   it('should return results of the mutation', async () => {
     const key = createKey()
-    // returns the data if promise resolved
+    // returns the data if the promise resolved
     expect(globalMutate(key, Promise.resolve('data'))).resolves.toBe('data')
 
-    // throw the error if promise rejected
+    // throw the error if the promise rejected
     expect(
       globalMutate(key, Promise.reject(new Error('error')))
     ).rejects.toBeInstanceOf(Error)
   })
 
   it('globalMutate should return undefined if the key is serialized to "" ', async () => {
-    // returns the data if promise resolved
+    // returns the data if the promise resolved
     expect(globalMutate(null, Promise.resolve('data'))).resolves.toBe(undefined)
 
-    // throw the error if promise rejected
+    // throw the error if the promise rejected
     const e = new Error('error')
     expect(
       globalMutate(() => {
@@ -352,12 +352,12 @@ describe('useSWR - local mutation', () => {
     // hydration
     screen.getByText('data:')
 
-    //mount
+    // mount
     await screen.findByText('data: fetched')
 
     // call bound mutate
     fireEvent.click(screen.getByText('data: fetched'))
-    // expect new updated value (after a tick)
+    // expect a new updated value (after a tick)
     await screen.findByText('data: mutated')
   })
 
@@ -442,7 +442,7 @@ describe('useSWR - local mutation', () => {
       ).resolves.toBe('off')
     })
 
-    // Wait for toggling "on" promise to resolve, but the "on" mutation is cancelled
+    // Wait for toggling "on" promise to resolve, but the "on" mutation is canceled
     await act(() => sleep(50))
     screen.getByText('off')
 
@@ -467,7 +467,7 @@ describe('useSWR - local mutation', () => {
     // hydration
     screen.getByText('data:')
 
-    //mount
+    // mount
     await screen.findByText('data: 0')
 
     act(() => {
@@ -546,7 +546,7 @@ describe('useSWR - local mutation', () => {
     // if mutate throws an error synchronously, the cache shouldn't be updated
     expect(cache.get(keyInfo)?.data).toBe(value)
 
-    // if mutate succeed, error should be cleared
+    // if mutate succeed, the error should be cleared
     await act(() => mutate(key, value, false))
     cacheError = cache.get(keyInfo)?.error
     expect(cacheError).toMatchInlineSnapshot(`undefined`)
@@ -1226,7 +1226,7 @@ describe('useSWR - local mutation', () => {
     // It should revert to `0` instead of `1` at the end.
     expect(renderedData).toEqual([undefined, 0, 1, 2, 0])
 
-    // It should receive the original displayed data instead of current displayed data.
+    // It should receive the original displayed data instead of the currently displayed data.
     expect(previousValue).toBe(0)
     expect(previousValue2).toBe(0)
   })
@@ -1306,7 +1306,7 @@ describe('useSWR - local mutation', () => {
     renderWithConfig(<Page />)
     await screen.findByText('data: foo')
 
-    // Here m1 and m2 have overlap and m1 will be discarded.
+    // Here m1 and m2 overlap and m1 will be discarded.
     await executeWithoutBatching(async () => {
       const m1 = mutate(
         createResponse('bar', { delay: 30 }).then(r => (serverData = r)),
@@ -1451,7 +1451,7 @@ describe('useSWR - local mutation', () => {
     const sendRequest = <Data,>(newItem) => {
       return new Promise<Data>(res =>
         setTimeout(() => {
-          // Server capitializes the new item.
+          // The server capitalizes the new item.
           const modifiedData =
             newItem.charAt(0).toUpperCase() + newItem.slice(1)
           serverData = [...serverData, modifiedData]

@@ -480,7 +480,7 @@ describe('useSWRInfinite', () => {
     act(() => toggle(v => !v))
     await screen.findByText('hide')
 
-    // remount, should still have 2 pages
+    // remount, it should still have 2 pages
     act(() => toggle(v => !v))
     await screen.findByText('data:page 0, page 1,')
   })
@@ -541,7 +541,7 @@ describe('useSWRInfinite', () => {
     renderWithGlobalCache(<Page />)
     screen.getByText('data:')
 
-    // after a rerender we should already have the cached data rendered
+    // after a rerender, we should already have the cached data rendered
     await screen.findByText(`data:${cachedData}`)
   })
 
@@ -1050,7 +1050,7 @@ describe('useSWRInfinite', () => {
 
     fireEvent.click(screen.getByText('data:response value'))
 
-    // Fetch new page and revalidate the first page.
+    // Fetch a new page and revalidate the first page.
     await screen.findByText('data:response value,response value')
     expect(getData).toHaveBeenCalledTimes(3)
   })

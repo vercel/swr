@@ -58,7 +58,7 @@ describe('useSWR - configs', () => {
       mutate = _mutate
 
       useEffect(() => {
-        // revalidate on mount and turn to idle
+        // revalidate on the mount and turn to idle
         setPaused(true)
       }, [])
 

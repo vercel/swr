@@ -31,17 +31,17 @@ if (typeof window !== 'undefined') prefetchWithProjects()
 export default function Index() {
   const { data } = useSWR('/api/data', fetch)
 
-  // This effect will fetch all project after mounting
+  // This effect will fetch all projects after mounting
   React.useEffect(() => {
     if (!data) return
     if (data.length === 0) return
     data.forEach(prefetchItem)
   }, [data]);
 
-  // With this handler you could prefetch the data for a specific
-  // project the moment the user move the mouse over the link
+  // With this handler, you could prefetch the data for a specific
+  // project the moment the user moves the mouse over the link
   function handleMouseEnter(event) {
-    // In our case we could get the ID from the href so we use that
+    // In our case, we could get the ID from the href so we use that
     prefetchItem(event.target.getAttribute("href").slice(1))
   }
 

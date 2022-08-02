@@ -27,4 +27,4 @@ npm run dev
 
 ## The Idea behind the Example
 
-Show how to use SWR suspense option with React suspense.
+Show how to use the SWR suspense option with React suspense.

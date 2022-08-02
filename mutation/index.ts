@@ -49,7 +49,7 @@ const mutation = (<Data, Error>() =>
         // Disable cache population by default.
         const options = Object.assign({ populateCache: false }, config, opts)
 
-        // Trigger a mutation, also track the timestamp. Any mutation that happened
+        // Trigger a mutation, and also track the timestamp. Any mutation that happened
         // earlier this timestamp should be ignored.
         const mutationStartedAt = getTimestamp()
 

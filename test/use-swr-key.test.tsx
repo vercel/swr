@@ -38,7 +38,7 @@ describe('useSWR - key', () => {
     screen.getByText('data:short request') // should be "short request" still
 
     // manually trigger a re-render from outside
-    // this triggers a re-render, and a read access to `swr.data`
+    // this triggers a re-render and a read access to `swr.data`
     // but the result should still be "short request"
     act(() => rerender(x => x + 1))
     screen.getByText('data:short request')
@@ -102,7 +102,7 @@ describe('useSWR - key', () => {
     await screen.findByText('hello, 1:a')
 
     fireEvent.click(screen.getByText('hello, 1:a'))
-    // first rerender on key change
+    // first, rerender on key change
     screen.getByText('hello, 2:')
 
     await screen.findByText('hello, 2:b')
@@ -213,7 +213,7 @@ describe('useSWR - key', () => {
     fireEvent.click(screen.getByText('update key'))
     await act(() => sleep(120))
 
-    // All values should equal because they're sharing the same key
+    // All values should be equal because they're sharing the same key
     expect(values.some(([a, b]) => a !== b)).toBeFalsy()
   })
 
