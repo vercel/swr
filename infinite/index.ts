@@ -68,6 +68,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
       if (infiniteKey) infiniteKey = INFINITE_PREFIX + infiniteKey
     } catch (err) {
       // Not ready yet.
+      console.error(err)
     }
 
     const [get, set, subscribeCache] = createCacheHelper<
