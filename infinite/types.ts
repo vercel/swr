@@ -17,9 +17,9 @@ export type SWRInfiniteFetcher<
     : never
   : never
 
-export type SWRInfiniteKeyLoader = (
+export type SWRInfiniteKeyLoader<Data = any> = (
   index: number,
-  previousPageData: any | null
+  previousPageData: Data | null
 ) => Arguments
 
 export interface SWRInfiniteConfiguration<
