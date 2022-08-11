@@ -3,5 +3,5 @@
   "compilerOptions": { 
     "strict": true
   },
-  "include": ["."]
+  "include": ["./**/*.ts", "./**/*.tsx"],
 }
