@@ -103,11 +103,11 @@
     ]
   },
   "devDependencies": {
-    "@playwright/experimental-ct-react": "^1.24.1",
-    "@playwright/test": "^1.24.1",
-    "@swc/core": "1.2.220",
+    "@playwright/experimental-ct-react": "^1.25.0",
+    "@playwright/test": "^1.25.0",
+    "@swc/core": "1.2.229",
     "@swc/jest": "0.2.22",
-    "@testing-library/jest-dom": "^5.16.4",
+    "@testing-library/jest-dom": "^5.16.5",
     "@type-challenges/utils": "0.1.1",
     "@types/jest": "^27.5.1",
     "@types/node": "^17.0.34",
