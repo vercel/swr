@@ -48,17 +48,16 @@
     }
   },
   "files": [
-    "core/dist/**",
-    "infinite/dist/**",
-    "immutable/dist/**",
-    "mutation/dist/**",
-    "_internal/dist/**",
+    "core/dist/**/*.{js,d.ts,mjs}",
+    "infinite/dist/**/*.{js,d.ts,mjs}",
+    "immutable/dist/**/*.{js,d.ts,mjs}",
+    "mutation/dist/**/*.{js,d.ts,mjs}",
+    "_internal/dist/**/*.{js,d.ts,mjs}",
     "core/package.json",
     "infinite/package.json",
     "immutable/package.json",
     "mutation/package.json",
-    "_internal/package.json",
-    "package.json"
+    "_internal/package.json"
   ],
   "repository": "github:vercel/swr",
   "homepage": "https://swr.vercel.app",
