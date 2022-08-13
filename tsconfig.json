@@ -13,7 +13,7 @@
     "strictBindCallApply": true,
     "downlevelIteration": true,
     "outDir": "./dist",
-    "rootDir": "core",
+    "rootDir": "./",
     "strict": true,
     "target": "es5",
     "baseUrl": ".",
@@ -26,9 +26,8 @@
       "swr/_internal": ["./_internal/index.ts"]
     },
     "incremental": true
-  },
-  "include": ["core"],
-  "exclude": ["./**/dist", "node_modules", "jest.config.js"],
+  }, 
+  "exclude": ["./**/dist", "examples"],
   "watchOptions": {
     "watchFile": "useFsEvents",
     "watchDirectory": "useFsEvents",
