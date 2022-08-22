@@ -17,34 +17,34 @@
   "exports": {
     "./package.json": "./package.json",
     ".": {
+      "types": "./core/dist/core/index.d.ts",
       "import": "./core/dist/index.mjs",
       "module": "./core/dist/index.esm.js",
-      "require": "./core/dist/index.js",
-      "types": "./core/dist/core/index.d.ts"
+      "require": "./core/dist/index.js"
     },
     "./infinite": {
+      "types": "./infinite/dist/infinite/index.d.ts",
       "import": "./infinite/dist/index.mjs",
       "module": "./infinite/dist/index.esm.js",
-      "require": "./infinite/dist/index.js",
-      "types": "./infinite/dist/infinite/index.d.ts"
+      "require": "./infinite/dist/index.js"
     },
     "./immutable": {
+      "types": "./immutable/dist/immutable/index.d.ts",
       "import": "./immutable/dist/index.mjs",
       "module": "./immutable/dist/index.esm.js",
-      "require": "./immutable/dist/index.js",
-      "types": "./immutable/dist/immutable/index.d.ts"
+      "require": "./immutable/dist/index.js"
     },
     "./mutation": {
+      "types": "./mutation/dist/mutation/index.d.ts",
       "import": "./mutation/dist/index.mjs",
       "module": "./mutation/dist/index.esm.js",
-      "require": "./mutation/dist/index.js",
-      "types": "./mutation/dist/mutation/index.d.ts"
+      "require": "./mutation/dist/index.js"
     },
     "./_internal": {
+      "types": "./_internal/dist/_internal/index.d.ts",
       "import": "./_internal/dist/index.mjs",
       "module": "./_internal/dist/index.esm.js",
-      "require": "./_internal/dist/index.js",
-      "types": "./_internal/dist/_internal/index.d.ts"
+      "require": "./_internal/dist/index.js"
     }
   },
   "files": [
