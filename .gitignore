@@ -10,10 +10,8 @@ dist
 .eslintcache
 examples/**/yarn.lock
 package-lock.json
-*/**/*.tsbuildinfo
+*.tsbuildinfo
 coverage
-*/**/.turbo
-.turbo
 .rollup.cache
 /test-results/
 /playwright-report/
