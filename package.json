@@ -69,16 +69,6 @@
     "watch": "pnpm -r run watch",
     "build": "pnpm -r run build",
     "types:check": "pnpm -r run types:check",
-    "watch:core": "pnpm --filter=\"./core\" run watch",
-    "watch:infinite": "pnpm --filter=\"./inifinite\" run watch",
-    "watch:immutable": "pnpm --filter=\"./immutable\" run watch",
-    "watch:mutation": "pnpm --filter=\"./mutation\" run watch",
-    "watch:internal": "pnpm --filter=\"./_internal\" run watch",
-    "build:core": "pnpm --filter=\"./core\" build",
-    "build:infinite": "pnpm --filter=\"./infinite\" build",
-    "build:immutable": "pnpm --filter=\"./immutable\" build",
-    "build:mutation": "pnpm --filter=\"./mutation\" build",
-    "build:internal": "pnpm --filter=\"./_internal\" build",
     "prepublishOnly": "pnpm clean && pnpm build",
     "publish-beta": "pnpm publish --tag beta",
     "format": "prettier --write ./**/*.{ts,tsx}",
@@ -86,7 +76,8 @@
     "lint:fix": "pnpm lint --fix",
     "coverage": "jest --coverage",
     "test-typing": "tsc --noEmit -p test/type/tsconfig.json && tsc --noEmit -p test/tsconfig.json",
-    "test": "jest"
+    "test": "jest",
+    "run-all-checks": "pnpm types:check && pnpm lint && pnpm test && pnpm test-typing"
   },
   "husky": {
     "hooks": {
@@ -112,7 +103,7 @@
     "@types/use-sync-external-store": "^0.0.3",
     "@typescript-eslint/eslint-plugin": "5.25.0",
     "@typescript-eslint/parser": "5.25.0",
-    "bunchee": "1.8.5",
+    "bunchee": "2.0.0-beta.2",
     "eslint": "8.15.0",
     "eslint-config-prettier": "8.5.0",
     "eslint-plugin-jest-dom": "4.0.1",
@@ -130,7 +121,7 @@
     "rimraf": "3.0.2",
     "swr": "workspace:*",
     "tslib": "2.4.0",
-    "typescript": "4.7.4"
+    "typescript": "4.8.2"
   },
   "peerDependencies": {
     "react": "^16.11.0 || ^17.0.0 || ^18.0.0"
