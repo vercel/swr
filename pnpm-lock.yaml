@@ -69,21 +69,6 @@ importers:
       tslib: 2.4.0
       typescript: 4.8.2
 
-  _internal:
-    specifiers: {}
-
-  core:
-    specifiers: {}
-
-  immutable:
-    specifiers: {}
-
-  infinite:
-    specifiers: {}
-
-  mutation:
-    specifiers: {}
-
 packages:
 
   /@ampproject/remapping/2.2.0:
