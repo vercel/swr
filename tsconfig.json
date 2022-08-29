@@ -19,14 +19,14 @@
     "baseUrl": ".",
     "noEmitOnError": true,
     "paths": {
-      "swr": ["./core/index.ts"],
-      "swr/infinite": ["./infinite/index.ts"],
-      "swr/immutable": ["./immutable/index.ts"],
-      "swr/mutation": ["./mutation/index.ts"],
-      "swr/_internal": ["./_internal/index.ts"]
+      "swr": ["src/core/index.ts"],
+      "swr/infinite": ["src/infinite/index.ts"],
+      "swr/immutable": ["src/immutable/index.ts"],
+      "swr/mutation": ["src/mutation/index.ts"],
+      "swr/_internal": ["src/_internal/index.ts"]
     },
     "incremental": true
-  }, 
+  },
   "exclude": ["./**/dist", "examples"],
   "watchOptions": {
     "watchFile": "useFsEvents",
