@@ -92,7 +92,7 @@
     ]
   },
   "devDependencies": {
-    "@swc/core": "1.2.186",
+    "@swc/core": "1.2.244",
     "@swc/jest": "0.2.21",
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.1.1",
@@ -103,7 +103,7 @@
     "@types/use-sync-external-store": "^0.0.3",
     "@typescript-eslint/eslint-plugin": "5.25.0",
     "@typescript-eslint/parser": "5.25.0",
-    "bunchee": "2.0.0-beta.2",
+    "bunchee": "2.0.0-beta.4",
     "eslint": "8.15.0",
     "eslint-config-prettier": "8.5.0",
     "eslint-plugin-jest-dom": "4.0.1",
