@@ -329,11 +329,11 @@ describe('useSWR - loading', () => {
       )
       // eslint-disable-next-line react/display-name
       const Component = ((_: any) => () => {
-        // eslint-disable-next-line react-hooks/rules-of-hooks
         const {
           data: result,
           isLoading,
           isValidating
+          // eslint-disable-next-line react-hooks/rules-of-hooks
         } = useSWR(key, () => createResponse('result', { delay: 10 }))
         return (
           <div>{`result is ${
