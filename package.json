@@ -87,8 +87,7 @@
   "lint-staged": {
     "*.{ts,tsx}": [
       "eslint --fix --cache",
-      "prettier --write",
-      "git add"
+      "prettier --write"
     ]
   },
   "devDependencies": {
