@@ -87,8 +87,7 @@
   "lint-staged": {
     "*.{ts,tsx}": [
       "eslint --fix --cache",
-      "prettier --write",
-      "git add"
+      "prettier --write"
     ]
   },
   "devDependencies": {
@@ -98,22 +97,22 @@
     "@testing-library/react": "^13.1.1",
     "@type-challenges/utils": "0.1.1",
     "@types/jest": "^27.5.1",
-    "@types/node": "^17.0.34",
+    "@types/node": "^18.7.14",
     "@types/react": "^18.0.9",
     "@types/use-sync-external-store": "^0.0.3",
-    "@typescript-eslint/eslint-plugin": "5.25.0",
-    "@typescript-eslint/parser": "5.25.0",
-    "bunchee": "2.0.0-beta.4",
+    "@typescript-eslint/eslint-plugin": "5.36.1",
+    "@typescript-eslint/parser": "5.36.1",
+    "bunchee": "2.0.1",
     "eslint": "8.15.0",
     "eslint-config-prettier": "8.5.0",
     "eslint-plugin-jest-dom": "4.0.1",
     "eslint-plugin-react": "7.30.0",
     "eslint-plugin-react-hooks": "4.5.0",
     "eslint-plugin-testing-library": "5.5.0",
-    "husky": "2.4.1",
+    "husky": "8.0.1",
     "jest": "28.1.0",
     "jest-environment-jsdom": "28.1.0",
-    "lint-staged": "8.2.1",
+    "lint-staged": "13.0.3",
     "next": "^12.1.6",
     "prettier": "2.6.2",
     "react": "^18.1.0",
