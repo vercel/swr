@@ -24,7 +24,8 @@ jobs:
           cache: pnpm
 
       - run: pnpm install
-      - run: pnpm build
       - run: pnpm run-all-checks
+      - run: pnpm clean
+      - run: pnpm build
         env:
           CI: true

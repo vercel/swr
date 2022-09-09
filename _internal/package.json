@@ -1,12 +1,12 @@
 {
   "main": "./dist/index.js",
   "module": "./dist/index.esm.js",
-  "types": "./dist/_internal",
+  "types": "./dist/_internal/index.d.ts",
   "exports": "./dist/index.mjs",
   "private": true,
   "scripts": {
     "watch": "bunchee index.ts -w",
-    "build": "bunchee index.ts",
+    "build": "bunchee index.ts --target es2015",
     "types:check": "tsc --noEmit",
     "clean": "rimraf dist"
   },
