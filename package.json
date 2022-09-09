@@ -13,35 +13,35 @@
   "packageManager": "pnpm@7.1.0",
   "main": "./core/dist/index.js",
   "module": "./core/dist/index.esm.js",
-  "types": "./core/dist/core/index.d.ts",
+  "types": "./core/dist/index.d.ts",
   "exports": {
     "./package.json": "./package.json",
     ".": {
-      "types": "./core/dist/core/index.d.ts",
+      "types": "./core/dist/index.d.ts",
       "import": "./core/dist/index.mjs",
       "module": "./core/dist/index.esm.js",
       "require": "./core/dist/index.js"
     },
     "./infinite": {
-      "types": "./infinite/dist/infinite/index.d.ts",
+      "types": "./infinite/dist/index.d.ts",
       "import": "./infinite/dist/index.mjs",
       "module": "./infinite/dist/index.esm.js",
       "require": "./infinite/dist/index.js"
     },
     "./immutable": {
-      "types": "./immutable/dist/immutable/index.d.ts",
+      "types": "./immutable/dist/index.d.ts",
       "import": "./immutable/dist/index.mjs",
       "module": "./immutable/dist/index.esm.js",
       "require": "./immutable/dist/index.js"
     },
     "./mutation": {
-      "types": "./mutation/dist/mutation/index.d.ts",
+      "types": "./mutation/dist/index.d.ts",
       "import": "./mutation/dist/index.mjs",
       "module": "./mutation/dist/index.esm.js",
       "require": "./mutation/dist/index.js"
     },
     "./_internal": {
-      "types": "./_internal/dist/_internal/index.d.ts",
+      "types": "./_internal/dist/index.d.ts",
       "import": "./_internal/dist/index.mjs",
       "module": "./_internal/dist/index.esm.js",
       "require": "./_internal/dist/index.js"
@@ -102,7 +102,7 @@
     "@types/use-sync-external-store": "^0.0.3",
     "@typescript-eslint/eslint-plugin": "5.36.1",
     "@typescript-eslint/parser": "5.36.1",
-    "bunchee": "2.0.1",
+    "bunchee": "2.1.1",
     "eslint": "8.15.0",
     "eslint-config-prettier": "8.5.0",
     "eslint-plugin-jest-dom": "4.0.1",
