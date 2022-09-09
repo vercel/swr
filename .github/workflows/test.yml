@@ -25,7 +25,7 @@ jobs:
 
       - run: pnpm install
       - run: pnpm run-all-checks
-      - run: npm clean
+      - run: pnpm clean
       - run: pnpm build
         env:
           CI: true
