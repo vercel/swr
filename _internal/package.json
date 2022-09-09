@@ -6,7 +6,7 @@
   "private": true,
   "scripts": {
     "watch": "bunchee index.ts -w",
-    "build": "bunchee index.ts --target es2015",
+    "build": "bunchee index.ts",
     "types:check": "tsc --noEmit",
     "clean": "rimraf dist"
   },
