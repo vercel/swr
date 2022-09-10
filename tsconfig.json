@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "declaration": true,
+    "declarationMap": true,
     "esModuleInterop": true,
     "jsx": "react",
     "lib": ["esnext", "dom"],
@@ -26,7 +27,7 @@
       "swr/_internal": ["./_internal/index.ts"]
     },
     "incremental": true
-  }, 
+  },
   "exclude": ["./**/dist", "examples"],
   "watchOptions": {
     "watchFile": "useFsEvents",
