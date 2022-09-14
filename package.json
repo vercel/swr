@@ -63,6 +63,7 @@
   "homepage": "https://swr.vercel.app",
   "license": "MIT",
   "scripts": {
+    "prepare": "husky install",
     "csb:install": "pnpm i -g pnpm@7",
     "csb:build": "pnpm install && pnpm build",
     "clean": "pnpm -r run clean",
@@ -78,11 +79,6 @@
     "test-typing": "tsc --noEmit -p test/type/tsconfig.json && tsc --noEmit -p test/tsconfig.json",
     "test": "jest",
     "run-all-checks": "pnpm types:check && pnpm lint && pnpm test && pnpm test-typing"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged && pnpm types:check"
-    }
   },
   "lint-staged": {
     "*.{ts,tsx}": [
