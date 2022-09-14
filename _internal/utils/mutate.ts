@@ -13,7 +13,7 @@ import type {
   Key
 } from '../types'
 
-type KeyFilter = (key?: Arguments) => boolean
+type KeyFilter = (key: Arguments | undefined, serializedKey: string) => boolean
 type MutateState<Data> = State<Data, any> & {
   // The previously committed data.
   _c?: Data
@@ -63,7 +63,7 @@ export async function internalMutate<Data>(
       if (
         // Skip the special useSWRInfinite keys.
         !key.startsWith('$inf$') &&
-        keyFilter((cache.get(key) as { _k: Arguments })._k)
+        keyFilter((cache.get(key) as { _k: Arguments })._k, key)
       ) {
         matchedKeys.push(key)
       }
