@@ -79,11 +79,6 @@
     "test": "jest",
     "run-all-checks": "pnpm types:check && pnpm lint && pnpm test && pnpm test-typing"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged && pnpm types:check"
-    }
-  },
   "lint-staged": {
     "*.{ts,tsx}": [
       "eslint --fix --cache",
