@@ -63,6 +63,7 @@
   "homepage": "https://swr.vercel.app",
   "license": "MIT",
   "scripts": {
+    "prepare": "husky install",
     "csb:install": "pnpm i -g pnpm@7",
     "csb:build": "pnpm install && pnpm build",
     "clean": "pnpm -r run clean",
