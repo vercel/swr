@@ -1563,11 +1563,14 @@ describe('useSWR - local mutation', () => {
   it('should remove all key value pairs when clear cache through key filter', async () => {
     const key = createKey()
     const mutationOneResults = []
+    const collectedKeys = []
 
     function Page() {
       const { data: data1 } = useSWR(key + 'first')
       const { data: data2 } = useSWR(key + 'second')
+      const { data: data3 } = useSWR([key + 'third'])
       const { mutate } = useSWRConfig()
+
       return (
         <div>
           <span
@@ -1582,12 +1585,21 @@ describe('useSWR - local mutation', () => {
           <span
             data-testid="clear-all"
             onClick={async () => {
-              const res = await mutate(() => true, undefined, false)
+              const res = await mutate(
+                (_key, { serializedKey }) => {
+                  console.log('serializedKey', _key, serializedKey)
+                  collectedKeys.push([_key, serializedKey])
+                  return true
+                },
+                undefined,
+                false
+              )
               mutationOneResults.push(...res)
             }}
           />
           <p>first:{data1}</p>
           <p>second:{data2}</p>
+          <p>third:{data3}</p>
         </div>
       )
     }
@@ -1597,12 +1609,19 @@ describe('useSWR - local mutation', () => {
     fireEvent.click(screen.getByTestId('mutator-filter-all'))
     await nextTick()
 
+
     await screen.findByText('first:value-first')
     await screen.findByText('second:value-second')
 
     // reset all keys to undefined
     fireEvent.click(screen.getByTestId('clear-all'))
     await nextTick()
+
+    expect(collectedKeys).toEqual([
+      [key + 'first', key + 'first'],
+      [key + 'second', key + 'second'],
+      [[key + 'third'], serialize([key + 'third'])[0]],
+    ])
 
     await screen.findByText('first:')
     await screen.findByText('second:')
