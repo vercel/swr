@@ -1587,7 +1587,6 @@ describe('useSWR - local mutation', () => {
             onClick={async () => {
               const res = await mutate(
                 (_key, { serializedKey }) => {
-                  console.log('serializedKey', _key, serializedKey)
                   collectedKeys.push([_key, serializedKey])
                   return true
                 },
@@ -1609,7 +1608,6 @@ describe('useSWR - local mutation', () => {
     fireEvent.click(screen.getByTestId('mutator-filter-all'))
     await nextTick()
 
-
     await screen.findByText('first:value-first')
     await screen.findByText('second:value-second')
 
@@ -1620,7 +1618,7 @@ describe('useSWR - local mutation', () => {
     expect(collectedKeys).toEqual([
       [key + 'first', key + 'first'],
       [key + 'second', key + 'second'],
-      [[key + 'third'], serialize([key + 'third'])[0]],
+      [[key + 'third'], serialize([key + 'third'])[0]]
     ])
 
     await screen.findByText('first:')
