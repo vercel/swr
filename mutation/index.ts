@@ -1,16 +1,15 @@
 import { useCallback, useRef } from 'react'
 import useSWR, { useSWRConfig } from 'swr'
+import type { Middleware, Key } from 'swr/_internal'
 import {
   serialize,
   useStateWithDeps,
   withMiddleware,
   useIsomorphicLayoutEffect,
   UNDEFINED,
-  getTimestamp,
-  Middleware,
-  Key
+  getTimestamp
 } from 'swr/_internal'
-import {
+import type {
   SWRMutationConfiguration,
   SWRMutationResponse,
   SWRMutationHook,
@@ -50,7 +49,7 @@ const mutation = (<Data, Error>() =>
         // Disable cache population by default.
         const options = Object.assign({ populateCache: false }, config, opts)
 
-        // Trigger a mutation, also track the timestamp. Any mutation that happened
+        // Trigger a mutation, and also track the timestamp. Any mutation that happened
         // earlier this timestamp should be ignored.
         const mutationStartedAt = getTimestamp()
 
@@ -61,13 +60,14 @@ const mutation = (<Data, Error>() =>
         try {
           const data = await mutate<Data>(
             serializedKey,
+            // FIXME: Error shouldn't be broadcasted here.
             (fetcher as any)(resolvedKey, { arg }),
             options
           )
 
           // If it's reset after the mutation, we don't broadcast any state change.
           if (ditchMutationsUntilRef.current <= mutationStartedAt) {
-            setState({ data, isMutating: false })
+            setState({ data, isMutating: false, error: undefined })
             options.onSuccess?.(data as Data, serializedKey, options)
           }
           return data

@@ -318,4 +318,58 @@ describe('useSWR - loading', () => {
     screen.getByText('loading,validating')
     await screen.findByText('ready,ready')
   })
+  it('isLoading and isValidating should always respect cache value', async () => {
+    const key = createKey()
+    const Page = () => {
+      const { data } = useSWR(key, () =>
+        createResponse('result', { delay: 10 })
+      )
+      const { data: response } = useSWR(data, () =>
+        createResponse('data', { delay: 10 })
+      )
+      // eslint-disable-next-line react/display-name
+      const Component = ((_: any) => () => {
+        const {
+          data: result,
+          isLoading,
+          isValidating
+          // eslint-disable-next-line react-hooks/rules-of-hooks
+        } = useSWR(key, () => createResponse('result', { delay: 10 }))
+        return (
+          <div>{`result is ${
+            result ? result : 'null'
+          },${isLoading},${isValidating}`}</div>
+        )
+      })(response)
+      return <Component></Component>
+    }
+    renderWithConfig(<Page />)
+    screen.getByText('result is null,true,true')
+    await screen.findByText('result is result,false,false')
+  })
+
+  it('isLoading should be false when key is null', () => {
+    function Page() {
+      const { isLoading } = useSWR(null, () => 'data')
+      return <div>isLoading:{String(isLoading)}</div>
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('isLoading:false')
+  })
+
+  it('isLoading should be false when the key function throws an error', () => {
+    function Page() {
+      const { isLoading } = useSWR(
+        () => {
+          throw new Error('error')
+        },
+        () => 'data'
+      )
+      return <div>isLoading:{String(isLoading)}</div>
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('isLoading:false')
+  })
 })

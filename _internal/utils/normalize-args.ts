@@ -1,6 +1,6 @@
 import { isFunction } from './helper'
 
-import { Key, Fetcher, SWRConfiguration } from '../types'
+import type { Key, Fetcher, SWRConfiguration } from '../types'
 
 export const normalize = <KeyType = Key, Data = any>(
   args:

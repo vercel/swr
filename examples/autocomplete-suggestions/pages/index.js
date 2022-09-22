@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import fetcher from '../libs/fetcher'
 import {
   Combobox,
@@ -7,6 +7,7 @@ import {
   ComboboxList,
   ComboboxOption
 } from '@reach/combobox'
+import debounce from 'lodash.debounce'
 
 import useSWR from 'swr'
 
@@ -17,9 +18,13 @@ export default function Index() {
     fetcher
   )
 
-  function handleSearchTermChange(event) {
+  function handleChange(event) {
     setSearchTerm(event.target.value)
   }
+
+  const debouncedHandleChange = useMemo(
+    () => debounce(handleChange, 500)
+  , []);
 
   return (
     <div style={{ textAlign: 'center' }}>
@@ -27,7 +32,7 @@ export default function Index() {
       <Combobox>
         <ComboboxInput
           className="country-search-input"
-          onChange={handleSearchTermChange}
+          onChange={debouncedHandleChange}
           aria-label="Countries"
         />
         {countries && countries.length > 0 && (

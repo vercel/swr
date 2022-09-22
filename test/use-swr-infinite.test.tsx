@@ -480,7 +480,7 @@ describe('useSWRInfinite', () => {
     act(() => toggle(v => !v))
     await screen.findByText('hide')
 
-    // remount, should still have 2 pages
+    // remount, it should still have 2 pages
     act(() => toggle(v => !v))
     await screen.findByText('data:page 0, page 1,')
   })
@@ -541,7 +541,7 @@ describe('useSWRInfinite', () => {
     renderWithGlobalCache(<Page />)
     screen.getByText('data:')
 
-    // after a rerender we should already have the cached data rendered
+    // after a rerender, we should already have the cached data rendered
     await screen.findByText(`data:${cachedData}`)
   })
 
@@ -866,7 +866,7 @@ describe('useSWRInfinite', () => {
           <div
             onClick={() => {
               // load next page
-              // @ts-ignore
+              // @ts-expect-error
               setSize('2')
             }}
           >
@@ -941,22 +941,15 @@ describe('useSWRInfinite', () => {
   })
 
   // https://github.com/vercel/swr/issues/908
-  //TODO: This test trigger act warning
   it('should revalidate first page after mutating', async () => {
-    let renderedData
     const key = createKey()
     let v = 'old'
 
     function Page() {
-      const {
-        data,
-        size,
-        mutate: boundMutate
-      } = useSWRInfinite(
+      const { data, mutate: boundMutate } = useSWRInfinite(
         i => [key, i],
-        () => v
+        () => createResponse(v)
       )
-      renderedData = data
 
       return (
         <div>
@@ -968,19 +961,16 @@ describe('useSWRInfinite', () => {
           >
             mutate
           </button>
-          <p>size=${size}</p>
+          <p>data:{data}</p>
         </div>
       )
     }
 
     renderWithConfig(<Page />)
 
-    await screen.findByText('mutate')
-    await nextTick()
-    expect(renderedData).toEqual(['old'])
+    await screen.findByText('data:old')
     fireEvent.click(screen.getByText('mutate'))
-    await nextTick()
-    expect(renderedData).toEqual(['new'])
+    await screen.findByText('data:new')
   })
 
   it('should reuse cached value for new pages', async () => {
@@ -1060,7 +1050,7 @@ describe('useSWRInfinite', () => {
 
     fireEvent.click(screen.getByText('data:response value'))
 
-    // Fetch new page and revalidate the first page.
+    // Fetch a new page and revalidate the first page.
     await screen.findByText('data:response value,response value')
     expect(getData).toHaveBeenCalledTimes(3)
   })

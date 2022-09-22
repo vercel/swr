@@ -1,10 +1,8 @@
 {
   "extends": "../tsconfig.json",
-  "compilerOptions": {
-    "rootDir": "..",
+  "compilerOptions": { 
     "strict": false
   },
-  "include": [".", "./jest-setup.ts"],
-  // This file need "strict": true
-  "exclude": ["./type/mutator.ts"]
+  "include": [".", "./jest-setup.ts"], 
+  "exclude": ["./type"]
 }

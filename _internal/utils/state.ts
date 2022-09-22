@@ -1,4 +1,5 @@
-import React, { useRef, useCallback, useState, MutableRefObject } from 'react'
+import type { MutableRefObject } from 'react'
+import React, { useRef, useCallback, useState } from 'react'
 
 import { useIsomorphicLayoutEffect, IS_REACT_LEGACY } from './env'
 
@@ -16,7 +17,7 @@ export const useStateWithDeps = <S = any>(
   const unmountedRef = useRef(false)
   const stateRef = useRef(state)
 
-  // If a state property (data, error or isValidating) is accessed by the render
+  // If a state property (data, error, or isValidating) is accessed by the render
   // function, we mark the property as a dependency so if it is updated again
   // in the future, we trigger a rerender.
   // This is also known as dependency-tracking.

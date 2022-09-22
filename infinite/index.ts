@@ -2,23 +2,24 @@
 // hook where `key` and return type are not like the normal `useSWR` types.
 
 import { useRef, useCallback } from 'react'
-import useSWR, { SWRConfig } from 'swr'
-
+import type { SWRConfig } from 'swr'
+import useSWR from 'swr'
 import {
   isUndefined,
   isFunction,
   UNDEFINED,
   createCacheHelper,
+  useIsomorphicLayoutEffect,
+  serialize,
+  withMiddleware
+} from 'swr/_internal'
+import type {
+  BareFetcher,
   SWRHook,
   MutatorCallback,
   Middleware,
-  BareFetcher,
-  useIsomorphicLayoutEffect,
-  serialize,
-  withMiddleware,
   MutatorOptions
 } from 'swr/_internal'
-
 import type {
   SWRInfiniteConfiguration,
   SWRInfiniteResponse,
@@ -44,7 +45,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
   (
     getKey: SWRInfiniteKeyLoader,
     fn: BareFetcher<Data> | null,
-    config: Omit<typeof SWRConfig.default, 'fetcher'> &
+    config: Omit<typeof SWRConfig.defaultValue, 'fetcher'> &
       Omit<SWRInfiniteConfiguration<Data, Error>, 'fetcher'>
   ): SWRInfiniteResponse<Data, Error> => {
     const didMountRef = useRef<boolean>(false)
@@ -75,7 +76,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
     >(cache, infiniteKey)
 
     const getSnapshot = useCallback(() => {
-      const size = isUndefined(get().$len) ? initialSize : get().$len
+      const size = isUndefined(get()._l) ? initialSize : get()._l
       return size
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [cache, infiniteKey, initialSize])
@@ -96,7 +97,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
     )
 
     const resolvePageSize = useCallback((): number => {
-      const cachedPageSize = get().$len
+      const cachedPageSize = get()._l
       return isUndefined(cachedPageSize) ? initialSize : cachedPageSize
 
       // `cache` isn't allowed to change during the lifecycle
@@ -114,7 +115,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
 
       if (infiniteKey) {
         // If the key has been changed, we keep the current page size if persistSize is enabled
-        set({ $len: persistSize ? lastPageSizeRef.current : initialSize })
+        set({ _l: persistSize ? lastPageSizeRef.current : initialSize })
       }
 
       // `initialSize` isn't allowed to change during the lifecycle
@@ -129,7 +130,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
       infiniteKey,
       async () => {
         // get the revalidate context
-        const [forceRevalidateAll, originalData] = get().$ctx || []
+        const [forceRevalidateAll, originalData] = get()._i || []
 
         // return an array of page data
         const data: Data[] = []
@@ -145,13 +146,13 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
             break
           }
 
-          const [getSWRCacahe, setSWRCache] = createCacheHelper<
+          const [getSWRCache, setSWRCache] = createCacheHelper<
             Data,
             SWRInfiniteCacheValue<Data, any>
           >(cache, pageKey)
 
           // Get the cached page data.
-          let pageData = getSWRCacahe().data as Data
+          let pageData = getSWRCache().data as Data
 
           // should fetch (or revalidate) if:
           // - `revalidateAll` is enabled
@@ -172,14 +173,14 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
 
           if (fn && shouldFetchPage) {
             pageData = await fn(pageArg)
-            setSWRCache({ ...getSWRCacahe(), data: pageData })
+            setSWRCache({ data: pageData, _k: pageArg })
           }
           data.push(pageData)
           previousPageData = pageData
         }
 
         // once we executed the data fetching based on the context, clear the context
-        set({ $ctx: UNDEFINED })
+        set({ _i: UNDEFINED })
 
         // return the data
         return data
@@ -213,10 +214,10 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
           if (!isUndefined(data)) {
             // We only revalidate the pages that are changed
             const originalData = dataRef.current
-            set({ $ctx: [false, originalData] })
+            set({ _i: [false, originalData] })
           } else {
             // Calling `mutate()`, we revalidate all pages
-            set({ $ctx: [true] })
+            set({ _i: [true] })
           }
         }
 
@@ -266,7 +267,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
         }
         if (typeof size != 'number') return EMPTY_PROMISE
 
-        set({ $len: size })
+        set({ _l: size })
         lastPageSizeRef.current = size
         return mutate(resolvePagesFromCache(size))
       },

@@ -1,4 +1,4 @@
-import {
+import type {
   SWRConfiguration,
   SWRResponse,
   Arguments,
@@ -17,9 +17,9 @@ export type SWRInfiniteFetcher<
     : never
   : never
 
-export type SWRInfiniteKeyLoader = (
+export type SWRInfiniteKeyLoader<Data = any> = (
   index: number,
-  previousPageData: any | null
+  previousPageData: Data | null
 ) => Arguments
 
 export interface SWRInfiniteConfiguration<
@@ -121,9 +121,10 @@ export interface SWRInfiniteHook {
 export interface SWRInfiniteCacheValue<Data = any, Error = any>
   extends State<Data, Error> {
   // We use cache to pass extra info (context) to fetcher so it can be globally
-  // shared. The key of the context data is based on the first page key.
-  $ctx?: [boolean] | [boolean, Data[] | undefined]
+  // shared. The key of the context data is based on the first-page key.
+  _i?: [boolean] | [boolean, Data[] | undefined]
   // Page size is also cached to share the page data between hooks with the
   // same key.
-  $len?: number
+  _l?: number
+  _k?: Arguments
 }

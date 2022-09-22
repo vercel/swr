@@ -24,7 +24,7 @@ export function useTrigger() {
     (_, opts: { arg: number }) => String(opts.arg)
   )
 
-  // The argument of trigger should be number or undefined.
+  // The argument of `trigger` should be number or undefined.
   // TODO: handle the `undefined` cases.
   expectType<Equal<Parameters<typeof trigger>[0], number | undefined>>(true)
   expectType<Promise<string | undefined>>(trigger(1))
@@ -48,7 +48,7 @@ export function useTriggerWithParameter() {
     }
   )
 
-  // The argument of trigger should be number or undefined.
+  // The argument of `trigger` should be number or undefined.
   // TODO: handle the `undefined` cases.
   expectType<Equal<Parameters<typeof trigger>[0], number | undefined>>(true)
   expectType<Promise<string | undefined>>(trigger(1))

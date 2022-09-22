@@ -1,4 +1,4 @@
-import { SWRResponse, Key, MutatorOptions } from 'swr'
+import type { SWRResponse, Key, MutatorOptions } from 'swr'
 
 type FetcherResponse<Data> = Data | Promise<Data>
 
@@ -29,14 +29,14 @@ export type SWRMutationConfiguration<
     data: Data,
     key: string,
     config: Readonly<
-      SWRMutationConfiguration<Data, Error, SWRMutationKey, ExtraArg>
+      SWRMutationConfiguration<Data, Error, ExtraArg, SWRMutationKey>
     >
   ) => void
   onError?: (
     err: Error,
     key: string,
     config: Readonly<
-      SWRMutationConfiguration<Data, Error, SWRMutationKey, ExtraArg>
+      SWRMutationConfiguration<Data, Error, ExtraArg, SWRMutationKey>
     >
   ) => void
 }

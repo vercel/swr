@@ -231,7 +231,7 @@ describe('useSWR - cache provider', () => {
       provider: () => new Map([[key, { data: 'cache' }]]),
       fallback: { [key]: 'fallback' }
     })
-    screen.getByText('cache') // no `undefined`, directly from cache
+    screen.getByText('cache') // no `undefined`, directly from the cache
     await screen.findByText('data')
   })
 
@@ -251,6 +251,7 @@ describe('useSWR - cache provider', () => {
       provider: parentCache_ => {
         parentCache = parentCache_
         return {
+          keys: () => parentCache.keys(),
           set: (k, v) => parentCache_.set(k, v),
           get: k => {
             // We append `-extended` to the value returned by the parent cache.
@@ -264,7 +265,7 @@ describe('useSWR - cache provider', () => {
         }
       }
     })
-    expect(parentCache).toBe(SWRConfig.default.cache)
+    expect(parentCache).toBe(SWRConfig.defaultValue.cache)
 
     screen.getByText('undefined')
     await screen.findByText('data-extended')
@@ -351,7 +352,7 @@ describe('useSWR - global cache', () => {
     }
 
     renderWithGlobalCache(<Page />)
-    expect(localCache).toBe(SWRConfig.default.cache)
+    expect(localCache).toBe(SWRConfig.defaultValue.cache)
     expect(localMutate).toBe(globalMutate)
   })
 

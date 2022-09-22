@@ -1,6 +1,7 @@
 import { act, screen, fireEvent } from '@testing-library/react'
 import React, { useEffect, useState } from 'react'
-import useSWR, { SWRConfig, useSWRConfig, Middleware } from 'swr'
+import type { Middleware } from 'swr'
+import useSWR, { SWRConfig, useSWRConfig } from 'swr'
 import { renderWithConfig, createKey, renderWithGlobalCache } from './utils'
 
 describe('useSWR - configs', () => {
@@ -53,7 +54,7 @@ describe('useSWR - configs', () => {
       mutate = _mutate
 
       useEffect(() => {
-        // revalidate on mount and turn to idle
+        // revalidate on the mount and turn to idle
         setPaused(true)
       }, [])
 
@@ -89,7 +90,7 @@ describe('useSWR - configs', () => {
   })
 
   it('should expose default config as static property on SWRConfig', () => {
-    expect(SWRConfig.default).toBeDefined()
+    expect(SWRConfig.defaultValue).toBeDefined()
   })
 
   it('should expose the default config from useSWRConfig', () => {
@@ -101,7 +102,7 @@ describe('useSWR - configs', () => {
     }
 
     renderWithGlobalCache(<Page />)
-    expect(SWRConfig.default).toEqual(config)
+    expect(SWRConfig.defaultValue).toEqual(config)
   })
 
   it('should expose the correctly extended config from useSWRConfig', () => {
@@ -142,5 +143,45 @@ describe('useSWR - configs', () => {
     expect(config.refreshInterval).toEqual(1)
     expect(config.fallback).toEqual({ a: 2, b: 1, c: 2 })
     expect(config.use).toEqual([middleware1, middleware2])
+  })
+
+  it('should ignore parent config when value is functional', async () => {
+    let config
+
+    function Page() {
+      config = useSWRConfig()
+      return null
+    }
+
+    const middleware1: Middleware = useSWRNext => (k, f, c) =>
+      useSWRNext(k, f, c)
+    const middleware2: Middleware = useSWRNext => (k, f, c) =>
+      useSWRNext(k, f, c)
+
+    renderWithConfig(
+      <SWRConfig
+        value={{
+          dedupingInterval: 1,
+          refreshInterval: 1,
+          fallback: { a: 1, b: 1 },
+          use: [middleware1]
+        }}
+      >
+        <SWRConfig
+          value={parentConfig => ({
+            dedupingInterval: 2 + parentConfig.dedupingInterval,
+            fallback: { a: 2, c: 2 },
+            use: [middleware2]
+          })}
+        >
+          <Page />
+        </SWRConfig>
+      </SWRConfig>
+    )
+
+    expect(config.dedupingInterval).toEqual(3)
+    expect(config.refreshInterval).toEqual(undefined)
+    expect(config.fallback).toEqual({ a: 2, c: 2 })
+    expect(config.use).toEqual([middleware2])
   })
 })

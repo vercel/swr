@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import useSWR, { SWRConfig } from 'swr'
 import { createKey, renderWithConfig, sleep } from './utils'
 
-// This has to be an async function to wait a microtask to flush updates
+// This has to be an async function to wait for a microtask to flush updates
 const advanceTimers = async (ms: number) => jest.advanceTimersByTime(ms) as any
 
 // This test heavily depends on setInterval/setTimeout timers, which makes tests slower and flaky.
@@ -117,7 +117,7 @@ describe('useSWR - refresh', () => {
     screen.getByText('count: 4')
     fireEvent.click(screen.getByText('count: 4'))
     await act(() => {
-      // it will clear 150ms timer and setup a new 200ms timer
+      // it will clear the 150ms timer and set up a new 200ms timer
       return advanceTimers(150)
     })
     screen.getByText('count: 4')
@@ -125,7 +125,7 @@ describe('useSWR - refresh', () => {
     screen.getByText('count: 5')
     fireEvent.click(screen.getByText('count: 5'))
     await act(() => {
-      // it will clear 200ms timer and stop
+      // it will clear the 200ms timer and stop
       return advanceTimers(50)
     })
     screen.getByText('count: 5')
@@ -175,7 +175,7 @@ describe('useSWR - refresh', () => {
     fireEvent.click(screen.getByText('count: 1 2'))
 
     await act(() => {
-      // it will setup a new 100ms timer
+      // it will set up a new 100ms timer
       return advanceTimers(50)
     })
 
@@ -303,7 +303,7 @@ describe('useSWR - refresh', () => {
     // The second refresh will not start a new timer
     fireEvent.click(screen.getByText(`click me ${key}-0`))
 
-    // first refresh with new key 1
+    // first, refresh with new key 1
     await act(() => advanceTimers(100))
     expect(fetcherWithToken).toBeCalledTimes(4)
     expect(fetcherWithToken).toHaveBeenLastCalledWith(`${key}-1`)
@@ -361,7 +361,7 @@ describe('useSWR - refresh', () => {
     // The second refresh will not start a new timer
     fireEvent.click(screen.getByText(`click me 0-${key}`))
 
-    // first refresh with new key 1
+    // first, refresh with new key 1
     await act(() => advanceTimers(50))
     expect(fetcherWithToken).toBeCalledTimes(4)
     expect(fetcherWithToken).toHaveBeenLastCalledWith(`1-${key}`)
