@@ -194,4 +194,44 @@ describe('useSWR - keep previous data', () => {
       [key3, key3]
     ])
   })
+
+  // https://github.com/vercel/swr/issues/2128
+  it('should re-render when returned data and fallbackData is the same and keepPreviousData is enabled', async () => {
+    const fallbackData = 'initial'
+    const fetcher = k => createResponse(k, { delay: 50 })
+    const keys = ['initial', 'updated']
+    function App() {
+      const [count, setCount] = useState(0)
+      const { data } = useSWR(keys[count % 2 === 0 ? 0 : 1], fetcher, {
+        fallbackData,
+        keepPreviousData: true,
+        revalidateOnMount: false,
+        revalidateOnFocus: false
+      })
+      return (
+        <>
+          <button onClick={() => setCount(c => c + 1)}>change key</button>
+          <div>{data}</div>
+        </>
+      )
+    }
+
+    renderWithConfig(<App />)
+    // fallbackData
+    screen.getByText('initial')
+
+    fireEvent.click(screen.getByText('change key'))
+    await act(() => sleep(10))
+    // previous data
+    screen.getByText('initial')
+    await act(() => sleep(100))
+    screen.getByText('updated')
+
+    fireEvent.click(screen.getByText('change key'))
+    await act(() => sleep(10))
+    // previous data
+    screen.getByText('updated')
+    await act(() => sleep(100))
+    screen.getByText('initial')
+  })
 })
