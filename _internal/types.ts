@@ -263,8 +263,8 @@ export type MutatorCallback<Data = any> = (
 export type MutatorOptions<Data = any> = {
   revalidate?: boolean
   populateCache?:
-  | boolean
-  | ((result: any, currentData: Data | undefined) => Data)
+    | boolean
+    | ((result: any, currentData: Data | undefined) => Data)
   optimisticData?: Data | ((currentData?: Data) => Data)
   rollbackOnError?: boolean
 }
@@ -302,12 +302,12 @@ export type MutatorWrapper<Fn> = Fn extends (
   ...args: [...infer Parameters]
 ) => infer Result
   ? Parameters[3] extends boolean
-  ? Result
-  : Parameters[3] extends Required<Pick<MutatorOptions, 'populateCache'>>
-  ? Parameters[3]['populateCache'] extends false
-  ? never
-  : Result
-  : Result
+    ? Result
+    : Parameters[3] extends Required<Pick<MutatorOptions, 'populateCache'>>
+    ? Parameters[3]['populateCache'] extends false
+      ? never
+      : Result
+    : Result
   : never
 
 export type Mutator<Data = any> = MutatorWrapper<MutatorFn<Data>>
