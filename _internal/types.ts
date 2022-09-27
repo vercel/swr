@@ -263,8 +263,8 @@ export type MutatorCallback<Data = any> = (
 export type MutatorOptions<Data = any> = {
   revalidate?: boolean
   populateCache?:
-    | boolean
-    | ((result: any, currentData: Data | undefined) => Data)
+  | boolean
+  | ((result: any, currentData: Data | undefined) => Data)
   optimisticData?: Data | ((currentData?: Data) => Data)
   rollbackOnError?: boolean
 }
@@ -302,12 +302,12 @@ export type MutatorWrapper<Fn> = Fn extends (
   ...args: [...infer Parameters]
 ) => infer Result
   ? Parameters[3] extends boolean
-    ? Result
-    : Parameters[3] extends Required<Pick<MutatorOptions, 'populateCache'>>
-    ? Parameters[3]['populateCache'] extends false
-      ? never
-      : Result
-    : Result
+  ? Result
+  : Parameters[3] extends Required<Pick<MutatorOptions, 'populateCache'>>
+  ? Parameters[3]['populateCache'] extends false
+  ? never
+  : Result
+  : Result
   : never
 
 export type Mutator<Data = any> = MutatorWrapper<MutatorFn<Data>>
@@ -336,13 +336,22 @@ export type SWRConfiguration<
   Fn extends BareFetcher<any> = BareFetcher<any>
 > = Partial<PublicConfiguration<Data, Error, Fn>>
 
-export interface SWRResponse<Data = any, Error = any> {
-  data: Data | undefined
-  error: Error | undefined
-  mutate: KeyedMutator<Data>
+export type SWRResponse<Data = any, Error = any> = { mutate: KeyedMutator<Data> } & ({
+  data: undefined
+  error: undefined
+  isValidating: true
+  isLoading: true
+} | {
+  data: Data
+  error: undefined
   isValidating: boolean
-  isLoading: boolean
-}
+  isLoading: false
+} | {
+  data: undefined
+  error: Error
+  isValidating: boolean
+  isLoading: false
+})
 
 export type KeyLoader<Args extends Arguments = Arguments> =
   | ((index: number, previousPageData: any | null) => Args)
