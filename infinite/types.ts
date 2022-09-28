@@ -34,8 +34,7 @@ export interface SWRInfiniteConfiguration<
   fetcher?: Fn
 }
 
-export interface SWRInfiniteResponse<Data = any, Error = any>
-  extends SWRResponse<Data[], Error> {
+export type SWRInfiniteResponse<Data = any, Error = any> = SWRResponse<Data[], Error> & {
   size: number
   setSize: (
     size: number | ((_size: number) => number)
