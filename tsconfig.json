@@ -11,7 +11,6 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "strictBindCallApply": true,
-    "downlevelIteration": true,
     "outDir": "./dist",
     "rootDir": "./",
     "strict": true,
