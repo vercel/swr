@@ -7,7 +7,8 @@ import {
   withMiddleware,
   useIsomorphicLayoutEffect,
   UNDEFINED,
-  getTimestamp
+  getTimestamp,
+  mergeObjects
 } from 'swr/_internal'
 import type {
   SWRMutationConfiguration,
@@ -43,11 +44,14 @@ const mutation = (<Data, Error>() =>
           throw new Error('Can’t trigger the mutation: missing fetcher.')
         }
         if (!serializedKey) {
-          throw new Error('Can’t trigger the mutation: key isn’t ready.')
+          throw new Error('Can’t trigger the mutation: missing key.')
         }
 
         // Disable cache population by default.
-        const options = Object.assign({ populateCache: false }, config, opts)
+        const options = mergeObjects(
+          mergeObjects({ populateCache: false, throwOnError: true }, config),
+          opts
+        )
 
         // Trigger a mutation, and also track the timestamp. Any mutation that happened
         // earlier this timestamp should be ignored.
@@ -60,9 +64,9 @@ const mutation = (<Data, Error>() =>
         try {
           const data = await mutate<Data>(
             serializedKey,
-            // FIXME: Error shouldn't be broadcasted here.
             (fetcher as any)(resolvedKey, { arg }),
-            options
+            // We must throw the error here so we can catch and update the states.
+            mergeObjects(options, { throwOnError: true })
           )
 
           // If it's reset after the mutation, we don't broadcast any state change.
@@ -72,11 +76,14 @@ const mutation = (<Data, Error>() =>
           }
           return data
         } catch (error) {
-          // If it's reset after the mutation, we don't broadcast any state change.
+          // If it's reset after the mutation, we don't broadcast any state change
+          // or throw because it's discarded.
           if (ditchMutationsUntilRef.current <= mutationStartedAt) {
             setState({ error: error as Error, isMutating: false })
             options.onError?.(error as Error, serializedKey, options)
-            throw error as Error
+            if (options.throwOnError) {
+              throw error as Error
+            }
           }
         }
       },
