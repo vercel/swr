@@ -639,7 +639,9 @@ export const SWRConfig = OBJECT.defineProperty(ConfigProvider, 'defaultValue', {
 export const unstable_serialize = (key: Key) => serialize(key)[0]
 
 /**
- * @link https://swr.vercel.app/
+ * A hook to fetch data.
+ *
+ * @link https://swr.vercel.app
  * @example
  * ```jsx
  * import useSWR from 'swr'
