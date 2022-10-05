@@ -505,7 +505,7 @@ describe('useSWR - local mutation', () => {
     screen.getByText('data: 1')
   })
 
-  it('should update error in cache when mutate failed with error', async () => {
+  it('should not update error in global cache when mutate failed with error', async () => {
     const value = 0
     const key = createKey()
     const message = 'mutate-error'
@@ -538,18 +538,10 @@ describe('useSWR - local mutation', () => {
       }
     })
 
-    screen.getByText(message)
+    screen.getByText('data: 0')
     const [keyInfo] = serialize(key)
-    let cacheError = cache.get(keyInfo)?.error
-    expect(cacheError.message).toMatchInlineSnapshot(`"${message}"`)
-
-    // if mutate throws an error synchronously, the cache shouldn't be updated
-    expect(cache.get(keyInfo)?.data).toBe(value)
-
-    // if mutate succeed, the error should be cleared
-    await act(() => mutate(key, value, false))
-    cacheError = cache.get(keyInfo)?.error
-    expect(cacheError).toMatchInlineSnapshot(`undefined`)
+    const cacheError = cache.get(keyInfo)?.error
+    expect(cacheError).toBeUndefined()
   })
 
   it('should keep the `mutate` function referential equal', async () => {

@@ -131,7 +131,7 @@ describe('useSWR - remote mutation', () => {
     expect(onSuccess).toHaveBeenCalled()
   })
 
-  it('should call `onError` event', async () => {
+  it('should call `onError` event and throw', async () => {
     const key = createKey()
     const onError = jest.fn()
     const onInplaceError = jest.fn()
@@ -163,6 +163,41 @@ describe('useSWR - remote mutation', () => {
     await screen.findByText('error!')
     expect(onError).toHaveBeenCalled()
     expect(onInplaceError).toHaveBeenCalled()
+  })
+
+  it('should call `onError` event and skip throwing the error when `throwOnError` is disabled', async () => {
+    const key = createKey()
+    const onError = jest.fn()
+    const onInplaceError = jest.fn()
+
+    function Page() {
+      const { data, error, trigger } = useSWRMutation(
+        key,
+        async () => {
+          await sleep(10)
+          throw new Error('error!')
+        },
+        {
+          onError,
+          throwOnError: false
+        }
+      )
+      return (
+        <button onClick={() => trigger().catch(onInplaceError)}>
+          {data || (error ? error.message : 'pending')}
+        </button>
+      )
+    }
+
+    render(<Page />)
+
+    // mount
+    await screen.findByText('pending')
+    fireEvent.click(screen.getByText('pending'))
+
+    await screen.findByText('error!')
+    expect(onError).toHaveBeenCalled()
+    expect(onInplaceError).not.toHaveBeenCalled()
   })
 
   it('should return `isMutating` state correctly', async () => {

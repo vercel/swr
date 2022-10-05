@@ -1,5 +1,11 @@
 import { serialize } from './serialize'
-import { createCacheHelper, isFunction, isUndefined, UNDEFINED } from './helper'
+import {
+  createCacheHelper,
+  isFunction,
+  isUndefined,
+  UNDEFINED,
+  mergeObjects
+} from './helper'
 import { SWRGlobalState } from './global-state'
 import { getTimestamp } from './timestamp'
 import * as revalidateEvents from '../constants'
@@ -43,16 +49,17 @@ export async function internalMutate<Data>(
 
   // When passing as a boolean, it's explicitly used to disable/enable
   // revalidation.
-  const options =
+  const options = mergeObjects(
+    { populateCache: true, throwOnError: true },
     typeof _opts === 'boolean' ? { revalidate: _opts } : _opts || {}
+  )
 
-  // Fallback to `true` if it's not explicitly set to `false`
-  let populateCache = isUndefined(options.populateCache)
-    ? true
-    : options.populateCache
+  let populateCache = options.populateCache
   let optimisticData = options.optimisticData
+
   const revalidate = options.revalidate !== false
   const rollbackOnError = options.rollbackOnError !== false
+  const throwOnError = options.throwOnError
 
   // If the second argument is a key filter, return the mutation results for all
   // filtered keys.
@@ -177,9 +184,6 @@ export async function internalMutate<Data>(
         // Only update cached data if there's no error. Data can be `undefined` here.
         set({ data, _c: UNDEFINED })
       }
-
-      // Always update error and original data here.
-      set({ error })
     }
 
     // Reset the timestamp to mark the mutation has ended.
@@ -193,7 +197,10 @@ export async function internalMutate<Data>(
     set({ _c: UNDEFINED })
 
     // Throw error or return data
-    if (error) throw error
+    if (error) {
+      if (throwOnError) throw error
+      return
+    }
     return populateCache ? res : data
   }
 }
