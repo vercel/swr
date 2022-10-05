@@ -122,6 +122,23 @@ const mutation = (<Data, Error>() =>
     }
   }) as unknown as Middleware
 
+/**
+ * A hook to define and manually trigger remote mutations like POST, PUT, DELETE and PATCH use cases.
+ *
+ * @link https://swr.vercel.app/docs/mutation
+ * @example
+ * ```jsx
+ * import useSWRMutation from 'swr/mutation'
+ *
+ * const {
+ *   data,
+ *   error,
+ *   trigger,
+ *   reset,
+ *   isMutating
+ * } = useSWRMutation(key, fetcher, options?)
+ * ```
+ */
 export default withMiddleware(useSWR, mutation) as unknown as SWRMutationHook
 
 export { SWRMutationConfiguration, SWRMutationResponse, SWRMutationHook }
