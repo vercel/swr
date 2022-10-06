@@ -141,4 +141,9 @@ const mutation = (<Data, Error>() =>
  */
 export default withMiddleware(useSWR, mutation) as unknown as SWRMutationHook
 
-export { SWRMutationConfiguration, SWRMutationResponse, SWRMutationHook }
+export {
+  SWRMutationConfiguration,
+  SWRMutationResponse,
+  SWRMutationHook,
+  MutationFetcher
+}
