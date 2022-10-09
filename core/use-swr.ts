@@ -107,7 +107,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     ? config.fallback[key]
     : fallbackData
 
-  const isEqual = (prev: State<Data, any>, current: State<Data, any>) => {
+  const isEqual = useCallback((prev: State<Data, any>, current: State<Data, any>) => {
     let equal = true
     for (const _ in stateDependencies) {
       const t = _ as keyof StateDependencies
@@ -122,7 +122,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       }
     }
     return equal
-  }
+  }, [stateDependencies, returnedData])
 
   const getSnapshot = useMemo(() => {
     const shouldStartRequest = (() => {
