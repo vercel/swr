@@ -609,7 +609,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     throw isUndefined(error) ? revalidate(WITH_DEDUPE) : error
   }
 
-  return {
+  return useMemo(() => ({
     mutate: boundMutate,
     get data() {
       stateDependencies.data = true
@@ -627,7 +627,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       stateDependencies.isLoading = true
       return isLoading
     }
-  } as SWRResponse<Data, Error>
+  }), [boundMutate, returnedData, error, isValidating, isLoading]) as SWRResponse<Data, Error>
 }
 
 export const SWRConfig = OBJECT.defineProperty(ConfigProvider, 'defaultValue', {
