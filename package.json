@@ -85,9 +85,9 @@
     "lint": "eslint . --ext .ts,.tsx --cache",
     "lint:fix": "pnpm lint --fix",
     "coverage": "jest --coverage",
-    "types:src": "tsc --noEmit -p src/tsconfig.json",
+    "types:src": "tsc --noEmit --project ./src/tsconfig.json",
     "types:test": "tsc --noEmit --project ./test/tsconfig.json",
-    "types:type": "tsc --noEmit -p test/type/tsconfig.json",
+    "types:type": "tsc --noEmit --project ./test/type/tsconfig.json",
     "test": "jest",
     "run-all-checks": "turbo run lint build test types:src types:test types:type"
   },

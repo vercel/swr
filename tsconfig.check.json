@@ -7,7 +7,7 @@
         "./index.ts"
       ],
       "swr/infinite": [
-        "./infinit.ts"
+        "./infinite.ts"
       ],
       "swr/immutable": [
         "./immutable.ts"
