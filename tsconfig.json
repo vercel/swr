@@ -20,24 +20,7 @@
     "target": "es5",
     "baseUrl": ".",
     "noEmitOnError": true,
-    "incremental": true,
-    "paths": {
-      "swr": [
-        "./index.ts"
-      ],
-      "swr/infinite": [
-        "./infinit.ts"
-      ],
-      "swr/immutable": [
-        "./immutable.ts"
-      ],
-      "swr/mutation": [
-        "./mutation.ts"
-      ],
-      "swr/_internal": [
-        "./_internal.ts"
-      ]
-    },
+    "incremental": true
   },
   "exclude": [
     "./**/dist",
