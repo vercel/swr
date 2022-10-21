@@ -8,7 +8,7 @@ import type {
   Mutator,
   MutatorWrapper,
   Arguments
-} from '../../_internal/types'
+} from 'swr/_internal'
 import { expectType } from './utils'
 
 type Case1<Data = any> = MutatorFn<Data>

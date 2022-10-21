@@ -1,8 +1,30 @@
 {
   "extends": "../tsconfig.json",
-  "compilerOptions": { 
-    "strict": false
+  "compilerOptions": {
+    "strict": false,
+    "paths": {
+      "swr": [
+        "./index.ts"
+      ],
+      "swr/infinite": [
+        "./infinit.ts"
+      ],
+      "swr/immutable": [
+        "./immutable.ts"
+      ],
+      "swr/mutation": [
+        "./mutation.ts"
+      ],
+      "swr/_internal": [
+        "./_internal.ts"
+      ]
+    },
   },
-  "include": [".", "./jest-setup.ts"], 
-  "exclude": ["./type"]
+  "include": [
+    ".",
+    "./jest-setup.ts"
+  ],
+  "exclude": [
+    "./type"
+  ]
 }
