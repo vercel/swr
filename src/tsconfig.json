@@ -1,22 +1,3 @@
 {
-  "extends": "../tsconfig.json",
-  "compilerOptions": {
-    "paths": {
-      "swr": [
-        "./index.ts"
-      ],
-      "swr/infinite": [
-        "./infinit.ts"
-      ],
-      "swr/immutable": [
-        "./immutable.ts"
-      ],
-      "swr/mutation": [
-        "./mutation.ts"
-      ],
-      "swr/_internal": [
-        "./_internal.ts"
-      ]
-    },
-  }
+  "extends": "../tsconfig.check.json"
 }

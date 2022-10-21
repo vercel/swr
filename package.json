@@ -12,7 +12,7 @@
   ],
   "packageManager": "pnpm@7.1.0",
   "main": "./dist/index.js",
-  "module": "./dist/index.esm.js",
+  "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "typesVersions": {
     "*": {
@@ -21,6 +21,15 @@
       ],
       "./infinite": [
         "./dist/infinite.d.ts"
+      ],
+      "./immutable": [
+        "./dist/immutable.d.ts"
+      ],
+      "./mutation": [
+        "./dist/mutation.d.ts"
+      ],
+      "./_internal": [
+        "./dist/_internal.d.ts"
       ]
     }
   },
@@ -29,45 +38,36 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
-      "module": "./dist/index.esm.js",
+      "module": "./dist/index.mjs",
       "require": "./dist/index.js"
     },
     "./infinite": {
       "types": "./dist/infinite.d.ts",
       "import": "./dist/infinite.mjs",
-      "module": "./dist/infinite.esm.js",
+      "module": "./dist/infinite.mjs",
       "require": "./dist/infinite.js"
     },
     "./immutable": {
       "types": "./dist/immutable.d.ts",
       "import": "./dist/immutable.mjs",
-      "module": "./dist/immutable.esm.js",
+      "module": "./dist/immutable.mjs",
       "require": "./dist/immutable.js"
     },
     "./mutation": {
       "types": "./dist/mutation.d.ts",
       "import": "./dist/mutation.mjs",
-      "module": "./dist/mutation.esm.js",
+      "module": "./dist/mutation.mjs",
       "require": "./dist/mutation.js"
     },
     "./_internal": {
       "types": "./dist/_internal.d.ts",
       "import": "./dist/_internal.mjs",
-      "module": "./dist/_internal.esm.js",
+      "module": "./dist/_internal.mjs",
       "require": "./dist/_internal.js"
     }
   },
   "files": [
-    "core/dist/**/*.{js,d.ts,mjs}",
-    "infinite/dist/**/*.{js,d.ts,mjs}",
-    "immutable/dist/**/*.{js,d.ts,mjs}",
-    "mutation/dist/**/*.{js,d.ts,mjs}",
-    "_internal/dist/**/*.{js,d.ts,mjs}",
-    "core/package.json",
-    "infinite/package.json",
-    "immutable/package.json",
-    "mutation/package.json",
-    "_internal/package.json"
+    "dist"
   ],
   "repository": "github:vercel/swr",
   "homepage": "https://swr.vercel.app",
@@ -76,19 +76,20 @@
     "prepare": "husky install",
     "csb:install": "pnpm i -g pnpm@7",
     "csb:build": "pnpm install && pnpm build",
-    "clean": "pnpm -r run clean",
-    "watch": "pnpm -r run watch",
+    "clean": "rimraf dist",
+    "watch": "pnpm bunchee -w",
     "build": "pnpm bunchee",
-    "types:check": "pnpm -r run types:check",
     "prepublishOnly": "pnpm clean && pnpm build",
     "publish-beta": "pnpm publish --tag beta",
     "format": "prettier --write ./**/*.{ts,tsx}",
     "lint": "eslint . --ext .ts,.tsx --cache",
     "lint:fix": "pnpm lint --fix",
     "coverage": "jest --coverage",
-    "test-typing": "tsc --noEmit -p test/type/tsconfig.json && tsc --noEmit -p test/tsconfig.json",
+    "types:src": "tsc --noEmit -p src/tsconfig.json",
+    "types:test": "tsc --noEmit --project ./test/tsconfig.json",
+    "types:type": "tsc --noEmit -p test/type/tsconfig.json",
     "test": "jest",
-    "run-all-checks": "pnpm types:check && pnpm lint && pnpm test && pnpm test-typing"
+    "run-all-checks": "turbo run lint build test types:src types:test types:type"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
@@ -124,8 +125,8 @@
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
     "rimraf": "3.0.2",
-    "swr": "workspace:*",
     "tslib": "2.4.0",
+    "turbo": "^1.6.0",
     "typescript": "4.8.2"
   },
   "peerDependencies": {

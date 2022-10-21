@@ -12,7 +12,6 @@ function createEventTarget() {
 }
 
 function runTests(propertyName) {
-  let webPreset
   let initFocus
   const eventName =
     propertyName === 'window' ? FOCUS_EVENT : VISIBILITYCHANGE_EVENT

@@ -1,7 +1,10 @@
 {
-  "extends": "../../tsconfig.json",
-  "compilerOptions": { 
-    "strict": true
+  "extends": "../../tsconfig.check.json",
+  "compilerOptions": {
+    "strict": true,
   },
-  "include": ["./**/*.ts", "./**/*.tsx"],
+  "include": [
+    "./**/*.ts",
+    "./**/*.tsx"
+  ],
 }

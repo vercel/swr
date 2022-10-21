@@ -1,24 +1,7 @@
 {
-  "extends": "../tsconfig.json",
+  "extends": "../tsconfig.check.json",
   "compilerOptions": {
-    "strict": false,
-    "paths": {
-      "swr": [
-        "./index.ts"
-      ],
-      "swr/infinite": [
-        "./infinit.ts"
-      ],
-      "swr/immutable": [
-        "./immutable.ts"
-      ],
-      "swr/mutation": [
-        "./mutation.ts"
-      ],
-      "swr/_internal": [
-        "./_internal.ts"
-      ]
-    },
+    "strict": false
   },
   "include": [
     ".",
