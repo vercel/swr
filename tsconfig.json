@@ -3,7 +3,10 @@
     "declaration": true,
     "esModuleInterop": true,
     "jsx": "react",
-    "lib": ["esnext", "dom"],
+    "lib": [
+      "esnext",
+      "dom"
+    ],
     "module": "NodeNext",
     "moduleResolution": "nodenext",
     "noFallthroughCasesInSwitch": true,
@@ -17,16 +20,29 @@
     "target": "es5",
     "baseUrl": ".",
     "noEmitOnError": true,
+    "incremental": true,
     "paths": {
-      "swr": ["./core/index.ts"],
-      "swr/infinite": ["./infinite/index.ts"],
-      "swr/immutable": ["./immutable/index.ts"],
-      "swr/mutation": ["./mutation/index.ts"],
-      "swr/_internal": ["./_internal/index.ts"]
+      "swr": [
+        "./index.ts"
+      ],
+      "swr/infinite": [
+        "./infinit.ts"
+      ],
+      "swr/immutable": [
+        "./immutable.ts"
+      ],
+      "swr/mutation": [
+        "./mutation.ts"
+      ],
+      "swr/_internal": [
+        "./_internal.ts"
+      ]
     },
-    "incremental": true
-  }, 
-  "exclude": ["./**/dist", "examples"],
+  },
+  "exclude": [
+    "./**/dist",
+    "examples"
+  ],
   "watchOptions": {
     "watchFile": "useFsEvents",
     "watchDirectory": "useFsEvents",

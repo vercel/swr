@@ -1,4 +1,4 @@
-import type { SWRResponse, Key, MutatorOptions } from 'swr'
+import type { SWRResponse, Key, MutatorOptions } from '../core/index'
 
 type FetcherResponse<Data> = Data | Promise<Data>
 
