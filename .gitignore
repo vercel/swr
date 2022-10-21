@@ -13,3 +13,4 @@ package-lock.json
 *.tsbuildinfo
 coverage
 .rollup.cache
+typecheck
