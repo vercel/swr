@@ -19,16 +19,16 @@
       ".": [
         "./dist/index.d.ts"
       ],
-      "./infinite": [
+      "infinite": [
         "./dist/infinite.d.ts"
       ],
-      "./immutable": [
+      "immutable": [
         "./dist/immutable.d.ts"
       ],
-      "./mutation": [
+      "mutation": [
         "./dist/mutation.d.ts"
       ],
-      "./_internal": [
+      "_internal": [
         "./dist/_internal.d.ts"
       ]
     }
