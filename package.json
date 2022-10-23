@@ -89,7 +89,7 @@
     "types:test": "tsc --noEmit --project ./test/tsconfig.json",
     "types:type": "tsc --noEmit --project ./test/type/tsconfig.json",
     "test": "jest",
-    "run-all-checks": "turbo run lint build test types:src types:test types:type"
+    "run-all-checks": "turbo run lint build types:src types:test types:type"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
