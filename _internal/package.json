@@ -1,7 +1,7 @@
 {
   "main": "./dist/index.js",
   "module": "./dist/index.esm.js",
-  "types": "./dist/_internal/index.d.ts",
+  "types": "./dist/index.d.ts",
   "exports": "./dist/index.mjs",
   "private": true,
   "scripts": {

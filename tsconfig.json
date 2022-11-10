@@ -25,7 +25,7 @@
       "swr/_internal": ["./_internal/index.ts"]
     },
     "incremental": true
-  }, 
+  },
   "exclude": ["./**/dist", "examples"],
   "watchOptions": {
     "watchFile": "useFsEvents",

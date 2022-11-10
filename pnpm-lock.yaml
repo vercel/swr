@@ -15,7 +15,7 @@ importers:
       '@types/use-sync-external-store': ^0.0.3
       '@typescript-eslint/eslint-plugin': 5.36.1
       '@typescript-eslint/parser': 5.36.1
-      bunchee: 2.1.5
+      bunchee: 2.1.6
       eslint: 8.15.0
       eslint-config-prettier: 8.5.0
       eslint-plugin-jest-dom: 4.0.1
@@ -49,7 +49,7 @@ importers:
       '@types/use-sync-external-store': 0.0.3
       '@typescript-eslint/eslint-plugin': 5.36.1_lwwfuyj7twi2pixhqbdlqx6rge
       '@typescript-eslint/parser': 5.36.1_3gbszem2nfymcdpvzng2ytglf4
-      bunchee: 2.1.5_typescript@4.8.2
+      bunchee: 2.1.6_typescript@4.8.2
       eslint: 8.15.0
       eslint-config-prettier: 8.5.0_eslint@8.15.0
       eslint-plugin-jest-dom: 4.0.1_eslint@8.15.0
@@ -1817,8 +1817,8 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  /bunchee/2.1.5_typescript@4.8.2:
-    resolution: {integrity: sha512-ZRAqbX7pNx/S8wi/LjpUKdnQBOX9LpTbnZ2xhaVgvjBU4TlienMNxbqUcR2MZDzipo33ybBcyMdCp78uKGdnTw==}
+  /bunchee/2.1.6_typescript@4.8.2:
+    resolution: {integrity: sha512-3lNuZ+ymJIm/VANXn1uF7CKxVH7nOOvx3o32mBWRJmw73y9TVqHT4N+4LfuzzlgUr+Xvr7AX5qJE4JzyWGX37w==}
     hasBin: true
     peerDependencies:
       typescript: '>= 3.7.0'
