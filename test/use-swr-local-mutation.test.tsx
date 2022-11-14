@@ -1375,12 +1375,13 @@ describe('useSWR - local mutation', () => {
     await sleep(30)
     expect(renderedData).toEqual([undefined, 0, 'bar-1', 1])
 
+    let rollbackErrorMessage
     try {
       await executeWithoutBatching(() =>
         mutate(createResponse(new Error('baz-2'), { delay: 20 }), {
           optimisticData: 'bar-2',
-          rollbackOnError: (error, currentData) => {
-            callbackArgs = [error.message, currentData]
+          rollbackOnError: error => {
+            rollbackErrorMessage = error.message
             return false
           }
         })
@@ -1391,7 +1392,7 @@ describe('useSWR - local mutation', () => {
 
     await sleep(30)
     expect(renderedData).toEqual([undefined, 0, 'bar-1', 1, 'bar-2', 2])
-    expect(callbackArgs).toEqual(['baz-2', undefined])
+    expect(rollbackErrorMessage).toEqual('baz-2')
   })
 
   it('should support transforming the result with `populateCache` before writing back', async () => {

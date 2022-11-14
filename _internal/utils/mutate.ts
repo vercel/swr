@@ -60,9 +60,9 @@ export async function internalMutate<Data>(
   let optimisticData = options.optimisticData
 
   const revalidate = options.revalidate !== false
-  const rollbackOnError = (error: unknown, currentData?: Data): boolean => {
+  const rollbackOnError = (error: unknown): boolean => {
     return typeof rollbackOnErrorOption === 'function'
-      ? rollbackOnErrorOption(error, currentData)
+      ? rollbackOnErrorOption(error)
       : rollbackOnErrorOption !== false
   }
   const throwOnError = options.throwOnError
@@ -169,11 +169,7 @@ export async function internalMutate<Data>(
       if (beforeMutationTs !== MUTATION[key][0]) {
         if (error) throw error
         return data
-      } else if (
-        error &&
-        hasOptimisticData &&
-        rollbackOnError(error, currentData)
-      ) {
+      } else if (error && hasOptimisticData && rollbackOnError(error)) {
         // Rollback. Always populate the cache in this case but without
         // transforming the data.
         populateCache = true
