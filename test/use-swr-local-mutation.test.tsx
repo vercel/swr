@@ -1342,7 +1342,6 @@ describe('useSWR - local mutation', () => {
     const renderedData = []
     let mutate
     let cnt = 0
-    let callbackArgs
 
     function Page() {
       const { data, mutate: boundMutate } = useSWR(key, () =>
