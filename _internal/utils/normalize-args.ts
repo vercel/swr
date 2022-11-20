@@ -1,4 +1,4 @@
-import { isFunction } from './helper'
+import { isFunction, isNull } from './helper'
 
 import type { Key, Fetcher, SWRConfiguration } from '../types'
 
@@ -13,7 +13,7 @@ export const normalize = <KeyType = Key, Data = any>(
   Fetcher<Data> | null | undefined,
   Partial<SWRConfiguration<Data>>
 ] => {
-  return isFunction(args[1]) || args[1] === null
+  return isFunction(args[1]) || isNull(args[1])
     ? [args[0], args[1], args[2] || {}]
     : [args[0], undefined, args[1] || {}]
 }
