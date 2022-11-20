@@ -209,7 +209,7 @@ export interface SWRHook {
   ): SWRResponse<Data, Error>
   <Data = any, Error = any, SWRKey extends Key = null>(
     key: SWRKey,
-    fetcher: Fetcher<Data, SWRKey> | null
+    fetcher: Fetcher<Data, SWRKey> | null | undefined
   ): SWRResponse<Data, Error>
   <Data = any, Error = any, SWRKey extends Key = null>(
     key: SWRKey,
@@ -217,13 +217,13 @@ export interface SWRHook {
   ): SWRResponse<Data, Error>
   <Data = any, Error = any, SWRKey extends Key = null>(
     key: SWRKey,
-    fetcher: Fetcher<Data, SWRKey> | null,
+    fetcher: Fetcher<Data, SWRKey> | null | undefined,
     config: SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>> | undefined
   ): SWRResponse<Data, Error>
   <Data = any, Error = any>(key: Key): SWRResponse<Data, Error>
   <Data = any, Error = any>(
     key: Key,
-    fetcher: BareFetcher<Data> | null
+    fetcher: BareFetcher<Data> | null | undefined
   ): SWRResponse<Data, Error>
   <Data = any, Error = any>(
     key: Key,
@@ -231,7 +231,7 @@ export interface SWRHook {
   ): SWRResponse<Data, Error>
   <Data = any, Error = any>(
     key: Key,
-    fetcher: BareFetcher<Data> | null,
+    fetcher: BareFetcher<Data> | null | undefined,
     config: SWRConfiguration<Data, Error, BareFetcher<Data>> | undefined
   ): SWRResponse<Data, Error>
 }

@@ -9,7 +9,7 @@ describe('Utils', () => {
     const opts = { revalidateOnFocus: false }
 
     // Only the `key` argument is passed
-    expect(normalize(['key'])).toEqual(['key', null, {}])
+    expect(normalize(['key'])).toEqual(['key', undefined, {}])
 
     // `key` and `null` as fetcher (no fetcher)
     expect(normalize(['key', null])).toEqual(['key', null, {}])
@@ -18,7 +18,7 @@ describe('Utils', () => {
     expect(normalize(['key', fetcher])).toEqual(['key', fetcher, {}])
 
     // `key` and `options`
-    expect(normalize(['key', opts])).toEqual(['key', null, opts])
+    expect(normalize(['key', opts])).toEqual(['key', undefined, opts])
 
     // `key`, `null` as fetcher, and `options`
     expect(normalize(['key', null, opts])).toEqual(['key', null, opts])

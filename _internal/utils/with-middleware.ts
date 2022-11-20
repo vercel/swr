@@ -16,9 +16,9 @@ export const withMiddleware = (
   return <Data = any, Error = any>(
     ...args:
       | [Key]
-      | [Key, Fetcher<Data> | null]
+      | [Key, Fetcher<Data> | null | undefined]
       | [Key, SWRConfiguration | undefined]
-      | [Key, Fetcher<Data> | null, SWRConfiguration | undefined]
+      | [Key, Fetcher<Data> | null | undefined, SWRConfiguration | undefined]
   ) => {
     const [key, fn, config] = normalize(args)
     const uses = (config.use || []).concat(middleware)
