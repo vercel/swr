@@ -1337,7 +1337,7 @@ describe('useSWR - local mutation', () => {
     expect(renderedData).toEqual([undefined, 'foo', 'bar', 'baz', 'qux', 'baz'])
   })
 
-  it('should not rollback optimistic updates if `rollbackOnError`', async () => {
+  it('should not rollback optimistic updates if `rollbackOnError` is disabled', async () => {
     const key = createKey()
     const renderedData = []
     let mutate
@@ -1362,17 +1362,36 @@ describe('useSWR - local mutation', () => {
 
     try {
       await executeWithoutBatching(() =>
-        mutate(createResponse(new Error('baz'), { delay: 20 }), {
-          optimisticData: 'bar',
+        mutate(createResponse(new Error('baz-1'), { delay: 20 }), {
+          optimisticData: 'bar-1',
           rollbackOnError: false
         })
       )
     } catch (e) {
-      expect(e.message).toEqual('baz')
+      expect(e.message).toEqual('baz-1')
     }
 
     await sleep(30)
-    expect(renderedData).toEqual([undefined, 0, 'bar', 1])
+    expect(renderedData).toEqual([undefined, 0, 'bar-1', 1])
+
+    let rollbackErrorMessage
+    try {
+      await executeWithoutBatching(() =>
+        mutate(createResponse(new Error('baz-2'), { delay: 20 }), {
+          optimisticData: 'bar-2',
+          rollbackOnError: error => {
+            rollbackErrorMessage = error.message
+            return false
+          }
+        })
+      )
+    } catch (e) {
+      expect(e.message).toEqual('baz-2')
+    }
+
+    await sleep(30)
+    expect(renderedData).toEqual([undefined, 0, 'bar-1', 1, 'bar-2', 2])
+    expect(rollbackErrorMessage).toEqual('baz-2')
   })
 
   it('should support transforming the result with `populateCache` before writing back', async () => {

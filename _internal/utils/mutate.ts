@@ -55,10 +55,16 @@ export async function internalMutate<Data>(
   )
 
   let populateCache = options.populateCache
+
+  const rollbackOnErrorOption = options.rollbackOnError
   let optimisticData = options.optimisticData
 
   const revalidate = options.revalidate !== false
-  const rollbackOnError = options.rollbackOnError !== false
+  const rollbackOnError = (error: unknown): boolean => {
+    return typeof rollbackOnErrorOption === 'function'
+      ? rollbackOnErrorOption(error)
+      : rollbackOnErrorOption !== false
+  }
   const throwOnError = options.throwOnError
 
   // If the second argument is a key filter, return the mutation results for all
@@ -126,7 +132,8 @@ export async function internalMutate<Data>(
     // that is going to be overridden by a `committedData`, or get reverted back.
     // `committedData` is the validated value that comes from a fetch or mutation.
     const displayedData = state.data
-    const committedData = isUndefined(state._c) ? displayedData : state._c
+    const currentData = state._c
+    const committedData = isUndefined(currentData) ? displayedData : currentData
 
     // Do optimistic data update.
     if (hasOptimisticData) {
@@ -162,7 +169,7 @@ export async function internalMutate<Data>(
       if (beforeMutationTs !== MUTATION[key][0]) {
         if (error) throw error
         return data
-      } else if (error && hasOptimisticData && rollbackOnError) {
+      } else if (error && hasOptimisticData && rollbackOnError(error)) {
         // Rollback. Always populate the cache in this case but without
         // transforming the data.
         populateCache = true

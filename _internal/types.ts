@@ -266,7 +266,7 @@ export type MutatorOptions<Data = any> = {
     | boolean
     | ((result: any, currentData: Data | undefined) => Data)
   optimisticData?: Data | ((currentData?: Data) => Data)
-  rollbackOnError?: boolean
+  rollbackOnError?: boolean | ((error: unknown) => boolean)
   throwOnError?: boolean
 }
 
