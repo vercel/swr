@@ -18,7 +18,7 @@ export const isFunction = <
 >(
   v: unknown
 ): v is T => typeof v == 'function'
-export const mergeObjects = (a: any, b?: any) => OBJECT.assign({}, a, b)
+export const mergeObjects = (a: any, b?: any) => ({ ...a, ...b })
 
 const STR_UNDEFINED = 'undefined'
 

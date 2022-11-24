@@ -14,7 +14,7 @@
     "outDir": "./dist",
     "rootDir": "./",
     "strict": true,
-    "target": "es5",
+    "target": "ES2018",
     "baseUrl": ".",
     "noEmitOnError": true,
     "paths": {
