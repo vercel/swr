@@ -1,6 +1,6 @@
 {
   "name": "swr",
-  "version": "2.0.0-rc.0",
+  "version": "2.0.0-rc.1",
   "description": "React Hooks library for remote data fetching",
   "keywords": [
     "swr",
