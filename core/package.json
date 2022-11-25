@@ -5,8 +5,8 @@
   "exports": "./dist/index.mjs",
   "private": true,
   "scripts": {
-    "watch": "bunchee index.ts -w",
-    "build": "bunchee index.ts",
+    "watch": "bunchee --target es2018 index.ts -w",
+    "build": "bunchee --target es2018 index.ts",
     "types:check": "tsc --noEmit",
     "clean": "rimraf dist"
   },

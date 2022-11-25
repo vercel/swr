@@ -147,13 +147,11 @@ export const useSWRHandler = <Data = any, Error = any>(
         return snapshot
       }
 
-      return Object.assign(
-        {
-          isValidating: true,
-          isLoading: true
-        },
-        snapshot
-      )
+      return {
+        isValidating: true,
+        isLoading: true,
+        ...snapshot
+      }
     }
 
     let memorizedSnapshot = getSelectedCache()
