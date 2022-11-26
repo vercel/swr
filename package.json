@@ -99,7 +99,7 @@
     "@types/use-sync-external-store": "^0.0.3",
     "@typescript-eslint/eslint-plugin": "5.36.1",
     "@typescript-eslint/parser": "5.36.1",
-    "bunchee": "2.1.6",
+    "bunchee": "2.1.7",
     "eslint": "8.15.0",
     "eslint-config-prettier": "8.5.0",
     "eslint-plugin-jest-dom": "4.0.1",
