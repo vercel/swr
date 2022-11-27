@@ -126,4 +126,26 @@ describe('useSWR - fetcher', () => {
     rerender(<Page fetcher={false} />)
     screen.getByText('data:')
   })
+
+  it('should be able to pass null to the fetcher even config.fetcher is provided', () => {
+    const key = createKey()
+    const fn = jest.fn()
+
+    function Page() {
+      const { data } = useSWR(key, null, {
+        fetcher: fn
+      })
+
+      return (
+        <div>
+          <p>data:{data}</p>
+        </div>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('data:')
+
+    expect(fn).not.toHaveBeenCalled()
+  })
 })

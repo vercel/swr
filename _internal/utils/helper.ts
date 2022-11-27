@@ -12,6 +12,7 @@ export const UNDEFINED = (/*#__NOINLINE__*/ noop()) as undefined
 
 export const OBJECT = Object
 
+export const isNull = (v: any): v is null => v === null
 export const isUndefined = (v: any): v is undefined => v === UNDEFINED
 export const isFunction = <
   T extends (...args: any[]) => any = (...args: any[]) => any

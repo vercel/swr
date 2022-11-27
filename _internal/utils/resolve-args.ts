@@ -2,6 +2,7 @@ import { mergeConfigs } from './merge-config'
 import { normalize } from './normalize-args'
 import { useSWRConfig } from './use-swr-config'
 import { BUILT_IN_MIDDLEWARE } from './middleware-preset'
+import { isUndefined } from './helper'
 
 // It's tricky to pass generic types as parameters, so we just directly override
 // the types here.
@@ -11,7 +12,7 @@ export const withArgs = <SWRType>(hook: any) => {
     const fallbackConfig = useSWRConfig()
 
     // Normalize arguments.
-    const [key, fn, _config] = normalize<any, any>(args)
+    const [key, fn, _config] = normalize(args)
 
     // Merge configurations.
     const config = mergeConfigs(fallbackConfig, _config)
@@ -24,6 +25,6 @@ export const withArgs = <SWRType>(hook: any) => {
       next = middleware[i](next)
     }
 
-    return next(key, fn || config.fetcher, config)
+    return next(key, isUndefined(fn) ? config.fetcher : fn, config)
   } as unknown as SWRType
 }

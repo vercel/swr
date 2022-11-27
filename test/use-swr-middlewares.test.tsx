@@ -57,6 +57,25 @@ describe('useSWR - middleware', () => {
     expect(mockConsoleLog.mock.calls.length).toBe(2)
   })
 
+  it('should pass null fetcher to middleware', () => {
+    const key = createKey()
+    const mockConsoleLog = jest.fn(s => s)
+    const loggerMiddleware: Middleware = useSWRNext => (k, fn, config) => {
+      mockConsoleLog(fn)
+      return useSWRNext(k, fn, config)
+    }
+    function Page() {
+      const { data } = useSWR(key, null, {
+        use: [loggerMiddleware]
+      })
+      return <div>hello, {data}</div>
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('hello,')
+    expect(mockConsoleLog.mock.calls[0][0]).toEqual(null)
+  })
+
   it('should support `use` option in context', async () => {
     const key = createKey()
     const mockConsoleLog = jest.fn(s => s)
