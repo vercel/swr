@@ -2,6 +2,7 @@ import React from 'react'
 import type { Cache } from 'swr'
 import { useSWRConfig, SWRConfig } from 'swr'
 import { expectType } from './utils'
+import type { FullConfiguration } from 'swr/_internal'
 
 export function useTestCache() {
   expectType<Cache<any>>(useSWRConfig().cache)
@@ -27,4 +28,13 @@ export function useCustomSWRConfig() {
       />
     </>
   )
+}
+
+export function useFullConfiguration() {
+  type IData = { value: string }
+  type IError = { error: any }
+  type IConfig = FullConfiguration<IData, IError>
+
+  const config: IConfig = SWRConfig.defaultValue
+  expectType<IData | undefined>(config.fallbackData)
 }
