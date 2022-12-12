@@ -191,7 +191,11 @@ export interface PublicConfiguration<
   isVisible: () => boolean
 }
 
-export type FullConfiguration = InternalConfiguration & PublicConfiguration
+export type FullConfiguration<
+  Data = any,
+  Error = any,
+  Fn extends Fetcher = BareFetcher
+> = InternalConfiguration & PublicConfiguration<Data, Error, Fn>
 
 export type ProviderConfiguration = {
   initFocus: (callback: () => void) => (() => void) | void
