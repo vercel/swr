@@ -2,6 +2,7 @@ import { act, screen } from '@testing-library/react'
 import React, { useState, useEffect, useRef } from 'react'
 import type { Middleware } from 'swr'
 import useSWR, { SWRConfig } from 'swr'
+import type { FetcherSecondParameter } from 'swr/_internal'
 import { withMiddleware } from 'swr/_internal'
 
 import {
@@ -242,7 +243,7 @@ describe('useSWR - middleware', () => {
     function Page() {
       const { data } = useSWR(
         [key, { hello: 'world' }],
-        (_, o) => {
+        (_, o: FetcherSecondParameter & { hello: string }) => {
           return o.hello
         },
         {

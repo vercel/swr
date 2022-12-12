@@ -1,4 +1,4 @@
-import { useCallback, useRef, useDebugValue, useMemo } from 'react'
+import { useCallback, useRef, useDebugValue, useMemo, useEffect } from 'react'
 import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js'
 
 import {
@@ -25,6 +25,7 @@ import {
 import type {
   State,
   Fetcher,
+  FetcherOptions,
   Key,
   SWRResponse,
   RevalidatorOptions,
@@ -103,6 +104,10 @@ export const useSWRHandler = <Data = any, Error = any>(
     >(cache, key)
 
   const stateDependencies = useRef<StateDependencies>({}).current
+
+  // When starting a revalidate, record an abort callback here so that it
+  // can be called if a newer revalidation happens.
+  const abandonRef = useRef<(() => void) | undefined>()
 
   const fallback = isUndefined(fallbackData)
     ? config.fallback[key]
@@ -271,6 +276,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         unmountedRef.current ||
         getConfig().isPaused()
       ) {
+        abandonRef.current?.()
         return false
       }
 
@@ -341,17 +347,58 @@ export const useSWRHandler = <Data = any, Error = any>(
             }, config.loadingTimeout)
           }
 
+          const options: FetcherOptions = {}
+          let abortController: AbortController | undefined
+
+          if (
+            config.abortDiscardedRequests &&
+            typeof AbortController !== 'undefined'
+          ) {
+            abortController = new AbortController()
+            options.signal = abortController.signal
+          }
+
           // Start the request and save the timestamp.
           // Key must be truthy if entering here.
           FETCH[key] = [
-            currentFetcher(fnArg as DefinitelyTruthy<Key>),
-            getTimestamp()
+            currentFetcher(fnArg as DefinitelyTruthy<Key>, options),
+            getTimestamp(),
+            0, // Number of revalidate calls waiting on this fetcher result
+            abortController
           ]
+        }
+
+        const currentRequestInfo = FETCH[key]
+
+        // Reference count the number of revalidate calls that are awaiting this request
+        currentRequestInfo[2] += 1
+        abandonRef.current?.()
+
+        if (config.abortDiscardedRequests) {
+          // Store an abort callback in abortRef to be called if/when the next revalidate happens
+          // or if the component is unmounted. Will only do anything the first time its invoked.
+          let abandoned = false
+
+          abandonRef.current = () => {
+            if (!abandoned) {
+              abandoned = true
+              // Decrement the reference count
+              currentRequestInfo[2] -= 1
+              // If this was the last awaiter then abort the request
+              if (currentRequestInfo[2] == 0) {
+                // Note: we may consider it OK to abort a request thats already
+                // resolved as its basically a no-op. The other option is to clear
+                // the abortcontroller immediately after the await so that its not
+                // aborted.
+                currentRequestInfo[3]?.abort()
+              }
+            }
+          }
         }
 
         // Wait until the ongoing request is done. Deduplication is also
         // considered here.
-        ;[newData, startAt] = FETCH[key]
+        ;[newData, startAt] = currentRequestInfo
         newData = await newData
 
         if (shouldStartNewRequest) {
@@ -626,6 +673,14 @@ export const useSWRHandler = <Data = any, Error = any>(
       }
     }
   }, [refreshInterval, refreshWhenHidden, refreshWhenOffline, key])
+
+  // On final unmount
+  useEffect(
+    () => () => {
+      abandonRef.current?.()
+    },
+    []
+  )
 
   // Display debug info in React DevTools.
   useDebugValue(returnedData)

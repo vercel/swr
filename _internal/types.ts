@@ -4,7 +4,15 @@ import type { defaultConfig } from './utils/config'
 export type GlobalState = [
   Record<string, RevalidateCallback[]>, // EVENT_REVALIDATORS
   Record<string, [number, number]>, // MUTATION: [ts, end_ts]
-  Record<string, [any, number]>, // FETCH: [data, ts]
+  Record<
+    string,
+    [
+      data: any,
+      timestamp: number,
+      revalidateCount: number,
+      abort: AbortController | undefined
+    ]
+  >, // FETCH: [data, timestamp, revalidateCount, abort]
   Record<string, FetcherResponse<any>>, // PRELOAD
   ScopedMutator, // Mutator
   (key: string, value: any, prev: any) => void, // Setter
@@ -14,15 +22,24 @@ export type FetcherResponse<Data = unknown> = Data | Promise<Data>
 export type BareFetcher<Data = unknown> = (
   ...args: any[]
 ) => FetcherResponse<Data>
+/**
+ * Second parameter provided to fetcher functions. At present this only allows
+ * for 'signal' for cancelling a request in progress, but allows for future
+ * enhancements.
+ */
+export interface FetcherOptions {
+  signal?: AbortSignal
+  [key: string]: unknown
+}
 export type Fetcher<
   Data = unknown,
   SWRKey extends Key = Key
 > = SWRKey extends () => infer Arg | null | undefined | false
-  ? (arg: Arg) => FetcherResponse<Data>
+  ? (arg: Arg, options: FetcherOptions) => FetcherResponse<Data>
   : SWRKey extends null | undefined | false
   ? never
   : SWRKey extends infer Arg
-  ? (arg: Arg) => FetcherResponse<Data>
+  ? (arg: Arg, options: FetcherOptions) => FetcherResponse<Data>
   : never
 
 export type BlockingData<
@@ -200,6 +217,12 @@ export interface PublicConfiguration<
    * @link https://swr.vercel.app/docs/advanced/react-native#customize-focus-and-reconnect-events
    */
   isVisible: () => boolean
+
+  /**
+   * Enable this to pass an instance of AbortSignal to your fetcher that will be aborted when there no useSWR hooks remaining that are listening for the result of the fetch (as
+   * a result for example of navigation, or change of search input). This allows you to cancel a long running a request if the result is no longer relevant, e.g. when doing a search.
+   */
+  abortDiscardedRequests?: boolean
 }
 
 export type FullConfiguration<
