@@ -18,11 +18,11 @@ export type Fetcher<
   Data = unknown,
   SWRKey extends Key = Key
 > = SWRKey extends () => infer Arg | null | undefined | false
-  ? (args: Arg) => FetcherResponse<Data>
+  ? (arg: Arg) => FetcherResponse<Data>
   : SWRKey extends null | undefined | false
   ? never
   : SWRKey extends infer Arg
-  ? (args: Arg) => FetcherResponse<Data>
+  ? (arg: Arg) => FetcherResponse<Data>
   : never
 
 // Configuration types that are only used internally, not exposed to the user.
@@ -208,6 +208,22 @@ export type ProviderConfiguration = {
  * ```
  */
 export interface SWRHook {
+  <Data = any, Error = any, SWRKey extends StrictKey = StrictKey>(
+    key: SWRKey
+  ): SWRResponse<Data, Error>
+  <Data = any, Error = any, SWRKey extends StrictKey = StrictKey>(
+    key: SWRKey,
+    fetcher: Fetcher<Data, SWRKey> | null
+  ): SWRResponse<Data, Error>
+  <Data = any, Error = any, SWRKey extends StrictKey = StrictKey>(
+    key: SWRKey,
+    config: SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>> | undefined
+  ): SWRResponse<Data, Error>
+  <Data = any, Error = any, SWRKey extends StrictKey = StrictKey>(
+    key: SWRKey,
+    fetcher: Fetcher<Data, SWRKey> | null,
+    config: SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>> | undefined
+  ): SWRResponse<Data, Error>
   <Data = any, Error = any, SWRKey extends Key = null>(
     key: SWRKey
   ): SWRResponse<Data, Error>
@@ -259,7 +275,8 @@ export type Arguments =
   | undefined
   | false
 export type Key = Arguments | (() => Arguments)
-
+type StrictTupleKey = ArgumentsTuple | null | undefined | false
+type StrictKey = StrictTupleKey | (() => StrictTupleKey)
 export type MutatorCallback<Data = any> = (
   currentData?: Data
 ) => Promise<undefined | Data> | undefined | Data
