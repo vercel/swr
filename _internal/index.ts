@@ -1,7 +1,7 @@
-import SWRConfig from './utils/config-context'
+import SWRConfig, { SWRConfigContext } from './utils/config-context'
 import * as revalidateEvents from './constants'
 
-export { SWRConfig, revalidateEvents }
+export { SWRConfig, SWRConfigContext, revalidateEvents }
 
 export { initCache } from './utils/cache'
 export { defaultConfig, cache, mutate, compare } from './utils/config'
