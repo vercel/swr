@@ -30,14 +30,16 @@ export type SWRMutationConfiguration<
     key: string,
     config: Readonly<
       SWRMutationConfiguration<Data, Error, ExtraArg, SWRMutationKey>
-    >
+    >,
+    extraArg: any
   ) => void
   onError?: (
     err: Error,
     key: string,
     config: Readonly<
       SWRMutationConfiguration<Data, Error, ExtraArg, SWRMutationKey>
-    >
+    >,
+    extraArg: any
   ) => void
 }
 

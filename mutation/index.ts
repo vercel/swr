@@ -72,7 +72,7 @@ const mutation = (<Data, Error>() =>
           // If it's reset after the mutation, we don't broadcast any state change.
           if (ditchMutationsUntilRef.current <= mutationStartedAt) {
             setState({ data, isMutating: false, error: undefined })
-            options.onSuccess?.(data as Data, serializedKey, options)
+            options.onSuccess?.(data as Data, serializedKey, options, arg)
           }
           return data
         } catch (error) {
@@ -80,7 +80,7 @@ const mutation = (<Data, Error>() =>
           // or throw because it's discarded.
           if (ditchMutationsUntilRef.current <= mutationStartedAt) {
             setState({ error: error as Error, isMutating: false })
-            options.onError?.(error as Error, serializedKey, options)
+            options.onError?.(error as Error, serializedKey, options, arg)
             if (options.throwOnError) {
               throw error as Error
             }
