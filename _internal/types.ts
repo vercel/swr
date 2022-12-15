@@ -275,7 +275,7 @@ export type Arguments =
   | undefined
   | false
 export type Key = Arguments | (() => Arguments)
-type StrictTupleKey = ArgumentsTuple | null | undefined | false
+export type StrictTupleKey = ArgumentsTuple | null | undefined | false
 type StrictKey = StrictTupleKey | (() => StrictTupleKey)
 export type MutatorCallback<Data = any> = (
   currentData?: Data

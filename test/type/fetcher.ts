@@ -347,7 +347,7 @@ export function useReturnTuple() {
     keys => {
       expectType<
         Equal<
-          [{ a: string; b: { c: string } }, (string | number)[]],
+          [{ a: string; b: { c: string; d: number } }, (string | number)[]],
           typeof keys
         >
       >(true)
