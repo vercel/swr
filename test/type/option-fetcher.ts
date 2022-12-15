@@ -1,6 +1,7 @@
 import useSWR from 'swr'
 import useSWRInfinite from 'swr/infinite'
 import { expectType, truthy } from './utils'
+import type { Equal } from '@type-challenges/utils'
 
 export function useDataErrorGeneric() {
   useSWR<{ id: number }>('/api/', { fetcher: () => ({ id: 123 }) })
@@ -11,19 +12,19 @@ export function useDataErrorGeneric() {
 export function useString() {
   useSWR('/api/user', {
     fetcher: key => {
-      expectType<string>(key)
+      expectType<Equal<'/api/user', typeof key>>(true)
       return key
     }
   })
   useSWR(truthy() ? '/api/user' : null, {
     fetcher: key => {
-      expectType<string>(key)
+      expectType<Equal<'/api/user', typeof key>>(true)
       return key
     }
   })
   useSWR(truthy() ? '/api/user' : false, {
     fetcher: key => {
-      expectType<string>(key)
+      expectType<Equal<'/api/user', typeof key>>(true)
       return key
     }
   })
@@ -34,7 +35,9 @@ export function useRecord() {
     { a: '1', b: { c: '3', d: 2 } },
     {
       fetcher: key => {
-        expectType<{ a: string; b: { c: string; d: number } }>(key)
+        expectType<
+          Equal<{ a: string; b: { c: string; d: number } }, typeof key>
+        >(true)
         return key
       }
     }
@@ -42,14 +45,18 @@ export function useRecord() {
 
   useSWR(truthy() ? { a: '1', b: { c: '3', d: 2 } } : null, {
     fetcher: key => {
-      expectType<{ a: string; b: { c: string; d: number } }>(key)
+      expectType<Equal<{ a: string; b: { c: string; d: number } }, typeof key>>(
+        true
+      )
       return key
     }
   })
 
   useSWR(truthy() ? { a: '1', b: { c: '3', d: 2 } } : false, {
     fetcher: key => {
-      expectType<{ a: string; b: { c: string; d: number } }>(key)
+      expectType<Equal<{ a: string; b: { c: string; d: number } }, typeof key>>(
+        true
+      )
       return key
     }
   })
@@ -58,19 +65,34 @@ export function useRecord() {
 export function useTuple() {
   useSWR([{ a: '1', b: { c: '3' } }, [1231, '888']], {
     fetcher: keys => {
-      expectType<[{ a: string; b: { c: string } }, (string | number)[]]>(keys)
+      expectType<
+        Equal<
+          [{ a: string; b: { c: string } }, (string | number)[]],
+          typeof keys
+        >
+      >(true)
       return keys
     }
   })
   useSWR(truthy() ? [{ a: '1', b: { c: '3' } }, [1231, '888']] : null, {
     fetcher: keys => {
-      expectType<[{ a: string; b: { c: string } }, (string | number)[]]>(keys)
+      expectType<
+        Equal<
+          [{ a: string; b: { c: string } }, (string | number)[]],
+          typeof keys
+        >
+      >(true)
       return keys
     }
   })
   useSWR(truthy() ? [{ a: '1', b: { c: '3' } }, [1231, '888']] : false, {
     fetcher: keys => {
-      expectType<[{ a: string; b: { c: string } }, (string | number)[]]>(keys)
+      expectType<
+        Equal<
+          [{ a: string; b: { c: string } }, (string | number)[]],
+          typeof keys
+        >
+      >(true)
       return keys
     }
   })
@@ -80,24 +102,7 @@ export function useReadonlyTuple() {
   useSWR([{ a: '1', b: { c: '3' } }, [1231, '888']] as const, {
     fetcher: keys => {
       expectType<
-        readonly [
-          {
-            readonly a: '1'
-            readonly b: {
-              readonly c: '3'
-            }
-          },
-          readonly [1231, '888']
-        ]
-      >(keys)
-      return keys
-    }
-  })
-  useSWR(
-    truthy() ? ([{ a: '1', b: { c: '3' } }, [1231, '888']] as const) : null,
-    {
-      fetcher: keys => {
-        expectType<
+        Equal<
           readonly [
             {
               readonly a: '1'
@@ -106,8 +111,31 @@ export function useReadonlyTuple() {
               }
             },
             readonly [1231, '888']
-          ]
-        >(keys)
+          ],
+          typeof keys
+        >
+      >(true)
+      return keys
+    }
+  })
+  useSWR(
+    truthy() ? ([{ a: '1', b: { c: '3' } }, [1231, '888']] as const) : null,
+    {
+      fetcher: keys => {
+        expectType<
+          Equal<
+            readonly [
+              {
+                readonly a: '1'
+                readonly b: {
+                  readonly c: '3'
+                }
+              },
+              readonly [1231, '888']
+            ],
+            typeof keys
+          >
+        >(true)
         return keys
       }
     }
@@ -117,16 +145,19 @@ export function useReadonlyTuple() {
     {
       fetcher: keys => {
         expectType<
-          readonly [
-            {
-              readonly a: '1'
-              readonly b: {
-                readonly c: '3'
-              }
-            },
-            readonly [1231, '888']
-          ]
-        >(keys)
+          Equal<
+            readonly [
+              {
+                readonly a: '1'
+                readonly b: {
+                  readonly c: '3'
+                }
+              },
+              readonly [1231, '888']
+            ],
+            typeof keys
+          >
+        >(true)
         return keys
       }
     }
@@ -136,20 +167,20 @@ export function useReadonlyTuple() {
 export function useReturnString() {
   useSWR(() => '/api/user', {
     fetcher: key => {
-      expectType<string>(key)
+      expectType<Equal<string, typeof key>>(true)
       return key
     }
   })
   useSWR(() => (truthy() ? '/api/user' : null), {
     fetcher: key => {
-      expectType<string>(key)
+      expectType<Equal<'/api/user', typeof key>>(true)
       return key
     }
   })
 
   useSWR(() => (truthy() ? '/api/user' : false), {
     fetcher: key => {
-      expectType<string>(key)
+      expectType<Equal<'/api/user', typeof key>>(true)
       return key
     }
   })
@@ -160,7 +191,7 @@ export function useReturnString() {
     },
     {
       fetcher: key => {
-        expectType<string>(key)
+        expectType<Equal<string, typeof key>>(true)
         return key
       }
     }
@@ -172,7 +203,7 @@ export function useReturnString() {
     },
     {
       fetcher: key => {
-        expectType<string>(key)
+        expectType<Equal<string, typeof key>>(true)
         return key
       }
     }
@@ -183,7 +214,7 @@ export function useReturnString() {
     },
     {
       fetcher: key => {
-        expectType<string>(key)
+        expectType<Equal<string, typeof key>>(true)
         return key
       }
     }
@@ -193,20 +224,26 @@ export function useReturnString() {
 export function useReturnRecord() {
   useSWR(() => ({ a: '1', b: { c: '3', d: 2 } }), {
     fetcher: key => {
-      expectType<{ a: string; b: { c: string; d: number } }>(key)
+      expectType<Equal<{ a: string; b: { c: string; d: number } }, typeof key>>(
+        true
+      )
       return key
     }
   })
   useSWR(() => (truthy() ? { a: '1', b: { c: '3', d: 2 } } : null), {
     fetcher: key => {
-      expectType<{ a: string; b: { c: string; d: number } }>(key)
+      expectType<Equal<{ a: string; b: { c: string; d: number } }, typeof key>>(
+        true
+      )
       return key
     }
   })
 
   useSWR(() => (truthy() ? { a: '1', b: { c: '3', d: 2 } } : false), {
     fetcher: key => {
-      expectType<{ a: string; b: { c: string; d: number } }>(key)
+      expectType<Equal<{ a: string; b: { c: string; d: number } }, typeof key>>(
+        true
+      )
       return key
     }
   })
@@ -218,7 +255,7 @@ export function useReturnRecord() {
     }),
     {
       fetcher: key => {
-        expectType<{ index: number; endPoint: string }>(key)
+        expectType<Equal<{ index: number; endPoint: string }, typeof key>>(true)
         return [key]
       }
     }
@@ -234,7 +271,7 @@ export function useReturnRecord() {
         : null,
     {
       fetcher: key => {
-        expectType<{ index: number; endPoint: string }>(key)
+        expectType<Equal<{ index: number; endPoint: string }, typeof key>>(true)
         return [key]
       }
     }
@@ -250,7 +287,7 @@ export function useReturnRecord() {
         : false,
     {
       fetcher: key => {
-        expectType<{ index: number; endPoint: string }>(key)
+        expectType<Equal<{ index: number; endPoint: string }, typeof key>>(true)
         return [key]
       }
     }
@@ -260,13 +297,23 @@ export function useReturnRecord() {
 export function useReturnTuple() {
   useSWR(() => [{ a: '1', b: { c: '3' } }, [1231, '888']], {
     fetcher: keys => {
-      expectType<[{ a: string; b: { c: string } }, (string | number)[]]>(keys)
+      expectType<
+        Equal<
+          [{ a: string; b: { c: string } }, (string | number)[]],
+          typeof keys
+        >
+      >(true)
       return keys
     }
   })
   useSWR(() => (truthy() ? [{ a: '1', b: { c: '3' } }, [1231, '888']] : null), {
     fetcher: keys => {
-      expectType<[{ a: string; b: { c: string } }, (string | number)[]]>(keys)
+      expectType<
+        Equal<
+          [{ a: string; b: { c: string } }, (string | number)[]],
+          typeof keys
+        >
+      >(true)
       return keys
     }
   })
@@ -275,7 +322,12 @@ export function useReturnTuple() {
     () => (truthy() ? [{ a: '1', b: { c: '3' } }, [1231, '888']] : false),
     {
       fetcher: keys => {
-        expectType<[{ a: string; b: { c: string } }, (string | number)[]]>(keys)
+        expectType<
+          Equal<
+            [{ a: string; b: { c: string } }, (string | number)[]],
+            typeof keys
+          >
+        >(true)
         return keys
       }
     }
@@ -285,7 +337,12 @@ export function useReturnTuple() {
     index => [{ a: '1', b: { c: '3', d: index } }, [1231, '888']],
     {
       fetcher: keys => {
-        expectType<[{ a: string; b: { c: string } }, (string | number)[]]>(keys)
+        expectType<
+          Equal<
+            [{ a: string; b: { c: string; d: number } }, (string | number)[]],
+            typeof keys
+          >
+        >(true)
         return keys[1]
       }
     }
@@ -296,7 +353,12 @@ export function useReturnTuple() {
       truthy() ? [{ a: '1', b: { c: '3', d: index } }, [1231, '888']] : null,
     {
       fetcher: keys => {
-        expectType<[{ a: string; b: { c: string } }, (string | number)[]]>(keys)
+        expectType<
+          Equal<
+            [{ a: string; b: { c: string; d: number } }, (string | number)[]],
+            typeof keys
+          >
+        >(true)
         return keys[1]
       }
     }
@@ -307,7 +369,12 @@ export function useReturnTuple() {
       truthy() ? [{ a: '1', b: { c: '3', d: index } }, [1231, '888']] : false,
     {
       fetcher: keys => {
-        expectType<[{ a: string; b: { c: string } }, (string | number)[]]>(keys)
+        expectType<
+          Equal<
+            [{ a: string; b: { c: string; d: number } }, (string | number)[]],
+            typeof keys
+          >
+        >(true)
         return keys[1]
       }
     }
@@ -318,16 +385,19 @@ export function useReturnReadonlyTuple() {
   useSWR(() => [{ a: '1', b: { c: '3' } }, [1231, '888']] as const, {
     fetcher: keys => {
       expectType<
-        readonly [
-          {
-            readonly a: '1'
-            readonly b: {
-              readonly c: '3'
-            }
-          },
-          readonly [1231, '888']
-        ]
-      >(keys)
+        Equal<
+          readonly [
+            {
+              readonly a: '1'
+              readonly b: {
+                readonly c: '3'
+              }
+            },
+            readonly [1231, '888']
+          ],
+          typeof keys
+        >
+      >(true)
       return keys
     }
   })
@@ -337,16 +407,19 @@ export function useReturnReadonlyTuple() {
     {
       fetcher: keys => {
         expectType<
-          readonly [
-            {
-              readonly a: '1'
-              readonly b: {
-                readonly c: '3'
-              }
-            },
-            readonly [1231, '888']
-          ]
-        >(keys)
+          Equal<
+            readonly [
+              {
+                readonly a: '1'
+                readonly b: {
+                  readonly c: '3'
+                }
+              },
+              readonly [1231, '888']
+            ],
+            typeof keys
+          >
+        >(true)
         return keys
       }
     }
@@ -358,16 +431,19 @@ export function useReturnReadonlyTuple() {
     {
       fetcher: keys => {
         expectType<
-          readonly [
-            {
-              readonly a: '1'
-              readonly b: {
-                readonly c: '3'
-              }
-            },
-            readonly [1231, '888']
-          ]
-        >(keys)
+          Equal<
+            readonly [
+              {
+                readonly a: '1'
+                readonly b: {
+                  readonly c: '3'
+                }
+              },
+              readonly [1231, '888']
+            ],
+            typeof keys
+          >
+        >(true)
         return keys
       }
     }
@@ -376,16 +452,19 @@ export function useReturnReadonlyTuple() {
   useSWRInfinite(() => [{ a: '1', b: { c: '3' } }, [1231, '888']] as const, {
     fetcher: keys => {
       expectType<
-        readonly [
-          {
-            readonly a: '1'
-            readonly b: {
-              readonly c: '3'
-            }
-          },
-          readonly [1231, '888']
-        ]
-      >(keys)
+        Equal<
+          readonly [
+            {
+              readonly a: '1'
+              readonly b: {
+                readonly c: '3'
+              }
+            },
+            readonly [1231, '888']
+          ],
+          typeof keys
+        >
+      >(true)
       return keys
     }
   })
@@ -395,16 +474,19 @@ export function useReturnReadonlyTuple() {
     {
       fetcher: keys => {
         expectType<
-          readonly [
-            {
-              readonly a: '1'
-              readonly b: {
-                readonly c: '3'
-              }
-            },
-            readonly [1231, '888']
-          ]
-        >(keys)
+          Equal<
+            readonly [
+              {
+                readonly a: '1'
+                readonly b: {
+                  readonly c: '3'
+                }
+              },
+              readonly [1231, '888']
+            ],
+            typeof keys
+          >
+        >(true)
         return keys[1]
       }
     }
@@ -416,16 +498,19 @@ export function useReturnReadonlyTuple() {
     {
       fetcher: keys => {
         expectType<
-          readonly [
-            {
-              readonly a: '1'
-              readonly b: {
-                readonly c: '3'
-              }
-            },
-            readonly [1231, '888']
-          ]
-        >(keys)
+          Equal<
+            readonly [
+              {
+                readonly a: '1'
+                readonly b: {
+                  readonly c: '3'
+                }
+              },
+              readonly [1231, '888']
+            ],
+            typeof keys
+          >
+        >(true)
         return keys[1]
       }
     }

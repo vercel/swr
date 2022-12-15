@@ -64,8 +64,8 @@
   "license": "MIT",
   "scripts": {
     "prepare": "husky install",
-    "csb:install": "pnpm i -g pnpm@7",
-    "csb:build": "pnpm install && pnpm build",
+    "csb:install": "pnpm install",
+    "csb:build": "pnpm build",
     "clean": "pnpm -r run clean",
     "watch": "pnpm -r run watch",
     "build": "pnpm build-package _internal && pnpm build-package core && pnpm build-package infinite && pnpm build-package immutable && pnpm build-package mutation",

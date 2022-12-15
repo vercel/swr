@@ -208,34 +208,18 @@ export type ProviderConfiguration = {
  * ```
  */
 export interface SWRHook {
-  <Data = any, Error = any, SWRKey extends StrictKey = StrictKey>(
+  <Data = any, Error = any, SWRKey extends Key = StrictKey>(
     key: SWRKey
   ): SWRResponse<Data, Error>
-  <Data = any, Error = any, SWRKey extends StrictKey = StrictKey>(
+  <Data = any, Error = any, SWRKey extends Key = StrictKey>(
     key: SWRKey,
     fetcher: Fetcher<Data, SWRKey> | null
   ): SWRResponse<Data, Error>
-  <Data = any, Error = any, SWRKey extends StrictKey = StrictKey>(
+  <Data = any, Error = any, SWRKey extends Key = StrictKey>(
     key: SWRKey,
     config: SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>> | undefined
   ): SWRResponse<Data, Error>
-  <Data = any, Error = any, SWRKey extends StrictKey = StrictKey>(
-    key: SWRKey,
-    fetcher: Fetcher<Data, SWRKey> | null,
-    config: SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>> | undefined
-  ): SWRResponse<Data, Error>
-  <Data = any, Error = any, SWRKey extends Key = null>(
-    key: SWRKey
-  ): SWRResponse<Data, Error>
-  <Data = any, Error = any, SWRKey extends Key = null>(
-    key: SWRKey,
-    fetcher: Fetcher<Data, SWRKey> | null
-  ): SWRResponse<Data, Error>
-  <Data = any, Error = any, SWRKey extends Key = null>(
-    key: SWRKey,
-    config: SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>> | undefined
-  ): SWRResponse<Data, Error>
-  <Data = any, Error = any, SWRKey extends Key = null>(
+  <Data = any, Error = any, SWRKey extends Key = StrictKey>(
     key: SWRKey,
     fetcher: Fetcher<Data, SWRKey> | null,
     config: SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>> | undefined
@@ -275,7 +259,7 @@ export type Arguments =
   | undefined
   | false
 export type Key = Arguments | (() => Arguments)
-type StrictTupleKey = ArgumentsTuple | null | undefined | false
+export type StrictTupleKey = ArgumentsTuple | null | undefined | false
 type StrictKey = StrictTupleKey | (() => StrictTupleKey)
 export type MutatorCallback<Data = any> = (
   currentData?: Data
