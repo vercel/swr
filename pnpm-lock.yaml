@@ -15,7 +15,7 @@ importers:
       '@types/use-sync-external-store': ^0.0.3
       '@typescript-eslint/eslint-plugin': 5.46.1
       '@typescript-eslint/parser': 5.46.1
-      bunchee: 2.1.7
+      bunchee: 2.2.0
       eslint: 8.29.0
       eslint-config-prettier: 8.5.0
       eslint-plugin-jest-dom: 4.0.3
@@ -49,7 +49,7 @@ importers:
       '@types/use-sync-external-store': 0.0.3
       '@typescript-eslint/eslint-plugin': 5.46.1_imrg37k3svwu377c6q7gkarwmi
       '@typescript-eslint/parser': 5.46.1_ha6vam6werchizxrnqvarmz2zu
-      bunchee: 2.1.7_typescript@4.9.4
+      bunchee: 2.2.0_typescript@4.9.4
       eslint: 8.29.0
       eslint-config-prettier: 8.5.0_eslint@8.29.0
       eslint-plugin-jest-dom: 4.0.3_eslint@8.29.0
@@ -1783,8 +1783,8 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  /bunchee/2.1.7_typescript@4.9.4:
-    resolution: {integrity: sha512-0eJxpWzCnuTTeEDDLrKhs5mr17j/Czx66St+ptr3r6OaIxtXL/cftPGjS+bVeypPTbqZ/EDdPbJ6sXYe58V2yg==}
+  /bunchee/2.2.0_typescript@4.9.4:
+    resolution: {integrity: sha512-lJY6bMIbNcSfBPUZ+6ZZPoqTKIPkl0fi+SL+DBDhWER1GOH14m6DTGLpa0MSEI3bo3TBUJ7TggQ/Gw7p76+nvQ==}
     hasBin: true
     peerDependencies:
       typescript: '>= 3.7.0'
@@ -3461,6 +3461,7 @@ packages:
 
   /js-tokens/4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
+    dev: true
 
   /js-yaml/3.14.1:
     resolution: {integrity: sha512-okMH7OXXJ7YrN9Ok3/SXrnu4iX9yOk+25nqX4imS2npuvTYDmo/QEZoqwZkYaIDk3jVvBOTOIEgEhaLOynBS9g==}
@@ -3668,6 +3669,7 @@ packages:
     hasBin: true
     dependencies:
       js-tokens: 4.0.0
+    dev: true
 
   /lru-cache/6.0.0:
     resolution: {integrity: sha512-Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA==}
@@ -4184,6 +4186,7 @@ packages:
     engines: {node: '>=0.10.0'}
     dependencies:
       loose-envify: 1.4.0
+    dev: true
 
   /redent/3.0.0:
     resolution: {integrity: sha512-6tDA8g98We0zd0GvVeMT9arEOnTw9qM03L9cJXaCjrip1OO764RDBLBfrB4cwzNGDj5OA5ioymC9GkizgWJDUg==}
@@ -4463,6 +4466,7 @@ packages:
 
   /sourcemap-codec/1.4.8:
     resolution: {integrity: sha512-9NykojV5Uih4lgo5So5dtw+f0JgJX30KCNI8gwhz2J9A15wD0Ml6tjHKwf6fTSa6fAdVBdZeNOs9eJ71qCk8vA==}
+    deprecated: Please use @jridgewell/sourcemap-codec instead
     dev: true
 
   /sprintf-js/1.0.3:
