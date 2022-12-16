@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
-import React from 'react'
+import React, { useState } from 'react'
 import useSWR from 'swr'
 import useSWRMutation from 'swr/mutation'
 import { createKey, sleep, nextTick } from './utils'
@@ -883,5 +883,48 @@ describe('useSWR - remote mutation', () => {
 
     fireEvent.click(screen.getByText('trigger'))
     await screen.findByText('Error: none')
+  })
+
+  it('should always use the latest fetcher', async () => {
+    const key = createKey()
+
+    function Page() {
+      const [count, setCount] = useState(0)
+      const { data, trigger } = useSWRMutation(key, () => count)
+
+      return (
+        <div>
+          <button
+            onClick={() => {
+              setCount(c => c + 1)
+            }}
+          >
+            ++
+          </button>
+          <button
+            onClick={() => {
+              trigger()
+            }}
+          >
+            trigger
+          </button>
+          <div>
+            data:{data},count:{count}
+          </div>
+        </div>
+      )
+    }
+
+    render(<Page />)
+
+    await screen.findByText('data:,count:0')
+    fireEvent.click(screen.getByText('trigger'))
+    await screen.findByText('data:0,count:0')
+
+    fireEvent.click(screen.getByText('++'))
+    await screen.findByText('data:0,count:1')
+
+    fireEvent.click(screen.getByText('trigger'))
+    await screen.findByText('data:1,count:1')
   })
 })
