@@ -1,14 +1,15 @@
 import React from 'react'
-import type { Cache } from 'swr'
-import { useSWRConfig, SWRConfig } from 'swr'
+import type { Cache, SWRResponse } from 'swr'
+import useSWR, { useSWRConfig, SWRConfig } from 'swr'
 import { expectType } from './utils'
 import type { FullConfiguration } from 'swr/_internal'
+import type { Equal } from '@type-challenges/utils'
 
-export function useTestCache() {
+export function testCache() {
   expectType<Cache<any>>(useSWRConfig().cache)
 }
 
-export function useCustomSWRConfig() {
+export function testCustomSWRConfig() {
   const noNull = [
     // @ts-expect-error
     <SWRConfig key={'null'} value={null} />,
@@ -30,11 +31,28 @@ export function useCustomSWRConfig() {
   )
 }
 
-export function useFullConfiguration() {
+export function testFullConfiguration() {
   type IData = { value: string }
   type IError = { error: any }
   type IConfig = FullConfiguration<IData, IError>
 
   const config: IConfig = SWRConfig.defaultValue
   expectType<IData | undefined>(config.fallbackData)
+}
+
+export function testCachedkData() {
+  type CachedSWRResponse = SWRResponse<string, any, true>
+  type FilledData = CachedSWRResponse['data']
+  expectType<Equal<FilledData, string>>(true)
+  const { data: fallbackabllData } = useSWR('/api', k => Promise.resolve(k), {
+    fallbackData: 'value'
+  })
+  const { data: suspenseyData } = useSWR(
+    '/api',
+    (k: string) => Promise.resolve(k),
+    { suspense: true } as const
+  )
+
+  expectType<string>(fallbackabllData)
+  expectType<string>(suspenseyData)
 }
