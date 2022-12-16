@@ -40,22 +40,46 @@ export function testFullConfiguration() {
   expectType<IData | undefined>(config.fallbackData)
 }
 
-export function testCachedkData() {
-  type CachedSWRResponse = SWRResponse<string, any, true>
-  type FilledData = CachedSWRResponse['data']
+export function testSWRResponseCachedDataTypes() {
+  type FilledData = SWRResponse<string, any, true>['data']
   expectType<Equal<FilledData, string>>(true)
 
-  // Specify the type of Data returning from fetcher
-  const fetcher = (k: string) => Promise.resolve(k)
-  const { data: fulfilledData } = useSWR('/api', fetcher, {
-    fallbackData: 'fallback'
-  })
+  type FilledConditionalData = SWRResponse<string | number, any, true>['data']
+  expectType<Equal<FilledConditionalData, string | number>>(true)
+}
+
+export function testSuspense() {
   const { data: suspenseyData } = useSWR(
     '/api',
     (k: string) => Promise.resolve(k),
     { suspense: true }
   )
 
-  expectType<string>(fulfilledData)
   expectType<string>(suspenseyData)
+}
+
+export function testFallbackData() {
+  // Need to specify the type of Data returning from fetcher
+
+  // Basic
+  const fetcher1 = (k: string) => Promise.resolve(k)
+  const { data: data1 } = useSWR('/api', fetcher1, {
+    fallbackData: 'fallback'
+  })
+  expectType<string>(data1)
+
+  // Conditional
+  const fetcher2 = (k: string) =>
+    Promise.resolve(Math.random() > 0.5 ? k : Math.random() * 100)
+  const { data: data2 } = useSWR('/api', fetcher2, {
+    fallbackData: 'fallback'
+  })
+  expectType<string | number>(data2)
+
+  // Complex
+  const fetcher3 = (k: string) => Promise.resolve({ value: k })
+  const { data: data3 } = useSWR('/api', fetcher3, {
+    fallbackData: { value: 'fallback' }
+  })
+  expectType<{ value: string }>(data3)
 }
