@@ -44,9 +44,11 @@ export function testCachedkData() {
   type CachedSWRResponse = SWRResponse<string, any, true>
   type FilledData = CachedSWRResponse['data']
   expectType<Equal<FilledData, string>>(true)
-  const key = '/api'
-  const { data: fulfilledData } = useSWR(key, k => Promise.resolve(k), {
-    fallbackData: 'value'
+
+  // Specify the type of Data returning from fetcher
+  const fetcher = (k: string) => Promise.resolve(k)
+  const { data: fulfilledData } = useSWR('/api', fetcher, {
+    fallbackData: 'fallback'
   })
   const { data: suspenseyData } = useSWR(
     '/api',

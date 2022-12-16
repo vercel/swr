@@ -53,8 +53,7 @@ type DefinitelyTruthy<T> = false extends T
 export const useSWRHandler = <Data = any, Error = any>(
   _key: Key,
   fetcher: Fetcher<Data> | null,
-  config: FullConfiguration<Data, Error, Fetcher<Data>> &
-    SWRConfiguration<Data, Error>
+  config: FullConfiguration & SWRConfiguration<Data, Error>
 ) => {
   const {
     cache,
