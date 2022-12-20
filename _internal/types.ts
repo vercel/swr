@@ -25,11 +25,14 @@ export type Fetcher<
   ? (arg: Arg) => FetcherResponse<Data>
   : never
 
-export type DataCached<Config, Data = any> = Config extends undefined
+export type BlockingData<
+  Data = any,
+  Options = SWROptions<Data>
+> = Options extends undefined
   ? false
-  : Config extends { suspense: true }
+  : Options extends { suspense: true }
   ? true
-  : Config extends { fallbackData: Data }
+  : Options extends { fallbackData: Data }
   ? true
   : false
 
@@ -235,7 +238,7 @@ export interface SWRHook {
   >(
     key: SWRKey,
     config: SWROptions
-  ): SWRResponse<Data, Error, DataCached<SWROptions, Data>>
+  ): SWRResponse<Data, Error, SWROptions>
   <
     Data = any,
     Error = any,
@@ -249,7 +252,7 @@ export interface SWRHook {
     key: SWRKey,
     fetcher: Fetcher<Data, SWRKey> | null,
     config: SWROptions
-  ): SWRResponse<Data, Error, DataCached<SWROptions, Data>>
+  ): SWRResponse<Data, Error, SWROptions>
   <Data = any, Error = any>(key: Key): SWRResponse<Data, Error>
   <Data = any, Error = any>(
     key: Key,
@@ -264,7 +267,7 @@ export interface SWRHook {
   >(
     key: Key,
     config: SWROptions
-  ): SWRResponse<Data, Error, DataCached<SWROptions, Data>>
+  ): SWRResponse<Data, Error, SWROptions>
   <
     Data = any,
     Error = any,
@@ -275,7 +278,7 @@ export interface SWRHook {
     key: Key,
     fetcher: BareFetcher<Data> | null,
     config: SWROptions
-  ): SWRResponse<Data, Error, DataCached<SWROptions, Data>>
+  ): SWRResponse<Data, Error, SWROptions>
 }
 
 // Middleware guarantees that a SWRHook receives a key, fetcher, and config as the argument
@@ -380,18 +383,19 @@ export type SWRConfiguration<
   Fn extends BareFetcher<any> = BareFetcher<any>
 > = Partial<PublicConfiguration<Data, Error, Fn>>
 
-export interface SWRResponse<Data = any, Error = any, Cached = false> {
+type SWROptions<Data> = SWRConfiguration<Data, Error, Fetcher<Data, Key>>
+export interface SWRResponse<Data = any, Error = any, Config = any> {
   /**
    * The returned data of the fetcher function.
    */
-  data: Cached extends true ? Data : Data | undefined
+  data: BlockingData<Data, Config> extends true ? Data : Data | undefined
   /**
    * The error object thrown by the fetcher function.
    */
   error: Error | undefined
   mutate: KeyedMutator<Data>
   isValidating: boolean
-  isLoading: Cached extends true ? false : boolean
+  isLoading: BlockingData<Data, Config> extends true ? false : boolean
 }
 
 export type KeyLoader<Args extends Arguments = Arguments> =

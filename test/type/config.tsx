@@ -41,10 +41,14 @@ export function testFullConfiguration() {
 }
 
 export function testSWRResponseCachedDataTypes() {
-  type FilledData = SWRResponse<string, any, true>['data']
+  type FilledData = SWRResponse<string, any, { suspense: true }>['data']
   expectType<Equal<FilledData, string>>(true)
 
-  type FilledConditionalData = SWRResponse<string | number, any, true>['data']
+  type FilledConditionalData = SWRResponse<
+    string | number,
+    any,
+    { suspense: true }
+  >['data']
   expectType<Equal<FilledConditionalData, string | number>>(true)
 }
 
