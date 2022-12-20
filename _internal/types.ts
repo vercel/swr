@@ -21,7 +21,7 @@ export type Fetcher<
   ? (arg: Arg) => FetcherResponse<Data>
   : SWRKey extends null | undefined | false
   ? never
-  : SWRKey extends string | infer Arg
+  : SWRKey extends infer Arg
   ? (arg: Arg) => FetcherResponse<Data>
   : never
 
