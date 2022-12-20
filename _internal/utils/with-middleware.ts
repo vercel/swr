@@ -9,10 +9,7 @@ import type {
 } from '../types'
 
 // Create a custom hook with a middleware
-export const withMiddleware = (
-  useSWR: SWRHook,
-  middleware: Middleware
-): SWRHook => {
+export const withMiddleware = (useSWR: SWRHook, middleware: Middleware) => {
   return <Data = any, Error = any>(
     ...args:
       | [Key]

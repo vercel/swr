@@ -217,8 +217,23 @@ export interface SWRHook {
   ): SWRResponse<Data, Error>
   <Data = any, Error = any, SWRKey extends Key = StrictKey>(
     key: SWRKey,
+    config:
+      | FallbackDataConfig<Data, Error, Fetcher<Data, SWRKey>>
+      | SuspenseConfig<Data, Error, Fetcher<Data, SWRKey>>
+      | undefined
+  ): CachedSWRResponse<Data, Error>
+  <Data = any, Error = any, SWRKey extends Key = StrictKey>(
+    key: SWRKey,
     config: SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>> | undefined
   ): SWRResponse<Data, Error>
+  <Data = any, Error = any, SWRKey extends Key = StrictKey>(
+    key: SWRKey,
+    fetcher: Fetcher<Data, SWRKey> | null,
+    config:
+      | FallbackDataConfig<Data, Error, Fetcher<Data, SWRKey>>
+      | SuspenseConfig<Data, Error, Fetcher<Data, SWRKey>>
+      | undefined
+  ): CachedSWRResponse<Data, Error>
   <Data = any, Error = any, SWRKey extends Key = StrictKey>(
     key: SWRKey,
     fetcher: Fetcher<Data, SWRKey> | null,
@@ -231,8 +246,23 @@ export interface SWRHook {
   ): SWRResponse<Data, Error>
   <Data = any, Error = any>(
     key: Key,
+    config:
+      | FallbackDataConfig<Data, Error, BareFetcher<Data>>
+      | SuspenseConfig<Data, Error, BareFetcher<Data>>
+      | undefined
+  ): CachedSWRResponse<Data, Error>
+  <Data = any, Error = any>(
+    key: Key,
     config: SWRConfiguration<Data, Error, BareFetcher<Data>> | undefined
   ): SWRResponse<Data, Error>
+  <Data = any, Error = any>(
+    key: Key,
+    fetcher: BareFetcher<Data> | null,
+    config:
+      | FallbackDataConfig<Data, Error, BareFetcher<Data>>
+      | SuspenseConfig<Data, Error, BareFetcher<Data>>
+      | undefined
+  ): CachedSWRResponse<Data, Error>
   <Data = any, Error = any>(
     key: Key,
     fetcher: BareFetcher<Data> | null,
@@ -341,6 +371,28 @@ export type SWRConfiguration<
   Error = any,
   Fn extends BareFetcher<any> = BareFetcher<any>
 > = Partial<PublicConfiguration<Data, Error, Fn>>
+
+interface SuspenseConfig<
+  Data = any,
+  Error = any,
+  Fn extends BareFetcher<any> = BareFetcher<any>
+> extends SWRConfiguration<Data, Error, Fn> {
+  suspense: true
+}
+
+interface FallbackDataConfig<
+  Data = any,
+  Error = any,
+  Fn extends BareFetcher<any> = BareFetcher<any>
+> extends SWRConfiguration<Data, Error, Fn> {
+  fallbackData: Data
+}
+
+interface CachedSWRResponse<Data = any, Error = any>
+  extends SWRResponse<Data, Error> {
+  data: Data
+  isLoading: false
+}
 
 export interface SWRResponse<Data = any, Error = any> {
   /**
