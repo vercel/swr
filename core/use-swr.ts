@@ -183,6 +183,10 @@ export const useSWRHandler = <Data = any, Error = any>(
   )
 
   const isInitialMount = !initialMountedRef.current
+
+  const hasRevalidator =
+    EVENT_REVALIDATORS[key] && EVENT_REVALIDATORS[key].length > 0
+
   const cachedData = cached.data
 
   const data = isUndefined(cachedData) ? fallback : cachedData
@@ -201,6 +205,9 @@ export const useSWRHandler = <Data = any, Error = any>(
   // - Not suspense mode and there is no fallback data and `revalidateIfStale` is enabled.
   // - `revalidateIfStale` is enabled but `data` is not defined.
   const shouldDoInitialRevalidation = (() => {
+    // if a key already has revalidators and also has error, we should not trigger revalidation
+    if (hasRevalidator && !isUndefined(error)) return false
+
     // If `revalidateOnMount` is set, we take the value directly.
     if (isInitialMount && !isUndefined(revalidateOnMount))
       return revalidateOnMount
@@ -511,8 +518,6 @@ export const useSWRHandler = <Data = any, Error = any>(
       return
     }
 
-    const isKeyHasActiveInstance =
-      EVENT_REVALIDATORS[key] && EVENT_REVALIDATORS[key].length > 0
     const unsubEvents = subscribeCallback(key, EVENT_REVALIDATORS, onRevalidate)
 
     // Mark the component as mounted and update corresponding refs.
@@ -522,9 +527,6 @@ export const useSWRHandler = <Data = any, Error = any>(
 
     // Keep the original key in the cache.
     setCache({ _k: fnArg })
-
-    // if a key is already active and has error, we should not trigger revalidation
-    if (isKeyHasActiveInstance && !isUndefined(error)) return
 
     // Trigger a revalidation.
     if (shouldDoInitialRevalidation) {
