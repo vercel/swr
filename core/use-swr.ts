@@ -511,6 +511,8 @@ export const useSWRHandler = <Data = any, Error = any>(
       return
     }
 
+    const isKeyHasActiveInstance =
+      EVENT_REVALIDATORS[key] && EVENT_REVALIDATORS[key].length > 0
     const unsubEvents = subscribeCallback(key, EVENT_REVALIDATORS, onRevalidate)
 
     // Mark the component as mounted and update corresponding refs.
@@ -520,6 +522,9 @@ export const useSWRHandler = <Data = any, Error = any>(
 
     // Keep the original key in the cache.
     setCache({ _k: fnArg })
+
+    // if a key is already active and has error, we should not trigger revalidation
+    if (isKeyHasActiveInstance && !isUndefined(error)) return
 
     // Trigger a revalidation.
     if (shouldDoInitialRevalidation) {
