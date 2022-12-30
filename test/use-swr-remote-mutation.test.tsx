@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
-import React from 'react'
+import React, { useState } from 'react'
 import useSWR from 'swr'
 import useSWRMutation from 'swr/mutation'
 import { createKey, sleep, nextTick } from './utils'
@@ -131,7 +131,7 @@ describe('useSWR - remote mutation', () => {
     expect(onSuccess).toHaveBeenCalled()
   })
 
-  it('should call `onError` event', async () => {
+  it('should call `onError` event and throw', async () => {
     const key = createKey()
     const onError = jest.fn()
     const onInplaceError = jest.fn()
@@ -163,6 +163,41 @@ describe('useSWR - remote mutation', () => {
     await screen.findByText('error!')
     expect(onError).toHaveBeenCalled()
     expect(onInplaceError).toHaveBeenCalled()
+  })
+
+  it('should call `onError` event and skip throwing the error when `throwOnError` is disabled', async () => {
+    const key = createKey()
+    const onError = jest.fn()
+    const onInplaceError = jest.fn()
+
+    function Page() {
+      const { data, error, trigger } = useSWRMutation(
+        key,
+        async () => {
+          await sleep(10)
+          throw new Error('error!')
+        },
+        {
+          onError,
+          throwOnError: false
+        }
+      )
+      return (
+        <button onClick={() => trigger().catch(onInplaceError)}>
+          {data || (error ? error.message : 'pending')}
+        </button>
+      )
+    }
+
+    render(<Page />)
+
+    // mount
+    await screen.findByText('pending')
+    fireEvent.click(screen.getByText('pending'))
+
+    await screen.findByText('error!')
+    expect(onError).toHaveBeenCalled()
+    expect(onInplaceError).not.toHaveBeenCalled()
   })
 
   it('should return `isMutating` state correctly', async () => {
@@ -848,5 +883,48 @@ describe('useSWR - remote mutation', () => {
 
     fireEvent.click(screen.getByText('trigger'))
     await screen.findByText('Error: none')
+  })
+
+  it('should always use the latest fetcher', async () => {
+    const key = createKey()
+
+    function Page() {
+      const [count, setCount] = useState(0)
+      const { data, trigger } = useSWRMutation(key, () => count)
+
+      return (
+        <div>
+          <button
+            onClick={() => {
+              setCount(c => c + 1)
+            }}
+          >
+            ++
+          </button>
+          <button
+            onClick={() => {
+              trigger()
+            }}
+          >
+            trigger
+          </button>
+          <div>
+            data:{data},count:{count}
+          </div>
+        </div>
+      )
+    }
+
+    render(<Page />)
+
+    await screen.findByText('data:,count:0')
+    fireEvent.click(screen.getByText('trigger'))
+    await screen.findByText('data:0,count:0')
+
+    fireEvent.click(screen.getByText('++'))
+    await screen.findByText('data:0,count:1')
+
+    fireEvent.click(screen.getByText('trigger'))
+    await screen.findByText('data:1,count:1')
   })
 })

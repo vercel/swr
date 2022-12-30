@@ -1,14 +1,12 @@
 {
-  "name": "swr-immutable",
-  "version": "0.0.1",
   "main": "./dist/index.js",
   "module": "./dist/index.esm.js",
-  "types": "./dist/immutable",
+  "types": "./dist/immutable/index.d.ts",
   "exports": "./dist/index.mjs",
   "private": true,
   "scripts": {
-    "watch": "bunchee index.ts --no-sourcemap -w",
-    "build": "bunchee index.ts --no-sourcemap",
+    "watch": "bunchee index.ts -w",
+    "build": "bunchee index.ts",
     "types:check": "tsc --noEmit",
     "clean": "rimraf dist"
   },

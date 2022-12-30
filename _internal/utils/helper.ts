@@ -1,10 +1,10 @@
 import { SWRGlobalState } from './global-state'
-import { Key, Cache, State, GlobalState } from '../types'
+import type { Key, Cache, State, GlobalState } from '../types'
 
 const EMPTY_CACHE = {}
 export const noop = () => {}
 
-// Using noop() as the undefined value as undefined can possibly be replaced
+// Using noop() as the undefined value as undefined can be replaced
 // by something else. Prettier ignore and extra parentheses are necessary here
 // to ensure that tsc doesn't remove the __NOINLINE__ comment.
 // prettier-ignore
@@ -13,13 +13,16 @@ export const UNDEFINED = (/*#__NOINLINE__*/ noop()) as undefined
 export const OBJECT = Object
 
 export const isUndefined = (v: any): v is undefined => v === UNDEFINED
-export const isFunction = (v: any): v is Function => typeof v == 'function'
-export const isEmptyCache = (v: any): boolean => v === EMPTY_CACHE
-export const mergeObjects = (a: any, b: any) => OBJECT.assign({}, a, b)
+export const isFunction = <
+  T extends (...args: any[]) => any = (...args: any[]) => any
+>(
+  v: unknown
+): v is T => typeof v == 'function'
+export const mergeObjects = (a: any, b?: any) => ({ ...a, ...b })
 
 const STR_UNDEFINED = 'undefined'
 
-// NOTE: Use function to guarantee it's re-evaluated between jsdom and node runtime for tests.
+// NOTE: Use the function to guarantee it's re-evaluated between jsdom and node runtime for tests.
 export const isWindowDefined = typeof window != STR_UNDEFINED
 export const isDocumentDefined = typeof document != STR_UNDEFINED
 export const hasRequestAnimationFrame = () =>
@@ -36,9 +39,9 @@ export const createCacheHelper = <Data = any, T = State<Data, any>>(
     // Setter
     (info: T) => {
       const prev = cache.get(key)
-      state[4](key as string, mergeObjects(prev, info), prev || EMPTY_CACHE)
+      state[5](key as string, mergeObjects(prev, info), prev || EMPTY_CACHE)
     },
     // Subscriber
-    state[5]
+    state[6]
   ] as const
 }

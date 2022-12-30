@@ -1,12 +1,6 @@
 import { act, fireEvent, screen } from '@testing-library/react'
-import React, {
-  ReactNode,
-  Suspense,
-  useEffect,
-  useReducer,
-  useState,
-  PropsWithChildren
-} from 'react'
+import type { ReactNode, PropsWithChildren } from 'react'
+import React, { Suspense, useEffect, useReducer, useState } from 'react'
 import useSWR, { mutate } from 'swr'
 import {
   createKey,
@@ -136,7 +130,7 @@ describe('useSWR - suspense', () => {
     // hydration
     screen.getByText('fallback')
     await screen.findByText('error boundary')
-    // 1 for js-dom 1 for react-error-boundray
+    // 1 for js-dom 1 for react-error-boundary
     expect(console.error).toHaveBeenCalledTimes(3)
   })
 
@@ -167,7 +161,7 @@ describe('useSWR - suspense', () => {
     )
 
     screen.getByText('hello,') // directly from cache
-    await screen.findByText('hello, error') // get error with cache
+    await screen.findByText('hello, error') // get the error with cache
   })
 
   it('should not fetch when cached data is present and `revalidateIfStale` is false', async () => {

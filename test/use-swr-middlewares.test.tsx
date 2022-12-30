@@ -1,7 +1,8 @@
 import { act, screen } from '@testing-library/react'
 import React, { useState, useEffect, useRef } from 'react'
-import useSWR, { Middleware, SWRConfig } from 'swr'
-import { withMiddleware } from '../_internal/utils/with-middleware'
+import type { Middleware } from 'swr'
+import useSWR, { SWRConfig } from 'swr'
+import { withMiddleware } from 'swr/_internal'
 
 import {
   createResponse,
@@ -54,6 +55,25 @@ describe('useSWR - middleware', () => {
     expect(mockConsoleLog.mock.calls[0][0]).toEqual([key, 1, 2, 3])
     // Initial render and data ready.
     expect(mockConsoleLog.mock.calls.length).toBe(2)
+  })
+
+  it('should pass null fetcher to middleware', () => {
+    const key = createKey()
+    const mockConsoleLog = jest.fn(s => s)
+    const loggerMiddleware: Middleware = useSWRNext => (k, fn, config) => {
+      mockConsoleLog(fn)
+      return useSWRNext(k, fn, config)
+    }
+    function Page() {
+      const { data } = useSWR(key, null, {
+        use: [loggerMiddleware]
+      })
+      return <div>hello, {data}</div>
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('hello,')
+    expect(mockConsoleLog.mock.calls[0][0]).toEqual(null)
   })
 
   it('should support `use` option in context', async () => {

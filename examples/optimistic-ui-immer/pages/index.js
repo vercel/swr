@@ -19,9 +19,9 @@ export default function Index() {
     // Then we send the request to the API and let mutate
     // update the data with the API response.
     // Our action may fail in the API function, and the response differ
-    // from what was optimistically updated, in that case the UI will be
+    // from what was optimistically updated, in that case, the UI will be
     // changed to match the API response.
-    // The fetch could also fail, in that case the UI will
+    // The fetch could also fail, in that case, the UI will
     // be in an incorrect state until the next successful fetch.
     mutate('/api/data', await fetch('/api/data', {
       method: 'POST',

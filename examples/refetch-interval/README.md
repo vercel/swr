@@ -27,4 +27,4 @@ npm run dev
 
 ## The Idea behind the Example
 
-Show how to make SWR fetch the API again in an interval automatically to ensure the data up-to-date.
+Show how to make SWR fetch the API again in an interval automatically to ensure the data is up-to-date.

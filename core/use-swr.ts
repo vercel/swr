@@ -1,5 +1,5 @@
-import { useCallback, useRef, useDebugValue } from 'react'
-import { useSyncExternalStoreWithSelector } from 'use-sync-external-store/shim/with-selector.js'
+import { useCallback, useRef, useDebugValue, useMemo } from 'react'
+import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js'
 
 import {
   defaultConfig,
@@ -8,20 +8,21 @@ import {
   rAF,
   useIsomorphicLayoutEffect,
   SWRGlobalState,
-  GlobalState,
   serialize,
   isUndefined,
   UNDEFINED,
   OBJECT,
   isFunction,
   createCacheHelper,
-  isEmptyCache,
   SWRConfig as ConfigProvider,
   withArgs,
   subscribeCallback,
   getTimestamp,
   internalMutate,
   revalidateEvents,
+  mergeObjects
+} from 'swr/_internal'
+import type {
   State,
   Fetcher,
   Key,
@@ -31,7 +32,8 @@ import {
   SWRConfiguration,
   SWRHook,
   RevalidateEvent,
-  StateDependencies
+  StateDependencies,
+  GlobalState
 } from 'swr/_internal'
 
 const WITH_DEDUPE = { dedupe: true }
@@ -51,7 +53,7 @@ type DefinitelyTruthy<T> = false extends T
 export const useSWRHandler = <Data = any, Error = any>(
   _key: Key,
   fetcher: Fetcher<Data> | null,
-  config: typeof defaultConfig & SWRConfiguration<Data, Error>
+  config: FullConfiguration & SWRConfiguration<Data, Error>
 ) => {
   const {
     cache,
@@ -90,20 +92,39 @@ export const useSWRHandler = <Data = any, Error = any>(
   const getConfig = () => configRef.current
   const isActive = () => getConfig().isVisible() && getConfig().isOnline()
 
-  const [getCache, setCache, subscribeCache] = createCacheHelper<Data>(
-    cache,
-    key
-  )
+  const [getCache, setCache, subscribeCache] = createCacheHelper<
+    Data,
+    State<Data, any> & {
+      // The original key arguments.
+      _k?: Key
+    }
+  >(cache, key)
 
   const stateDependencies = useRef<StateDependencies>({}).current
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const getSnapshot = useCallback(getCache, [cache, key])
   const fallback = isUndefined(fallbackData)
     ? config.fallback[key]
     : fallbackData
 
-  const selector = (snapshot: State<Data, any>) => {
+  const isEqual = (prev: State<Data, any>, current: State<Data, any>) => {
+    let equal = true
+    for (const _ in stateDependencies) {
+      const t = _ as keyof StateDependencies
+      if (!compare(current[t], prev[t])) {
+        if (t === 'data' && isUndefined(prev[t])) {
+          if (!compare(current[t], returnedData)) {
+            equal = false
+          }
+        } else {
+          equal = false
+        }
+      }
+    }
+    return equal
+  }
+
+  const getSnapshot = useMemo(() => {
     const shouldStartRequest = (() => {
       if (!key) return false
       if (!fetcher) return false
@@ -114,50 +135,51 @@ export const useSWRHandler = <Data = any, Error = any>(
       if (suspense) return false
       return true
     })()
-    if (!shouldStartRequest) return snapshot
-    if (isEmptyCache(snapshot)) {
+
+    const getSelectedCache = () => {
+      const state = getCache()
+
+      // We only select the needed fields from the state.
+      const snapshot = mergeObjects(state)
+      delete snapshot._k
+
+      if (!shouldStartRequest) {
+        return snapshot
+      }
+
       return {
         isValidating: true,
-        isLoading: true
+        isLoading: true,
+        ...snapshot
       }
     }
-    return snapshot
-  }
-  const isEqual = useCallback(
-    (prev: State<Data, any>, current: State<Data, any>) => {
-      let equal = true
-      for (const _ in stateDependencies) {
-        const t = _ as keyof StateDependencies
-        if (!compare(current[t], prev[t])) {
-          if (t === 'data' && isUndefined(prev[t])) {
-            if (!compare(current[t], fallback)) {
-              equal = false
-            }
-          } else {
-            equal = false
-          }
-        }
-      }
-      return equal
-    },
+
+    let memorizedSnapshot = getSelectedCache()
+
+    return () => {
+      const snapshot = getSelectedCache()
+      return isEqual(snapshot, memorizedSnapshot)
+        ? memorizedSnapshot
+        : (memorizedSnapshot = snapshot)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [cache, key]
-  )
+  }, [cache, key])
 
   // Get the current state that SWR should return.
-  const cached = useSyncExternalStoreWithSelector(
+  const cached = useSyncExternalStore(
     useCallback(
       (callback: () => void) =>
-        subscribeCache(key, () => {
-          callback()
-        }),
+        subscribeCache(
+          key,
+          (prev: State<Data, any>, current: State<Data, any>) => {
+            if (!isEqual(prev, current)) callback()
+          }
+        ),
       // eslint-disable-next-line react-hooks/exhaustive-deps
       [cache, key]
     ),
     getSnapshot,
-    getSnapshot,
-    selector,
-    isEqual
+    getSnapshot
   )
 
   const isInitialMount = !initialMountedRef.current
@@ -166,7 +188,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   const data = isUndefined(cachedData) ? fallback : cachedData
   const error = cached.error
 
-  // Use a ref to store previous returned data. Use the inital data as its inital value.
+  // Use a ref to store previously returned data. Use the initial data as its initial value.
   const laggyDataRef = useRef(data)
 
   const returnedData = keepPreviousData
@@ -187,25 +209,29 @@ export const useSWRHandler = <Data = any, Error = any>(
     if (getConfig().isPaused()) return false
 
     // Under suspense mode, it will always fetch on render if there is no
-    // stale data so no need to revalidate immediately on mount again.
+    // stale data so no need to revalidate immediately mount it again.
     // If data exists, only revalidate if `revalidateIfStale` is true.
     if (suspense) return isUndefined(data) ? false : config.revalidateIfStale
 
-    // If there is no stale data, we need to revalidate on mount;
+    // If there is no stale data, we need to revalidate when mount;
     // If `revalidateIfStale` is set to true, we will always revalidate.
     return isUndefined(data) || config.revalidateIfStale
   })()
 
   // Resolve the default validating state:
-  // If it's able to validate, and it should revalidate on mount, this will be true.
+  // If it's able to validate, and it should revalidate when mount, this will be true.
   const defaultValidatingState = !!(
     key &&
     fetcher &&
     isInitialMount &&
     shouldDoInitialRevalidation
   )
-  const isValidating = cached.isValidating || defaultValidatingState
-  const isLoading = cached.isLoading || defaultValidatingState
+  const isValidating = isUndefined(cached.isValidating)
+    ? defaultValidatingState
+    : cached.isValidating
+  const isLoading = isUndefined(cached.isLoading)
+    ? defaultValidatingState
+    : cached.isLoading
 
   // The revalidation function is a carefully crafted wrapper of the original
   // `fetcher`, to correctly handle the many edge cases.
@@ -253,7 +279,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         return key === keyRef.current
       }
 
-      // The final state object when request finishes.
+      // The final state object when the request finishes.
       const finalState: State<Data, Error> = {
         isValidating: false,
         isLoading: false
@@ -262,7 +288,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         setCache(finalState)
       }
       const cleanupState = () => {
-        // Check if it's still the same request before deleting.
+        // Check if it's still the same request before deleting it.
         const requestInfo = FETCH[key]
         if (requestInfo && requestInfo[1] === startAt) {
           delete FETCH[key]
@@ -279,7 +305,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       try {
         if (shouldStartNewRequest) {
           setCache(initialState)
-          // If no cache being rendered currently (it shows a blank page),
+          // If no cache is being rendered currently (it shows a blank page),
           // we trigger the loading slow event.
           if (config.loadingTimeout && isUndefined(getCache().data)) {
             setTimeout(() => {
@@ -326,7 +352,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         // Clear error.
         finalState.error = UNDEFINED
 
-        // If there're other mutations(s), overlapped with the current revalidation:
+        // If there're other mutations(s), that overlapped with the current revalidation:
         // case 1:
         //   req------------------>res
         //       mutate------>end
@@ -356,7 +382,7 @@ export const useSWRHandler = <Data = any, Error = any>(
           }
           return false
         }
-        // Deep compare with latest state to avoid extra re-renders.
+        // Deep compare with the latest state to avoid extra re-renders.
         // For local state, compare and assign.
         const cacheData = getCache().data
 
@@ -370,13 +396,13 @@ export const useSWRHandler = <Data = any, Error = any>(
             getConfig().onSuccess(newData, key, config)
           }
         }
-      } catch (err) {
+      } catch (err: any) {
         cleanupState()
 
         const currentConfig = getConfig()
         const { shouldRetryOnError } = currentConfig
 
-        // Not paused, we continue handling the error. Otherwise discard it.
+        // Not paused, we continue handling the error. Otherwise, discard it.
         if (!currentConfig.isPaused()) {
           // Get a new error, don't use deep comparison for errors.
           finalState.error = err as Error
@@ -391,7 +417,7 @@ export const useSWRHandler = <Data = any, Error = any>(
                 shouldRetryOnError(err as Error))
             ) {
               if (isActive()) {
-                // If it's inactive, stop. It will auto revalidate when
+                // If it's inactive, stop. It will auto-revalidate when
                 // refocusing or reconnecting.
                 // When retrying, deduplication is always enabled.
                 currentConfig.onErrorRetry(
@@ -432,19 +458,19 @@ export const useSWRHandler = <Data = any, Error = any>(
     [key, cache]
   )
 
-  // Similar to the global mutate, but bound to the current cache and key.
+  // Similar to the global mutate but bound to the current cache and key.
   // `cache` isn't allowed to change during the lifecycle.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const boundMutate: SWRResponse<Data, Error>['mutate'] = useCallback(
-    // By using `bind` we don't need to modify the size of the rest arguments.
-    // Due to https://github.com/microsoft/TypeScript/issues/37181, we have to
-    // cast it to any for now.
-    internalMutate.bind(UNDEFINED, cache, () => keyRef.current) as any,
+    // Use callback to make sure `keyRef.current` returns latest result every time
+    (...args) => {
+      return internalMutate(cache, keyRef.current, ...args)
+    },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   )
 
-  // Logic for updating refs.
+  // The logic for updating refs.
   useIsomorphicLayoutEffect(() => {
     fetcherRef.current = fetcher
     configRef.current = config
@@ -492,6 +518,9 @@ export const useSWRHandler = <Data = any, Error = any>(
     keyRef.current = key
     initialMountedRef.current = true
 
+    // Keep the original key in the cache.
+    setCache({ _k: fnArg })
+
     // Trigger a revalidation.
     if (shouldDoInitialRevalidation) {
       if (isUndefined(data) || IS_SERVER) {
@@ -523,7 +552,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         ? refreshInterval(data)
         : refreshInterval
 
-      // We only start next interval if `refreshInterval` is not 0, and:
+      // We only start the next interval if `refreshInterval` is not 0, and:
       // - `force` is true, which is the start of polling
       // - or `timer` is not 0, which means the effect wasn't canceled
       if (interval && timer !== -1) {
@@ -533,7 +562,7 @@ export const useSWRHandler = <Data = any, Error = any>(
 
     function execute() {
       // Check if it's OK to execute:
-      // Only revalidate when the page is visible, online and not errored.
+      // Only revalidate when the page is visible, online, and not errored.
       if (
         !getCache().error &&
         (refreshWhenHidden || getConfig().isVisible()) &&
@@ -541,7 +570,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       ) {
         revalidate(WITH_DEDUPE).then(next)
       } else {
-        // Schedule next interval to check again.
+        // Schedule the next interval to check again.
         next()
       }
     }
@@ -560,7 +589,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   useDebugValue(returnedData)
 
   // In Suspense mode, we can't return the empty `data` state.
-  // If there is `error`, the `error` needs to be thrown to the error boundary.
+  // If there is an `error`, the `error` needs to be thrown to the error boundary.
   // If there is no `error`, the `revalidation` promise needs to be thrown to
   // the suspense boundary.
   if (suspense && isUndefined(data) && key) {
@@ -607,4 +636,19 @@ export const SWRConfig = OBJECT.defineProperty(ConfigProvider, 'defaultValue', {
 
 export const unstable_serialize = (key: Key) => serialize(key)[0]
 
+/**
+ * A hook to fetch data.
+ *
+ * @link https://swr.vercel.app
+ * @example
+ * ```jsx
+ * import useSWR from 'swr'
+ * function Profile() {
+ *   const { data, error } = useSWR('/api/user', fetcher)
+ *   if (error) return <div>failed to load</div>
+ *   if (!data) return <div>loading...</div>
+ *   return <div>hello {data.name}!</div>
+ * }
+ * ```
+ */
 export default withArgs<SWRHook>(useSWRHandler)

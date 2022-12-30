@@ -432,14 +432,20 @@ describe('useSWR', () => {
     await act(() => sleep(20))
     screen.getByText('data: 1')
   })
+
   it('Nested SWR hook should only do loading once', async () => {
     const key = createKey()
     let count = 0
     const ChildComponent = () => {
       const { data } = useSWR(key, _ => createResponse(_, { delay: 100 }))
       return <div id="child">{data}</div>
+      const { data } = useSWR(key, _ => createResponse(_, { delay: 100 }))
+      return <div id="child">{data}</div>
     }
     const NestedRender = () => {
+      const { data, isValidating } = useSWR(key, _ =>
+        createResponse(_, { delay: 50 })
+      )
       const { data, isValidating } = useSWR(key, _ =>
         createResponse(_, { delay: 50 })
       )
@@ -449,7 +455,7 @@ describe('useSWR', () => {
       return (
         <div>
           <div id="parent">{data}</div>
-          <ChildComponent></ChildComponent>
+          <ChildComponent />
         </div>
       )
     }
@@ -460,7 +466,7 @@ describe('useSWR', () => {
           count += 1
         }}
       >
-        <NestedRender></NestedRender>
+        <NestedRender />
       </Profiler>
     )
     renderWithConfig(<Page />)
@@ -468,5 +474,104 @@ describe('useSWR', () => {
     await screen.findAllByText(key)
     await act(() => sleep(150))
     expect(count).toBe(2)
+  })
+
+  // Test for https://swr.vercel.app/docs/advanced/performance#dependency-collection
+  it('should render four times in the worst case', async () => {
+    let isFirstFetch = true
+    const fetcher = async () => {
+      if (isFirstFetch) {
+        isFirstFetch = false
+        throw new Error('error')
+      }
+      return 'value'
+    }
+    const key = createKey()
+
+    const logs = []
+
+    function Page() {
+      const { data, error, isLoading, isValidating } = useSWR(key, fetcher, {
+        errorRetryInterval: 10
+      })
+      logs.push({
+        data,
+        error,
+        isLoading,
+        isValidating
+      })
+      if (isLoading) return <p>loading</p>
+      return <p>data:{data}</p>
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data:value')
+
+    expect(logs).toMatchInlineSnapshot(`
+      [
+        {
+          "data": undefined,
+          "error": undefined,
+          "isLoading": true,
+          "isValidating": true,
+        },
+        {
+          "data": undefined,
+          "error": [Error: error],
+          "isLoading": false,
+          "isValidating": false,
+        },
+        {
+          "data": undefined,
+          "error": [Error: error],
+          "isLoading": true,
+          "isValidating": true,
+        },
+        {
+          "data": "value",
+          "error": undefined,
+          "isLoading": false,
+          "isValidating": false,
+        },
+      ]
+    `)
+  })
+
+  // Test for https://swr.vercel.app/docs/advanced/performance#dependency-collection
+  it('should render only two times in the best case', async () => {
+    let isFirstFetch = true
+    const fetcher = async () => {
+      if (isFirstFetch) {
+        isFirstFetch = false
+        throw new Error('error')
+      }
+      return 'value'
+    }
+    const key = createKey()
+
+    const logs = []
+
+    function Page() {
+      const { data } = useSWR(key, fetcher, {
+        errorRetryInterval: 10
+      })
+      logs.push({ data })
+      if (!data) return <p>loading</p>
+      return <p>data:{data}</p>
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data:value')
+
+    expect(logs).toMatchInlineSnapshot(`
+      [
+        {
+          "data": undefined,
+        },
+        {
+          "data": "value",
+        },
+      ]
+    `)
   })
 })

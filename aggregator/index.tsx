@@ -2,19 +2,22 @@ import React, { useRef, useMemo, useCallback } from 'react'
 import useSWR, { unstable_serialize } from 'swr'
 import {
   createCacheHelper,
-  SWRHook,
-  Middleware,
   withMiddleware,
   isUndefined,
   useIsomorphicLayoutEffect,
   mergeObjects,
-  Arguments,
   SWRGlobalState,
-  getTimestamp,
+  getTimestamp
+} from 'swr/_internal'
+
+import type {
+  SWRHook,
+  Middleware,
+  Arguments,
   GlobalState,
   BareFetcher,
-  defaultConfig,
-  SWRResponse
+  SWRResponse,
+  defaultConfig
 } from 'swr/_internal'
 
 import type {

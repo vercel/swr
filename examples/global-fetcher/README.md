@@ -27,4 +27,4 @@ npm run dev
 
 ## The Idea behind the Example
 
-Use the `SWRConfig` provider to setup the fetcher globally instead of a per-hook call.
+Use the `SWRConfig` provider to set up the fetcher globally instead of a per-hook call.
