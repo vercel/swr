@@ -439,13 +439,8 @@ describe('useSWR', () => {
     const ChildComponent = () => {
       const { data } = useSWR(key, _ => createResponse(_, { delay: 100 }))
       return <div id="child">{data}</div>
-      const { data } = useSWR(key, _ => createResponse(_, { delay: 100 }))
-      return <div id="child">{data}</div>
     }
     const NestedRender = () => {
-      const { data, isValidating } = useSWR(key, _ =>
-        createResponse(_, { delay: 50 })
-      )
       const { data, isValidating } = useSWR(key, _ =>
         createResponse(_, { delay: 50 })
       )
