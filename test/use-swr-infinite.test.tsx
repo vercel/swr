@@ -1293,6 +1293,41 @@ describe('useSWRInfinite', () => {
     expect(logger).toEqual([undefined, ['foo-0']])
   })
 
+  it('should be able to use the optimisticData option', async () => {
+    let t = 0
+    const key = createKey()
+    const fetcher = async () => createResponse(`foo-${t++}`)
+    const updater = async () => createResponse(['updated'])
+
+    function Page() {
+      const { data, mutate } = useSWRInfinite(() => key, fetcher, {
+        dedupingInterval: 0
+      })
+
+      return (
+        <>
+          <div>data: {String(data)}</div>
+          <button
+            onClick={() => {
+              mutate(updater, { optimisticData: ['optimistic'] })
+            }}
+          >
+            mutate
+          </button>
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data: foo-0')
+
+    fireEvent.click(screen.getByText('mutate'))
+
+    await screen.findByText('data: optimistic')
+    await screen.findByText('data: updated')
+    await screen.findByText('data: foo-1')
+  })
+
   it('should share data with useSWR', async () => {
     const key = createKey()
     const SWR = () => {
