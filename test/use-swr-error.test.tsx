@@ -495,7 +495,7 @@ describe('useSWR - error', () => {
     expect(errorEvents.length).toBe(1)
   })
 
-  it('should not should not trigger revalidation when a key is already active and has error', async () => {
+  it('should not should not trigger revalidation when a key is already active and has error - isLoading', async () => {
     const key = createKey()
     const useData = () => {
       return useSWR<any, any>(
@@ -520,6 +520,34 @@ describe('useSWR - error', () => {
     }
     renderWithConfig(<App />)
     screen.getByText('loading')
+    await screen.findByText('error!,false')
+  })
+
+  it('should not should not trigger revalidation when a key is already active and has error - isValidating', async () => {
+    const key = createKey()
+    const useData = () => {
+      return useSWR<any, any>(
+        key,
+        () => createResponse(new Error('error!'), { delay: 200 }),
+        undefined
+      )
+    }
+    const Page = () => {
+      useData()
+      return null
+    }
+    const App = () => {
+      const { error, isValidating } = useData()
+      if (isValidating) return <span>validating</span>
+      return (
+        <div>
+          {error ? error.message : ''},{isValidating.toString()}
+          <Page />
+        </div>
+      )
+    }
+    renderWithConfig(<App />)
+    screen.getByText('validating')
     await screen.findByText('error!,false')
   })
 })
