@@ -222,7 +222,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
         }
 
         return arguments.length
-          ? swr.mutate(data, shouldRevalidate)
+          ? swr.mutate(data, { ...options, revalidate: shouldRevalidate })
           : swr.mutate()
       },
       // swr.mutate is always the same reference
