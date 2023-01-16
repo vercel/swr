@@ -78,6 +78,7 @@
     "lint:fix": "pnpm lint --fix",
     "coverage": "jest --coverage",
     "test-typing": "tsc --noEmit -p test/type/tsconfig.json && tsc --noEmit -p test/tsconfig.json",
+    "test-packaging": "publint",
     "test": "jest",
     "run-all-checks": "pnpm types:check && pnpm lint && pnpm test && pnpm test-typing"
   },
@@ -112,6 +113,7 @@
     "lint-staged": "13.0.3",
     "next": "^13.0.6",
     "prettier": "2.8.1",
+    "publint": "^0.1.8",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "rimraf": "3.0.2",
