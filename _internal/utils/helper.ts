@@ -38,9 +38,10 @@ export const createCacheHelper = <Data = any, T = State<Data, any>>(
     () => (cache.get(key) || EMPTY_CACHE) as T,
     // Setter
     (info: T) => {
-      const prev = cache.get(key)
-      if (isUndefined(key)) return
-      state[5](key, mergeObjects(prev, info), prev || EMPTY_CACHE)
+      if (!isUndefined(key)) {
+        const prev = cache.get(key)
+        state[5](key, mergeObjects(prev, info), prev || EMPTY_CACHE)
+      }
     },
     // Subscriber
     state[6]
