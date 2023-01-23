@@ -11,6 +11,7 @@ inputs:
 
 
 runs:
+  using: composite
   steps:
     - name: Check out
       uses: actions/checkout@v3
@@ -23,11 +24,12 @@ runs:
 
     - name: Setup pnpm
       uses: pnpm/action-setup@v2.2.2
-      with:
-        version: 7
 
     - name: Install Dependencies
       shell: bash
-      run: pnpm install
+
+      run: |
+        corepack enable
+        pnpm install
       env:
         CI: true
