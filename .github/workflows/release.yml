@@ -7,14 +7,13 @@ on:
 
 jobs:
   release:
-    name: Publish
     runs-on: ubuntu-latest
     steps:
       - name: Check out
         uses: actions/checkout@v3
 
       - name: Install
-        uses: ./.github/workflows/install
+        uses: .github/workflows/install
 
       - name: Publish
         run: pnpm publish
