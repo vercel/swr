@@ -17,9 +17,6 @@ jobs:
         uses: ./.github/workflows/install
 
       - name: Lint
-        run: pnpm run-all-checks
-        run: pnpm clean
-        run: pnpm build
-        run: pnpm test-packaging
+        run: pnpm run-all-checks && pnpm clean && pnpm build && pnpm test-packaging
         env:
           CI: true
