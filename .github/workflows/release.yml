@@ -14,7 +14,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install
-        uses: ./.github/workflows/install
+        uses: ./.github/workflows/install.yml
 
       - name: Publish
         run: pnpm publish
