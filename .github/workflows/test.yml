@@ -11,15 +11,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-      - uses: actions/checkout@v3
+        uses: actions/checkout@v3
 
       - name: Install
         uses: ./.github/workflows/install
 
       - name: Lint
-      - run: pnpm run-all-checks
-      - run: pnpm clean
-      - run: pnpm build
-      - run: pnpm test-packaging
+        run: pnpm run-all-checks
+        run:
+        run: pnpm build
+        run: pnpm test-packaging
         env:
           CI: true

@@ -11,13 +11,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out
-      - uses: actions/checkout@v3
+        uses: actions/checkout@v3
 
       - name: Install
-      - uses: ./.github/workflows/install
+        uses: ./.github/workflows/install
 
       - name: Publish
-      - run: pnpm publish
+        run: pnpm publish
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN_ELEVATED }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
