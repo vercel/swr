@@ -53,7 +53,7 @@ type DefinitelyTruthy<T> = false extends T
 export const useSWRHandler = <Data = any, Error = any>(
   _key: Key,
   fetcher: Fetcher<Data> | null,
-  config: typeof defaultConfig & SWRConfiguration<Data, Error>
+  config: FullConfiguration & SWRConfiguration<Data, Error>
 ) => {
   const {
     cache,
@@ -113,7 +113,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       const t = _ as keyof StateDependencies
       if (!compare(current[t], prev[t])) {
         if (t === 'data' && isUndefined(prev[t])) {
-          if (!compare(current[t], fallback)) {
+          if (!compare(current[t], returnedData)) {
             equal = false
           }
         } else {
@@ -147,13 +147,11 @@ export const useSWRHandler = <Data = any, Error = any>(
         return snapshot
       }
 
-      return Object.assign(
-        {
-          isValidating: true,
-          isLoading: true
-        },
-        snapshot
-      )
+      return {
+        isValidating: true,
+        isLoading: true,
+        ...snapshot
+      }
     }
 
     let memorizedSnapshot = getSelectedCache()
@@ -398,7 +396,7 @@ export const useSWRHandler = <Data = any, Error = any>(
             getConfig().onSuccess(newData, key, config)
           }
         }
-      } catch (err) {
+      } catch (err: any) {
         cleanupState()
 
         const currentConfig = getConfig()
@@ -639,7 +637,9 @@ export const SWRConfig = OBJECT.defineProperty(ConfigProvider, 'defaultValue', {
 export const unstable_serialize = (key: Key) => serialize(key)[0]
 
 /**
- * @link https://swr.vercel.app/
+ * A hook to fetch data.
+ *
+ * @link https://swr.vercel.app
  * @example
  * ```jsx
  * import useSWR from 'swr'

@@ -2,7 +2,7 @@ import { act, screen, fireEvent } from '@testing-library/react'
 import React, { useEffect, useState } from 'react'
 import useSWR, { mutate as globalMutate, useSWRConfig } from 'swr'
 import useSWRInfinite from 'swr/infinite'
-import { serialize } from '../_internal/utils/serialize'
+import { serialize } from 'swr/_internal'
 import {
   createResponse,
   sleep,
@@ -505,7 +505,7 @@ describe('useSWR - local mutation', () => {
     screen.getByText('data: 1')
   })
 
-  it('should update error in cache when mutate failed with error', async () => {
+  it('should not update error in global cache when mutate failed with error', async () => {
     const value = 0
     const key = createKey()
     const message = 'mutate-error'
@@ -538,18 +538,10 @@ describe('useSWR - local mutation', () => {
       }
     })
 
-    screen.getByText(message)
+    screen.getByText('data: 0')
     const [keyInfo] = serialize(key)
-    let cacheError = cache.get(keyInfo)?.error
-    expect(cacheError.message).toMatchInlineSnapshot(`"${message}"`)
-
-    // if mutate throws an error synchronously, the cache shouldn't be updated
-    expect(cache.get(keyInfo)?.data).toBe(value)
-
-    // if mutate succeed, the error should be cleared
-    await act(() => mutate(key, value, false))
-    cacheError = cache.get(keyInfo)?.error
-    expect(cacheError).toMatchInlineSnapshot(`undefined`)
+    const cacheError = cache.get(keyInfo)?.error
+    expect(cacheError).toBeUndefined()
   })
 
   it('should keep the `mutate` function referential equal', async () => {
@@ -1345,7 +1337,7 @@ describe('useSWR - local mutation', () => {
     expect(renderedData).toEqual([undefined, 'foo', 'bar', 'baz', 'qux', 'baz'])
   })
 
-  it('should not rollback optimistic updates if `rollbackOnError`', async () => {
+  it('should not rollback optimistic updates if `rollbackOnError` is disabled', async () => {
     const key = createKey()
     const renderedData = []
     let mutate
@@ -1370,17 +1362,36 @@ describe('useSWR - local mutation', () => {
 
     try {
       await executeWithoutBatching(() =>
-        mutate(createResponse(new Error('baz'), { delay: 20 }), {
-          optimisticData: 'bar',
+        mutate(createResponse(new Error('baz-1'), { delay: 20 }), {
+          optimisticData: 'bar-1',
           rollbackOnError: false
         })
       )
     } catch (e) {
-      expect(e.message).toEqual('baz')
+      expect(e.message).toEqual('baz-1')
     }
 
     await sleep(30)
-    expect(renderedData).toEqual([undefined, 0, 'bar', 1])
+    expect(renderedData).toEqual([undefined, 0, 'bar-1', 1])
+
+    let rollbackErrorMessage
+    try {
+      await executeWithoutBatching(() =>
+        mutate(createResponse(new Error('baz-2'), { delay: 20 }), {
+          optimisticData: 'bar-2',
+          rollbackOnError: error => {
+            rollbackErrorMessage = error.message
+            return false
+          }
+        })
+      )
+    } catch (e) {
+      expect(e.message).toEqual('baz-2')
+    }
+
+    await sleep(30)
+    expect(renderedData).toEqual([undefined, 0, 'bar-1', 1, 'bar-2', 2])
+    expect(rollbackErrorMessage).toEqual('baz-2')
   })
 
   it('should support transforming the result with `populateCache` before writing back', async () => {

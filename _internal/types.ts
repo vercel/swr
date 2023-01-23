@@ -18,12 +18,23 @@ export type Fetcher<
   Data = unknown,
   SWRKey extends Key = Key
 > = SWRKey extends () => infer Arg | null | undefined | false
-  ? (args: Arg) => FetcherResponse<Data>
+  ? (arg: Arg) => FetcherResponse<Data>
   : SWRKey extends null | undefined | false
   ? never
   : SWRKey extends infer Arg
-  ? (args: Arg) => FetcherResponse<Data>
+  ? (arg: Arg) => FetcherResponse<Data>
   : never
+
+export type BlockingData<
+  Data = any,
+  Options = SWROptions<Data>
+> = Options extends undefined
+  ? false
+  : Options extends { suspense: true }
+  ? true
+  : Options extends { fallbackData: Data }
+  ? true
+  : false
 
 // Configuration types that are only used internally, not exposed to the user.
 export interface InternalConfiguration {
@@ -191,7 +202,11 @@ export interface PublicConfiguration<
   isVisible: () => boolean
 }
 
-export type FullConfiguration = InternalConfiguration & PublicConfiguration
+export type FullConfiguration<
+  Data = any,
+  Error = any,
+  Fn extends Fetcher = BareFetcher
+> = InternalConfiguration & PublicConfiguration<Data, Error, Fn>
 
 export type ProviderConfiguration = {
   initFocus: (callback: () => void) => (() => void) | void
@@ -204,36 +219,66 @@ export type ProviderConfiguration = {
  * ```
  */
 export interface SWRHook {
-  <Data = any, Error = any, SWRKey extends Key = null>(
+  <Data = any, Error = any, SWRKey extends Key = StrictKey>(
     key: SWRKey
   ): SWRResponse<Data, Error>
-  <Data = any, Error = any, SWRKey extends Key = null>(
+  <Data = any, Error = any, SWRKey extends Key = StrictKey>(
     key: SWRKey,
     fetcher: Fetcher<Data, SWRKey> | null
   ): SWRResponse<Data, Error>
-  <Data = any, Error = any, SWRKey extends Key = null>(
+  <
+    Data = any,
+    Error = any,
+    SWRKey extends Key = StrictKey,
+    SWROptions extends
+      | SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>>
+      | undefined =
+      | SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>>
+      | undefined
+  >(
     key: SWRKey,
-    config: SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>> | undefined
-  ): SWRResponse<Data, Error>
-  <Data = any, Error = any, SWRKey extends Key = null>(
+    config: SWROptions
+  ): SWRResponse<Data, Error, SWROptions>
+  <
+    Data = any,
+    Error = any,
+    SWRKey extends Key = StrictKey,
+    SWROptions extends
+      | SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>>
+      | undefined =
+      | SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>>
+      | undefined
+  >(
     key: SWRKey,
     fetcher: Fetcher<Data, SWRKey> | null,
-    config: SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>> | undefined
-  ): SWRResponse<Data, Error>
+    config: SWROptions
+  ): SWRResponse<Data, Error, SWROptions>
   <Data = any, Error = any>(key: Key): SWRResponse<Data, Error>
   <Data = any, Error = any>(
     key: Key,
     fetcher: BareFetcher<Data> | null
   ): SWRResponse<Data, Error>
-  <Data = any, Error = any>(
+  <
+    Data = any,
+    Error = any,
+    SWROptions extends
+      | SWRConfiguration<Data, Error, BareFetcher<Data>>
+      | undefined = SWRConfiguration<Data, Error, BareFetcher<Data>> | undefined
+  >(
     key: Key,
-    config: SWRConfiguration<Data, Error, BareFetcher<Data>> | undefined
-  ): SWRResponse<Data, Error>
-  <Data = any, Error = any>(
+    config: SWROptions
+  ): SWRResponse<Data, Error, SWROptions>
+  <
+    Data = any,
+    Error = any,
+    SWROptions extends
+      | SWRConfiguration<Data, Error, BareFetcher<Data>>
+      | undefined = SWRConfiguration<Data, Error, BareFetcher<Data>> | undefined
+  >(
     key: Key,
     fetcher: BareFetcher<Data> | null,
-    config: SWRConfiguration<Data, Error, BareFetcher<Data>> | undefined
-  ): SWRResponse<Data, Error>
+    config: SWROptions
+  ): SWRResponse<Data, Error, SWROptions>
 }
 
 // Middleware guarantees that a SWRHook receives a key, fetcher, and config as the argument
@@ -255,7 +300,8 @@ export type Arguments =
   | undefined
   | false
 export type Key = Arguments | (() => Arguments)
-
+export type StrictTupleKey = ArgumentsTuple | null | undefined | false
+type StrictKey = StrictTupleKey | (() => StrictTupleKey)
 export type MutatorCallback<Data = any> = (
   currentData?: Data
 ) => Promise<undefined | Data> | undefined | Data
@@ -266,7 +312,8 @@ export type MutatorOptions<Data = any> = {
     | boolean
     | ((result: any, currentData: Data | undefined) => Data)
   optimisticData?: Data | ((currentData?: Data) => Data)
-  rollbackOnError?: boolean
+  rollbackOnError?: boolean | ((error: unknown) => boolean)
+  throwOnError?: boolean
 }
 
 export type MutatorConfig = {
@@ -336,12 +383,19 @@ export type SWRConfiguration<
   Fn extends BareFetcher<any> = BareFetcher<any>
 > = Partial<PublicConfiguration<Data, Error, Fn>>
 
-export interface SWRResponse<Data = any, Error = any> {
-  data: Data | undefined
+type SWROptions<Data> = SWRConfiguration<Data, Error, Fetcher<Data, Key>>
+export interface SWRResponse<Data = any, Error = any, Config = any> {
+  /**
+   * The returned data of the fetcher function.
+   */
+  data: BlockingData<Data, Config> extends true ? Data : Data | undefined
+  /**
+   * The error object thrown by the fetcher function.
+   */
   error: Error | undefined
   mutate: KeyedMutator<Data>
   isValidating: boolean
-  isLoading: boolean
+  isLoading: BlockingData<Data, Config> extends true ? false : boolean
 }
 
 export type KeyLoader<Args extends Arguments = Arguments> =

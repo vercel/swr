@@ -3,7 +3,8 @@ import type {
   SWRResponse,
   Arguments,
   BareFetcher,
-  State
+  State,
+  StrictTupleKey
 } from 'swr/_internal'
 
 type FetcherResponse<Data = unknown> = Data | Promise<Data>
@@ -17,10 +18,10 @@ export type SWRInfiniteFetcher<
     : never
   : never
 
-export type SWRInfiniteKeyLoader<Data = any> = (
-  index: number,
-  previousPageData: Data | null
-) => Arguments
+export type SWRInfiniteKeyLoader<
+  Data = any,
+  Args extends Arguments = Arguments
+> = (index: number, previousPageData: Data | null) => Args
 
 export interface SWRInfiniteConfiguration<
   Data = any,
@@ -49,7 +50,7 @@ export interface SWRInfiniteHook {
     KeyLoader extends SWRInfiniteKeyLoader = (
       index: number,
       previousPageData: Data | null
-    ) => null
+    ) => StrictTupleKey
   >(
     getKey: KeyLoader
   ): SWRInfiniteResponse<Data, Error>
@@ -59,7 +60,7 @@ export interface SWRInfiniteHook {
     KeyLoader extends SWRInfiniteKeyLoader = (
       index: number,
       previousPageData: Data | null
-    ) => null
+    ) => StrictTupleKey
   >(
     getKey: KeyLoader,
     fetcher: SWRInfiniteFetcher<Data, KeyLoader> | null
@@ -70,7 +71,7 @@ export interface SWRInfiniteHook {
     KeyLoader extends SWRInfiniteKeyLoader = (
       index: number,
       previousPageData: Data | null
-    ) => null
+    ) => StrictTupleKey
   >(
     getKey: KeyLoader,
     config:
@@ -87,7 +88,7 @@ export interface SWRInfiniteHook {
     KeyLoader extends SWRInfiniteKeyLoader = (
       index: number,
       previousPageData: Data | null
-    ) => null
+    ) => StrictTupleKey
   >(
     getKey: KeyLoader,
     fetcher: SWRInfiniteFetcher<Data, KeyLoader> | null,

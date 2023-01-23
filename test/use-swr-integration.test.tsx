@@ -503,26 +503,26 @@ describe('useSWR', () => {
     await screen.findByText('data:value')
 
     expect(logs).toMatchInlineSnapshot(`
-      Array [
-        Object {
+      [
+        {
           "data": undefined,
           "error": undefined,
           "isLoading": true,
           "isValidating": true,
         },
-        Object {
+        {
           "data": undefined,
           "error": [Error: error],
           "isLoading": false,
           "isValidating": false,
         },
-        Object {
+        {
           "data": undefined,
           "error": [Error: error],
           "isLoading": true,
           "isValidating": true,
         },
-        Object {
+        {
           "data": "value",
           "error": undefined,
           "isLoading": false,
@@ -559,11 +559,11 @@ describe('useSWR', () => {
     await screen.findByText('data:value')
 
     expect(logs).toMatchInlineSnapshot(`
-      Array [
-        Object {
+      [
+        {
           "data": undefined,
         },
-        Object {
+        {
           "data": "value",
         },
       ]
