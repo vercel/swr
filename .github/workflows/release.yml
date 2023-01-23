@@ -12,8 +12,6 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@v3
-        with:
-          persist-credentials: false
 
       - name: Install
         uses: ./.github/workflows/install

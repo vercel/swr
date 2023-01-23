@@ -10,6 +10,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
+      - name: Check out
       - uses: actions/checkout@v3
 
       - name: Setup pnpm
@@ -23,6 +24,7 @@ jobs:
           node-version: 16
           cache: pnpm
 
+      - name: Install Dependencies
       - run: pnpm install
         env:
           CI: true
