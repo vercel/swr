@@ -1,0 +1,35 @@
+name: 'Install'
+description: 'Set up and install dependencies'
+
+inputs:
+  fetch-depth:
+    default: '1'
+    required: false
+  persist-credentials:
+    default: true
+    required: false
+
+
+runs:
+  using: composite
+  steps:
+    - name: Check out
+      uses: actions/checkout@v3
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v2.2.2
+
+    - name: Use Node.js 16
+      uses: actions/setup-node@v3
+      with:
+        node-version: 16
+        cache: pnpm
+
+    - name: Install Dependencies
+      shell: bash
+
+      run: |
+        corepack enable
+        pnpm install
+      env:
+        CI: true
