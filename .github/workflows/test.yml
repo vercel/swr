@@ -18,7 +18,7 @@ jobs:
 
       - name: Lint
         run: pnpm run-all-checks
-        run:
+        run: pnpm clean
         run: pnpm build
         run: pnpm test-packaging
         env:
