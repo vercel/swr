@@ -1,0 +1,25 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  release:
+    name: Publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+
+      - name: Install
+        uses: ./.github/workflows/install
+
+      - name: Publish
+        run: pnpm publish
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN_ELEVATED }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

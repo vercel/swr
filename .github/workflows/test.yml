@@ -12,18 +12,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2.2.2
-        with:
-          version: 7
+      - name: Install
+        uses: ./.github/workflows/install
 
-      - name: Use Node.js 16
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16
-          cache: pnpm
-
-      - run: pnpm install
+      - name: Lint
       - run: pnpm run-all-checks
       - run: pnpm clean
       - run: pnpm build
