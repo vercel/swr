@@ -1,12 +1,9 @@
+import type { Key, SWRHook, Middleware, SWRConfiguration } from 'swr'
 import { useRef } from 'react'
 import useSWR from 'swr'
 import {
   withMiddleware,
-  Key,
-  SWRHook,
-  Middleware,
   serialize,
-  SWRConfiguration,
   useIsomorphicLayoutEffect
 } from 'swr/_internal'
 
