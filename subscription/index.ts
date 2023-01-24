@@ -1,10 +1,11 @@
-import type { Key, SWRHook, Middleware, SWRConfiguration } from 'swr'
+import type { Key, SWRHook, Middleware, SWRConfiguration, SWRConfig } from 'swr'
 import { useRef } from 'react'
 import useSWR from 'swr'
 import {
   withMiddleware,
   serialize,
-  useIsomorphicLayoutEffect
+  useIsomorphicLayoutEffect,
+  createCacheHelper
 } from 'swr/_internal'
 
 export type SWRSubscription<Data = any, Error = any> = (
@@ -30,7 +31,7 @@ export const subscription = (<Data, Error>(useSWRNext: SWRHook) =>
   (
     _key: Key,
     subscribe: SWRSubscription<Data, Error>,
-    config?: SWRConfiguration
+    config: SWRConfiguration & typeof SWRConfig.defaultValue
   ): SWRSubscriptionResponse<Data, Error> => {
     const [key] = serialize(_key)
     const swr = useSWRNext(key, null, config)
@@ -40,25 +41,19 @@ export const subscription = (<Data, Error>(useSWRNext: SWRHook) =>
       subscribeRef.current = subscribe
     })
 
+    const { cache } = config
+    const [, set] = createCacheHelper<Data>(cache, key)
+
     useIsomorphicLayoutEffect(() => {
       subscriptions.set(key, (subscriptions.get(key) || 0) + 1)
 
       const onData = (val?: Data) => swr.mutate(val, false)
-      const onError = async (err: any) => {
-        // Avoid thrown errors from `mutate`
-        // eslint-disable-next-line no-empty
-        try {
-          await swr.mutate(() => {
-            throw err
-          }, false)
-        } catch (_) {
-          /* eslint-disable-line no-empty */
-        }
-      }
+      const onError = async (err: any) => set({ error: err })
 
-      const next = (_err?: any, _data?: Data) => {
-        if (_err) onError(_err)
-        else onData(_data)
+      const next = (err_?: any, data_?: Data) => {
+        console.log('next:_err', err_)
+        if (err_) onError(err_)
+        else onData(data_)
       }
 
       if (subscriptions.get(key) === 1) {

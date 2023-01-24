@@ -5,16 +5,16 @@ import useSWRSubscription from 'swr/unstable_subscription'
 
 describe('useSWRSubscription', () => {
   it('should update state when fetcher is a subscription', async () => {
-    const key = 'sub-0'
+    const swrKey = 'sub-0'
     let intervalId
     let res = 0
-    function subscribe(_key, { next }) {
+    function subscribe(key, { next }) {
       intervalId = setInterval(() => {
         if (res === 3) {
-          const err = new Error(_key + 'error')
+          const err = new Error(key + 'error')
           next(err)
         } else {
-          next(undefined, _key + res)
+          next(undefined, key + res)
         }
         res++
       }, 100)
@@ -23,7 +23,7 @@ describe('useSWRSubscription', () => {
     }
 
     function Page() {
-      const { data, error } = useSWRSubscription(key, subscribe, {
+      const { data, error } = useSWRSubscription(swrKey, subscribe, {
         fallbackData: 'fallback'
       })
       return <div>{error ? error.message : data}</div>
@@ -33,15 +33,15 @@ describe('useSWRSubscription', () => {
     await act(() => sleep(10))
     screen.getByText(`fallback`)
     await act(() => sleep(100))
-    screen.getByText(`${key}0`)
+    screen.getByText(`${swrKey}0`)
     await act(() => sleep(100))
-    screen.getByText(`${key}1`)
+    screen.getByText(`${swrKey}1`)
     await act(() => sleep(100))
-    screen.getByText(`${key}2`)
+    screen.getByText(`${swrKey}2`)
     await act(() => sleep(100))
-    screen.getByText(`${key}error`)
+    screen.getByText(`${swrKey}error`)
     clearInterval(intervalId)
     await sleep(100)
-    screen.getByText(`${key}error`)
+    screen.getByText(`${swrKey}error`)
   })
 })
