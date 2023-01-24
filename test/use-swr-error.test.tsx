@@ -494,4 +494,60 @@ describe('useSWR - error', () => {
     // Since there's only 1 request fired, only 1 error event should be reported.
     expect(errorEvents.length).toBe(1)
   })
+
+  it('should not should not trigger revalidation when a key is already active and has error - isLoading', async () => {
+    const key = createKey()
+    const useData = () => {
+      return useSWR<any, any>(
+        key,
+        () => createResponse(new Error('error!'), { delay: 200 }),
+        undefined
+      )
+    }
+    const Page = () => {
+      useData()
+      return null
+    }
+    const App = () => {
+      const { error, isLoading } = useData()
+      if (isLoading) return <span>loading</span>
+      return (
+        <div>
+          {error ? error.message : ''},{isLoading.toString()}
+          <Page />
+        </div>
+      )
+    }
+    renderWithConfig(<App />)
+    screen.getByText('loading')
+    await screen.findByText('error!,false')
+  })
+
+  it('should not should not trigger revalidation when a key is already active and has error - isValidating', async () => {
+    const key = createKey()
+    const useData = () => {
+      return useSWR<any, any>(
+        key,
+        () => createResponse(new Error('error!'), { delay: 200 }),
+        undefined
+      )
+    }
+    const Page = () => {
+      useData()
+      return null
+    }
+    const App = () => {
+      const { error, isValidating } = useData()
+      if (isValidating) return <span>validating</span>
+      return (
+        <div>
+          {error ? error.message : ''},{isValidating.toString()}
+          <Page />
+        </div>
+      )
+    }
+    renderWithConfig(<App />)
+    screen.getByText('validating')
+    await screen.findByText('error!,false')
+  })
 })
