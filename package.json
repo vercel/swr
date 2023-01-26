@@ -34,7 +34,7 @@
       "module": "./immutable/dist/index.esm.js",
       "require": "./immutable/dist/index.js"
     },
-    "./unstable_subscription": {
+    "./subscription": {
       "import": "./subscription/dist/index.mjs",
       "module": "./subscription/dist/index.esm.js",
       "require": "./subscription/dist/index.js",
