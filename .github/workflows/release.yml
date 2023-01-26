@@ -1,7 +1,7 @@
 name: Release
 
 on:
-  workflows_run:
+  workflow_run:
     workflow: [Lint and Test]
     types:
       - completed
