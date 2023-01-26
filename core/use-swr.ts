@@ -174,7 +174,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       (callback: () => void) =>
         subscribeCache(
           key,
-          (prev: State<Data, any>, current: State<Data, any>) => {
+          (current: State<Data, any>, prev: State<Data, any>) => {
             if (!isEqual(prev, current)) callback()
           }
         ),
