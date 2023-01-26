@@ -16,7 +16,7 @@ jobs:
         uses: ./.github/workflows/install
 
       - name: Publish
-        run: pnpm publish --no-git-checks
+        run: npm publish --access public
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN_ELEVATED }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
