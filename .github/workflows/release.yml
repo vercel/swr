@@ -1,6 +1,10 @@
 name: Release
 
 on:
+  workflow_run:
+    workflows: [Lint and Test]
+    types:
+      - completed
   push:
     tags:
       - v*
@@ -16,7 +20,8 @@ jobs:
         uses: ./.github/workflows/install
 
       - name: Publish
-        run: pnpm publish
+        run: |
+          echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
+          npm publish --access public
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN_ELEVATED }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
