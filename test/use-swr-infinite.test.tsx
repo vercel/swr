@@ -358,42 +358,52 @@ describe('useSWRInfinite', () => {
   })
 
   it('should reset page size when key changes', async () => {
-    let toggle
-
     const key = createKey()
     function Page() {
       const [t, setT] = useState(false)
-      const { data, size, setSize } = useSWRInfinite(
+      const {
+        data,
+        size: pageSize,
+        setSize
+      } = useSWRInfinite(
         index => [key, index, t ? 'A' : 'B'],
-        ([_, index]) => createResponse(`page ${index}, `)
+        ([_, index]) =>
+          createResponse(`page ${index}, `, {
+            delay: 20
+          }),
+        {
+          dedupingInterval: 0
+        }
       )
-
-      toggle = setT
-
       return (
-        <div
-          onClick={() => {
-            // load next page
-            setSize(size + 1)
-          }}
-        >
-          data:{data}
-        </div>
+        <>
+          <button onClick={() => setT(v => !v)}>change key</button>
+          <button onClick={() => setSize(size => size + 1)}>load next</button>
+          <div>size: {pageSize}</div>
+          <div>
+            key:{t ? 'A' : 'B'} data:{data}
+          </div>
+        </>
       )
     }
 
     renderWithConfig(<Page />)
-    screen.getByText('data:')
+    screen.getByText('key:B data:')
 
-    await screen.findByText('data:page 0,')
+    await screen.findByText('key:B data:page 0,')
 
     // load next page
-    fireEvent.click(screen.getByText('data:page 0,'))
-    await screen.findByText('data:page 0, page 1,')
+    fireEvent.click(screen.getByText('load next'))
+    await screen.findByText('key:B data:page 0, page 1,')
 
     // switch key, it should have only 1 page
-    act(() => toggle(v => !v))
-    await screen.findByText('data:page 0,')
+    fireEvent.click(screen.getByText('change key'))
+    await screen.findByText('key:A data:page 0,')
+
+    // switch key back, it should have 2 pages
+    fireEvent.click(screen.getByText('change key'))
+    await act(() => sleep(40))
+    await screen.findByText('key:B data:page 0, page 1,')
   })
 
   it('should persist page size when key changes', async () => {
