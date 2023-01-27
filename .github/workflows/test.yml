@@ -26,7 +26,8 @@ jobs:
           pnpm test-packaging
   release:
     runs-on: ubuntu-latest
-    if: ${{ contains('refs/tags', github.ref) == 'true' && jobs.test.result == 'success' }}
+    needs: test
+    if: ${{ contains('refs/tags', github.ref) == 'true' }}
     steps:
       - name: Check out
         uses: actions/checkout@v3
