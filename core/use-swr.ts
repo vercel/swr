@@ -133,9 +133,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       // If it's paused, we skip revalidation.
       if (getConfig().isPaused()) return false
       if (suspense) return false
-      const { data: cachedData } = getCache()
-      const data = isUndefined(cachedData) ? fallback : cachedData
-      if (!isUndefined(data) && !revalidateIfStale) return false
+      if (!isUndefined(revalidateIfStale)) return revalidateIfStale
       return true
     })()
 
