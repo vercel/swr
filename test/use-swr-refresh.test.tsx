@@ -2,7 +2,6 @@ import { act, fireEvent, screen } from '@testing-library/react'
 import React, { useState } from 'react'
 import useSWR, { SWRConfig, useSWRConfig } from 'swr'
 import { createKey, renderWithConfig, sleep } from './utils'
-import { resourceLimits } from 'worker_threads'
 
 // This has to be an async function to wait for a microtask to flush updates
 const advanceTimers = async (ms: number) => jest.advanceTimersByTime(ms) as any
