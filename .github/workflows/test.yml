@@ -4,8 +4,9 @@ on:
   push:
     branches:
       - main
+    tags:
+      - v*
   pull_request:
-  
 
 jobs:
   test:
@@ -23,3 +24,17 @@ jobs:
           pnpm clean
           pnpm build
           pnpm test-packaging
+  release:
+    runs-on: ubuntu-latest
+    if: ${{ contains('refs/tags', github.ref) == 'true' && jobs.test.result == 'success' }}
+    steps:
+      - name: Check out
+        uses: actions/checkout@v3
+
+      - name: Install
+        uses: ./.github/workflows/install
+
+      - name: Release
+        run: pnpm publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_ELEVATED }}
