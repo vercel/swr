@@ -164,6 +164,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     // unnecessary re-renders, we keep the previous snapshot and use deep
     // comparison to check if we need to return a new one.
     let memorizedSnapshot = getSelectedCache(getCache())
+    const memorizedInitialSnapshot = getSelectedCache(getInitialCache())
 
     return [
       () => {
@@ -172,7 +173,7 @@ export const useSWRHandler = <Data = any, Error = any>(
           ? memorizedSnapshot
           : (memorizedSnapshot = newSnapshot)
       },
-      () => getSelectedCache(getInitialCache())
+      () => memorizedInitialSnapshot
     ]
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cache, key])
