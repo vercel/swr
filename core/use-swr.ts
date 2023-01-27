@@ -61,6 +61,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     suspense,
     fallbackData,
     revalidateOnMount,
+    revalidateIfStale,
     refreshInterval,
     refreshWhenHidden,
     refreshWhenOffline,
@@ -102,7 +103,6 @@ export const useSWRHandler = <Data = any, Error = any>(
 
   const stateDependencies = useRef<StateDependencies>({}).current
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const fallback = isUndefined(fallbackData)
     ? config.fallback[key]
     : fallbackData
@@ -139,6 +139,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       // If it's paused, we skip revalidation.
       if (getConfig().isPaused()) return false
       if (suspense) return false
+      if (!isUndefined(revalidateIfStale)) return revalidateIfStale
       return true
     })()
 
@@ -224,11 +225,11 @@ export const useSWRHandler = <Data = any, Error = any>(
     // Under suspense mode, it will always fetch on render if there is no
     // stale data so no need to revalidate immediately mount it again.
     // If data exists, only revalidate if `revalidateIfStale` is true.
-    if (suspense) return isUndefined(data) ? false : config.revalidateIfStale
+    if (suspense) return isUndefined(data) ? false : revalidateIfStale
 
     // If there is no stale data, we need to revalidate when mount;
     // If `revalidateIfStale` is set to true, we will always revalidate.
-    return isUndefined(data) || config.revalidateIfStale
+    return isUndefined(data) || revalidateIfStale
   })()
 
   // Resolve the default validating state:
