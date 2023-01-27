@@ -1,0 +1,41 @@
+name: Test and Release
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - v*
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install
+        uses: ./.github/workflows/install
+
+      - name: Lint
+        run: |
+          pnpm run-all-checks
+          pnpm clean
+          pnpm build
+          pnpm test-packaging
+  release:
+    runs-on: ubuntu-latest
+    needs: test
+    if: ${{ contains('refs/tags', github.ref) == 'true' }}
+    steps:
+      - name: Check out
+        uses: actions/checkout@v3
+
+      - name: Install
+        uses: ./.github/workflows/install
+
+      - name: Release
+        run: pnpm publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_ELEVATED }}
