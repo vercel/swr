@@ -5,6 +5,7 @@ on:
     branches:
       - main
   pull_request:
+  
 
 jobs:
   test:
@@ -22,5 +23,3 @@ jobs:
           pnpm clean
           pnpm build
           pnpm test-packaging
-        env:
-          CI: true

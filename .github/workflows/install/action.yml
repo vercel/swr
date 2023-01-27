@@ -3,10 +3,12 @@ description: 'Set up and install dependencies'
 
 inputs:
   fetch-depth:
+    description: 'Number of commits to fetch'
     default: '1'
     required: false
   persist-credentials:
-    default: true
+    description: 'Whether to persist credentials'
+    default: "true"
     required: false
 
 
@@ -17,7 +19,7 @@ runs:
       uses: actions/checkout@v3
 
     - name: Setup pnpm
-      uses: pnpm/action-setup@v2.2.2
+      uses: pnpm/action-setup@v2.2.4
 
     - name: Use Node.js 16
       uses: actions/setup-node@v3
@@ -27,9 +29,6 @@ runs:
 
     - name: Install Dependencies
       shell: bash
-
       run: |
         corepack enable
         pnpm install
-      env:
-        CI: true

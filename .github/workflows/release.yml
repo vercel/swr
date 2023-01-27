@@ -11,6 +11,7 @@ on:
 
 jobs:
   release:
+    if: ${{ contains('refs/tags', github.ref) == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out
@@ -19,9 +20,7 @@ jobs:
       - name: Install
         uses: ./.github/workflows/install
 
-      - name: Publish
-        run: |
-          echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
-          npm publish --access public
+      - name: Release
+        run: pnpm publish --access public --no-git-checks
         env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN_ELEVATED }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_ELEVATED }}
