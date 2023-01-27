@@ -8,8 +8,8 @@
     "moduleResolution": "nodenext",
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": false,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "strictBindCallApply": true,
     "outDir": "./dist",
     "rootDir": "./",
@@ -22,6 +22,7 @@
       "swr/infinite": ["./infinite/index.ts"],
       "swr/immutable": ["./immutable/index.ts"],
       "swr/mutation": ["./mutation/index.ts"],
+      "swr/aggregator": ["./aggregator/index.ts"],
       "swr/_internal": ["./_internal/index.ts"]
     },
     "incremental": true

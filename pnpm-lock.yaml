@@ -74,6 +74,9 @@ importers:
   _internal:
     specifiers: {}
 
+  aggregator:
+    specifiers: {}
+
   core:
     specifiers: {}
 

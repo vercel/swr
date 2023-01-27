@@ -28,6 +28,12 @@
       "module": "./infinite/dist/index.esm.js",
       "require": "./infinite/dist/index.js"
     },
+    "./aggregator": {
+      "import": "./aggregator/dist/index.mjs",
+      "module": "./aggregator/dist/index.esm.js",
+      "require": "./aggregator/dist/index.js",
+      "types": "./aggregator/dist/aggregator/index.d.ts"
+    },
     "./immutable": {
       "types": "./immutable/dist/immutable/index.d.ts",
       "import": "./immutable/dist/index.mjs",
@@ -53,11 +59,14 @@
     "immutable/dist/**/*.{js,d.ts,mjs}",
     "mutation/dist/**/*.{js,d.ts,mjs}",
     "_internal/dist/**/*.{js,d.ts,mjs}",
+    "aggregator/dist/**/*.{js,d.ts,mjs}",
     "core/package.json",
     "infinite/package.json",
     "immutable/package.json",
     "mutation/package.json",
-    "_internal/package.json"
+    "_internal/package.json",
+    "aggregator/package.json",
+    "package.json"
   ],
   "repository": "github:vercel/swr",
   "homepage": "https://swr.vercel.app",
@@ -68,7 +77,7 @@
     "csb:build": "pnpm build",
     "clean": "pnpm -r run clean",
     "watch": "pnpm -r run watch",
-    "build": "pnpm build-package _internal && pnpm build-package core && pnpm build-package infinite && pnpm build-package immutable && pnpm build-package mutation",
+    "build": "pnpm build-package _internal && pnpm build-package core && pnpm build-package infinite && pnpm build-package immutable && pnpm build-package mutation &&  pnpm bunchee index.tsx --cwd aggregator",
     "build-package": "bunchee index.ts --cwd",
     "types:check": "pnpm -r run types:check",
     "prepublishOnly": "pnpm clean && pnpm build",

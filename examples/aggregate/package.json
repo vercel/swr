@@ -1,0 +1,16 @@
+{
+  "name": "queries",
+  "private": true,
+  "license": "MIT",
+  "dependencies": {
+    "next": "latest",
+    "react": "18.1.0",
+    "react-dom": "18.1.0",
+    "swr": "latest"
+  },
+  "scripts": {
+    "dev": "next",
+    "start": "next start",
+    "build": "next build"
+  }
+}
