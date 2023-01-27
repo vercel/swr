@@ -1,6 +1,6 @@
 {
   "name": "swr",
-  "version": "2.0.0",
+  "version": "2.0.2",
   "description": "React Hooks library for remote data fetching",
   "keywords": [
     "swr",
@@ -23,19 +23,19 @@
       "require": "./core/dist/index.js"
     },
     "./infinite": {
-      "types": "./infinite/dist/index.d.ts",
+      "types": "./infinite/dist/infinite/index.d.ts",
       "import": "./infinite/dist/index.mjs",
       "module": "./infinite/dist/index.esm.js",
       "require": "./infinite/dist/index.js"
     },
     "./immutable": {
-      "types": "./immutable/dist/index.d.ts",
+      "types": "./immutable/dist/immutable/index.d.ts",
       "import": "./immutable/dist/index.mjs",
       "module": "./immutable/dist/index.esm.js",
       "require": "./immutable/dist/index.js"
     },
     "./mutation": {
-      "types": "./mutation/dist/index.d.ts",
+      "types": "./mutation/dist/mutation/index.d.ts",
       "import": "./mutation/dist/index.mjs",
       "module": "./mutation/dist/index.esm.js",
       "require": "./mutation/dist/index.js"
@@ -64,12 +64,12 @@
   "license": "MIT",
   "scripts": {
     "prepare": "husky install",
-    "csb:install": "pnpm i -g pnpm@7",
-    "csb:build": "pnpm install && pnpm build",
+    "csb:install": "pnpm install",
+    "csb:build": "pnpm build",
     "clean": "pnpm -r run clean",
     "watch": "pnpm -r run watch",
     "build": "pnpm build-package _internal && pnpm build-package core && pnpm build-package infinite && pnpm build-package immutable && pnpm build-package mutation",
-    "build-package": "bunchee --target es2018 index.ts --cwd",
+    "build-package": "bunchee index.ts --cwd",
     "types:check": "pnpm -r run types:check",
     "prepublishOnly": "pnpm clean && pnpm build",
     "publish-beta": "pnpm publish --tag beta",
@@ -78,6 +78,7 @@
     "lint:fix": "pnpm lint --fix",
     "coverage": "jest --coverage",
     "test-typing": "tsc --noEmit -p test/type/tsconfig.json && tsc --noEmit -p test/tsconfig.json",
+    "test-packaging": "publint",
     "test": "jest",
     "run-all-checks": "pnpm types:check && pnpm lint && pnpm test && pnpm test-typing"
   },
@@ -99,7 +100,7 @@
     "@types/use-sync-external-store": "^0.0.3",
     "@typescript-eslint/eslint-plugin": "5.46.1",
     "@typescript-eslint/parser": "5.46.1",
-    "bunchee": "2.1.7",
+    "bunchee": "2.2.0",
     "eslint": "8.29.0",
     "eslint-config-prettier": "8.5.0",
     "eslint-plugin-jest-dom": "4.0.3",
@@ -112,6 +113,7 @@
     "lint-staged": "13.0.3",
     "next": "^13.0.6",
     "prettier": "2.8.1",
+    "publint": "^0.1.8",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "rimraf": "3.0.2",

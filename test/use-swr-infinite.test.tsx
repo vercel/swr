@@ -358,42 +358,52 @@ describe('useSWRInfinite', () => {
   })
 
   it('should reset page size when key changes', async () => {
-    let toggle
-
     const key = createKey()
     function Page() {
       const [t, setT] = useState(false)
-      const { data, size, setSize } = useSWRInfinite(
+      const {
+        data,
+        size: pageSize,
+        setSize
+      } = useSWRInfinite(
         index => [key, index, t ? 'A' : 'B'],
-        ([_, index]) => createResponse(`page ${index}, `)
+        ([_, index]) =>
+          createResponse(`page ${index}, `, {
+            delay: 20
+          }),
+        {
+          dedupingInterval: 0
+        }
       )
-
-      toggle = setT
-
       return (
-        <div
-          onClick={() => {
-            // load next page
-            setSize(size + 1)
-          }}
-        >
-          data:{data}
-        </div>
+        <>
+          <button onClick={() => setT(v => !v)}>change key</button>
+          <button onClick={() => setSize(size => size + 1)}>load next</button>
+          <div>size: {pageSize}</div>
+          <div>
+            key:{t ? 'A' : 'B'} data:{data}
+          </div>
+        </>
       )
     }
 
     renderWithConfig(<Page />)
-    screen.getByText('data:')
+    screen.getByText('key:B data:')
 
-    await screen.findByText('data:page 0,')
+    await screen.findByText('key:B data:page 0,')
 
     // load next page
-    fireEvent.click(screen.getByText('data:page 0,'))
-    await screen.findByText('data:page 0, page 1,')
+    fireEvent.click(screen.getByText('load next'))
+    await screen.findByText('key:B data:page 0, page 1,')
 
     // switch key, it should have only 1 page
-    act(() => toggle(v => !v))
-    await screen.findByText('data:page 0,')
+    fireEvent.click(screen.getByText('change key'))
+    await screen.findByText('key:A data:page 0,')
+
+    // switch key back, it should have 2 pages
+    fireEvent.click(screen.getByText('change key'))
+    await act(() => sleep(40))
+    await screen.findByText('key:B data:page 0, page 1,')
   })
 
   it('should persist page size when key changes', async () => {
@@ -1291,6 +1301,368 @@ describe('useSWRInfinite', () => {
     expect(fetcher).toBeCalledTimes(1)
 
     expect(logger).toEqual([undefined, ['foo-0']])
+  })
+
+  it('should be able to use the optimisticData option', async () => {
+    let t = 0
+    const key = createKey()
+    const fetcher = async () => createResponse(`foo-${t++}`)
+    const updater = async () => createResponse(['updated'])
+
+    function Page() {
+      const { data, mutate } = useSWRInfinite(() => key, fetcher, {
+        dedupingInterval: 0
+      })
+
+      return (
+        <>
+          <div>data: {String(data)}</div>
+          <button
+            onClick={() => {
+              mutate(updater, { optimisticData: ['optimistic'] })
+            }}
+          >
+            mutate
+          </button>
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data: foo-0')
+
+    fireEvent.click(screen.getByText('mutate'))
+
+    await screen.findByText('data: optimistic')
+    await screen.findByText('data: updated')
+    await screen.findByText('data: foo-1')
+  })
+
+  it('should be able to use the functional optimisticData option', async () => {
+    let t = 0
+    const key = createKey()
+    const fetcher = async () => createResponse(`foo-${t++}`)
+    const updater = async () => createResponse(['updated'])
+
+    function Page() {
+      const { data, mutate } = useSWRInfinite(() => key, fetcher, {
+        dedupingInterval: 0
+      })
+
+      return (
+        <>
+          <div>data: {String(data)}</div>
+          <button
+            onClick={() => {
+              mutate(updater, {
+                optimisticData: current => [...current, 'optimistic']
+              })
+            }}
+          >
+            mutate
+          </button>
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data: foo-0')
+
+    fireEvent.click(screen.getByText('mutate'))
+
+    await screen.findByText('data: foo-0,optimistic')
+    await screen.findByText('data: updated')
+    await screen.findByText('data: foo-1')
+  })
+
+  it('should be able to use the functional populateCache option', async () => {
+    let t = 0
+    const key = createKey()
+    const fetcher = async () => createResponse(`foo-${t++}`)
+    const updater = async () => createResponse(['updated'])
+
+    function Page() {
+      const { data, mutate } = useSWRInfinite(() => key, fetcher, {
+        dedupingInterval: 0
+      })
+
+      return (
+        <>
+          <div>data: {String(data)}</div>
+          <button
+            onClick={() => {
+              mutate(updater, {
+                populateCache: (result: string, currentData: string[]) => {
+                  return [...currentData, ...result]
+                },
+                revalidate: false
+              })
+            }}
+          >
+            mutate
+          </button>
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data: foo-0')
+
+    fireEvent.click(screen.getByText('mutate'))
+
+    await screen.findByText('data: foo-0,updated')
+  })
+
+  it('should be able to turn off the populateCache option', async () => {
+    let t = 0
+    const key = createKey()
+    const fetcher = async () => createResponse(`foo-${t++}`)
+    const updater = async () => createResponse(['updated'])
+
+    function Page() {
+      const { data, mutate } = useSWRInfinite(() => key, fetcher, {
+        dedupingInterval: 0
+      })
+
+      return (
+        <>
+          <div>data: {String(data)}</div>
+          <button
+            onClick={() => {
+              mutate(updater, {
+                populateCache: false,
+                revalidate: false
+              })
+            }}
+          >
+            mutate
+          </button>
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data: foo-0')
+    fireEvent.click(screen.getByText('mutate'))
+    sleep(50)
+    await screen.findByText('data: foo-0')
+  })
+
+  it('should be able to use the functional optimisticData option with multiple pages', async () => {
+    const apiData = {
+      0: ['A1', 'A2', 'A3'],
+      1: ['B1', 'B2', 'B3']
+    }
+    const key = createKey()
+    const fetcher = async ([_key, pageKey]) => createResponse(apiData[pageKey])
+    const updater = async () => createResponse(['updated'])
+
+    function Page() {
+      const { data, mutate } = useSWRInfinite(
+        (pageIndex: number) => [key, pageIndex],
+        fetcher,
+        {
+          initialSize: 2,
+          dedupingInterval: 0
+        }
+      )
+
+      return (
+        <>
+          <div>data: {String(data)}</div>
+          <button
+            onClick={() => {
+              mutate(updater, {
+                optimisticData: current => [current[0], [...current[1], 'B4']],
+                populateCache: (result: string, currentData: string[]) => {
+                  return [currentData[0], [...currentData[1], ...result]]
+                },
+                revalidate: false
+              })
+            }}
+          >
+            mutate
+          </button>
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data: A1,A2,A3,B1,B2,B3')
+
+    fireEvent.click(screen.getByText('mutate'))
+
+    await screen.findByText('data: A1,A2,A3,B1,B2,B3,B4')
+    await screen.findByText('data: A1,A2,A3,B1,B2,B3,updated')
+  })
+
+  it('should be able to use the rollbackOnError option', async () => {
+    let t = 0
+    const key = createKey()
+    const fetcher = async () => createResponse(`foo-${t++}`)
+    const updater = async () =>
+      createResponse(new Error('error')) as any as Promise<string[]>
+
+    function Page() {
+      const { data, mutate } = useSWRInfinite(() => key, fetcher, {
+        dedupingInterval: 0
+      })
+
+      return (
+        <>
+          <div>data: {String(data)}</div>
+          <button
+            onClick={async () => {
+              try {
+                await mutate(updater, {
+                  optimisticData: ['optimistic'],
+                  rollbackOnError: true,
+                  revalidate: false
+                })
+              } catch (e) {
+                // noop
+              }
+            }}
+          >
+            mutate
+          </button>
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data: foo-0')
+
+    fireEvent.click(screen.getByText('mutate'))
+
+    await screen.findByText('data: optimistic')
+    await screen.findByText('data: foo-0')
+  })
+
+  it('should be able to disable the rollbackOnError option', async () => {
+    let t = 0
+    const key = createKey()
+    const fetcher = async () => createResponse(`foo-${t++}`)
+    const updater = async () =>
+      createResponse(new Error('error')) as any as Promise<string[]>
+
+    function Page() {
+      const { data, mutate } = useSWRInfinite(() => key, fetcher, {
+        dedupingInterval: 0
+      })
+
+      return (
+        <>
+          <div>data: {String(data)}</div>
+          <button
+            onClick={async () => {
+              try {
+                await mutate(updater, {
+                  optimisticData: ['optimistic'],
+                  rollbackOnError: false,
+                  revalidate: false
+                })
+              } catch (e) {
+                // noop
+              }
+            }}
+          >
+            mutate
+          </button>
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data: foo-0')
+
+    fireEvent.click(screen.getByText('mutate'))
+
+    await screen.findByText('data: optimistic')
+    await sleep(50)
+    await screen.findByText('data: optimistic')
+  })
+
+  it('should be able to use the throwOnError option', async () => {
+    let t = 0
+    const key = createKey()
+    const fetcher = async () => createResponse(`foo-${t++}`)
+    const updater = async () =>
+      createResponse(new Error('mutation error')) as any as Promise<string[]>
+
+    function Page() {
+      const [error, setError] = useState(null)
+      const { data, mutate } = useSWRInfinite(() => key, fetcher, {
+        dedupingInterval: 0
+      })
+
+      return (
+        <>
+          <div>data: {String(data)}</div>
+          <div>error: {error}</div>
+          <button
+            onClick={async () => {
+              try {
+                await mutate(updater, { throwOnError: true, revalidate: false })
+              } catch (e) {
+                setError(e.message)
+              }
+            }}
+          >
+            mutate
+          </button>
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data: foo-0')
+
+    fireEvent.click(screen.getByText('mutate'))
+    await screen.findByText('error: mutation error')
+  })
+
+  it('should be able to disable the throwOnError option', async () => {
+    let t = 0
+    const key = createKey()
+    const fetcher = async () => createResponse(`foo-${t++}`)
+    const updater = async () =>
+      createResponse(new Error('mutation error')) as any as Promise<string[]>
+
+    function Page() {
+      const [error, setError] = useState(null)
+      const { data, mutate } = useSWRInfinite(() => key, fetcher, {
+        dedupingInterval: 0
+      })
+
+      return (
+        <>
+          <div>data: {String(data)}</div>
+          <div>error: {error}</div>
+          <button
+            onClick={async () => {
+              try {
+                await mutate(updater, {
+                  throwOnError: false,
+                  revalidate: false
+                })
+              } catch (e) {
+                setError(e.message)
+              }
+            }}
+          >
+            mutate
+          </button>
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data: foo-0')
+
+    fireEvent.click(screen.getByText('mutate'))
+    await sleep(50)
+    await screen.findByText('error:')
   })
 
   it('should share data with useSWR', async () => {

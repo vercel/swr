@@ -1,5 +1,5 @@
 import { SWRGlobalState } from './global-state'
-import type { Key, Cache, State, GlobalState } from '../types'
+import type { Cache, State, GlobalState } from '../types'
 
 const EMPTY_CACHE = {}
 export const noop = () => {}
@@ -30,7 +30,7 @@ export const hasRequestAnimationFrame = () =>
 
 export const createCacheHelper = <Data = any, T = State<Data, any>>(
   cache: Cache,
-  key: Key
+  key: string | undefined
 ) => {
   const state = SWRGlobalState.get(cache) as GlobalState
   return [
@@ -38,8 +38,10 @@ export const createCacheHelper = <Data = any, T = State<Data, any>>(
     () => (cache.get(key) || EMPTY_CACHE) as T,
     // Setter
     (info: T) => {
-      const prev = cache.get(key)
-      state[5](key as string, mergeObjects(prev, info), prev || EMPTY_CACHE)
+      if (!isUndefined(key)) {
+        const prev = cache.get(key)
+        state[5](key, mergeObjects(prev, info), prev || EMPTY_CACHE)
+      }
     },
     // Subscriber
     state[6]
