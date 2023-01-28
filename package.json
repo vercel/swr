@@ -10,7 +10,7 @@
     "cache",
     "fetch"
   ],
-  "packageManager": "pnpm@7.1.0",
+  "packageManager": "pnpm@7.26.1",
   "main": "./core/dist/index.js",
   "module": "./core/dist/index.esm.js",
   "types": "./core/dist/index.d.ts",
@@ -66,7 +66,7 @@
     "prepare": "husky install",
     "csb:install": "pnpm install",
     "csb:build": "pnpm build",
-    "clean": "pnpm -r run clean",
+    "clean": "pnpm -r run clean && rimraf playwright-report test-result",
     "watch": "pnpm -r run watch",
     "build": "pnpm build-package _internal && pnpm build-package core && pnpm build-package infinite && pnpm build-package immutable && pnpm build-package mutation",
     "build:e2e": "pnpm next build e2e/site",
