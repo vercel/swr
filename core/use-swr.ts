@@ -93,13 +93,14 @@ export const useSWRHandler = <Data = any, Error = any>(
   const getConfig = () => configRef.current
   const isActive = () => getConfig().isVisible() && getConfig().isOnline()
 
-  const [getCache, setCache, subscribeCache] = createCacheHelper<
-    Data,
-    State<Data, any> & {
-      // The original key arguments.
-      _k?: Key
-    }
-  >(cache, key)
+  const [getCache, setCache, subscribeCache, getInitialCache] =
+    createCacheHelper<
+      Data,
+      State<Data, any> & {
+        // The original key arguments.
+        _k?: Key
+      }
+    >(cache, key)
 
   const stateDependencies = useRef<StateDependencies>({}).current
 
@@ -143,9 +144,8 @@ export const useSWRHandler = <Data = any, Error = any>(
       return true
     })()
 
-    const getSelectedCache = () => {
-      const state = getCache()
-
+    // Get the cache and merge it with expected states.
+    const getSelectedCache = (state: ReturnType<typeof getCache>) => {
       // We only select the needed fields from the state.
       const snapshot = mergeObjects(state)
       delete snapshot._k
@@ -161,14 +161,21 @@ export const useSWRHandler = <Data = any, Error = any>(
       }
     }
 
-    let memorizedSnapshot = getSelectedCache()
+    // To make sure that we are returning the same object reference to avoid
+    // unnecessary re-renders, we keep the previous snapshot and use deep
+    // comparison to check if we need to return a new one.
+    let memorizedSnapshot = getSelectedCache(getCache())
+    const memorizedInitialSnapshot = getSelectedCache(getInitialCache())
 
-    return () => {
-      const snapshot = getSelectedCache()
-      return isEqual(snapshot, memorizedSnapshot)
-        ? memorizedSnapshot
-        : (memorizedSnapshot = snapshot)
-    }
+    return [
+      () => {
+        const newSnapshot = getSelectedCache(getCache())
+        return isEqual(newSnapshot, memorizedSnapshot)
+          ? memorizedSnapshot
+          : (memorizedSnapshot = newSnapshot)
+      },
+      () => memorizedInitialSnapshot
+    ]
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cache, key])
 
@@ -185,8 +192,8 @@ export const useSWRHandler = <Data = any, Error = any>(
       // eslint-disable-next-line react-hooks/exhaustive-deps
       [cache, key]
     ),
-    getSnapshot,
-    getSnapshot
+    getSnapshot[0],
+    getSnapshot[1]
   )
 
   const isInitialMount = !initialMountedRef.current
