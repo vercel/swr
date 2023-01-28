@@ -14,3 +14,4 @@ package-lock.json
 coverage
 .rollup.cache
 playwright-report
+test-results
