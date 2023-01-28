@@ -69,6 +69,7 @@
     "clean": "pnpm -r run clean",
     "watch": "pnpm -r run watch",
     "build": "pnpm build-package _internal && pnpm build-package core && pnpm build-package infinite && pnpm build-package immutable && pnpm build-package mutation",
+    "build:e2e": "pnpm next build e2e/site",
     "build-package": "bunchee index.ts --cwd",
     "types:check": "pnpm -r run types:check",
     "prepublishOnly": "pnpm clean && pnpm build",
@@ -80,6 +81,7 @@
     "test-typing": "tsc --noEmit -p test/type/tsconfig.json && tsc --noEmit -p test/tsconfig.json",
     "test-packaging": "publint",
     "test": "jest",
+    "test:e2e": "playwright test",
     "run-all-checks": "pnpm types:check && pnpm lint && pnpm test && pnpm test-typing"
   },
   "lint-staged": {

@@ -21,10 +21,10 @@ runs:
     - name: Setup pnpm
       uses: pnpm/action-setup@v2.2.4
 
-    - name: Use Node.js 16
+    - name: Use Node.js 18
       uses: actions/setup-node@v3
       with:
-        node-version: 16
+        node-version: 18
         cache: pnpm
 
     - name: Install Dependencies
