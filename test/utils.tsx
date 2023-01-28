@@ -54,6 +54,18 @@ export const renderWithGlobalCache = (
   return _renderWithConfig(element, { ...config })
 }
 
+export const hydrateWithConfig = (
+  element: React.ReactElement,
+  container: HTMLElement,
+  config?: Parameters<typeof _renderWithConfig>[1]
+): ReturnType<typeof _renderWithConfig> => {
+  const provider = () => new Map()
+  const TestSWRConfig = ({ children }: { children: React.ReactNode }) => (
+    <SWRConfig value={{ provider, ...config }}>{children}</SWRConfig>
+  )
+  return render(element, { container, wrapper: TestSWRConfig, hydrate: true })
+}
+
 export const mockVisibilityHidden = () => {
   const mockVisibilityState = jest.spyOn(document, 'visibilityState', 'get')
   mockVisibilityState.mockImplementation(() => 'hidden')
@@ -67,4 +79,27 @@ export async function executeWithoutBatching(fn: () => any) {
   global.IS_REACT_ACT_ENVIRONMENT = false
   await fn()
   global.IS_REACT_ACT_ENVIRONMENT = prev
+}
+
+export const mockConsoleForHydrationErrors = () => {
+  jest.spyOn(console, 'error').mockImplementation(() => {})
+  return () => {
+    // It should not have any hydration warnings.
+    expect(
+      // @ts-expect-error
+      console.error.mock.calls.find(([err]) => {
+        return (
+          err?.message?.includes(
+            'Text content does not match server-rendered HTML.'
+          ) ||
+          err?.message?.includes(
+            'Hydration failed because the initial UI does not match what was rendered on the server.'
+          )
+        )
+      })
+    ).toBeFalsy()
+
+    // @ts-expect-error
+    console.error.mockRestore()
+  }
 }
