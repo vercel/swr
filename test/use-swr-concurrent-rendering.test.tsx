@@ -121,7 +121,5 @@ describe('useSWR - concurrent rendering', () => {
       renderWithConfig(<Page />)
       await sleep(500)
     })
-
-    console.log(log)
   })
 })
