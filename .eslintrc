@@ -17,7 +17,8 @@
     "plugin:@typescript-eslint/recommended",
     "prettier",
     "plugin:jest-dom/recommended",
-    "plugin:testing-library/react"
+    "plugin:testing-library/react",
+    "plugin:react/jsx-runtime"
   ],
   "settings": {
     "react": {

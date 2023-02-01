@@ -66,7 +66,7 @@ export const initCache = <Data = any>(
       const subs = subscriptions[key]
       if (subs) {
         for (let i = subs.length; i--; ) {
-          subs[i](prev, value)
+          subs[i](value, prev)
         }
       }
     }
