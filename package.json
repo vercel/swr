@@ -35,10 +35,10 @@
       "require": "./immutable/dist/index.js"
     },
     "./subscription": {
+      "types": "./subscription/dist/index.d.ts",
       "import": "./subscription/dist/index.mjs",
       "module": "./subscription/dist/index.esm.js",
-      "require": "./subscription/dist/index.js",
-      "types": "./subscription/dist/index.d.ts"
+      "require": "./subscription/dist/index.js"
     },
     "./mutation": {
       "types": "./mutation/dist/mutation/index.d.ts",
