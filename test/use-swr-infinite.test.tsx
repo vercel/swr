@@ -1692,4 +1692,29 @@ describe('useSWRInfinite', () => {
     await screen.findByText(`size: 2`)
     await screen.findByText(`swr: ${key}-2,`)
   })
+
+  it('should support the parallel option', async () => {
+    // mock api
+    const pageData = ['apple', 'banana', 'pineapple']
+
+    const key = createKey()
+    function Page() {
+      const { data } = useSWRInfinite(
+        index => [key, index],
+        ([_, index]) => createResponse(`${pageData[index]}, `, { delay: 100 }),
+        {
+          initialSize: 3,
+          parallel: true
+        }
+      )
+
+      return <div>data:{data}</div>
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('data:')
+
+    await act(() => sleep(150))
+    screen.getByText('data:apple, banana, pineapple,')
+  })
 })

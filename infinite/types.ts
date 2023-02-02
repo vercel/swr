@@ -32,6 +32,7 @@ export interface SWRInfiniteConfiguration<
   revalidateAll?: boolean
   persistSize?: boolean
   revalidateFirstPage?: boolean
+  parallel?: boolean
   fetcher?: Fn
 }
 
