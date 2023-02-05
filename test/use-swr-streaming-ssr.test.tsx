@@ -1,3 +1,4 @@
+import { act } from '@testing-library/react'
 import React, { Suspense } from 'react'
 import useSWR from 'swr'
 import {
@@ -73,7 +74,7 @@ describe('useSWR - streaming', () => {
       //   <div>undefined</div>
 
       // Wait for streaming to finish.
-      await sleep(50)
+      await act(() => sleep(50))
 
       expect(dataDuringHydration).toEqual({
         a: 'undefined',
