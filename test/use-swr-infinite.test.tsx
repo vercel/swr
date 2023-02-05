@@ -1701,7 +1701,7 @@ describe('useSWRInfinite', () => {
     function Page() {
       const { data } = useSWRInfinite(
         index => [key, index],
-        ([_, index]) => createResponse(`${pageData[index]}, `, { delay: 100 }),
+        ([_, index]) => createResponse(`${pageData[index]}, `, { delay: 50 }),
         {
           initialSize: 3,
           parallel: true
@@ -1714,7 +1714,91 @@ describe('useSWRInfinite', () => {
     renderWithConfig(<Page />)
     screen.getByText('data:')
 
-    await act(() => sleep(150))
+    await act(() => sleep(100))
     screen.getByText('data:apple, banana, pineapple,')
+  })
+
+  it('should send request sequentially when the parallel option is disabled', async () => {
+    // mock api
+    const pageData = ['apple', 'banana', 'pineapple']
+
+    const key = createKey()
+    function Page() {
+      const { data } = useSWRInfinite(
+        index => [key, index],
+        ([_, index]) => createResponse(`${pageData[index]}, `, { delay: 50 }),
+        {
+          initialSize: 3,
+          parallel: false
+        }
+      )
+
+      return <div>data:{data}</div>
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('data:')
+
+    await act(() => sleep(100))
+    screen.getByText('data:')
+    await act(() => sleep(200))
+    screen.getByText('data:apple, banana, pineapple,')
+  })
+
+  it('should be the parallel option false by default', async () => {
+    // mock api
+    const pageData = ['apple', 'banana', 'pineapple']
+
+    const key = createKey()
+    function Page() {
+      const { data } = useSWRInfinite(
+        index => [key, index],
+        ([_, index]) => createResponse(`${pageData[index]}, `, { delay: 50 }),
+        {
+          initialSize: 3
+        }
+      )
+
+      return <div>data:{data}</div>
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('data:')
+
+    await act(() => sleep(100))
+    screen.getByText('data:')
+    await act(() => sleep(200))
+    screen.getByText('data:apple, banana, pineapple,')
+  })
+
+  it('should make previousPageData null when the parallel option is enabled', async () => {
+    // mock api
+    const pageData = ['apple', 'banana', 'pineapple']
+
+    const previousPageDataLogs = []
+
+    const key = createKey()
+    function Page() {
+      const { data } = useSWRInfinite(
+        (index, previousPageData) => {
+          previousPageDataLogs.push(previousPageData)
+          return [key, index]
+        },
+        ([_, index]) => createResponse(`${pageData[index]}, `, { delay: 50 }),
+        {
+          initialSize: 3,
+          parallel: true
+        }
+      )
+
+      return <div>data:{data}</div>
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('data:')
+
+    await act(() => sleep(100))
+    screen.getByText('data:apple, banana, pineapple,')
+    expect(previousPageDataLogs.every(d => d === null)).toBeTruthy()
   })
 })
