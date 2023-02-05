@@ -139,7 +139,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
 
         const pageSize = resolvePageSize()
 
-        const revalidates = []
+        const revalidators = []
 
         let previousPageData = null
         for (let i = 0; i < pageSize; ++i) {
@@ -184,7 +184,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
               data[i] = pageData
             }
             if (parallel) {
-              revalidates.push(revalidate)
+              revalidators.push(revalidate)
             } else {
               await revalidate()
             }
@@ -198,7 +198,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
 
         // flush all revalidateions in parallel
         if (parallel) {
-          await Promise.all(revalidates.map(r => r()))
+          await Promise.all(revalidators.map(r => r()))
         }
 
         // once we executed the data fetching based on the context, clear the context
