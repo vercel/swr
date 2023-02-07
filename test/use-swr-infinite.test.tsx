@@ -1714,6 +1714,7 @@ describe('useSWRInfinite', () => {
     renderWithConfig(<Page />)
     screen.getByText('data:')
 
+    // If SWR sends requests sequentially, it takes 150ms at least
     await act(() => sleep(100))
     screen.getByText('data:apple, banana, pineapple,')
   })
@@ -1739,6 +1740,7 @@ describe('useSWRInfinite', () => {
     renderWithConfig(<Page />)
     screen.getByText('data:')
 
+    // If SWR sends requests sequentially, it takes 150ms at least
     await act(() => sleep(100))
     screen.getByText('data:')
     await act(() => sleep(200))
@@ -1765,6 +1767,7 @@ describe('useSWRInfinite', () => {
     renderWithConfig(<Page />)
     screen.getByText('data:')
 
+    // If SWR sends requests sequentially, it takes 150ms at least
     await act(() => sleep(100))
     screen.getByText('data:')
     await act(() => sleep(200))
@@ -1797,6 +1800,7 @@ describe('useSWRInfinite', () => {
     renderWithConfig(<Page />)
     screen.getByText('data:')
 
+    // If SWR sends requests sequentially, it takes 150ms at least
     await act(() => sleep(100))
     screen.getByText('data:apple, banana, pineapple,')
     expect(previousPageDataLogs.every(d => d === null)).toBeTruthy()
