@@ -16,5 +16,5 @@ module.exports = {
   },
   coveragePathIgnorePatterns: ['/node_modules/', '/dist/', '/test/'],
   coverageReporters: ['text', 'html'],
-  reporters: ['default', 'github-actions']
+  reporters: [['github-actions', { silent: false }], 'summary']
 }
