@@ -445,7 +445,15 @@ export const useSWRHandler = <Data = any, Error = any>(
                   err,
                   key,
                   currentConfig,
-                  revalidate,
+                  param => {
+                    const revalidators = EVENT_REVALIDATORS[key]
+                    if (revalidators && revalidators[0]) {
+                      revalidators[0](
+                        revalidateEvents.ERROR_REVALIDATE_EVENT,
+                        param
+                      )
+                    }
+                  },
                   {
                     retryCount: (opts.retryCount || 0) + 1,
                     dedupe: true
@@ -511,7 +519,13 @@ export const useSWRHandler = <Data = any, Error = any>(
     // Expose revalidators to global event listeners. So we can trigger
     // revalidation from the outside.
     let nextFocusRevalidatedAt = 0
-    const onRevalidate = (type: RevalidateEvent) => {
+    const onRevalidate = (
+      type: RevalidateEvent,
+      params: {
+        retryCount?: number
+        dedupe?: boolean
+      } = {}
+    ) => {
       if (type == revalidateEvents.FOCUS_EVENT) {
         const now = Date.now()
         if (
@@ -528,6 +542,8 @@ export const useSWRHandler = <Data = any, Error = any>(
         }
       } else if (type == revalidateEvents.MUTATE_EVENT) {
         return revalidate()
+      } else if (type == revalidateEvents.ERROR_REVALIDATE_EVENT) {
+        return revalidate(params)
       }
       return
     }
