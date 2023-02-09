@@ -445,12 +445,12 @@ export const useSWRHandler = <Data = any, Error = any>(
                   err,
                   key,
                   currentConfig,
-                  param => {
+                  _opts => {
                     const revalidators = EVENT_REVALIDATORS[key]
                     if (revalidators && revalidators[0]) {
                       revalidators[0](
                         revalidateEvents.ERROR_REVALIDATE_EVENT,
-                        param
+                        _opts
                       )
                     }
                   },
