@@ -555,10 +555,10 @@ describe('useSWR - error', () => {
         key,
         () => createResponse(new Error('error!'), { delay: 200 }),
         {
-          onErrorRetry: (_, __, ___, revalidate, param) => {
+          onErrorRetry: (_, __, ___, revalidate, opts) => {
             setTimeout(() => {
               fn()
-              revalidate(param)
+              revalidate(opts)
             }, 100)
           },
           dedupingInterval: 1

@@ -424,7 +424,7 @@ type RevalidateCallbackReturnType = {
 }
 export type RevalidateCallback = <K extends RevalidateEvent>(
   type: K,
-  param?: any
+  opts?: any
 ) => RevalidateCallbackReturnType[K]
 
 export interface Cache<Data = any> {

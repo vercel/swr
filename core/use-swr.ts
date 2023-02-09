@@ -521,7 +521,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     let nextFocusRevalidatedAt = 0
     const onRevalidate = (
       type: RevalidateEvent,
-      params: {
+      opts: {
         retryCount?: number
         dedupe?: boolean
       } = {}
@@ -543,7 +543,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       } else if (type == revalidateEvents.MUTATE_EVENT) {
         return revalidate()
       } else if (type == revalidateEvents.ERROR_REVALIDATE_EVENT) {
-        return revalidate(params)
+        return revalidate(opts)
       }
       return
     }
