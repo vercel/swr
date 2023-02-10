@@ -130,7 +130,7 @@ describe('useSWR - config callbacks', () => {
     expect(state).toEqual('b')
   })
 
-  it.skip('should trigger the onLoadingSlow and onSuccess event with the lastest version of the callbacks', async () => {
+  it('should trigger the onLoadingSlow and onSuccess event with the lastest version of the callbacks', async () => {
     const LOADING_TIMEOUT = 100
     let state = null
     let count = 0
