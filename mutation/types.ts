@@ -63,7 +63,7 @@ export interface SWRMutationResponse<
    * Function to trigger the mutation. You can also pass an extra argument to
    * the fetcher, and override the options for the mutation hook.
    */
-  trigger: [ExtraArg] extends [null]
+  trigger: [ExtraArg] extends [never]
     ? <SWRData = Data>(
         extraArgument?: null,
         options?: SWRMutationConfiguration<
