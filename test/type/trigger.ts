@@ -14,7 +14,7 @@ export function useExtraParam() {
     expectType<string>(key)
   })
   useSWRMutation('/api/user', (_, opts) => {
-    expectType<Equal<typeof opts, Readonly<{ arg: any }>>>(true)
+    expectType<Equal<typeof opts, Readonly<{ arg: never }>>>(true)
   })
 }
 
@@ -25,8 +25,7 @@ export function useTrigger() {
   )
 
   // The argument of `trigger` should be number or undefined.
-  // TODO: handle the `undefined` cases.
-  expectType<Equal<Parameters<typeof trigger>[0], number | undefined>>(true)
+  expectType<Equal<Parameters<typeof trigger>[0], number>>(true)
   expectType<Promise<string | undefined>>(trigger(1))
 
   // Other return values
@@ -49,7 +48,6 @@ export function useTriggerWithParameter() {
   )
 
   // The argument of `trigger` should be number or undefined.
-  // TODO: handle the `undefined` cases.
-  expectType<Equal<Parameters<typeof trigger>[0], number | undefined>>(true)
+  expectType<Equal<Parameters<typeof trigger>[0], number>>(true)
   expectType<Promise<string | undefined>>(trigger(1))
 }
