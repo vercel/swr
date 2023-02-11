@@ -197,7 +197,11 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
     const mutate = useCallback(
       // eslint-disable-next-line func-names
       function (
-        data?: undefined | Data[] | Promise<Data[]> | MutatorCallback<Data[]>,
+        data?:
+          | undefined
+          | Data[]
+          | Promise<Data[] | undefined>
+          | MutatorCallback<Data[]>,
         opts?: undefined | boolean | MutatorOptions<Data[]>
       ) {
         // When passing as a boolean, it's explicitly used to disable/enable

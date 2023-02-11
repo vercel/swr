@@ -56,7 +56,7 @@ describe('useSWR - remote mutation', () => {
 
   it('should trigger request with the correct argument signature', async () => {
     const key = createKey()
-    const fetcher = jest.fn(() => 'data')
+    const fetcher = jest.fn((_, __: { arg: string }) => 'data')
 
     function Page() {
       const { data, trigger } = useSWRMutation([key, 'arg0'], fetcher)
@@ -112,7 +112,7 @@ describe('useSWR - remote mutation', () => {
     function Page() {
       const { data, trigger } = useSWRMutation(key, () => 'data')
       return (
-        <button onClick={() => trigger(undefined, { onSuccess })}>
+        <button onClick={() => trigger(null, { onSuccess })}>
           {data || 'pending'}
         </button>
       )
@@ -235,7 +235,7 @@ describe('useSWR - remote mutation', () => {
     function Page() {
       const { data, error, trigger } = useSWRMutation(
         key,
-        async (_, { arg: shouldReturnValue }) => {
+        async (_, { arg: shouldReturnValue }: { arg: boolean }) => {
           await sleep(10)
           if (shouldReturnValue) return 'data'
           throw new Error('error')
@@ -344,7 +344,10 @@ describe('useSWR - remote mutation', () => {
 
     function Page() {
       const { data } = useSWR(key, () => 'data')
-      const { trigger } = useSWRMutation(key, (_, { arg }) => arg)
+      const { trigger } = useSWRMutation(
+        key,
+        (_, { arg }: { arg: string }) => arg
+      )
       return (
         <div onClick={() => trigger('updated!', { populateCache: true })}>
           data:{data || 'none'}
@@ -369,7 +372,10 @@ describe('useSWR - remote mutation', () => {
 
     function Page() {
       const { data } = useSWR(key, () => 'data')
-      const { trigger } = useSWRMutation(key, (_, { arg }) => arg)
+      const { trigger } = useSWRMutation(
+        key,
+        (_, { arg }: { arg: string }) => arg
+      )
       return (
         <div
           onClick={() =>
@@ -810,16 +816,19 @@ describe('useSWR - remote mutation', () => {
         await sleep(10)
         return ['foo']
       })
-      const { trigger } = useSWRMutation(key, async (_, { arg }) => {
-        await sleep(20)
-        return arg.toUpperCase()
-      })
+      const { trigger } = useSWRMutation(
+        key,
+        async (_, { arg }: { arg: string }) => {
+          await sleep(20)
+          return arg.toUpperCase()
+        }
+      )
 
       return (
         <div>
           <button
             onClick={() =>
-              trigger('bar', {
+              trigger<typeof data>('bar', {
                 optimisticData: current => [...current, 'bar'],
                 populateCache: (added, current) => [...current, added],
                 revalidate: false
@@ -859,7 +868,7 @@ describe('useSWR - remote mutation', () => {
     function Page() {
       const { error, trigger } = useSWRMutation(
         key,
-        async (_, { arg: shouldReturnValue }) => {
+        async (_, { arg: shouldReturnValue }: { arg: boolean }) => {
           await sleep(10)
           if (shouldReturnValue) return ['foo']
           throw new Error('error')

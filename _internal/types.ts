@@ -373,7 +373,7 @@ export interface ScopedMutator<Data = any> {
 }
 
 export type KeyedMutator<Data> = (
-  data?: Data | Promise<Data> | MutatorCallback<Data>,
+  data?: Data | Promise<Data | undefined> | MutatorCallback<Data>,
   opts?: boolean | MutatorOptions<Data>
 ) => Promise<Data | undefined>
 
