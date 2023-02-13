@@ -63,12 +63,10 @@ export const initCache = <Data = any>(
     }
     const setter = (key: string, value: any, prev: any) => {
       provider.set(key, value)
-      if (subscriptions[key]) {
-        // Make a copy of subscriptions to avoid mutations of subscriptions to affect
-        // the array while looping
-        const subs = subscriptions[key].slice()
-        for (let i = subs.length; i--; ) {
-          subs[i](value, prev)
+      const subs = subscriptions[key]
+      if (subs) {
+        for (const fn of subs) {
+          fn(value, prev)
         }
       }
     }
