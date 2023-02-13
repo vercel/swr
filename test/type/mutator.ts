@@ -1,6 +1,5 @@
 import type { Equal, Expect } from '@type-challenges/utils'
 import useSWR, { useSWRConfig } from 'swr'
-
 import type {
   MutatorFn,
   Key,
