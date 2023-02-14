@@ -495,13 +495,11 @@ describe('useSWR - error', () => {
     expect(errorEvents.length).toBe(1)
   })
 
-  it('should not should not trigger revalidation when a key is already active and has error - isLoading', async () => {
+  it('should not trigger revalidation when a key is already active and has error - isLoading', async () => {
     const key = createKey()
     const useData = () => {
-      return useSWR<any, any>(
-        key,
-        () => createResponse(new Error('error!'), { delay: 200 }),
-        undefined
+      return useSWR<any, any>(key, () =>
+        createResponse(new Error('error!'), { delay: 200 })
       )
     }
     const Page = () => {
@@ -523,13 +521,11 @@ describe('useSWR - error', () => {
     await screen.findByText('error!,false')
   })
 
-  it('should not should not trigger revalidation when a key is already active and has error - isValidating', async () => {
+  it('should not trigger revalidation when a key is already active and has error - isValidating', async () => {
     const key = createKey()
     const useData = () => {
-      return useSWR<any, any>(
-        key,
-        () => createResponse(new Error('error!'), { delay: 200 }),
-        undefined
+      return useSWR<any, any>(key, () =>
+        createResponse(new Error('error!'), { delay: 200 })
       )
     }
     const Page = () => {
@@ -549,5 +545,55 @@ describe('useSWR - error', () => {
     renderWithConfig(<App />)
     screen.getByText('validating')
     await screen.findByText('error!,false')
+  })
+
+  it('should trigger revalidation when first hook is unmount', async () => {
+    const key = createKey()
+    const fn = jest.fn()
+    const useData = () => {
+      return useSWR<any, any>(
+        key,
+        () => createResponse(new Error('error!'), { delay: 200 }),
+        {
+          onErrorRetry: (_, __, ___, revalidate, opts) => {
+            setTimeout(() => {
+              fn()
+              revalidate(opts)
+            }, 100)
+          },
+          dedupingInterval: 1
+        }
+      )
+    }
+    const First = () => {
+      useData()
+      const [state, setState] = useState(true)
+      return (
+        <>
+          <button onClick={() => setState(!state)}>toggle</button>
+          {state ? <Second></Second> : null}
+        </>
+      )
+    }
+    const Second = () => {
+      useData()
+      return null
+    }
+    const App = () => {
+      return (
+        <div>
+          <First></First>
+          <Second />
+        </div>
+      )
+    }
+    renderWithConfig(<App />)
+    await act(() => sleep(320))
+    expect(fn).toBeCalledTimes(1)
+    fireEvent.click(screen.getByText('toggle'))
+    await act(() => sleep(320))
+    expect(fn).toBeCalledTimes(2)
+    await act(() => sleep(320))
+    expect(fn).toBeCalledTimes(3)
   })
 })

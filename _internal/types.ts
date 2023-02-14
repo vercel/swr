@@ -415,14 +415,16 @@ export type RevalidateEvent =
   | typeof revalidateEvents.FOCUS_EVENT
   | typeof revalidateEvents.RECONNECT_EVENT
   | typeof revalidateEvents.MUTATE_EVENT
-
+  | typeof revalidateEvents.ERROR_REVALIDATE_EVENT
 type RevalidateCallbackReturnType = {
   [revalidateEvents.FOCUS_EVENT]: void
   [revalidateEvents.RECONNECT_EVENT]: void
   [revalidateEvents.MUTATE_EVENT]: Promise<boolean>
+  [revalidateEvents.ERROR_REVALIDATE_EVENT]: void
 }
 export type RevalidateCallback = <K extends RevalidateEvent>(
-  type: K
+  type: K,
+  opts?: any
 ) => RevalidateCallbackReturnType[K]
 
 export interface Cache<Data = any> {
