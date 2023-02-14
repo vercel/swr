@@ -65,8 +65,8 @@ export const initCache = <Data = any>(
       provider.set(key, value)
       const subs = subscriptions[key]
       if (subs) {
-        for (let i = subs.length; i--; ) {
-          subs[i](value, prev)
+        for (const fn of subs) {
+          fn(value, prev)
         }
       }
     }
