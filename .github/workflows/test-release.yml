@@ -26,15 +26,14 @@ jobs:
           pnpm test-packaging
   e2e:
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.30.0-focal
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
       - name: Install
         uses: ./.github/workflows/install
-
-      - name: Install Playwright
-        run: npx playwright install --with-deps chromium
 
       - name: E2E Tests
         run: |
