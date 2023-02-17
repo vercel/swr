@@ -26,7 +26,8 @@ import type {
   SWRInfiniteHook,
   SWRInfiniteKeyLoader,
   SWRInfiniteFetcher,
-  SWRInfiniteCacheValue
+  SWRInfiniteCacheValue,
+  SWRInfiniteCompareFn
 } from './types'
 import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js'
 
@@ -313,5 +314,6 @@ export {
   SWRInfiniteResponse,
   SWRInfiniteHook,
   SWRInfiniteKeyLoader,
-  SWRInfiniteFetcher
+  SWRInfiniteFetcher,
+  SWRInfiniteCompareFn
 }
