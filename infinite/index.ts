@@ -254,9 +254,9 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
           previousPageData = pageData
         }
         return data
-        // exclude getKey from the dependencies, which isn't allowed to change during the lifecycle
-        // eslint-disable-next-line react-hooks/exhaustive-deps
       },
+      // exclude getKey from the dependencies, which isn't allowed to change during the lifecycle
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       [cache]
     )
     // Extend the SWR API
