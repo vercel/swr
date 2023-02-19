@@ -1,6 +1,6 @@
 import { screen, act, fireEvent } from '@testing-library/react'
-import React, { useState } from 'react'
-import useSWR from 'swr'
+import React, { Suspense, useState } from 'react'
+import useSWR, { preload } from 'swr'
 import useSWRImmutable from 'swr/immutable'
 import {
   sleep,
@@ -98,6 +98,36 @@ describe('useSWR - immutable', () => {
     // wait for rerender
     await act(() => sleep(50))
     await screen.findByText('data: 0')
+  })
+
+  it('should do something', async () => {
+    async function fetcher(key: string) {
+      expect(key).toBe('constant')
+      return new Promise<string>(resolve => {
+        setTimeout(() => resolve('this is 1'), 1000)
+      })
+    }
+    preload('constant', fetcher)
+    function Component() {
+      const { data } = useSWRImmutable('constant', {
+        fallbackData: 'this is 0'
+      })
+      return <div>{data}</div>
+    }
+    function Page() {
+      return (
+        <Suspense fallback="loading...">
+          <Component />
+        </Suspense>
+      )
+    }
+
+    renderWithConfig(<Page />, {
+      fetcher,
+      suspense: true
+    })
+    screen.getByText('this is 0')
+    await screen.findByText('this is 1')
   })
 
   it('should not revalidate with the immutable hook', async () => {
