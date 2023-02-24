@@ -8,6 +8,7 @@ module.exports = {
     '^swr$': '<rootDir>/core/index.ts',
     '^swr/infinite$': '<rootDir>/infinite/index.ts',
     '^swr/immutable$': '<rootDir>/immutable/index.ts',
+    '^swr/subscription$': '<rootDir>/subscription/index.ts',
     '^swr/mutation$': '<rootDir>/mutation/index.ts',
     '^swr/_internal$': '<rootDir>/_internal/index.ts'
   },
