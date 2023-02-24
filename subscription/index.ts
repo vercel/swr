@@ -11,7 +11,7 @@ import {
 export type SWRSubscription<Data = any, Error = any> = (
   key: Key,
   { next }: { next: (err?: Error, data?: Data) => void }
-) => void
+) => () => void
 
 export type SWRSubscriptionResponse<Data = any, Error = any> = {
   data?: Data
@@ -24,8 +24,9 @@ export type SWRSubscriptionHook<Data = any, Error = any> = (
   config?: SWRConfiguration
 ) => SWRSubscriptionResponse<Data, Error>
 
-const subscriptions = new Map<Key, number>()
-const disposers = new Map()
+// [subscription count, disposer]
+type SubscriptionStates = [Map<string, number>, Map<string, () => void>]
+const subscriptionStorage = new WeakMap<object, SubscriptionStates>()
 
 export const subscription = (<Data, Error>(useSWRNext: SWRHook) =>
   (
@@ -35,8 +36,9 @@ export const subscription = (<Data, Error>(useSWRNext: SWRHook) =>
   ): SWRSubscriptionResponse<Data, Error> => {
     const [key] = serialize(_key)
     const swr = useSWRNext(key, null, config)
-    const subscribeRef = useRef(subscribe)
 
+    // Track the latest subscribe function.
+    const subscribeRef = useRef(subscribe)
     useIsomorphicLayoutEffect(() => {
       subscribeRef.current = subscribe
     })
@@ -44,32 +46,53 @@ export const subscription = (<Data, Error>(useSWRNext: SWRHook) =>
     const { cache } = config
     const [, set] = createCacheHelper<Data>(cache, key)
 
+    // Ensure that the subscription state is scoped by the cache boundary, so
+    // you can have multiple SWR zones with subscriptions having the same key.
+    const [subscriptions, disposers] = subscriptionStorage.get(config) || [
+      new Map<string, number>(),
+      new Map<string, () => void>()
+    ]
+
     useIsomorphicLayoutEffect(() => {
-      subscriptions.set(key, (subscriptions.get(key) || 0) + 1)
+      const refCount = subscriptions.get(key) || 0
 
-      const onData = (val?: Data) => swr.mutate(val, false)
-      const onError = async (err: any) => set({ error: err })
-
-      const next = (err_?: any, data_?: Data) => {
-        if (err_) onError(err_)
-        else onData(data_)
+      const next = (error?: Error | null, data?: Data) => {
+        if (error !== null && typeof error !== 'undefined') {
+          set({ error })
+        } else {
+          swr.mutate(data, false)
+        }
       }
 
-      if (subscriptions.get(key) === 1) {
+      if (!refCount) {
         const dispose = subscribeRef.current(key, { next })
+        if (typeof dispose !== 'function') {
+          throw new Error(
+            'The `subscribe` function must return a function to unsubscribe.'
+          )
+        }
         disposers.set(key, dispose)
       }
+
+      // Increment the ref count.
+      subscriptions.set(key, refCount + 1)
+
       return () => {
         // Prevent frequent unsubscribe caused by unmount
         setTimeout(() => {
-          const count = subscriptions.get(key) || 1
-          subscriptions.set(key, count - 1)
-          // Dispose if it's last one
-          if (count === 1) {
-            disposers.get(key)()
+          // TODO: Throw error during development if count is undefined.
+          const count = subscriptions.get(key)! - 1
+
+          subscriptions.set(key, count)
+
+          // Dispose if it's the last one.
+          if (!count) {
+            // TODO: Throw error during development if disposer is undefined.
+            disposers.get(key)!()
           }
         })
       }
+
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [key])
 
@@ -84,7 +107,19 @@ export const subscription = (<Data, Error>(useSWRNext: SWRHook) =>
   }) as unknown as Middleware
 
 /**
+ * A hook to subscribe a SWR resource to an external data source for continuous updates.
  * @experimental This API is experimental and might change in the future.
+ * @example
+ * ```jsx
+ * import useSWRSubscription from 'swr/subscription'
+ *
+ * const { data, error } = useSWRSubscription(key, (key, { next }) => {
+ *   const unsubscribe = dataSource.subscribe(key, (err, data) => {
+ *     next(err, data)
+ *   })
+ *   return unsubscribe
+ * })
+ * ```
  */
 const useSWRSubscription = withMiddleware(
   useSWR,
