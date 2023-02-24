@@ -8,18 +8,20 @@ on:
       - v*
   pull_request:
 
+env:
+  PNPM_VERSION: 7
+
 jobs:
   install:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2.2.4
+      - name: Install pnpm
+        uses: npm i -g pnpm@${PNPM_VERSION}
 
       - name: Use Node.js 18
         uses: actions/setup-node@v3
         with:
-          version: 7
           node-version: 18
           cache: pnpm
           registry-url: 'https://registry.npmjs.org'
