@@ -52,6 +52,8 @@ export const subscription = (<Data, Error>(useSWRNext: SWRHook) =>
         new Map<string, () => void>()
       ])
     }
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const [subscriptions, disposers] = subscriptionStorage.get(cache)!
 
     useIsomorphicLayoutEffect(() => {
@@ -85,13 +87,15 @@ export const subscription = (<Data, Error>(useSWRNext: SWRHook) =>
         // Prevent frequent unsubscribe caused by unmount
         setTimeout(() => {
           // TODO: Throw error during development if count is undefined.
-          const count = subscriptions.get(subscriptionKey)! - 1
+          const count = subscriptions.get(subscriptionKey)
+          if (count == null) return
 
-          subscriptions.set(subscriptionKey, count)
+          subscriptions.set(subscriptionKey, count - 1)
 
           // Dispose if it's the last one.
-          if (!count) {
-            disposers.get(subscriptionKey)!()
+          if (count === 1) {
+            const dispose = disposers.get(subscriptionKey)
+            dispose?.()
           }
         })
       }
