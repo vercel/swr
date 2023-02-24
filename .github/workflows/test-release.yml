@@ -16,31 +16,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: pnpm/action-setup@v2
-        with:
-          version: ${PNPM_VERSION}
-          run_install: false
-
       - name: Use Node.js 18
         uses: actions/setup-node@v3
         with:
           node-version: 18
           cache: pnpm
           registry-url: 'https://registry.npmjs.org'
-
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-      - uses: actions/cache@v3
-        name: Setup pnpm cache
+      - uses: pnpm/action-setup@v2
         with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+          version: ${PNPM_VERSION}
+          run_install: false
 
       - name: Install Dependencies
         shell: bash
@@ -53,10 +38,20 @@ jobs:
     needs: [install]
     steps:
       - uses: actions/checkout@v3
+      - name: Use Node.js 18
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: pnpm
+          registry-url: 'https://registry.npmjs.org'
       - uses: pnpm/action-setup@v2
         with:
           version: ${PNPM_VERSION}
           run_install: false
+        with:
+          node-version: 18
+          cache: pnpm
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Lint and test
         run: |
@@ -70,6 +65,12 @@ jobs:
     needs: [install]
     steps:
       - uses: actions/checkout@v3
+      - name: Use Node.js 18
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: pnpm
+          registry-url: 'https://registry.npmjs.org'
       - uses: pnpm/action-setup@v2
         with:
           version: ${PNPM_VERSION}
@@ -97,6 +98,12 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
       - uses: actions/checkout@v3
+      - name: Use Node.js 18
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: pnpm
+          registry-url: 'https://registry.npmjs.org'
       - uses: pnpm/action-setup@v2
         with:
           version: ${PNPM_VERSION}
