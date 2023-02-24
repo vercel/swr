@@ -48,10 +48,6 @@ jobs:
         with:
           version: ${PNPM_VERSION}
           run_install: false
-        with:
-          node-version: 18
-          cache: pnpm
-          registry-url: 'https://registry.npmjs.org'
 
       - name: Lint and test
         run: |
