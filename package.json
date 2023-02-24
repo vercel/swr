@@ -34,6 +34,12 @@
       "module": "./immutable/dist/index.esm.js",
       "require": "./immutable/dist/index.js"
     },
+    "./subscription": {
+      "types": "./subscription/dist/index.d.ts",
+      "import": "./subscription/dist/index.mjs",
+      "module": "./subscription/dist/index.esm.js",
+      "require": "./subscription/dist/index.js"
+    },
     "./mutation": {
       "types": "./mutation/dist/mutation/index.d.ts",
       "import": "./mutation/dist/index.mjs",
@@ -53,11 +59,13 @@
     "immutable/dist/**/*.{js,d.ts,mjs}",
     "mutation/dist/**/*.{js,d.ts,mjs}",
     "_internal/dist/**/*.{js,d.ts,mjs}",
+    "subscription/dist/*.{js,d.ts,mjs}",
     "core/package.json",
     "infinite/package.json",
     "immutable/package.json",
     "mutation/package.json",
-    "_internal/package.json"
+    "_internal/package.json",
+    "subscription/package.json"
   ],
   "repository": "github:vercel/swr",
   "homepage": "https://swr.vercel.app",
@@ -68,7 +76,7 @@
     "csb:build": "pnpm build",
     "clean": "pnpm -r run clean && rimraf playwright-report test-result",
     "watch": "pnpm -r run watch",
-    "build": "pnpm build-package _internal && pnpm build-package core && pnpm build-package infinite && pnpm build-package immutable && pnpm build-package mutation",
+    "build": "pnpm build-package _internal && pnpm build-package core && pnpm build-package infinite && pnpm build-package immutable && pnpm build-package mutation && pnpm build-package subscription",
     "build:e2e": "pnpm next build e2e/site",
     "build-package": "bunchee index.ts --cwd",
     "types:check": "pnpm -r run types:check",
