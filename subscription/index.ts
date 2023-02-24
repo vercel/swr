@@ -10,7 +10,7 @@ import {
 
 export type SWRSubscription<Data = any, Error = any> = (
   key: Key,
-  { next }: { next: (err?: Error, data?: Data) => void }
+  { next }: { next: (err?: Error | null, data?: Data) => void }
 ) => () => void
 
 export type SWRSubscriptionResponse<Data = any, Error = any> = {
