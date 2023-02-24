@@ -10,8 +10,8 @@ on:
 
 jobs:
   install:
-  runs-on: ubuntu-latest
-  steps:
+    runs-on: ubuntu-latest
+    steps:
     - name: Setup pnpm
       uses: pnpm/action-setup@v2.2.4
 
