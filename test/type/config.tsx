@@ -53,13 +53,45 @@ export function testSWRResponseCachedDataTypes() {
 }
 
 export function testSuspense() {
-  const { data: suspenseData } = useSWR(
+  // Basic
+  const { data: data1 } = useSWR('/api', (k: string) => Promise.resolve(k), {
+    suspense: true
+  })
+  expectType<string>(data1)
+
+  // Basic(default fetcher)
+  const { data: data2 } = useSWR('/api', {
+    suspense: true
+  })
+  expectType<any>(data2)
+
+  // Generics
+  const { data: data3 } = useSWR<string>(
     '/api',
     (k: string) => Promise.resolve(k),
     { suspense: true }
   )
+  expectType<string>(data3)
 
-  expectType<string>(suspenseData)
+  // Generics(default fetcher)
+  const { data: data4 } = useSWR<string>('/api', { suspense: true })
+  expectType<string>(data4)
+
+  // Generics(SWRKey)
+  const { data: data5 } = useSWR<string, any, '/api'>(
+    '/api',
+    (k: string) => Promise.resolve(k),
+    {
+      suspense: true
+    }
+  )
+  expectType<string>(data5)
+
+  // Generics(SWRKey, default fetcher)
+  const { data: data6 } = useSWR<string, any, '/api'>('/api', {
+    suspense: true
+  })
+  expectType<string>(data6)
 }
 
 export function testFallbackData() {
