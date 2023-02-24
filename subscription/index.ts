@@ -1,5 +1,5 @@
 import type { Key, SWRHook, Middleware, SWRConfiguration, SWRConfig } from 'swr'
-import { useRef } from 'react'
+
 import useSWR from 'swr'
 import {
   withMiddleware,
@@ -20,7 +20,7 @@ export type SWRSubscriptionResponse<Data = any, Error = any> = {
 
 export type SWRSubscriptionHook<Data = any, Error = any> = (
   key: Key,
-  subscribe: SWRSubscription<Data, Error>,
+  subscriber: SWRSubscription<Data, Error>,
   config?: SWRConfiguration
 ) => SWRSubscriptionResponse<Data, Error>
 
@@ -33,7 +33,7 @@ const SUBSCRIPTION_PREFIX = '$sub$'
 export const subscription = (<Data, Error>(useSWRNext: SWRHook) =>
   (
     _key: Key,
-    subscribe: SWRSubscription<Data, Error>,
+    subscriber: SWRSubscription<Data, Error>,
     config: SWRConfiguration & typeof SWRConfig.defaultValue
   ): SWRSubscriptionResponse<Data, Error> => {
     const [key] = serialize(_key)
@@ -41,12 +41,6 @@ export const subscription = (<Data, Error>(useSWRNext: SWRHook) =>
     // Prefix the key to avoid conflicts with other SWR resources.
     const subscriptionKey = key ? SUBSCRIPTION_PREFIX + key : undefined
     const swr = useSWRNext(subscriptionKey, null, config)
-
-    // Track the latest subscribe function.
-    const subscribeRef = useRef(subscribe)
-    useIsomorphicLayoutEffect(() => {
-      subscribeRef.current = subscribe
-    })
 
     const { cache } = config
 
@@ -78,7 +72,7 @@ export const subscription = (<Data, Error>(useSWRNext: SWRHook) =>
       subscriptions.set(subscriptionKey, refCount + 1)
 
       if (!refCount) {
-        const dispose = subscribeRef.current(key, { next })
+        const dispose = subscriber(key, { next })
         if (typeof dispose !== 'function') {
           throw new Error(
             'The `subscribe` function must return a function to unsubscribe.'
