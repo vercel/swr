@@ -17,7 +17,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install pnpm
-        uses: npm i -g pnpm@${PNPM_VERSION}
+        shell: bash
+        run: npm i -g pnpm@${PNPM_VERSION}
 
       - name: Use Node.js 18
         uses: actions/setup-node@v3
