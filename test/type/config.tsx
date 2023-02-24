@@ -118,4 +118,36 @@ export function testFallbackData() {
     fallbackData: { value: 'fallback' }
   })
   expectType<{ value: string }>(data3)
+
+  // Does not need specific fetcher
+
+  // Basic(default fetcher)
+  const { data: data4 } = useSWR('/api', { fallbackData: 'fallback' })
+  expectType<any>(data4)
+
+  // Generics
+  const { data: data5 } = useSWR<string>(
+    '/api',
+    (k: string) => Promise.resolve(k),
+    { fallbackData: 'fallback' }
+  )
+  expectType<string>(data5)
+
+  // Generics(default fetcher)
+  const { data: data6 } = useSWR<string>('/api', { fallbackData: 'fallback' })
+  expectType<string>(data6)
+
+  // Generics(SWRKey)
+  const { data: data7 } = useSWR<string, any, '/api'>(
+    '/api',
+    (k: string) => Promise.resolve(k),
+    { fallbackData: 'fallback' }
+  )
+  expectType<string>(data7)
+
+  // Generics(SWRKey, default fetcher)
+  const { data: data8 } = useSWR<string, any, '/api'>('/api', {
+    fallbackData: 'fallback'
+  })
+  expectType<string>(data8)
 }
