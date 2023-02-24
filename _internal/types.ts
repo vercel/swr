@@ -235,7 +235,7 @@ export interface SWRHook {
       | undefined = SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>>
   >(
     key: SWRKey,
-    config: SWROptions
+    config: SWROptions | undefined
   ): SWRResponse<Data, Error, Required<SWROptions>>
   <
     Data = any,
@@ -247,7 +247,7 @@ export interface SWRHook {
   >(
     key: SWRKey,
     fetcher: Fetcher<Data, SWRKey> | null,
-    config: SWROptions
+    config: SWROptions | undefined
   ): SWRResponse<Data, Error, Required<SWROptions>>
   <Data = any, Error = any>(key: Key): SWRResponse<Data, Error>
   <Data = any, Error = any>(
@@ -262,7 +262,7 @@ export interface SWRHook {
       | undefined = SWRConfiguration<Data, Error, BareFetcher<Data>>
   >(
     key: Key,
-    config: SWROptions
+    config: SWROptions | undefined
   ): SWRResponse<Data, Error, Required<SWROptions>>
   <
     Data = any,
@@ -273,7 +273,7 @@ export interface SWRHook {
   >(
     key: Key,
     fetcher: BareFetcher<Data> | null,
-    config: SWROptions
+    config: SWROptions | undefined
   ): SWRResponse<Data, Error, Required<SWROptions>>
 }
 
