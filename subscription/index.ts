@@ -28,6 +28,8 @@ export type SWRSubscriptionHook<Data = any, Error = any> = (
 type SubscriptionStates = [Map<string, number>, Map<string, () => void>]
 const subscriptionStorage = new WeakMap<object, SubscriptionStates>()
 
+const SUBSCRIPTION_PREFIX = '$sub$'
+
 export const subscription = (<Data, Error>(useSWRNext: SWRHook) =>
   (
     _key: Key,
@@ -35,7 +37,10 @@ export const subscription = (<Data, Error>(useSWRNext: SWRHook) =>
     config: SWRConfiguration & typeof SWRConfig.defaultValue
   ): SWRSubscriptionResponse<Data, Error> => {
     const [key] = serialize(_key)
-    const swr = useSWRNext(key, null, config)
+
+    // Prefix the key to avoid conflicts with other SWR resources.
+    const subscriptionKey = key ? SUBSCRIPTION_PREFIX + key : undefined
+    const swr = useSWRNext(subscriptionKey, null, config)
 
     // Track the latest subscribe function.
     const subscribeRef = useRef(subscribe)
@@ -44,17 +49,22 @@ export const subscription = (<Data, Error>(useSWRNext: SWRHook) =>
     })
 
     const { cache } = config
-    const [, set] = createCacheHelper<Data>(cache, key)
 
     // Ensure that the subscription state is scoped by the cache boundary, so
     // you can have multiple SWR zones with subscriptions having the same key.
-    const [subscriptions, disposers] = subscriptionStorage.get(config) || [
-      new Map<string, number>(),
-      new Map<string, () => void>()
-    ]
+    if (!subscriptionStorage.has(cache)) {
+      subscriptionStorage.set(cache, [
+        new Map<string, number>(),
+        new Map<string, () => void>()
+      ])
+    }
+    const [subscriptions, disposers] = subscriptionStorage.get(cache)!
 
     useIsomorphicLayoutEffect(() => {
-      const refCount = subscriptions.get(key) || 0
+      if (!subscriptionKey) return
+
+      const [, set] = createCacheHelper<Data>(cache, subscriptionKey)
+      const refCount = subscriptions.get(subscriptionKey) || 0
 
       const next = (error?: Error | null, data?: Data) => {
         if (error !== null && typeof error !== 'undefined') {
@@ -64,6 +74,9 @@ export const subscription = (<Data, Error>(useSWRNext: SWRHook) =>
         }
       }
 
+      // Increment the ref count.
+      subscriptions.set(subscriptionKey, refCount + 1)
+
       if (!refCount) {
         const dispose = subscribeRef.current(key, { next })
         if (typeof dispose !== 'function') {
@@ -71,30 +84,26 @@ export const subscription = (<Data, Error>(useSWRNext: SWRHook) =>
             'The `subscribe` function must return a function to unsubscribe.'
           )
         }
-        disposers.set(key, dispose)
+        disposers.set(subscriptionKey, dispose)
       }
-
-      // Increment the ref count.
-      subscriptions.set(key, refCount + 1)
 
       return () => {
         // Prevent frequent unsubscribe caused by unmount
         setTimeout(() => {
           // TODO: Throw error during development if count is undefined.
-          const count = subscriptions.get(key)! - 1
+          const count = subscriptions.get(subscriptionKey)! - 1
 
-          subscriptions.set(key, count)
+          subscriptions.set(subscriptionKey, count)
 
           // Dispose if it's the last one.
           if (!count) {
-            // TODO: Throw error during development if disposer is undefined.
-            disposers.get(key)!()
+            disposers.get(subscriptionKey)!()
           }
         })
       }
 
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [key])
+    }, [subscriptionKey])
 
     return {
       get data() {
