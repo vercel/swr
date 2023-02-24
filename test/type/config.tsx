@@ -2,7 +2,11 @@ import React from 'react'
 import type { Cache, SWRResponse } from 'swr'
 import useSWR, { useSWRConfig, SWRConfig } from 'swr'
 import { expectType } from './utils'
-import type { FullConfiguration } from 'swr/_internal'
+import type {
+  BareFetcher,
+  FullConfiguration,
+  PublicConfiguration
+} from 'swr/_internal'
 import type { Equal } from '@type-challenges/utils'
 
 export function testCache() {
@@ -150,4 +154,13 @@ export function testFallbackData() {
     fallbackData: 'fallback'
   })
   expectType<string>(data8)
+}
+export function testUndefined() {
+  // Undefined can be passed to config.
+  expectType<
+    Equal<
+      Parameters<typeof useSWR<string, any>>['2'],
+      Partial<PublicConfiguration<string, any, BareFetcher<string>>> | undefined
+    >
+  >(true)
 }
