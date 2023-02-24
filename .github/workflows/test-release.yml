@@ -16,9 +16,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Install pnpm
-        shell: bash
-        run: npm i -g pnpm@${PNPM_VERSION}
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${PNPM_VERSION}
+          run_install: false
 
       - name: Use Node.js 18
         uses: actions/setup-node@v3
@@ -52,6 +53,10 @@ jobs:
     needs: [install]
     steps:
       - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${PNPM_VERSION}
+          run_install: false
 
       - name: Lint and test
         run: |
@@ -59,11 +64,16 @@ jobs:
           pnpm clean
           pnpm build
           pnpm test-packaging
+
   e2e:
     runs-on: ubuntu-latest
     needs: [install]
     steps:
       - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${PNPM_VERSION}
+          run_install: false
 
       - name: Install Playwright
         run: npx playwright install --with-deps chromium
@@ -87,6 +97,10 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
       - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${PNPM_VERSION}
+          run_install: false
 
       - name: Release
         run: pnpm publish --access public --no-git-checks
