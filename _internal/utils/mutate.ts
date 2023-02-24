@@ -54,8 +54,6 @@ export async function internalMutate<Data>(
     typeof _opts === 'boolean' ? { revalidate: _opts } : _opts || {}
   )
 
-  console.log('opts', options)
-
   let populateCache = options.populateCache
 
   const rollbackOnErrorOption = options.rollbackOnError

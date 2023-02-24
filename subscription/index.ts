@@ -51,7 +51,6 @@ export const subscription = (<Data, Error>(useSWRNext: SWRHook) =>
       const onError = async (err: any) => set({ error: err })
 
       const next = (err_?: any, data_?: Data) => {
-        console.log('next:_err', err_)
         if (err_) onError(err_)
         else onData(data_)
       }
@@ -84,6 +83,9 @@ export const subscription = (<Data, Error>(useSWRNext: SWRHook) =>
     }
   }) as unknown as Middleware
 
+/**
+ * @experimental This API is experimental and might change in the future.
+ */
 const useSWRSubscription = withMiddleware(
   useSWR,
   subscription
