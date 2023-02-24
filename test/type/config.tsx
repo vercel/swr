@@ -53,13 +53,13 @@ export function testSWRResponseCachedDataTypes() {
 }
 
 export function testSuspense() {
-  const { data: suspenseyData } = useSWR(
+  const { data: suspenseData } = useSWR(
     '/api',
     (k: string) => Promise.resolve(k),
     { suspense: true }
   )
 
-  expectType<string>(suspenseyData)
+  expectType<string>(suspenseData)
 }
 
 export function testFallbackData() {
