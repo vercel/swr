@@ -57,7 +57,8 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
       revalidateAll = false,
       persistSize = false,
       revalidateFirstPage = true,
-      revalidateOnMount = false
+      revalidateOnMount = false,
+      parallel = false
     } = config
 
     // The serialized key of the first page. This key will be used to store
@@ -138,9 +139,13 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
 
         const pageSize = resolvePageSize()
 
+        const revalidators = []
+
         let previousPageData = null
         for (let i = 0; i < pageSize; ++i) {
-          const [pageKey, pageArg] = serialize(getKey(i, previousPageData))
+          const [pageKey, pageArg] = serialize(
+            getKey(i, parallel ? null : previousPageData)
+          )
 
           if (!pageKey) {
             // `pageKey` is falsy, stop fetching new pages.
@@ -173,11 +178,27 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
               !config.compare(originalData[i], pageData))
 
           if (fn && shouldFetchPage) {
-            pageData = await fn(pageArg)
-            setSWRCache({ data: pageData, _k: pageArg })
+            const revalidate = async () => {
+              pageData = await fn(pageArg)
+              setSWRCache({ data: pageData, _k: pageArg })
+              data[i] = pageData
+            }
+            if (parallel) {
+              revalidators.push(revalidate)
+            } else {
+              await revalidate()
+            }
+          } else {
+            data[i] = pageData
           }
-          data.push(pageData)
-          previousPageData = pageData
+          if (!parallel) {
+            previousPageData = pageData
+          }
+        }
+
+        // flush all revalidateions in parallel
+        if (parallel) {
+          await Promise.all(revalidators.map(r => r()))
         }
 
         // once we executed the data fetching based on the context, clear the context
