@@ -86,14 +86,13 @@ export const subscription = (<Data, Error>(useSWRNext: SWRHook) =>
       return () => {
         // Prevent frequent unsubscribe caused by unmount
         setTimeout(() => {
-          // TODO: Throw error during development if count is undefined.
-          const count = subscriptions.get(subscriptionKey)
-          if (count == null) return
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          const count = subscriptions.get(subscriptionKey)! - 1
 
-          subscriptions.set(subscriptionKey, count - 1)
+          subscriptions.set(subscriptionKey, count)
 
           // Dispose if it's the last one.
-          if (count === 1) {
+          if (!count) {
             const dispose = disposers.get(subscriptionKey)
             dispose?.()
           }
