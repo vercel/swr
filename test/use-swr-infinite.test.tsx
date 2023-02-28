@@ -1692,4 +1692,153 @@ describe('useSWRInfinite', () => {
     await screen.findByText(`size: 2`)
     await screen.findByText(`swr: ${key}-2,`)
   })
+
+  it('should support the parallel option', async () => {
+    // mock api
+    const pageData = ['apple', 'banana', 'pineapple']
+
+    const key = createKey()
+    function Page() {
+      const { data } = useSWRInfinite(
+        index => [key, index],
+        ([_, index]) => createResponse(`${pageData[index]}, `, { delay: 50 }),
+        {
+          initialSize: 3,
+          parallel: true
+        }
+      )
+
+      return <div>data:{data}</div>
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('data:')
+
+    // If SWR sends requests sequentially, it takes 150ms at least
+    await act(() => sleep(100))
+    screen.getByText('data:apple, banana, pineapple,')
+  })
+
+  it('should return the first error happened in parallel requests', async () => {
+    // mock api
+    const pageData = [
+      { data: new Error('apple'), delay: 50 },
+      { data: new Error('banana'), delay: 30 },
+      { data: 'pineapple', delay: 10 }
+    ]
+
+    const key = createKey()
+    function Page() {
+      const { data, error } = useSWRInfinite(
+        index => [key, index],
+        ([_, index]) =>
+          createResponse<string>(pageData[index].data as string, {
+            delay: pageData[index].delay
+          }),
+        {
+          initialSize: 3,
+          parallel: true
+        }
+      )
+
+      if (error) {
+        return <div>error:{error.message}</div>
+      }
+
+      return <div>data:{data}</div>
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('data:')
+
+    await act(() => sleep(50))
+    screen.getByText('error:banana')
+  })
+
+  it('should send request sequentially when the parallel option is disabled', async () => {
+    // mock api
+    const pageData = ['apple', 'banana', 'pineapple']
+
+    const key = createKey()
+    function Page() {
+      const { data } = useSWRInfinite(
+        index => [key, index],
+        ([_, index]) => createResponse(`${pageData[index]}, `, { delay: 50 }),
+        {
+          initialSize: 3,
+          parallel: false
+        }
+      )
+
+      return <div>data:{data}</div>
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('data:')
+
+    // If SWR sends requests sequentially, it takes 150ms at least
+    await act(() => sleep(100))
+    screen.getByText('data:')
+    await act(() => sleep(200))
+    screen.getByText('data:apple, banana, pineapple,')
+  })
+
+  it('should be the parallel option false by default', async () => {
+    // mock api
+    const pageData = ['apple', 'banana', 'pineapple']
+
+    const key = createKey()
+    function Page() {
+      const { data } = useSWRInfinite(
+        index => [key, index],
+        ([_, index]) => createResponse(`${pageData[index]}, `, { delay: 50 }),
+        {
+          initialSize: 3
+        }
+      )
+
+      return <div>data:{data}</div>
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('data:')
+
+    // If SWR sends requests sequentially, it takes 150ms at least
+    await act(() => sleep(100))
+    screen.getByText('data:')
+    await act(() => sleep(200))
+    screen.getByText('data:apple, banana, pineapple,')
+  })
+
+  it('should make previousPageData null when the parallel option is enabled', async () => {
+    // mock api
+    const pageData = ['apple', 'banana', 'pineapple']
+
+    const previousPageDataLogs = []
+
+    const key = createKey()
+    function Page() {
+      const { data } = useSWRInfinite(
+        (index, previousPageData) => {
+          previousPageDataLogs.push(previousPageData)
+          return [key, index]
+        },
+        ([_, index]) => createResponse(`${pageData[index]}, `, { delay: 50 }),
+        {
+          initialSize: 3,
+          parallel: true
+        }
+      )
+
+      return <div>data:{data}</div>
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('data:')
+
+    // If SWR sends requests sequentially, it takes 150ms at least
+    await act(() => sleep(100))
+    screen.getByText('data:apple, banana, pineapple,')
+    expect(previousPageDataLogs.every(d => d === null)).toBeTruthy()
+  })
 })

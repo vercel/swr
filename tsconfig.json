@@ -22,7 +22,8 @@
       "swr/infinite": ["./infinite/index.ts"],
       "swr/immutable": ["./immutable/index.ts"],
       "swr/mutation": ["./mutation/index.ts"],
-      "swr/_internal": ["./_internal/index.ts"]
+      "swr/_internal": ["./_internal/index.ts"],
+      "swr/subscription": ["subscription/index.ts"],
     },
     "incremental": true
   },
