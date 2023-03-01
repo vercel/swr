@@ -27,6 +27,7 @@ const mutation = (<Data, Error>() =>
 
     const keyRef = useRef(key)
     const fetcherRef = useRef(fetcher)
+    const configRef = useRef(config)
     // Ditch all mutation results that happened earlier than this timestamp.
     const ditchMutationsUntilRef = useRef(0)
 
@@ -50,7 +51,10 @@ const mutation = (<Data, Error>() =>
 
         // Disable cache population by default.
         const options = mergeObjects(
-          mergeObjects({ populateCache: false, throwOnError: true }, config),
+          mergeObjects(
+            { populateCache: false, throwOnError: true },
+            configRef.current
+          ),
           opts
         )
 
@@ -101,6 +105,7 @@ const mutation = (<Data, Error>() =>
     useIsomorphicLayoutEffect(() => {
       keyRef.current = key
       fetcherRef.current = fetcher
+      configRef.current = config
     })
 
     // We don't return `mutate` here as it can be pretty confusing (e.g. people
