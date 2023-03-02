@@ -66,6 +66,7 @@ export const subscription = (<Data, Error>(useSWRNext: SWRHook) =>
         if (error !== null && typeof error !== 'undefined') {
           set({ error })
         } else {
+          set({ error: undefined })
           swr.mutate(data, false)
         }
       }
