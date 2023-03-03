@@ -592,4 +592,25 @@ describe('useSWR', () => {
       ]
     `)
   })
+
+  it.skip('should not render if the result of swr is not used', async () => {
+    const key = createKey()
+    const fetcher = jest.fn(() => createResponse(key, { delay: 100 }))
+    const onRender = jest.fn()
+    function Page() {
+      useSWR(key, fetcher)
+      return <div>test</div>
+    }
+    function App() {
+      return (
+        <Profiler id={key} onRender={onRender}>
+          <Page />
+        </Profiler>
+      )
+    }
+    renderWithConfig(<App />)
+    await sleep(200)
+    expect(fetcher).toBeCalledTimes(1)
+    expect(onRender).toBeCalledTimes(1)
+  })
 })
