@@ -936,4 +936,56 @@ describe('useSWR - remote mutation', () => {
     fireEvent.click(screen.getByText('trigger'))
     await screen.findByText('data:1,count:1')
   })
+
+  it('should always use the latest config', async () => {
+    const key = createKey()
+    const logs = []
+
+    function Page() {
+      const [count, setCount] = useState(0)
+      const { data, trigger } = useSWRMutation(key, async () => count, {
+        onSuccess() {
+          logs.push(count)
+        }
+      })
+
+      return (
+        <div>
+          <button
+            onClick={() => {
+              setCount(c => c + 1)
+            }}
+          >
+            ++
+          </button>
+          <button
+            onClick={() => {
+              trigger()
+            }}
+          >
+            trigger
+          </button>
+          <div>
+            data:{data},count:{count}
+          </div>
+        </div>
+      )
+    }
+
+    render(<Page />)
+
+    await screen.findByText('data:,count:0')
+    expect(logs).toEqual([])
+    fireEvent.click(screen.getByText('trigger'))
+    await screen.findByText('data:0,count:0')
+    expect(logs).toEqual([0])
+
+    fireEvent.click(screen.getByText('++'))
+    await screen.findByText('data:0,count:1')
+    expect(logs).toEqual([0])
+
+    fireEvent.click(screen.getByText('trigger'))
+    await screen.findByText('data:1,count:1')
+    expect(logs).toEqual([0, 1])
+  })
 })
