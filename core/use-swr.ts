@@ -160,12 +160,17 @@ export const useSWRHandler = <Data = any, Error = any>(
         ...snapshot
       }
     }
-
+    const cachedData = getCache()
+    const initialData = getInitialCache()
+    const clientSnapshot = getSelectedCache(cachedData)
+    const serverSnapshot =
+      cachedData === initialData
+        ? clientSnapshot
+        : getSelectedCache(initialData)
     // To make sure that we are returning the same object reference to avoid
     // unnecessary re-renders, we keep the previous snapshot and use deep
     // comparison to check if we need to return a new one.
-    let memorizedSnapshot = getSelectedCache(getCache())
-    const memorizedInitialSnapshot = getSelectedCache(getInitialCache())
+    let memorizedSnapshot = clientSnapshot
 
     return [
       () => {
@@ -174,7 +179,7 @@ export const useSWRHandler = <Data = any, Error = any>(
           ? memorizedSnapshot
           : (memorizedSnapshot = newSnapshot)
       },
-      () => memorizedInitialSnapshot
+      () => serverSnapshot
     ]
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cache, key])
