@@ -1,4 +1,5 @@
 import useSWR from 'swr'
+import { Profiler } from 'react'
 
 const useFetchUser = () =>
   useSWR(
@@ -11,8 +12,20 @@ const useFetchUser = () =>
       })
   )
 
-export default function UserSWR() {
+function UserSWR() {
   useFetchUser()
-  console.log('UserSWR rendered')
   return <div>SWRTest</div>
+}
+
+export default function SWRTest() {
+  return (
+    <Profiler
+      id="swr"
+      onRender={() => {
+        ;(window as any).onRender('UserSWR rendered')
+      }}
+    >
+      <UserSWR />
+    </Profiler>
+  )
 }

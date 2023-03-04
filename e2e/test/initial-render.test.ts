@@ -5,14 +5,7 @@ test.describe('rendering', () => {
     page
   }) => {
     const log: any[] = []
-    await page.exposeFunction('consoleLog', (msg: any) => log.push(msg))
-    await page.addInitScript(`
-      const log = window.console.log
-      window.console.log = (...args) => {
-        consoleLog(...args)
-        log(...args)
-      }
-    `)
+    await page.exposeFunction('onRender', (msg: any) => log.push(msg))
     await page.goto('./initial-render', { waitUntil: 'commit' })
     await expect(page.getByText('SWRTest')).toBeVisible()
     expect(log).toHaveLength(1)

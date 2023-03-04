@@ -77,7 +77,7 @@
     "clean": "pnpm -r run clean && rimraf playwright-report test-result",
     "watch": "pnpm -r run watch",
     "build": "pnpm build-package _internal && pnpm build-package core && pnpm build-package infinite && pnpm build-package immutable && pnpm build-package mutation && pnpm build-package subscription",
-    "build:e2e": "pnpm next build e2e/site",
+    "build:e2e": "pnpm next build e2e/site -- --profile",
     "build-package": "bunchee index.ts --cwd",
     "types:check": "pnpm -r run types:check",
     "prepublishOnly": "pnpm clean && pnpm build",
