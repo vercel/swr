@@ -1,6 +1,11 @@
 import type { FC, PropsWithChildren } from 'react'
-import { useRef } from 'react'
-import { createContext, createElement, useContext, useMemo } from 'react'
+import {
+  createContext,
+  createElement,
+  useContext,
+  useMemo,
+  useRef
+} from 'react'
 import { cache as defaultCache } from './config'
 import { initCache } from './cache'
 import { mergeConfigs } from './merge-config'
