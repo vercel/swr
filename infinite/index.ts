@@ -251,37 +251,6 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
       // eslint-disable-next-line react-hooks/exhaustive-deps
       [infiniteKey, cache]
     )
-
-    const resolvePagesFromCache = useCallback(
-      (pageSize: number, key: string): Data[] | undefined => {
-        // return an array of page data
-        const data: Data[] = []
-        const [getInfiniteCache] = createCacheHelper<
-          Data,
-          SWRInfiniteCacheValue<Data[], any>
-        >(cache, key)
-        let previousPageData = null
-        for (let i = 0; i < pageSize; ++i) {
-          const [pageKey] = serialize(getKey(i, previousPageData))
-          const [getCache] = createCacheHelper<
-            Data,
-            SWRInfiniteCacheValue<Data, any>
-          >(cache, pageKey)
-          // Get the cached page data.
-          const pageData = pageKey ? getCache().data : UNDEFINED
-
-          // Return the current data if we can't get it from the cache.
-          if (isUndefined(pageData)) return getInfiniteCache().data
-
-          data.push(pageData)
-          previousPageData = pageData
-        }
-        return data
-      },
-      // exclude getKey from the dependencies, which isn't allowed to change during the lifecycle
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      [cache]
-    )
     // Extend the SWR API
 
     const setSize = useCallback(
@@ -302,10 +271,36 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
 
         changeSize({ _l: size })
         lastPageSizeRef.current = size
-        return mutate(resolvePagesFromCache(size, infiniteKey))
+
+        // Calculate the page data after the size change.
+        const data: Data[] = []
+        const [getInfiniteCache] = createCacheHelper<
+          Data,
+          SWRInfiniteCacheValue<Data[], any>
+        >(cache, infiniteKey)
+        let previousPageData = null
+        for (let i = 0; i < size; ++i) {
+          const [pageKey] = serialize(getKey(i, previousPageData))
+          const [getCache] = createCacheHelper<
+            Data,
+            SWRInfiniteCacheValue<Data, any>
+          >(cache, pageKey)
+          // Get the cached page data.
+          const pageData = pageKey ? getCache().data : UNDEFINED
+
+          // Return the current data if we can't get it from the cache.
+          if (isUndefined(pageData)) {
+            return mutate(getInfiniteCache().data)
+          }
+
+          data.push(pageData)
+          previousPageData = pageData
+        }
+        return mutate(data)
       },
-      // `cache` and `rerender` isn't allowed to change during the lifecycle
-      [infiniteKey, cache, mutate, resolvePagesFromCache, resolvePageSize]
+      // exclude getKey from the dependencies, which isn't allowed to change during the lifecycle
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [infiniteKey, cache, mutate, resolvePageSize]
     )
 
     // Use getter functions to avoid unnecessary re-renders caused by triggering
