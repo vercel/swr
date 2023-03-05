@@ -1,11 +1,6 @@
 import type { FC, PropsWithChildren } from 'react'
-import {
-  createContext,
-  createElement,
-  useContext,
-  useState,
-  useMemo
-} from 'react'
+import { useRef } from 'react'
+import { createContext, createElement, useContext, useMemo } from 'react'
 import { cache as defaultCache } from './config'
 import { initCache } from './cache'
 import { mergeConfigs } from './merge-config'
@@ -46,15 +41,15 @@ const SWRConfig: FC<
   // Should not use the inherited provider.
   const provider = config && config.provider
 
-  // Use a lazy initialized state to create the cache on first access.
-  const [cacheContext] = useState(() =>
-    provider
-      ? initCache(
-          provider((extendedConfig as any).cache || defaultCache),
-          config
-        )
-      : UNDEFINED
-  )
+  // initialize the cache only on first access.
+  const cacheContextRef = useRef<ReturnType<typeof initCache>>(UNDEFINED)
+  if (provider && !cacheContextRef.current) {
+    cacheContextRef.current = initCache(
+      provider((extendedConfig as any).cache || defaultCache),
+      config
+    )
+  }
+  const cacheContext = cacheContextRef.current
 
   // Override the cache if a new provider is given.
   if (cacheContext) {
