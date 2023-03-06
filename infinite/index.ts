@@ -126,9 +126,9 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
     const shouldRevalidateOnMount = revalidateOnMount && !didMountRef.current
 
     // Actual SWR hook to load all pages in one fetcher.
-    const swr = useSWRNext<Data[], Error>(
+    const swr = useSWRNext(
       infiniteKey,
-      async _infiniteKey => {
+      async key => {
         // get the revalidate context
         const forceRevalidateAll = get()._i
 
@@ -139,7 +139,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
         const [getCache] = createCacheHelper<
           Data,
           SWRInfiniteCacheValue<Data[], any>
-        >(cache, _infiniteKey)
+        >(cache, key)
         const cacheData = getCache().data
 
         const revalidators = []
