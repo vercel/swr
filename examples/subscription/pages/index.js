@@ -1,52 +1,37 @@
-import React, { useCallback, useEffect, useState } from "react"
+import React from "react"
 import useSWRSubscription from "swr/subscription"
 import EventEmitter from "events"
 
 const event = new EventEmitter()
 
-const swrKey = "sub-key"
+// Simulating an external data source.
+let stopped = false
+async function start () {
+  for (let i = 0; i < 100; i++) {
+    await new Promise(res => setTimeout(res, 1000))
+    if (stopped) return
+    if (i % 3 === 0 && i !== 0) {
+      event.emit("error", new Error("error: " + i));
+    } else {
+      event.emit("data", "state: " + i);
+    }
+  }
+}
 
 export default function page() {
-  const [num, setNum] = useState(0)
+  const { data, error } = useSWRSubscription('my-sub', (key, { next }) => {
+    event.on("data", (value) => next(undefined, value));
+    event.on("error", (err) => next(err));
+    start();
+    return () => {
+      stopped = true;
+    };
+  })
 
-  useEffect(() => {
-    if (num % 3 === 0 && num > 0) {
-      const err = new Error("error:" + num)
-      event.emit("error", err)
-    } else {
-      event.emit("data", "state:" + num)
-    }
-  }, [num])
-
-  const subscribe = useCallback(
-    (key, { next }) => {
-      const onData = (value) => next(undefined, value)
-      const onError = (err) => next(err)
-
-      event.on("data", onData)
-      event.on("error", onError)
-
-      return () => {
-        event.off("data", next)
-        event.off("error", next)
-      }
-    },
-    []
-  )
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setNum(num + 1)
-    }, 1000)
-
-    return () => clearInterval(timer)
-  }, [num])
-
-  const { data, error } = useSWRSubscription(swrKey, subscribe)
   return (
     <div>
       <h3>SWR Subscription</h3>
-      <h4>Recieved every second, error when data is times of 3</h4>
+      <h4>Received every second, error when data is times of 3</h4>
       <div>{data}</div>
       <div>{error ? error.message : ""}</div>
     </div>
