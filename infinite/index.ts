@@ -288,7 +288,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
           // Get the cached page data.
           const pageData = pageKey ? getCache().data : UNDEFINED
 
-          // Return the current data if we can't get it from the cache.
+          // Call `mutate` with infinte cache data if we can't get it from the page cache.
           if (isUndefined(pageData)) {
             return mutate(getInfiniteCache().data)
           }
