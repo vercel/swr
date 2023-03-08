@@ -26,7 +26,8 @@ import type {
   SWRInfiniteHook,
   SWRInfiniteKeyLoader,
   SWRInfiniteFetcher,
-  SWRInfiniteCacheValue
+  SWRInfiniteCacheValue,
+  SWRInfiniteCompareFn
 } from './types'
 import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js'
 
@@ -49,8 +50,6 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
       Omit<SWRInfiniteConfiguration<Data, Error>, 'fetcher'>
   ): SWRInfiniteResponse<Data, Error> => {
     const didMountRef = useRef<boolean>(false)
-    const dataRef = useRef<Data[]>()
-
     const {
       cache,
       initialSize = 1,
@@ -70,7 +69,6 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
     } catch (err) {
       // Not ready yet.
     }
-
     const [get, set, subscribeCache] = createCacheHelper<
       Data,
       SWRInfiniteCacheValue<Data, any>
@@ -128,16 +126,21 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
     const shouldRevalidateOnMount = revalidateOnMount && !didMountRef.current
 
     // Actual SWR hook to load all pages in one fetcher.
-    const swr = useSWRNext<Data[], Error>(
+    const swr = useSWRNext(
       infiniteKey,
-      async () => {
+      async key => {
         // get the revalidate context
-        const [forceRevalidateAll, originalData] = get()._i || []
+        const forceRevalidateAll = get()._i
 
         // return an array of page data
         const data: Data[] = []
 
         const pageSize = resolvePageSize()
+        const [getCache] = createCacheHelper<
+          Data,
+          SWRInfiniteCacheValue<Data[], any>
+        >(cache, key)
+        const cacheData = getCache().data
 
         const revalidators = []
 
@@ -171,11 +174,11 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
             revalidateAll ||
             forceRevalidateAll ||
             isUndefined(pageData) ||
-            (revalidateFirstPage && !i && !isUndefined(dataRef.current)) ||
+            (revalidateFirstPage && !i && !isUndefined(cacheData)) ||
             shouldRevalidateOnMount ||
-            (originalData &&
-              !isUndefined(originalData[i]) &&
-              !config.compare(originalData[i], pageData))
+            (cacheData &&
+              !isUndefined(cacheData[i]) &&
+              !config.compare(cacheData[i], pageData))
 
           if (fn && shouldFetchPage) {
             const revalidate = async () => {
@@ -210,11 +213,6 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
       config
     )
 
-    // update dataRef
-    useIsomorphicLayoutEffect(() => {
-      dataRef.current = swr.data
-    }, [swr.data])
-
     const mutate = useCallback(
       // eslint-disable-next-line func-names
       function (
@@ -235,15 +233,13 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
 
         // It is possible that the key is still falsy.
         if (!infiniteKey) return EMPTY_PROMISE
-
         if (shouldRevalidate) {
           if (!isUndefined(data)) {
             // We only revalidate the pages that are changed
-            const originalData = dataRef.current
-            set({ _i: [false, originalData] })
+            set({ _i: false })
           } else {
             // Calling `mutate()`, we revalidate all pages
-            set({ _i: [true] })
+            set({ _i: true })
           }
         }
 
@@ -255,36 +251,16 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
       // eslint-disable-next-line react-hooks/exhaustive-deps
       [infiniteKey, cache]
     )
-
-    // Function to load pages data from the cache based on the page size.
-    const resolvePagesFromCache = (pageSize: number): Data[] | undefined => {
-      // return an array of page data
-      const data: Data[] = []
-
-      let previousPageData = null
-      for (let i = 0; i < pageSize; ++i) {
-        const [pageKey] = serialize(getKey(i, previousPageData))
-
-        // Get the cached page data.
-        const pageData = pageKey ? cache.get(pageKey)?.data : UNDEFINED
-
-        // Return the current data if we can't get it from the cache.
-        if (isUndefined(pageData)) return dataRef.current
-
-        data.push(pageData)
-        previousPageData = pageData
-      }
-
-      // Return the data
-      return data
-    }
-
     // Extend the SWR API
+
     const setSize = useCallback(
       (arg: number | ((size: number) => number)) => {
         // It is possible that the key is still falsy.
         if (!infiniteKey) return EMPTY_PROMISE
-
+        const [, changeSize] = createCacheHelper<
+          Data,
+          SWRInfiniteCacheValue<Data, any>
+        >(cache, infiniteKey)
         let size
         if (isFunction(arg)) {
           size = arg(resolvePageSize())
@@ -293,13 +269,38 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
         }
         if (typeof size != 'number') return EMPTY_PROMISE
 
-        set({ _l: size })
+        changeSize({ _l: size })
         lastPageSizeRef.current = size
-        return mutate(resolvePagesFromCache(size))
+
+        // Calculate the page data after the size change.
+        const data: Data[] = []
+        const [getInfiniteCache] = createCacheHelper<
+          Data,
+          SWRInfiniteCacheValue<Data[], any>
+        >(cache, infiniteKey)
+        let previousPageData = null
+        for (let i = 0; i < size; ++i) {
+          const [pageKey] = serialize(getKey(i, previousPageData))
+          const [getCache] = createCacheHelper<
+            Data,
+            SWRInfiniteCacheValue<Data, any>
+          >(cache, pageKey)
+          // Get the cached page data.
+          const pageData = pageKey ? getCache().data : UNDEFINED
+
+          // Call `mutate` with infinte cache data if we can't get it from the page cache.
+          if (isUndefined(pageData)) {
+            return mutate(getInfiniteCache().data)
+          }
+
+          data.push(pageData)
+          previousPageData = pageData
+        }
+        return mutate(data)
       },
-      // `cache` and `rerender` isn't allowed to change during the lifecycle
+      // exclude getKey from the dependencies, which isn't allowed to change during the lifecycle
       // eslint-disable-next-line react-hooks/exhaustive-deps
-      [infiniteKey, resolvePageSize, mutate, cache]
+      [infiniteKey, cache, mutate, resolvePageSize]
     )
 
     // Use getter functions to avoid unnecessary re-renders caused by triggering
@@ -330,5 +331,6 @@ export {
   SWRInfiniteResponse,
   SWRInfiniteHook,
   SWRInfiniteKeyLoader,
-  SWRInfiniteFetcher
+  SWRInfiniteFetcher,
+  SWRInfiniteCompareFn
 }
