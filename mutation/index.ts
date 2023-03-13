@@ -26,6 +26,8 @@ const mutation = (<Data, Error>() =>
     const { mutate } = useSWRConfig()
 
     const keyRef = useRef(key)
+    const fetcherRef = useRef(fetcher)
+    const configRef = useRef(config)
     // Ditch all mutation results that happened earlier than this timestamp.
     const ditchMutationsUntilRef = useRef(0)
 
@@ -40,7 +42,7 @@ const mutation = (<Data, Error>() =>
       async (arg: any, opts?: SWRMutationConfiguration<Data, Error>) => {
         const [serializedKey, resolvedKey] = serialize(keyRef.current)
 
-        if (!fetcher) {
+        if (!fetcherRef.current) {
           throw new Error('Can’t trigger the mutation: missing fetcher.')
         }
         if (!serializedKey) {
@@ -49,7 +51,10 @@ const mutation = (<Data, Error>() =>
 
         // Disable cache population by default.
         const options = mergeObjects(
-          mergeObjects({ populateCache: false, throwOnError: true }, config),
+          mergeObjects(
+            { populateCache: false, throwOnError: true },
+            configRef.current
+          ),
           opts
         )
 
@@ -64,7 +69,7 @@ const mutation = (<Data, Error>() =>
         try {
           const data = await mutate<Data>(
             serializedKey,
-            (fetcher as any)(resolvedKey, { arg }),
+            (fetcherRef.current as any)(resolvedKey, { arg }),
             // We must throw the error here so we can catch and update the states.
             mergeObjects(options, { throwOnError: true })
           )
@@ -99,6 +104,8 @@ const mutation = (<Data, Error>() =>
 
     useIsomorphicLayoutEffect(() => {
       keyRef.current = key
+      fetcherRef.current = fetcher
+      configRef.current = config
     })
 
     // We don't return `mutate` here as it can be pretty confusing (e.g. people

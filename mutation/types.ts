@@ -1,4 +1,4 @@
-import type { SWRResponse, Key, MutatorOptions } from 'swr'
+import type { SWRResponse, Key } from 'swr'
 
 type FetcherResponse<Data> = Data | Promise<Data>
 
@@ -22,14 +22,22 @@ export type SWRMutationConfiguration<
   Data,
   Error,
   ExtraArg = any,
-  SWRMutationKey extends Key = Key
-> = MutatorOptions<Data> & {
+  SWRMutationKey extends Key = Key,
+  SWRData = any
+> = {
+  revalidate?: boolean
+  populateCache?:
+    | boolean
+    | ((result: Data, currentData: SWRData | undefined) => SWRData)
+  optimisticData?: SWRData | ((currentData?: SWRData) => SWRData)
+  rollbackOnError?: boolean | ((error: unknown) => boolean)
+  throwOnError?: boolean
   fetcher?: MutationFetcher<Data, ExtraArg, SWRMutationKey>
   onSuccess?: (
     data: Data,
     key: string,
     config: Readonly<
-      SWRMutationConfiguration<Data, Error, ExtraArg, SWRMutationKey>
+      SWRMutationConfiguration<Data, Error, ExtraArg, SWRMutationKey, SWRData>
     >,
     extraArg: any
   ) => void
@@ -37,7 +45,7 @@ export type SWRMutationConfiguration<
     err: Error,
     key: string,
     config: Readonly<
-      SWRMutationConfiguration<Data, Error, ExtraArg, SWRMutationKey>
+      SWRMutationConfiguration<Data, Error, ExtraArg, SWRMutationKey, SWRData>
     >,
     extraArg: any
   ) => void
@@ -46,7 +54,7 @@ export type SWRMutationConfiguration<
 export interface SWRMutationResponse<
   Data = any,
   Error = any,
-  ExtraArg = any,
+  ExtraArg = never,
   SWRMutationKey extends Key = Key
 > extends Pick<SWRResponse<Data, Error>, 'data' | 'error'> {
   /**
@@ -57,10 +65,27 @@ export interface SWRMutationResponse<
    * Function to trigger the mutation. You can also pass an extra argument to
    * the fetcher, and override the options for the mutation hook.
    */
-  trigger: (
-    extraArgument?: ExtraArg,
-    options?: SWRMutationConfiguration<Data, Error, ExtraArg, SWRMutationKey>
-  ) => Promise<Data | undefined>
+  trigger: [ExtraArg] extends [never]
+    ? <SWRData = Data>(
+        extraArgument?: null,
+        options?: SWRMutationConfiguration<
+          Data,
+          Error,
+          ExtraArg,
+          SWRMutationKey,
+          SWRData
+        >
+      ) => Promise<Data | undefined>
+    : <SWRData = Data>(
+        extraArgument: ExtraArg,
+        options?: SWRMutationConfiguration<
+          Data,
+          Error,
+          ExtraArg,
+          SWRMutationKey,
+          SWRData
+        >
+      ) => Promise<Data | undefined>
   /**
    * Function to reset the mutation state (`data`, `error`, and `isMutating`).
    */
@@ -71,7 +96,7 @@ export type SWRMutationHook = <
   Data = any,
   Error = any,
   SWRMutationKey extends Key = Key,
-  ExtraArg = any
+  ExtraArg = never
 >(
   /**
    * The key of the resource that will be mutated. It should be the same key

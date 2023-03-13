@@ -113,6 +113,29 @@ describe('useSWR', () => {
     expect(fetch).toHaveBeenCalled()
   })
 
+  it('initial loading state should be false when revalidation is disabled with fallbackData', async () => {
+    const fetch = jest.fn(() => 'SWR')
+
+    const key = createKey()
+    function Page() {
+      const { data, isLoading, isValidating } = useSWR(key, fetch, {
+        revalidateIfStale: false,
+        revalidateOnFocus: false,
+        revalidateOnReconnect: false,
+        fallbackData: 'Fallback'
+      })
+      return (
+        <div>
+          {data}, {isLoading.toString()} , {isValidating.toString()}
+        </div>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('Fallback, false , false')
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
   it('should dedupe requests by default', async () => {
     const fetcher = jest.fn(() => createResponse('SWR'))
 

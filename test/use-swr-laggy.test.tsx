@@ -234,4 +234,35 @@ describe('useSWR - keep previous data', () => {
     await act(() => sleep(100))
     screen.getByText('initial')
   })
+
+  it('should work keepPreviousData without changing th key', async () => {
+    const key = createKey()
+    let counter = 0
+    const fetcher = () => createResponse(++counter, { delay: 50 })
+    function App() {
+      const { data, mutate } = useSWR(key, fetcher)
+      const { data: laggedData } = useSWR(key, fetcher, {
+        keepPreviousData: true
+      })
+
+      return (
+        <>
+          <button onClick={() => mutate(undefined)}>mutate</button>
+          <div>
+            data:{data},laggy:{laggedData}
+          </div>
+        </>
+      )
+    }
+
+    renderWithConfig(<App />)
+    screen.getByText('data:,laggy:')
+    await act(() => sleep(100))
+    screen.getByText('data:1,laggy:1')
+    fireEvent.click(screen.getByText('mutate'))
+    // previous data
+    screen.getByText('data:,laggy:1')
+    await act(() => sleep(100))
+    screen.getByText('data:2,laggy:2')
+  })
 })

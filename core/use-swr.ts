@@ -53,8 +53,7 @@ type DefinitelyTruthy<T> = false extends T
 export const useSWRHandler = <Data = any, Error = any>(
   _key: Key,
   fetcher: Fetcher<Data> | null,
-  config: FullConfiguration<Data, Error, Fetcher<Data>> &
-    SWRConfiguration<Data, Error>
+  config: FullConfiguration & SWRConfiguration<Data, Error>
 ) => {
   const {
     cache,
@@ -62,6 +61,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     suspense,
     fallbackData,
     revalidateOnMount,
+    revalidateIfStale,
     refreshInterval,
     refreshWhenHidden,
     refreshWhenOffline,
@@ -93,17 +93,17 @@ export const useSWRHandler = <Data = any, Error = any>(
   const getConfig = () => configRef.current
   const isActive = () => getConfig().isVisible() && getConfig().isOnline()
 
-  const [getCache, setCache, subscribeCache] = createCacheHelper<
-    Data,
-    State<Data, any> & {
-      // The original key arguments.
-      _k?: Key
-    }
-  >(cache, key)
+  const [getCache, setCache, subscribeCache, getInitialCache] =
+    createCacheHelper<
+      Data,
+      State<Data, any> & {
+        // The original key arguments.
+        _k?: Key
+      }
+    >(cache, key)
 
   const stateDependencies = useRef<StateDependencies>({}).current
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const fallback = isUndefined(fallbackData)
     ? config.fallback[key]
     : fallbackData
@@ -112,12 +112,18 @@ export const useSWRHandler = <Data = any, Error = any>(
     let equal = true
     for (const _ in stateDependencies) {
       const t = _ as keyof StateDependencies
-      if (!compare(current[t], prev[t])) {
-        if (t === 'data' && isUndefined(prev[t])) {
-          if (!compare(current[t], returnedData)) {
+      if (t === 'data') {
+        if (!compare(current[t], prev[t])) {
+          if (isUndefined(prev[t])) {
+            if (!compare(current[t], returnedData)) {
+              equal = false
+            }
+          } else {
             equal = false
           }
-        } else {
+        }
+      } else {
+        if (current[t] !== prev[t]) {
           equal = false
         }
       }
@@ -134,12 +140,12 @@ export const useSWRHandler = <Data = any, Error = any>(
       // If it's paused, we skip revalidation.
       if (getConfig().isPaused()) return false
       if (suspense) return false
+      if (!isUndefined(revalidateIfStale)) return revalidateIfStale
       return true
     })()
 
-    const getSelectedCache = () => {
-      const state = getCache()
-
+    // Get the cache and merge it with expected states.
+    const getSelectedCache = (state: ReturnType<typeof getCache>) => {
       // We only select the needed fields from the state.
       const snapshot = mergeObjects(state)
       delete snapshot._k
@@ -154,15 +160,27 @@ export const useSWRHandler = <Data = any, Error = any>(
         ...snapshot
       }
     }
+    const cachedData = getCache()
+    const initialData = getInitialCache()
+    const clientSnapshot = getSelectedCache(cachedData)
+    const serverSnapshot =
+      cachedData === initialData
+        ? clientSnapshot
+        : getSelectedCache(initialData)
+    // To make sure that we are returning the same object reference to avoid
+    // unnecessary re-renders, we keep the previous snapshot and use deep
+    // comparison to check if we need to return a new one.
+    let memorizedSnapshot = clientSnapshot
 
-    let memorizedSnapshot = getSelectedCache()
-
-    return () => {
-      const snapshot = getSelectedCache()
-      return isEqual(snapshot, memorizedSnapshot)
-        ? memorizedSnapshot
-        : (memorizedSnapshot = snapshot)
-    }
+    return [
+      () => {
+        const newSnapshot = getSelectedCache(getCache())
+        return isEqual(newSnapshot, memorizedSnapshot)
+          ? memorizedSnapshot
+          : (memorizedSnapshot = newSnapshot)
+      },
+      () => serverSnapshot
+    ]
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cache, key])
 
@@ -172,18 +190,22 @@ export const useSWRHandler = <Data = any, Error = any>(
       (callback: () => void) =>
         subscribeCache(
           key,
-          (prev: State<Data, any>, current: State<Data, any>) => {
+          (current: State<Data, any>, prev: State<Data, any>) => {
             if (!isEqual(prev, current)) callback()
           }
         ),
       // eslint-disable-next-line react-hooks/exhaustive-deps
       [cache, key]
     ),
-    getSnapshot,
-    getSnapshot
+    getSnapshot[0],
+    getSnapshot[1]
   )
 
   const isInitialMount = !initialMountedRef.current
+
+  const hasRevalidator =
+    EVENT_REVALIDATORS[key] && EVENT_REVALIDATORS[key].length > 0
+
   const cachedData = cached.data
 
   const data = isUndefined(cachedData) ? fallback : cachedData
@@ -202,6 +224,9 @@ export const useSWRHandler = <Data = any, Error = any>(
   // - Not suspense mode and there is no fallback data and `revalidateIfStale` is enabled.
   // - `revalidateIfStale` is enabled but `data` is not defined.
   const shouldDoInitialRevalidation = (() => {
+    // if a key already has revalidators and also has error, we should not trigger revalidation
+    if (hasRevalidator && !isUndefined(error)) return false
+
     // If `revalidateOnMount` is set, we take the value directly.
     if (isInitialMount && !isUndefined(revalidateOnMount))
       return revalidateOnMount
@@ -212,11 +237,11 @@ export const useSWRHandler = <Data = any, Error = any>(
     // Under suspense mode, it will always fetch on render if there is no
     // stale data so no need to revalidate immediately mount it again.
     // If data exists, only revalidate if `revalidateIfStale` is true.
-    if (suspense) return isUndefined(data) ? false : config.revalidateIfStale
+    if (suspense) return isUndefined(data) ? false : revalidateIfStale
 
     // If there is no stale data, we need to revalidate when mount;
     // If `revalidateIfStale` is set to true, we will always revalidate.
-    return isUndefined(data) || config.revalidateIfStale
+    return isUndefined(data) || revalidateIfStale
   })()
 
   // Resolve the default validating state:
@@ -425,7 +450,15 @@ export const useSWRHandler = <Data = any, Error = any>(
                   err,
                   key,
                   currentConfig,
-                  revalidate,
+                  _opts => {
+                    const revalidators = EVENT_REVALIDATORS[key]
+                    if (revalidators && revalidators[0]) {
+                      revalidators[0](
+                        revalidateEvents.ERROR_REVALIDATE_EVENT,
+                        _opts
+                      )
+                    }
+                  },
                   {
                     retryCount: (opts.retryCount || 0) + 1,
                     dedupe: true
@@ -491,7 +524,13 @@ export const useSWRHandler = <Data = any, Error = any>(
     // Expose revalidators to global event listeners. So we can trigger
     // revalidation from the outside.
     let nextFocusRevalidatedAt = 0
-    const onRevalidate = (type: RevalidateEvent) => {
+    const onRevalidate = (
+      type: RevalidateEvent,
+      opts: {
+        retryCount?: number
+        dedupe?: boolean
+      } = {}
+    ) => {
       if (type == revalidateEvents.FOCUS_EVENT) {
         const now = Date.now()
         if (
@@ -508,6 +547,8 @@ export const useSWRHandler = <Data = any, Error = any>(
         }
       } else if (type == revalidateEvents.MUTATE_EVENT) {
         return revalidate()
+      } else if (type == revalidateEvents.ERROR_REVALIDATE_EVENT) {
+        return revalidate(opts)
       }
       return
     }

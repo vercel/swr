@@ -3,39 +3,42 @@ import type {
   SWRResponse,
   Arguments,
   BareFetcher,
-  State
+  State,
+  StrictTupleKey
 } from 'swr/_internal'
 
 type FetcherResponse<Data = unknown> = Data | Promise<Data>
 
 export type SWRInfiniteFetcher<
   Data = any,
-  Key extends Arguments = Arguments
-> = Key extends readonly [...infer Args]
-  ? (args: [...Args]) => FetcherResponse<Data>
-  : Key extends [...infer Args]
-  ? (args: [...Args]) => FetcherResponse<Data>
-  : Key extends null | undefined | false
-  ? never
-  : Key extends infer Arg
-  ? (arg: Arg) => FetcherResponse<Data>
+  KeyLoader extends SWRInfiniteKeyLoader = SWRInfiniteKeyLoader
+> = KeyLoader extends (...args: any[]) => any
+  ? ReturnType<KeyLoader> extends infer T | null | false | undefined
+    ? (args: T) => FetcherResponse<Data>
+    : never
   : never
 
 export type SWRInfiniteKeyLoader<
   Data = any,
-  Key extends Arguments = Arguments
-> = (index: number, previousPageData: Data | null) => Key
+  Args extends Arguments = Arguments
+> = (index: number, previousPageData: Data | null) => Args
 
+export interface SWRInfiniteCompareFn<Data = any> {
+  (a: Data | undefined, b: Data | undefined): boolean
+  (a: Data[] | undefined, b: Data[] | undefined): boolean
+}
 export interface SWRInfiniteConfiguration<
   Data = any,
   Error = any,
   Fn extends SWRInfiniteFetcher<Data> = BareFetcher<Data>
-> extends SWRConfiguration<Data[], Error> {
+> extends Omit<SWRConfiguration<Data[], Error>, 'compare'> {
   initialSize?: number
   revalidateAll?: boolean
   persistSize?: boolean
   revalidateFirstPage?: boolean
+  parallel?: boolean
   fetcher?: Fn
+  compare?: SWRInfiniteCompareFn<Data>
 }
 
 export interface SWRInfiniteResponse<Data = any, Error = any>
@@ -47,24 +50,60 @@ export interface SWRInfiniteResponse<Data = any, Error = any>
 }
 
 export interface SWRInfiniteHook {
-  <Data = any, Error = any, Key extends Arguments = null>(
-    getKey: SWRInfiniteKeyLoader<Data, Key>
+  <
+    Data = any,
+    Error = any,
+    KeyLoader extends SWRInfiniteKeyLoader = (
+      index: number,
+      previousPageData: Data | null
+    ) => StrictTupleKey
+  >(
+    getKey: KeyLoader
   ): SWRInfiniteResponse<Data, Error>
-  <Data = any, Error = any, Key extends Arguments = null>(
-    getKey: SWRInfiniteKeyLoader<Data, Key>,
-    fetcher: SWRInfiniteFetcher<Data, Key> | null
+  <
+    Data = any,
+    Error = any,
+    KeyLoader extends SWRInfiniteKeyLoader = (
+      index: number,
+      previousPageData: Data | null
+    ) => StrictTupleKey
+  >(
+    getKey: KeyLoader,
+    fetcher: SWRInfiniteFetcher<Data, KeyLoader> | null
   ): SWRInfiniteResponse<Data, Error>
-  <Data = any, Error = any, Key extends Arguments = null>(
-    getKey: SWRInfiniteKeyLoader<Data, Key>,
+  <
+    Data = any,
+    Error = any,
+    KeyLoader extends SWRInfiniteKeyLoader = (
+      index: number,
+      previousPageData: Data | null
+    ) => StrictTupleKey
+  >(
+    getKey: KeyLoader,
     config:
-      | SWRInfiniteConfiguration<Data, Error, SWRInfiniteFetcher<Data, Key>>
+      | SWRInfiniteConfiguration<
+          Data,
+          Error,
+          SWRInfiniteFetcher<Data, KeyLoader>
+        >
       | undefined
   ): SWRInfiniteResponse<Data, Error>
-  <Data = any, Error = any, Key extends Arguments = null>(
-    getKey: SWRInfiniteKeyLoader<Data, Key>,
-    fetcher: SWRInfiniteFetcher<Data, Key> | null,
+  <
+    Data = any,
+    Error = any,
+    KeyLoader extends SWRInfiniteKeyLoader = (
+      index: number,
+      previousPageData: Data | null
+    ) => StrictTupleKey
+  >(
+    getKey: KeyLoader,
+    fetcher: SWRInfiniteFetcher<Data, KeyLoader> | null,
     config:
-      | SWRInfiniteConfiguration<Data, Error, SWRInfiniteFetcher<Data, Key>>
+      | SWRInfiniteConfiguration<
+          Data,
+          Error,
+          SWRInfiniteFetcher<Data, KeyLoader>
+        >
       | undefined
   ): SWRInfiniteResponse<Data, Error>
   <Data = any, Error = any>(getKey: SWRInfiniteKeyLoader): SWRInfiniteResponse<
@@ -90,7 +129,7 @@ export interface SWRInfiniteCacheValue<Data = any, Error = any>
   extends State<Data, Error> {
   // We use cache to pass extra info (context) to fetcher so it can be globally
   // shared. The key of the context data is based on the first-page key.
-  _i?: [boolean] | [boolean, Data[] | undefined]
+  _i?: boolean
   // Page size is also cached to share the page data between hooks with the
   // same key.
   _l?: number

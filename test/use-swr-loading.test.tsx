@@ -228,7 +228,8 @@ describe('useSWR - loading', () => {
           await sleep(50)
           throw new Error(key)
         },
-        dedupingInterval: 0
+        dedupingInterval: 0,
+        errorRetryInterval: 50
       })
 
       return isValidating ? <>validating</> : <>stopped</>
@@ -251,8 +252,7 @@ describe('useSWR - loading', () => {
     screen.getByText('stopped,')
 
     fireEvent.click(screen.getByText('start'))
-    await executeWithoutBatching(() => sleep(20))
-    screen.getByText('validating,validating')
+    await screen.findByText('validating,validating')
 
     // Pause before it resolves
     paused = true
