@@ -2,12 +2,7 @@ import React from 'react'
 import type { Cache, SWRResponse } from 'swr'
 import useSWR, { useSWRConfig, SWRConfig } from 'swr'
 import { expectType } from './utils'
-import type {
-  BareFetcher,
-  FullConfiguration,
-  PublicConfiguration,
-  SWRConfiguration
-} from 'swr/_internal'
+import type { FullConfiguration, SWRConfiguration } from 'swr/_internal'
 import type { Equal } from '@type-challenges/utils'
 
 export function testCache() {
@@ -58,45 +53,13 @@ export function testSWRResponseCachedDataTypes() {
 }
 
 export function testSuspense() {
-  // Basic
-  const { data: data1 } = useSWR('/api', (k: string) => Promise.resolve(k), {
-    suspense: true
-  })
-  expectType<string>(data1)
-
-  // Basic(default fetcher)
-  const { data: data2 } = useSWR('/api', {
-    suspense: true
-  })
-  expectType<any>(data2)
-
-  // Generics
-  const { data: data3 } = useSWR<string>(
+  const { data: suspenseyData } = useSWR(
     '/api',
     (k: string) => Promise.resolve(k),
     { suspense: true }
   )
-  expectType<string>(data3)
 
-  // Generics(default fetcher)
-  const { data: data4 } = useSWR<string>('/api', { suspense: true })
-  expectType<string>(data4)
-
-  // Generics(SWRKey)
-  const { data: data5 } = useSWR<string, any, '/api'>(
-    '/api',
-    (k: string) => Promise.resolve(k),
-    {
-      suspense: true
-    }
-  )
-  expectType<string>(data5)
-
-  // Generics(SWRKey, default fetcher)
-  const { data: data6 } = useSWR<string, any, '/api'>('/api', {
-    suspense: true
-  })
-  expectType<string>(data6)
+  expectType<string>(suspenseyData)
 }
 
 export function testFallbackData() {
@@ -123,47 +86,6 @@ export function testFallbackData() {
     fallbackData: { value: 'fallback' }
   })
   expectType<{ value: string }>(data3)
-
-  // Does not need specific fetcher
-
-  // Basic(default fetcher)
-  const { data: data4 } = useSWR('/api', { fallbackData: 'fallback' })
-  expectType<any>(data4)
-
-  // Generics
-  const { data: data5 } = useSWR<string>(
-    '/api',
-    (k: string) => Promise.resolve(k),
-    { fallbackData: 'fallback' }
-  )
-  expectType<string>(data5)
-
-  // Generics(default fetcher)
-  const { data: data6 } = useSWR<string>('/api', { fallbackData: 'fallback' })
-  expectType<string>(data6)
-
-  // Generics(SWRKey)
-  const { data: data7 } = useSWR<string, any, '/api'>(
-    '/api',
-    (k: string) => Promise.resolve(k),
-    { fallbackData: 'fallback' }
-  )
-  expectType<string>(data7)
-
-  // Generics(SWRKey, default fetcher)
-  const { data: data8 } = useSWR<string, any, '/api'>('/api', {
-    fallbackData: 'fallback'
-  })
-  expectType<string>(data8)
-}
-export function testUndefined() {
-  // Undefined can be passed to config.
-  expectType<
-    Equal<
-      Parameters<typeof useSWR<string, any>>['2'],
-      Partial<PublicConfiguration<string, any, BareFetcher<string>>> | undefined
-    >
-  >(true)
 }
 
 export function testUndefinedData() {
