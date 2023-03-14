@@ -2,11 +2,7 @@ import React from 'react'
 import type { Cache, SWRResponse } from 'swr'
 import useSWR, { useSWRConfig, SWRConfig } from 'swr'
 import { expectType } from './utils'
-import type {
-  BareFetcher,
-  FullConfiguration,
-  PublicConfiguration
-} from 'swr/_internal'
+import type { FullConfiguration, SWRConfiguration } from 'swr/_internal'
 import type { Equal } from '@type-challenges/utils'
 
 export function testCache() {
@@ -69,33 +65,22 @@ export function testSuspense() {
   })
   expectType<any>(data2)
 
-  // Generics
+  // If a generic is explicitly passed we will lose type inference for the swr config
+  // because of partial inference limitations in typescript.
+  // https://github.com/microsoft/TypeScript/issues/26242
   const { data: data3 } = useSWR<string>(
     '/api',
     (k: string) => Promise.resolve(k),
     { suspense: true }
   )
-  expectType<string>(data3)
+  expectType<string | undefined>(data3)
 
-  // Generics(default fetcher)
-  const { data: data4 } = useSWR<string>('/api', { suspense: true })
-  expectType<string>(data4)
-
-  // Generics(SWRKey)
-  const { data: data5 } = useSWR<string, any, '/api'>(
+  const { data: data4 } = useSWR<string, any, { suspense: true }>(
     '/api',
     (k: string) => Promise.resolve(k),
-    {
-      suspense: true
-    }
+    { suspense: true }
   )
-  expectType<string>(data5)
-
-  // Generics(SWRKey, default fetcher)
-  const { data: data6 } = useSWR<string, any, '/api'>('/api', {
-    suspense: true
-  })
-  expectType<string>(data6)
+  expectType<string>(data4)
 }
 
 export function testFallbackData() {
@@ -129,38 +114,26 @@ export function testFallbackData() {
   const { data: data4 } = useSWR('/api', { fallbackData: 'fallback' })
   expectType<any>(data4)
 
-  // Generics
+  // If a generic is explicitly passed we will lose type inference for the swr config
+  // because of partial inference limitations in typescript.
+  // https://github.com/microsoft/TypeScript/issues/26242
   const { data: data5 } = useSWR<string>(
     '/api',
     (k: string) => Promise.resolve(k),
     { fallbackData: 'fallback' }
   )
-  expectType<string>(data5)
+  expectType<string | undefined>(data5)
 
-  // Generics(default fetcher)
-  const { data: data6 } = useSWR<string>('/api', { fallbackData: 'fallback' })
-  expectType<string>(data6)
-
-  // Generics(SWRKey)
-  const { data: data7 } = useSWR<string, any, '/api'>(
+  const { data: data6 } = useSWR<string, any, { fallbackData: 'fallback' }>(
     '/api',
     (k: string) => Promise.resolve(k),
     { fallbackData: 'fallback' }
   )
-  expectType<string>(data7)
-
-  // Generics(SWRKey, default fetcher)
-  const { data: data8 } = useSWR<string, any, '/api'>('/api', {
-    fallbackData: 'fallback'
-  })
-  expectType<string>(data8)
+  expectType<string>(data6)
 }
-export function testUndefined() {
-  // Undefined can be passed to config.
-  expectType<
-    Equal<
-      Parameters<typeof useSWR<string, any>>['2'],
-      Partial<PublicConfiguration<string, any, BareFetcher<string>>> | undefined
-    >
-  >(true)
+
+export function testConfigAsSWRConfiguration() {
+  const fetcher = (k: string) => Promise.resolve({ value: k })
+  const { data } = useSWR('/api', fetcher, {} as SWRConfiguration)
+  expectType<Equal<typeof data, { value: string } | undefined>>(true)
 }

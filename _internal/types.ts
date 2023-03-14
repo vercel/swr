@@ -232,23 +232,27 @@ export interface SWRHook {
     SWRKey extends Key = StrictKey,
     SWROptions extends
       | SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>>
-      | undefined = SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>>
+      | undefined =
+      | SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>>
+      | undefined
   >(
     key: SWRKey,
-    config: SWROptions | undefined
-  ): SWRResponse<Data, Error, Required<SWROptions>>
+    config: SWROptions
+  ): SWRResponse<Data, Error, SWROptions>
   <
     Data = any,
     Error = any,
     SWRKey extends Key = StrictKey,
     SWROptions extends
       | SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>>
-      | undefined = SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>>
+      | undefined =
+      | SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>>
+      | undefined
   >(
     key: SWRKey,
     fetcher: Fetcher<Data, SWRKey> | null,
-    config: SWROptions | undefined
-  ): SWRResponse<Data, Error, Required<SWROptions>>
+    config: SWROptions
+  ): SWRResponse<Data, Error, SWROptions>
   <Data = any, Error = any>(key: Key): SWRResponse<Data, Error>
   <Data = any, Error = any>(
     key: Key,
@@ -259,22 +263,22 @@ export interface SWRHook {
     Error = any,
     SWROptions extends
       | SWRConfiguration<Data, Error, BareFetcher<Data>>
-      | undefined = SWRConfiguration<Data, Error, BareFetcher<Data>>
+      | undefined = SWRConfiguration<Data, Error, BareFetcher<Data>> | undefined
   >(
     key: Key,
-    config: SWROptions | undefined
-  ): SWRResponse<Data, Error, Required<SWROptions>>
+    config: SWROptions
+  ): SWRResponse<Data, Error, SWROptions>
   <
     Data = any,
     Error = any,
     SWROptions extends
       | SWRConfiguration<Data, Error, BareFetcher<Data>>
-      | undefined = SWRConfiguration<Data, Error, BareFetcher<Data>>
+      | undefined = SWRConfiguration<Data, Error, BareFetcher<Data>> | undefined
   >(
     key: Key,
     fetcher: BareFetcher<Data> | null,
-    config: SWROptions | undefined
-  ): SWRResponse<Data, Error, Required<SWROptions>>
+    config: SWROptions
+  ): SWRResponse<Data, Error, SWROptions>
 }
 
 // Middleware guarantees that a SWRHook receives a key, fetcher, and config as the argument
