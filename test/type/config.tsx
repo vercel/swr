@@ -5,7 +5,8 @@ import { expectType } from './utils'
 import type {
   BareFetcher,
   FullConfiguration,
-  PublicConfiguration
+  PublicConfiguration,
+  SWRConfiguration
 } from 'swr/_internal'
 import type { Equal } from '@type-challenges/utils'
 
@@ -163,4 +164,10 @@ export function testUndefined() {
       Partial<PublicConfiguration<string, any, BareFetcher<string>>> | undefined
     >
   >(true)
+}
+
+export function testUndefinedData() {
+  const fetcher = (k: string) => Promise.resolve({ value: k })
+  const { data } = useSWR('/api', fetcher, {} as SWRConfiguration)
+  expectType<Equal<typeof data, { value: string } | undefined>>(true)
 }
