@@ -2,7 +2,7 @@ import React from 'react'
 import type { Cache, SWRResponse } from 'swr'
 import useSWR, { useSWRConfig, SWRConfig } from 'swr'
 import { expectType } from './utils'
-import type { FullConfiguration } from 'swr/_internal'
+import type { FullConfiguration, SWRConfiguration } from 'swr/_internal'
 import type { Equal } from '@type-challenges/utils'
 
 export function testCache() {
@@ -130,4 +130,10 @@ export function testFallbackData() {
     { fallbackData: 'fallback' }
   )
   expectType<string>(data6)
+}
+
+export function testConfigAsSWRConfiguration() {
+  const fetcher = (k: string) => Promise.resolve({ value: k })
+  const { data } = useSWR('/api', fetcher, {} as SWRConfiguration)
+  expectType<Equal<typeof data, { value: string } | undefined>>(true)
 }
