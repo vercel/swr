@@ -55,6 +55,11 @@ export function useString() {
     expectType<Equal<'/api/user', typeof key>>(true)
     return key
   })
+
+  useSWRSubscription('/ws', key => {
+    expectType<Equal<'/ws', typeof key>>(true)
+    return () => {}
+  })
 }
 
 export function useRecord() {

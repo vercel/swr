@@ -22,11 +22,13 @@ export type SWRSubscriptionResponse<Data = any, Error = any> = {
   error?: Error
 }
 
-export type SWRSubscriptionHook<Data = any, Error = any> = (
-  key: Key,
-  subscribe: SWRSubscription<Data, Error>,
-  config?: SWRConfiguration
-) => SWRSubscriptionResponse<Data, Error>
+export interface SWRSubscriptionHook {
+  <Data = any, Error = any, SWRKey extends Key = Key>(
+    key: SWRKey,
+    subscribe: SWRSubscription<Data, Error, SWRKey>,
+    config?: SWRConfiguration
+  ): SWRSubscriptionResponse<Data, Error>
+}
 
 // [subscription count, disposer]
 type SubscriptionStates = [Map<string, number>, Map<string, () => void>]
