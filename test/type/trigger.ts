@@ -3,11 +3,10 @@ import useSWR from 'swr'
 type ExpectType = <T>(value: T) => void
 const expectType: ExpectType = () => {}
 
-type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B
-  ? 1
-  : 2
-  ? true
-  : false
+type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false;
+
+// Test the Equal type
+expectType<Equal<number, string>>(false) // should be false
 
 export function useExtraParam() {
   useSWRMutation('/api/user', key => {
