@@ -8,8 +8,12 @@ import {
   createCacheHelper
 } from 'swr/_internal'
 
-export type SWRSubscription<Data = any, Error = any> = (
-  key: Key,
+export type SWRSubscription<
+  Data = any,
+  Error = any,
+  SWRKey extends Key = Key
+> = (
+  key: SWRKey,
   { next }: { next: (err?: Error | null, data?: Data) => void }
 ) => () => void
 
