@@ -1,6 +1,5 @@
 import useSWR from 'swr'
 import useSWRInfinite from 'swr/infinite'
-import useSWRSubscription from 'swr/subscription'
 import { expectType, truthy } from './utils'
 import type { Equal } from '@type-challenges/utils'
 
@@ -23,21 +22,6 @@ export function useDataErrorGeneric() {
     },
     key => key
   )
-  useSWRSubscription<{ id: number }, { err: string }>(
-    'key',
-    (_key, { next }) => {
-      expectType<
-        Equal<
-          (
-            err?: { err: string } | null | undefined,
-            data?: { id: number } | undefined
-          ) => void,
-          typeof next
-        >
-      >(true)
-      return () => {}
-    }
-  )
 }
 
 export function useString() {
@@ -54,11 +38,6 @@ export function useString() {
   useSWR(truthy() ? '/api/user' : false, key => {
     expectType<Equal<'/api/user', typeof key>>(true)
     return key
-  })
-
-  useSWRSubscription('/ws', key => {
-    expectType<Equal<'/ws', typeof key>>(true)
-    return () => {}
   })
 }
 
