@@ -1,6 +1,6 @@
 {
   "name": "swr",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "React Hooks library for remote data fetching",
   "keywords": [
     "swr",
@@ -141,9 +141,6 @@
     "singleQuote": true,
     "arrowParens": "avoid",
     "trailingComma": "none"
-  },
-  "engines": {
-    "pnpm": "7"
   },
   "dependencies": {
     "use-sync-external-store": "^1.2.0"

@@ -137,3 +137,15 @@ export function testConfigAsSWRConfiguration() {
   const { data } = useSWR('/api', fetcher, {} as SWRConfiguration)
   expectType<Equal<typeof data, { value: string } | undefined>>(true)
 }
+
+export function testEmptyConfig() {
+  const fetcher = (k: string) => Promise.resolve({ value: k })
+  const { data, error, isLoading } = useSWR<{ value: string }, Error>(
+    '/api',
+    fetcher,
+    {}
+  )
+  expectType<Equal<typeof data, { value: string } | undefined>>(true)
+  expectType<Equal<typeof error, Error | undefined>>(true)
+  expectType<Equal<typeof isLoading, boolean>>(true)
+}

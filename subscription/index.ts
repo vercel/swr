@@ -8,19 +8,34 @@ import {
   createCacheHelper
 } from 'swr/_internal'
 
-export type SWRSubscription<Data = any, Error = any> = (
-  key: Key,
-  { next }: { next: (err?: Error | null, data?: Data) => void }
-) => () => void
+export type SWRSubNext<Data = any, Error = any> = {
+  next: (err?: Error | null, data?: Data) => void
+}
+
+export type SWRSubscription<
+  SWRSubKey extends Key = Key,
+  Data = any,
+  Error = any
+> = SWRSubKey extends () => infer Arg | null | undefined | false
+  ? (key: Arg, { next }: SWRSubNext<Data, Error>) => void
+  : SWRSubKey extends null | undefined | false
+  ? never
+  : SWRSubKey extends infer Arg
+  ? (key: Arg, { next }: SWRSubNext<Data, Error>) => void
+  : never
 
 export type SWRSubscriptionResponse<Data = any, Error = any> = {
   data?: Data
   error?: Error
 }
 
-export type SWRSubscriptionHook<Data = any, Error = any> = (
-  key: Key,
-  subscribe: SWRSubscription<Data, Error>,
+export type SWRSubscriptionHook = <
+  Data = any,
+  Error = any,
+  SWRSubKey extends Key = Key
+>(
+  key: SWRSubKey,
+  subscribe: SWRSubscription<SWRSubKey, Data, Error>,
   config?: SWRConfiguration
 ) => SWRSubscriptionResponse<Data, Error>
 
@@ -30,10 +45,10 @@ const subscriptionStorage = new WeakMap<object, SubscriptionStates>()
 
 const SUBSCRIPTION_PREFIX = '$sub$'
 
-export const subscription = (<Data, Error>(useSWRNext: SWRHook) =>
+export const subscription = (<Data = any, Error = any>(useSWRNext: SWRHook) =>
   (
     _key: Key,
-    subscribe: SWRSubscription<Data, Error>,
+    subscribe: SWRSubscription<any, Data, Error>,
     config: SWRConfiguration & typeof SWRConfig.defaultValue
   ): SWRSubscriptionResponse<Data, Error> => {
     const [key] = serialize(_key)
