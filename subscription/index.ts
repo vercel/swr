@@ -52,7 +52,10 @@ export const subscription = (<Data = any, Error = any>(useSWRNext: SWRHook) =>
       const [, set] = createCacheHelper<Data>(cache, subscriptionKey)
       const refCount = subscriptions.get(subscriptionKey) || 0
 
-      const next = (error?: Error | null, data?: Data) => {
+      const next: SWRSubscriptionOptions<Data, Error>['next'] = (
+        error,
+        data
+      ) => {
         if (error !== null && typeof error !== 'undefined') {
           set({ error })
         } else {
