@@ -1,6 +1,6 @@
 import { act, fireEvent, screen } from '@testing-library/react'
 import React, { useState } from 'react'
-import useSWR, { SWRConfig } from 'swr'
+import useSWR, { SWRConfig, useSWRConfig } from 'swr'
 import { createKey, renderWithConfig, sleep } from './utils'
 
 // This has to be an async function to wait for a microtask to flush updates
@@ -262,6 +262,243 @@ describe('useSWR - refresh', () => {
     const cachedData = customCache.get(key)?.data
     expect(cachedData.timestamp.toString()).toEqual('1')
     screen.getByText('1')
+  })
+
+  it('custom compare should only be used for comparing data', async () => {
+    let count = 0
+    const key = createKey()
+    const compareParams = []
+    const fetcher = jest.fn(() => ({
+      timestamp: ++count,
+      version: '1.0'
+    }))
+    function Page() {
+      const config = useSWRConfig()
+      const { data, mutate: change } = useSWR(key, fetcher, {
+        compare: function (a, b) {
+          compareParams.push([a, b])
+          return config.compare(a, b)
+        },
+        dedupingInterval: 0
+      })
+
+      if (!data) {
+        return <div>loading</div>
+      }
+      return (
+        <>
+          <button onClick={() => change()}>change</button>
+          <div>{data.timestamp}</div>
+        </>
+      )
+    }
+    renderWithConfig(<Page />)
+    await screen.findByText('1')
+    expect(compareParams).toMatchInlineSnapshot(`
+      [
+        [
+          undefined,
+          undefined,
+        ],
+        [
+          undefined,
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+        ],
+        [
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+          undefined,
+        ],
+        [
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+          undefined,
+        ],
+        [
+          undefined,
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+        ],
+        [
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+        ],
+        [
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+        ],
+        [
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+        ],
+      ]
+    `)
+
+    fireEvent.click(screen.getByText('change'))
+    await screen.findByText('2')
+    expect(compareParams).toMatchInlineSnapshot(`
+      [
+        [
+          undefined,
+          undefined,
+        ],
+        [
+          undefined,
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+        ],
+        [
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+          undefined,
+        ],
+        [
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+          undefined,
+        ],
+        [
+          undefined,
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+        ],
+        [
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+        ],
+        [
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+        ],
+        [
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+        ],
+        [
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+        ],
+        [
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+          {
+            "timestamp": 2,
+            "version": "1.0",
+          },
+        ],
+        [
+          {
+            "timestamp": 2,
+            "version": "1.0",
+          },
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+        ],
+        [
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+          {
+            "timestamp": 2,
+            "version": "1.0",
+          },
+        ],
+        [
+          {
+            "timestamp": 2,
+            "version": "1.0",
+          },
+          {
+            "timestamp": 2,
+            "version": "1.0",
+          },
+        ],
+        [
+          {
+            "timestamp": 2,
+            "version": "1.0",
+          },
+          {
+            "timestamp": 2,
+            "version": "1.0",
+          },
+        ],
+        [
+          {
+            "timestamp": 2,
+            "version": "1.0",
+          },
+          {
+            "timestamp": 2,
+            "version": "1.0",
+          },
+        ],
+      ]
+    `)
   })
 
   it('should not let the previous interval timer to set new timer if key changes too fast', async () => {
