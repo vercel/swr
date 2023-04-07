@@ -64,6 +64,62 @@ describe('useSWRSubscription', () => {
     screen.getByText(`error:`)
   })
 
+  it('should pass the origin keys', async () => {
+    const swrKey = createKey()
+    let intervalId
+    let res = 0
+    function subscribe(key, { next }) {
+      intervalId = setInterval(() => {
+        if (res === 3) {
+          const err = new Error(key)
+          next(err)
+        } else {
+          next(undefined, key[0] + res)
+        }
+        res++
+      }, 100)
+
+      return () => {}
+    }
+
+    function Page() {
+      const { data, error } = useSWRSubscription([swrKey], subscribe, {
+        fallbackData: 'fallback'
+      })
+      return (
+        <>
+          <div data-testid="data">{'data:' + data}</div>
+          <div data-testid="error">
+            {'error:' + (error ? error.message : '')}
+          </div>
+        </>
+      )
+    }
+    renderWithConfig(<Page />)
+    await act(() => sleep(10))
+    screen.getByText(`data:fallback`)
+    screen.getByText('error:')
+    await act(() => sleep(100))
+    screen.getByText(`data:${swrKey}0`)
+    screen.getByText('error:')
+    await act(() => sleep(100))
+    screen.getByText(`data:${swrKey}1`)
+    screen.getByText('error:')
+    await act(() => sleep(100))
+    screen.getByText(`data:${swrKey}2`)
+    screen.getByText('error:')
+    await act(() => sleep(100))
+    // error occurred, error arrives instead of data 3
+    screen.getByText(`data:${swrKey}2`)
+    screen.getByText(`error:${swrKey}`)
+    await act(() => sleep(100))
+    screen.getByText(`data:${swrKey}4`)
+    screen.getByText('error:')
+    clearInterval(intervalId)
+    await sleep(100)
+    screen.getByText(`error:`)
+  })
+
   it('should deduplicate subscriptions', async () => {
     const swrKey = createKey()
 

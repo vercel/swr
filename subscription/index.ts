@@ -26,6 +26,7 @@ export const subscription = (<Data = any, Error = any>(useSWRNext: SWRHook) =>
     config: SWRConfiguration & typeof SWRConfig.defaultValue
   ): SWRSubscriptionResponse<Data, Error> => {
     const [key] = serialize(_key)
+    const originKey = _key
 
     // Prefix the key to avoid conflicts with other SWR resources.
     const subscriptionKey = key ? SUBSCRIPTION_PREFIX + key : undefined
@@ -64,7 +65,7 @@ export const subscription = (<Data = any, Error = any>(useSWRNext: SWRHook) =>
       subscriptions.set(subscriptionKey, refCount + 1)
 
       if (!refCount) {
-        const dispose = subscribe(key, { next })
+        const dispose = subscribe(originKey, { next })
         if (typeof dispose !== 'function') {
           throw new Error(
             'The `subscribe` function must return a function to unsubscribe.'
