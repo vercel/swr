@@ -588,10 +588,15 @@ export const useSWRHandler = <Data = any, Error = any>(
     let timer: any
 
     function next() {
+      const cacheData = getCache().data
+      const configFallbackData = getConfig().fallbackData
+      const latestFallback = isUndefined(configFallbackData)
+        ? getConfig().fallback[key]
+        : configFallbackData
       // Use the passed interval
       // ...or invoke the function with the updated data to get the interval
       const interval = isFunction(refreshInterval)
-        ? refreshInterval(getCache().data)
+        ? refreshInterval(isUndefined(cacheData) ? latestFallback : cacheData)
         : refreshInterval
 
       // We only start the next interval if `refreshInterval` is not 0, and:
