@@ -87,7 +87,6 @@
     "lint:fix": "pnpm lint --fix",
     "coverage": "jest --coverage",
     "test-typing": "tsc --noEmit -p test/type/tsconfig.json && tsc --noEmit -p test/tsconfig.json",
-    "test-packaging": "publint",
     "test": "jest",
     "test:e2e": "playwright test",
     "run-all-checks": "pnpm types:check && pnpm lint && pnpm test && pnpm test-typing"
@@ -99,6 +98,7 @@
     ]
   },
   "devDependencies": {
+    "@playwright/test": "^1.30.0",
     "@swc/core": "^1.3.29",
     "@swc/jest": "0.2.24",
     "@testing-library/jest-dom": "^5.16.5",
@@ -110,7 +110,7 @@
     "@types/use-sync-external-store": "^0.0.3",
     "@typescript-eslint/eslint-plugin": "5.49.0",
     "@typescript-eslint/parser": "5.49.0",
-    "bunchee": "2.2.0",
+    "bunchee": "3.0.1",
     "eslint": "8.32.0",
     "eslint-config-prettier": "8.6.0",
     "eslint-plugin-jest-dom": "4.0.3",
@@ -123,13 +123,11 @@
     "lint-staged": "13.1.0",
     "next": "^13.1.6",
     "prettier": "2.8.3",
-    "publint": "^0.1.9",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "rimraf": "4.1.2",
     "swr": "workspace:*",
-    "typescript": "4.9.4",
-    "@playwright/test": "^1.30.0"
+    "typescript": "4.9.4"
   },
   "peerDependencies": {
     "react": "^16.11.0 || ^17.0.0 || ^18.0.0"
