@@ -672,6 +672,47 @@ describe('useSWR - refresh', () => {
     screen.getByText('count: 4')
   })
 
+  it('should pass updated data to refreshInterval, when refreshInterval is constant function', async () => {
+    let count = 1
+
+    // constant function
+    const refreshInterval = jest.fn(updatedCount => {
+      return updatedCount > 5 ? 0 : 1000
+    })
+
+    const key = createKey()
+    function Page() {
+      // constant function
+      // const refreshInterval = useCallback((updatedCount) => {
+      //   return updatedCount > 5 ? 0 : 1000
+      // }, [])
+
+      const { data } = useSWR(key, () => count++, {
+        refreshInterval,
+        dedupingInterval: 100
+      })
+      return <div>count: {data}</div>
+    }
+
+    renderWithConfig(<Page />)
+
+    // hydration
+    screen.getByText('count:')
+
+    // mount
+    await screen.findByText('count: 1')
+
+    await act(() => advanceTimers(1000))
+    screen.getByText('count: 2')
+    expect(refreshInterval).toHaveBeenLastCalledWith(2)
+    await act(() => advanceTimers(1000))
+    screen.getByText('count: 3')
+    expect(refreshInterval).toHaveBeenLastCalledWith(3)
+    await act(() => advanceTimers(1000))
+    screen.getByText('count: 4')
+    expect(refreshInterval).toHaveBeenLastCalledWith(4)
+  })
+
   it('should disable refresh if function returns 0', async () => {
     let count = 1
 
