@@ -36,7 +36,7 @@ export const createCacheHelper = <Data = any, T = State<Data, any>>(
   const state = SWRGlobalState.get(cache) as GlobalState
   return [
     // Getter
-    () => (cache.get(key) || EMPTY_CACHE) as T,
+    () => ((!isUndefined(key) && cache.get(key)) || EMPTY_CACHE) as T,
     // Setter
     (info: T) => {
       if (!isUndefined(key)) {
@@ -61,7 +61,7 @@ export const createCacheHelper = <Data = any, T = State<Data, any>>(
       }
 
       // If we haven't done any client-side updates, we return the current value.
-      return (cache.get(key) || EMPTY_CACHE) as T
+      return ((!isUndefined(key) && cache.get(key)) || EMPTY_CACHE) as T
     }
   ] as const
 }
