@@ -591,7 +591,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       // Use the passed interval
       // ...or invoke the function with the updated data to get the interval
       const interval = isFunction(refreshInterval)
-        ? refreshInterval(data)
+        ? refreshInterval(getCache().data)
         : refreshInterval
 
       // We only start the next interval if `refreshInterval` is not 0, and:

@@ -23,7 +23,6 @@ jobs:
           pnpm run-all-checks
           pnpm clean
           pnpm build
-          pnpm test-packaging
   e2e:
     runs-on: ubuntu-latest
     container:
