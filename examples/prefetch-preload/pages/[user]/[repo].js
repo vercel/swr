@@ -1,6 +1,6 @@
-import React from 'react'
 import Head from "next/head"
 import Link from 'next/link'
+import React from 'react'
 import fetch from '../../libs/fetch'
 
 import useSWR, { mutate } from 'swr'
@@ -42,7 +42,7 @@ export default function Repo() {
         }
         <br />
         <br />
-        <Link href="/"><a onMouseEnter={handleMouseEnter}>Back</a></Link>
+        <Link href="/" onMouseEnter={handleMouseEnter}>Back</Link>
       </div>
     </>
   )

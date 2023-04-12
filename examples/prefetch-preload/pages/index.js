@@ -57,8 +57,8 @@ export default function Index() {
         {
           data ? data.map(project =>
             <p key={project}>
-              <Link href='/[user]/[repo]' as={`/${project}`}>
-                <a onMouseEnter={handleMouseEnter}>{project}</a>
+              <Link href='/[user]/[repo]' as={`/${project}`} onMouseEnter={handleMouseEnter}>
+                {project}
               </Link>
             </p>
           ) : 'loading...'

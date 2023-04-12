@@ -1,4 +1,3 @@
-import React from 'react'
 import Link from 'next/link'
 
 import useRequest from '../libs/useRequest'
@@ -16,7 +15,7 @@ export default function Index() {
           ? data.map(project => (
               <p key={project}>
                 <Link href="/[user]/[repo]" as={`/${project}`}>
-                  <a>{project}</a>
+                  {project}
                 </Link>
               </p>
             ))

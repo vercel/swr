@@ -1,4 +1,3 @@
-import React from 'react'
 import Link from 'next/link'
 
 import useRequest from '../../libs/useRequest'
@@ -29,9 +28,7 @@ export default function Repo() {
       )}
       <br />
       <br />
-      <Link href="/">
-        <a>Back</a>
-      </Link>
+      <Link href="/">Back</Link>
     </div>
   )
 }
