@@ -1,4 +1,3 @@
-import React from 'react'
 import Link from 'next/link'
 import fetch from '../libs/fetch'
 
@@ -17,7 +16,7 @@ export default function HomePage() {
           ? data.map(project => (
               <p key={project}>
                 <Link href="/[user]/[repo]" as={`/${project}`}>
-                  <a>{project}</a>
+                  {project}
                 </Link>
               </p>
             ))

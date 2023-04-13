@@ -13,7 +13,7 @@ export default function Index() {
           ? data.map(project => (
               <p key={project}>
                 <Link href="/[user]/[repo]" as={`/${project}`}>
-                  <a>{project}</a>
+                  {project}
                 </Link>
               </p>
             ))
