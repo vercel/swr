@@ -693,4 +693,6 @@ export const unstable_serialize = (key: Key) => serialize(key)[0]
  * }
  * ```
  */
-export default withArgs<SWRHook>(useSWRHandler)
+const useSWR = withArgs<SWRHook>(useSWRHandler)
+
+export default useSWR
