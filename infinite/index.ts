@@ -324,7 +324,9 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
     }
   }) as unknown as Middleware
 
-export default withMiddleware(useSWR, infinite) as SWRInfiniteHook
+const useSWRInfinite = withMiddleware(useSWR, infinite) as SWRInfiniteHook
+
+export default useSWRInfinite
 
 export {
   SWRInfiniteConfiguration,
