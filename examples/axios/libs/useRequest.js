@@ -3,7 +3,7 @@ import axios from 'axios'
 
 export default function useRequest(request, { fallbackData, ...config } = {}) {
   return useSWR(
-    request && JSON.stringify(request),
+    request,
     () => axios(request || {}).then(response => response.data),
     {
       ...config,

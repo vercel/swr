@@ -1,4 +1,3 @@
-import React from 'react'
 import Link from 'next/link'
 import fetch from '../../libs/fetch'
 
@@ -27,9 +26,7 @@ export default function Repo() {
       )}
       <br />
       <br />
-      <Link href="/">
-        <a>Back</a>
-      </Link>
+      <Link href="/">Back</Link>
     </div>
   )
 }

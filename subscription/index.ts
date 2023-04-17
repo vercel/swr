@@ -1,5 +1,10 @@
 import type { Key, SWRHook, Middleware, SWRConfiguration, SWRConfig } from 'swr'
-
+import type {
+  SWRSubscriptionOptions,
+  SWRSubscription,
+  SWRSubscriptionResponse,
+  SWRSubscriptionHook
+} from './types'
 import useSWR from 'swr'
 import {
   withMiddleware,
@@ -7,37 +12,6 @@ import {
   useIsomorphicLayoutEffect,
   createCacheHelper
 } from 'swr/_internal'
-
-export type SWRSubNext<Data = any, Error = any> = {
-  next: (err?: Error | null, data?: Data) => void
-}
-
-export type SWRSubscription<
-  SWRSubKey extends Key = Key,
-  Data = any,
-  Error = any
-> = SWRSubKey extends () => infer Arg | null | undefined | false
-  ? (key: Arg, { next }: SWRSubNext<Data, Error>) => void
-  : SWRSubKey extends null | undefined | false
-  ? never
-  : SWRSubKey extends infer Arg
-  ? (key: Arg, { next }: SWRSubNext<Data, Error>) => void
-  : never
-
-export type SWRSubscriptionResponse<Data = any, Error = any> = {
-  data?: Data
-  error?: Error
-}
-
-export type SWRSubscriptionHook = <
-  Data = any,
-  Error = any,
-  SWRSubKey extends Key = Key
->(
-  key: SWRSubKey,
-  subscribe: SWRSubscription<SWRSubKey, Data, Error>,
-  config?: SWRConfiguration
-) => SWRSubscriptionResponse<Data, Error>
 
 // [subscription count, disposer]
 type SubscriptionStates = [Map<string, number>, Map<string, () => void>]
@@ -52,6 +26,7 @@ export const subscription = (<Data = any, Error = any>(useSWRNext: SWRHook) =>
     config: SWRConfiguration & typeof SWRConfig.defaultValue
   ): SWRSubscriptionResponse<Data, Error> => {
     const [key] = serialize(_key)
+    const originKey = _key
 
     // Prefix the key to avoid conflicts with other SWR resources.
     const subscriptionKey = key ? SUBSCRIPTION_PREFIX + key : undefined
@@ -77,7 +52,10 @@ export const subscription = (<Data = any, Error = any>(useSWRNext: SWRHook) =>
       const [, set] = createCacheHelper<Data>(cache, subscriptionKey)
       const refCount = subscriptions.get(subscriptionKey) || 0
 
-      const next = (error?: Error | null, data?: Data) => {
+      const next: SWRSubscriptionOptions<Data, Error>['next'] = (
+        error,
+        data
+      ) => {
         if (error !== null && typeof error !== 'undefined') {
           set({ error })
         } else {
@@ -90,7 +68,7 @@ export const subscription = (<Data = any, Error = any>(useSWRNext: SWRHook) =>
       subscriptions.set(subscriptionKey, refCount + 1)
 
       if (!refCount) {
-        const dispose = subscribe(key, { next })
+        const dispose = subscribe(originKey, { next })
         if (typeof dispose !== 'function') {
           throw new Error(
             'The `subscribe` function must return a function to unsubscribe.'
@@ -149,3 +127,10 @@ const useSWRSubscription = withMiddleware(
 ) as SWRSubscriptionHook
 
 export default useSWRSubscription
+
+export type {
+  SWRSubscription,
+  SWRSubscriptionOptions,
+  SWRSubscriptionResponse,
+  SWRSubscriptionHook
+}
