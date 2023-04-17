@@ -72,11 +72,10 @@ export const useSWRHandler = <Data = any, Error = any>(
     cache
   ) as GlobalState
 
-  // `key` is the identifier of the SWR `data` state, `keyInfo` holds extra
-  // states such as `error` and `isValidating` inside,
-  // all of them are derived from `_key`.
+  // `key` is the identifier of the SWR internal state,
   // `fnArg` is the argument/arguments parsed from the key, which will be passed
   // to the fetcher.
+  // All of them are derived from `_key`.
   const [key, fnArg] = serialize(_key)
 
   // If it's the initial render of this hook.

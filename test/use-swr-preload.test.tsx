@@ -217,4 +217,16 @@ describe('useSWR - preload', () => {
     expect(fetcherCount).toBe(1)
     expect(renderCount).toBe(3)
   })
+
+  it('should pass serialize key to fetcher', async () => {
+    const key = createKey()
+    let calledWith: string
+
+    const fetcher = (args: string) => {
+      calledWith = args
+    }
+
+    preload(() => key, fetcher)
+    expect(calledWith).toBe(key)
+  })
 })
