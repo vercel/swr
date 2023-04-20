@@ -60,6 +60,6 @@ jobs:
         uses: ./.github/workflows/install
 
       - name: Release
-        run: pnpm publish --access public --no-git-checks --provenance
+        run: npm publish --access public --no-git-checks --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_ELEVATED }}
