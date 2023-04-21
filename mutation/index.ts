@@ -7,7 +7,8 @@ import {
   withMiddleware,
   useIsomorphicLayoutEffect,
   UNDEFINED,
-  getTimestamp
+  getTimestamp,
+  mergeObjects
 } from 'swr/_internal'
 import type {
   SWRMutationConfiguration,
@@ -25,6 +26,8 @@ const mutation = (<Data, Error>() =>
     const { mutate } = useSWRConfig()
 
     const keyRef = useRef(key)
+    const fetcherRef = useRef(fetcher)
+    const configRef = useRef(config)
     // Ditch all mutation results that happened earlier than this timestamp.
     const ditchMutationsUntilRef = useRef(0)
 
@@ -39,15 +42,21 @@ const mutation = (<Data, Error>() =>
       async (arg: any, opts?: SWRMutationConfiguration<Data, Error>) => {
         const [serializedKey, resolvedKey] = serialize(keyRef.current)
 
-        if (!fetcher) {
+        if (!fetcherRef.current) {
           throw new Error('Can’t trigger the mutation: missing fetcher.')
         }
         if (!serializedKey) {
-          throw new Error('Can’t trigger the mutation: key isn’t ready.')
+          throw new Error('Can’t trigger the mutation: missing key.')
         }
 
         // Disable cache population by default.
-        const options = Object.assign({ populateCache: false }, config, opts)
+        const options = mergeObjects(
+          mergeObjects(
+            { populateCache: false, throwOnError: true },
+            configRef.current
+          ),
+          opts
+        )
 
         // Trigger a mutation, and also track the timestamp. Any mutation that happened
         // earlier this timestamp should be ignored.
@@ -60,9 +69,9 @@ const mutation = (<Data, Error>() =>
         try {
           const data = await mutate<Data>(
             serializedKey,
-            // FIXME: Error shouldn't be broadcasted here.
-            (fetcher as any)(resolvedKey, { arg }),
-            options
+            (fetcherRef.current as any)(resolvedKey, { arg }),
+            // We must throw the error here so we can catch and update the states.
+            mergeObjects(options, { throwOnError: true })
           )
 
           // If it's reset after the mutation, we don't broadcast any state change.
@@ -72,11 +81,14 @@ const mutation = (<Data, Error>() =>
           }
           return data
         } catch (error) {
-          // If it's reset after the mutation, we don't broadcast any state change.
+          // If it's reset after the mutation, we don't broadcast any state change
+          // or throw because it's discarded.
           if (ditchMutationsUntilRef.current <= mutationStartedAt) {
             setState({ error: error as Error, isMutating: false })
             options.onError?.(error as Error, serializedKey, options)
-            throw error as Error
+            if (options.throwOnError) {
+              throw error as Error
+            }
           }
         }
       },
@@ -92,6 +104,8 @@ const mutation = (<Data, Error>() =>
 
     useIsomorphicLayoutEffect(() => {
       keyRef.current = key
+      fetcherRef.current = fetcher
+      configRef.current = config
     })
 
     // We don't return `mutate` here as it can be pretty confusing (e.g. people
@@ -115,6 +129,33 @@ const mutation = (<Data, Error>() =>
     }
   }) as unknown as Middleware
 
-export default withMiddleware(useSWR, mutation) as unknown as SWRMutationHook
+/**
+ * A hook to define and manually trigger remote mutations like POST, PUT, DELETE and PATCH use cases.
+ *
+ * @link https://swr.vercel.app/docs/mutation
+ * @example
+ * ```jsx
+ * import useSWRMutation from 'swr/mutation'
+ *
+ * const {
+ *   data,
+ *   error,
+ *   trigger,
+ *   reset,
+ *   isMutating
+ * } = useSWRMutation(key, fetcher, options?)
+ * ```
+ */
+const useSWRMutation = withMiddleware(
+  useSWR,
+  mutation
+) as unknown as SWRMutationHook
 
-export { SWRMutationConfiguration, SWRMutationResponse, SWRMutationHook }
+export default useSWRMutation
+
+export {
+  SWRMutationConfiguration,
+  SWRMutationResponse,
+  SWRMutationHook,
+  MutationFetcher
+}

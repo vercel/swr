@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
-import React from 'react'
+import React, { useState } from 'react'
 import useSWR from 'swr'
 import useSWRMutation from 'swr/mutation'
 import { createKey, sleep, nextTick } from './utils'
@@ -56,7 +56,7 @@ describe('useSWR - remote mutation', () => {
 
   it('should trigger request with the correct argument signature', async () => {
     const key = createKey()
-    const fetcher = jest.fn(() => 'data')
+    const fetcher = jest.fn((_, __: { arg: string }) => 'data')
 
     function Page() {
       const { data, trigger } = useSWRMutation([key, 'arg0'], fetcher)
@@ -112,7 +112,7 @@ describe('useSWR - remote mutation', () => {
     function Page() {
       const { data, trigger } = useSWRMutation(key, () => 'data')
       return (
-        <button onClick={() => trigger(undefined, { onSuccess })}>
+        <button onClick={() => trigger(null, { onSuccess })}>
           {data || 'pending'}
         </button>
       )
@@ -131,7 +131,7 @@ describe('useSWR - remote mutation', () => {
     expect(onSuccess).toHaveBeenCalled()
   })
 
-  it('should call `onError` event', async () => {
+  it('should call `onError` event and throw', async () => {
     const key = createKey()
     const onError = jest.fn()
     const onInplaceError = jest.fn()
@@ -163,6 +163,41 @@ describe('useSWR - remote mutation', () => {
     await screen.findByText('error!')
     expect(onError).toHaveBeenCalled()
     expect(onInplaceError).toHaveBeenCalled()
+  })
+
+  it('should call `onError` event and skip throwing the error when `throwOnError` is disabled', async () => {
+    const key = createKey()
+    const onError = jest.fn()
+    const onInplaceError = jest.fn()
+
+    function Page() {
+      const { data, error, trigger } = useSWRMutation(
+        key,
+        async () => {
+          await sleep(10)
+          throw new Error('error!')
+        },
+        {
+          onError,
+          throwOnError: false
+        }
+      )
+      return (
+        <button onClick={() => trigger().catch(onInplaceError)}>
+          {data || (error ? error.message : 'pending')}
+        </button>
+      )
+    }
+
+    render(<Page />)
+
+    // mount
+    await screen.findByText('pending')
+    fireEvent.click(screen.getByText('pending'))
+
+    await screen.findByText('error!')
+    expect(onError).toHaveBeenCalled()
+    expect(onInplaceError).not.toHaveBeenCalled()
   })
 
   it('should return `isMutating` state correctly', async () => {
@@ -200,7 +235,7 @@ describe('useSWR - remote mutation', () => {
     function Page() {
       const { data, error, trigger } = useSWRMutation(
         key,
-        async (_, { arg: shouldReturnValue }) => {
+        async (_, { arg: shouldReturnValue }: { arg: boolean }) => {
           await sleep(10)
           if (shouldReturnValue) return 'data'
           throw new Error('error')
@@ -309,7 +344,10 @@ describe('useSWR - remote mutation', () => {
 
     function Page() {
       const { data } = useSWR(key, () => 'data')
-      const { trigger } = useSWRMutation(key, (_, { arg }) => arg)
+      const { trigger } = useSWRMutation(
+        key,
+        (_, { arg }: { arg: string }) => arg
+      )
       return (
         <div onClick={() => trigger('updated!', { populateCache: true })}>
           data:{data || 'none'}
@@ -334,7 +372,10 @@ describe('useSWR - remote mutation', () => {
 
     function Page() {
       const { data } = useSWR(key, () => 'data')
-      const { trigger } = useSWRMutation(key, (_, { arg }) => arg)
+      const { trigger } = useSWRMutation(
+        key,
+        (_, { arg }: { arg: string }) => arg
+      )
       return (
         <div
           onClick={() =>
@@ -775,16 +816,19 @@ describe('useSWR - remote mutation', () => {
         await sleep(10)
         return ['foo']
       })
-      const { trigger } = useSWRMutation(key, async (_, { arg }) => {
-        await sleep(20)
-        return arg.toUpperCase()
-      })
+      const { trigger } = useSWRMutation(
+        key,
+        async (_, { arg }: { arg: string }) => {
+          await sleep(20)
+          return arg.toUpperCase()
+        }
+      )
 
       return (
         <div>
           <button
             onClick={() =>
-              trigger('bar', {
+              trigger<typeof data>('bar', {
                 optimisticData: current => [...current, 'bar'],
                 populateCache: (added, current) => [...current, added],
                 revalidate: false
@@ -824,7 +868,7 @@ describe('useSWR - remote mutation', () => {
     function Page() {
       const { error, trigger } = useSWRMutation(
         key,
-        async (_, { arg: shouldReturnValue }) => {
+        async (_, { arg: shouldReturnValue }: { arg: boolean }) => {
           await sleep(10)
           if (shouldReturnValue) return ['foo']
           throw new Error('error')
@@ -848,5 +892,100 @@ describe('useSWR - remote mutation', () => {
 
     fireEvent.click(screen.getByText('trigger'))
     await screen.findByText('Error: none')
+  })
+
+  it('should always use the latest fetcher', async () => {
+    const key = createKey()
+
+    function Page() {
+      const [count, setCount] = useState(0)
+      const { data, trigger } = useSWRMutation(key, () => count)
+
+      return (
+        <div>
+          <button
+            onClick={() => {
+              setCount(c => c + 1)
+            }}
+          >
+            ++
+          </button>
+          <button
+            onClick={() => {
+              trigger()
+            }}
+          >
+            trigger
+          </button>
+          <div>
+            data:{data},count:{count}
+          </div>
+        </div>
+      )
+    }
+
+    render(<Page />)
+
+    await screen.findByText('data:,count:0')
+    fireEvent.click(screen.getByText('trigger'))
+    await screen.findByText('data:0,count:0')
+
+    fireEvent.click(screen.getByText('++'))
+    await screen.findByText('data:0,count:1')
+
+    fireEvent.click(screen.getByText('trigger'))
+    await screen.findByText('data:1,count:1')
+  })
+
+  it('should always use the latest config', async () => {
+    const key = createKey()
+    const logs = []
+
+    function Page() {
+      const [count, setCount] = useState(0)
+      const { data, trigger } = useSWRMutation(key, async () => count, {
+        onSuccess() {
+          logs.push(count)
+        }
+      })
+
+      return (
+        <div>
+          <button
+            onClick={() => {
+              setCount(c => c + 1)
+            }}
+          >
+            ++
+          </button>
+          <button
+            onClick={() => {
+              trigger()
+            }}
+          >
+            trigger
+          </button>
+          <div>
+            data:{data},count:{count}
+          </div>
+        </div>
+      )
+    }
+
+    render(<Page />)
+
+    await screen.findByText('data:,count:0')
+    expect(logs).toEqual([])
+    fireEvent.click(screen.getByText('trigger'))
+    await screen.findByText('data:0,count:0')
+    expect(logs).toEqual([0])
+
+    fireEvent.click(screen.getByText('++'))
+    await screen.findByText('data:0,count:1')
+    expect(logs).toEqual([0])
+
+    fireEvent.click(screen.getByText('trigger'))
+    await screen.findByText('data:1,count:1')
+    expect(logs).toEqual([0, 1])
   })
 })

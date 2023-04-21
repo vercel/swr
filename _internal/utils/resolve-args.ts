@@ -24,6 +24,6 @@ export const withArgs = <SWRType>(hook: any) => {
       next = middleware[i](next)
     }
 
-    return next(key, fn || config.fetcher, config)
+    return next(key, fn || config.fetcher || null, config)
   } as unknown as SWRType
 }

@@ -3,7 +3,8 @@ import type {
   SWRResponse,
   Arguments,
   BareFetcher,
-  State
+  State,
+  StrictTupleKey
 } from 'swr/_internal'
 
 type FetcherResponse<Data = unknown> = Data | Promise<Data>
@@ -17,21 +18,27 @@ export type SWRInfiniteFetcher<
     : never
   : never
 
-export type SWRInfiniteKeyLoader = (
-  index: number,
-  previousPageData: any | null
-) => Arguments
+export type SWRInfiniteKeyLoader<
+  Data = any,
+  Args extends Arguments = Arguments
+> = (index: number, previousPageData: Data | null) => Args
 
+export interface SWRInfiniteCompareFn<Data = any> {
+  (a: Data | undefined, b: Data | undefined): boolean
+  (a: Data[] | undefined, b: Data[] | undefined): boolean
+}
 export interface SWRInfiniteConfiguration<
   Data = any,
   Error = any,
   Fn extends SWRInfiniteFetcher<Data> = BareFetcher<Data>
-> extends SWRConfiguration<Data[], Error> {
+> extends Omit<SWRConfiguration<Data[], Error>, 'compare'> {
   initialSize?: number
   revalidateAll?: boolean
   persistSize?: boolean
   revalidateFirstPage?: boolean
+  parallel?: boolean
   fetcher?: Fn
+  compare?: SWRInfiniteCompareFn<Data>
 }
 
 export interface SWRInfiniteResponse<Data = any, Error = any>
@@ -49,7 +56,7 @@ export interface SWRInfiniteHook {
     KeyLoader extends SWRInfiniteKeyLoader = (
       index: number,
       previousPageData: Data | null
-    ) => null
+    ) => StrictTupleKey
   >(
     getKey: KeyLoader
   ): SWRInfiniteResponse<Data, Error>
@@ -59,7 +66,7 @@ export interface SWRInfiniteHook {
     KeyLoader extends SWRInfiniteKeyLoader = (
       index: number,
       previousPageData: Data | null
-    ) => null
+    ) => StrictTupleKey
   >(
     getKey: KeyLoader,
     fetcher: SWRInfiniteFetcher<Data, KeyLoader> | null
@@ -70,7 +77,7 @@ export interface SWRInfiniteHook {
     KeyLoader extends SWRInfiniteKeyLoader = (
       index: number,
       previousPageData: Data | null
-    ) => null
+    ) => StrictTupleKey
   >(
     getKey: KeyLoader,
     config:
@@ -87,7 +94,7 @@ export interface SWRInfiniteHook {
     KeyLoader extends SWRInfiniteKeyLoader = (
       index: number,
       previousPageData: Data | null
-    ) => null
+    ) => StrictTupleKey
   >(
     getKey: KeyLoader,
     fetcher: SWRInfiniteFetcher<Data, KeyLoader> | null,
@@ -122,7 +129,7 @@ export interface SWRInfiniteCacheValue<Data = any, Error = any>
   extends State<Data, Error> {
   // We use cache to pass extra info (context) to fetcher so it can be globally
   // shared. The key of the context data is based on the first-page key.
-  _i?: [boolean] | [boolean, Data[] | undefined]
+  _i?: boolean
   // Page size is also cached to share the page data between hooks with the
   // same key.
   _l?: number

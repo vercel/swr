@@ -1,5 +1,11 @@
 import { serialize } from './serialize'
-import { createCacheHelper, isFunction, isUndefined, UNDEFINED } from './helper'
+import {
+  createCacheHelper,
+  isFunction,
+  isUndefined,
+  UNDEFINED,
+  mergeObjects
+} from './helper'
 import { SWRGlobalState } from './global-state'
 import { getTimestamp } from './timestamp'
 import * as revalidateEvents from '../constants'
@@ -43,26 +49,35 @@ export async function internalMutate<Data>(
 
   // When passing as a boolean, it's explicitly used to disable/enable
   // revalidation.
-  const options =
+  const options = mergeObjects(
+    { populateCache: true, throwOnError: true },
     typeof _opts === 'boolean' ? { revalidate: _opts } : _opts || {}
+  )
 
-  // Fallback to `true` if it's not explicitly set to `false`
-  let populateCache = isUndefined(options.populateCache)
-    ? true
-    : options.populateCache
+  let populateCache = options.populateCache
+
+  const rollbackOnErrorOption = options.rollbackOnError
   let optimisticData = options.optimisticData
+
   const revalidate = options.revalidate !== false
-  const rollbackOnError = options.rollbackOnError !== false
+  const rollbackOnError = (error: unknown): boolean => {
+    return typeof rollbackOnErrorOption === 'function'
+      ? rollbackOnErrorOption(error)
+      : rollbackOnErrorOption !== false
+  }
+  const throwOnError = options.throwOnError
 
   // If the second argument is a key filter, return the mutation results for all
   // filtered keys.
   if (isFunction(_key)) {
     const keyFilter = _key
     const matchedKeys: Key[] = []
-    for (const key of cache.keys()) {
+    const it = cache.keys()
+    for (let keyIt = it.next(); !keyIt.done; keyIt = it.next()) {
+      const key = keyIt.value
       if (
-        // Skip the special useSWRInfinite keys.
-        !key.startsWith('$inf$') &&
+        // Skip the special useSWRInfinite and useSWRSubscription keys.
+        !/^\$(inf|sub)\$/.test(key) &&
         keyFilter((cache.get(key) as { _k: Arguments })._k)
       ) {
         matchedKeys.push(key)
@@ -117,7 +132,8 @@ export async function internalMutate<Data>(
     // that is going to be overridden by a `committedData`, or get reverted back.
     // `committedData` is the validated value that comes from a fetch or mutation.
     const displayedData = state.data
-    const committedData = isUndefined(state._c) ? displayedData : state._c
+    const currentData = state._c
+    const committedData = isUndefined(currentData) ? displayedData : currentData
 
     // Do optimistic data update.
     if (hasOptimisticData) {
@@ -153,7 +169,7 @@ export async function internalMutate<Data>(
       if (beforeMutationTs !== MUTATION[key][0]) {
         if (error) throw error
         return data
-      } else if (error && hasOptimisticData && rollbackOnError) {
+      } else if (error && hasOptimisticData && rollbackOnError(error)) {
         // Rollback. Always populate the cache in this case but without
         // transforming the data.
         populateCache = true
@@ -175,9 +191,6 @@ export async function internalMutate<Data>(
         // Only update cached data if there's no error. Data can be `undefined` here.
         set({ data, _c: UNDEFINED })
       }
-
-      // Always update error and original data here.
-      set({ error })
     }
 
     // Reset the timestamp to mark the mutation has ended.
@@ -191,7 +204,10 @@ export async function internalMutate<Data>(
     set({ _c: UNDEFINED })
 
     // Throw error or return data
-    if (error) throw error
+    if (error) {
+      if (throwOnError) throw error
+      return
+    }
     return populateCache ? res : data
   }
 }

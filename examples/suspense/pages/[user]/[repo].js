@@ -40,7 +40,7 @@ export default function Repo() {
       <br />
       <br />
       <Link href="/">
-        <a>Back</a>
+        Back
       </Link>
     </div>
   )

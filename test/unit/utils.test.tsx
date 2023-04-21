@@ -1,7 +1,9 @@
-import { normalize } from '../../_internal/utils/normalize-args'
-import { stableHash as hash } from '../../_internal/utils/hash'
-import { serialize } from '../../_internal/utils/serialize'
-import { mergeConfigs } from '../../_internal/utils/merge-config'
+import {
+  stableHash as hash,
+  serialize,
+  normalize,
+  mergeConfigs
+} from 'swr/_internal'
 
 describe('Utils', () => {
   it('should normalize arguments correctly', async () => {

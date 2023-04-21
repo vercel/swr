@@ -1,6 +1,6 @@
 import { act, fireEvent, screen } from '@testing-library/react'
 import React, { useState } from 'react'
-import useSWR, { SWRConfig } from 'swr'
+import useSWR, { SWRConfig, useSWRConfig } from 'swr'
 import { createKey, renderWithConfig, sleep } from './utils'
 
 // This has to be an async function to wait for a microtask to flush updates
@@ -264,6 +264,243 @@ describe('useSWR - refresh', () => {
     screen.getByText('1')
   })
 
+  it('custom compare should only be used for comparing data', async () => {
+    let count = 0
+    const key = createKey()
+    const compareParams = []
+    const fetcher = jest.fn(() => ({
+      timestamp: ++count,
+      version: '1.0'
+    }))
+    function Page() {
+      const config = useSWRConfig()
+      const { data, mutate: change } = useSWR(key, fetcher, {
+        compare: function (a, b) {
+          compareParams.push([a, b])
+          return config.compare(a, b)
+        },
+        dedupingInterval: 0
+      })
+
+      if (!data) {
+        return <div>loading</div>
+      }
+      return (
+        <>
+          <button onClick={() => change()}>change</button>
+          <div>{data.timestamp}</div>
+        </>
+      )
+    }
+    renderWithConfig(<Page />)
+    await screen.findByText('1')
+    expect(compareParams).toMatchInlineSnapshot(`
+      [
+        [
+          undefined,
+          undefined,
+        ],
+        [
+          undefined,
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+        ],
+        [
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+          undefined,
+        ],
+        [
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+          undefined,
+        ],
+        [
+          undefined,
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+        ],
+        [
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+        ],
+        [
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+        ],
+        [
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+        ],
+      ]
+    `)
+
+    fireEvent.click(screen.getByText('change'))
+    await screen.findByText('2')
+    expect(compareParams).toMatchInlineSnapshot(`
+      [
+        [
+          undefined,
+          undefined,
+        ],
+        [
+          undefined,
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+        ],
+        [
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+          undefined,
+        ],
+        [
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+          undefined,
+        ],
+        [
+          undefined,
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+        ],
+        [
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+        ],
+        [
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+        ],
+        [
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+        ],
+        [
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+        ],
+        [
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+          {
+            "timestamp": 2,
+            "version": "1.0",
+          },
+        ],
+        [
+          {
+            "timestamp": 2,
+            "version": "1.0",
+          },
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+        ],
+        [
+          {
+            "timestamp": 1,
+            "version": "1.0",
+          },
+          {
+            "timestamp": 2,
+            "version": "1.0",
+          },
+        ],
+        [
+          {
+            "timestamp": 2,
+            "version": "1.0",
+          },
+          {
+            "timestamp": 2,
+            "version": "1.0",
+          },
+        ],
+        [
+          {
+            "timestamp": 2,
+            "version": "1.0",
+          },
+          {
+            "timestamp": 2,
+            "version": "1.0",
+          },
+        ],
+        [
+          {
+            "timestamp": 2,
+            "version": "1.0",
+          },
+          {
+            "timestamp": 2,
+            "version": "1.0",
+          },
+        ],
+      ]
+    `)
+  })
+
   it('should not let the previous interval timer to set new timer if key changes too fast', async () => {
     const key = createKey()
     const fetcherWithToken = jest.fn(async token => {
@@ -433,6 +670,47 @@ describe('useSWR - refresh', () => {
     screen.getByText('count: 3')
     await act(() => advanceTimers(1000)) // updated after 3s
     screen.getByText('count: 4')
+  })
+
+  it('should pass updated data to refreshInterval, when refreshInterval is constant function', async () => {
+    let count = 1
+
+    // constant function
+    const refreshInterval = jest.fn(updatedCount => {
+      return updatedCount > 5 ? 0 : 1000
+    })
+
+    const key = createKey()
+    function Page() {
+      // constant function
+      // const refreshInterval = useCallback((updatedCount) => {
+      //   return updatedCount > 5 ? 0 : 1000
+      // }, [])
+
+      const { data } = useSWR(key, () => count++, {
+        refreshInterval,
+        dedupingInterval: 100
+      })
+      return <div>count: {data}</div>
+    }
+
+    renderWithConfig(<Page />)
+
+    // hydration
+    screen.getByText('count:')
+
+    // mount
+    await screen.findByText('count: 1')
+
+    await act(() => advanceTimers(1000))
+    screen.getByText('count: 2')
+    expect(refreshInterval).toHaveBeenLastCalledWith(2)
+    await act(() => advanceTimers(1000))
+    screen.getByText('count: 3')
+    expect(refreshInterval).toHaveBeenLastCalledWith(3)
+    await act(() => advanceTimers(1000))
+    screen.getByText('count: 4')
+    expect(refreshInterval).toHaveBeenLastCalledWith(4)
   })
 
   it('should disable refresh if function returns 0', async () => {

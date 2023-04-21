@@ -1,6 +1,5 @@
 import type { Equal, Expect } from '@type-challenges/utils'
 import useSWR, { useSWRConfig } from 'swr'
-
 import type {
   MutatorFn,
   Key,
@@ -8,7 +7,7 @@ import type {
   Mutator,
   MutatorWrapper,
   Arguments
-} from '../../_internal/types'
+} from 'swr/_internal'
 import { expectType } from './utils'
 
 type Case1<Data = any> = MutatorFn<Data>

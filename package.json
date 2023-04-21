@@ -1,6 +1,6 @@
 {
   "name": "swr",
-  "version": "2.0.0-beta.6",
+  "version": "2.1.3",
   "description": "React Hooks library for remote data fetching",
   "keywords": [
     "swr",
@@ -10,76 +10,76 @@
     "cache",
     "fetch"
   ],
-  "packageManager": "pnpm@7.1.0",
+  "packageManager": "pnpm@7.26.1",
   "main": "./core/dist/index.js",
   "module": "./core/dist/index.esm.js",
-  "types": "./core/dist/core/index.d.ts",
+  "types": "./core/dist/index.d.ts",
   "exports": {
     "./package.json": "./package.json",
     ".": {
+      "types": "./core/dist/index.d.ts",
       "import": "./core/dist/index.mjs",
       "module": "./core/dist/index.esm.js",
-      "require": "./core/dist/index.js",
-      "types": "./core/dist/core/index.d.ts"
+      "require": "./core/dist/index.js"
     },
     "./infinite": {
+      "types": "./infinite/dist/infinite/index.d.ts",
       "import": "./infinite/dist/index.mjs",
       "module": "./infinite/dist/index.esm.js",
-      "require": "./infinite/dist/index.js",
-      "types": "./infinite/dist/infinite/index.d.ts"
+      "require": "./infinite/dist/index.js"
     },
     "./immutable": {
+      "types": "./immutable/dist/immutable/index.d.ts",
       "import": "./immutable/dist/index.mjs",
       "module": "./immutable/dist/index.esm.js",
-      "require": "./immutable/dist/index.js",
-      "types": "./immutable/dist/immutable/index.d.ts"
+      "require": "./immutable/dist/index.js"
+    },
+    "./subscription": {
+      "types": "./subscription/dist/index.d.ts",
+      "import": "./subscription/dist/index.mjs",
+      "module": "./subscription/dist/index.esm.js",
+      "require": "./subscription/dist/index.js"
     },
     "./mutation": {
+      "types": "./mutation/dist/mutation/index.d.ts",
       "import": "./mutation/dist/index.mjs",
       "module": "./mutation/dist/index.esm.js",
-      "require": "./mutation/dist/index.js",
-      "types": "./mutation/dist/mutation/index.d.ts"
+      "require": "./mutation/dist/index.js"
     },
     "./_internal": {
+      "types": "./_internal/dist/index.d.ts",
       "import": "./_internal/dist/index.mjs",
       "module": "./_internal/dist/index.esm.js",
-      "require": "./_internal/dist/index.js",
-      "types": "./_internal/dist/_internal/index.d.ts"
+      "require": "./_internal/dist/index.js"
     }
   },
   "files": [
-    "core/dist/**",
-    "infinite/dist/**",
-    "immutable/dist/**",
-    "mutation/dist/**",
-    "_internal/dist/**",
+    "core/dist/**/*.{js,d.ts,mjs}",
+    "infinite/dist/**/*.{js,d.ts,mjs}",
+    "immutable/dist/**/*.{js,d.ts,mjs}",
+    "mutation/dist/**/*.{js,d.ts,mjs}",
+    "_internal/dist/**/*.{js,d.ts,mjs}",
+    "subscription/dist/*.{js,d.ts,mjs}",
     "core/package.json",
     "infinite/package.json",
     "immutable/package.json",
     "mutation/package.json",
     "_internal/package.json",
-    "package.json"
+    "subscription/package.json"
   ],
   "repository": "github:vercel/swr",
   "homepage": "https://swr.vercel.app",
   "license": "MIT",
   "scripts": {
-    "csb:install": "pnpm i -g pnpm@7",
-    "csb:build": "pnpm install && pnpm build",
-    "clean": "pnpm -r run clean",
+    "prepare": "husky install",
+    "csb:install": "pnpm install",
+    "csb:build": "pnpm build",
+    "clean": "pnpm -r run clean && rimraf playwright-report test-result",
     "watch": "pnpm -r run watch",
-    "build": "pnpm -r run build",
+    "build": "pnpm build-package _internal && pnpm build-package core && pnpm build-package infinite && pnpm build-package immutable && pnpm build-package mutation && pnpm build-package subscription",
+    "build:e2e": "pnpm next build e2e/site -- --profile",
+    "build-package": "bunchee index.ts --cwd",
     "types:check": "pnpm -r run types:check",
-    "watch:core": "pnpm --filter=\"./core\" run watch",
-    "watch:infinite": "pnpm --filter=\"./inifinite\" run watch",
-    "watch:immutable": "pnpm --filter=\"./immutable\" run watch",
-    "watch:mutation": "pnpm --filter=\"./mutation\" run watch",
-    "watch:internal": "pnpm --filter=\"./_internal\" run watch",
-    "build:core": "pnpm --filter=\"./core\" build",
-    "build:infinite": "pnpm --filter=\"./infinite\" build",
-    "build:immutable": "pnpm --filter=\"./immutable\" build",
-    "build:mutation": "pnpm --filter=\"./mutation\" build",
-    "build:internal": "pnpm --filter=\"./_internal\" build",
     "prepublishOnly": "pnpm clean && pnpm build",
     "publish-beta": "pnpm publish --tag beta",
     "format": "prettier --write ./**/*.{ts,tsx}",
@@ -87,51 +87,47 @@
     "lint:fix": "pnpm lint --fix",
     "coverage": "jest --coverage",
     "test-typing": "tsc --noEmit -p test/type/tsconfig.json && tsc --noEmit -p test/tsconfig.json",
-    "test": "jest"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged && pnpm types:check"
-    }
+    "test": "jest",
+    "test:e2e": "playwright test",
+    "run-all-checks": "pnpm types:check && pnpm lint && pnpm test && pnpm test-typing"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
       "eslint --fix --cache",
-      "prettier --write",
-      "git add"
+      "prettier --write"
     ]
   },
   "devDependencies": {
-    "@swc/core": "1.2.186",
-    "@swc/jest": "0.2.21",
-    "@testing-library/jest-dom": "^5.16.4",
-    "@testing-library/react": "^13.1.1",
+    "@playwright/test": "^1.30.0",
+    "@swc/core": "^1.3.29",
+    "@swc/jest": "0.2.24",
+    "@testing-library/jest-dom": "^5.16.5",
+    "@testing-library/react": "^13.4.0",
     "@type-challenges/utils": "0.1.1",
-    "@types/jest": "^27.5.1",
-    "@types/node": "^17.0.34",
-    "@types/react": "^18.0.9",
+    "@types/jest": "^29.4.0",
+    "@types/node": "^18.11.18",
+    "@types/react": "^18.0.27",
     "@types/use-sync-external-store": "^0.0.3",
-    "@typescript-eslint/eslint-plugin": "5.25.0",
-    "@typescript-eslint/parser": "5.25.0",
-    "bunchee": "1.8.5",
-    "eslint": "8.15.0",
-    "eslint-config-prettier": "8.5.0",
-    "eslint-plugin-jest-dom": "4.0.1",
-    "eslint-plugin-react": "7.30.0",
-    "eslint-plugin-react-hooks": "4.5.0",
-    "eslint-plugin-testing-library": "5.5.0",
-    "husky": "2.4.1",
-    "jest": "28.1.0",
-    "jest-environment-jsdom": "28.1.0",
-    "lint-staged": "8.2.1",
-    "next": "^12.1.6",
-    "prettier": "2.6.2",
-    "react": "^18.1.0",
-    "react-dom": "^18.1.0",
-    "rimraf": "3.0.2",
+    "@typescript-eslint/eslint-plugin": "5.49.0",
+    "@typescript-eslint/parser": "5.49.0",
+    "bunchee": "3.0.1",
+    "eslint": "8.32.0",
+    "eslint-config-prettier": "8.6.0",
+    "eslint-plugin-jest-dom": "4.0.3",
+    "eslint-plugin-react": "7.32.1",
+    "eslint-plugin-react-hooks": "4.6.0",
+    "eslint-plugin-testing-library": "5.10.0",
+    "husky": "8.0.3",
+    "jest": "29.4.1",
+    "jest-environment-jsdom": "29.4.1",
+    "lint-staged": "13.1.0",
+    "next": "^13.1.6",
+    "prettier": "2.8.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "rimraf": "4.1.2",
     "swr": "workspace:*",
-    "tslib": "2.4.0",
-    "typescript": "4.7.4"
+    "typescript": "4.9.4"
   },
   "peerDependencies": {
     "react": "^16.11.0 || ^17.0.0 || ^18.0.0"
@@ -143,9 +139,6 @@
     "singleQuote": true,
     "arrowParens": "avoid",
     "trailingComma": "none"
-  },
-  "engines": {
-    "pnpm": "7"
   },
   "dependencies": {
     "use-sync-external-store": "^1.2.0"

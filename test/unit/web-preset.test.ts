@@ -12,7 +12,6 @@ function createEventTarget() {
 }
 
 function runTests(propertyName) {
-  let webPreset
   let initFocus
   const eventName =
     propertyName === 'window' ? FOCUS_EVENT : VISIBILITYCHANGE_EVENT
@@ -45,8 +44,7 @@ function runTests(propertyName) {
         globalSpy.document.mockImplementation(() => target)
       }
 
-      webPreset = require('../../_internal/utils/web-preset')
-      initFocus = webPreset.defaultConfigOptions.initFocus
+      initFocus = require('swr/_internal').defaultConfigOptions.initFocus
 
       const fn = jest.fn()
       const release = initFocus(fn) as () => void
@@ -71,8 +69,7 @@ function runTests(propertyName) {
         globalSpy.document.mockImplementation(() => undefined)
       }
 
-      webPreset = require('../../_internal/utils/web-preset')
-      initFocus = webPreset.defaultConfigOptions.initFocus
+      initFocus = require('swr/_internal').defaultConfigOptions.initFocus
 
       const fn = jest.fn()
       const release = initFocus(fn) as () => void

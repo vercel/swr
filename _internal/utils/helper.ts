@@ -1,7 +1,8 @@
 import { SWRGlobalState } from './global-state'
-import type { Key, Cache, State, GlobalState } from '../types'
+import type { Cache, State, GlobalState } from '../types'
 
 const EMPTY_CACHE = {}
+const INITIAL_CACHE: Record<string, any> = {}
 export const noop = () => {}
 
 // Using noop() as the undefined value as undefined can be replaced
@@ -18,7 +19,7 @@ export const isFunction = <
 >(
   v: unknown
 ): v is T => typeof v == 'function'
-export const mergeObjects = (a: any, b?: any) => OBJECT.assign({}, a, b)
+export const mergeObjects = (a: any, b?: any) => ({ ...a, ...b })
 
 const STR_UNDEFINED = 'undefined'
 
@@ -30,18 +31,37 @@ export const hasRequestAnimationFrame = () =>
 
 export const createCacheHelper = <Data = any, T = State<Data, any>>(
   cache: Cache,
-  key: Key
+  key: string | undefined
 ) => {
   const state = SWRGlobalState.get(cache) as GlobalState
   return [
     // Getter
-    () => (cache.get(key) || EMPTY_CACHE) as T,
+    () => ((!isUndefined(key) && cache.get(key)) || EMPTY_CACHE) as T,
     // Setter
     (info: T) => {
-      const prev = cache.get(key)
-      state[5](key as string, mergeObjects(prev, info), prev || EMPTY_CACHE)
+      if (!isUndefined(key)) {
+        const prev = cache.get(key)
+
+        // Before writing to the store, we keep the value in the initial cache
+        // if it's not there yet.
+        if (!(key in INITIAL_CACHE)) {
+          INITIAL_CACHE[key] = prev
+        }
+
+        state[5](key, mergeObjects(prev, info), prev || EMPTY_CACHE)
+      }
     },
     // Subscriber
-    state[6]
+    state[6],
+    // Get server cache snapshot
+    () => {
+      if (!isUndefined(key)) {
+        // If the cache was updated on the client, we return the stored initial value.
+        if (key in INITIAL_CACHE) return INITIAL_CACHE[key]
+      }
+
+      // If we haven't done any client-side updates, we return the current value.
+      return ((!isUndefined(key) && cache.get(key)) || EMPTY_CACHE) as T
+    }
   ] as const
 }

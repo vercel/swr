@@ -16,7 +16,7 @@ export default function Home({ fallbackData }) {
           ? data.results.map(pokemon => (
               <p key={pokemon.name}>
                 <Link href="/[pokemon]" as={`/${pokemon.name}`}>
-                  <a>{pokemon.name}</a>
+                  {pokemon.name}
                 </Link>
               </p>
             ))

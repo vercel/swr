@@ -1,5 +1,5 @@
-import { act, screen } from '@testing-library/react'
-import React, { Suspense } from 'react'
+import { act, fireEvent, screen } from '@testing-library/react'
+import React, { Suspense, useEffect, useState } from 'react'
 import useSWR, { preload, useSWRConfig } from 'swr'
 import { createKey, createResponse, renderWithConfig, sleep } from './utils'
 
@@ -46,6 +46,41 @@ describe('useSWR - preload', () => {
     expect(count).toBe(1)
 
     renderWithConfig(<Page />)
+    await screen.findByText('data:foo')
+    expect(count).toBe(1)
+  })
+
+  it('should be able to prealod resources in effects', async () => {
+    const key = createKey()
+    let count = 0
+
+    const fetcher = () => {
+      ++count
+      return createResponse('foo')
+    }
+
+    function Comp() {
+      const { data } = useSWR(key, fetcher)
+      return <div>data:{data}</div>
+    }
+
+    function Page() {
+      const [show, setShow] = useState(false)
+      useEffect(() => {
+        preload(key, fetcher)
+      }, [])
+      return show ? (
+        <Comp />
+      ) : (
+        <button onClick={() => setShow(true)}>click</button>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    expect(count).toBe(1)
+
+    fireEvent.click(screen.getByText('click'))
+
     await screen.findByText('data:foo')
     expect(count).toBe(1)
   })
@@ -181,5 +216,17 @@ describe('useSWR - preload', () => {
     await screen.findByText('data:foo')
     expect(fetcherCount).toBe(1)
     expect(renderCount).toBe(3)
+  })
+
+  it('should pass serialize key to fetcher', async () => {
+    const key = createKey()
+    let calledWith: string
+
+    const fetcher = (args: string) => {
+      calledWith = args
+    }
+
+    preload(() => key, fetcher)
+    expect(calledWith).toBe(key)
   })
 })

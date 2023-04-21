@@ -113,6 +113,29 @@ describe('useSWR', () => {
     expect(fetch).toHaveBeenCalled()
   })
 
+  it('initial loading state should be false when revalidation is disabled with fallbackData', async () => {
+    const fetch = jest.fn(() => 'SWR')
+
+    const key = createKey()
+    function Page() {
+      const { data, isLoading, isValidating } = useSWR(key, fetch, {
+        revalidateIfStale: false,
+        revalidateOnFocus: false,
+        revalidateOnReconnect: false,
+        fallbackData: 'Fallback'
+      })
+      return (
+        <div>
+          {data}, {isLoading.toString()} , {isValidating.toString()}
+        </div>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('Fallback, false , false')
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
   it('should dedupe requests by default', async () => {
     const fetcher = jest.fn(() => createResponse('SWR'))
 
@@ -469,5 +492,104 @@ describe('useSWR', () => {
     await screen.findAllByText(key)
     await act(() => sleep(150))
     expect(count).toBe(2)
+  })
+
+  // Test for https://swr.vercel.app/docs/advanced/performance#dependency-collection
+  it('should render four times in the worst case', async () => {
+    let isFirstFetch = true
+    const fetcher = async () => {
+      if (isFirstFetch) {
+        isFirstFetch = false
+        throw new Error('error')
+      }
+      return 'value'
+    }
+    const key = createKey()
+
+    const logs = []
+
+    function Page() {
+      const { data, error, isLoading, isValidating } = useSWR(key, fetcher, {
+        errorRetryInterval: 10
+      })
+      logs.push({
+        data,
+        error,
+        isLoading,
+        isValidating
+      })
+      if (isLoading) return <p>loading</p>
+      return <p>data:{data}</p>
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data:value')
+
+    expect(logs).toMatchInlineSnapshot(`
+      [
+        {
+          "data": undefined,
+          "error": undefined,
+          "isLoading": true,
+          "isValidating": true,
+        },
+        {
+          "data": undefined,
+          "error": [Error: error],
+          "isLoading": false,
+          "isValidating": false,
+        },
+        {
+          "data": undefined,
+          "error": [Error: error],
+          "isLoading": true,
+          "isValidating": true,
+        },
+        {
+          "data": "value",
+          "error": undefined,
+          "isLoading": false,
+          "isValidating": false,
+        },
+      ]
+    `)
+  })
+
+  // Test for https://swr.vercel.app/docs/advanced/performance#dependency-collection
+  it('should render only two times in the best case', async () => {
+    let isFirstFetch = true
+    const fetcher = async () => {
+      if (isFirstFetch) {
+        isFirstFetch = false
+        throw new Error('error')
+      }
+      return 'value'
+    }
+    const key = createKey()
+
+    const logs = []
+
+    function Page() {
+      const { data } = useSWR(key, fetcher, {
+        errorRetryInterval: 10
+      })
+      logs.push({ data })
+      if (!data) return <p>loading</p>
+      return <p>data:{data}</p>
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data:value')
+
+    expect(logs).toMatchInlineSnapshot(`
+      [
+        {
+          "data": undefined,
+        },
+        {
+          "data": "value",
+        },
+      ]
+    `)
   })
 })

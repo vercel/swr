@@ -30,7 +30,7 @@ export default function Pokemon({ pokemon, fallbackData }) {
       <br />
       <br />
       <Link href="/">
-        <a>Back</a>
+        Back
       </Link>
     </div>
   )
