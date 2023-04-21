@@ -21,7 +21,7 @@ const [onWindowEvent, offWindowEvent] =
     : [noop, noop]
 
 const isVisible = () => {
-  const visibilityState = isDocumentDefined && document.visibilityState
+  const visibilityState = isDocumentDefined && document?.visibilityState
   return isUndefined(visibilityState) || visibilityState !== 'hidden'
 }
 
