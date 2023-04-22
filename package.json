@@ -106,7 +106,7 @@
     "@type-challenges/utils": "0.1.1",
     "@types/jest": "^29.4.0",
     "@types/node": "^18.11.18",
-    "@types/react": "^18.0.27",
+    "@types/react": "^18.0.38",
     "@types/use-sync-external-store": "^0.0.3",
     "@typescript-eslint/eslint-plugin": "5.49.0",
     "@typescript-eslint/parser": "5.49.0",
