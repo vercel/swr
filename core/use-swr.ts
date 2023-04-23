@@ -172,7 +172,18 @@ export const useSWRHandler = <Data = any, Error = any>(
       () => {
         const newSnapshot = getSelectedCache(getCache())
         const compareResult = isEqual(newSnapshot, memorizedSnapshot)
+
         if (compareResult) {
+          // Mentally, we should always return the `memorizedSnapshot` here
+          // as there's no change between the new and old snapshots.
+          // However, since the `isEqual` function only compares selected fields,
+          // the values of the unselected fields might be changed. That's
+          // simply because we didn't track them.
+          // To support the case in https://github.com/vercel/swr/pull/2576,
+          // we need to update these fields in the `memorizedSnapshot` too
+          // with direct mutations to ensure the snapshot is always up-to-date
+          // even for the unselected fields, but only trigger re-renders when
+          // the selected fields are changed.
           memorizedSnapshot.data = newSnapshot.data
           memorizedSnapshot.isLoading = newSnapshot.isLoading
           memorizedSnapshot.isValidating = newSnapshot.isValidating
