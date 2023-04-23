@@ -592,4 +592,36 @@ describe('useSWR', () => {
       ]
     `)
   })
+
+  // Test for https://github.com/vercel/swr/issues/2446
+  it('should return latest data synchronously after accessing getter', async () => {
+    const fetcher = async () => {
+      await sleep(10)
+      return 'value'
+    }
+    const key = createKey()
+
+    const logs = []
+
+    function Page() {
+      const swr = useSWR(key, fetcher)
+      const [show, setShow] = useState(false)
+      useEffect(() => {
+        setTimeout(() => {
+          setShow(true)
+        }, 100)
+      }, [])
+      if (!show) return null
+      logs.push(swr.data)
+      return <p>data:{swr.data}</p>
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data:value')
+    expect(logs).toMatchInlineSnapshot(`
+      [
+        "value",
+      ]
+    `)
+  })
 })

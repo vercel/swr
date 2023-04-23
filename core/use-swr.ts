@@ -102,32 +102,29 @@ export const useSWRHandler = <Data = any, Error = any>(
     >(cache, key)
 
   const stateDependencies = useRef<StateDependencies>({}).current
-
   const fallback = isUndefined(fallbackData)
     ? config.fallback[key]
     : fallbackData
 
   const isEqual = (prev: State<Data, any>, current: State<Data, any>) => {
-    let equal = true
     for (const _ in stateDependencies) {
       const t = _ as keyof StateDependencies
       if (t === 'data') {
-        if (!compare(current[t], prev[t])) {
-          if (isUndefined(prev[t])) {
-            if (!compare(current[t], returnedData)) {
-              equal = false
-            }
-          } else {
-            equal = false
+        if (!compare(prev[t], current[t])) {
+          if (!isUndefined(prev[t])) {
+            return false
+          }
+          if (!compare(returnedData, current[t])) {
+            return false
           }
         }
       } else {
         if (current[t] !== prev[t]) {
-          equal = false
+          return false
         }
       }
     }
-    return equal
+    return true
   }
 
   const getSnapshot = useMemo(() => {
@@ -174,9 +171,28 @@ export const useSWRHandler = <Data = any, Error = any>(
     return [
       () => {
         const newSnapshot = getSelectedCache(getCache())
-        return isEqual(newSnapshot, memorizedSnapshot)
-          ? memorizedSnapshot
-          : (memorizedSnapshot = newSnapshot)
+        const compareResult = isEqual(newSnapshot, memorizedSnapshot)
+
+        if (compareResult) {
+          // Mentally, we should always return the `memorizedSnapshot` here
+          // as there's no change between the new and old snapshots.
+          // However, since the `isEqual` function only compares selected fields,
+          // the values of the unselected fields might be changed. That's
+          // simply because we didn't track them.
+          // To support the case in https://github.com/vercel/swr/pull/2576,
+          // we need to update these fields in the `memorizedSnapshot` too
+          // with direct mutations to ensure the snapshot is always up-to-date
+          // even for the unselected fields, but only trigger re-renders when
+          // the selected fields are changed.
+          memorizedSnapshot.data = newSnapshot.data
+          memorizedSnapshot.isLoading = newSnapshot.isLoading
+          memorizedSnapshot.isValidating = newSnapshot.isValidating
+          memorizedSnapshot.error = newSnapshot.error
+          return memorizedSnapshot
+        } else {
+          memorizedSnapshot = newSnapshot
+          return newSnapshot
+        }
       },
       () => serverSnapshot
     ]
