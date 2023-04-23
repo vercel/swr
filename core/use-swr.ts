@@ -21,7 +21,6 @@ import {
   internalMutate,
   revalidateEvents,
   mergeObjects
-  // stableHash
 } from 'swr/_internal'
 import type {
   State,
@@ -103,16 +102,11 @@ export const useSWRHandler = <Data = any, Error = any>(
     >(cache, key)
 
   const stateDependencies = useRef<StateDependencies>({}).current
-  const latestComparedState = useRef<State<Data, any>>({})
-
   const fallback = isUndefined(fallbackData)
     ? config.fallback[key]
     : fallbackData
 
-  const compareSelectedSnapshots = (
-    prev: State<Data, any>,
-    current: State<Data, any>
-  ) => {
+  const isEqual = (prev: State<Data, any>, current: State<Data, any>) => {
     for (const _ in stateDependencies) {
       const t = _ as keyof StateDependencies
       if (t === 'data') {
@@ -120,7 +114,7 @@ export const useSWRHandler = <Data = any, Error = any>(
           if (!isUndefined(prev[t])) {
             return false
           }
-          if (!compare(cachedDataWithLaggyAndFallback, current[t])) {
+          if (!compare(returnedData, current[t])) {
             return false
           }
         }
@@ -130,13 +124,6 @@ export const useSWRHandler = <Data = any, Error = any>(
         }
       }
     }
-
-    // Since we only compare the selected fields, even if the states are
-    // considered as equal they might still differ. When the tracked
-    // dependencies change, we need to access the state synchronously as it's
-    // too late to trigger an external state change.
-    latestComparedState.current = current
-
     return true
   }
 
@@ -154,27 +141,28 @@ export const useSWRHandler = <Data = any, Error = any>(
     })()
 
     // Get the cache and merge it with expected states.
-    const getFullState = (state: ReturnType<typeof getCache>) => {
+    const getSelectedCache = (state: ReturnType<typeof getCache>) => {
       // We only select the needed fields from the state.
-      let snapshot = mergeObjects(state)
+      const snapshot = mergeObjects(state)
       delete snapshot._k
 
-      if (shouldStartRequest) {
-        snapshot = {
-          isValidating: true,
-          isLoading: true,
-          ...snapshot
-        }
+      if (!shouldStartRequest) {
+        return snapshot
       }
 
-      return snapshot
+      return {
+        isValidating: true,
+        isLoading: true,
+        ...snapshot
+      }
     }
-
     const cachedData = getCache()
     const initialData = getInitialCache()
-    const clientSnapshot = getFullState(cachedData)
+    const clientSnapshot = getSelectedCache(cachedData)
     const serverSnapshot =
-      cachedData === initialData ? clientSnapshot : getFullState(initialData)
+      cachedData === initialData
+        ? clientSnapshot
+        : getSelectedCache(initialData)
     // To make sure that we are returning the same object reference to avoid
     // unnecessary re-renders, we keep the previous snapshot and use deep
     // comparison to check if we need to return a new one.
@@ -182,12 +170,18 @@ export const useSWRHandler = <Data = any, Error = any>(
 
     return [
       () => {
-        const newSnapshot = getFullState(getCache())
-
-        if (!compareSelectedSnapshots(memorizedSnapshot, newSnapshot)) {
+        const newSnapshot = getSelectedCache(getCache())
+        const compareResult = isEqual(newSnapshot, memorizedSnapshot)
+        if (compareResult) {
+          memorizedSnapshot.data = newSnapshot.data
+          memorizedSnapshot.isLoading = newSnapshot.isLoading
+          memorizedSnapshot.isValidating = newSnapshot.isValidating
+          memorizedSnapshot.error = newSnapshot.error
+          return memorizedSnapshot
+        } else {
           memorizedSnapshot = newSnapshot
+          return newSnapshot
         }
-        return memorizedSnapshot
       },
       () => serverSnapshot
     ]
@@ -201,7 +195,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         subscribeCache(
           key,
           (current: State<Data, any>, prev: State<Data, any>) => {
-            if (!compareSelectedSnapshots(prev, current)) callback()
+            if (!isEqual(prev, current)) callback()
           }
         ),
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -223,10 +217,11 @@ export const useSWRHandler = <Data = any, Error = any>(
 
   // Use a ref to store previously returned data. Use the initial data as its initial value.
   const laggyDataRef = useRef(data)
-  const cachedDataWithLaggyAndFallback = keepPreviousData
-    ? !isUndefined(cachedData)
-      ? cachedData
-      : laggyDataRef.current
+
+  const returnedData = keepPreviousData
+    ? isUndefined(cachedData)
+      ? laggyDataRef.current
+      : cachedData
     : data
 
   // - Suspense mode and there's stale data for the initial render.
@@ -261,24 +256,10 @@ export const useSWRHandler = <Data = any, Error = any>(
     isInitialMount &&
     shouldDoInitialRevalidation
   )
-
-  const currentLatestComparedState = latestComparedState.current
-  const returnData = !isUndefined(currentLatestComparedState.data)
-    ? currentLatestComparedState.data
-    : cachedDataWithLaggyAndFallback
-  const returnError = !isUndefined(currentLatestComparedState.error)
-    ? currentLatestComparedState.error
-    : error
-  const returnIsValidating = !isUndefined(
-    currentLatestComparedState.isValidating
-  )
-    ? currentLatestComparedState.isValidating
-    : isUndefined(cached.isValidating)
+  const isValidating = isUndefined(cached.isValidating)
     ? defaultValidatingState
     : cached.isValidating
-  const returnIsLoading = !isUndefined(currentLatestComparedState.isLoading)
-    ? currentLatestComparedState.isLoading
-    : isUndefined(cached.isLoading)
+  const isLoading = isUndefined(cached.isLoading)
     ? defaultValidatingState
     : cached.isLoading
 
@@ -651,7 +632,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   }, [refreshInterval, refreshWhenHidden, refreshWhenOffline, key])
 
   // Display debug info in React DevTools.
-  useDebugValue(returnData)
+  useDebugValue(returnedData)
 
   // In Suspense mode, we can't return the empty `data` state.
   // If there is an `error`, the `error` needs to be thrown to the error boundary.
@@ -676,19 +657,19 @@ export const useSWRHandler = <Data = any, Error = any>(
     mutate: boundMutate,
     get data() {
       stateDependencies.data = true
-      return returnData
+      return returnedData
     },
     get error() {
       stateDependencies.error = true
-      return returnError
+      return error
     },
     get isValidating() {
       stateDependencies.isValidating = true
-      return returnIsValidating
+      return isValidating
     },
     get isLoading() {
       stateDependencies.isLoading = true
-      return returnIsLoading
+      return isLoading
     }
   } as SWRResponse<Data, Error>
 }
