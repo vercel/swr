@@ -113,6 +113,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     prev: State<Data, any>,
     current: State<Data, any>
   ) => {
+    latestComparedState.current = current
     for (const _ in stateDependencies) {
       const t = _ as keyof StateDependencies
       if (t === 'data') {
@@ -120,7 +121,7 @@ export const useSWRHandler = <Data = any, Error = any>(
           if (!isUndefined(prev[t])) {
             return false
           }
-          if (!compare(cachedDataWithLaggyAndFallback, current[t])) {
+          if (!compare(returnData, current[t])) {
             return false
           }
         }
@@ -135,7 +136,6 @@ export const useSWRHandler = <Data = any, Error = any>(
     // considered as equal they might still differ. When the tracked
     // dependencies change, we need to access the state synchronously as it's
     // too late to trigger an external state change.
-    latestComparedState.current = current
 
     return true
   }
@@ -195,7 +195,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   }, [cache, key])
 
   // Get the current state that SWR should return.
-  const cached = useSyncExternalStore(
+  useSyncExternalStore(
     useCallback(
       (callback: () => void) =>
         subscribeCache(
@@ -216,18 +216,14 @@ export const useSWRHandler = <Data = any, Error = any>(
   const hasRevalidator =
     EVENT_REVALIDATORS[key] && EVENT_REVALIDATORS[key].length > 0
 
-  const cachedData = cached.data
+  const currentLatestComparedState = latestComparedState.current
+  const cachedData = currentLatestComparedState.data
 
   const data = isUndefined(cachedData) ? fallback : cachedData
-  const error = cached.error
+  const error = currentLatestComparedState.error
 
   // Use a ref to store previously returned data. Use the initial data as its initial value.
   const laggyDataRef = useRef(data)
-  const cachedDataWithLaggyAndFallback = keepPreviousData
-    ? !isUndefined(cachedData)
-      ? cachedData
-      : laggyDataRef.current
-    : data
 
   // - Suspense mode and there's stale data for the initial render.
   // - Not suspense mode and there is no fallback data and `revalidateIfStale` is enabled.
@@ -261,26 +257,21 @@ export const useSWRHandler = <Data = any, Error = any>(
     isInitialMount &&
     shouldDoInitialRevalidation
   )
-
-  const currentLatestComparedState = latestComparedState.current
-  const returnData = !isUndefined(currentLatestComparedState.data)
-    ? currentLatestComparedState.data
-    : cachedDataWithLaggyAndFallback
-  const returnError = !isUndefined(currentLatestComparedState.error)
-    ? currentLatestComparedState.error
-    : error
-  const returnIsValidating = !isUndefined(
+  const returnData = keepPreviousData
+    ? isUndefined(cachedData)
+      ? laggyDataRef.current
+      : cachedData
+    : data
+  const returnError = error
+  const returnIsValidating = isUndefined(
     currentLatestComparedState.isValidating
   )
-    ? currentLatestComparedState.isValidating
-    : isUndefined(cached.isValidating)
     ? defaultValidatingState
-    : cached.isValidating
-  const returnIsLoading = !isUndefined(currentLatestComparedState.isLoading)
-    ? currentLatestComparedState.isLoading
-    : isUndefined(cached.isLoading)
+    : currentLatestComparedState.isValidating
+
+  const returnIsLoading = isUndefined(currentLatestComparedState.isLoading)
     ? defaultValidatingState
-    : cached.isLoading
+    : currentLatestComparedState.isLoading
 
   // The revalidation function is a carefully crafted wrapper of the original
   // `fetcher`, to correctly handle the many edge cases.
