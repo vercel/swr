@@ -116,11 +116,11 @@ export const useSWRHandler = <Data = any, Error = any>(
     for (const _ in stateDependencies) {
       const t = _ as keyof StateDependencies
       if (t === 'data') {
-        if (!compare(current[t], prev[t])) {
+        if (!compare(prev[t], current[t])) {
           if (!isUndefined(prev[t])) {
             return false
           }
-          if (!compare(current[t], cachedDataWithLaggyAndFallback)) {
+          if (!compare(cachedDataWithLaggyAndFallback, current[t])) {
             return false
           }
         }

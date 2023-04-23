@@ -308,32 +308,32 @@ describe('useSWR - refresh', () => {
           },
         ],
         [
+          undefined,
           {
             "timestamp": 1,
             "version": "1.0",
           },
-          undefined,
         ],
         [
+          undefined,
           {
             "timestamp": 1,
             "version": "1.0",
           },
-          undefined,
         ],
         [
+          undefined,
           {
             "timestamp": 1,
             "version": "1.0",
           },
-          undefined,
         ],
         [
+          undefined,
           {
             "timestamp": 1,
             "version": "1.0",
           },
-          undefined,
         ],
         [
           {
@@ -384,32 +384,32 @@ describe('useSWR - refresh', () => {
           },
         ],
         [
+          undefined,
           {
             "timestamp": 1,
             "version": "1.0",
           },
-          undefined,
         ],
         [
+          undefined,
           {
             "timestamp": 1,
             "version": "1.0",
           },
-          undefined,
         ],
         [
+          undefined,
           {
             "timestamp": 1,
             "version": "1.0",
           },
-          undefined,
         ],
         [
+          undefined,
           {
             "timestamp": 1,
             "version": "1.0",
           },
-          undefined,
         ],
         [
           {
@@ -463,21 +463,21 @@ describe('useSWR - refresh', () => {
         ],
         [
           {
-            "timestamp": 2,
+            "timestamp": 1,
             "version": "1.0",
           },
           {
-            "timestamp": 1,
+            "timestamp": 2,
             "version": "1.0",
           },
         ],
         [
           {
-            "timestamp": 2,
+            "timestamp": 1,
             "version": "1.0",
           },
           {
-            "timestamp": 1,
+            "timestamp": 2,
             "version": "1.0",
           },
         ],
