@@ -107,26 +107,24 @@ export const useSWRHandler = <Data = any, Error = any>(
     : fallbackData
 
   const isEqual = (prev: State<Data, any>, current: State<Data, any>) => {
-    let equal = true
     for (const _ in stateDependencies) {
       const t = _ as keyof StateDependencies
       if (t === 'data') {
         if (!compare(prev[t], current[t])) {
-          if (isUndefined(prev[t])) {
-            if (!compare(returnedData, current[t])) {
-              equal = false
-            }
-          } else {
-            equal = false
+          if (!isUndefined(prev[t])) {
+            return false
+          }
+          if (!compare(returnedData, current[t])) {
+            return false
           }
         }
       } else {
         if (current[t] !== prev[t]) {
-          equal = false
+          return false
         }
       }
     }
-    return equal
+    return true
   }
 
   const getSnapshot = useMemo(() => {
