@@ -88,6 +88,7 @@
     "coverage": "jest --coverage",
     "test-typing": "tsc --noEmit -p test/type/tsconfig.json && tsc --noEmit -p test/tsconfig.json",
     "test": "jest",
+    "test:build": "jest --config jest.config.build.js",
     "test:e2e": "playwright test",
     "run-all-checks": "pnpm types:check && pnpm lint && pnpm test && pnpm test-typing"
   },
