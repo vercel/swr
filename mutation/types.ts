@@ -31,7 +31,6 @@ export type SWRMutationConfiguration<
     | ((result: Data, currentData: SWRData | undefined) => SWRData)
   optimisticData?: SWRData | ((currentData?: SWRData) => SWRData)
   rollbackOnError?: boolean | ((error: unknown) => boolean)
-  throwOnError?: boolean
   fetcher?: MutationFetcher<Data, ExtraArg, SWRMutationKey>
   onSuccess?: (
     data: Data,
@@ -49,6 +48,83 @@ export type SWRMutationConfiguration<
   ) => void
 }
 
+type RemoveUndefined<T> = T extends undefined ? never : T
+interface TriggerWithArgs<
+  Data = any,
+  Error = any,
+  ExtraArg = never,
+  SWRMutationKey extends Key = Key
+> {
+  <SWRData = Data>(
+    extraArgument: ExtraArg,
+    options?: SWRMutationConfiguration<
+      Data,
+      Error,
+      ExtraArg,
+      SWRMutationKey,
+      SWRData
+    >
+  ): Promise<Data>
+  <SWRData = Data>(
+    extraArgument: ExtraArg,
+    options?: SWRMutationConfiguration<
+      Data,
+      Error,
+      ExtraArg,
+      SWRMutationKey,
+      SWRData
+    > & { throwOnError: true }
+  ): Promise<RemoveUndefined<Data>>
+  <SWRData = Data>(
+    extraArgument: ExtraArg,
+    options?: SWRMutationConfiguration<
+      Data,
+      Error,
+      ExtraArg,
+      SWRMutationKey,
+      SWRData
+    > & { throwOnError: false }
+  ): Promise<Data | undefined>
+}
+
+interface TriggerWithoutArgs<
+  Data = any,
+  Error = any,
+  ExtraArg = never,
+  SWRMutationKey extends Key = Key
+> {
+  <SWRData = Data>(
+    extraArgument?: null,
+    options?: SWRMutationConfiguration<
+      Data,
+      Error,
+      ExtraArg,
+      SWRMutationKey,
+      SWRData
+    >
+  ): Promise<Data>
+  <SWRData = Data>(
+    extraArgument?: null,
+    options?: SWRMutationConfiguration<
+      Data,
+      Error,
+      ExtraArg,
+      SWRMutationKey,
+      SWRData
+    > & { throwOnError: true }
+  ): Promise<RemoveUndefined<Data>>
+  <SWRData = Data>(
+    extraArgument?: null,
+    options?: SWRMutationConfiguration<
+      Data,
+      Error,
+      ExtraArg,
+      SWRMutationKey,
+      SWRData
+    > & { throwOnError: false }
+  ): Promise<Data>
+}
+
 export interface SWRMutationResponse<
   Data = any,
   Error = any,
@@ -64,58 +140,95 @@ export interface SWRMutationResponse<
    * the fetcher, and override the options for the mutation hook.
    */
   trigger: [ExtraArg] extends [never]
-    ? <SWRData = Data>(
-        extraArgument?: null,
-        options?: SWRMutationConfiguration<
-          Data,
-          Error,
-          ExtraArg,
-          SWRMutationKey,
-          SWRData
-        >
-      ) => Promise<Data | undefined>
-    : <SWRData = Data>(
-        extraArgument: ExtraArg,
-        options?: SWRMutationConfiguration<
-          Data,
-          Error,
-          ExtraArg,
-          SWRMutationKey,
-          SWRData
-        >
-      ) => Promise<Data | undefined>
+    ? TriggerWithoutArgs<Data, Error, ExtraArg, SWRMutationKey>
+    : TriggerWithArgs<Data, Error, ExtraArg, SWRMutationKey>
   /**
    * Function to reset the mutation state (`data`, `error`, and `isMutating`).
    */
   reset: () => void
 }
 
-export type SWRMutationHook = <
-  Data = any,
-  Error = any,
-  SWRMutationKey extends Key = Key,
-  ExtraArg = never
->(
-  /**
-   * The key of the resource that will be mutated. It should be the same key
-   * used in the `useSWR` hook so SWR can handle revalidation and race
-   * conditions for that resource.
-   */
-  key: SWRMutationKey,
-  /**
-   * The function to trigger the mutation that accepts the key, extra argument
-   * and options. For example:
-   *
-   * ```jsx
-   * (api, data) => fetch(api, {
-   *   method: 'POST',
-   *   body: JSON.stringify(data)
-   * })
-   * ```
-   */
-  fetcher: MutationFetcher<Data, ExtraArg, SWRMutationKey>,
-  /**
-   * Extra options for the mutation hook.
-   */
-  options?: SWRMutationConfiguration<Data, Error, ExtraArg, SWRMutationKey>
-) => SWRMutationResponse<Data, Error, ExtraArg, SWRMutationKey>
+export interface SWRMutationHook {
+  <Data = any, Error = any, SWRMutationKey extends Key = Key, ExtraArg = never>(
+    /**
+     * The key of the resource that will be mutated. It should be the same key
+     * used in the `useSWR` hook so SWR can handle revalidation and race
+     * conditions for that resource.
+     */
+    key: SWRMutationKey,
+    /**
+     * The function to trigger the mutation that accepts the key, extra argument
+     * and options. For example:
+     *
+     * ```jsx
+     * (api, data) => fetch(api, {
+     *   method: 'POST',
+     *   body: JSON.stringify(data)
+     * })
+     * ```
+     */
+    fetcher: MutationFetcher<Data, ExtraArg, SWRMutationKey>,
+    /**
+     * Extra options for the mutation hook.
+     */
+    options?: SWRMutationConfiguration<Data, Error, ExtraArg, SWRMutationKey>
+  ): SWRMutationResponse<Data, Error, ExtraArg, SWRMutationKey>
+  <Data = any, Error = any, SWRMutationKey extends Key = Key, ExtraArg = never>(
+    /**
+     * The key of the resource that will be mutated. It should be the same key
+     * used in the `useSWR` hook so SWR can handle revalidation and race
+     * conditions for that resource.
+     */
+    key: SWRMutationKey,
+    /**
+     * The function to trigger the mutation that accepts the key, extra argument
+     * and options. For example:
+     *
+     * ```jsx
+     * (api, data) => fetch(api, {
+     *   method: 'POST',
+     *   body: JSON.stringify(data)
+     * })
+     * ```
+     */
+    fetcher: MutationFetcher<Data, ExtraArg, SWRMutationKey>,
+    /**
+     * Extra options for the mutation hook.
+     */
+    options?: SWRMutationConfiguration<
+      Data,
+      Error,
+      ExtraArg,
+      SWRMutationKey
+    > & { throwOnError: false }
+  ): SWRMutationResponse<Data | undefined, Error, ExtraArg, SWRMutationKey>
+  <Data = any, Error = any, SWRMutationKey extends Key = Key, ExtraArg = never>(
+    /**
+     * The key of the resource that will be mutated. It should be the same key
+     * used in the `useSWR` hook so SWR can handle revalidation and race
+     * conditions for that resource.
+     */
+    key: SWRMutationKey,
+    /**
+     * The function to trigger the mutation that accepts the key, extra argument
+     * and options. For example:
+     *
+     * ```jsx
+     * (api, data) => fetch(api, {
+     *   method: 'POST',
+     *   body: JSON.stringify(data)
+     * })
+     * ```
+     */
+    fetcher: MutationFetcher<Data, ExtraArg, SWRMutationKey>,
+    /**
+     * Extra options for the mutation hook.
+     */
+    options?: SWRMutationConfiguration<
+      Data,
+      Error,
+      ExtraArg,
+      SWRMutationKey
+    > & { throwOnError: true }
+  ): SWRMutationResponse<Data, Error, ExtraArg, SWRMutationKey>
+}
