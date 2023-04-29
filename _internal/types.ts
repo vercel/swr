@@ -162,7 +162,8 @@ export interface PublicConfiguration<
   onSuccess: (
     data: Data,
     key: string,
-    config: Readonly<PublicConfiguration<Data, Error, Fn>>
+    config: Readonly<PublicConfiguration<Data, Error, Fn>>,
+    arg: any
   ) => void
   /**
    * callback function when a request returns an error
