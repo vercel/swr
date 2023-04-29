@@ -544,6 +544,30 @@ describe('useSWR - local mutation', () => {
     expect(cacheError).toBeUndefined()
   })
 
+  it('should update error in global cache when mutate succeeded', async () => {
+    const key = createKey()
+
+    let mutate
+    function Page() {
+      const {
+        data,
+        error,
+        mutate: mutate_
+      } = useSWR<string>(key, async () => {
+        throw new Error('error')
+      })
+      mutate = mutate_
+      return <div>{error ? error.message : `data: ${data}`}</div>
+    }
+
+    renderWithConfig(<Page />)
+
+    // Mount
+    await screen.findByText('error')
+    mutate(v => v, { revalidate: false })
+    await screen.findByText('data: undefined')
+  })
+
   it('should keep the `mutate` function referential equal', async () => {
     const refs = []
 
