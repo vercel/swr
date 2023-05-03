@@ -1,4 +1,10 @@
-import { useCallback, useRef, useDebugValue, useMemo } from 'react'
+/// <reference types="react/experimental" />
+import ReactExports, {
+  useCallback,
+  useRef,
+  useDebugValue,
+  useMemo
+} from 'react'
 import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js'
 
 import {
@@ -35,6 +41,37 @@ import type {
   StateDependencies,
   GlobalState
 } from 'swr/_internal'
+
+const use =
+  ReactExports.use ||
+  (<T>(
+    promise: Promise<T> & {
+      status?: 'pending' | 'fulfilled' | 'rejected'
+      value?: T
+      reason?: unknown
+    }
+  ): T => {
+    if (promise.status === 'pending') {
+      throw promise
+    } else if (promise.status === 'fulfilled') {
+      return promise.value as T
+    } else if (promise.status === 'rejected') {
+      throw promise.reason
+    } else {
+      promise.status = 'pending'
+      promise.then(
+        v => {
+          promise.status = 'fulfilled'
+          promise.value = v
+        },
+        e => {
+          promise.status = 'rejected'
+          promise.reason = e
+        }
+      )
+      throw promise
+    }
+  })
 
 const WITH_DEDUPE = { dedupe: true }
 
@@ -661,7 +698,11 @@ export const useSWRHandler = <Data = any, Error = any>(
     fetcherRef.current = fetcher
     configRef.current = config
     unmountedRef.current = false
-    throw isUndefined(error) ? revalidate(WITH_DEDUPE) : error
+    if (isUndefined(error)) {
+      use(revalidate(WITH_DEDUPE))
+    } else {
+      throw error
+    }
   }
 
   return {
