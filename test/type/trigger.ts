@@ -53,6 +53,11 @@ export function useTriggerWithParameter() {
   // The argument of `trigger` should be number or undefined.
   expectType<Equal<Parameters<typeof trigger>[0], number>>(true)
   expectType<Promise<string>>(trigger(1))
+  expectType<Promise<string | undefined>>(
+    trigger(1, {
+      throwOnError: false
+    })
+  )
 }
 
 export function useOnErrorThrowFalse() {
