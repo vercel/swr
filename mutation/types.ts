@@ -8,8 +8,8 @@ type FetcherOptions<ExtraArg = unknown> = Readonly<{
 
 export type MutationFetcher<
   Data = unknown,
-  ExtraArg = unknown,
-  SWRKey extends Key = Key
+  SWRKey extends Key = Key,
+  ExtraArg = unknown
 > = SWRKey extends () => infer Arg | null | undefined | false
   ? (key: Arg, options: FetcherOptions<ExtraArg>) => FetcherResponse<Data>
   : SWRKey extends null | undefined | false
@@ -21,8 +21,8 @@ export type MutationFetcher<
 export type SWRMutationConfiguration<
   Data,
   Error,
-  ExtraArg = any,
   SWRMutationKey extends Key = Key,
+  ExtraArg = any,
   SWRData = any
 > = {
   revalidate?: boolean
@@ -31,19 +31,19 @@ export type SWRMutationConfiguration<
     | ((result: Data, currentData: SWRData | undefined) => SWRData)
   optimisticData?: SWRData | ((currentData?: SWRData) => SWRData)
   rollbackOnError?: boolean | ((error: unknown) => boolean)
-  fetcher?: MutationFetcher<Data, ExtraArg, SWRMutationKey>
+  fetcher?: MutationFetcher<Data, SWRMutationKey, ExtraArg>
   onSuccess?: (
     data: Data,
     key: string,
     config: Readonly<
-      SWRMutationConfiguration<Data, Error, ExtraArg, SWRMutationKey, SWRData>
+      SWRMutationConfiguration<Data, Error, SWRMutationKey, ExtraArg, SWRData>
     >
   ) => void
   onError?: (
     err: Error,
     key: string,
     config: Readonly<
-      SWRMutationConfiguration<Data, Error, ExtraArg, SWRMutationKey, SWRData>
+      SWRMutationConfiguration<Data, Error, SWRMutationKey, ExtraArg, SWRData>
     >
   ) => void
 }
@@ -52,16 +52,16 @@ type RemoveUndefined<T> = T extends undefined ? never : T
 interface TriggerWithArgs<
   Data = any,
   Error = any,
-  ExtraArg = never,
-  SWRMutationKey extends Key = Key
+  SWRMutationKey extends Key = Key,
+  ExtraArg = never
 > {
   <SWRData = Data>(
     extraArgument: ExtraArg,
     options?: SWRMutationConfiguration<
       Data,
       Error,
-      ExtraArg,
       SWRMutationKey,
+      ExtraArg,
       SWRData
     >
   ): Promise<Data>
@@ -70,8 +70,8 @@ interface TriggerWithArgs<
     options?: SWRMutationConfiguration<
       Data,
       Error,
-      ExtraArg,
       SWRMutationKey,
+      ExtraArg,
       SWRData
     > & { throwOnError: true }
   ): Promise<RemoveUndefined<Data>>
@@ -80,8 +80,8 @@ interface TriggerWithArgs<
     options?: SWRMutationConfiguration<
       Data,
       Error,
-      ExtraArg,
       SWRMutationKey,
+      ExtraArg,
       SWRData
     > & { throwOnError: false }
   ): Promise<Data | undefined>
@@ -90,16 +90,16 @@ interface TriggerWithArgs<
 interface TriggerWithoutArgs<
   Data = any,
   Error = any,
-  ExtraArg = never,
-  SWRMutationKey extends Key = Key
+  SWRMutationKey extends Key = Key,
+  ExtraArg = never
 > {
   <SWRData = Data>(
     extraArgument?: null,
     options?: SWRMutationConfiguration<
       Data,
       Error,
-      ExtraArg,
       SWRMutationKey,
+      ExtraArg,
       SWRData
     >
   ): Promise<Data>
@@ -108,8 +108,8 @@ interface TriggerWithoutArgs<
     options?: SWRMutationConfiguration<
       Data,
       Error,
-      ExtraArg,
       SWRMutationKey,
+      ExtraArg,
       SWRData
     > & { throwOnError: true }
   ): Promise<RemoveUndefined<Data>>
@@ -118,8 +118,8 @@ interface TriggerWithoutArgs<
     options?: SWRMutationConfiguration<
       Data,
       Error,
-      ExtraArg,
       SWRMutationKey,
+      ExtraArg,
       SWRData
     > & { throwOnError: false }
   ): Promise<Data>
@@ -128,8 +128,8 @@ interface TriggerWithoutArgs<
 export interface SWRMutationResponse<
   Data = any,
   Error = any,
-  ExtraArg = never,
-  SWRMutationKey extends Key = Key
+  SWRMutationKey extends Key = Key,
+  ExtraArg = never
 > extends Pick<SWRResponse<Data, Error>, 'data' | 'error'> {
   /**
    * Indicates if the mutation is in progress.
@@ -141,7 +141,7 @@ export interface SWRMutationResponse<
    */
   trigger: [ExtraArg] extends [never]
     ? TriggerWithoutArgs<Data, Error, ExtraArg, SWRMutationKey>
-    : TriggerWithArgs<Data, Error, ExtraArg, SWRMutationKey>
+    : TriggerWithArgs<Data, Error, SWRMutationKey, ExtraArg>
   /**
    * Function to reset the mutation state (`data`, `error`, and `isMutating`).
    */
@@ -167,12 +167,12 @@ export interface SWRMutationHook {
      * })
      * ```
      */
-    fetcher: MutationFetcher<Data, ExtraArg, SWRMutationKey>,
+    fetcher: MutationFetcher<Data, SWRMutationKey, ExtraArg>,
     /**
      * Extra options for the mutation hook.
      */
-    options?: SWRMutationConfiguration<Data, Error, ExtraArg, SWRMutationKey>
-  ): SWRMutationResponse<Data, Error, ExtraArg, SWRMutationKey>
+    options?: SWRMutationConfiguration<Data, Error, SWRMutationKey, ExtraArg>
+  ): SWRMutationResponse<Data, Error, SWRMutationKey, ExtraArg>
   <Data = any, Error = any, SWRMutationKey extends Key = Key, ExtraArg = never>(
     /**
      * The key of the resource that will be mutated. It should be the same key
@@ -191,17 +191,17 @@ export interface SWRMutationHook {
      * })
      * ```
      */
-    fetcher: MutationFetcher<Data, ExtraArg, SWRMutationKey>,
+    fetcher: MutationFetcher<Data, SWRMutationKey, ExtraArg>,
     /**
      * Extra options for the mutation hook.
      */
     options?: SWRMutationConfiguration<
       Data,
       Error,
-      ExtraArg,
-      SWRMutationKey
+      SWRMutationKey,
+      ExtraArg
     > & { throwOnError: false }
-  ): SWRMutationResponse<Data | undefined, Error, ExtraArg, SWRMutationKey>
+  ): SWRMutationResponse<Data | undefined, Error, SWRMutationKey, ExtraArg>
   <Data = any, Error = any, SWRMutationKey extends Key = Key, ExtraArg = never>(
     /**
      * The key of the resource that will be mutated. It should be the same key
@@ -220,15 +220,15 @@ export interface SWRMutationHook {
      * })
      * ```
      */
-    fetcher: MutationFetcher<Data, ExtraArg, SWRMutationKey>,
+    fetcher: MutationFetcher<Data, SWRMutationKey, ExtraArg>,
     /**
      * Extra options for the mutation hook.
      */
     options?: SWRMutationConfiguration<
       Data,
       Error,
-      ExtraArg,
-      SWRMutationKey
+      SWRMutationKey,
+      ExtraArg
     > & { throwOnError: true }
-  ): SWRMutationResponse<Data, Error, ExtraArg, SWRMutationKey>
+  ): SWRMutationResponse<Data, Error, SWRMutationKey, ExtraArg>
 }
