@@ -29,20 +29,20 @@ importers:
       lint-staged: 13.1.0
       next: ^13.1.6
       prettier: 2.8.3
-      react: 18.3.0-canary-aef7ce554-20230503
-      react-dom: 18.3.0-canary-aef7ce554-20230503
+      react: ^18.2.0
+      react-dom: ^18.2.0
       rimraf: 4.1.2
       swr: workspace:*
       typescript: 4.9.4
-      use-sync-external-store: 1.3.0-canary-aef7ce554-20230503
+      use-sync-external-store: ^1.2.0
     dependencies:
-      use-sync-external-store: 1.3.0-canary-aef7ce554-20230503_zl5roxx27vtabl5li6halikybq
+      use-sync-external-store: 1.2.0_react@18.2.0
     devDependencies:
       '@playwright/test': 1.30.0
       '@swc/core': 1.3.29
       '@swc/jest': 0.2.24_@swc+core@1.3.29
       '@testing-library/jest-dom': 5.16.5
-      '@testing-library/react': 14.0.0_hsnnykslldpawta6n52y3pbwqq
+      '@testing-library/react': 14.0.0_biqbaboplfbrettd7655fr4n2y
       '@type-challenges/utils': 0.1.1
       '@types/jest': 29.4.0
       '@types/node': 18.11.18
@@ -61,10 +61,10 @@ importers:
       jest: 29.4.1_@types+node@18.11.18
       jest-environment-jsdom: 29.4.1
       lint-staged: 13.1.0
-      next: 13.1.6_hsnnykslldpawta6n52y3pbwqq
+      next: 13.1.6_biqbaboplfbrettd7655fr4n2y
       prettier: 2.8.3
-      react: 18.3.0-canary-aef7ce554-20230503
-      react-dom: 18.3.0-canary-aef7ce554-20230503_zl5roxx27vtabl5li6halikybq
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
       rimraf: 4.1.2
       swr: 'link:'
       typescript: 4.9.4
@@ -1318,7 +1318,7 @@ packages:
       redent: 3.0.0
     dev: true
 
-  /@testing-library/react/14.0.0_hsnnykslldpawta6n52y3pbwqq:
+  /@testing-library/react/14.0.0_biqbaboplfbrettd7655fr4n2y:
     resolution: {integrity: sha512-S04gSNJbYE30TlIMLTzv6QCTzt9AqIF5y6s6SzVFILNcNvbV/jU96GeiTPillGQo+Ny64M/5PV7klNYYgv5Dfg==}
     engines: {node: '>=14'}
     peerDependencies:
@@ -1328,8 +1328,8 @@ packages:
       '@babel/runtime': 7.18.9
       '@testing-library/dom': 9.2.0
       '@types/react-dom': 18.0.6
-      react: 18.3.0-canary-aef7ce554-20230503
-      react-dom: 18.3.0-canary-aef7ce554-20230503_zl5roxx27vtabl5li6halikybq
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
     dev: true
 
   /@tootallnate/once/2.0.0:
@@ -4011,7 +4011,7 @@ packages:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
     dev: true
 
-  /next/13.1.6_hsnnykslldpawta6n52y3pbwqq:
+  /next/13.1.6_biqbaboplfbrettd7655fr4n2y:
     resolution: {integrity: sha512-hHlbhKPj9pW+Cymvfzc15lvhaOZ54l+8sXDXJWm3OBNBzgrVj6hwGPmqqsXg40xO1Leq+kXpllzRPuncpC0Phw==}
     engines: {node: '>=14.6.0'}
     hasBin: true
@@ -4033,9 +4033,9 @@ packages:
       '@swc/helpers': 0.4.14
       caniuse-lite: 1.0.30001439
       postcss: 8.4.14
-      react: 18.3.0-canary-aef7ce554-20230503
-      react-dom: 18.3.0-canary-aef7ce554-20230503_zl5roxx27vtabl5li6halikybq
-      styled-jsx: 5.1.1_zl5roxx27vtabl5li6halikybq
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      styled-jsx: 5.1.1_react@18.2.0
     optionalDependencies:
       '@next/swc-android-arm-eabi': 13.1.6
       '@next/swc-android-arm64': 13.1.6
@@ -4436,14 +4436,14 @@ packages:
     resolution: {integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==}
     dev: true
 
-  /react-dom/18.3.0-canary-aef7ce554-20230503_zl5roxx27vtabl5li6halikybq:
-    resolution: {integrity: sha512-XyunYyvQ74LQ70sQefYRte21x3zhBfSvMu3drjd8jONP8LoJmFH0wL5pNLqfE1nH1NeCuatHNhx4MrhOzFKmZA==}
+  /react-dom/18.2.0_react@18.2.0:
+    resolution: {integrity: sha512-6IMTriUmvsjHUjNtEDudZfuDQUoWXVxKHhlEGSk81n4YFS+r/Kl99wXiwlVXtPBtJenozv2P+hxDsw9eA7Xo6g==}
     peerDependencies:
-      react: 18.3.0-canary-aef7ce554-20230503
+      react: ^18.2.0
     dependencies:
       loose-envify: 1.4.0
-      react: 18.3.0-canary-aef7ce554-20230503
-      scheduler: 0.24.0-canary-aef7ce554-20230503
+      react: 18.2.0
+      scheduler: 0.23.0
     dev: true
 
   /react-is/16.13.1:
@@ -4458,8 +4458,8 @@ packages:
     resolution: {integrity: sha512-xWGDIW6x921xtzPkhiULtthJHoJvBbF3q26fzloPCK0hsvxtPVelvftw3zjbHWSkR2km9Z+4uxbDDK/6Zw9B8w==}
     dev: true
 
-  /react/18.3.0-canary-aef7ce554-20230503:
-    resolution: {integrity: sha512-GOn8HYngztclyxfWt3syY0cwqz3cSVp82PiIijMhWdCgc0wsE1fohXdmGx3vW51ywDUChc78X2sWrRlFtQgTKQ==}
+  /react/18.2.0:
+    resolution: {integrity: sha512-/3IjMdb2L9QbBdWiW5e3P2/npwMBaU9mHCSCUzNln0ZCYbcfTsGbTJrU/kGemdH2IWmB2ioZ+zkxtmq6g09fGQ==}
     engines: {node: '>=0.10.0'}
     dependencies:
       loose-envify: 1.4.0
@@ -4658,8 +4658,8 @@ packages:
       xmlchars: 2.2.0
     dev: true
 
-  /scheduler/0.24.0-canary-aef7ce554-20230503:
-    resolution: {integrity: sha512-po0PuF+i2m3Mq7Jm82uMRUXnvIUBYFH4t+G+Qs6U24rexQ0bZlCW1woHragjYKDCuvfIrP2bUTQ3Z1s6Eu9GDQ==}
+  /scheduler/0.23.0:
+    resolution: {integrity: sha512-CtuThmgHNg7zIZWAXi3AsyIzA3n4xx7aNyjwC2VJldO2LMVDhFK+63xGqq6CsJH4rTAt6/M+N4GhZiDYPx9eUw==}
     dependencies:
       loose-envify: 1.4.0
     dev: true
@@ -4870,7 +4870,7 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /styled-jsx/5.1.1_zl5roxx27vtabl5li6halikybq:
+  /styled-jsx/5.1.1_react@18.2.0:
     resolution: {integrity: sha512-pW7uC1l4mBZ8ugbiZrcIsiIvVx1UmTfw7UkC3Um2tmfUq9Bhk8IiyEIPl6F8agHgjzku6j0xQEZbfA5uSgSaCw==}
     engines: {node: '>= 12.0.0'}
     peerDependencies:
@@ -4884,7 +4884,7 @@ packages:
         optional: true
     dependencies:
       client-only: 0.0.1
-      react: 18.3.0-canary-aef7ce554-20230503
+      react: 18.2.0
     dev: true
 
   /supports-color/5.5.0:
@@ -5058,12 +5058,12 @@ packages:
       requires-port: 1.0.0
     dev: true
 
-  /use-sync-external-store/1.3.0-canary-aef7ce554-20230503_zl5roxx27vtabl5li6halikybq:
-    resolution: {integrity: sha512-6gyVONox9ZP1BrBmRax7W12Oscljq0nErpvD8xXz+W2HqPFbXlReDEdY/pzDMVB8GeDOlh1g3a6YTNLo/BL0cw==}
+  /use-sync-external-store/1.2.0_react@18.2.0:
+    resolution: {integrity: sha512-eEgnFxGQ1Ife9bzYs6VLi8/4X6CObHMw9Qr9tPY43iKwsPw8xE8+EFsf/2cFZ5S3esXgpWgtSCtLNS41F+sKPA==}
     peerDependencies:
-      react: 18.3.0-canary-aef7ce554-20230503
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0
     dependencies:
-      react: 18.3.0-canary-aef7ce554-20230503
+      react: 18.2.0
     dev: false
 
   /v8-to-istanbul/9.0.1:
