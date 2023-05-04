@@ -1,6 +1,5 @@
 import { act, screen } from '@testing-library/react'
 import { sleep, renderWithConfig, createKey } from './utils'
-
 import useSWRSubscription from 'swr/subscription'
 import useSWR from 'swr'
 

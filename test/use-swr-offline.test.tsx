@@ -1,5 +1,4 @@
 import { act, screen } from '@testing-library/react'
-
 import useSWR from 'swr'
 import {
   nextTick as waitForNextTick,
