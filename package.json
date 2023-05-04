@@ -72,7 +72,7 @@
   "license": "MIT",
   "scripts": {
     "prepare": "husky install",
-    "csb:install": "pnpm install",
+    "csb:install": "corepack enable && corepack pnpm i",
     "csb:build": "pnpm build",
     "clean": "pnpm -r run clean && rimraf playwright-report test-result",
     "watch": "pnpm -r run watch",
