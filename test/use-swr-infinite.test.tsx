@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { fireEvent, act, screen } from '@testing-library/react'
 import useSWR, { mutate as globalMutate, useSWRConfig, SWRConfig } from 'swr'
 import useSWRInfinite, { unstable_serialize } from 'swr/infinite'

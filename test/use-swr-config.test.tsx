@@ -1,5 +1,5 @@
 import { act, screen, fireEvent } from '@testing-library/react'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Middleware } from 'swr'
 import useSWR, { SWRConfig, useSWRConfig } from 'swr'
 import { renderWithConfig, createKey, renderWithGlobalCache } from './utils'

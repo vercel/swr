@@ -1,5 +1,5 @@
 import { act, fireEvent, screen } from '@testing-library/react'
-import React, { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import useSWR, { preload, useSWRConfig } from 'swr'
 import { createKey, createResponse, renderWithConfig, sleep } from './utils'
 
