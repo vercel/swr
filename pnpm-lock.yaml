@@ -105,6 +105,13 @@ packages:
       '@babel/highlight': 7.18.6
     dev: true
 
+  /@babel/code-frame/7.21.4:
+    resolution: {integrity: sha512-LYvhNKfwWSPpocw8GI7gpK2nq3HSDuEPC/uSYaALSJu9xjsalaaYFOq0Pwt5KmVqwEbZlDu81aLXwBOmD/Fv9g==}
+    engines: {node: '>=6.9.0'}
+    dependencies:
+      '@babel/highlight': 7.18.6
+    dev: true
+
   /@babel/compat-data/7.18.8:
     resolution: {integrity: sha512-HSmX4WZPPK3FUxYp7g2T6EyO8j96HlZJlxmKPSh6KAcqwyDrfx7hKjXpAW/0FhFfTJsR0Yt4lAjLI2coMptIHQ==}
     engines: {node: '>=6.9.0'}
@@ -115,7 +122,7 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       '@ampproject/remapping': 2.2.0
-      '@babel/code-frame': 7.18.6
+      '@babel/code-frame': 7.21.4
       '@babel/generator': 7.18.9
       '@babel/helper-compilation-targets': 7.18.9_@babel+core@7.18.9
       '@babel/helper-module-transforms': 7.18.9
@@ -395,7 +402,7 @@ packages:
     resolution: {integrity: sha512-JoDWzPe+wgBsTTgdnIma3iHNFC7YVJoPssVBDjiHfNlyt4YcunDtcDOUmfVDfCK5MfdsaIoX9PkijPhjH3nYUw==}
     engines: {node: '>=6.9.0'}
     dependencies:
-      '@babel/code-frame': 7.18.6
+      '@babel/code-frame': 7.21.4
       '@babel/parser': 7.18.9
       '@babel/types': 7.18.9
     dev: true
@@ -404,7 +411,7 @@ packages:
     resolution: {integrity: sha512-LcPAnujXGwBgv3/WHv01pHtb2tihcyW1XuL9wd7jqh1Z8AQkTd+QVjMrMijrln0T7ED3UXLIy36P9Ao7W75rYg==}
     engines: {node: '>=6.9.0'}
     dependencies:
-      '@babel/code-frame': 7.18.6
+      '@babel/code-frame': 7.21.4
       '@babel/generator': 7.18.9
       '@babel/helper-environment-visitor': 7.18.9
       '@babel/helper-function-name': 7.18.9
@@ -4255,7 +4262,7 @@ packages:
     resolution: {integrity: sha512-ayCKvm/phCGxOkYRSCM82iDwct8/EonSEgCSxWxD7ve6jHggsFl4fZVQBPRNgQoKiuV/odhFrGzQXZwbifC8Rg==}
     engines: {node: '>=8'}
     dependencies:
-      '@babel/code-frame': 7.18.6
+      '@babel/code-frame': 7.21.4
       error-ex: 1.3.2
       json-parse-even-better-errors: 2.3.1
       lines-and-columns: 1.2.4
@@ -4578,7 +4585,7 @@ packages:
       rollup: 3.20.2
       typescript: 4.9.4
     optionalDependencies:
-      '@babel/code-frame': 7.18.6
+      '@babel/code-frame': 7.21.4
     dev: true
 
   /rollup-plugin-preserve-shebang/1.0.1:
