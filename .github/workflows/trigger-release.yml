@@ -1,0 +1,88 @@
+on:
+  workflow_dispatch:
+    inputs:
+      releaseType:
+        description: Release stable or beta?
+        required: true
+        type: choice
+        options:
+          - beta
+          - stable
+
+      semverType:
+        description: semver type?
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+    secrets:
+      RELEASE_BOT_TOKEN:
+        required: true
+
+name: Trigger Release
+
+env:
+  PNPM_VERSION: 7.26.1
+
+
+jobs:
+  start:
+    runs-on: ubuntu-latest1
+
+    environment: release-${{ github.event.inputs.releaseType }}
+    steps:
+      - name: Setup node
+        uses: actions/setup-node@v3
+        if: ${{ steps.docs-change.outputs.docsChange == 'nope' }}
+        with:
+          node-version: 18
+          check-latest: true
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 10
+
+      - run: npm i -g pnpm@${PNPM_VERSION}
+
+      - id: get-store-path
+        run: echo STORE_PATH=$(pnpm store path) >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v3
+        timeout-minutes: 5
+        id: cache-pnpm-store
+        with:
+          path: ${{ steps.get-store-path.outputs.STORE_PATH }}
+          key: pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-
+            pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - run: pnpm install
+
+      - run: pnpm run build
+
+      - name: Configure git
+        run: |
+          git config user.name "vercel-release-bot"
+          git config user.email "infra+release@vercel.com"
+
+      - name: Tag beta
+        if: ${{ github.event.inputs.releaseType === 'beta' }}
+        run: npm version prerelease --preid=beta
+
+      - name: Tag stable
+        if: ${{ github.event.inputs.releaseType === 'stable' }}
+        run: npm version ${{ github.event.inputs.releaseType }}
+
+      - name: Git push
+        env:
+            RELEASE_BOT_TOKEN: ${{ secrets.RELEASE_BOT_TOKEN }}
+        run: |
+          git push origin main
+          git push origin --tags
+
+
+
