@@ -1,0 +1,26 @@
+name: Test React Canary
+
+on:
+  workflow_dispatch: 
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install
+        uses: ./.github/workflows/install
+
+      - name: Install Canary
+        run: corepack pnpm upgrade react@canary react-dom@canary use-sync-external-store@canary
+
+      - name: Lint and test
+        run: |
+          pnpm run-all-checks
+          pnpm clean
+          pnpm build
+          pnpm test:build
