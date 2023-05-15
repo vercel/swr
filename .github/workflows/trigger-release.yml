@@ -62,7 +62,11 @@ jobs:
 
       - run: pnpm install
 
-      - run: pnpm run build
+      - run: |
+          pnpm run-all-checks
+          pnpm clean
+          pnpm build
+          pnpm test:build
 
       - name: Configure git
         run: |
