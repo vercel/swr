@@ -63,20 +63,25 @@ jobs:
 
       - run: pnpm run build
 
-      - run: |
-        git config user.name "vercel-release-bot"
-        git config user.email "infra+release@vercel.com"
+      - name: Configure git
+        run: |
+          git config user.name "vercel-release-bot"
+          git config user.email "infra+release@vercel.com"
 
-      - name: tag beta
+      - name: Tag beta
         if: ${{ github.event.inputs.releaseType === 'beta' }}
         run: npm version prerelease --preid=beta
 
-      - name: tag stable
+      - name: Tag stable
         if: ${{ github.event.inputs.releaseType === 'stable' }}
         run: npm version ${{ github.event.inputs.releaseType }}
 
-      - run: git push && git push --tags
+      - name: Git push
         env:
-          RELEASE_BOT_TOKEN: ${{ secrets.RELEASE_BOT_TOKEN }}
+            RELEASE_BOT_TOKEN: ${{ secrets.RELEASE_BOT_TOKEN }}
+        run: |
+          git push origin main
+          git push origin --tags
+
 
 
