@@ -31,7 +31,7 @@ jobs:
   start:
     runs-on: ubuntu-latest
 
-    environment: release-${{ github.event.inputs.releaseType }}
+    environment: release-${{ github.event.inputs.releaseType }}-${{ github.event.inputs.semverType }}
     steps:
       - name: Setup node
         uses: actions/setup-node@v3
@@ -75,11 +75,11 @@ jobs:
 
       - name: Tag beta
         if: ${{ github.event.inputs.releaseType == 'beta' }}
-        run: npm version pre${{ github.event.inputs.releaseType }} --preid=beta
+        run: npm version pre${{ github.event.inputs.semverType }} --preid=beta
 
       - name: Tag stable
         if: ${{ github.event.inputs.releaseType == 'stable' }}
-        run: npm version ${{ github.event.inputs.releaseType }}
+        run: npm version ${{ github.event.inputs.semverType }}
 
       - name: Git push
         env:
