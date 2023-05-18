@@ -3,7 +3,11 @@ import useSWR from 'swr'
 type ExpectType = <T>(value: T) => void
 const expectType: ExpectType = () => {}
 
-type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false;
+type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B
+  ? 1
+  : 2
+  ? true
+  : false
 
 // Test the Equal type
 expectType<Equal<number, string>>(false) // should be false
@@ -25,7 +29,7 @@ export function useTrigger() {
 
   // The argument of `trigger` should be number or undefined.
   expectType<Equal<Parameters<typeof trigger>[0], number>>(true)
-  expectType<Promise<string | undefined>>(trigger(1))
+  expectType<Promise<string>>(trigger(1))
 
   // Other return values
   expectType<Equal<typeof reset, () => void>>(true)
@@ -48,7 +52,34 @@ export function useTriggerWithParameter() {
 
   // The argument of `trigger` should be number or undefined.
   expectType<Equal<Parameters<typeof trigger>[0], number>>(true)
+  expectType<Promise<string>>(trigger(1))
+  expectType<Promise<string | undefined>>(
+    trigger(1, {
+      throwOnError: false
+    })
+  )
+}
+
+export function useOnErrorThrowFalse() {
+  const { trigger } = useSWRMutation<string, any, string, number>(
+    '/api/user',
+    (_, opts) => {
+      expectType<Equal<typeof opts, Readonly<{ arg: number }>>>(true)
+      return String(opts.arg)
+    },
+    {
+      throwOnError: false
+    }
+  )
+
+  // The argument of `trigger` should be number or undefined.
+  expectType<Equal<Parameters<typeof trigger>[0], number>>(true)
   expectType<Promise<string | undefined>>(trigger(1))
+  expectType<Promise<string>>(
+    trigger(1, {
+      throwOnError: true
+    })
+  )
 }
 
 export function useTestSWRMutation() {
