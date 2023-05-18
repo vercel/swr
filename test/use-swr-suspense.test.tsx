@@ -218,7 +218,7 @@ describe('useSWR - suspense', () => {
       </Suspense>
     )
     // FIXME: without this line, the test will fail with react@canary
-    await sleep(5)
+    await sleep(10)
     await screen.findByText(updatedKey)
     // fixes https://github.com/vercel/swr/issues/57
     // initialKey' -> undefined -> updatedKey

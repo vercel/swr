@@ -27,6 +27,9 @@ To run SWR locally, you can start it with any example in the `examples` folder. 
 First of all, build SWR assets
 
 ```sh
+corepack enable
+corepack pnpm install
+
 pnpm watch
 ```
 

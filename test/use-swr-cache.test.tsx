@@ -1,5 +1,5 @@
 import { act, fireEvent, screen } from '@testing-library/react'
-import React, { useState, StrictMode } from 'react'
+import { useState, StrictMode } from 'react'
 import useSWR, { useSWRConfig, SWRConfig, mutate as globalMutate } from 'swr'
 import {
   sleep,

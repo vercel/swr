@@ -1,4 +1,3 @@
-import React from 'react'
 import type { Cache, SWRResponse } from 'swr'
 import useSWR, { useSWRConfig, SWRConfig } from 'swr'
 import { expectType } from './utils'
