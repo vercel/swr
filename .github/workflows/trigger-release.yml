@@ -74,11 +74,11 @@ jobs:
           git config user.email "infra+release@vercel.com"
 
       - name: Tag beta
-        if: ${{ github.event.inputs.releaseType === 'beta' }}
+        if: ${{ github.event.inputs.releaseType == 'beta' }}
         run: npm version pre${{ github.event.inputs.releaseType }} --preid=beta
 
       - name: Tag stable
-        if: ${{ github.event.inputs.releaseType === 'stable' }}
+        if: ${{ github.event.inputs.releaseType == 'stable' }}
         run: npm version ${{ github.event.inputs.releaseType }}
 
       - name: Git push
