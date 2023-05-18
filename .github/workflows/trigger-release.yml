@@ -75,7 +75,7 @@ jobs:
 
       - name: Tag beta
         if: ${{ github.event.inputs.releaseType === 'beta' }}
-        run: npm version prerelease --preid=beta
+        run: npm version pre${{ github.event.inputs.releaseType }} --preid=beta
 
       - name: Tag stable
         if: ${{ github.event.inputs.releaseType === 'stable' }}
