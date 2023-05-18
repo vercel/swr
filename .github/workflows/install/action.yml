@@ -32,4 +32,6 @@ runs:
       shell: bash
       run: |
         corepack enable
+        node -v
+        pnpm -v
         pnpm install

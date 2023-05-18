@@ -1,5 +1,5 @@
 import { act, fireEvent, screen } from '@testing-library/react'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import useSWR from 'swr'
 import {
   sleep,
