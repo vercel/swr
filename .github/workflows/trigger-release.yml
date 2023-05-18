@@ -29,7 +29,7 @@ env:
 
 jobs:
   start:
-    runs-on: ubuntu-latest1
+    runs-on: ubuntu-latest
 
     environment: release-${{ github.event.inputs.releaseType }}
     steps:
