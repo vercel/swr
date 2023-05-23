@@ -18,7 +18,7 @@ on:
           - major
 
     secrets:
-      RELEASE_BOT_TOKEN:
+      RELEASE_BOT_GITHUB_TOKEN:
         required: true
 
 name: Trigger Release
@@ -83,7 +83,7 @@ jobs:
 
       - name: Git push
         env:
-            RELEASE_BOT_TOKEN: ${{ secrets.RELEASE_BOT_TOKEN }}
+            RELEASE_BOT_GITHUB_TOKEN: ${{ secrets.RELEASE_BOT_GITHUB_TOKEN }}
         run: |
           git push origin main
           git push origin --tags
