@@ -1,7 +1,8 @@
-import { act, screen } from '@testing-library/react'
+import { act, fireEvent, screen } from '@testing-library/react'
 import { sleep, renderWithConfig, createKey } from './utils'
 import useSWRSubscription from 'swr/subscription'
 import useSWR from 'swr'
+import { useEffect, useState } from 'react'
 
 describe('useSWRSubscription', () => {
   it('should update the state', async () => {
@@ -205,5 +206,56 @@ describe('useSWRSubscription', () => {
     screen.getByText(`swr:${swrKey}1`)
     await act(() => sleep(100))
     screen.getByText(`swr:${swrKey}2`)
+  })
+
+  it('should support singleton subscription', async () => {
+    const placeholderFn: (data: number) => void = () => {}
+    let callback: (data: number) => void = placeholderFn
+    const sub = (fn: (data: number) => void) => {
+      console.log('sub')
+      callback = fn
+      return () => {
+        console.log('unsub')
+        callback = placeholderFn
+      }
+    }
+    const emit = (data: number) => {
+      callback(data)
+    }
+    const useSubData = (key: number) =>
+      useSWRSubscription(key.toString(), (_, { next }) =>
+        sub(data => next(null, data + key))
+      )
+    const App = () => {
+      const [key, setKey] = useState(0)
+      const { data } = useSubData(key)
+      useEffect(() => {
+        callback(1)
+      }, [])
+      return (
+        <div className="App">
+          <p>key: {key}</p>
+          <p className="read-the-docs">data: {data}</p>
+          <button
+            onClick={() => {
+              setKey(value => value + 1)
+              setTimeout(() => {
+                emit(2)
+                console.log(callback === placeholderFn)
+              }, 100)
+            }}
+          >
+            add
+          </button>
+        </div>
+      )
+    }
+    renderWithConfig(<App />)
+    await screen.findByText(`key: 0`)
+    await screen.findByText(`data: 1`)
+    fireEvent.click(screen.getByText('add'))
+    await act(() => sleep(100))
+    await screen.findByText(`key: 1`)
+    await screen.findByText(`data: 3`)
   })
 })
