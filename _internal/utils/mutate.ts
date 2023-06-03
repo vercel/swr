@@ -188,8 +188,8 @@ export async function internalMutate<Data>(
           data = populateCache(data, committedData)
         }
 
-        // Only update cached data if there's no error. Data can be `undefined` here.
-        set({ data, _c: UNDEFINED })
+        // Only update cached data and reset the error if there's no error. Data can be `undefined` here.
+        set({ data, error: UNDEFINED, _c: UNDEFINED })
       }
     }
 
