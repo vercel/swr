@@ -27,7 +27,7 @@ jobs:
   e2e:
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/playwright:v1.30.0-focal
+      image: mcr.microsoft.com/playwright:v1.33.0-focal
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -60,7 +60,23 @@ jobs:
       - name: Install
         uses: ./.github/workflows/install
 
-      - name: Release
-        run: npm publish --access public --no-git-checks --provenance
+      - name: Determine tag
+        id: determine_tag
+        run: |
+          echo "tag=$(echo $GITHUB_REF | grep -Eo 'alpha|beta|canary|rc')" >> $GITHUB_OUTPUT
+
+      - name: Publish to versioned tag
+        if: steps.determine_tag.outputs.tag != ''
+        run: |
+          echo "Publishing to ${{ steps.determine_tag.outputs.tag }} tag"
+          npm publish --access public --no-git-checks --provenance --tag ${{ steps.determine_tag.outputs.tag }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_ELEVATED }}
+
+      - name: Publish to latest
+        if: steps.determine_tag.outputs.tag == ''
+        run: |
+          echo "Publishing to latest"
+          npm publish --access public --no-git-checks --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_ELEVATED }}

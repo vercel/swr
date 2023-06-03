@@ -78,19 +78,16 @@ export const subscription = (<Data = any, Error = any>(useSWRNext: SWRHook) =>
       }
 
       return () => {
-        // Prevent frequent unsubscribe caused by unmount
-        setTimeout(() => {
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          const count = subscriptions.get(subscriptionKey)! - 1
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const count = subscriptions.get(subscriptionKey)! - 1
 
-          subscriptions.set(subscriptionKey, count)
+        subscriptions.set(subscriptionKey, count)
 
-          // Dispose if it's the last one.
-          if (!count) {
-            const dispose = disposers.get(subscriptionKey)
-            dispose?.()
-          }
-        })
+        // Dispose if it's the last one.
+        if (!count) {
+          const dispose = disposers.get(subscriptionKey)
+          dispose?.()
+        }
       }
 
       // eslint-disable-next-line react-hooks/exhaustive-deps

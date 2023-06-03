@@ -1,5 +1,5 @@
 import { act, fireEvent, screen } from '@testing-library/react'
-import React from 'react'
+import { useState } from 'react'
 import useSWR, { useSWRConfig } from 'swr'
 import {
   createResponse,
@@ -176,7 +176,7 @@ describe('useSWR - revalidate', () => {
     }
 
     function Page() {
-      const [showFoo, setShowFoo] = React.useState(true)
+      const [showFoo, setShowFoo] = useState(true)
       const { mutate } = useSWRConfig()
       return (
         <>

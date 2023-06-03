@@ -5,7 +5,6 @@
 // Do not lint the return value destruction for `renderToString`
 /* eslint-disable testing-library/render-result-naming-convention */
 
-import React from 'react'
 import { renderToString } from 'react-dom/server'
 import useSWR from 'swr'
 import useSWRImmutable from 'swr/immutable'

@@ -13,7 +13,7 @@ module.exports = {
     '^swr/_internal$': '<rootDir>/_internal/index.ts'
   },
   transform: {
-    '^.+\\.(t|j)sx?$': '@swc/jest'
+    '^.+\\.(t|j)sx?$': ['@swc/jest']
   },
   coveragePathIgnorePatterns: ['/node_modules/', '/dist/', '/test/'],
   coverageReporters: ['text', 'html'],

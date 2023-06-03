@@ -1,5 +1,5 @@
 import { act, screen } from '@testing-library/react'
-import React, { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import type { Middleware } from 'swr'
 import useSWR, { SWRConfig } from 'swr'
 import { withMiddleware } from 'swr/_internal'
