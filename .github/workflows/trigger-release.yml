@@ -25,7 +25,8 @@ name: Trigger Release
 
 env:
   PNPM_VERSION: 7.26.1
-
+  SEMVER_TYPE: ${{ github.event.inputs.semverType }}
+  RELEASE_TYPE: ${{ github.event.inputs.releaseType }}
 
 jobs:
   start:
@@ -74,13 +75,9 @@ jobs:
           git config user.name "vercel-release-bot"
           git config user.email "infra+release@vercel.com"
 
-      - name: Tag beta
-        if: ${{ github.event.inputs.releaseType == 'beta' }}
-        run: npm version pre${{ github.event.inputs.semverType }} --preid=beta
-
-      - name: Tag stable
-        if: ${{ github.event.inputs.releaseType == 'stable' }}
-        run: npm version ${{ github.event.inputs.semverType }}
+      - name: Bump version and tag
+        run: |
+          node ./scripts/bump-next-version.js
 
       - name: Git push
         env:
