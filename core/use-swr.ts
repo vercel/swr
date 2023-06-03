@@ -705,7 +705,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         value?: boolean
         reason?: unknown
       } = revalidate(WITH_DEDUPE)
-      if (keepPreviousData && !isUndefined(returnedData)) {
+      if (!isUndefined(returnedData)) {
         promise.status = 'fulfilled'
         promise.value = true
       }
