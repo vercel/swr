@@ -698,8 +698,18 @@ export const useSWRHandler = <Data = any, Error = any>(
     fetcherRef.current = fetcher
     configRef.current = config
     unmountedRef.current = false
+
     if (isUndefined(error)) {
-      use(revalidate(WITH_DEDUPE))
+      const promise: Promise<boolean> & {
+        status?: 'pending' | 'fulfilled' | 'rejected'
+        value?: boolean
+        reason?: unknown
+      } = revalidate(WITH_DEDUPE)
+      if (!isUndefined(returnedData)) {
+        promise.status = 'fulfilled'
+        promise.value = true
+      }
+      use(promise as Promise<boolean>)
     } else {
       throw error
     }

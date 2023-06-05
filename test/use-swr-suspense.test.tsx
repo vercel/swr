@@ -1,5 +1,6 @@
 import { act, fireEvent, screen } from '@testing-library/react'
 import type { ReactNode, PropsWithChildren } from 'react'
+import { Profiler } from 'react'
 import React, { Suspense, useEffect, useReducer, useState } from 'react'
 import useSWR, { mutate } from 'swr'
 import {
@@ -397,5 +398,43 @@ describe('useSWR - suspense', () => {
     screen.getByText('fallback')
 
     await screen.findByText('SWR')
+  })
+
+  it('should only render fallback once when `keepPreviousData` is set to true', async () => {
+    const originKey = createKey()
+    const newKey = createKey()
+    const onRender = jest.fn()
+    const Result = ({ query }: { query: string }) => {
+      const { data } = useSWR(query, q => createResponse(q, { delay: 200 }), {
+        suspense: true,
+        keepPreviousData: true
+      })
+      return <div>data: {data}</div>
+    }
+    const App = () => {
+      const [query, setQuery] = useState(originKey)
+      return (
+        <>
+          <button onClick={() => setQuery(newKey)}>change</button>
+          <br />
+          <Suspense
+            fallback={
+              <Profiler id={originKey} onRender={onRender}>
+                <div>loading</div>
+              </Profiler>
+            }
+          >
+            <Result query={query}></Result>
+          </Suspense>
+        </>
+      )
+    }
+    renderWithConfig(<App />)
+    await act(() => sleep(200))
+    await screen.findByText(`data: ${originKey}`)
+    fireEvent.click(screen.getByText('change'))
+    await act(() => sleep(200))
+    await screen.findByText(`data: ${newKey}`)
+    expect(onRender).toHaveBeenCalledTimes(1)
   })
 })
