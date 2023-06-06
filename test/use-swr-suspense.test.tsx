@@ -1,7 +1,7 @@
 import { act, fireEvent, screen } from '@testing-library/react'
 import type { ReactNode, PropsWithChildren } from 'react'
 import { Profiler } from 'react'
-import React, { Suspense, useEffect, useReducer, useState } from 'react'
+import React, { Suspense, useReducer, useState } from 'react'
 import useSWR, { mutate } from 'swr'
 import {
   createKey,
@@ -191,39 +191,41 @@ describe('useSWR - suspense', () => {
   })
 
   it('should pause when key changes', async () => {
-    const renderedResults = []
+    // fixes https://github.com/vercel/swr/issues/57
+    // initialKey' -> undefined -> updatedKey
     const initialKey = createKey()
     const updatedKey = createKey()
+    const onRender = jest.fn()
     function Section() {
       const [key, setKey] = useState(initialKey)
       const { data } = useSWR(key, k => createResponse(k), {
         suspense: true
       })
-
-      useEffect(() => {
-        if (data === initialKey) {
-          setKey(updatedKey)
-        }
-      }, [data])
-
-      if (data !== renderedResults[renderedResults.length - 1]) {
-        renderedResults.push(data)
-      }
-
-      return <>{data}</>
+      return (
+        <>
+          <div>data: {data}</div>
+          <button onClick={() => setKey(updatedKey)}>change</button>
+        </>
+      )
     }
 
     renderWithConfig(
-      <Suspense fallback={<div>fallback</div>}>
+      <Suspense
+        fallback={
+          <Profiler id={initialKey} onRender={onRender}>
+            <div>fallback</div>
+          </Profiler>
+        }
+      >
         <Section />
       </Suspense>
     )
-    // FIXME: without this line, the test will fail with react@canary
-    await sleep(10)
-    await screen.findByText(updatedKey)
-    // fixes https://github.com/vercel/swr/issues/57
-    // initialKey' -> undefined -> updatedKey
-    expect(renderedResults).toEqual([initialKey, updatedKey])
+    await screen.findByText('fallback')
+    await screen.findByText(`data: ${initialKey}`)
+    fireEvent.click(screen.getByText('change'))
+    await screen.findByText('fallback')
+    await screen.findByText(`data: ${updatedKey}`)
+    expect(onRender).toHaveBeenCalledTimes(2)
   })
 
   it('should render correctly when key changes (but with same response data)', async () => {
