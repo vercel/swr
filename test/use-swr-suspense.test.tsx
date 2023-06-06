@@ -1,7 +1,7 @@
 import { act, fireEvent, screen } from '@testing-library/react'
 import type { ReactNode, PropsWithChildren } from 'react'
 import { Profiler } from 'react'
-import React, { Suspense, useEffect, useReducer, useState } from 'react'
+import React, { Suspense, useReducer, useState } from 'react'
 import useSWR, { mutate } from 'swr'
 import {
   createKey,
