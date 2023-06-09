@@ -683,25 +683,6 @@ export const useSWRHandler = <Data = any, Error = any>(
   // Display debug info in React DevTools.
   useDebugValue(returnedData)
 
-  const result = {
-    mutate: boundMutate,
-    get data() {
-      stateDependencies.data = true
-      return returnedData
-    },
-    get error() {
-      stateDependencies.error = true
-      return error
-    },
-    get isValidating() {
-      stateDependencies.isValidating = true
-      return isValidating
-    },
-    get isLoading() {
-      stateDependencies.isLoading = true
-      return isLoading
-    }
-  } as SWRResponse<Data, Error>
   // In Suspense mode, we can't return the empty `data` state.
   // If there is an `error`, the `error` needs to be thrown to the error boundary.
   // If there is no `error`, the `revalidation` promise needs to be thrown to
@@ -722,7 +703,6 @@ export const useSWRHandler = <Data = any, Error = any>(
     if (!isUndefined(req)) {
       const promise = boundMutate(req)
       use(promise)
-      return result
     }
 
     if (isUndefined(error)) {
@@ -737,7 +717,25 @@ export const useSWRHandler = <Data = any, Error = any>(
     }
   }
 
-  return result
+  return {
+    mutate: boundMutate,
+    get data() {
+      stateDependencies.data = true
+      return returnedData
+    },
+    get error() {
+      stateDependencies.error = true
+      return error
+    },
+    get isValidating() {
+      stateDependencies.isValidating = true
+      return isValidating
+    },
+    get isLoading() {
+      stateDependencies.isLoading = true
+      return isLoading
+    }
+  } as SWRResponse<Data, Error>
 }
 
 export const SWRConfig = OBJECT.defineProperty(ConfigProvider, 'defaultValue', {
