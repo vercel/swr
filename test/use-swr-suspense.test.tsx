@@ -1,7 +1,7 @@
 import { act, fireEvent, screen } from '@testing-library/react'
 import { Profiler } from 'react'
 import { Suspense, useReducer, useState } from 'react'
-import useSWR, { mutate, preload } from 'swr'
+import useSWR, { mutate } from 'swr'
 import {
   createKey,
   createResponse,
@@ -422,56 +422,5 @@ describe('useSWR - suspense', () => {
     await act(() => sleep(200))
     await screen.findByText(`data: ${newKey}`)
     expect(onRender).toHaveBeenCalledTimes(1)
-  })
-
-  it('should be able to do retry when suspense falied', async () => {
-    const key = createKey()
-    let count = 0
-
-    const fetcher = jest.fn(() => {
-      count++
-      if (count === 1) {
-        return Promise.reject('error')
-      }
-      return createResponse('SWR Suspense Retry')
-    })
-
-    const Page = () => {
-      const { data } = useSWR(key, fetcher, {
-        suspense: true
-      })
-      return <div>data: {data}</div>
-    }
-
-    const Fallback = ({ resetErrorBoundary }: FallbackProps) => {
-      return (
-        <div role="alert">
-          <p>Something went wrong</p>
-          <button onClick={resetErrorBoundary}>retry</button>
-        </div>
-      )
-    }
-
-    const App = () => {
-      return (
-        <ErrorBoundary
-          onReset={() => {
-            preload(key, fetcher)
-          }}
-          FallbackComponent={Fallback}
-        >
-          <Suspense fallback={<div>loading</div>}>
-            <Page />
-          </Suspense>
-        </ErrorBoundary>
-      )
-    }
-
-    renderWithConfig(<App />)
-    await screen.findByText('Something went wrong')
-    expect(fetcher).toHaveBeenCalledTimes(1)
-    fireEvent.click(screen.getByText('retry'))
-    expect(fetcher).toHaveBeenCalledTimes(2)
-    await screen.findByText('data: SWR Suspense Retry')
   })
 })

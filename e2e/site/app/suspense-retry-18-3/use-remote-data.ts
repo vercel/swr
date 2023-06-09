@@ -11,7 +11,7 @@ const fetcher = () => {
     .then(r => r.name)
 }
 
-const key = 'manual-retry'
+const key = 'manual-retry-18-3'
 
 export const useRemoteData = () =>
   useSWR(key, fetcher, {

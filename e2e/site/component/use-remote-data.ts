@@ -2,7 +2,7 @@ import useSWR from 'swr'
 import { preload } from 'swr'
 
 let count = 0
-const fetcher = () => {
+export const fetcher = () => {
   count++
   if (count === 1) return Promise.reject('wrong')
   return fetch('/api/retry')
@@ -10,7 +10,7 @@ const fetcher = () => {
     .then(r => r.name)
 }
 
-const key = 'manual-retry'
+const key = 'manual-retry-18-2'
 
 export const useRemoteData = () =>
   useSWR(key, fetcher, {
