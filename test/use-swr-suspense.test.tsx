@@ -9,7 +9,6 @@ import {
   renderWithGlobalCache,
   sleep
 } from './utils'
-import type { FallbackProps } from 'react-error-boundary'
 import { ErrorBoundary } from 'react-error-boundary'
 
 describe('useSWR - suspense', () => {
