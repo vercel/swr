@@ -94,7 +94,7 @@ export async function internalMutate<Data>(
     const [key] = serialize(_k)
     if (!key) return
     const [get, set] = createCacheHelper<Data, MutateState<Data>>(cache, key)
-    const [EVENT_REVALIDATORS, MUTATION, FETCH] = SWRGlobalState.get(
+    const [EVENT_REVALIDATORS, MUTATION, FETCH, PRELOAD] = SWRGlobalState.get(
       cache
     ) as GlobalState
 
@@ -104,6 +104,7 @@ export async function internalMutate<Data>(
         // Invalidate the key by deleting the concurrent request markers so new
         // requests will not be deduped.
         delete FETCH[key]
+        delete PRELOAD[key]
         if (revalidators && revalidators[0]) {
           return revalidators[0](revalidateEvents.MUTATE_EVENT).then(
             () => get().data

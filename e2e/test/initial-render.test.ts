@@ -23,4 +23,22 @@ test.describe('rendering', () => {
     await expect(page.getByText('suspense-after-preload')).toBeVisible()
     expect(log).toHaveLength(0)
   })
+  test('should be able to retry in suspense with react 18.3', async ({
+    page
+  }) => {
+    await page.goto('./suspense-retry-18-3', { waitUntil: 'commit' })
+    await expect(page.getByText('Something went wrong')).toBeVisible()
+    await page.getByRole('button', { name: 'retry' }).click()
+    await expect(page.getByText('loading')).toBeVisible()
+    await expect(page.getByText('data: SWR suspense retry works')).toBeVisible()
+  })
+  test('should be able to retry in suspense with react 18.2', async ({
+    page
+  }) => {
+    await page.goto('./suspense-retry-18-2', { waitUntil: 'commit' })
+    await expect(page.getByText('Something went wrong')).toBeVisible()
+    await page.getByRole('button', { name: 'retry' }).click()
+    await expect(page.getByText('loading')).toBeVisible()
+    await expect(page.getByText('data: SWR suspense retry works')).toBeVisible()
+  })
 })

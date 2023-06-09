@@ -617,7 +617,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     // Keep the original key in the cache.
     setCache({ _k: fnArg })
 
-    // Trigger a revalidation.
+    // Trigger a revalidation
     if (shouldDoInitialRevalidation) {
       if (isUndefined(data) || IS_SERVER) {
         // Revalidate immediately.
@@ -726,7 +726,6 @@ export const useSWRHandler = <Data = any, Error = any>(
         promise.status = 'fulfilled'
         promise.value = (req as ReactUsePromise<Data>).value
       }
-      delete PRELOAD[key]
       use(promise as Promise<Data>)
       return result
     }
