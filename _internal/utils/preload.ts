@@ -27,7 +27,7 @@ export const preload = <
 >(
   key_: SWRKey,
   fetcher: Fetcher
-): FetcherResponse<Data> => {
+): ReturnType<Fetcher> => {
   const [key, fnArg] = serialize(key_)
   const [, , , PRELOAD] = SWRGlobalState.get(cache) as GlobalState
 
@@ -43,9 +43,9 @@ export const preload = <
       promise.status = 'fulfilled'
       PRELOAD[key] = promise
       return data
-    })
+    }) as ReturnType<Fetcher>
   }
-  return req
+  return req as ReturnType<Fetcher>
 }
 
 export const middleware: Middleware =
