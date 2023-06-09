@@ -26,7 +26,8 @@ import {
   getTimestamp,
   internalMutate,
   revalidateEvents,
-  mergeObjects
+  mergeObjects,
+  isPromiseLike
 } from 'swr/_internal'
 import type {
   State,
@@ -39,7 +40,8 @@ import type {
   SWRHook,
   RevalidateEvent,
   StateDependencies,
-  GlobalState
+  GlobalState,
+  ReactUsePromise
 } from 'swr/_internal'
 
 const use =
@@ -105,7 +107,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     keepPreviousData
   } = config
 
-  const [EVENT_REVALIDATORS, MUTATION, FETCH] = SWRGlobalState.get(
+  const [EVENT_REVALIDATORS, MUTATION, FETCH, PRELOAD] = SWRGlobalState.get(
     cache
   ) as GlobalState
 
@@ -682,40 +684,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   // Display debug info in React DevTools.
   useDebugValue(returnedData)
 
-  // In Suspense mode, we can't return the empty `data` state.
-  // If there is an `error`, the `error` needs to be thrown to the error boundary.
-  // If there is no `error`, the `revalidation` promise needs to be thrown to
-  // the suspense boundary.
-  if (suspense && isUndefined(data) && key) {
-    // SWR should throw when trying to use Suspense on the server with React 18,
-    // without providing any initial data. See:
-    // https://github.com/vercel/swr/issues/1832
-    if (!IS_REACT_LEGACY && IS_SERVER) {
-      throw new Error('Fallback data is required when using suspense in SSR.')
-    }
-
-    // Always update fetcher and config refs even with the Suspense mode.
-    fetcherRef.current = fetcher
-    configRef.current = config
-    unmountedRef.current = false
-
-    if (isUndefined(error)) {
-      const promise: Promise<boolean> & {
-        status?: 'pending' | 'fulfilled' | 'rejected'
-        value?: boolean
-        reason?: unknown
-      } = revalidate(WITH_DEDUPE)
-      if (!isUndefined(returnedData)) {
-        promise.status = 'fulfilled'
-        promise.value = true
-      }
-      use(promise as Promise<boolean>)
-    } else {
-      throw error
-    }
-  }
-
-  return {
+  const result = {
     mutate: boundMutate,
     get data() {
       stateDependencies.data = true
@@ -734,6 +703,47 @@ export const useSWRHandler = <Data = any, Error = any>(
       return isLoading
     }
   } as SWRResponse<Data, Error>
+  // In Suspense mode, we can't return the empty `data` state.
+  // If there is an `error`, the `error` needs to be thrown to the error boundary.
+  // If there is no `error`, the `revalidation` promise needs to be thrown to
+  // the suspense boundary.
+  if (suspense && isUndefined(data) && key) {
+    // SWR should throw when trying to use Suspense on the server with React 18,
+    // without providing any initial data. See:
+    // https://github.com/vercel/swr/issues/1832
+    if (!IS_REACT_LEGACY && IS_SERVER) {
+      throw new Error('Fallback data is required when using suspense in SSR.')
+    }
+
+    // Always update fetcher and config refs even with the Suspense mode.
+    fetcherRef.current = fetcher
+    configRef.current = config
+    unmountedRef.current = false
+    const req = PRELOAD[key]
+    if (!isUndefined(req) && isPromiseLike(req)) {
+      const promise: ReactUsePromise<Data> = boundMutate(req as Promise<Data>)
+      if ((req as ReactUsePromise<Data>).status === 'fulfilled') {
+        promise.status = 'fulfilled'
+        promise.value = (req as ReactUsePromise<Data>).value
+      }
+      use(promise as Promise<Data>)
+      delete PRELOAD[key]
+      return result
+    }
+
+    if (isUndefined(error)) {
+      const promise: ReactUsePromise<boolean> = revalidate(WITH_DEDUPE)
+      if (!isUndefined(returnedData)) {
+        promise.status = 'fulfilled'
+        promise.value = true
+      }
+      use(promise as Promise<boolean>)
+    } else {
+      throw error
+    }
+  }
+
+  return result
 }
 
 export const SWRConfig = OBJECT.defineProperty(ConfigProvider, 'defaultValue', {

@@ -5,7 +5,7 @@ export type GlobalState = [
   Record<string, RevalidateCallback[]>, // EVENT_REVALIDATORS
   Record<string, [number, number]>, // MUTATION: [ts, end_ts]
   Record<string, [any, number]>, // FETCH: [data, ts]
-  Record<string, FetcherResponse<any>>, // PRELOAD
+  Record<string, FetcherResponse<any> | ReactUsePromise<any>>, // PRELOAD
   ScopedMutator, // Mutator
   (key: string, value: any, prev: any) => void, // Setter
   (key: string, callback: (current: any, prev: any) => void) => () => void // Subscriber
@@ -24,6 +24,12 @@ export type Fetcher<
   : SWRKey extends infer Arg
   ? (arg: Arg) => FetcherResponse<Data>
   : never
+
+export type ReactUsePromise<T = unknown, Error = unknown> = Promise<any> & {
+  status?: 'pending' | 'fulfilled' | 'rejected'
+  value?: T
+  reason?: Error
+}
 
 export type BlockingData<
   Data = any,

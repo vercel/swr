@@ -15,4 +15,12 @@ test.describe('rendering', () => {
     await sleep(1200)
     expect(log).toHaveLength(1)
   })
+  test('should not suspense when using resolved preload', async ({ page }) => {
+    const log: any[] = []
+    await page.exposeFunction('onRender', (msg: any) => log.push(msg))
+    await page.goto('./suspense-after-preload', { waitUntil: 'commit' })
+    await page.getByRole('button', { name: 'preload' }).click()
+    await expect(page.getByText('suspense-after-preload')).toBeVisible()
+    expect(log).toHaveLength(0)
+  })
 })

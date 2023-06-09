@@ -4,7 +4,8 @@ import {
   isFunction,
   isUndefined,
   UNDEFINED,
-  mergeObjects
+  mergeObjects,
+  isPromiseLike
 } from './helper'
 import { SWRGlobalState } from './global-state'
 import { getTimestamp } from './timestamp'
@@ -156,7 +157,7 @@ export async function internalMutate<Data>(
     }
 
     // `data` is a promise/thenable, resolve the final data first.
-    if (data && isFunction((data as Promise<Data>).then)) {
+    if (data && isPromiseLike(data)) {
       // This means that the mutation is async, we need to check timestamps to
       // avoid race conditions.
       data = await (data as Promise<Data>).catch(err => {
