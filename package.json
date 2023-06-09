@@ -126,6 +126,7 @@
     "prettier": "2.8.8",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-error-boundary": "^4.0.9",
     "rimraf": "5.0.1",
     "semver": "^7.5.1",
     "swr": "workspace:*",

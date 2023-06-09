@@ -726,8 +726,8 @@ export const useSWRHandler = <Data = any, Error = any>(
         promise.status = 'fulfilled'
         promise.value = (req as ReactUsePromise<Data>).value
       }
-      use(promise as Promise<Data>)
       delete PRELOAD[key]
+      use(promise as Promise<Data>)
       return result
     }
 
