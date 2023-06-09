@@ -1,5 +1,5 @@
 'use client'
-import { Suspense, useState, Profiler } from 'react'
+import { Suspense, useState } from 'react'
 import useSWR from 'swr'
 import { preload } from 'swr'
 
@@ -26,25 +26,14 @@ function Comp() {
     <div className="App">
       <button
         onClick={async () => {
-          await preload(key, fetcher)
+          preload(key, fetcher)
           toggle(!show)
         }}
       >
         preload
       </button>
       {show ? (
-        <Suspense
-          fallback={
-            <Profiler
-              id={key[0]}
-              onRender={() => {
-                ;(window as any).onRender('render')
-              }}
-            >
-              <div>loading</div>
-            </Profiler>
-          }
-        >
+        <Suspense fallback={<div>loading</div>}>
           <Demo />
         </Suspense>
       ) : null}
