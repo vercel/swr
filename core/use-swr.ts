@@ -26,8 +26,7 @@ import {
   getTimestamp,
   internalMutate,
   revalidateEvents,
-  mergeObjects,
-  isPromiseLike
+  mergeObjects
 } from 'swr/_internal'
 import type {
   State,
@@ -720,13 +719,9 @@ export const useSWRHandler = <Data = any, Error = any>(
     configRef.current = config
     unmountedRef.current = false
     const req = PRELOAD[key]
-    if (!isUndefined(req) && isPromiseLike(req)) {
-      const promise: ReactUsePromise<Data> = boundMutate(req as Promise<Data>)
-      if ((req as ReactUsePromise<Data>).status === 'fulfilled') {
-        promise.status = 'fulfilled'
-        promise.value = (req as ReactUsePromise<Data>).value
-      }
-      use(promise as Promise<Data>)
+    if (!isUndefined(req)) {
+      const promise = boundMutate(req)
+      use(promise)
       return result
     }
 

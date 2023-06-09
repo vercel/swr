@@ -3,13 +3,12 @@ import type {
   Key,
   BareFetcher,
   GlobalState,
-  FetcherResponse,
-  ReactUsePromise
+  FetcherResponse
 } from '../types'
 import { serialize } from './serialize'
 import { cache } from './config'
 import { SWRGlobalState } from './global-state'
-import { isPromiseLike, isUndefined } from './helper'
+import { isUndefined } from './helper'
 // Basically same as Fetcher but without Conditional Fetching
 type PreloadFetcher<
   Data = unknown,
@@ -34,18 +33,9 @@ export const preload = <
   // Prevent preload to be called multiple times before used.
   if (PRELOAD[key]) return PRELOAD[key]
 
-  const req = fetcher(fnArg) as FetcherResponse<Data>
+  const req = fetcher(fnArg) as ReturnType<Fetcher>
   PRELOAD[key] = req
-  if (!isUndefined(req) && isPromiseLike(req)) {
-    return req.then(data => {
-      const promise = Promise.resolve(data) as ReactUsePromise<Data>
-      promise.value = data
-      promise.status = 'fulfilled'
-      PRELOAD[key] = promise
-      return data
-    }) as ReturnType<Fetcher>
-  }
-  return req as ReturnType<Fetcher>
+  return req
 }
 
 export const middleware: Middleware =
@@ -58,22 +48,8 @@ export const middleware: Middleware =
         const [, , , PRELOAD] = SWRGlobalState.get(cache) as GlobalState
         const req = PRELOAD[key]
         if (isUndefined(req)) return fetcher_(...args)
-        if (
-          !isPromiseLike(req) ||
-          (req as ReactUsePromise<any>).status === 'fulfilled'
-        ) {
-          delete PRELOAD[key]
-          return req
-        }
-        return (
-          req.then(data => {
-            delete PRELOAD[key]
-            return data
-          }) as Promise<any>
-        ).catch(err => {
-          delete PRELOAD[key]
-          throw err
-        })
+        delete PRELOAD[key]
+        return req
       })
     return useSWRNext(key_, fetcher, config)
   }
