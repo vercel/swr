@@ -1,17 +1,13 @@
 import { act, fireEvent, screen } from '@testing-library/react'
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useState, Profiler } from 'react'
 import useSWR, { preload, useSWRConfig } from 'swr'
 import { createKey, createResponse, renderWithConfig, sleep } from './utils'
 
 describe('useSWR - preload', () => {
   it('preload the fetcher function', async () => {
     const key = createKey()
-    let count = 0
 
-    const fetcher = () => {
-      ++count
-      return createResponse('foo')
-    }
+    const fetcher = jest.fn(() => createResponse('foo'))
 
     function Page() {
       const { data } = useSWR(key, fetcher)
@@ -19,21 +15,16 @@ describe('useSWR - preload', () => {
     }
 
     preload(key, fetcher)
-    expect(count).toBe(1)
+    expect(fetcher).toBeCalledTimes(1)
 
     renderWithConfig(<Page />)
     await screen.findByText('data:foo')
-    expect(count).toBe(1)
+    expect(fetcher).toBeCalledTimes(1)
   })
 
   it('should avoid preloading the resource multiple times', async () => {
     const key = createKey()
-    let count = 0
-
-    const fetcher = () => {
-      ++count
-      return createResponse('foo')
-    }
+    const fetcher = jest.fn(() => createResponse('foo'))
 
     function Page() {
       const { data } = useSWR(key, fetcher)
@@ -43,21 +34,16 @@ describe('useSWR - preload', () => {
     preload(key, fetcher)
     preload(key, fetcher)
     preload(key, fetcher)
-    expect(count).toBe(1)
+    expect(fetcher).toBeCalledTimes(1)
 
     renderWithConfig(<Page />)
     await screen.findByText('data:foo')
-    expect(count).toBe(1)
+    expect(fetcher).toBeCalledTimes(1)
   })
 
   it('should be able to prealod resources in effects', async () => {
     const key = createKey()
-    let count = 0
-
-    const fetcher = () => {
-      ++count
-      return createResponse('foo')
-    }
+    const fetcher = jest.fn(() => createResponse('foo'))
 
     function Comp() {
       const { data } = useSWR(key, fetcher)
@@ -77,38 +63,40 @@ describe('useSWR - preload', () => {
     }
 
     renderWithConfig(<Page />)
-    expect(count).toBe(1)
+    expect(fetcher).toBeCalledTimes(1)
 
     fireEvent.click(screen.getByText('click'))
 
     await screen.findByText('data:foo')
-    expect(count).toBe(1)
+    expect(fetcher).toBeCalledTimes(1)
   })
 
   it('preload the fetcher function with the suspense mode', async () => {
     const key = createKey()
-    let count = 0
-
-    const fetcher = () => {
-      ++count
-      return createResponse('foo')
-    }
-
+    const fetcher = jest.fn(() => createResponse('foo'))
+    const onRender = jest.fn()
     function Page() {
       const { data } = useSWR(key, fetcher, { suspense: true })
       return <div>data:{data}</div>
     }
 
     preload(key, fetcher)
-    expect(count).toBe(1)
+    expect(fetcher).toBeCalledTimes(1)
 
     renderWithConfig(
-      <Suspense fallback="loading">
+      <Suspense
+        fallback={
+          <Profiler id={key} onRender={onRender}>
+            loading
+          </Profiler>
+        }
+      >
         <Page />
       </Suspense>
     )
     await screen.findByText('data:foo')
-    expect(count).toBe(1)
+    expect(onRender).toBeCalledTimes(1)
+    expect(fetcher).toBeCalledTimes(1)
   })
 
   it('avoid suspense waterfall by prefetching the resources', async () => {
@@ -189,33 +177,35 @@ describe('useSWR - preload', () => {
   it('dedupe requests during preloading', async () => {
     const key = createKey()
 
-    let fetcherCount = 0
-    let renderCount = 0
-
-    const fetcher = () => {
-      ++fetcherCount
-      return createResponse('foo', { delay: 50 })
-    }
+    const fetcher = jest.fn(() =>
+      createResponse('foo', {
+        delay: 50
+      })
+    )
+    const onRender = jest.fn()
 
     function Page() {
-      ++renderCount
       const { data } = useSWR(key, fetcher, { dedupingInterval: 0 })
-      return <div>data:{data}</div>
+      return (
+        <Profiler id={key} onRender={onRender}>
+          data:{data}
+        </Profiler>
+      )
     }
 
     preload(key, fetcher)
-    expect(fetcherCount).toBe(1)
+    expect(fetcher).toBeCalledTimes(1)
 
     const { rerender } = renderWithConfig(<Page />)
-    expect(renderCount).toBe(1)
+    expect(onRender).toBeCalledTimes(1)
     // rerender when the preloading is in-flight, and the deduping interval is over
     await act(() => sleep(10))
     rerender(<Page />)
-    expect(renderCount).toBe(2)
+    expect(onRender).toBeCalledTimes(2)
 
     await screen.findByText('data:foo')
-    expect(fetcherCount).toBe(1)
-    expect(renderCount).toBe(3)
+    expect(fetcher).toBeCalledTimes(1)
+    expect(onRender).toBeCalledTimes(3)
   })
 
   it('should pass serialize key to fetcher', async () => {

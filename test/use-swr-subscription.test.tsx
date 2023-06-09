@@ -212,10 +212,8 @@ describe('useSWRSubscription', () => {
     const placeholderFn: (data: number) => void = () => {}
     let callback: (data: number) => void = placeholderFn
     const sub = (fn: (data: number) => void) => {
-      console.log('sub')
       callback = fn
       return () => {
-        console.log('unsub')
         callback = placeholderFn
       }
     }
@@ -241,7 +239,6 @@ describe('useSWRSubscription', () => {
               setKey(value => value + 1)
               setTimeout(() => {
                 emit(2)
-                console.log(callback === placeholderFn)
               }, 100)
             }}
           >
