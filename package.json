@@ -18,12 +18,14 @@
     "./package.json": "./package.json",
     ".": {
       "types": "./core/dist/index.d.ts",
+      "react-server": "./core/dist/react-server.mjs",
       "import": "./core/dist/index.mjs",
       "module": "./core/dist/index.esm.js",
       "require": "./core/dist/index.js"
     },
     "./infinite": {
       "types": "./infinite/dist/infinite/index.d.ts",
+      "react-server": "./infinite/dist/react-server.mjs",
       "import": "./infinite/dist/index.mjs",
       "module": "./infinite/dist/index.esm.js",
       "require": "./infinite/dist/index.js"
@@ -111,7 +113,7 @@
     "@types/use-sync-external-store": "^0.0.3",
     "@typescript-eslint/eslint-plugin": "5.59.8",
     "@typescript-eslint/parser": "5.59.8",
-    "bunchee": "3.2.0",
+    "bunchee": "3.3.1",
     "eslint": "8.42.0",
     "eslint-config-prettier": "8.8.0",
     "eslint-plugin-jest-dom": "5.0.1",
