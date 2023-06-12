@@ -24,7 +24,7 @@ on:
 name: Trigger Release
 
 env:
-  PNPM_VERSION: 7.26.1
+  PNPM_VERSION: 8.4.0
   SEMVER_TYPE: ${{ github.event.inputs.semverType }}
   RELEASE_TYPE: ${{ github.event.inputs.releaseType }}
 
