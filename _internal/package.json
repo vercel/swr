@@ -2,11 +2,16 @@
   "main": "./dist/index.js",
   "module": "./dist/index.esm.js",
   "types": "./dist/index.d.ts",
-  "exports": "./dist/index.mjs",
+  "exports": {
+    "types": "./dist/index.d.ts",
+    "import": "./dist/index.mjs",
+    "module": "./dist/index.esm.js",
+    "require": "./dist/index.js"
+  },
   "private": true,
   "scripts": {
-    "watch": "bunchee index.ts -w",
-    "build": "bunchee index.ts",
+    "watch": "bunchee -w",
+    "build": "bunchee",
     "types:check": "tsc --noEmit",
     "clean": "rimraf dist"
   },
