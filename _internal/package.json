@@ -11,7 +11,7 @@
   "private": true,
   "scripts": {
     "watch": "bunchee -w",
-    "build": "bunchee",
+    "build": "",
     "types:check": "tsc --noEmit",
     "clean": "rimraf dist"
   },
