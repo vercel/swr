@@ -43,7 +43,7 @@
       "require": "./subscription/dist/index.js"
     },
     "./mutation": {
-      "types": "./mutation/dist/mutation/index.d.ts",
+      "types": "./mutation/dist/index.d.ts",
       "import": "./mutation/dist/index.mjs",
       "module": "./mutation/dist/index.esm.js",
       "require": "./mutation/dist/index.js"
