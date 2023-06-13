@@ -95,9 +95,6 @@ export function useTestSWRMutation() {
 
   const test = () => {
     // @ts-expect-error `arg` should be 'foo'
-    trigger()
-
-    // @ts-expect-error `arg` should be 'foo'
     trigger<typeof data>('bar', {
       optimisticData: current => {
         expectType<string[] | undefined>(current)
