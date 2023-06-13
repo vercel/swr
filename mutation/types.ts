@@ -56,7 +56,7 @@ interface TriggerWithArgs<
   ExtraArg = never
 > {
   <SWRData = Data>(
-    extraArgument: ExtraArg,
+    extraArgument?: ExtraArg,
     options?: SWRMutationConfiguration<
       Data,
       Error,
