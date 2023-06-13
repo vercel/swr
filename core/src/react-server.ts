@@ -1,1 +1,1 @@
-export { unstable_serialize } from './use-swr'
+export { unstable_serialize } from './serialize'

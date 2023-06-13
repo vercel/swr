@@ -744,7 +744,7 @@ export const SWRConfig = OBJECT.defineProperty(ConfigProvider, 'defaultValue', {
   defaultValue: FullConfiguration
 }
 
-export const unstable_serialize = (key: Key) => serialize(key)[0]
+export { unstable_serialize } from './serialize'
 
 /**
  * A hook to fetch data.

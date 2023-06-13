@@ -6,7 +6,7 @@
   "private": true,
   "scripts": {
     "watch": "bunchee -w",
-    "build": " bunchee",
+    "build": "bunchee",
     "types:check": "tsc --noEmit",
     "clean": "rimraf dist"
   },
