@@ -49,7 +49,7 @@ export type SWRMutationConfiguration<
 }
 
 type RemoveUndefined<T> = T extends undefined ? never : T
-interface TriggerWithArgs<
+export interface TriggerWithArgs<
   Data = any,
   Error = any,
   SWRMutationKey extends Key = Key,
@@ -87,7 +87,7 @@ interface TriggerWithArgs<
   ): Promise<Data | undefined>
 }
 
-interface TriggerWithoutArgs<
+export interface TriggerWithoutArgs<
   Data = any,
   Error = any,
   SWRMutationKey extends Key = Key,
