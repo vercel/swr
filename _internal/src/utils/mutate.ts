@@ -139,7 +139,7 @@ export async function internalMutate<Data>(
     // Do optimistic data update.
     if (hasOptimisticData) {
       optimisticData = isFunction(optimisticData)
-        ? optimisticData(committedData)
+        ? optimisticData(committedData, displayedData)
         : optimisticData
 
       // When we set optimistic data, backup the current committedData data in `_c`.
