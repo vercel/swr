@@ -140,7 +140,7 @@ export interface SWRMutationResponse<
    * the fetcher, and override the options for the mutation hook.
    */
   trigger: [ExtraArg] extends [never]
-    ? TriggerWithoutArgs<Data, Error, ExtraArg, SWRMutationKey>
+    ? TriggerWithoutArgs<Data, Error, SWRMutationKey, ExtraArg>
     : TriggerWithArgs<Data, Error, SWRMutationKey, ExtraArg>
   /**
    * Function to reset the mutation state (`data`, `error`, and `isMutating`).
