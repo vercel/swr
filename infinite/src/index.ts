@@ -30,17 +30,20 @@ import type {
   SWRInfiniteCompareFn
 } from './types'
 import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js'
+import { INFINITE_PREFIX, getFirstPageKey } from './serialize'
 
-const INFINITE_PREFIX = '$inf$'
+// const INFINITE_PREFIX = '$inf$'
 const EMPTY_PROMISE = Promise.resolve() as Promise<undefined>
 
-const getFirstPageKey = (getKey: SWRInfiniteKeyLoader) => {
-  return serialize(getKey ? getKey(0, null) : null)[0]
-}
+// const getFirstPageKey = (getKey: SWRInfiniteKeyLoader) => {
+//   return serialize(getKey ? getKey(0, null) : null)[0]
+// }
 
-export const unstable_serialize = (getKey: SWRInfiniteKeyLoader) => {
-  return INFINITE_PREFIX + getFirstPageKey(getKey)
-}
+export { unstable_serialize } from './serialize'
+
+// export const unstable_serialize = (getKey: SWRInfiniteKeyLoader) => {
+//   return INFINITE_PREFIX + getFirstPageKey(getKey)
+// }
 
 export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
   (
