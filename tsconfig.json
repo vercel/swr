@@ -17,6 +17,8 @@
     "target": "ES2018",
     "baseUrl": ".",
     "noEmitOnError": true,
+    /** FIXME: only use this to skip build error */
+    "downlevelIteration": true,
     "paths": {
       "swr": ["./core/index.ts"],
       "swr/infinite": ["./infinite/index.ts"],
