@@ -20,6 +20,8 @@ export const isFunction = <
   v: unknown
 ): v is T => typeof v == 'function'
 export const mergeObjects = (a: any, b?: any) => ({ ...a, ...b })
+export const isPromiseLike = (x: unknown): x is PromiseLike<unknown> =>
+  isFunction((x as any).then)
 
 const STR_UNDEFINED = 'undefined'
 

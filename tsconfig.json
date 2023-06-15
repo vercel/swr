@@ -17,6 +17,7 @@
     "target": "ES2018",
     "baseUrl": ".",
     "noEmitOnError": true,
+    "downlevelIteration": true,
     "paths": {
       "swr": ["./core/index.ts"],
       "swr/infinite": ["./infinite/index.ts"],

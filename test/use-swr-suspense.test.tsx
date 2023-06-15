@@ -1,7 +1,6 @@
 import { act, fireEvent, screen } from '@testing-library/react'
-import type { ReactNode, PropsWithChildren } from 'react'
 import { Profiler } from 'react'
-import React, { Suspense, useReducer, useState } from 'react'
+import { Suspense, useReducer, useState } from 'react'
 import useSWR, { mutate } from 'swr'
 import {
   createKey,
@@ -10,23 +9,7 @@ import {
   renderWithGlobalCache,
   sleep
 } from './utils'
-
-class ErrorBoundary extends React.Component<
-  PropsWithChildren<{ fallback: ReactNode }>
-> {
-  state = { hasError: false }
-  static getDerivedStateFromError() {
-    return {
-      hasError: true
-    }
-  }
-  render() {
-    if (this.state.hasError) {
-      return this.props.fallback
-    }
-    return this.props.children
-  }
-}
+import { ErrorBoundary } from 'react-error-boundary'
 
 describe('useSWR - suspense', () => {
   afterEach(() => {

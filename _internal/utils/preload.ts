@@ -8,7 +8,7 @@ import type {
 import { serialize } from './serialize'
 import { cache } from './config'
 import { SWRGlobalState } from './global-state'
-
+import { isUndefined } from './helper'
 // Basically same as Fetcher but without Conditional Fetching
 type PreloadFetcher<
   Data = unknown,
@@ -47,11 +47,9 @@ export const middleware: Middleware =
         const [key] = serialize(key_)
         const [, , , PRELOAD] = SWRGlobalState.get(cache) as GlobalState
         const req = PRELOAD[key]
-        if (req) {
-          delete PRELOAD[key]
-          return req
-        }
-        return fetcher_(...args)
+        if (isUndefined(req)) return fetcher_(...args)
+        delete PRELOAD[key]
+        return req
       })
     return useSWRNext(key_, fetcher, config)
   }

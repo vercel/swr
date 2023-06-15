@@ -39,7 +39,8 @@ import type {
   SWRHook,
   RevalidateEvent,
   StateDependencies,
-  GlobalState
+  GlobalState,
+  ReactUsePromise
 } from 'swr/_internal'
 
 const use =
@@ -105,7 +106,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     keepPreviousData
   } = config
 
-  const [EVENT_REVALIDATORS, MUTATION, FETCH] = SWRGlobalState.get(
+  const [EVENT_REVALIDATORS, MUTATION, FETCH, PRELOAD] = SWRGlobalState.get(
     cache
   ) as GlobalState
 
@@ -615,7 +616,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     // Keep the original key in the cache.
     setCache({ _k: fnArg })
 
-    // Trigger a revalidation.
+    // Trigger a revalidation
     if (shouldDoInitialRevalidation) {
       if (isUndefined(data) || IS_SERVER) {
         // Revalidate immediately.
@@ -698,13 +699,14 @@ export const useSWRHandler = <Data = any, Error = any>(
     fetcherRef.current = fetcher
     configRef.current = config
     unmountedRef.current = false
+    const req = PRELOAD[key]
+    if (!isUndefined(req)) {
+      const promise = boundMutate(req)
+      use(promise)
+    }
 
     if (isUndefined(error)) {
-      const promise: Promise<boolean> & {
-        status?: 'pending' | 'fulfilled' | 'rejected'
-        value?: boolean
-        reason?: unknown
-      } = revalidate(WITH_DEDUPE)
+      const promise: ReactUsePromise<boolean> = revalidate(WITH_DEDUPE)
       if (!isUndefined(returnedData)) {
         promise.status = 'fulfilled'
         promise.value = true
