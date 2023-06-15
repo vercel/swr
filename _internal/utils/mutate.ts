@@ -74,8 +74,7 @@ export async function internalMutate<Data>(
     const keyFilter = _key
     const matchedKeys: Key[] = []
     const it = cache.keys()
-    for (let keyIt = it.next(); !keyIt.done; keyIt = it.next()) {
-      const key = keyIt.value
+    for (const key of it) {
       if (
         // Skip the special useSWRInfinite and useSWRSubscription keys.
         !/^\$(inf|sub)\$/.test(key) &&
