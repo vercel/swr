@@ -29,4 +29,13 @@ test.describe('rendering', () => {
     await page.getByRole('button', { name: 'retry' }).click()
     await expect(page.getByText('data: SWR suspense retry works')).toBeVisible()
   })
+  test('should be able to use `unstable_serialize` in server component', async ({
+    page
+  }) => {
+    await page.goto('./react-server-entry', { waitUntil: 'commit' })
+    await expect(page.getByText('unstable_serialize: useSWR')).toBeVisible()
+    await expect(
+      page.getByText('infinite_unstable_serialize: $inf$useSWRInfinite')
+    ).toBeVisible()
+  })
 })
