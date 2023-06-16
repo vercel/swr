@@ -24,14 +24,14 @@
       "require": "./core/dist/index.js"
     },
     "./infinite": {
-      "types": "./infinite/dist/infinite/index.d.ts",
+      "types": "./infinite/dist/index.d.ts",
       "react-server": "./infinite/dist/react-server.mjs",
       "import": "./infinite/dist/index.mjs",
       "module": "./infinite/dist/index.esm.js",
       "require": "./infinite/dist/index.js"
     },
     "./immutable": {
-      "types": "./immutable/dist/immutable/index.d.ts",
+      "types": "./immutable/dist/index.d.ts",
       "import": "./immutable/dist/index.mjs",
       "module": "./immutable/dist/index.esm.js",
       "require": "./immutable/dist/index.js"

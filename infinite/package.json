@@ -1,7 +1,7 @@
 {
   "main": "./dist/index.js",
   "module": "./dist/index.esm.js",
-  "types": "./dist/infinite/index.d.ts",
+  "types": "./dist/index.d.ts",
   "exports": {
     "types": "./dist/index.d.ts",
     "react-server": "./dist/react-server.mjs",
