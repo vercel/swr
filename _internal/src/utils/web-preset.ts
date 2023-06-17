@@ -30,12 +30,10 @@ const initFocus = (callback: () => void) => {
   if (isDocumentDefined) {
     document.addEventListener('visibilitychange', callback)
   }
-  onWindowEvent('focus', callback)
   return () => {
     if (isDocumentDefined) {
       document.removeEventListener('visibilitychange', callback)
     }
-    offWindowEvent('focus', callback)
   }
 }
 
