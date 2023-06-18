@@ -49,6 +49,7 @@ export type SWRMutationConfiguration<
 }
 
 type RemoveUndefined<T> = T extends undefined ? never : T
+type IsUndefinedIncluded<T> = undefined extends T ? true : false
 export interface TriggerWithArgs<
   Data = any,
   Error = any,
@@ -77,6 +78,44 @@ export interface TriggerWithArgs<
   ): Promise<RemoveUndefined<Data>>
   <SWRData = Data>(
     extraArgument: ExtraArg,
+    options?: SWRMutationConfiguration<
+      Data,
+      Error,
+      SWRMutationKey,
+      ExtraArg,
+      SWRData
+    > & { throwOnError: false }
+  ): Promise<Data | undefined>
+}
+
+interface TriggerWithOptionsArgs<
+  Data = any,
+  Error = any,
+  SWRMutationKey extends Key = Key,
+  ExtraArg = never
+> {
+  <SWRData = Data>(
+    extraArgument?: ExtraArg,
+    options?: SWRMutationConfiguration<
+      Data,
+      Error,
+      SWRMutationKey,
+      ExtraArg,
+      SWRData
+    >
+  ): Promise<Data>
+  <SWRData = Data>(
+    extraArgument?: ExtraArg,
+    options?: SWRMutationConfiguration<
+      Data,
+      Error,
+      SWRMutationKey,
+      ExtraArg,
+      SWRData
+    > & { throwOnError: true }
+  ): Promise<RemoveUndefined<Data>>
+  <SWRData = Data>(
+    extraArgument?: ExtraArg,
     options?: SWRMutationConfiguration<
       Data,
       Error,
@@ -141,6 +180,8 @@ export interface SWRMutationResponse<
    */
   trigger: [ExtraArg] extends [never]
     ? TriggerWithoutArgs<Data, Error, SWRMutationKey, ExtraArg>
+    : IsUndefinedIncluded<ExtraArg> extends true
+    ? TriggerWithOptionsArgs<Data, Error, SWRMutationKey, ExtraArg>
     : TriggerWithArgs<Data, Error, SWRMutationKey, ExtraArg>
   /**
    * Function to reset the mutation state (`data`, `error`, and `isMutating`).
