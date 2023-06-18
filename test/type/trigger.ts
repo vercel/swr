@@ -114,6 +114,22 @@ export function useTestSWRMutation() {
   test()
 }
 
+export function useTestSWRMutationWithOptionalArgs() {
+  const { trigger } = useSWRMutation(
+    'key',
+    async (_, { arg }: { arg?: 'foo' }) => {
+      return arg?.toUpperCase()
+    }
+  )
+
+  const test = () => {
+    expectType<Promise<string | undefined>>(trigger('foo'))
+    expectType<Promise<string | undefined>>(trigger(undefined))
+    expectType<Promise<string | undefined>>(trigger())
+  }
+  test()
+}
+
 export function useTestSWRMutationWithSWRMutate() {
   const { mutate } = useSWR('/some/key', () => {
     return {
