@@ -50,6 +50,7 @@
     },
     "./_internal": {
       "types": "./_internal/dist/index.d.ts",
+      "react-server": "./_internal/dist/react-server.mjs",
       "import": "./_internal/dist/index.mjs",
       "module": "./_internal/dist/index.esm.js",
       "require": "./_internal/dist/index.js"
