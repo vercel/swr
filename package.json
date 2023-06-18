@@ -50,6 +50,7 @@
     },
     "./_internal": {
       "types": "./_internal/dist/index.d.ts",
+      "react-server": "./_internal/dist/react-server.mjs",
       "import": "./_internal/dist/index.mjs",
       "module": "./_internal/dist/index.esm.js",
       "require": "./_internal/dist/index.js"
@@ -113,7 +114,7 @@
     "@types/use-sync-external-store": "^0.0.3",
     "@typescript-eslint/eslint-plugin": "5.59.8",
     "@typescript-eslint/parser": "5.59.8",
-    "bunchee": "3.3.4",
+    "bunchee": "3.4.0",
     "eslint": "8.42.0",
     "eslint-config-prettier": "8.8.0",
     "eslint-plugin-jest-dom": "5.0.1",

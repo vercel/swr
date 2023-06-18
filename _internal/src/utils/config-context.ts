@@ -9,7 +9,7 @@ import {
 import { cache as defaultCache } from './config'
 import { initCache } from './cache'
 import { mergeConfigs } from './merge-config'
-import { UNDEFINED, mergeObjects, isFunction } from './helper'
+import { UNDEFINED, mergeObjects, isFunction } from './shared'
 import { useIsomorphicLayoutEffect } from './env'
 import type {
   SWRConfiguration,

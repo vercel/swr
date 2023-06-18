@@ -10,7 +10,7 @@ import { stableHash } from './hash'
 import { initCache } from './cache'
 import { preset } from './web-preset'
 import { slowConnection } from './env'
-import { isUndefined, noop, mergeObjects } from './helper'
+import { isUndefined, noop, mergeObjects } from './shared'
 
 // error retry
 const onErrorRetry = (
