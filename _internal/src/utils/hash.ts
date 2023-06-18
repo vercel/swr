@@ -1,4 +1,4 @@
-import { OBJECT, isUndefined } from './helper'
+import { OBJECT, isUndefined } from './shared'
 
 // use WeakMap to store the object->key mapping
 // so the objects can be garbage collected.

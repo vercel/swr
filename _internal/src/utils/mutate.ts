@@ -1,12 +1,12 @@
 import { serialize } from './serialize'
+import { createCacheHelper } from './helper'
 import {
-  createCacheHelper,
   isFunction,
   isUndefined,
   UNDEFINED,
   mergeObjects,
   isPromiseLike
-} from './helper'
+} from './shared'
 import { SWRGlobalState } from './global-state'
 import { getTimestamp } from './timestamp'
 import * as revalidateEvents from '../constants'

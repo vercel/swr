@@ -1,6 +1,6 @@
 import { defaultConfigOptions } from './web-preset'
 import { IS_SERVER } from './env'
-import { UNDEFINED, mergeObjects, noop } from './helper'
+import { UNDEFINED, mergeObjects, noop } from './shared'
 import { internalMutate } from './mutate'
 import { SWRGlobalState } from './global-state'
 import * as revalidateEvents from '../constants'

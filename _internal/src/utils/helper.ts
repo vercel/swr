@@ -1,27 +1,9 @@
-import { SWRGlobalState } from './global-state'
 import type { Cache, State, GlobalState } from '../types'
+import { SWRGlobalState } from './global-state'
+import { isUndefined, mergeObjects } from './shared'
 
 const EMPTY_CACHE = {}
 const INITIAL_CACHE: Record<string, any> = {}
-export const noop = () => {}
-
-// Using noop() as the undefined value as undefined can be replaced
-// by something else. Prettier ignore and extra parentheses are necessary here
-// to ensure that tsc doesn't remove the __NOINLINE__ comment.
-// prettier-ignore
-export const UNDEFINED = (/*#__NOINLINE__*/ noop()) as undefined
-
-export const OBJECT = Object
-
-export const isUndefined = (v: any): v is undefined => v === UNDEFINED
-export const isFunction = <
-  T extends (...args: any[]) => any = (...args: any[]) => any
->(
-  v: unknown
-): v is T => typeof v == 'function'
-export const mergeObjects = (a: any, b?: any) => ({ ...a, ...b })
-export const isPromiseLike = (x: unknown): x is PromiseLike<unknown> =>
-  isFunction((x as any).then)
 
 const STR_UNDEFINED = 'undefined'
 
@@ -67,3 +49,5 @@ export const createCacheHelper = <Data = any, T = State<Data, any>>(
     }
   ] as const
 }
+
+// export { UNDEFINED, OBJECT, isUndefined, isFunction, mergeObjects, isPromiseLike }

@@ -1,5 +1,5 @@
 import { stableHash } from './hash'
-import { isFunction } from './helper'
+import { isFunction } from './shared'
 
 import type { Key } from '../types'
 

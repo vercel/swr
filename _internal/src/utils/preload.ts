@@ -8,7 +8,7 @@ import type {
 import { serialize } from './serialize'
 import { cache } from './config'
 import { SWRGlobalState } from './global-state'
-import { isUndefined } from './helper'
+import { isUndefined } from './shared'
 // Basically same as Fetcher but without Conditional Fetching
 type PreloadFetcher<
   Data = unknown,

@@ -1,4 +1,4 @@
-import { isFunction } from './helper'
+import { isFunction } from './shared'
 
 import type { Key, Fetcher, SWRConfiguration } from '../types'
 
