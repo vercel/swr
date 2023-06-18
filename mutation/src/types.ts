@@ -50,7 +50,7 @@ export type SWRMutationConfiguration<
 
 type RemoveUndefined<T> = T extends undefined ? never : T
 type IsUndefinedIncluded<T> = undefined extends T ? true : false
-interface TriggerWithArgs<
+export interface TriggerWithArgs<
   Data = any,
   Error = any,
   SWRMutationKey extends Key = Key,
@@ -126,7 +126,7 @@ interface TriggerWithOptionalArgs<
   ): Promise<Data | undefined>
 }
 
-interface TriggerWithoutArgs<
+export interface TriggerWithoutArgs<
   Data = any,
   Error = any,
   SWRMutationKey extends Key = Key,
@@ -179,7 +179,7 @@ export interface SWRMutationResponse<
    * the fetcher, and override the options for the mutation hook.
    */
   trigger: [ExtraArg] extends [never]
-    ? TriggerWithoutArgs<Data, Error, ExtraArg, SWRMutationKey>
+    ? TriggerWithoutArgs<Data, Error, SWRMutationKey, ExtraArg>
     : IsUndefinedIncluded<ExtraArg> extends true
     ? TriggerWithOptionalArgs<Data, Error, SWRMutationKey, ExtraArg>
     : TriggerWithArgs<Data, Error, SWRMutationKey, ExtraArg>

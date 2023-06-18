@@ -4,7 +4,8 @@ import {
   isFunction,
   isUndefined,
   UNDEFINED,
-  mergeObjects
+  mergeObjects,
+  isPromiseLike
 } from './helper'
 import { SWRGlobalState } from './global-state'
 import { getTimestamp } from './timestamp'
@@ -73,8 +74,7 @@ export async function internalMutate<Data>(
     const keyFilter = _key
     const matchedKeys: Key[] = []
     const it = cache.keys()
-    for (let keyIt = it.next(); !keyIt.done; keyIt = it.next()) {
-      const key = keyIt.value
+    for (const key of it) {
       if (
         // Skip the special useSWRInfinite and useSWRSubscription keys.
         !/^\$(inf|sub)\$/.test(key) &&
@@ -93,7 +93,7 @@ export async function internalMutate<Data>(
     const [key] = serialize(_k)
     if (!key) return
     const [get, set] = createCacheHelper<Data, MutateState<Data>>(cache, key)
-    const [EVENT_REVALIDATORS, MUTATION, FETCH] = SWRGlobalState.get(
+    const [EVENT_REVALIDATORS, MUTATION, FETCH, PRELOAD] = SWRGlobalState.get(
       cache
     ) as GlobalState
 
@@ -103,6 +103,7 @@ export async function internalMutate<Data>(
         // Invalidate the key by deleting the concurrent request markers so new
         // requests will not be deduped.
         delete FETCH[key]
+        delete PRELOAD[key]
         if (revalidators && revalidators[0]) {
           return revalidators[0](revalidateEvents.MUTATE_EVENT).then(
             () => get().data
@@ -156,7 +157,7 @@ export async function internalMutate<Data>(
     }
 
     // `data` is a promise/thenable, resolve the final data first.
-    if (data && isFunction((data as Promise<Data>).then)) {
+    if (data && isPromiseLike(data)) {
       // This means that the mutation is async, we need to check timestamps to
       // avoid race conditions.
       data = await (data as Promise<Data>).catch(err => {

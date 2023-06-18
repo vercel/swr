@@ -1,4 +1,4 @@
-import type { BlockingData } from '../../_internal/types'
+import type { BlockingData } from 'swr/_internal'
 import { expectType } from './utils'
 
 export function testDataCached() {
