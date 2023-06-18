@@ -88,7 +88,7 @@ export interface TriggerWithArgs<
   ): Promise<Data | undefined>
 }
 
-interface TriggerWithOptionalArgs<
+interface TriggerWithOptionsArgs<
   Data = any,
   Error = any,
   SWRMutationKey extends Key = Key,
@@ -181,7 +181,7 @@ export interface SWRMutationResponse<
   trigger: [ExtraArg] extends [never]
     ? TriggerWithoutArgs<Data, Error, SWRMutationKey, ExtraArg>
     : IsUndefinedIncluded<ExtraArg> extends true
-    ? TriggerWithOptionalArgs<Data, Error, SWRMutationKey, ExtraArg>
+    ? TriggerWithOptionsArgs<Data, Error, SWRMutationKey, ExtraArg>
     : TriggerWithArgs<Data, Error, SWRMutationKey, ExtraArg>
   /**
    * Function to reset the mutation state (`data`, `error`, and `isMutating`).
