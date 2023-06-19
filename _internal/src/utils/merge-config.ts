@@ -1,4 +1,4 @@
-import { mergeObjects } from './helper'
+import { mergeObjects } from './shared'
 import type { FullConfiguration } from '../types'
 
 export const mergeConfigs = (

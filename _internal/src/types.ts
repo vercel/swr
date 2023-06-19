@@ -317,7 +317,9 @@ export type MutatorOptions<Data = any> = {
   populateCache?:
     | boolean
     | ((result: any, currentData: Data | undefined) => Data)
-  optimisticData?: Data | ((currentData?: Data) => Data)
+  optimisticData?:
+    | Data
+    | ((currentData: Data | undefined, displayedData: Data | undefined) => Data)
   rollbackOnError?: boolean | ((error: unknown) => boolean)
   throwOnError?: boolean
 }

@@ -1,5 +1,6 @@
 import type { ProviderConfiguration } from '../types'
-import { isUndefined, noop, isWindowDefined, isDocumentDefined } from './helper'
+import { isWindowDefined, isDocumentDefined } from './helper'
+import { isUndefined, noop } from './shared'
 
 /**
  * Due to the bug https://bugs.chromium.org/p/chromium/issues/detail?id=678075,
