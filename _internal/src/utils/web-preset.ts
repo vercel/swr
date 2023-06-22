@@ -16,24 +16,25 @@ const isOnline = () => online
 const [onWindowEvent, offWindowEvent] =
   isWindowDefined && window.addEventListener
     ? [
-        window.addEventListener.bind(window),
-        window.removeEventListener.bind(window)
-      ]
+      window.addEventListener.bind(window),
+      window.removeEventListener.bind(window)
+    ]
     : [noop, noop]
 
-const isVisible = () => {
-  const visibilityState = isDocumentDefined && document.visibilityState
-  return isUndefined(visibilityState) || visibilityState !== 'hidden'
+const isVisible = (): boolean => {
+  const hasDocument = isDocumentDefined()
+  const visibilityState = document?.visibilityState
+  return hasDocument && isUndefined(visibilityState) || visibilityState !== 'hidden'
 }
 
 const initFocus = (callback: () => void) => {
   // focus revalidate
-  if (isDocumentDefined) {
+  if (isDocumentDefined()) {
     document.addEventListener('visibilitychange', callback)
   }
   onWindowEvent('focus', callback)
   return () => {
-    if (isDocumentDefined) {
+    if (isDocumentDefined()) {
       document.removeEventListener('visibilitychange', callback)
     }
     offWindowEvent('focus', callback)
