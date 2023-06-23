@@ -16,7 +16,7 @@ jobs:
         uses: ./.github/workflows/install
 
       - name: Install Canary
-        run: corepack pnpm upgrade react@canary react-dom@canary use-sync-external-store@canary
+        run: pnpm upgrade react@canary react-dom@canary use-sync-external-store@canary
 
       - name: Lint and test
         run: |
