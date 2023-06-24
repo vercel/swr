@@ -1,7 +1,12 @@
 import type { MutableRefObject } from 'react'
 import React, { useRef, useCallback, useState } from 'react'
-import { useIsomorphicLayoutEffect, IS_REACT_LEGACY } from './env'
+import { useIsomorphicLayoutEffect, IS_REACT_LEGACY } from 'swr/_internal'
 
+export const startTransition = IS_REACT_LEGACY
+  ? (fn: (...args: any[]) => any) => {
+      fn()
+    }
+  : React.startTransition
 /**
  * An implementation of state with dependency-tracking.
  */
@@ -65,11 +70,7 @@ export const useStateWithDeps = <S = any>(
       }
 
       if (shouldRerender && !unmountedRef.current) {
-        if (IS_REACT_LEGACY) {
-          rerender({})
-        } else {
-          ;(React as any).startTransition(() => rerender({}))
-        }
+        rerender({})
       }
     },
     [rerender]
