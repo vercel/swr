@@ -1,7 +1,7 @@
 import { useCallback, useRef } from 'react'
 import useSWR, { useSWRConfig } from 'swr'
 import type { Middleware, Key } from 'swr/_internal'
-import { useStateWithDeps, startTransition } from './state'
+import { useStateWithDeps, useTransition } from './state'
 import {
   serialize,
   withMiddleware,
@@ -23,6 +23,7 @@ const mutation = (<Data, Error>() =>
     fetcher: MutationFetcher<Data>,
     config: SWRMutationConfiguration<Data, Error> = {}
   ) => {
+    const [isPending, startTransition] = useTransition()
     const { mutate } = useSWRConfig()
     const keyRef = useRef(key)
     const fetcherRef = useRef(fetcher)
@@ -127,7 +128,7 @@ const mutation = (<Data, Error>() =>
       },
       get isMutating() {
         stateDependencies.isMutating = true
-        return currentState.isMutating
+        return isPending || currentState.isMutating
       }
     }
   }) as unknown as Middleware

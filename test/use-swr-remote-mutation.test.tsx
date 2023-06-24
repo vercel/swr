@@ -784,7 +784,7 @@ describe('useSWR - remote mutation', () => {
     await act(() => sleep(20))
 
     // Shouldn't have intermediate states
-    expect(logger).toEqual([undefined, 2])
+    expect(logger).toEqual([undefined, 2, 2])
   })
 
   it('should error if no mutator is given', async () => {

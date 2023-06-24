@@ -2,11 +2,14 @@ import type { MutableRefObject } from 'react'
 import React, { useRef, useCallback, useState } from 'react'
 import { useIsomorphicLayoutEffect, IS_REACT_LEGACY } from 'swr/_internal'
 
-export const startTransition = IS_REACT_LEGACY
-  ? (fn: (...args: any[]) => any) => {
-      fn()
-    }
-  : React.startTransition
+const startTrainstion: React.TransitionStartFunction = callback => {
+  callback()
+}
+export const useTransition: () => [
+  isPending: boolean,
+  startTransition: React.TransitionStartFunction
+] = IS_REACT_LEGACY ? () => [false, startTrainstion] : React.useTransition
+
 /**
  * An implementation of state with dependency-tracking.
  */
@@ -17,7 +20,7 @@ export const useStateWithDeps = <S = any>(
   Record<keyof S, boolean>,
   (payload: Partial<S>) => void
 ] => {
-  const rerender = useState<Record<string, unknown>>({})[1]
+  const [, rerender] = useState<Record<string, unknown>>({})
   const unmountedRef = useRef(false)
   const stateRef = useRef(state)
 
@@ -48,33 +51,30 @@ export const useStateWithDeps = <S = any>(
    * })
    * ```
    */
-  const setState = useCallback(
-    (payload: Partial<S>) => {
-      let shouldRerender = false
+  const setState = useCallback((payload: Partial<S>) => {
+    let shouldRerender = false
 
-      const currentState = stateRef.current
-      for (const _ in payload) {
-        const k = _ as keyof S
+    const currentState = stateRef.current
+    for (const _ in payload) {
+      const k = _ as keyof S
 
-        // If the property has changed, update the state and mark rerender as
-        // needed.
-        if (currentState[k] !== payload[k]) {
-          currentState[k] = payload[k]
+      // If the property has changed, update the state and mark rerender as
+      // needed.
+      if (currentState[k] !== payload[k]) {
+        currentState[k] = payload[k]
 
-          // If the property is accessed by the component, a rerender should be
-          // triggered.
-          if (stateDependenciesRef.current[k]) {
-            shouldRerender = true
-          }
+        // If the property is accessed by the component, a rerender should be
+        // triggered.
+        if (stateDependenciesRef.current[k]) {
+          shouldRerender = true
         }
       }
+    }
 
-      if (shouldRerender && !unmountedRef.current) {
-        rerender({})
-      }
-    },
-    [rerender]
-  )
+    if (shouldRerender && !unmountedRef.current) {
+      rerender({})
+    }
+  }, [])
 
   useIsomorphicLayoutEffect(() => {
     unmountedRef.current = false
