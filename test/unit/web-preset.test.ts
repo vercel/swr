@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events'
 
-const FOCUS_EVENT = 'focus'
+const FOCUS_EVENT = 'visibilitychange'
 const VISIBILITYCHANGE_EVENT = 'visibilitychange'
 
 function createEventTarget() {
