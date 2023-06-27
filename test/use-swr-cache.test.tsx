@@ -190,8 +190,6 @@ describe('useSWR - cache provider', () => {
 
     await screen.findByText('0')
     await nextTick()
-    await focusOn(window)
-    await nextTick()
     screen.getByText('1')
   })
 
@@ -410,8 +408,6 @@ describe('useSWR - global cache', () => {
     screen.getByText('undefined')
 
     await screen.findByText('0')
-    await nextTick()
-    await focusOn(window)
     await nextTick()
     screen.getByText('1')
   })

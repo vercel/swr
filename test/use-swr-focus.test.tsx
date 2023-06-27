@@ -30,7 +30,6 @@ describe('useSWR - focus', () => {
 
     await waitForNextTick()
     // trigger revalidation
-    await focusWindow()
 
     await screen.findByText('data: 1')
   })
@@ -91,7 +90,6 @@ describe('useSWR - focus', () => {
     // change revalidateOnFocus to true
     fireEvent.click(screen.getByText('data: 0'))
     // trigger revalidation
-    await focusWindow()
     // data should update
     await screen.findByText('data: 1')
 
@@ -136,7 +134,6 @@ describe('useSWR - focus', () => {
     // still in throttling interval
     await act(() => sleep(20))
     // should be throttled
-    await focusWindow()
     await screen.findByText('data: 1')
     // wait for focusThrottleInterval
     await act(() => sleep(100))
@@ -173,7 +170,6 @@ describe('useSWR - focus', () => {
     // wait for throttle interval
     await act(() => sleep(100))
     // trigger revalidation
-    await focusWindow()
     await screen.findByText('data: 2')
 
     await waitForNextTick()
@@ -214,7 +210,6 @@ describe('useSWR - focus', () => {
     screen.getByText('data:')
     await screen.findByText('data: 0')
     await waitForNextTick()
-    await focusWindow()
     await screen.findByText('data: 1')
   })
 
