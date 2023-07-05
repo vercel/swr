@@ -12,7 +12,7 @@
   "private": true,
   "scripts": {
     "watch": "bunchee -w",
-    "build": "bunchee",
+    "build": "bunchee --external client-only",
     "types:check": "tsc --noEmit",
     "clean": "rimraf dist"
   },
