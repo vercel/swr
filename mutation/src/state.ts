@@ -1,14 +1,13 @@
-import type { MutableRefObject } from 'react'
+import type { MutableRefObject, TransitionFunction } from 'react'
 import React, { useRef, useCallback, useState } from 'react'
 import { useIsomorphicLayoutEffect, IS_REACT_LEGACY } from 'swr/_internal'
 
-const startTrainstion: React.TransitionStartFunction = callback => {
-  callback()
-}
-export const useTransition: () => [
-  isPending: boolean,
-  startTransition: React.TransitionStartFunction
-] = IS_REACT_LEGACY ? () => [false, startTrainstion] : React.useTransition
+export const startTransition: (scope: TransitionFunction) => void =
+  IS_REACT_LEGACY
+    ? React.startTransition
+    : cb => {
+        cb()
+      }
 
 /**
  * An implementation of state with dependency-tracking.
