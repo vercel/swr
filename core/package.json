@@ -16,10 +16,8 @@
     "types:check": "tsc --noEmit",
     "clean": "rimraf dist"
   },
-  "dependencies": {
-    "client-only": "*"
-  },
   "peerDependencies": {
+    "client-only": "*",
     "swr": "*",
     "react": "*",
     "use-sync-external-store": "*"
