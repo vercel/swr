@@ -45,8 +45,8 @@ importers:
         specifier: 5.59.8
         version: 5.59.8(eslint@8.42.0)(typescript@5.1.3)
       bunchee:
-        specifier: 3.4.1
-        version: 3.4.1(typescript@5.1.3)
+        specifier: 3.5.0
+        version: 3.5.0(typescript@5.1.3)
       eslint:
         specifier: 8.42.0
         version: 8.42.0
@@ -1995,12 +1995,12 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  /bunchee@3.4.1(typescript@5.1.3):
-    resolution: {integrity: sha512-iyIrtXftVahdMV5r7iInyloUpqVXqfTdLUGn4l/GAy6evWE0zQLVhoPPJ8b1ghFpJYVYdHdCwEQd/u45aYtnvw==}
+  /bunchee@3.5.0(typescript@5.1.3):
+    resolution: {integrity: sha512-lJBj1U2nZQEQpNt1h0f3rGx2sn2qA9BHzGPpLRuJlUAKCOz3n8WU6P/mPPmGKn1NTuS9+OoTuEX4JW8lvZFBwg==}
     engines: {node: '>= 16'}
     hasBin: true
     peerDependencies:
-      typescript: '>=4.1.0 <5.0.0 || >=5.0.0 <6.0.0'
+      typescript: ^4.1 || ^5.0
     peerDependenciesMeta:
       '@swc/helpers':
         optional: true
@@ -2015,11 +2015,11 @@ packages:
       '@swc/core': 1.3.46(@swc/helpers@0.5.0)
       '@swc/helpers': 0.5.0
       arg: 5.0.2
+      magic-string: 0.30.0
       pretty-bytes: 5.6.0
       publint: 0.1.11
       rollup: 3.20.2
       rollup-plugin-dts: 5.3.0(rollup@3.20.2)(typescript@5.1.3)
-      rollup-plugin-preserve-shebang: 1.0.1
       rollup-plugin-swc3: 0.8.1(@swc/core@1.3.46)(rollup@3.20.2)
       tslib: 2.5.0
       typescript: 5.1.3
@@ -3946,12 +3946,6 @@ packages:
     hasBin: true
     dev: true
 
-  /magic-string@0.25.9:
-    resolution: {integrity: sha512-RmF0AsMzgt25qzqqLc1+MbHmhdx0ojF2Fvs4XnOqz2ZOBXzzkEwc/dJQZCYHAn7v1jbVOjAZfK8msRn4BxO4VQ==}
-    dependencies:
-      sourcemap-codec: 1.4.8
-    dev: true
-
   /magic-string@0.27.0:
     resolution: {integrity: sha512-8UnnX2PeRAPZuN12svgR9j7M1uWMovg/CEnIwIG0LFkXSJJe4PdfUGiTGl8V9bsBHFUtfVINcSyYxd7q+kx9fA==}
     engines: {node: '>=12'}
@@ -4655,12 +4649,6 @@ packages:
       '@babel/code-frame': 7.21.4
     dev: true
 
-  /rollup-plugin-preserve-shebang@1.0.1:
-    resolution: {integrity: sha512-gk7ExGBqvUinhgrvldKHkAKXXwRkWMXMZymNkrtn50uBgHITlhRjhnKmbNGwAIc4Bzgl3yLv7/8Fhi/XeHhFKg==}
-    dependencies:
-      magic-string: 0.25.9
-    dev: true
-
   /rollup-plugin-swc3@0.8.1(@swc/core@1.3.46)(rollup@3.20.2):
     resolution: {integrity: sha512-xoHRmrGamXrz4rNfmXiTNf/6pAYY2daFOJavVsrG/HvBgsoa8lx9rtas9XiqOl5DqD04tGn8MiUwarITOPyh8A==}
     engines: {node: '>=12'}
@@ -4823,11 +4811,6 @@ packages:
   /source-map@0.6.1:
     resolution: {integrity: sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==}
     engines: {node: '>=0.10.0'}
-    dev: true
-
-  /sourcemap-codec@1.4.8:
-    resolution: {integrity: sha512-9NykojV5Uih4lgo5So5dtw+f0JgJX30KCNI8gwhz2J9A15wD0Ml6tjHKwf6fTSa6fAdVBdZeNOs9eJ71qCk8vA==}
-    deprecated: Please use @jridgewell/sourcemap-codec instead
     dev: true
 
   /sprintf-js@1.0.3:
