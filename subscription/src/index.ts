@@ -1,5 +1,3 @@
-'use client'
-
 import type { Key, SWRHook, Middleware, SWRConfiguration, SWRConfig } from 'swr'
 import type {
   SWRSubscriptionOptions,

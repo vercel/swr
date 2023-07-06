@@ -1,4 +1,4 @@
-'use client'
+import 'client-only'
 
 // useSWR
 import useSWR from './use-swr'
