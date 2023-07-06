@@ -1,17 +1,12 @@
-import { act, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import useSWR from 'swr'
 import {
   nextTick as waitForNextTick,
-  focusOn,
+  toggleVisibility,
   createKey,
-  renderWithConfig
+  renderWithConfig,
+  dispatchWindowEvent
 } from './utils'
-
-const focusWindow = () => focusOn(window)
-const dispatchWindowEvent = event =>
-  act(async () => {
-    window.dispatchEvent(new Event(event))
-  })
 
 describe('useSWR - offline', () => {
   it('should not revalidate when offline', async () => {
@@ -36,7 +31,7 @@ describe('useSWR - offline', () => {
     await dispatchWindowEvent('offline')
 
     // trigger focus revalidation
-    await focusWindow()
+    toggleVisibility()
 
     // should not be revalidated
     screen.getByText('data: 0')

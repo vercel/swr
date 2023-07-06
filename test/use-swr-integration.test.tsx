@@ -7,7 +7,8 @@ import {
   nextTick as waitForNextTick,
   renderWithConfig,
   createKey,
-  renderWithGlobalCache
+  renderWithGlobalCache,
+  toggleVisibility
 } from './utils'
 
 describe('useSWR', () => {
@@ -389,7 +390,7 @@ describe('useSWR', () => {
     await screen.findByText('hello, Initial')
 
     await waitForNextTick()
-    fireEvent.focus(window)
+    toggleVisibility()
 
     await screen.findByText(`hello, ${initialKey}`)
 

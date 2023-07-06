@@ -1,4 +1,4 @@
-import { act, fireEvent, render } from '@testing-library/react'
+import { act, render } from '@testing-library/react'
 import { SWRConfig } from 'swr'
 
 export function sleep(time: number) {
@@ -21,9 +21,14 @@ export const createResponse = <T,>(
 
 export const nextTick = () => act(() => sleep(1))
 
-export const focusOn = (element: any) =>
-  act(async () => {
-    fireEvent.focus(element)
+export const toggleVisibility = (_?: any) =>
+  act(() => {
+    document.dispatchEvent(new Event('visibilitychange'))
+  })
+
+export const dispatchWindowEvent = (event: string) =>
+  act(() => {
+    window.dispatchEvent(new Event(event))
   })
 
 export const createKey = () => 'swr-key-' + ~~(Math.random() * 1e7)
