@@ -17,6 +17,7 @@
     "clean": "rimraf dist"
   },
   "peerDependencies": {
+    "client-only": "*",
     "swr": "*",
     "react": "*",
     "use-sync-external-store": "*"
