@@ -12,8 +12,7 @@ function createEventTarget() {
 
 function runTests(propertyName) {
   let initFocus
-  const eventName =
-    propertyName === 'window' && VISIBILITYCHANGE_EVENT
+  const eventName = VISIBILITYCHANGE_EVENT
 
   describe(`Web Preset ${propertyName}`, () => {
     const globalSpy = {
@@ -49,11 +48,11 @@ function runTests(propertyName) {
       const release = initFocus(fn) as () => void
 
       target.emit(eventName)
-      expect(fn).toBeCalledTimes(0)
+      expect(fn).toBeCalledTimes(1)
 
       release()
       target.emit(eventName)
-      expect(fn).toBeCalledTimes(0)
+      expect(fn).toBeCalledTimes(1)
     })
 
     it(`should not trigger listener when ${propertyName} is falsy`, async () => {
@@ -87,5 +86,4 @@ function runTests(propertyName) {
   })
 }
 
-runTests('window')
 runTests('document')

@@ -133,6 +133,7 @@ describe('useSWR - focus', () => {
     // still in throttling interval
     await act(() => sleep(20))
     // should be throttled
+    toggleVisibility()
     await screen.findByText('data: 1')
     // wait for focusThrottleInterval
     await act(() => sleep(100))
