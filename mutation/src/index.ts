@@ -1,5 +1,3 @@
-'use client'
-
 import { useCallback, useRef } from 'react'
 import useSWR, { useSWRConfig } from 'swr'
 import type { Middleware, Key } from 'swr/_internal'

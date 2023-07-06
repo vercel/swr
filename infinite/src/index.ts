@@ -1,5 +1,3 @@
-'use client'
-
 // We have to several type castings here because `useSWRInfinite` is a special
 // hook where `key` and return type are not like the normal `useSWR` types.
 
