@@ -1394,7 +1394,7 @@ describe('useSWRInfinite', () => {
           <button
             onClick={() => {
               mutate(updater, {
-                populateCache: (result: string, currentData: string[]) => {
+                populateCache: (result: string[], currentData: string[]) => {
                   return [...currentData, ...result]
                 },
                 revalidate: false
@@ -1476,7 +1476,7 @@ describe('useSWRInfinite', () => {
             onClick={() => {
               mutate(updater, {
                 optimisticData: current => [current[0], [...current[1], 'B4']],
-                populateCache: (result: string, currentData: string[]) => {
+                populateCache: (result: string[], currentData: string[]) => {
                   return [currentData[0], [...currentData[1], ...result]]
                 },
                 revalidate: false

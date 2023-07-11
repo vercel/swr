@@ -190,31 +190,13 @@ export interface SWRMutationResponse<
 }
 
 export interface SWRMutationHook {
-  <Data = any, Error = any, SWRMutationKey extends Key = Key, ExtraArg = never>(
-    /**
-     * The key of the resource that will be mutated. It should be the same key
-     * used in the `useSWR` hook so SWR can handle revalidation and race
-     * conditions for that resource.
-     */
-    key: SWRMutationKey,
-    /**
-     * The function to trigger the mutation that accepts the key, extra argument
-     * and options. For example:
-     *
-     * ```jsx
-     * (api, data) => fetch(api, {
-     *   method: 'POST',
-     *   body: JSON.stringify(data)
-     * })
-     * ```
-     */
-    fetcher: MutationFetcher<Data, SWRMutationKey, ExtraArg>,
-    /**
-     * Extra options for the mutation hook.
-     */
-    options?: SWRMutationConfiguration<Data, Error, SWRMutationKey, ExtraArg>
-  ): SWRMutationResponse<Data, Error, SWRMutationKey, ExtraArg>
-  <Data = any, Error = any, SWRMutationKey extends Key = Key, ExtraArg = never>(
+  <
+    Data = any,
+    Error = any,
+    SWRMutationKey extends Key = Key,
+    ExtraArg = never,
+    SWRData = Data
+  >(
     /**
      * The key of the resource that will be mutated. It should be the same key
      * used in the `useSWR` hook so SWR can handle revalidation and race
@@ -240,10 +222,53 @@ export interface SWRMutationHook {
       Data,
       Error,
       SWRMutationKey,
-      ExtraArg
+      ExtraArg,
+      SWRData
+    >
+  ): SWRMutationResponse<Data, Error, SWRMutationKey, ExtraArg>
+  <
+    Data = any,
+    Error = any,
+    SWRMutationKey extends Key = Key,
+    ExtraArg = never,
+    SWRData = Data
+  >(
+    /**
+     * The key of the resource that will be mutated. It should be the same key
+     * used in the `useSWR` hook so SWR can handle revalidation and race
+     * conditions for that resource.
+     */
+    key: SWRMutationKey,
+    /**
+     * The function to trigger the mutation that accepts the key, extra argument
+     * and options. For example:
+     *
+     * ```jsx
+     * (api, data) => fetch(api, {
+     *   method: 'POST',
+     *   body: JSON.stringify(data)
+     * })
+     * ```
+     */
+    fetcher: MutationFetcher<Data, SWRMutationKey, ExtraArg>,
+    /**
+     * Extra options for the mutation hook.
+     */
+    options?: SWRMutationConfiguration<
+      Data,
+      Error,
+      SWRMutationKey,
+      ExtraArg,
+      SWRData
     > & { throwOnError: false }
   ): SWRMutationResponse<Data | undefined, Error, SWRMutationKey, ExtraArg>
-  <Data = any, Error = any, SWRMutationKey extends Key = Key, ExtraArg = never>(
+  <
+    Data = any,
+    Error = any,
+    SWRMutationKey extends Key = Key,
+    ExtraArg = never,
+    SWRData = Data
+  >(
     /**
      * The key of the resource that will be mutated. It should be the same key
      * used in the `useSWR` hook so SWR can handle revalidation and race
@@ -269,7 +294,8 @@ export interface SWRMutationHook {
       Data,
       Error,
       SWRMutationKey,
-      ExtraArg
+      ExtraArg,
+      SWRData
     > & { throwOnError: true }
   ): SWRMutationResponse<Data, Error, SWRMutationKey, ExtraArg>
 }

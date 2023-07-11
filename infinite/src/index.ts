@@ -232,13 +232,9 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
 
     const mutate = useCallback(
       // eslint-disable-next-line func-names
-      function (
-        data?:
-          | undefined
-          | Data[]
-          | Promise<Data[] | undefined>
-          | MutatorCallback<Data[]>,
-        opts?: undefined | boolean | MutatorOptions<Data[]>
+      function <T>(
+        data?: undefined | T | Promise<T | undefined> | MutatorCallback<T>,
+        opts?: undefined | boolean | MutatorOptions<Data[], T>
       ) {
         // When passing as a boolean, it's explicitly used to disable/enable
         // revalidation.
@@ -261,8 +257,8 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
         }
 
         return arguments.length
-          ? swr.mutate(data, { ...options, revalidate: shouldRevalidate })
-          : swr.mutate()
+          ? swr.mutate<T>(data, { ...options, revalidate: shouldRevalidate })
+          : swr.mutate<T>()
       },
       // swr.mutate is always the same reference
       // eslint-disable-next-line react-hooks/exhaustive-deps
