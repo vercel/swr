@@ -25,8 +25,8 @@ export const subscription = (<Data = any, Error = any>(useSWRNext: SWRHook) =>
     subscribe: SWRSubscription<any, Data, Error>,
     config: SWRConfiguration & typeof SWRConfig.defaultValue
   ): SWRSubscriptionResponse<Data, Error> => {
-    const [key] = serialize(_key)
-    const originKey = _key
+    const [key, args] = serialize(_key)
+    const originKey = args
 
     // Prefix the key to avoid conflicts with other SWR resources.
     const subscriptionKey = key ? SUBSCRIPTION_PREFIX + key : undefined
