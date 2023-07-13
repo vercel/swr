@@ -82,7 +82,7 @@ describe('useSWRSubscription', () => {
     }
 
     function Page() {
-      const { data, error } = useSWRSubscription([swrKey], subscribe, {
+      const { data, error } = useSWRSubscription(() => [swrKey], subscribe, {
         fallbackData: 'fallback'
       })
       return (
