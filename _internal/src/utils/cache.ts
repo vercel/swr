@@ -65,8 +65,12 @@ export const initCache = <Data = any>(
       provider.set(key, value)
       const subs = subscriptions[key]
       if (subs) {
-        for (const fn of subs) {
-          fn(value, prev)
+        let i = 0;
+        while (i <= subs.length) {
+          if (typeof subs[i] === 'function') {
+            subs[i](value, prev);
+          }
+          i += 1;
         }
       }
     }
