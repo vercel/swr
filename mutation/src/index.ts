@@ -1,9 +1,9 @@
 import { useCallback, useRef } from 'react'
 import useSWR, { useSWRConfig } from 'swr'
 import type { Middleware, Key } from 'swr/_internal'
+import { useStateWithDeps, startTransition } from './state'
 import {
   serialize,
-  useStateWithDeps,
   withMiddleware,
   useIsomorphicLayoutEffect,
   UNDEFINED,
@@ -24,7 +24,6 @@ const mutation = (<Data, Error>() =>
     config: SWRMutationConfiguration<Data, Error> = {}
   ) => {
     const { mutate } = useSWRConfig()
-
     const keyRef = useRef(key)
     const fetcherRef = useRef(fetcher)
     const configRef = useRef(config)
@@ -76,7 +75,9 @@ const mutation = (<Data, Error>() =>
 
           // If it's reset after the mutation, we don't broadcast any state change.
           if (ditchMutationsUntilRef.current <= mutationStartedAt) {
-            setState({ data, isMutating: false, error: undefined })
+            startTransition(() =>
+              setState({ data, isMutating: false, error: undefined })
+            )
             options.onSuccess?.(data as Data, serializedKey, options)
           }
           return data
@@ -84,7 +85,9 @@ const mutation = (<Data, Error>() =>
           // If it's reset after the mutation, we don't broadcast any state change
           // or throw because it's discarded.
           if (ditchMutationsUntilRef.current <= mutationStartedAt) {
-            setState({ error: error as Error, isMutating: false })
+            startTransition(() =>
+              setState({ error: error as Error, isMutating: false })
+            )
             options.onError?.(error as Error, serializedKey, options)
             if (options.throwOnError) {
               throw error as Error

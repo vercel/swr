@@ -1,7 +1,7 @@
 /* eslint-disable testing-library/prefer-screen-queries */
 import { test, expect } from '@playwright/test'
 
-test.skip('mutate-server-action', async ({ page }) => {
+test('mutate-server-action', async ({ page }) => {
   await page.goto('./mutate-server-action')
   await page.getByRole('button', { name: 'mutate' }).click()
   await expect(page.getByText('isMutating: true')).toBeVisible()
