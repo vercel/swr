@@ -23,4 +23,5 @@ jobs:
           pnpm run-all-checks
           pnpm clean
           pnpm build
+          pnpm attw
           pnpm test:build
