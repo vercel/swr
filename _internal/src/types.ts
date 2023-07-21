@@ -1,5 +1,4 @@
 import type * as revalidateEvents from './constants'
-import type { defaultConfig } from './utils/config'
 
 export type GlobalState = [
   Record<string, RevalidateCallback[]>, // EVENT_REVALIDATORS
@@ -293,8 +292,7 @@ export type Middleware = (
 ) => <Data = any, Error = any>(
   key: Key,
   fetcher: BareFetcher<Data> | null,
-  config: typeof defaultConfig &
-    SWRConfiguration<Data, Error, BareFetcher<Data>>
+  config: SWRConfiguration<Data, Error, BareFetcher<Data>>
 ) => SWRResponse<Data, Error>
 
 type ArgumentsTuple = [any, ...unknown[]] | readonly [any, ...unknown[]]
