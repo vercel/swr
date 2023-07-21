@@ -4,6 +4,7 @@
   "types": "./dist/index.d.ts",
   "exports": {
     "import": "./dist/index.mjs",
+    "module": "./dist/index.esm.js",
     "require": "./dist/index.js"
   },
   "private": true,

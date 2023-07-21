@@ -35,28 +35,34 @@
     ".": {
       "react-server": "./core/dist/react-server.mjs",
       "import": "./core/dist/index.mjs",
+      "module": "./core/dist/index.esm.js",
       "require": "./core/dist/index.js"
     },
     "./infinite": {
       "react-server": "./infinite/dist/react-server.mjs",
       "import": "./infinite/dist/index.mjs",
+      "module": "./infinite/dist/index.esm.js",
       "require": "./infinite/dist/index.js"
     },
     "./immutable": {
       "import": "./immutable/dist/index.mjs",
+      "module": "./immutable/dist/index.esm.js",
       "require": "./immutable/dist/index.js"
     },
     "./subscription": {
       "import": "./subscription/dist/index.mjs",
+      "module": "./subscription/dist/index.esm.js",
       "require": "./subscription/dist/index.js"
     },
     "./mutation": {
       "import": "./mutation/dist/index.mjs",
+      "module": "./mutation/dist/index.esm.js",
       "require": "./mutation/dist/index.js"
     },
     "./_internal": {
       "react-server": "./_internal/dist/react-server.mjs",
       "import": "./_internal/dist/index.mjs",
+      "module": "./_internal/dist/index.esm.js",
       "require": "./_internal/dist/index.js"
     }
   },
