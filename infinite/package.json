@@ -3,7 +3,6 @@
   "module": "./dist/index.esm.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    "types": "./dist/index.d.ts",
     "react-server": "./dist/react-server.mjs",
     "import": "./dist/index.mjs",
     "module": "./dist/index.esm.js",

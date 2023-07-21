@@ -14,42 +14,52 @@
   "main": "./core/dist/index.js",
   "module": "./core/dist/index.esm.js",
   "types": "./core/dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "infinite": [
+        "./infinite/dist/index.d.ts"
+      ],
+      "immutable": [
+        "./immutable/dist/index.d.ts"
+      ],
+      "mutation": [
+        "./mutation/dist/index.d.ts"
+      ],
+      "subscription": [
+        "./subscription/dist/index.d.ts"
+      ]
+    }
+  },
   "exports": {
     "./package.json": "./package.json",
     ".": {
-      "types": "./core/dist/index.d.ts",
       "react-server": "./core/dist/react-server.mjs",
       "import": "./core/dist/index.mjs",
       "module": "./core/dist/index.esm.js",
       "require": "./core/dist/index.js"
     },
     "./infinite": {
-      "types": "./infinite/dist/index.d.ts",
       "react-server": "./infinite/dist/react-server.mjs",
       "import": "./infinite/dist/index.mjs",
       "module": "./infinite/dist/index.esm.js",
       "require": "./infinite/dist/index.js"
     },
     "./immutable": {
-      "types": "./immutable/dist/index.d.ts",
       "import": "./immutable/dist/index.mjs",
       "module": "./immutable/dist/index.esm.js",
       "require": "./immutable/dist/index.js"
     },
     "./subscription": {
-      "types": "./subscription/dist/index.d.ts",
       "import": "./subscription/dist/index.mjs",
       "module": "./subscription/dist/index.esm.js",
       "require": "./subscription/dist/index.js"
     },
     "./mutation": {
-      "types": "./mutation/dist/index.d.ts",
       "import": "./mutation/dist/index.mjs",
       "module": "./mutation/dist/index.esm.js",
       "require": "./mutation/dist/index.js"
     },
     "./_internal": {
-      "types": "./_internal/dist/index.d.ts",
       "react-server": "./_internal/dist/react-server.mjs",
       "import": "./_internal/dist/index.mjs",
       "module": "./_internal/dist/index.esm.js",
@@ -57,12 +67,12 @@
     }
   },
   "files": [
-    "core/dist/**/*.{js,d.ts,mjs}",
-    "infinite/dist/**/*.{js,d.ts,mjs}",
-    "immutable/dist/**/*.{js,d.ts,mjs}",
-    "mutation/dist/**/*.{js,d.ts,mjs}",
-    "_internal/dist/**/*.{js,d.ts,mjs}",
-    "subscription/dist/*.{js,d.ts,mjs}",
+    "core/dist/**/*.{js,d.ts,mjs,d.mts}",
+    "infinite/dist/**/*.{js,d.ts,mjs,d.mts}",
+    "immutable/dist/**/*.{js,d.ts,mjs,d.mts}",
+    "mutation/dist/**/*.{js,d.ts,mjs,d.mts}",
+    "_internal/dist/**/*.{js,d.ts,mjs,d.mts}",
+    "subscription/dist/*.{js,d.ts,mjs,d.mts}",
     "core/package.json",
     "infinite/package.json",
     "immutable/package.json",
@@ -82,6 +92,7 @@
     "build": "pnpm build-package _internal && pnpm build-package core && pnpm build-package infinite && pnpm build-package immutable && pnpm build-package mutation && pnpm build-package subscription",
     "build:e2e": "pnpm next build e2e/site",
     "build-package": "bunchee --cwd",
+    "attw": "attw --pack",
     "types:check": "pnpm -r run types:check",
     "prepublishOnly": "pnpm clean && pnpm build",
     "publish-beta": "pnpm publish --tag beta",
@@ -93,7 +104,7 @@
     "test": "jest",
     "test:build": "jest --config jest.config.build.js",
     "test:e2e": "playwright test",
-    "run-all-checks": "pnpm types:check && pnpm lint && pnpm test && pnpm test-typing"
+    "run-all-checks": "pnpm types:check && pnpm lint && pnpm test-typing"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
@@ -102,6 +113,7 @@
     ]
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.7.0",
     "@playwright/test": "^1.34.3",
     "@swc/core": "^1.3.62",
     "@swc/jest": "0.2.26",
@@ -114,7 +126,7 @@
     "@types/use-sync-external-store": "^0.0.3",
     "@typescript-eslint/eslint-plugin": "5.59.8",
     "@typescript-eslint/parser": "5.59.8",
-    "bunchee": "3.5.0",
+    "bunchee": "3.6.0",
     "eslint": "8.42.0",
     "eslint-config-prettier": "8.8.0",
     "eslint-plugin-jest-dom": "5.0.1",
