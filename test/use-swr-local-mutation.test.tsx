@@ -600,42 +600,6 @@ describe('useSWR - local mutation', () => {
     }
   })
 
-  // https://github.com/vercel/swr/pull/1003
-  it.skip('should not dedupe synchronous mutations', async () => {
-    const mutationRecivedValues = []
-    const renderRecivedValues = []
-
-    const key = createKey()
-    function Component() {
-      const { data, mutate: boundMutate } = useSWR(key, () => 0)
-
-      useEffect(() => {
-        setTimeout(() => {
-          // let's mutate twice, synchronously
-          boundMutate(v => {
-            mutationRecivedValues.push(v) // should be 0
-            return 1
-          }, false)
-          boundMutate(v => {
-            mutationRecivedValues.push(v) // should be 1
-            return 2
-          }, false)
-        }, 1)
-        // the mutate function is guaranteed to be the same reference
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-      }, [])
-
-      renderRecivedValues.push(data) // should be 0 -> 2, never render 1 in between
-      return null
-    }
-
-    renderWithConfig(<Component />)
-
-    await executeWithoutBatching(() => sleep(50))
-    expect(mutationRecivedValues).toEqual([0, 1])
-    expect(renderRecivedValues).toEqual([undefined, 0, 1, 2])
-  })
-
   it('async mutation case 1 (startAt <= MUTATION_TS[key])', async () => {
     let result = 0
     const key = createKey()
