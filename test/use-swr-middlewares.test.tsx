@@ -32,7 +32,11 @@ describe('useSWR - middleware', () => {
     await screen.findByText('hello, data')
     expect(mockConsoleLog.mock.calls[0][0]).toBe(key)
     // Initial render and data ready.
-    expect(mockConsoleLog.mock.calls.length).toBe(2)
+    /**
+     * productiion mode
+     * expect(mockConsoleLog.mock.calls.length).toBe(2)
+     */
+    expect(mockConsoleLog.mock.calls.length).toBe(4)
   })
 
   it('should pass original keys to middleware', async () => {
@@ -54,7 +58,11 @@ describe('useSWR - middleware', () => {
     await screen.findByText('hello, data')
     expect(mockConsoleLog.mock.calls[0][0]).toEqual([key, 1, 2, 3])
     // Initial render and data ready.
-    expect(mockConsoleLog.mock.calls.length).toBe(2)
+    /**
+     * productiion mode
+     * expect(mockConsoleLog.mock.calls.length).toBe(2)
+     */
+    expect(mockConsoleLog.mock.calls.length).toBe(4)
   })
 
   it('should pass null fetcher to middleware', () => {
@@ -92,7 +100,11 @@ describe('useSWR - middleware', () => {
     screen.getByText('hello,')
     await screen.findByText('hello, data')
     expect(mockConsoleLog.mock.calls[0][0]).toBe(key)
-    expect(mockConsoleLog.mock.calls.length).toBe(2)
+    /**
+     * productiion mode
+     * expect(mockConsoleLog.mock.calls.length).toBe(2)
+     */
+    expect(mockConsoleLog.mock.calls.length).toBe(4)
   })
 
   it('should support extending middleware via context and per-hook config', async () => {
@@ -121,8 +133,14 @@ describe('useSWR - middleware', () => {
     )
     screen.getByText('hello,')
     await screen.findByText('hello, data')
+    /**
+    * productiion mode 
+    * expect(mockConsoleLog.mock.calls.map(call => call[0])).toEqual([
+        2, 1, 0, 2, 1, 0
+      ])
+    */
     expect(mockConsoleLog.mock.calls.map(call => call[0])).toEqual([
-      2, 1, 0, 2, 1, 0
+      2, 1, 0, 2, 1, 0, 2, 1, 0, 2, 1, 0
     ])
   })
 
@@ -156,7 +174,36 @@ describe('useSWR - middleware', () => {
     renderWithConfig(<Page />, { use: [createLoggerMiddleware(2)] })
     screen.getByText('hello,')
     await screen.findByText('hello, data')
+    /**
+     * productiion mode
+     * expect(mockConsoleLog.mock.calls.map(call => call[0])).toEqual([
+      '2-enter',
+      '1-enter',
+      '0-enter',
+      '0-exit',
+      '1-exit',
+      '2-exit',
+      '2-enter',
+      '1-enter',
+      '0-enter',
+      '0-exit',
+      '1-exit',
+      '2-exit'
+      ])
+     */
     expect(mockConsoleLog.mock.calls.map(call => call[0])).toEqual([
+      '2-enter',
+      '1-enter',
+      '0-enter',
+      '0-exit',
+      '1-exit',
+      '2-exit',
+      '2-enter',
+      '1-enter',
+      '0-enter',
+      '0-exit',
+      '1-exit',
+      '2-exit',
       '2-enter',
       '1-enter',
       '0-enter',

@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useState, Profiler } from 'react'
 import { fireEvent, act, screen } from '@testing-library/react'
 import useSWR, { mutate as globalMutate, useSWRConfig, SWRConfig } from 'swr'
 import useSWRInfinite, { unstable_serialize } from 'swr/infinite'
@@ -497,25 +497,28 @@ describe('useSWRInfinite', () => {
 
   it('should keep `mutate` referential equal', async () => {
     const setters = []
-
     const key = createKey()
     function Comp() {
       const { data, size, setSize } = useSWRInfinite(
         index => [key, index],
         ([_, index]) => createResponse(`page ${index}, `)
       )
-
-      setters.push(setSize)
-
       return (
-        <div
-          onClick={() => {
-            // load next page
-            setSize(size + 1)
+        <Profiler
+          id={key}
+          onRender={() => {
+            setters.push(setSize)
           }}
         >
-          data:{data}
-        </div>
+          <div
+            onClick={() => {
+              // load next page
+              setSize(size + 1)
+            }}
+          >
+            data:{data}
+          </div>
+        </Profiler>
       )
     }
 
@@ -531,7 +534,7 @@ describe('useSWRInfinite', () => {
 
     // check all `setSize`s are referential equal.
     for (const setSize of setters) {
-      expect(setSize).toEqual(setters[0])
+      expect(setSize).toBe(setters[0])
     }
   })
 
@@ -843,15 +846,18 @@ describe('useSWRInfinite', () => {
   })
 
   it('should correctly set size when key is null', async () => {
-    const loggedValues = []
-
+    const onRender = jest.fn()
+    const key = createKey()
     function Page() {
       const { size, setSize } = useSWRInfinite(
         () => null,
         () => ''
       )
-      loggedValues.push(size)
-      return <button onClick={() => setSize(1)}>set size</button>
+      return (
+        <Profiler id={key} onRender={() => onRender(size)}>
+          <button onClick={() => setSize(1)}>set size</button>
+        </Profiler>
+      )
     }
 
     renderWithConfig(<Page />)
@@ -859,8 +865,8 @@ describe('useSWRInfinite', () => {
     await screen.findByText('set size')
     fireEvent.click(screen.getByText('set size'))
     await nextTick()
-
-    expect(loggedValues).toEqual([1])
+    expect(onRender).toBeCalledTimes(1)
+    expect(onRender).toBeCalledWith(1)
   })
 
   it('setSize should only accept number', async () => {
@@ -1099,12 +1105,11 @@ describe('useSWRInfinite', () => {
       const { data, mutate } = useSWRInfinite(() => key, fetcher, {
         dedupingInterval: 0
       })
-      logger.push(data)
       return (
-        <>
+        <Profiler id={key} onRender={() => logger.push(data)}>
           <div>data: {String(data)}</div>
           <button onClick={() => mutate()}>mutate</button>
-        </>
+        </Profiler>
       )
     }
 
@@ -1250,14 +1255,13 @@ describe('useSWRInfinite', () => {
       const { data, mutate } = useSWRInfinite(() => key, fetcher, {
         dedupingInterval: 0
       })
-      logger.push(data)
       return (
-        <>
+        <Profiler id={key} onRender={() => logger.push(data)}>
           <div>data: {String(data)}</div>
           <button onClick={() => mutate(data, { revalidate: true })}>
             mutate
           </button>
-        </>
+        </Profiler>
       )
     }
 
@@ -1283,14 +1287,13 @@ describe('useSWRInfinite', () => {
       const { data, mutate } = useSWRInfinite(() => key, fetcher, {
         dedupingInterval: 0
       })
-      logger.push(data)
       return (
-        <>
+        <Profiler id={key} onRender={() => logger.push(data)}>
           <div>data: {String(data)}</div>
           <button onClick={() => mutate(data, { revalidate: false })}>
             mutate
           </button>
-        </>
+        </Profiler>
       )
     }
 

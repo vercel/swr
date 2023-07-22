@@ -1,5 +1,5 @@
 import { act, screen, fireEvent } from '@testing-library/react'
-import React, { useEffect } from 'react'
+import React, { Profiler, useEffect } from 'react'
 import useSWR from 'swr'
 import {
   createResponse,
@@ -12,15 +12,14 @@ import {
 
 describe('useSWR - loading', () => {
   it('should return validating state', async () => {
-    let renderCount = 0
+    const onRender = jest.fn()
     const key = createKey()
     function Page() {
       const { data, isValidating } = useSWR(key, () => createResponse('data'))
-      renderCount++
       return (
-        <div>
+        <Profiler id={key} onRender={onRender}>
           hello, {data}, {isValidating ? 'validating' : 'ready'}
-        </div>
+        </Profiler>
       )
     }
 
@@ -31,19 +30,18 @@ describe('useSWR - loading', () => {
     //    data       isValidating
     // -> undefined, true
     // -> data,      false
-    expect(renderCount).toEqual(2)
+    expect(onRender).toBeCalledTimes(2)
   })
 
   it('should return loading state', async () => {
-    let renderCount = 0
+    const onRender = jest.fn()
     const key = createKey()
     function Page() {
       const { data, isLoading } = useSWR(key, () => createResponse('data'))
-      renderCount++
       return (
-        <div>
+        <Profiler id={key} onRender={onRender}>
           hello, {data}, {isLoading ? 'loading' : 'ready'}
-        </div>
+        </Profiler>
       )
     }
 
@@ -54,17 +52,20 @@ describe('useSWR - loading', () => {
     //    data       isLoading
     // -> undefined, true
     // -> data,      false
-    expect(renderCount).toEqual(2)
+    expect(onRender).toBeCalledTimes(2)
   })
 
   it('should avoid extra rerenders', async () => {
-    let renderCount = 0
+    const onRender = jest.fn()
     const key = createKey()
     function Page() {
       // we never access `isValidating`, so it will not trigger rerendering
       const { data } = useSWR(key, () => createResponse('data'))
-      renderCount++
-      return <div>hello, {data}</div>
+      return (
+        <Profiler id={key} onRender={onRender}>
+          hello, {data}
+        </Profiler>
+      )
     }
 
     renderWithConfig(<Page />)
@@ -73,12 +74,12 @@ describe('useSWR - loading', () => {
     //    data
     // -> undefined
     // -> data
-    expect(renderCount).toEqual(2)
+    expect(onRender).toBeCalledTimes(2)
   })
 
   it('should avoid extra rerenders while fetching', async () => {
-    let renderCount = 0,
-      dataLoaded = false
+    const onRender = jest.fn()
+    let dataLoaded = false
 
     const key = createKey()
     function Page() {
@@ -88,8 +89,11 @@ describe('useSWR - loading', () => {
         dataLoaded = true
         return res
       })
-      renderCount++
-      return <div>hello</div>
+      return (
+        <Profiler id={key} onRender={onRender}>
+          <div>hello</div>
+        </Profiler>
+      )
     }
 
     renderWithConfig(<Page />)
@@ -97,15 +101,14 @@ describe('useSWR - loading', () => {
 
     await executeWithoutBatching(() => sleep(100)) // wait
     // it doesn't re-render, but fetch was triggered
-    expect(renderCount).toEqual(1)
+    expect(onRender).toBeCalledTimes(1)
     expect(dataLoaded).toEqual(true)
   })
 
   it('should avoid extra rerenders when the fallback is the same as cache', async () => {
-    let renderCount = 0,
-      initialDataLoaded = false,
+    let initialDataLoaded = false,
       mutationDataLoaded = false
-
+    const onRneder = jest.fn()
     const key = createKey()
     function Page() {
       const { data, mutate } = useSWR(
@@ -131,9 +134,11 @@ describe('useSWR - loading', () => {
 
         return () => clearTimeout(timeout)
       }, [mutate])
-
-      renderCount++
-      return <div>{data?.greeting}</div>
+      return (
+        <Profiler id={key} onRender={onRneder}>
+          <div>{data?.greeting}</div>
+        </Profiler>
+      )
     }
 
     renderWithConfig(<Page />)
@@ -143,7 +148,7 @@ describe('useSWR - loading', () => {
     // it doesn't re-render, but fetch was triggered
     expect(initialDataLoaded).toEqual(true)
     expect(mutationDataLoaded).toEqual(true)
-    expect(renderCount).toEqual(1)
+    expect(onRneder).toBeCalledTimes(1)
   })
 
   it('should return enumerable object', async () => {
@@ -264,20 +269,19 @@ describe('useSWR - loading', () => {
 
   it('should not trigger loading state when revalidating', async () => {
     const key = createKey()
-    let renderCount = 0
+    const onRender = jest.fn()
     function Page() {
       const { isLoading, isValidating, mutate } = useSWR(key, () =>
         createResponse('data', { delay: 10 })
       )
-      renderCount++
       return (
-        <div>
+        <Profiler id={key} onRender={onRender}>
           <div>
             {isLoading ? 'loading' : 'ready'},
             {isValidating ? 'validating' : 'ready'}
           </div>
           <button onClick={() => mutate()}>revalidate</button>
-        </div>
+        </Profiler>
       )
     }
 
@@ -290,7 +294,7 @@ describe('useSWR - loading', () => {
     await screen.findByText('ready,ready')
 
     // isValidating: true -> false -> true -> false
-    expect(renderCount).toBe(4)
+    expect(onRender).toBeCalledTimes(4)
   })
 
   it('should trigger loading state when changing the key', async () => {

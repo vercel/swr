@@ -512,14 +512,21 @@ describe('useSWR', () => {
       const { data, error, isLoading, isValidating } = useSWR(key, fetcher, {
         errorRetryInterval: 10
       })
-      logs.push({
-        data,
-        error,
-        isLoading,
-        isValidating
-      })
-      if (isLoading) return <p>loading</p>
-      return <p>data:{data}</p>
+      return (
+        <Profiler
+          id={key}
+          onRender={() =>
+            logs.push({
+              data,
+              error,
+              isLoading,
+              isValidating
+            })
+          }
+        >
+          {isLoading ? <p>loading</p> : <p>data:{data}</p>}
+        </Profiler>
+      )
     }
 
     renderWithConfig(<Page />)
@@ -573,9 +580,11 @@ describe('useSWR', () => {
       const { data } = useSWR(key, fetcher, {
         errorRetryInterval: 10
       })
-      logs.push({ data })
-      if (!data) return <p>loading</p>
-      return <p>data:{data}</p>
+      return (
+        <Profiler id={key} onRender={() => logs.push({ data })}>
+          <p>data:{data}</p>
+        </Profiler>
+      )
     }
 
     renderWithConfig(<Page />)
@@ -612,8 +621,11 @@ describe('useSWR', () => {
         }, 100)
       }, [])
       if (!show) return null
-      logs.push(swr.data)
-      return <p>data:{swr.data}</p>
+      return (
+        <Profiler id={key} onRender={() => logs.push(swr.data)}>
+          <p>data:{swr.data}</p>
+        </Profiler>
+      )
     }
 
     renderWithConfig(<Page />)
