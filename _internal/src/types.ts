@@ -1,4 +1,4 @@
-import type * as revalidateEvents from './constants'
+import type * as revalidateEvents from './events'
 
 export type GlobalState = [
   Record<string, RevalidateCallback[]>, // EVENT_REVALIDATORS

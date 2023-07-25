@@ -11,7 +11,8 @@ import {
   createCacheHelper,
   useIsomorphicLayoutEffect,
   serialize,
-  withMiddleware
+  withMiddleware,
+  INFINITE_PREFIX
 } from 'swr/_internal'
 import type {
   BareFetcher,
@@ -30,7 +31,7 @@ import type {
   SWRInfiniteCompareFn
 } from './types'
 import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js'
-import { INFINITE_PREFIX, getFirstPageKey } from './serialize'
+import { getFirstPageKey } from './serialize'
 
 // const INFINITE_PREFIX = '$inf$'
 const EMPTY_PROMISE = Promise.resolve() as Promise<undefined>
