@@ -9,7 +9,7 @@ import {
 } from './shared'
 import { SWRGlobalState } from './global-state'
 import { getTimestamp } from './timestamp'
-import * as revalidateEvents from '../constants'
+import * as revalidateEvents from '../events'
 import type {
   Cache,
   MutatorCallback,
