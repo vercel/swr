@@ -8,6 +8,21 @@ describe('useSWRInfinite - preload', () => {
   const getKeyFunction = (key: string) => (index: number) =>
     `page-${index}-${key}`
 
+  it('preloading useSWRInfinite should produce the same result', async () => {
+    const key = createKey()
+    const getKey = getKeyFunction(key)
+
+    const fetcher = jest.fn(() => createResponse('foo'))
+    function Page() {
+      const { data } = useSWRInfinite(getKey, fetcher)
+      return <div>data:{Array.isArray(data) ? 'true' : 'false'}</div>
+    }
+
+    preload(getKey(0), fetcher)
+    renderWithConfig(<Page />)
+    await screen.findByText('data:true')
+  })
+
   it('preload the fetcher function', async () => {
     const key = createKey()
     const getKey = getKeyFunction(key)

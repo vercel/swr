@@ -12,14 +12,17 @@ import {
   useIsomorphicLayoutEffect,
   serialize,
   withMiddleware,
-  INFINITE_PREFIX
+  INFINITE_PREFIX,
+  SWRGlobalState,
+  cache as defaultCache
 } from 'swr/_internal'
 import type {
   BareFetcher,
   SWRHook,
   MutatorCallback,
   Middleware,
-  MutatorOptions
+  MutatorOptions,
+  GlobalState
 } from 'swr/_internal'
 import type {
   SWRInfiniteConfiguration,
@@ -63,6 +66,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
       revalidateOnMount = false,
       parallel = false
     } = config
+    const [, , , PRELOAD] = SWRGlobalState.get(defaultCache) as GlobalState
 
     // The serialized key of the first page. This key will be used to store
     // metadata of this SWR infinite hook.
@@ -73,6 +77,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
     } catch (err) {
       // Not ready yet.
     }
+
     const [get, set, subscribeCache] = createCacheHelper<
       Data,
       SWRInfiniteCacheValue<Data, any>
@@ -164,8 +169,21 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
             SWRInfiniteCacheValue<Data, any>
           >(cache, pageKey)
 
+          const hasPreloadedRequest = pageKey in PRELOAD
           // Get the cached page data.
           let pageData = getSWRCache().data as Data
+
+          if (hasPreloadedRequest) {
+            const req = PRELOAD[pageKey]
+            // delete the preload cache key before resolving it
+            // in case there's an error
+            delete PRELOAD[pageKey]
+            // get the page data from the preload cache
+            pageData = await req
+            // set the SWR cache with the preloaded data
+            setSWRCache({ data: pageData, _k: pageArg })
+            // remove the preload cache key to prevent memory leak
+          }
 
           // should fetch (or revalidate) if:
           // - `revalidateAll` is enabled
@@ -183,7 +201,6 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
             (cacheData &&
               !isUndefined(cacheData[i]) &&
               !config.compare(cacheData[i], pageData))
-
           if (fn && shouldFetchPage) {
             const revalidate = async () => {
               pageData = await fn(pageArg)
