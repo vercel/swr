@@ -48,14 +48,15 @@ export const middleware: Middleware =
         const [key] = serialize(key_)
         const [, , , PRELOAD] = SWRGlobalState.get(cache) as GlobalState
 
-        let normalizedKey = key
         if (key.startsWith(INFINITE_PREFIX)) {
-          normalizedKey = key.slice(INFINITE_PREFIX.length)
+          // we want the infinite fetcher to be called.
+          // handling of the PRELOAD cache happens there.
+          return fetcher_(...args)
         }
 
-        const req = PRELOAD[normalizedKey]
+        const req = PRELOAD[key]
         if (isUndefined(req)) return fetcher_(...args)
-        delete PRELOAD[normalizedKey]
+        delete PRELOAD[key]
         return req
       })
     return useSWRNext(key_, fetcher, config)

@@ -24,6 +24,7 @@ describe('useSWRInfinite', () => {
       return (
         <div>
           <div>data:{data}</div>
+          <div>isArray:{Array.isArray(data) ? 'true' : 'false'}</div>
           <div>error:{error}</div>
           <div>isValidating:{isValidating.toString()}</div>
         </div>
@@ -34,6 +35,7 @@ describe('useSWRInfinite', () => {
     screen.getByText('data:')
 
     await screen.findByText(`data:page-0-${key}`)
+    await screen.findByText(`isArray:true`)
     await screen.findByText(`error:`)
     await screen.findByText(`isValidating:false`)
   })
