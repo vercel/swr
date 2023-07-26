@@ -50,8 +50,7 @@ export const middleware: Middleware =
 
         let normalizedKey = key
         if (key.startsWith(INFINITE_PREFIX)) {
-          normalizedKey = key.replace(INFINITE_PREFIX, '')
-          console.log(key, normalizedKey)
+          normalizedKey = key.slice(INFINITE_PREFIX.length)
         }
 
         const req = PRELOAD[normalizedKey]
