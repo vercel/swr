@@ -269,7 +269,7 @@ describe('useSWRInfinite - preload', () => {
     preload([key, 0], fetcher)
     renderWithConfig(<Page />)
     screen.getByText('data:')
-    // If SWR sends requests sequentially, it takes 150ms at least
+    // If SWR sends parallel requests, it should only take 200ms
     await act(() => sleep(200))
     screen.getByText('data:apple, banana, pineapple,')
   })
@@ -293,7 +293,6 @@ describe('useSWRInfinite - preload', () => {
     preload([key, 2], fetcher)
     renderWithConfig(<Page />)
     screen.getByText('data:')
-    // If SWR sends requests sequentially, it takes 150ms at least
     await act(() => sleep(50))
     screen.getByText('data:apple, banana, pineapple,')
   })
