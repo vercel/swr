@@ -200,8 +200,8 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
                 // get the page data from the preload cache
                 pageData = await req
               }
-              data[i] = pageData
               setSWRCache({ data: pageData, _k: pageArg })
+              data[i] = pageData
             }
             if (parallel) {
               revalidators.push(revalidate)
