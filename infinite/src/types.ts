@@ -47,6 +47,7 @@ export interface SWRInfiniteResponse<Data = any, Error = any>
   setSize: (
     size: number | ((_size: number) => number)
   ) => Promise<Data[] | undefined>
+  isLoadingMore: boolean | undefined
 }
 
 export interface SWRInfiniteHook {

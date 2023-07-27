@@ -307,6 +307,13 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
       [infiniteKey, cache, mutate, resolvePageSize]
     )
 
+    // Based on https://swr.vercel.app/examples/infinite-loading
+    const isLoadingMore =
+      swr.isLoading ||
+      (resolvePageSize() > 0 &&
+        swr.data &&
+        typeof swr.data[resolvePageSize() - 1] === 'undefined')
+
     // Use getter functions to avoid unnecessary re-renders caused by triggering
     // all the getters of the returned swr object.
     return {
@@ -324,7 +331,8 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
       },
       get isLoading() {
         return swr.isLoading
-      }
+      },
+      isLoadingMore
     }
   }) as unknown as Middleware
 
