@@ -251,4 +251,49 @@ describe('useSWRInfinite - preload', () => {
     preload(() => getKey(0), fetcher)
     expect(calledWith).toBe(getKey(0))
   })
+  it('should not break parallel option', async () => {
+    // mock api
+    const pageData = ['apple', 'banana', 'pineapple']
+
+    const key = createKey()
+    const fetcher = ([_, index]) =>
+      createResponse(`${pageData[index]}, `, { delay: index === 0 ? 50 : 200 })
+    function Page() {
+      const { data } = useSWRInfinite(index => [key, index], fetcher, {
+        initialSize: 3,
+        parallel: true
+      })
+
+      return <div>data:{data}</div>
+    }
+    preload([key, 0], fetcher)
+    renderWithConfig(<Page />)
+    screen.getByText('data:')
+    // If SWR sends parallel requests, it should only take 200ms
+    await act(() => sleep(200))
+    screen.getByText('data:apple, banana, pineapple,')
+  })
+  it('should be able to preload multiple page', async () => {
+    // mock api
+    const pageData = ['apple', 'banana', 'pineapple']
+
+    const key = createKey()
+    const fetcher = ([_, index]) =>
+      createResponse(`${pageData[index]}, `, { delay: 50 })
+    function Page() {
+      const { data } = useSWRInfinite(index => [key, index], fetcher, {
+        initialSize: 3,
+        parallel: true
+      })
+
+      return <div>data:{data}</div>
+    }
+    preload([key, 0], fetcher)
+    preload([key, 1], fetcher)
+    preload([key, 2], fetcher)
+    renderWithConfig(<Page />)
+    screen.getByText('data:')
+    await act(() => sleep(50))
+    screen.getByText('data:apple, banana, pineapple,')
+  })
 })

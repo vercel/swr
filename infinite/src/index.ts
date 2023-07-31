@@ -169,22 +169,8 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
             SWRInfiniteCacheValue<Data, any>
           >(cache, pageKey)
 
-          const hasPreloadedRequest = pageKey in PRELOAD
           // Get the cached page data.
           let pageData = getSWRCache().data as Data
-
-          if (hasPreloadedRequest) {
-            const req = PRELOAD[pageKey]
-            // delete the preload cache key before resolving it
-            // in case there's an error
-            delete PRELOAD[pageKey]
-            // get the page data from the preload cache
-            pageData = await req
-            // set the SWR cache with the preloaded data
-            setSWRCache({ data: pageData, _k: pageArg })
-            // remove the preload cache key to prevent memory leak
-          }
-
           // should fetch (or revalidate) if:
           // - `revalidateAll` is enabled
           // - `mutate()` called
@@ -203,7 +189,17 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
               !config.compare(cacheData[i], pageData))
           if (fn && shouldFetchPage) {
             const revalidate = async () => {
-              pageData = await fn(pageArg)
+              const hasPreloadedRequest = pageKey in PRELOAD
+              if (!hasPreloadedRequest) {
+                pageData = await fn(pageArg)
+              } else {
+                const req = PRELOAD[pageKey]
+                // delete the preload cache key before resolving it
+                // in case there's an error
+                delete PRELOAD[pageKey]
+                // get the page data from the preload cache
+                pageData = await req
+              }
               setSWRCache({ data: pageData, _k: pageArg })
               data[i] = pageData
             }
