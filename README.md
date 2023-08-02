@@ -56,10 +56,10 @@ With SWR, components will get **a stream of data updates constantly and automati
 import useSWR from 'swr'
 
 function Profile() {
-  const { data, error } = useSWR('/api/user', fetcher)
+  const { data, error, isLoading } = useSWR('/api/user', fetcher)
 
   if (error) return <div>failed to load</div>
-  if (!data) return <div>loading...</div>
+  if (isLoading) return <div>loading...</div>
   return <div>hello {data.name}!</div>
 }
 ```
@@ -68,9 +68,9 @@ In this example, the React Hook `useSWR` accepts a `key` and a `fetcher` functio
 The `key` is a unique identifier of the request, normally the URL of the API. And the `fetcher` accepts
 `key` as its parameter and returns the data asynchronously.
 
-`useSWR` also returns 2 values: `data` and `error`. When the request (fetcher) is not yet finished,
-`data` will be `undefined`. And when we get a response, it sets `data` and `error` based on the result
-of `fetcher` and rerenders the component.
+`useSWR` also returns 3 values: `data`, `isLoading` and `error`. When the request (fetcher) is not yet finished,
+`data` will be `undefined` and `isLoading` will be `true`. When we get a response, it sets `data` and `error` based on the result
+of `fetcher`, `isLoading` to false and rerenders the component.
 
 Note that `fetcher` can be any asynchronous function, you can use your favourite data-fetching
 library to handle that part.

@@ -754,9 +754,9 @@ export { unstable_serialize } from './serialize'
  * ```jsx
  * import useSWR from 'swr'
  * function Profile() {
- *   const { data, error } = useSWR('/api/user', fetcher)
+ *   const { data, error, isLoading } = useSWR('/api/user', fetcher)
  *   if (error) return <div>failed to load</div>
- *   if (!data) return <div>loading...</div>
+ *   if (isLoading) return <div>loading...</div>
  *   return <div>hello {data.name}!</div>
  * }
  * ```
