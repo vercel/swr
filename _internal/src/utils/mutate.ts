@@ -97,8 +97,8 @@ export async function internalMutate<Data>(
       cache
     ) as GlobalState
 
-    const revalidators = EVENT_REVALIDATORS[key]
     const startRevalidate = () => {
+      const revalidators = EVENT_REVALIDATORS[key]
       if (revalidate) {
         // Invalidate the key by deleting the concurrent request markers so new
         // requests will not be deduped.

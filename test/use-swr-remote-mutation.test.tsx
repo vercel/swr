@@ -537,6 +537,51 @@ describe('useSWR - remote mutation', () => {
     expect(logger).not.toHaveBeenCalledWith('bar')
   })
 
+  it('should revalidate the SWR request that starts during the mutation', async () => {
+    const key = createKey()
+
+    function Page() {
+      const [triggered, setTriggered] = React.useState(false)
+      const { data } = useSWR(
+        triggered ? key : null,
+        async () => {
+          await sleep(10)
+          return 'foo'
+        },
+        { revalidateOnMount: false }
+      )
+      const { trigger } = useSWRMutation(key, async () => {
+        await sleep(20)
+        return 'bar'
+      })
+
+      return (
+        <div>
+          <button
+            onClick={() => {
+              trigger(undefined)
+              setTriggered(true)
+            }}
+          >
+            trigger
+          </button>
+          <div>data:{data || 'none'}</div>
+        </div>
+      )
+    }
+
+    render(<Page />)
+
+    // mount
+    await screen.findByText('data:none')
+
+    fireEvent.click(screen.getByText('trigger'))
+    await act(() => sleep(50))
+
+    // The SWR request that starts during the mutation should be revalidated.
+    await screen.findByText('data:foo')
+  })
+
   it('should revalidate after populating the cache', async () => {
     const key = createKey()
     const logger = jest.fn()
