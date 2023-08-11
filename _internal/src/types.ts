@@ -310,11 +310,15 @@ export type MutatorCallback<Data = any> = (
   currentData?: Data
 ) => Promise<undefined | Data> | undefined | Data
 
-export type MutatorOptions<Data = any> = {
+/**
+ * @typeParam Data - The type of the data related to the key
+ * @typeParam MutationData - The type of the data returned by the mutator
+ */
+export type MutatorOptions<Data = any, MutationData = Data> = {
   revalidate?: boolean
   populateCache?:
     | boolean
-    | ((result: any, currentData: Data | undefined) => Data)
+    | ((result: MutationData, currentData: Data | undefined) => Data)
   optimisticData?:
     | Data
     | ((currentData: Data | undefined, displayedData: Data | undefined) => Data)
@@ -365,23 +369,38 @@ export type MutatorWrapper<Fn> = Fn extends (
 
 export type Mutator<Data = any> = MutatorWrapper<MutatorFn<Data>>
 
-export interface ScopedMutator<Data = any> {
-  <T = Data>(
+export interface ScopedMutator {
+  /**
+   * @typeParam Data - The type of the data related to the key
+   * @typeParam MutationData - The type of the data returned by the mutator
+   */
+  <Data = any, MutationData = Data>(
     matcher: (key?: Arguments) => boolean,
-    data?: T | Promise<T> | MutatorCallback<T>,
-    opts?: boolean | MutatorOptions<Data>
-  ): Promise<Array<T | undefined>>
-  <T = Data>(
+    data?: MutationData | Promise<MutationData> | MutatorCallback<MutationData>,
+    opts?: boolean | MutatorOptions<Data, MutationData>
+  ): Promise<Array<MutationData | undefined>>
+  /**
+   * @typeParam Data - The type of the data related to the key
+   * @typeParam MutationData - The type of the data returned by the mutator
+   */
+  <Data = any, T = Data>(
     key: Arguments,
     data?: T | Promise<T> | MutatorCallback<T>,
-    opts?: boolean | MutatorOptions<Data>
+    opts?: boolean | MutatorOptions<Data, T>
   ): Promise<T | undefined>
 }
 
-export type KeyedMutator<Data> = (
-  data?: Data | Promise<Data | undefined> | MutatorCallback<Data>,
-  opts?: boolean | MutatorOptions<Data>
-) => Promise<Data | undefined>
+/**
+ * @typeParam Data - The type of the data related to the key
+ * @typeParam MutationData - The type of the data returned by the mutator
+ */
+export type KeyedMutator<Data> = <MutationData>(
+  data?:
+    | MutationData
+    | Promise<MutationData | undefined>
+    | MutatorCallback<MutationData>,
+  opts?: boolean | MutatorOptions<Data, MutationData>
+) => Promise<MutationData | undefined>
 
 export type SWRConfiguration<
   Data = any,

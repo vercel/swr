@@ -174,10 +174,9 @@ export async function internalMutate<Data>(
         // Rollback. Always populate the cache in this case but without
         // transforming the data.
         populateCache = true
-        data = committedData
 
         // Reset data to be the latest committed data, and clear the `_c` value.
-        set({ data, _c: UNDEFINED })
+        set({ data: committedData, _c: UNDEFINED })
       }
     }
 
@@ -186,11 +185,12 @@ export async function internalMutate<Data>(
       if (!error) {
         // Transform the result into data.
         if (isFunction(populateCache)) {
-          data = populateCache(data, committedData)
+          const populateCachedData = populateCache(data, committedData)
+          set({ data: populateCachedData, error: UNDEFINED, _c: UNDEFINED })
+        } else {
+          // Only update cached data and reset the error if there's no error. Data can be `undefined` here.
+          set({ data, error: UNDEFINED, _c: UNDEFINED })
         }
-
-        // Only update cached data and reset the error if there's no error. Data can be `undefined` here.
-        set({ data, error: UNDEFINED, _c: UNDEFINED })
       }
     }
 
@@ -198,17 +198,17 @@ export async function internalMutate<Data>(
     MUTATION[key][1] = getTimestamp()
 
     // Update existing SWR Hooks' internal states:
-    const res = await startRevalidate()
-
-    // The mutation and revalidation are ended, we can clear it since the data is
-    // not an optimistic value anymore.
-    set({ _c: UNDEFINED })
+    Promise.resolve(startRevalidate()).then(() => {
+      // The mutation and revalidation are ended, we can clear it since the data is
+      // not an optimistic value anymore.
+      set({ _c: UNDEFINED })
+    })
 
     // Throw error or return data
     if (error) {
       if (throwOnError) throw error
       return
     }
-    return populateCache ? res : data
+    return data
   }
 }

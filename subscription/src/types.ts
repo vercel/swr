@@ -1,7 +1,7 @@
 import type { Key, SWRConfiguration, MutatorCallback } from 'swr'
 
 export type SWRSubscriptionOptions<Data = any, Error = any> = {
-  next: <T = Data>(err?: Error | null, data?: Data | MutatorCallback<T>) => void
+  next: (err?: Error | null, data?: Data | MutatorCallback<Data>) => void
 }
 
 export type SWRSubscription<

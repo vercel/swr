@@ -550,7 +550,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const boundMutate: SWRResponse<Data, Error>['mutate'] = useCallback(
     // Use callback to make sure `keyRef.current` returns latest result every time
-    (...args) => {
+    (...args: any[]) => {
       return internalMutate(cache, keyRef.current, ...args)
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps

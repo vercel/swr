@@ -62,11 +62,9 @@ export function useMutatorTypes() {
 
   mutate(async () => '1')
 
-  // @ts-expect-error
   mutate(async () => 1)
 
-  // FIXME: this should work.
-  // mutate(async () => 1, { populateCache: false })
+  mutate(async () => 1, { populateCache: false })
 }
 
 export function useConfigMutate() {
@@ -85,7 +83,7 @@ export function useConfigMutate() {
   )
 
   expect<Promise<any>>(
-    mutate('string', data => {
+    mutate('string', (data?: string) => {
       expectType<string | undefined>(data)
       return '0'
     })
