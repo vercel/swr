@@ -394,7 +394,7 @@ export interface ScopedMutator {
  * @typeParam Data - The type of the data related to the key
  * @typeParam MutationData - The type of the data returned by the mutator
  */
-export type KeyedMutator<Data> = <MutationData>(
+export type KeyedMutator<Data> = <MutationData = Data>(
   data?:
     | MutationData
     | Promise<MutationData | undefined>
