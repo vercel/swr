@@ -4,10 +4,10 @@ import { useIsomorphicLayoutEffect, IS_REACT_LEGACY } from 'swr/_internal'
 
 export const startTransition: (scope: TransitionFunction) => void =
   IS_REACT_LEGACY
-    ? React.startTransition
-    : cb => {
+    ? cb => {
         cb()
       }
+    : React.startTransition
 
 /**
  * An implementation of state with dependency-tracking.
