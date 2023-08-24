@@ -6,6 +6,8 @@ import type { Equal } from '@type-challenges/utils'
 export function useDataErrorGeneric() {
   useSWR<{ id: number }>('/api/', () => ({ id: 123 }))
   useSWR<string, any>('/api/', (key: string) => key)
+  const fetcher = ({ url }: { url: string }) => url
+  useSWR({ url: '/api' }, fetcher)
   useSWRInfinite<string[], any>(
     (index, previousPageData) => {
       expectType<Equal<number, typeof index>>(true)
