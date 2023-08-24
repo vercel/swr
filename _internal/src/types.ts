@@ -304,6 +304,7 @@ export type Arguments =
   | undefined
   | false
 export type Key = Arguments | (() => Arguments)
+export type CustomHashes = Array<(arg: unknown) => string>
 export type StrictTupleKey = ArgumentsTuple | null | undefined | false
 type StrictKey = StrictTupleKey | (() => StrictTupleKey)
 export type MutatorCallback<Data = any> = (
