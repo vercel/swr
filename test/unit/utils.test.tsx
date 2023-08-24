@@ -1,8 +1,8 @@
 import {
   stableHash as hash,
-  serialize,
+  mergeConfigs,
   normalize,
-  mergeConfigs
+  serialize
 } from 'swr/_internal'
 
 describe('Utils', () => {
@@ -113,9 +113,46 @@ describe('Utils', () => {
       /@\d+~,1,"key",null,#x:1,,/
     )
 
+    class Todo {
+      constructor(
+        private name: string,
+        private isCompleted: boolean,
+        private createdAt: Date
+      ) {}
+
+      get message() {
+        return `Todo: ${this.name} created at ${this.createdAt}, ${
+          this.isCompleted ? 'complete.' : 'not completed.'
+        }`
+      }
+    }
+
     // Stable hash
     expect(hash([{ x: 1, y: 2, z: undefined }])).toMatch(
       hash([{ z: undefined, y: 2, x: 1 }])
+    )
+    expect(
+      hash(
+        [new Todo('Go to gym', false, new Date('2023-08-24'))],
+        [
+          arg => {
+            if (arg instanceof Todo) {
+              return arg.message
+            }
+          }
+        ]
+      )
+    ).toMatch(
+      hash(
+        [new Todo('Go to gym', false, new Date('2023-08-24'))],
+        [
+          arg => {
+            if (arg instanceof Todo) {
+              return arg.message
+            }
+          }
+        ]
+      )
     )
     expect(hash([{ x: 1, y: { a: 1, b: 2 }, z: undefined }])).toMatch(
       hash([{ y: { b: 2, a: 1 }, x: 1 }])
