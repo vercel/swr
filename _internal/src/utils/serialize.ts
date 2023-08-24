@@ -1,9 +1,12 @@
 import { stableHash } from './hash'
 import { isFunction } from './shared'
 
-import type { Key, Arguments } from '../types'
+import type { Arguments, CustomHashes, Key } from '../types'
 
-export const serialize = (key: Key): [string, Arguments] => {
+export const serialize = (
+  key: Key,
+  customHashes?: CustomHashes
+): [string, Arguments] => {
   if (isFunction(key)) {
     try {
       key = key()
@@ -22,7 +25,7 @@ export const serialize = (key: Key): [string, Arguments] => {
     typeof key == 'string'
       ? key
       : (Array.isArray(key) ? key.length : key)
-      ? stableHash(key)
+      ? stableHash(key, customHashes)
       : ''
 
   return [key, args]

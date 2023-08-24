@@ -194,7 +194,11 @@ export interface PublicConfiguration<
   /**
    * comparison function used to detect when returned data has changed, to avoid spurious rerenders. By default, [stable-hash](https://github.com/shuding/stable-hash) is used.
    */
-  compare: (a: Data | undefined, b: Data | undefined) => boolean
+  compare: (
+    a: Data | undefined,
+    b: Data | undefined,
+    customHashes?: CustomHashes
+  ) => boolean
   /**
    * isOnline and isVisible are functions that return a boolean, to determine if the application is "active". By default, SWR will bail out a revalidation if these conditions are not met.
    * @link https://swr.vercel.app/docs/advanced/react-native#customize-focus-and-reconnect-events
@@ -205,6 +209,7 @@ export interface PublicConfiguration<
    * @link https://swr.vercel.app/docs/advanced/react-native#customize-focus-and-reconnect-events
    */
   isVisible: () => boolean
+  customHashes?: CustomHashes
 }
 
 export type FullConfiguration<

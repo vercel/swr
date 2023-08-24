@@ -1,15 +1,15 @@
+import { INFINITE_PREFIX } from '../constants'
 import type {
-  Middleware,
-  Key,
   BareFetcher,
+  FetcherResponse,
   GlobalState,
-  FetcherResponse
+  Key,
+  Middleware
 } from '../types'
-import { serialize } from './serialize'
 import { cache } from './config'
 import { SWRGlobalState } from './global-state'
+import { serialize } from './serialize'
 import { isUndefined } from './shared'
-import { INFINITE_PREFIX } from '../constants'
 // Basically same as Fetcher but without Conditional Fetching
 type PreloadFetcher<
   Data = unknown,
@@ -45,7 +45,7 @@ export const middleware: Middleware =
     const fetcher =
       fetcher_ &&
       ((...args: any[]) => {
-        const [key] = serialize(key_)
+        const [key] = serialize(key_, config.customHashes)
         const [, , , PRELOAD] = SWRGlobalState.get(cache) as GlobalState
 
         if (key.startsWith(INFINITE_PREFIX)) {

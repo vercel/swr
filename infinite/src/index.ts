@@ -1,40 +1,40 @@
 // We have to several type castings here because `useSWRInfinite` is a special
 // hook where `key` and return type are not like the normal `useSWR` types.
 
-import { useRef, useCallback } from 'react'
+import { useCallback, useRef } from 'react'
 import type { SWRConfig } from 'swr'
 import useSWR from 'swr'
-import {
-  isUndefined,
-  isFunction,
-  UNDEFINED,
-  createCacheHelper,
-  useIsomorphicLayoutEffect,
-  serialize,
-  withMiddleware,
-  INFINITE_PREFIX,
-  SWRGlobalState,
-  cache as defaultCache
-} from 'swr/_internal'
 import type {
   BareFetcher,
-  SWRHook,
-  MutatorCallback,
+  GlobalState,
   Middleware,
+  MutatorCallback,
   MutatorOptions,
-  GlobalState
+  SWRHook
 } from 'swr/_internal'
-import type {
-  SWRInfiniteConfiguration,
-  SWRInfiniteResponse,
-  SWRInfiniteHook,
-  SWRInfiniteKeyLoader,
-  SWRInfiniteFetcher,
-  SWRInfiniteCacheValue,
-  SWRInfiniteCompareFn
-} from './types'
+import {
+  INFINITE_PREFIX,
+  SWRGlobalState,
+  UNDEFINED,
+  createCacheHelper,
+  cache as defaultCache,
+  isFunction,
+  isUndefined,
+  serialize,
+  useIsomorphicLayoutEffect,
+  withMiddleware
+} from 'swr/_internal'
 import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js'
 import { getFirstPageKey } from './serialize'
+import type {
+  SWRInfiniteCacheValue,
+  SWRInfiniteCompareFn,
+  SWRInfiniteConfiguration,
+  SWRInfiniteFetcher,
+  SWRInfiniteHook,
+  SWRInfiniteKeyLoader,
+  SWRInfiniteResponse
+} from './types'
 
 // const INFINITE_PREFIX = '$inf$'
 const EMPTY_PROMISE = Promise.resolve() as Promise<undefined>
@@ -64,7 +64,8 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
       persistSize = false,
       revalidateFirstPage = true,
       revalidateOnMount = false,
-      parallel = false
+      parallel = false,
+      customHashes = []
     } = config
     const [, , , PRELOAD] = SWRGlobalState.get(defaultCache) as GlobalState
 
@@ -186,7 +187,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
             shouldRevalidateOnMount ||
             (cacheData &&
               !isUndefined(cacheData[i]) &&
-              !config.compare(cacheData[i], pageData))
+              !config.compare(cacheData[i], pageData, customHashes))
           if (fn && shouldFetchPage) {
             const revalidate = async () => {
               const hasPreloadedRequest = pageKey in PRELOAD
@@ -342,10 +343,10 @@ const useSWRInfinite = withMiddleware(useSWR, infinite) as SWRInfiniteHook
 export default useSWRInfinite
 
 export {
+  SWRInfiniteCompareFn,
   SWRInfiniteConfiguration,
-  SWRInfiniteResponse,
+  SWRInfiniteFetcher,
   SWRInfiniteHook,
   SWRInfiniteKeyLoader,
-  SWRInfiniteFetcher,
-  SWRInfiniteCompareFn
+  SWRInfiniteResponse
 }

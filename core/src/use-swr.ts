@@ -1,46 +1,46 @@
 /// <reference types="react/experimental" />
 import ReactExports, {
   useCallback,
-  useRef,
   useDebugValue,
-  useMemo
+  useMemo,
+  useRef
 } from 'react'
 import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js'
 
-import {
-  defaultConfig,
-  IS_REACT_LEGACY,
-  IS_SERVER,
-  rAF,
-  useIsomorphicLayoutEffect,
-  SWRGlobalState,
-  serialize,
-  isUndefined,
-  UNDEFINED,
-  OBJECT,
-  isFunction,
-  createCacheHelper,
-  SWRConfig as ConfigProvider,
-  withArgs,
-  subscribeCallback,
-  getTimestamp,
-  internalMutate,
-  revalidateEvents,
-  mergeObjects
-} from 'swr/_internal'
 import type {
-  State,
   Fetcher,
-  Key,
-  SWRResponse,
-  RevalidatorOptions,
   FullConfiguration,
+  GlobalState,
+  Key,
+  ReactUsePromise,
+  RevalidateEvent,
+  RevalidatorOptions,
   SWRConfiguration,
   SWRHook,
-  RevalidateEvent,
-  StateDependencies,
-  GlobalState,
-  ReactUsePromise
+  SWRResponse,
+  State,
+  StateDependencies
+} from 'swr/_internal'
+import {
+  SWRConfig as ConfigProvider,
+  IS_REACT_LEGACY,
+  IS_SERVER,
+  OBJECT,
+  SWRGlobalState,
+  UNDEFINED,
+  createCacheHelper,
+  defaultConfig,
+  getTimestamp,
+  internalMutate,
+  isFunction,
+  isUndefined,
+  mergeObjects,
+  rAF,
+  revalidateEvents,
+  serialize,
+  subscribeCallback,
+  useIsomorphicLayoutEffect,
+  withArgs
 } from 'swr/_internal'
 
 const use =
@@ -103,7 +103,8 @@ export const useSWRHandler = <Data = any, Error = any>(
     refreshInterval,
     refreshWhenHidden,
     refreshWhenOffline,
-    keepPreviousData
+    keepPreviousData,
+    customHashes
   } = config
 
   const [EVENT_REVALIDATORS, MUTATION, FETCH, PRELOAD] = SWRGlobalState.get(
@@ -114,7 +115,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   // `fnArg` is the argument/arguments parsed from the key, which will be passed
   // to the fetcher.
   // All of them are derived from `_key`.
-  const [key, fnArg] = serialize(_key)
+  const [key, fnArg] = serialize(_key, customHashes)
 
   // If it's the initial render of this hook.
   const initialMountedRef = useRef(false)
@@ -148,11 +149,11 @@ export const useSWRHandler = <Data = any, Error = any>(
     for (const _ in stateDependencies) {
       const t = _ as keyof StateDependencies
       if (t === 'data') {
-        if (!compare(prev[t], current[t])) {
+        if (!compare(prev[t], current[t], customHashes)) {
           if (!isUndefined(prev[t])) {
             return false
           }
-          if (!compare(returnedData, current[t])) {
+          if (!compare(returnedData, current[t], customHashes)) {
             return false
           }
         }
@@ -467,7 +468,9 @@ export const useSWRHandler = <Data = any, Error = any>(
 
         // Since the compare fn could be custom fn
         // cacheData might be different from newData even when compare fn returns True
-        finalState.data = compare(cacheData, newData) ? cacheData : newData
+        finalState.data = compare(cacheData, newData, customHashes)
+          ? cacheData
+          : newData
 
         // Trigger the successful callback if it's the original request.
         if (shouldStartNewRequest) {

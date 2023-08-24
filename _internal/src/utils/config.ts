@@ -1,16 +1,17 @@
 import type {
-  PublicConfiguration,
+  Cache,
+  CustomHashes,
   FullConfiguration,
-  RevalidatorOptions,
+  PublicConfiguration,
   Revalidator,
-  ScopedMutator,
-  Cache
+  RevalidatorOptions,
+  ScopedMutator
 } from '../types'
-import { stableHash } from './hash'
 import { initCache } from './cache'
-import { preset } from './web-preset'
 import { slowConnection } from './env'
-import { isUndefined, noop, mergeObjects } from './shared'
+import { stableHash } from './hash'
+import { isUndefined, mergeObjects, noop } from './shared'
+import { preset } from './web-preset'
 
 // error retry
 const onErrorRetry = (
@@ -37,12 +38,13 @@ const onErrorRetry = (
   setTimeout(revalidate, timeout, opts)
 }
 
-const compare = (currentData: any, newData: any) =>
-  stableHash(currentData) == stableHash(newData)
+const compare = (currentData: any, newData: any, customHashes?: CustomHashes) =>
+  stableHash(currentData, customHashes) == stableHash(newData, customHashes)
+const customHashes = [] as CustomHashes
 
 // Default cache provider
 const [cache, mutate] = initCache(new Map()) as [Cache<any>, ScopedMutator]
-export { cache, mutate, compare }
+export { cache, compare, mutate }
 
 // Default config
 export const defaultConfig: FullConfiguration = mergeObjects(
@@ -71,7 +73,8 @@ export const defaultConfig: FullConfiguration = mergeObjects(
     isPaused: () => false,
     cache,
     mutate,
-    fallback: {}
+    fallback: {},
+    customHashes
   },
   // use web preset by default
   preset
