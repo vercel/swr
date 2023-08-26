@@ -295,7 +295,7 @@ export type Middleware = (
   config: SWRConfiguration<Data, Error, BareFetcher<Data>>
 ) => SWRResponse<Data, Error>
 
-type ArgumentsTuple = [any, ...unknown[]] | readonly [any, ...unknown[]]
+type ArgumentsTuple = readonly [any, ...unknown[]]
 export type Arguments =
   | string
   | ArgumentsTuple
