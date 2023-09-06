@@ -577,6 +577,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     // Expose revalidators to global event listeners. So we can trigger
     // revalidation from the outside.
     let nextFocusRevalidatedAt = 0
+    let nextReconnectRevalidatedAt = 0
     const onRevalidate = (
       type: RevalidateEvent,
       opts: {
@@ -584,8 +585,8 @@ export const useSWRHandler = <Data = any, Error = any>(
         dedupe?: boolean
       } = {}
     ) => {
+      const now = Date.now()
       if (type == revalidateEvents.FOCUS_EVENT) {
-        const now = Date.now()
         if (
           getConfig().revalidateOnFocus &&
           now > nextFocusRevalidatedAt &&
@@ -595,8 +596,18 @@ export const useSWRHandler = <Data = any, Error = any>(
           softRevalidate()
         }
       } else if (type == revalidateEvents.RECONNECT_EVENT) {
-        if (getConfig().revalidateOnReconnect && isActive()) {
-          softRevalidate()
+        if (
+          getConfig().revalidateOnReconnect &&
+          now > nextReconnectRevalidatedAt &&
+          isActive()
+        ) {
+          nextReconnectRevalidatedAt = now + getConfig().reconnectThrottleInterval
+          if (getConfig().forceRevalidateOnReconnect) {
+            return revalidate()
+          }
+          else {
+            softRevalidate()
+          }
         }
       } else if (type == revalidateEvents.MUTATE_EVENT) {
         return revalidate()

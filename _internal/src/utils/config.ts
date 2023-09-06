@@ -58,11 +58,13 @@ export const defaultConfig: FullConfiguration = mergeObjects(
     revalidateOnFocus: true,
     revalidateOnReconnect: true,
     revalidateIfStale: true,
+    forceRevalidateOnReconnect: false,
     shouldRetryOnError: true,
 
     // timeouts
     errorRetryInterval: slowConnection ? 10000 : 5000,
     focusThrottleInterval: 5 * 1000,
+    reconnectThrottleInterval: 5 * 1000,
     dedupingInterval: 2 * 1000,
     loadingTimeout: slowConnection ? 5000 : 3000,
 

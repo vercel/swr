@@ -73,6 +73,11 @@ export interface PublicConfiguration<
    */
   focusThrottleInterval: number
   /**
+   * only revalidate once during a time span in milliseconds
+   * @defaultValue 5000
+   */
+  reconnectThrottleInterval: number
+  /**
    * dedupe requests with the same key in this time span in milliseconds
    * @defaultValue 2000
    */
@@ -116,6 +121,11 @@ export interface PublicConfiguration<
    * @link https://swr.vercel.app/docs/revalidation#disable-automatic-revalidations
    */
   revalidateIfStale: boolean
+  /**
+   * ignore `dedupingInterval` (but not `reconnectThrottleInterval`) when revalidating after regaining a network connection
+   * @defaultValue false
+   */
+  forceRevalidateOnReconnect: boolean
   /**
    * retry when fetcher has an error
    * @defaultValue true
