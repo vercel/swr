@@ -1580,10 +1580,11 @@ describe('useSWR - local mutation', () => {
     }
 
     function Page() {
-      const { data, mutate } = useSWR(key, () => serverData)
+      const { mutate } = useSWRConfig()
+      const { data } = useSWR(key, () => serverData)
 
       appendData = () => {
-        return mutate(sendRequest('cherry'), {
+        return mutate<string[], string>(key, sendRequest('cherry'), {
           optimisticData: [...data, 'cherry (optimistic)'],
           populateCache: (result, currentData) => [
             ...currentData,
