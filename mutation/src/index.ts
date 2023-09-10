@@ -14,7 +14,10 @@ import type {
   SWRMutationConfiguration,
   SWRMutationResponse,
   SWRMutationHook,
-  MutationFetcher
+  MutationFetcher,
+  TriggerWithArgs,
+  TriggerWithoutArgs,
+  TriggerWithOptionsArgs
 } from './types'
 
 const mutation = (<Data, Error>() =>
@@ -160,5 +163,8 @@ export {
   SWRMutationConfiguration,
   SWRMutationResponse,
   SWRMutationHook,
-  MutationFetcher
+  MutationFetcher,
+  TriggerWithArgs,
+  TriggerWithoutArgs,
+  TriggerWithOptionsArgs
 }

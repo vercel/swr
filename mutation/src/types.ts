@@ -88,7 +88,7 @@ export interface TriggerWithArgs<
   ): Promise<Data | undefined>
 }
 
-interface TriggerWithOptionsArgs<
+export interface TriggerWithOptionsArgs<
   Data = any,
   Error = any,
   SWRMutationKey extends Key = Key,
