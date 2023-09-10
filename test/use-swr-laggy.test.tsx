@@ -1,5 +1,5 @@
 import { screen, act, fireEvent } from '@testing-library/react'
-import { useState } from 'react'
+import { Profiler, useState } from 'react'
 import useSWR from 'swr'
 import useSWRInfinite from 'swr/infinite'
 
@@ -14,8 +14,11 @@ describe('useSWR - keep previous data', () => {
       const { data: laggedData } = useSWR(key, fetcher, {
         keepPreviousData: true
       })
-      loggedData.push([key, laggedData])
-      return <button onClick={() => setKey(createKey())}>change key</button>
+      return (
+        <Profiler id={key} onRender={() => loggedData.push([key, laggedData])}>
+          <button onClick={() => setKey(createKey())}>change key</button>
+        </Profiler>
+      )
     }
 
     renderWithConfig(<App />)
@@ -43,9 +46,14 @@ describe('useSWR - keep previous data', () => {
       const { data: laggedData } = useSWR(key, fetcher, {
         keepPreviousData: true
       })
-
-      loggedData.push([key, data, laggedData])
-      return <button onClick={() => setKey(createKey())}>change key</button>
+      return (
+        <Profiler
+          id={key}
+          onRender={() => loggedData.push([key, data, laggedData])}
+        >
+          <button onClick={() => setKey(createKey())}>change key</button>
+        </Profiler>
+      )
     }
 
     renderWithConfig(<App />)
@@ -77,8 +85,14 @@ describe('useSWR - keep previous data', () => {
         fallbackData: 'fallback'
       })
 
-      loggedData.push([key, data, laggedData])
-      return <button onClick={() => setKey(createKey())}>change key</button>
+      return (
+        <Profiler
+          id={key}
+          onRender={() => loggedData.push([key, data, laggedData])}
+        >
+          <button onClick={() => setKey(createKey())}>change key</button>
+        </Profiler>
+      )
     }
 
     renderWithConfig(<App />)
@@ -104,12 +118,11 @@ describe('useSWR - keep previous data', () => {
       const { data: laggedData, mutate } = useSWR(key, fetcher, {
         keepPreviousData: true
       })
-      loggedData.push([key, laggedData])
       return (
-        <>
+        <Profiler id={key} onRender={() => loggedData.push([key, laggedData])}>
           <button onClick={() => setKey(createKey())}>change key</button>
           <button onClick={() => mutate('mutate')}>mutate</button>
-        </>
+        </Profiler>
       )
     }
 
@@ -141,9 +154,11 @@ describe('useSWR - keep previous data', () => {
       const { data } = useSWRInfinite(() => key, fetcher, {
         keepPreviousData: true
       })
-
-      loggedData.push([key, data])
-      return <button onClick={() => setKey(createKey())}>change key</button>
+      return (
+        <Profiler id={key} onRender={() => loggedData.push([key, data])}>
+          <button onClick={() => setKey(createKey())}>change key</button>
+        </Profiler>
+      )
     }
 
     renderWithConfig(<App />)
@@ -170,8 +185,11 @@ describe('useSWR - keep previous data', () => {
       const { data: laggedData } = useSWR(key, fetcher, {
         keepPreviousData
       })
-      loggedData.push([key, laggedData])
-      return <button onClick={() => setKey(createKey())}>change key</button>
+      return (
+        <Profiler id={key} onRender={() => loggedData.push([key, laggedData])}>
+          <button onClick={() => setKey(createKey())}>change key</button>
+        </Profiler>
+      )
     }
 
     renderWithConfig(<App />)

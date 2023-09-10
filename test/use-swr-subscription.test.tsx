@@ -21,7 +21,9 @@ describe('useSWRSubscription', () => {
         res++
       }, 100)
 
-      return () => {}
+      return () => {
+        clearInterval(intervalId)
+      }
     }
 
     function Page() {
@@ -78,7 +80,9 @@ describe('useSWRSubscription', () => {
         res++
       }, 100)
 
-      return () => {}
+      return () => {
+        clearInterval(intervalId)
+      }
     }
 
     function Page() {
@@ -138,6 +142,7 @@ describe('useSWRSubscription', () => {
       }, 100)
 
       return () => {
+        --subscriptionCount
         clearInterval(intervalId)
       }
     }

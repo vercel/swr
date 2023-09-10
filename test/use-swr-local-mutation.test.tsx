@@ -1,5 +1,5 @@
 import { act, screen, fireEvent } from '@testing-library/react'
-import { useEffect, useState } from 'react'
+import { Profiler, useEffect, useState } from 'react'
 import useSWR, { mutate as globalMutate, useSWRConfig } from 'swr'
 import useSWRInfinite from 'swr/infinite'
 import { serialize } from 'swr/_internal'
@@ -582,9 +582,11 @@ describe('useSWR - local mutation', () => {
         const timeout = setTimeout(() => setKey(updatedKey), 50)
         return () => clearTimeout(timeout)
       }, [])
-
-      refs.push(boundMutate)
-      return <div>{data}</div>
+      return (
+        <Profiler id={key} onRender={() => refs.push(boundMutate)}>
+          <div>{data}</div>
+        </Profiler>
+      )
     }
 
     renderWithConfig(<Section />)
@@ -598,42 +600,6 @@ describe('useSWR - local mutation', () => {
     for (const ref of refs) {
       expect(ref).toEqual(refs[0])
     }
-  })
-
-  // https://github.com/vercel/swr/pull/1003
-  it.skip('should not dedupe synchronous mutations', async () => {
-    const mutationRecivedValues = []
-    const renderRecivedValues = []
-
-    const key = createKey()
-    function Component() {
-      const { data, mutate: boundMutate } = useSWR(key, () => 0)
-
-      useEffect(() => {
-        setTimeout(() => {
-          // let's mutate twice, synchronously
-          boundMutate(v => {
-            mutationRecivedValues.push(v) // should be 0
-            return 1
-          }, false)
-          boundMutate(v => {
-            mutationRecivedValues.push(v) // should be 1
-            return 2
-          }, false)
-        }, 1)
-        // the mutate function is guaranteed to be the same reference
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-      }, [])
-
-      renderRecivedValues.push(data) // should be 0 -> 2, never render 1 in between
-      return null
-    }
-
-    renderWithConfig(<Component />)
-
-    await executeWithoutBatching(() => sleep(50))
-    expect(mutationRecivedValues).toEqual([0, 1])
-    expect(renderRecivedValues).toEqual([undefined, 0, 1, 2])
   })
 
   it('async mutation case 1 (startAt <= MUTATION_TS[key])', async () => {
@@ -702,31 +668,37 @@ describe('useSWR - local mutation', () => {
           dedupingInterval: 200
         }
       )
-      useEffect(() => {
-        mutate(
-          updatedKey,
-          async () => {
-            result += 1
-            return createResponse(result, {
-              delay: 200
-            })
-          },
-          false
-        )
-        setKey(updatedKey)
-      }, [])
       return (
-        <div>{data !== undefined ? `data: ${data.toString()}` : 'loading'}</div>
+        <>
+          <div>
+            {data !== undefined ? `data: ${data.toString()}` : 'loading'}
+          </div>
+          <button
+            onClick={() => {
+              mutate(
+                updatedKey,
+                async () => {
+                  result += 1
+                  return createResponse(result, {
+                    delay: 200
+                  })
+                },
+                false
+              )
+              setKey(updatedKey)
+            }}
+          >
+            mutate
+          </button>
+        </>
       )
     }
 
     renderWithConfig(<Component />)
     screen.getByText('loading')
-
+    fireEvent.click(screen.getByRole('button'))
     // mutate success
     await act(() => sleep(200))
-    fireEvent.click(screen.getByText('data: 1'))
-
     // fetcher result should be ignored
     await act(() => sleep(200))
     expect(fetcher).toBeCalledTimes(1)
@@ -751,25 +723,33 @@ describe('useSWR - local mutation', () => {
           dedupingInterval: 200
         }
       )
-      useEffect(() => {
-        setKey(updatedKey)
-        mutate(
-          updatedKey,
-          async () => {
-            result += 1
-            return createResponse(result, { delay: 200 })
-          },
-          false
-        )
-      }, [])
       return (
-        <div>{data !== undefined ? `data: ${data.toString()}` : 'loading'}</div>
+        <>
+          <div>
+            {data !== undefined ? `data: ${data.toString()}` : 'loading'}
+          </div>
+          <button
+            onClick={() => {
+              setKey(updatedKey)
+              mutate(
+                updatedKey,
+                async () => {
+                  result += 1
+                  return createResponse(result, { delay: 200 })
+                },
+                false
+              )
+            }}
+          >
+            mutate
+          </button>
+        </>
       )
     }
 
     renderWithConfig(<Component />)
     screen.getByText('loading')
-
+    fireEvent.click(screen.getByRole('button'))
     // fetcher result should be ignored
     await act(() => sleep(100))
     expect(fetcher).toBeCalledTimes(1)
@@ -920,27 +900,38 @@ describe('useSWR - local mutation', () => {
     function Page() {
       const { data, mutate } = useSWR(key, () => 'foo')
 
-      useEffect(() => {
-        async function startMutation() {
-          await sleep(10)
-          mutate('sync1', false)
-          mutate(createResponse('async1', { delay: 50 }), false)
-          await sleep(10)
-          mutate('sync2', false)
-          mutate(createResponse('async2', { delay: 50 }), false)
-          await sleep(10)
-          mutate('sync3', false)
-          mutate(createResponse('async3', { delay: 50 }), false)
-        }
+      return (
+        <Profiler
+          id={key}
+          onRender={() => {
+            loggedData.push(data)
+          }}
+        >
+          <button
+            onClick={() => {
+              async function startMutation() {
+                await sleep(10)
+                mutate('sync1', false)
+                mutate(createResponse('async1', { delay: 50 }), false)
+                await sleep(10)
+                mutate('sync2', false)
+                mutate(createResponse('async2', { delay: 50 }), false)
+                await sleep(10)
+                mutate('sync3', false)
+                mutate(createResponse('async3', { delay: 50 }), false)
+              }
 
-        startMutation()
-      }, [mutate])
-
-      loggedData.push(data)
-      return null
+              startMutation()
+            }}
+          >
+            mutate
+          </button>
+        </Profiler>
+      )
     }
 
     renderWithConfig(<Page />)
+    fireEvent.click(screen.getByRole('button'))
     await executeWithoutBatching(() => sleep(200))
 
     // Only "async3" is left and others were deduped.
@@ -1040,9 +1031,17 @@ describe('useSWR - local mutation', () => {
       const { data, mutate: boundMutate } = useSWR(key, () =>
         createResponse('foo', { delay: 20 })
       )
-      mutate = boundMutate
-      renderedData.push(data)
-      return <div>data: {String(data)}</div>
+      return (
+        <Profiler
+          id={key}
+          onRender={() => {
+            mutate = boundMutate
+            renderedData.push(data)
+          }}
+        >
+          <div>data: {String(data)}</div>
+        </Profiler>
+      )
     }
 
     renderWithConfig(<Page />)
@@ -1066,9 +1065,17 @@ describe('useSWR - local mutation', () => {
       const { data, mutate: boundMutate } = useSWR(key, () =>
         createResponse('foo', { delay: 20 })
       )
-      mutate = boundMutate
-      renderedData.push(data)
-      return <div>data: {String(data)}</div>
+      return (
+        <Profiler
+          id={key}
+          onRender={() => {
+            mutate = boundMutate
+            renderedData.push(data)
+          }}
+        >
+          <div>data: {String(data)}</div>
+        </Profiler>
+      )
     }
 
     renderWithConfig(<Page />)
@@ -1107,12 +1114,12 @@ describe('useSWR - local mutation', () => {
     function Page() {
       const mutateWithOptData = useOptimisticDataMutate(key, 'final', 'loading')
       const { data } = useSWR(key)
-      renderedData.push(data)
+
       return (
-        <div>
+        <Profiler id={key} onRender={() => renderedData.push(data)}>
           <button onClick={() => mutateWithOptData()}>mutate</button>
           <div>data: {String(data)}</div>
-        </div>
+        </Profiler>
       )
     }
 
@@ -1217,9 +1224,17 @@ describe('useSWR - local mutation', () => {
         refreshInterval: 10,
         dedupingInterval: 0
       })
-      mutate = boundMutate
-      renderedData.push(data)
-      return <div>data: {String(data)}</div>
+      return (
+        <Profiler
+          id={key}
+          onRender={() => {
+            mutate = boundMutate
+            renderedData.push(data)
+          }}
+        >
+          <div>data: {String(data)}</div>
+        </Profiler>
+      )
     }
 
     renderWithConfig(<Page />)
@@ -1248,14 +1263,22 @@ describe('useSWR - local mutation', () => {
       const { data, mutate: boundMutate } = useSWR(key, () =>
         createResponse(cnt++, { delay: 20 })
       )
-      mutate = boundMutate
-      if (
-        !renderedData.length ||
-        renderedData[renderedData.length - 1] !== data
-      ) {
-        renderedData.push(data)
-      }
-      return <div>data: {String(data)}</div>
+      return (
+        <Profiler
+          id={key}
+          onRender={() => {
+            mutate = boundMutate
+            if (
+              !renderedData.length ||
+              renderedData[renderedData.length - 1] !== data
+            ) {
+              renderedData.push(data)
+            }
+          }}
+        >
+          <div>data: {String(data)}</div>
+        </Profiler>
+      )
     }
 
     renderWithConfig(<Page />)
@@ -1286,16 +1309,22 @@ describe('useSWR - local mutation', () => {
       const { data, mutate: boundMutate } = useSWR(key, () =>
         createResponse(0, { delay: 20 })
       )
-      mutate = boundMutate
-
-      if (
-        !renderedData.length ||
-        renderedData[renderedData.length - 1] !== data
-      ) {
-        renderedData.push(data)
-      }
-
-      return <div>data: {String(data)}</div>
+      return (
+        <Profiler
+          id={key}
+          onRender={() => {
+            mutate = boundMutate
+            if (
+              !renderedData.length ||
+              renderedData[renderedData.length - 1] !== data
+            ) {
+              renderedData.push(data)
+            }
+          }}
+        >
+          <div>data: {String(data)}</div>
+        </Profiler>
+      )
     }
 
     renderWithConfig(<Page />)
@@ -1342,13 +1371,21 @@ describe('useSWR - local mutation', () => {
         createResponse(serverData, { delay: 20 })
       )
       mutate = boundMutate
-      if (
-        !renderedData.length ||
-        renderedData[renderedData.length - 1] !== data
-      ) {
-        renderedData.push(data)
-      }
-      return <div>data: {String(data)}</div>
+      return (
+        <Profiler
+          id={key}
+          onRender={() => {
+            if (
+              !renderedData.length ||
+              renderedData[renderedData.length - 1] !== data
+            ) {
+              renderedData.push(data)
+            }
+          }}
+        >
+          <div>data: {String(data)}</div>
+        </Profiler>
+      )
     }
 
     // data == "foo"
@@ -1392,14 +1429,22 @@ describe('useSWR - local mutation', () => {
       const { data, mutate: boundMutate } = useSWR(key, () =>
         createResponse(serverData, { delay: 20 })
       )
-      mutate = boundMutate
-      if (
-        !renderedData.length ||
-        renderedData[renderedData.length - 1] !== data
-      ) {
-        renderedData.push(data)
-      }
-      return <div>data: {String(data)}</div>
+      return (
+        <Profiler
+          id={key}
+          onRender={() => {
+            mutate = boundMutate
+            if (
+              !renderedData.length ||
+              renderedData[renderedData.length - 1] !== data
+            ) {
+              renderedData.push(data)
+            }
+          }}
+        >
+          <div>data: {String(data)}</div>
+        </Profiler>
+      )
     }
 
     // data == "foo"
@@ -1455,14 +1500,22 @@ describe('useSWR - local mutation', () => {
       const { data, mutate: boundMutate } = useSWR(key, () =>
         createResponse(cnt++, { delay: 20 })
       )
-      mutate = boundMutate
-      if (
-        !renderedData.length ||
-        renderedData[renderedData.length - 1] !== data
-      ) {
-        renderedData.push(data)
-      }
-      return <div>data: {String(data)}</div>
+      return (
+        <Profiler
+          id={key}
+          onRender={() => {
+            mutate = boundMutate
+            if (
+              !renderedData.length ||
+              renderedData[renderedData.length - 1] !== data
+            ) {
+              renderedData.push(data)
+            }
+          }}
+        >
+          <div>data: {String(data)}</div>
+        </Profiler>
+      )
     }
 
     renderWithConfig(<Page />)
@@ -1539,15 +1592,20 @@ describe('useSWR - local mutation', () => {
 
     function Page() {
       const { data, mutate } = useSWR(key, () => 'foo')
-      mutatePage = () =>
-        mutate(new Promise(res => setTimeout(() => res('baz'), 20)), {
-          optimisticData: () => 'bar',
-          revalidate: false,
-          populateCache: v => '!' + v
-        })
-
-      renderedData.push(data)
-      return null
+      return (
+        <Profiler
+          id={key}
+          onRender={() => {
+            mutatePage = () =>
+              mutate(new Promise(res => setTimeout(() => res('baz'), 20)), {
+                optimisticData: () => 'bar',
+                revalidate: false,
+                populateCache: v => '!' + v
+              })
+            renderedData.push(data)
+          }}
+        ></Profiler>
+      )
     }
 
     renderWithConfig(<Page />)
@@ -1582,19 +1640,25 @@ describe('useSWR - local mutation', () => {
     function Page() {
       const { data, mutate } = useSWR(key, () => serverData)
 
-      appendData = () => {
-        return mutate(sendRequest('cherry'), {
-          optimisticData: [...data, 'cherry (optimistic)'],
-          populateCache: (result, currentData) => [
-            ...currentData,
-            result + ' (res)'
-          ],
-          revalidate: true
-        })
-      }
+      return (
+        <Profiler
+          id={key}
+          onRender={() => {
+            appendData = () => {
+              return mutate(sendRequest('cherry'), {
+                optimisticData: [...data, 'cherry (optimistic)'],
+                populateCache: (result, currentData) => [
+                  ...currentData,
+                  result + ' (res)'
+                ],
+                revalidate: true
+              })
+            }
 
-      renderedData.push(data)
-      return null
+            renderedData.push(data)
+          }}
+        ></Profiler>
+      )
     }
 
     renderWithConfig(<Page />)

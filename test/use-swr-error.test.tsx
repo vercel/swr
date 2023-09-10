@@ -1,5 +1,5 @@
 import { act, fireEvent, screen } from '@testing-library/react'
-import { useEffect, useState } from 'react'
+import { useState, Profiler } from 'react'
 import useSWR from 'swr'
 import {
   sleep,
@@ -288,84 +288,6 @@ describe('useSWR - error', () => {
     screen.getByText('error: 1')
   })
 
-  it.skip('should not trigger the onLoadingSlow and onSuccess event after component unmount', async () => {
-    const key = createKey()
-    let loadingSlow = null,
-      success = null
-    function Page() {
-      const { data } = useSWR(key, () => createResponse('SWR'), {
-        onLoadingSlow: loadingKey => {
-          loadingSlow = loadingKey
-        },
-        onSuccess: (_, successKey) => {
-          success = successKey
-        },
-        loadingTimeout: 100
-      })
-      return <div>hello, {data}</div>
-    }
-
-    function App() {
-      const [on, toggle] = useState(true)
-      return (
-        <div id="app" onClick={() => toggle(s => !s)}>
-          {on && <Page />}
-        </div>
-      )
-    }
-
-    renderWithConfig(<App />)
-    screen.getByText('hello,')
-    expect(loadingSlow).toEqual(null)
-    expect(success).toEqual(null)
-
-    fireEvent.click(screen.getByText('hello,'))
-    await act(() => sleep(200))
-    expect(success).toEqual(null)
-    expect(loadingSlow).toEqual(null)
-  })
-
-  it.skip('should not trigger the onError and onErrorRetry event after component unmount', async () => {
-    const key = createKey()
-    let retry = null,
-      failed = null
-    function Page() {
-      const { data } = useSWR(key, () => createResponse(new Error('error!')), {
-        onError: (_, errorKey) => {
-          failed = errorKey
-        },
-        onErrorRetry: (_, errorKey) => {
-          retry = errorKey
-        },
-        dedupingInterval: 0
-      })
-      return (
-        <div>
-          <>hello, {data}</>
-        </div>
-      )
-    }
-
-    function App() {
-      const [on, toggle] = useState(true)
-      return (
-        <div id="app" onClick={() => toggle(s => !s)}>
-          {on && <Page />}
-        </div>
-      )
-    }
-
-    renderWithConfig(<App />)
-    screen.getByText('hello,')
-    expect(retry).toEqual(null)
-    expect(failed).toEqual(null)
-
-    fireEvent.click(screen.getByText('hello,'))
-    await act(() => sleep(200))
-    expect(retry).toEqual(null)
-    expect(failed).toEqual(null)
-  })
-
   it('should not trigger error retries if errorRetryCount is set to 0', async () => {
     const key = createKey()
     let count = 0
@@ -398,7 +320,7 @@ describe('useSWR - error', () => {
   })
 
   it('should not clear error during revalidating until fetcher is finished successfully', async () => {
-    const errors = []
+    const onError = jest.fn()
     const key = createKey()
     let mutate
     function Page() {
@@ -412,11 +334,17 @@ describe('useSWR - error', () => {
         }
       )
       mutate = _mutate
-      useEffect(() => {
-        errors.push(error ? error.message : null)
-      }, [error])
 
-      return <div>hello, {error ? error.message : null}</div>
+      return (
+        <Profiler
+          id={key}
+          onRender={() => {
+            onError(error ? error.message : null)
+          }}
+        >
+          <div>hello, {error ? error.message : null}</div>
+        </Profiler>
+      )
     }
 
     renderWithConfig(<Page />)
@@ -427,7 +355,9 @@ describe('useSWR - error', () => {
     await act(() => mutate())
     // initial -> first error -> mutate -> receive another error
     // the error won't be cleared during revalidation
-    expect(errors).toEqual([null, 'error', 'error'])
+    expect(onError).toHaveBeenNthCalledWith(1, null)
+    expect(onError).toHaveBeenNthCalledWith(2, 'error')
+    expect(onError).toHaveBeenNthCalledWith(3, 'error')
   })
 
   it('should reset isValidating when an error occured synchronously', async () => {

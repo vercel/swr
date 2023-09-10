@@ -1,5 +1,5 @@
 import { act, fireEvent, screen } from '@testing-library/react'
-import { useState, StrictMode } from 'react'
+import { useState, StrictMode, Profiler } from 'react'
 import useSWR, { useSWRConfig, SWRConfig, mutate as globalMutate } from 'swr'
 import {
   sleep,
@@ -47,8 +47,11 @@ describe('useSWR - cache provider', () => {
 
     function Page() {
       const { data } = useSWR(key, fetcher)
-      renderedValues.push(data)
-      return <div>{data}</div>
+      return (
+        <Profiler id={key} onRender={() => renderedValues.push(data)}>
+          <div>{data}</div>
+        </Profiler>
+      )
     }
 
     renderWithConfig(<Page />, {
@@ -171,8 +174,13 @@ describe('useSWR - cache provider', () => {
     screen.getByText('1')
     unmount()
     expect(focusFn).toBeCalled()
-    expect(unsubscribeFocusFn).toBeCalledTimes(1)
-    expect(unsubscribeReconnectFn).toBeCalledTimes(1)
+    /**
+     * production mode
+     * expect(unsubscribeFocusFn).toBeCalledTimes(1)
+     * expect(unsubscribeReconnectFn).toBeCalledTimes(1)
+     */
+    expect(unsubscribeFocusFn).toBeCalledTimes(2)
+    expect(unsubscribeReconnectFn).toBeCalledTimes(2)
   })
 
   it('should work with revalidateOnFocus', async () => {
@@ -335,9 +343,13 @@ describe('useSWR - cache provider', () => {
     }
 
     renderWithConfig(<Page />)
-    expect(createCacheProvider).toBeCalledTimes(1)
+    /**
+     * production mode
+     * expect(createCacheProvider).toBeCalledTimes(1)
+     * */
+    expect(createCacheProvider).toBeCalledTimes(2)
     act(() => rerender({}))
-    expect(createCacheProvider).toBeCalledTimes(1)
+    expect(createCacheProvider).toBeCalledTimes(2)
   })
 })
 

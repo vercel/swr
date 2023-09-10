@@ -258,14 +258,22 @@ describe('useSWR - suspense', () => {
           suspense: true
         }
       )
-      if (`${data}` !== renderedResults[renderedResults.length - 1]) {
-        if (data === undefined) {
-          renderedResults.push(`${baseKey}-nodata`)
-        } else {
-          renderedResults.push(`${data}`)
-        }
-      }
-      return <div>{data ? data : `${baseKey}-nodata`}</div>
+      return (
+        <Profiler
+          id={baseKey}
+          onRender={() => {
+            if (`${data}` !== renderedResults[renderedResults.length - 1]) {
+              if (data === undefined) {
+                renderedResults.push(`${baseKey}-nodata`)
+              } else {
+                renderedResults.push(`${data}`)
+              }
+            }
+          }}
+        >
+          <div>{data ? data : `${baseKey}-nodata`}</div>
+        </Profiler>
+      )
     }
     const App = () => {
       const [query, setQuery] = useState('123')
@@ -326,18 +334,28 @@ describe('useSWR - suspense', () => {
     let renderCount = 0
     let startRenderCount = 0
     const key = createKey()
+    const profilerKey = createKey()
     function Section() {
-      ++startRenderCount
       const { data } = useSWR(key, () => createResponse('SWR'), {
         suspense: true
       })
-      ++renderCount
-      return <div>{data}</div>
+      return (
+        <Profiler
+          id={key}
+          onRender={() => {
+            ++renderCount
+          }}
+        >
+          <div>{data}</div>
+        </Profiler>
+      )
     }
 
     renderWithConfig(
       <Suspense fallback={<div>fallback</div>}>
-        <Section />
+        <Profiler id={profilerKey} onRender={() => ++startRenderCount}>
+          <Section />
+        </Profiler>
       </Suspense>
     )
 
@@ -345,7 +363,7 @@ describe('useSWR - suspense', () => {
     screen.getByText('fallback')
     await screen.findByText('SWR')
     await act(() => sleep(50)) // wait a moment to observe unnecessary renders
-    expect(startRenderCount).toBe(2) // fallback + data
+    expect(startRenderCount).toBe(1) // fallback
     expect(renderCount).toBe(1) // data
   })
 
