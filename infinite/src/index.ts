@@ -33,7 +33,7 @@ import type {
   SWRInfiniteCacheValue,
   SWRInfiniteCompareFn
 } from './types'
-import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js'
+import { useSyncExternalStore } from 'use-sync-external-store/shim'
 import { getFirstPageKey } from './serialize'
 
 // const INFINITE_PREFIX = '$inf$'
