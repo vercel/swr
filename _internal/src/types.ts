@@ -394,13 +394,10 @@ export interface ScopedMutator {
  * @typeParam Data - The type of the data related to the key
  * @typeParam MutationData - The type of the data returned by the mutator
  */
-export type KeyedMutator<Data> = <MutationData>(
-  data?:
-    | MutationData
-    | Promise<MutationData | undefined>
-    | MutatorCallback<MutationData>,
+export type KeyedMutator<Data> = <MutationData = Data>(
+  data?: Data | Promise<Data | undefined> | MutatorCallback<Data>,
   opts?: boolean | MutatorOptions<Data, MutationData>
-) => Promise<MutationData | undefined>
+) => Promise<Data | MutationData | undefined>
 
 export type SWRConfiguration<
   Data = any,
