@@ -61,12 +61,12 @@ export function useMutatorTypes() {
   const { mutate } = useSWR<string>('')
 
   mutate(async () => '1')
+  mutate(async () => '1', { populateCache: false })
 
   // @ts-expect-error
   mutate(async () => 1)
-
-  // FIXME: this should work.
-  // mutate(async () => 1, { populateCache: false })
+  // @ts-expect-error
+  mutate(async () => 1, { populateCache: false })
 }
 
 export function useConfigMutate() {
