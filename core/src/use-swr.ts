@@ -27,7 +27,8 @@ import {
   getTimestamp,
   internalMutate,
   revalidateEvents,
-  mergeObjects
+  mergeObjects,
+  SWRNoCacheOnMountContext
 } from 'swr/_internal'
 import type {
   State,
@@ -43,7 +44,6 @@ import type {
   GlobalState,
   ReactUsePromise
 } from 'swr/_internal'
-import { SWRNoCacheOnMountContext } from '_internal/src/utils/nocache-context'
 
 const use =
   ReactExports.use ||

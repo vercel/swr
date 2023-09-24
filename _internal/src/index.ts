@@ -1,9 +1,17 @@
 import SWRConfig from './utils/config-context'
 import * as revalidateEvents from './events'
 import { INFINITE_PREFIX } from './constants'
-import SWRNoCacheOnMount from './utils/nocache-context'
+import SWRNoCacheOnMount, {
+  SWRNoCacheOnMountContext
+} from './utils/nocache-context'
 
-export { SWRConfig, revalidateEvents, INFINITE_PREFIX, SWRNoCacheOnMount }
+export {
+  SWRConfig,
+  revalidateEvents,
+  INFINITE_PREFIX,
+  SWRNoCacheOnMount,
+  SWRNoCacheOnMountContext
+}
 
 export { initCache } from './utils/cache'
 export { defaultConfig, cache, mutate, compare } from './utils/config'
