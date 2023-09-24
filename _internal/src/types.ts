@@ -127,6 +127,11 @@ export interface PublicConfiguration<
    */
   keepPreviousData?: boolean
   /**
+   * Force fetching on mount. Only works with `suspense: true` and need to wrap react `<Suspense>` with `<SWRNoCacheOnMount>`.
+   * @defaultValue false
+   */
+  noCacheOnMount?: boolean
+  /**
    * @experimental  enable React Suspense mode
    * @defaultValue false
    * @link https://swr.vercel.app/docs/suspense

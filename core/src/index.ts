@@ -9,6 +9,7 @@ export { unstable_serialize } from './serialize'
 export { useSWRConfig } from 'swr/_internal'
 export { mutate } from 'swr/_internal'
 export { preload } from 'swr/_internal'
+export { SWRNoCacheOnMount } from 'swr/_internal'
 
 // Types
 export type {

@@ -3,7 +3,8 @@ import ReactExports, {
   useCallback,
   useRef,
   useDebugValue,
-  useMemo
+  useMemo,
+  useContext
 } from 'react'
 import { useSyncExternalStore } from 'use-sync-external-store/shim'
 
@@ -42,6 +43,7 @@ import type {
   GlobalState,
   ReactUsePromise
 } from 'swr/_internal'
+import { SWRNoCacheOnMountContext } from '_internal/src/utils/nocache-context'
 
 const use =
   ReactExports.use ||
@@ -103,7 +105,8 @@ export const useSWRHandler = <Data = any, Error = any>(
     refreshInterval,
     refreshWhenHidden,
     refreshWhenOffline,
-    keepPreviousData
+    keepPreviousData,
+    noCacheOnMount
   } = config
 
   const [EVENT_REVALIDATORS, MUTATION, FETCH, PRELOAD] = SWRGlobalState.get(
@@ -129,6 +132,10 @@ export const useSWRHandler = <Data = any, Error = any>(
   const configRef = useRef(config)
   const getConfig = () => configRef.current
   const isActive = () => getConfig().isVisible() && getConfig().isOnline()
+  const { shouldForceFetch: checkShouldForceFetch } = useContext(
+    SWRNoCacheOnMountContext
+  )
+  const shouldForceFetch = checkShouldForceFetch({ noCacheOnMount, key })
 
   const [getCache, setCache, subscribeCache, getInitialCache] =
     createCacheHelper<
@@ -687,7 +694,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   // If there is an `error`, the `error` needs to be thrown to the error boundary.
   // If there is no `error`, the `revalidation` promise needs to be thrown to
   // the suspense boundary.
-  if (suspense && isUndefined(data) && key) {
+  if (suspense && (shouldForceFetch || isUndefined(data)) && key) {
     // SWR should throw when trying to use Suspense on the server with React 18,
     // without providing any initial data. See:
     // https://github.com/vercel/swr/issues/1832
@@ -700,14 +707,14 @@ export const useSWRHandler = <Data = any, Error = any>(
     configRef.current = config
     unmountedRef.current = false
     const req = PRELOAD[key]
-    if (!isUndefined(req)) {
+    if (!shouldForceFetch && !isUndefined(req)) {
       const promise = boundMutate(req)
       use(promise)
     }
 
     if (isUndefined(error)) {
       const promise: ReactUsePromise<boolean> = revalidate(WITH_DEDUPE)
-      if (!isUndefined(returnedData)) {
+      if (!shouldForceFetch && !isUndefined(returnedData)) {
         promise.status = 'fulfilled'
         promise.value = true
       }
