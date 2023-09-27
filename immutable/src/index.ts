@@ -13,3 +13,4 @@ export const immutable: Middleware = useSWRNext => (key, fetcher, config) => {
 const useSWRImmutable = withMiddleware(useSWR, immutable)
 
 export default useSWRImmutable
+export { useSWRImmutable }

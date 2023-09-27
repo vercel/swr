@@ -158,8 +158,9 @@ const useSWRMutation = withMiddleware(
 ) as unknown as SWRMutationHook
 
 export default useSWRMutation
+export { useSWRMutation }
 
-export {
+export type {
   SWRMutationConfiguration,
   SWRMutationResponse,
   SWRMutationHook,

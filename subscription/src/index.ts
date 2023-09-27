@@ -123,6 +123,7 @@ const useSWRSubscription = withMiddleware(
 ) as SWRSubscriptionHook
 
 export default useSWRSubscription
+export { useSWRSubscription }
 
 export type {
   SWRSubscription,

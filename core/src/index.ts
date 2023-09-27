@@ -3,6 +3,7 @@ import 'client-only'
 // useSWR
 import useSWR from './use-swr'
 export default useSWR
+export { useSWR }
 // Core APIs
 export { SWRConfig } from './use-swr'
 export { unstable_serialize } from './serialize'
