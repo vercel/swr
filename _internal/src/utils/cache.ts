@@ -3,7 +3,7 @@ import { IS_SERVER } from './env'
 import { UNDEFINED, mergeObjects, noop } from './shared'
 import { internalMutate } from './mutate'
 import { SWRGlobalState } from './global-state'
-import * as revalidateEvents from '../constants'
+import * as revalidateEvents from '../events'
 
 import type {
   Cache,
@@ -27,8 +27,8 @@ export const initCache = <Data = any>(
   provider: Cache<Data>,
   options?: Partial<ProviderConfiguration>
 ):
-  | [Cache<Data>, ScopedMutator<Data>, () => void, () => void]
-  | [Cache<Data>, ScopedMutator<Data>]
+  | [Cache<Data>, ScopedMutator, () => void, () => void]
+  | [Cache<Data>, ScopedMutator]
   | undefined => {
   // The global state for a specific provider will be used to deduplicate
   // requests and store listeners. As well as a mutate function that is bound to
@@ -43,10 +43,7 @@ export const initCache = <Data = any>(
     // new mutate function.
     const EVENT_REVALIDATORS = {}
 
-    const mutate = internalMutate.bind(
-      UNDEFINED,
-      provider
-    ) as ScopedMutator<Data>
+    const mutate = internalMutate.bind(UNDEFINED, provider) as ScopedMutator
     let unmount = noop
 
     const subscriptions: Record<string, ((current: any, prev: any) => void)[]> =

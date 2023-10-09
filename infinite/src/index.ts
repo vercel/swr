@@ -11,14 +11,18 @@ import {
   createCacheHelper,
   useIsomorphicLayoutEffect,
   serialize,
-  withMiddleware
+  withMiddleware,
+  INFINITE_PREFIX,
+  SWRGlobalState,
+  cache as defaultCache
 } from 'swr/_internal'
 import type {
   BareFetcher,
   SWRHook,
   MutatorCallback,
   Middleware,
-  MutatorOptions
+  MutatorOptions,
+  GlobalState
 } from 'swr/_internal'
 import type {
   SWRInfiniteConfiguration,
@@ -30,7 +34,7 @@ import type {
   SWRInfiniteCompareFn
 } from './types'
 import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js'
-import { INFINITE_PREFIX, getFirstPageKey } from './serialize'
+import { getFirstPageKey } from './serialize'
 
 // const INFINITE_PREFIX = '$inf$'
 const EMPTY_PROMISE = Promise.resolve() as Promise<undefined>
@@ -62,6 +66,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
       revalidateOnMount = false,
       parallel = false
     } = config
+    const [, , , PRELOAD] = SWRGlobalState.get(defaultCache) as GlobalState
 
     // The serialized key of the first page. This key will be used to store
     // metadata of this SWR infinite hook.
@@ -72,6 +77,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
     } catch (err) {
       // Not ready yet.
     }
+
     const [get, set, subscribeCache] = createCacheHelper<
       Data,
       SWRInfiniteCacheValue<Data, any>
@@ -165,7 +171,6 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
 
           // Get the cached page data.
           let pageData = getSWRCache().data as Data
-
           // should fetch (or revalidate) if:
           // - `revalidateAll` is enabled
           // - `mutate()` called
@@ -182,10 +187,19 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
             (cacheData &&
               !isUndefined(cacheData[i]) &&
               !config.compare(cacheData[i], pageData))
-
           if (fn && shouldFetchPage) {
             const revalidate = async () => {
-              pageData = await fn(pageArg)
+              const hasPreloadedRequest = pageKey in PRELOAD
+              if (!hasPreloadedRequest) {
+                pageData = await fn(pageArg)
+              } else {
+                const req = PRELOAD[pageKey]
+                // delete the preload cache key before resolving it
+                // in case there's an error
+                delete PRELOAD[pageKey]
+                // get the page data from the preload cache
+                pageData = await req
+              }
               setSWRCache({ data: pageData, _k: pageArg })
               data[i] = pageData
             }
@@ -218,13 +232,13 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
 
     const mutate = useCallback(
       // eslint-disable-next-line func-names
-      function (
+      function <T = Data[]>(
         data?:
           | undefined
           | Data[]
           | Promise<Data[] | undefined>
           | MutatorCallback<Data[]>,
-        opts?: undefined | boolean | MutatorOptions<Data[]>
+        opts?: undefined | boolean | MutatorOptions<Data[], T>
       ) {
         // When passing as a boolean, it's explicitly used to disable/enable
         // revalidation.

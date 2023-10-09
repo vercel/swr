@@ -1365,7 +1365,7 @@ describe('useSWR - local mutation', () => {
         }
       )
     })
-
+    await sleep(30)
     try {
       // data == "baz", then reverted back to "bar"
       await executeWithoutBatching(() =>
@@ -1567,8 +1567,8 @@ describe('useSWR - local mutation', () => {
 
     let appendData
 
-    const sendRequest = <Data,>(newItem) => {
-      return new Promise<Data>(res =>
+    const sendRequest = (newItem: string) => {
+      return new Promise<string>(res =>
         setTimeout(() => {
           // The server capitalizes the new item.
           const modifiedData =
@@ -1580,10 +1580,11 @@ describe('useSWR - local mutation', () => {
     }
 
     function Page() {
-      const { data, mutate } = useSWR(key, () => serverData)
+      const { mutate } = useSWRConfig()
+      const { data } = useSWR(key, () => serverData)
 
       appendData = () => {
-        return mutate(sendRequest('cherry'), {
+        return mutate<string[], string>(key, sendRequest('cherry'), {
           optimisticData: [...data, 'cherry (optimistic)'],
           populateCache: (result, currentData) => [
             ...currentData,

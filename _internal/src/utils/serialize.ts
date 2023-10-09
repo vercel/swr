@@ -1,9 +1,9 @@
 import { stableHash } from './hash'
 import { isFunction } from './shared'
 
-import type { Key } from '../types'
+import type { Key, Arguments } from '../types'
 
-export const serialize = (key: Key): [string, Key] => {
+export const serialize = (key: Key): [string, Arguments] => {
   if (isFunction(key)) {
     try {
       key = key()

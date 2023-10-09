@@ -550,7 +550,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const boundMutate: SWRResponse<Data, Error>['mutate'] = useCallback(
     // Use callback to make sure `keyRef.current` returns latest result every time
-    (...args) => {
+    (...args: any[]) => {
       return internalMutate(cache, keyRef.current, ...args)
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -754,9 +754,9 @@ export { unstable_serialize } from './serialize'
  * ```jsx
  * import useSWR from 'swr'
  * function Profile() {
- *   const { data, error } = useSWR('/api/user', fetcher)
+ *   const { data, error, isLoading } = useSWR('/api/user', fetcher)
  *   if (error) return <div>failed to load</div>
- *   if (!data) return <div>loading...</div>
+ *   if (isLoading) return <div>loading...</div>
  *   return <div>hello {data.name}!</div>
  * }
  * ```

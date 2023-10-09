@@ -1,7 +1,8 @@
 import SWRConfig from './utils/config-context'
-import * as revalidateEvents from './constants'
+import * as revalidateEvents from './events'
+import { INFINITE_PREFIX } from './constants'
 
-export { SWRConfig, revalidateEvents }
+export { SWRConfig, revalidateEvents, INFINITE_PREFIX }
 
 export { initCache } from './utils/cache'
 export { defaultConfig, cache, mutate, compare } from './utils/config'
@@ -16,7 +17,6 @@ export { internalMutate } from './utils/mutate'
 export { normalize } from './utils/normalize-args'
 export { withArgs } from './utils/resolve-args'
 export { serialize } from './utils/serialize'
-export { useStateWithDeps } from './utils/state'
 export { subscribeCallback } from './utils/subscribe-key'
 export { getTimestamp } from './utils/timestamp'
 export { useSWRConfig } from './utils/use-swr-config'
