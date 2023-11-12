@@ -15,16 +15,8 @@
     "rootDir": "./",
     "strict": true,
     "target": "ES2018",
-    "baseUrl": ".",
     "noEmitOnError": true,
     "downlevelIteration": true,
-    "paths": {
-      "swr": ["./core/src/index.ts"],
-      "swr/infinite": ["./infinite/src/index.ts"],
-      "swr/immutable": ["./immutable/src/index.ts"],
-      "swr/mutation": ["./mutation/src/index.ts"],
-      "swr/subscription": ["subscription/src/index.ts"],
-    },
     "incremental": true
   },
   "exclude": ["./**/dist", "examples"],
