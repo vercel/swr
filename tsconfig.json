@@ -12,9 +12,9 @@
     "noUnusedParameters": true,
     "strictBindCallApply": true,
     "outDir": "./dist",
+    "rootDir": "./",
     "strict": true,
     "target": "ES2018",
-    "baseUrl": ".",
     "noEmitOnError": true,
     "downlevelIteration": true,
     "incremental": true
