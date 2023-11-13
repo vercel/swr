@@ -15,8 +15,15 @@
     "rootDir": "./",
     "strict": true,
     "target": "ES2018",
+    "baseUrl": ".",
     "noEmitOnError": true,
     "downlevelIteration": true,
+    "paths": {
+      "swr/infinite": ["./infinite"],
+      "swr/immutable": ["./immutable"],
+      "swr/mutation": ["./mutation"],
+      "swr/subscription": ["./subscription"],
+    },
     "incremental": true
   },
   "exclude": ["./**/dist", "examples"],
