@@ -19,11 +19,12 @@
     "noEmitOnError": true,
     "downlevelIteration": true,
     "paths": {
-      "swr/_internal": ["./_internal"],
-      "swr/infinite": ["./infinite"],
-      "swr/immutable": ["./immutable"],
-      "swr/mutation": ["./mutation"],
-      "swr/subscription": ["./subscription"],
+      // "swr": ["./core/"],
+      // "swr/_internal": ["./_internal/src/index.ts"],
+      // "swr/infinite": ["./infinite/src/index.ts"],
+      // "swr/immutable": ["./immutable/src/index.ts"],
+      // "swr/mutation": ["./mutation/src/index.ts"],
+      // "swr/subscription": ["./subscription/src/index.ts"],
     },
     "incremental": true
   },
