@@ -1,6 +1,5 @@
-import useSWRMutation from 'swr/mutation'
+import useSWRMutation, { type TriggerWithoutArgs } from 'swr/mutation'
 import { expectType } from './utils'
-import type { TriggerWithoutArgs } from '../../mutation/src/types'
 
 export function useConfigMutation() {
   const { trigger } = useSWRMutation('key', k => k)

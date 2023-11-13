@@ -16,6 +16,7 @@
     "clean": "rimraf dist"
   },
   "peerDependencies": {
+    "swr": "*",
     "react": "*"
   }
 }
