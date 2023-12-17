@@ -20,9 +20,9 @@ jobs:
 
       - name: Lint and test
         run: |
-          pnpm run-all-checks
           pnpm clean
           pnpm build
+          pnpm run-all-checks
           pnpm attw
           pnpm test:build
   e2e:

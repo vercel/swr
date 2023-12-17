@@ -1,7 +1,7 @@
 name: Test React Canary
 
 on:
-  workflow_dispatch: 
+  workflow_dispatch:
   schedule:
     - cron: '0 0 * * *'
 
@@ -20,7 +20,7 @@ jobs:
 
       - name: Lint and test
         run: |
-          pnpm run-all-checks
           pnpm clean
           pnpm build
+          pnpm run-all-checks
           pnpm test:build
