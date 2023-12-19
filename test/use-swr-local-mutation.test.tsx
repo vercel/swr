@@ -564,7 +564,9 @@ describe('useSWR - local mutation', () => {
 
     // Mount
     await screen.findByText('error')
-    mutate(v => v, { revalidate: false })
+    act(() => {
+      mutate(v => v, { revalidate: false })
+    })
     await screen.findByText('data: undefined')
   })
 
@@ -1053,7 +1055,7 @@ describe('useSWR - local mutation', () => {
         optimisticData: 'bar'
       })
     )
-    await sleep(30)
+    await act(() => sleep(30))
     expect(renderedData).toEqual([undefined, 'foo', 'bar', 'baz', 'foo'])
   })
 
@@ -1079,7 +1081,7 @@ describe('useSWR - local mutation', () => {
         optimisticData: data => 'function_' + data
       })
     )
-    await sleep(30)
+    await act(() => sleep(30))
     expect(renderedData).toEqual([
       undefined,
       'foo',
