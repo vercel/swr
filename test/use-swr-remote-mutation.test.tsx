@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import React, { useState } from 'react'
 import useSWR from 'swr'
 import useSWRMutation from 'swr/mutation'
-import { createKey, sleep, nextTick } from './utils'
+import { createKey, sleep, nextTick, createResponse } from './utils'
 
 const waitForNextTick = () => act(() => sleep(1))
 
@@ -1032,5 +1032,53 @@ describe('useSWR - remote mutation', () => {
     fireEvent.click(screen.getByText('trigger'))
     await screen.findByText('data:1,count:1')
     expect(logs).toEqual([0, 1])
+  })
+
+  it('should support revalidate as a function', async () => {
+    const key = createKey()
+
+    let value = 0
+
+    function Page() {
+      const { data } = useSWR(key, () => createResponse(++value))
+      const { trigger } = useSWRMutation(key, () => {
+        value += 10
+        return createResponse(value)
+      })
+
+      return (
+        <div>
+          <button
+            onClick={() =>
+              trigger(undefined, {
+                revalidate: (d, k) => k === key && d < 30,
+                populateCache: true
+              })
+            }
+          >
+            trigger
+          </button>
+          <div>data:{data || 'none'}</div>
+        </div>
+      )
+    }
+
+    render(<Page />)
+
+    // mount
+    await screen.findByText('data:1')
+
+    fireEvent.click(screen.getByText('trigger'))
+    await screen.findByText('data:12')
+    fireEvent.click(screen.getByText('trigger'))
+    await screen.findByText('data:23')
+    fireEvent.click(screen.getByText('trigger'))
+    await screen.findByText('data:33')
+
+    // stop revalidation because value > 30
+    fireEvent.click(screen.getByText('trigger'))
+    await screen.findByText('data:43')
+    fireEvent.click(screen.getByText('trigger'))
+    await screen.findByText('data:53')
   })
 })

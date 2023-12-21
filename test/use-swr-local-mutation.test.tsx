@@ -1810,4 +1810,119 @@ describe('useSWR - local mutation', () => {
       [key, 'inf', 1]
     ])
   })
+  it('should support revalidate as a function', async () => {
+    let value = 0,
+      mutate
+    const key = createKey()
+    function Page() {
+      mutate = useSWRConfig().mutate
+      const { data } = useSWR(key, () => value++)
+      return <div>data: {data}</div>
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('data:')
+
+    // mount
+    await screen.findByText('data: 0')
+
+    act(() => {
+      // value 0 -> 0
+      mutate(key, 100, { revalidate: () => false })
+    })
+    await screen.findByText('data: 100')
+
+    act(() => {
+      // value 0 -> 1
+      mutate(key, 200, { revalidate: () => true })
+    })
+    await screen.findByText('data: 200')
+    await screen.findByText('data: 1')
+  })
+
+  it('the function-style relivadate option receives the key and current data', async () => {
+    let value = 0,
+      mutate
+    const key = createKey()
+    function Page() {
+      mutate = useSWRConfig().mutate
+      const { data } = useSWR(key, () => value++)
+      return <div>data: {data}</div>
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('data:')
+
+    // mount
+    await screen.findByText('data: 0')
+
+    act(() => {
+      // value 0 -> 0
+      mutate(key, 100, { revalidate: (d, k) => k === key && d === 200 }) // revalidate = false
+    })
+    await screen.findByText('data: 100')
+
+    act(() => {
+      // value 0 -> 1
+      mutate(key, 200, { revalidate: (d, k) => k === key && d === 200 }) // revalidate = true
+    })
+    await screen.findByText('data: 200')
+    await screen.findByText('data: 1')
+  })
+
+  it('the function-style relivadate option works with mutate filter', async () => {
+    const key1 = createKey()
+    const key2 = createKey()
+    const key3 = createKey()
+
+    let mockData = {
+      [key1]: 'page1',
+      [key2]: 'page2',
+      [key3]: 'page3'
+    }
+    function Page() {
+      const mutate = useSWRConfig().mutate
+      const { data: data1 } = useSWR(key1, () => mockData[key1])
+      const { data: data2 } = useSWR(key2, () => mockData[key2])
+      const { data: data3 } = useSWR(key3, () => mockData[key3])
+
+      return (
+        <>
+          <div>data1: {data1}</div>
+          <div>data2: {data2}</div>
+          <div>data3: {data3}</div>
+          <button
+            onClick={() => {
+              // key1 is filtered
+              mutate(k => k !== key1, 'updated', {
+                // only revalidate key3
+                revalidate: (d, k) => d === 'updated' && k === key3
+              })
+            }}
+          >
+            click
+          </button>
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+
+    // mount
+    await screen.findByText('data1: page1')
+    await screen.findByText('data2: page2')
+    await screen.findByText('data3: page3')
+
+    mockData = {
+      [key1]: '<page1>',
+      [key2]: '<page2>',
+      [key3]: '<page3>'
+    }
+
+    fireEvent.click(screen.getByText('click'))
+
+    await screen.findByText('data1: page1')
+    await screen.findByText('data2: updated')
+    await screen.findByText('data3: <page3>')
+  })
 })

@@ -21,7 +21,6 @@ import type {
   SWRHook,
   MutatorCallback,
   Middleware,
-  MutatorOptions,
   GlobalState
 } from '../_internal'
 import type {
@@ -31,7 +30,8 @@ import type {
   SWRInfiniteKeyLoader,
   SWRInfiniteFetcher,
   SWRInfiniteCacheValue,
-  SWRInfiniteCompareFn
+  SWRInfiniteCompareFn,
+  SWRInfiniteMutatorOptions
 } from './types'
 import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js'
 import { getFirstPageKey } from './serialize'
@@ -55,7 +55,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
     fn: BareFetcher<Data> | null,
     config: Omit<typeof SWRConfig.defaultValue, 'fetcher'> &
       Omit<SWRInfiniteConfiguration<Data, Error>, 'fetcher'>
-  ): SWRInfiniteResponse<Data, Error> => {
+  ) => {
     const didMountRef = useRef<boolean>(false)
     const {
       cache,
@@ -140,6 +140,8 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
       async key => {
         // get the revalidate context
         const forceRevalidateAll = get()._i
+        const shouldRevalidatePage = get()._r
+        set({ _r: UNDEFINED })
 
         // return an array of page data
         const data: Data[] = []
@@ -187,7 +189,12 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
             (cacheData &&
               !isUndefined(cacheData[i]) &&
               !config.compare(cacheData[i], pageData))
-          if (fn && shouldFetchPage) {
+          if (
+            fn &&
+            (typeof shouldRevalidatePage === 'function'
+              ? shouldRevalidatePage(pageData, pageArg)
+              : shouldFetchPage)
+          ) {
             const revalidate = async () => {
               const hasPreloadedRequest = pageKey in PRELOAD
               if (!hasPreloadedRequest) {
@@ -238,7 +245,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
           | Data[]
           | Promise<Data[] | undefined>
           | MutatorCallback<Data[]>,
-        opts?: undefined | boolean | MutatorOptions<Data[], T>
+        opts?: undefined | boolean | SWRInfiniteMutatorOptions<Data[], T>
       ) {
         // When passing as a boolean, it's explicitly used to disable/enable
         // revalidation.
@@ -253,10 +260,10 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
         if (shouldRevalidate) {
           if (!isUndefined(data)) {
             // We only revalidate the pages that are changed
-            set({ _i: false })
+            set({ _i: false, _r: options.revalidate })
           } else {
             // Calling `mutate()`, we revalidate all pages
-            set({ _i: true })
+            set({ _i: true, _r: options.revalidate })
           }
         }
 

@@ -4,7 +4,9 @@ import type {
   Arguments,
   BareFetcher,
   State,
-  StrictTupleKey
+  StrictTupleKey,
+  MutatorOptions,
+  MutatorCallback
 } from '../_internal'
 
 type FetcherResponse<Data = unknown> = Data | Promise<Data>
@@ -41,12 +43,29 @@ export interface SWRInfiniteConfiguration<
   compare?: SWRInfiniteCompareFn<Data>
 }
 
+interface SWRInfiniteRevalidateFn<Data = any> {
+  (data: Data, key: Arguments): boolean
+}
+
+type InfiniteKeyedMutator<Data> = <MutationData = Data>(
+  data?: Data | Promise<Data | undefined> | MutatorCallback<Data>,
+  opts?: boolean | SWRInfiniteMutatorOptions<Data, MutationData>
+) => Promise<Data | MutationData | undefined>
+
+export interface SWRInfiniteMutatorOptions<Data = any, MutationData = Data>
+  extends Omit<MutatorOptions<Data, MutationData>, 'revalidate'> {
+  revalidate?:
+    | boolean
+    | SWRInfiniteRevalidateFn<Data extends unknown[] ? Data[number] : never>
+}
+
 export interface SWRInfiniteResponse<Data = any, Error = any>
-  extends SWRResponse<Data[], Error> {
+  extends Omit<SWRResponse<Data[], Error>, 'mutate'> {
   size: number
   setSize: (
     size: number | ((_size: number) => number)
   ) => Promise<Data[] | undefined>
+  mutate: InfiniteKeyedMutator<Data[]>
 }
 
 export interface SWRInfiniteHook {
@@ -134,4 +153,5 @@ export interface SWRInfiniteCacheValue<Data = any, Error = any>
   // same key.
   _l?: number
   _k?: Arguments
+  _r?: boolean | SWRInfiniteRevalidateFn
 }
