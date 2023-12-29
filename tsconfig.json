@@ -17,8 +17,12 @@
     "target": "ES2018",
     "noEmitOnError": true,
     "downlevelIteration": true,
-    "incremental": true
+    "incremental": true,
+    "paths": {
+      "swr/*": ["./src/*"]
+    }
   },
+  "include": ["./src/**/*", "env.d.ts"],
   "exclude": ["./**/dist", "examples"],
   "watchOptions": {
     "watchFile": "useFsEvents",

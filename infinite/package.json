@@ -1,13 +1,7 @@
 {
-  "main": "./dist/index.js",
-  "module": "./dist/index.esm.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    "react-server": "./dist/react-server.mjs",
-    "import": "./dist/index.mjs",
-    "module": "./dist/index.esm.js",
-    "require": "./dist/index.js"
-  },
+  "main": "../dist/infinite/index.js",
+  "module": "../dist/infinite/index.esm.js",
+  "types": "../dist/infinite/index.d.ts",
   "private": true,
   "scripts": {
     "watch": "bunchee -w",

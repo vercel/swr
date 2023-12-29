@@ -1,5 +1,5 @@
 import { useCallback, useRef } from 'react'
-import useSWR, { useSWRConfig } from 'swr'
+import useSWR, { useSWRConfig } from '..'
 import type { Middleware, Key } from 'swr/_internal'
 import { useStateWithDeps, startTransition } from './state'
 import {
