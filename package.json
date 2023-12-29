@@ -17,28 +17,24 @@
   "exports": {
     "./package.json": "./package.json",
     ".": {
+      "react-server": "./dist/core/react-server.mjs",
       "import": {
         "types": "./dist/core/index.d.mts",
         "default": "./dist/core/index.mjs"
       },
-      "module": {
-        "types": "./dist/core/index.d.mts",
-        "default": "./dist/core/index.esm.js"
-      },
+      "module": "./dist/core/index.esm.js",
       "require": {
         "types": "./dist/core/index.d.ts",
         "default": "./dist/core/index.js"
       }
     },
     "./infinite": {
+      "react-server": "./dist/infinite/react-server.mjs",
       "import": {
         "types": "./dist/infinite/index.d.mts",
         "default": "./dist/infinite/index.mjs"
       },
-      "module": {
-        "types": "./dist/infinite/index.d.mts",
-        "default": "./dist/infinite/index.esm.js"
-      },
+      "module": "./dist/infinite/index.esm.js",
       "require": {
         "types": "./dist/infinite/index.d.ts",
         "default": "./dist/infinite/index.js"
@@ -49,10 +45,7 @@
         "types": "./dist/immutable/index.d.mts",
         "default": "./dist/immutable/index.mjs"
       },
-      "module": {
-        "types": "./dist/immutable/index.d.mts",
-        "default": "./dist/immutable/index.esm.js"
-      },
+      "module": "./dist/immutable/index.esm.js",
       "require": {
         "types": "./dist/immutable/index.d.ts",
         "default": "./dist/immutable/index.js"
@@ -63,10 +56,7 @@
         "types": "./dist/subscription/index.d.mts",
         "default": "./dist/subscription/index.mjs"
       },
-      "module": {
-        "types": "./dist/subscription/index.d.mts",
-        "default": "./dist/subscription/index.esm.js"
-      },
+      "module": "./dist/subscription/index.esm.js",
       "require": {
         "types": "./dist/subscription/index.d.ts",
         "default": "./dist/subscription/index.js"
@@ -77,24 +67,19 @@
         "types": "./dist/mutation/index.d.mts",
         "default": "./dist/mutation/index.mjs"
       },
-      "module": {
-        "types": "./dist/mutation/index.d.mts",
-        "default": "./dist/mutation/index.esm.js"
-      },
+      "module": "./dist/mutation/index.esm.js",
       "require": {
         "types": "./dist/mutation/index.d.ts",
         "default": "./dist/mutation/index.js"
       }
     },
     "./_internal": {
+      "react-server": "./dist/_internal/react-server.mjs",
       "import": {
         "types": "./dist/_internal/index.d.mts",
         "default": "./dist/_internal/index.mjs"
       },
-      "module": {
-        "types": "./dist/_internal/index.d.mts",
-        "default": "./dist/_internal/index.esm.js"
-      },
+      "module": "./dist/_internal/index.esm.js",
       "require": {
         "types": "./dist/_internal/index.d.ts",
         "default": "./dist/_internal/index.js"
@@ -155,7 +140,7 @@
     "@types/use-sync-external-store": "^0.0.3",
     "@typescript-eslint/eslint-plugin": "5.59.8",
     "@typescript-eslint/parser": "5.59.8",
-    "bunchee": "4.2.9",
+    "bunchee": "^4.2.10",
     "eslint": "8.42.0",
     "eslint-config-prettier": "8.8.0",
     "eslint-plugin-jest-dom": "5.0.1",

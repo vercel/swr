@@ -51,8 +51,8 @@ importers:
         specifier: 5.59.8
         version: 5.59.8(eslint@8.42.0)(typescript@5.1.3)
       bunchee:
-        specifier: 4.2.9
-        version: 4.2.9(typescript@5.1.3)
+        specifier: ^4.2.10
+        version: 4.2.10(typescript@5.1.3)
       eslint:
         specifier: 8.42.0
         version: 8.42.0
@@ -180,12 +180,12 @@ packages:
       '@babel/highlight': 7.18.6
     dev: true
 
-  /@babel/code-frame@7.22.13:
-    resolution: {integrity: sha512-XktuhWlJ5g+3TJXc5upd9Ks1HutSArik6jf2eAjYFyIOf4ej3RN+184cZbzDvbPnuTJIUhPKKJE3cIsYTiAT3w==}
+  /@babel/code-frame@7.23.5:
+    resolution: {integrity: sha512-CgH3s1a96LipHCmSUmYFPwY7MNx8C3avkq7i4Wl3cfa662ldtUe4VM1TPXX70pfmrlWTb6jLqTYrZyT2ZTJBgA==}
     engines: {node: '>=6.9.0'}
     requiresBuild: true
     dependencies:
-      '@babel/highlight': 7.22.20
+      '@babel/highlight': 7.23.4
       chalk: 2.4.2
     dev: true
     optional: true
@@ -338,8 +338,8 @@ packages:
       js-tokens: 4.0.0
     dev: true
 
-  /@babel/highlight@7.22.20:
-    resolution: {integrity: sha512-dkdMCN3py0+ksCgYmGG8jKeGA/8Tk+gJwSYYlFGxG5lmhfKNoAy004YpLxpS1W2J8m/EK2Ew+yOs9pVRwO89mg==}
+  /@babel/highlight@7.23.4:
+    resolution: {integrity: sha512-acGdbYSfp2WheJoJm/EBBBLh/ID8KDc64ISZ9DYtBmC8/Q204PZJLHyzeB5qMzJ5trcOkybd78M4x2KWsUq++A==}
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/helper-validator-identifier': 7.22.20
@@ -1122,7 +1122,7 @@ packages:
       rollup:
         optional: true
     dependencies:
-      '@types/estree': 1.0.0
+      '@types/estree': 1.0.5
       estree-walker: 2.0.2
       picomatch: 2.3.1
       rollup: 4.9.1
@@ -1595,8 +1595,8 @@ packages:
       '@babel/types': 7.18.9
     dev: true
 
-  /@types/estree@1.0.0:
-    resolution: {integrity: sha512-WulqXMDUTYAXCjZnk6JtIHPigp55cVtDgDrO2gHRwhyJto21+1zbVCtOYB2L1F9w4qCQ0rOGWBnBe0FNTiEJIQ==}
+  /@types/estree@1.0.5:
+    resolution: {integrity: sha512-/kYRxGDLWzHOB7q+wtSUQlFrtcdUccpfy+X+9iMBpHK8QLLhx2wIPYuS5DYtR9Wa/YlZAbIovy7qVdB1Aq6Lyw==}
     dev: true
 
   /@types/graceful-fs@4.1.5:
@@ -2237,8 +2237,8 @@ packages:
       semver: 7.5.4
     dev: true
 
-  /bunchee@4.2.9(typescript@5.1.3):
-    resolution: {integrity: sha512-/pjmelJLmyJxFzpsYGHz/BFB4yLzfMzmiCJnabLEk92Al3EDuJkWu60GDyDCdxm9BkpjHDE0sLFkKovAe8wvvQ==}
+  /bunchee@4.2.10(typescript@5.1.3):
+    resolution: {integrity: sha512-f1ut+3JbsZxv0sf7kHRNm/r9fiEY8tWVUZm0h3PNOCbfmkxgCYeXCDO4ls5mHEisr0fufs/9ACVkYBXU/rv1iw==}
     engines: {node: '>= 18.0.0'}
     hasBin: true
     peerDependencies:
@@ -3463,7 +3463,7 @@ packages:
   /is-reference@1.2.1:
     resolution: {integrity: sha512-U82MsXXiFIrjCK4otLT+o2NA2Cd2g5MLoOVXUZjIOhLurrRxpEXzI8O0KZHr3IjLvlAH1kTPYSuqer5T9ZVBKQ==}
     dependencies:
-      '@types/estree': 1.0.0
+      '@types/estree': 1.0.5
     dev: true
 
   /is-regex@1.1.4:
@@ -4970,7 +4970,7 @@ packages:
       rollup: 4.9.1
       typescript: 5.1.3
     optionalDependencies:
-      '@babel/code-frame': 7.22.13
+      '@babel/code-frame': 7.23.5
     dev: true
 
   /rollup-plugin-swc3@0.11.0(@swc/core@1.3.101)(rollup@4.9.1):
