@@ -2,16 +2,5 @@
   "main": "../dist/infinite/index.js",
   "module": "../dist/infinite/index.esm.js",
   "types": "../dist/infinite/index.d.ts",
-  "private": true,
-  "scripts": {
-    "watch": "bunchee -w",
-    "build": "bunchee",
-    "types:check": "tsc --noEmit",
-    "clean": "rimraf dist"
-  },
-  "peerDependencies": {
-    "swr": "*",
-    "react": "*",
-    "use-sync-external-store": "*"
-  }
+  "private": true
 }
