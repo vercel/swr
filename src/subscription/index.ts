@@ -1,11 +1,17 @@
-import type { Key, SWRHook, Middleware, SWRConfiguration, SWRConfig } from '..'
+import type {
+  Key,
+  SWRHook,
+  Middleware,
+  SWRConfiguration,
+  SWRConfig
+} from '../core'
 import type {
   SWRSubscriptionOptions,
   SWRSubscription,
   SWRSubscriptionResponse,
   SWRSubscriptionHook
 } from './types'
-import useSWR from '..'
+import useSWR from '../core'
 import {
   withMiddleware,
   serialize,
