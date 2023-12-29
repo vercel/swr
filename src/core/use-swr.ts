@@ -27,7 +27,7 @@ import {
   internalMutate,
   revalidateEvents,
   mergeObjects
-} from 'swr/_internal'
+} from '../_internal'
 import type {
   State,
   Fetcher,
@@ -41,7 +41,7 @@ import type {
   StateDependencies,
   GlobalState,
   ReactUsePromise
-} from 'swr/_internal'
+} from '../_internal'
 
 const use =
   ReactExports.use ||

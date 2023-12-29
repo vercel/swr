@@ -15,7 +15,7 @@ import {
   INFINITE_PREFIX,
   SWRGlobalState,
   cache as defaultCache
-} from 'swr/_internal'
+} from '../_internal'
 import type {
   BareFetcher,
   SWRHook,
@@ -23,7 +23,7 @@ import type {
   Middleware,
   MutatorOptions,
   GlobalState
-} from 'swr/_internal'
+} from '../_internal'
 import type {
   SWRInfiniteConfiguration,
   SWRInfiniteResponse,

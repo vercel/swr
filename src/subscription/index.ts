@@ -17,7 +17,7 @@ import {
   serialize,
   useIsomorphicLayoutEffect,
   createCacheHelper
-} from 'swr/_internal'
+} from '../_internal'
 
 // [subscription count, disposer]
 type SubscriptionStates = [Map<string, number>, Map<string, () => void>]
