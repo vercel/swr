@@ -18,9 +18,6 @@
     "noEmitOnError": true,
     "downlevelIteration": true,
     "incremental": true,
-    "paths": {
-      "swr/*": ["./src/*"]
-    }
   },
   "include": ["./src/**/*", "env.d.ts"],
   "exclude": ["./**/dist", "examples"],
