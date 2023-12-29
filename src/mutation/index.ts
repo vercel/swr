@@ -1,6 +1,6 @@
 import { useCallback, useRef } from 'react'
 import useSWR, { useSWRConfig } from '../core'
-import type { Middleware, Key } from 'swr/_internal'
+import type { Middleware, Key } from '../_internal'
 import { useStateWithDeps, startTransition } from './state'
 import {
   serialize,
@@ -9,7 +9,7 @@ import {
   UNDEFINED,
   getTimestamp,
   mergeObjects
-} from 'swr/_internal'
+} from '../_internal'
 import type {
   SWRMutationConfiguration,
   SWRMutationResponse,
