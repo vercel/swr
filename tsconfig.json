@@ -17,7 +17,7 @@
     "target": "ES2018",
     "noEmitOnError": true,
     "downlevelIteration": true,
-    "incremental": true,
+    "incremental": true
   },
   "include": ["./src/**/*", "env.d.ts"],
   "exclude": ["./**/dist", "examples"],
