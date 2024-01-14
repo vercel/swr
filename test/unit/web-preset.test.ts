@@ -1,6 +1,5 @@
 import { EventEmitter } from 'events'
 
-const FOCUS_EVENT = 'focus'
 const VISIBILITYCHANGE_EVENT = 'visibilitychange'
 
 function createEventTarget() {
@@ -13,8 +12,7 @@ function createEventTarget() {
 
 function runTests(propertyName) {
   let initFocus
-  const eventName =
-    propertyName === 'window' ? FOCUS_EVENT : VISIBILITYCHANGE_EVENT
+  const eventName = VISIBILITYCHANGE_EVENT
 
   describe(`Web Preset ${propertyName}`, () => {
     const globalSpy = {
@@ -88,5 +86,4 @@ function runTests(propertyName) {
   })
 }
 
-runTests('window')
 runTests('document')

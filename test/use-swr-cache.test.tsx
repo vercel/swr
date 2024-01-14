@@ -6,7 +6,7 @@ import {
   createKey,
   createResponse,
   nextTick,
-  focusOn,
+  toggleVisibility,
   renderWithConfig,
   renderWithGlobalCache
 } from './utils'
@@ -166,7 +166,7 @@ describe('useSWR - cache provider', () => {
     await screen.findByText('1')
     await nextTick()
     // try to trigger revalidation, but shouldn't work
-    await focusOn(window)
+    toggleVisibility()
     // revalidateOnFocus won't work
     screen.getByText('1')
     unmount()
@@ -175,7 +175,7 @@ describe('useSWR - cache provider', () => {
     expect(unsubscribeReconnectFn).toBeCalledTimes(1)
   })
 
-  it('should work with revalidateOnFocus', async () => {
+  it('should work with revalidateOnFocus 1', async () => {
     const key = createKey()
     let value = 0
     function Page() {
@@ -190,7 +190,7 @@ describe('useSWR - cache provider', () => {
 
     await screen.findByText('0')
     await nextTick()
-    await focusOn(window)
+    toggleVisibility()
     await nextTick()
     screen.getByText('1')
   })
@@ -397,7 +397,7 @@ describe('useSWR - global cache', () => {
     await screen.findByText('data:mutated value')
   })
 
-  it('should work with revalidateOnFocus', async () => {
+  it('should work with revalidateOnFocus 2', async () => {
     const key = createKey()
     let value = 0
     function Page() {
@@ -411,7 +411,7 @@ describe('useSWR - global cache', () => {
 
     await screen.findByText('0')
     await nextTick()
-    await focusOn(window)
+    toggleVisibility()
     await nextTick()
     screen.getByText('1')
   })

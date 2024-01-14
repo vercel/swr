@@ -6,11 +6,9 @@ import {
   sleep,
   createKey,
   nextTick as waitForNextTick,
-  focusOn,
+  toggleVisibility,
   renderWithConfig
 } from './utils'
-
-const focusWindow = () => focusOn(window)
 
 describe('useSWR - immutable', () => {
   it('should revalidate on mount', async () => {
@@ -138,7 +136,7 @@ describe('useSWR - immutable', () => {
 
     // trigger window focus
     await waitForNextTick()
-    await focusWindow()
+    toggleVisibility()
 
     // wait for rerender
     await act(() => sleep(50))

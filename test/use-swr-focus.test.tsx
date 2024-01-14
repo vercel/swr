@@ -4,12 +4,10 @@ import useSWR from 'swr'
 import {
   sleep,
   nextTick as waitForNextTick,
-  focusOn,
+  toggleVisibility,
   renderWithConfig,
   createKey
 } from './utils'
-
-const focusWindow = () => focusOn(window)
 
 describe('useSWR - focus', () => {
   it('should revalidate on focus by default', async () => {
@@ -30,8 +28,7 @@ describe('useSWR - focus', () => {
 
     await waitForNextTick()
     // trigger revalidation
-    await focusWindow()
-
+    toggleVisibility()
     await screen.findByText('data: 1')
   })
 
@@ -56,7 +53,7 @@ describe('useSWR - focus', () => {
 
     await waitForNextTick()
     // trigger revalidation
-    await focusWindow()
+    toggleVisibility()
     // should not be revalidated
     screen.getByText('data: 0')
   })
@@ -84,20 +81,20 @@ describe('useSWR - focus', () => {
 
     await waitForNextTick()
     // trigger revalidation
-    await focusWindow()
+    toggleVisibility()
     // data should not change
     screen.getByText('data: 0')
 
     // change revalidateOnFocus to true
     fireEvent.click(screen.getByText('data: 0'))
     // trigger revalidation
-    await focusWindow()
+    toggleVisibility()
     // data should update
     await screen.findByText('data: 1')
 
     await waitForNextTick()
     // trigger revalidation
-    await focusWindow()
+    toggleVisibility()
     // data should update
     await screen.findByText('data: 2')
 
@@ -105,7 +102,7 @@ describe('useSWR - focus', () => {
     // change revalidateOnFocus to false
     fireEvent.click(screen.getByText('data: 2'))
     // trigger revalidation
-    await focusWindow()
+    toggleVisibility()
     // data should not change
     screen.getByText('data: 2')
   })
@@ -132,17 +129,17 @@ describe('useSWR - focus', () => {
 
     await waitForNextTick()
     // trigger revalidation
-    await focusWindow()
+    toggleVisibility()
     // still in throttling interval
     await act(() => sleep(20))
     // should be throttled
-    await focusWindow()
+    toggleVisibility()
     await screen.findByText('data: 1')
     // wait for focusThrottleInterval
     await act(() => sleep(100))
 
     // trigger revalidation again
-    await focusWindow()
+    toggleVisibility()
     await screen.findByText('data: 2')
   })
 
@@ -169,11 +166,11 @@ describe('useSWR - focus', () => {
 
     await waitForNextTick()
     // trigger revalidation
-    await focusWindow()
+    toggleVisibility()
     // wait for throttle interval
     await act(() => sleep(100))
     // trigger revalidation
-    await focusWindow()
+    toggleVisibility()
     await screen.findByText('data: 2')
 
     await waitForNextTick()
@@ -182,17 +179,17 @@ describe('useSWR - focus', () => {
     // wait for throttle interval
     await act(() => sleep(100))
     // trigger revalidation
-    await focusWindow()
+    toggleVisibility()
     // wait for throttle interval
     await act(() => sleep(100))
     // should be throttled
-    await focusWindow()
+    toggleVisibility()
     await screen.findByText('data: 3')
 
     // wait for throttle interval
     await act(() => sleep(150))
     // trigger revalidation
-    await focusWindow()
+    toggleVisibility()
     // wait for throttle intervals
     await act(() => sleep(150))
     await screen.findByText('data: 4')
@@ -214,7 +211,7 @@ describe('useSWR - focus', () => {
     screen.getByText('data:')
     await screen.findByText('data: 0')
     await waitForNextTick()
-    await focusWindow()
+    toggleVisibility()
     await screen.findByText('data: 1')
   })
 
@@ -233,7 +230,7 @@ describe('useSWR - focus', () => {
     renderWithConfig(<Page />)
     await waitForNextTick()
 
-    fireEvent.focus(window)
+    toggleVisibility()
     fireEvent.click(screen.getByText('change key'))
 
     await waitForNextTick()
