@@ -1,22 +1,6 @@
 {
-  "main": "./dist/index.js",
-  "module": "./dist/index.esm.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    "react-server": "./dist/react-server.mjs",
-    "import": "./dist/index.mjs",
-    "module": "./dist/index.esm.js",
-    "require": "./dist/index.js"
-  },
-  "private": true,
-  "scripts": {
-    "watch": "bunchee -w",
-    "build": "bunchee",
-    "types:check": "tsc --noEmit",
-    "clean": "rimraf dist"
-  },
-  "peerDependencies": {
-    "swr": "*",
-    "react": "*"
-  }
+  "main": "../dist/_internal/index.js",
+  "module": "../dist/_internal/index.esm.js",
+  "types": "../dist/_internal/index.d.ts",
+  "private": true
 }

@@ -24,6 +24,7 @@ jobs:
           pnpm build
           pnpm run-all-checks
           pnpm attw
+          pnpm test
           pnpm test:build
   e2e:
     runs-on: ubuntu-latest

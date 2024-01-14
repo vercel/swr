@@ -1,6 +1,6 @@
 import type { MutableRefObject, TransitionFunction } from 'react'
 import React, { useRef, useCallback, useState } from 'react'
-import { useIsomorphicLayoutEffect, IS_REACT_LEGACY } from 'swr/_internal'
+import { useIsomorphicLayoutEffect, IS_REACT_LEGACY } from '../_internal'
 
 export const startTransition: (scope: TransitionFunction) => void =
   IS_REACT_LEGACY

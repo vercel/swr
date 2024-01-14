@@ -5,12 +5,12 @@ module.exports = {
   modulePathIgnorePatterns: ['<rootDir>/examples/'],
   setupFilesAfterEnv: ['<rootDir>/test/jest-setup.ts'],
   moduleNameMapper: {
-    '^swr$': '<rootDir>/core/src/index.ts',
-    '^swr/infinite$': '<rootDir>/infinite/src/index.ts',
-    '^swr/immutable$': '<rootDir>/immutable/src/index.ts',
-    '^swr/subscription$': '<rootDir>/subscription/src/index.ts',
-    '^swr/mutation$': '<rootDir>/mutation/src/index.ts',
-    '^swr/_internal$': '<rootDir>/_internal/src/index.ts'
+    '^swr$': '<rootDir>/src/index/index.ts',
+    '^swr/infinite$': '<rootDir>/src/infinite/index.ts',
+    '^swr/immutable$': '<rootDir>/src/immutable/index.ts',
+    '^swr/subscription$': '<rootDir>/src/subscription/index.ts',
+    '^swr/mutation$': '<rootDir>/src/mutation/index.ts',
+    '^swr/_internal$': '<rootDir>/src/_internal/index.ts'
   },
   transform: {
     '^.+\\.(t|j)sx?$': ['@swc/jest']
