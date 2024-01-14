@@ -6,9 +6,9 @@ export default useSWR
 // Core APIs
 export { SWRConfig } from './use-swr'
 export { unstable_serialize } from './serialize'
-export { useSWRConfig } from 'swr/_internal'
-export { mutate } from 'swr/_internal'
-export { preload } from 'swr/_internal'
+export { useSWRConfig } from '../_internal'
+export { mutate } from '../_internal'
+export { preload } from '../_internal'
 
 // Types
 export type {
@@ -28,4 +28,4 @@ export type {
   Middleware,
   Arguments,
   State
-} from 'swr/_internal'
+} from '../_internal'

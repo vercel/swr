@@ -1,17 +1,23 @@
-import type { Key, SWRHook, Middleware, SWRConfiguration, SWRConfig } from 'swr'
+import type {
+  Key,
+  SWRHook,
+  Middleware,
+  SWRConfiguration,
+  SWRConfig
+} from '../core'
 import type {
   SWRSubscriptionOptions,
   SWRSubscription,
   SWRSubscriptionResponse,
   SWRSubscriptionHook
 } from './types'
-import useSWR from 'swr'
+import useSWR from '../core'
 import {
   withMiddleware,
   serialize,
   useIsomorphicLayoutEffect,
   createCacheHelper
-} from 'swr/_internal'
+} from '../_internal'
 
 // [subscription count, disposer]
 type SubscriptionStates = [Map<string, number>, Map<string, () => void>]

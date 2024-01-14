@@ -1,4 +1,4 @@
-import type { SWRResponse, Key } from 'swr'
+import type { SWRResponse, Key } from '../core'
 
 type FetcherResponse<Data> = Data | Promise<Data>
 

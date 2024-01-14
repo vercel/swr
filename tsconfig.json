@@ -19,6 +19,7 @@
     "downlevelIteration": true,
     "incremental": true
   },
+  "include": ["./src/**/*", "env.d.ts"],
   "exclude": ["./**/dist", "examples"],
   "watchOptions": {
     "watchFile": "useFsEvents",
