@@ -148,3 +148,12 @@ export function testEmptyConfig() {
   expectType<Equal<typeof error, Error | undefined>>(true)
   expectType<Equal<typeof isLoading, boolean>>(true)
 }
+
+export function testFallbackDataConfig() {
+  const fetcher = (k: string) => Promise.resolve({ value: k })
+  const { data, isLoading } = useSWR('/api', fetcher, {
+    fallbackData: { value: 'fallback' }
+  })
+  expectType<Equal<typeof data, { value: string }>>(true)
+  expectType<Equal<typeof isLoading, boolean>>(true)
+}

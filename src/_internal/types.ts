@@ -405,6 +405,11 @@ export type SWRConfiguration<
   Fn extends BareFetcher<any> = BareFetcher<any>
 > = Partial<PublicConfiguration<Data, Error, Fn>>
 
+export type IsLoadingResponse<
+  Data = any,
+  Options = SWROptions<Data>
+> = Options extends { suspense: true } ? false : boolean
+
 type SWROptions<Data> = SWRConfiguration<Data, Error, Fetcher<Data, Key>>
 export interface SWRResponse<Data = any, Error = any, Config = any> {
   /**
@@ -417,7 +422,7 @@ export interface SWRResponse<Data = any, Error = any, Config = any> {
   error: Error | undefined
   mutate: KeyedMutator<Data>
   isValidating: boolean
-  isLoading: BlockingData<Data, Config> extends true ? false : boolean
+  isLoading: IsLoadingResponse<Data, Config>
 }
 
 export type KeyLoader<Args extends Arguments = Arguments> =
