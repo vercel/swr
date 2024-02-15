@@ -403,7 +403,10 @@ export type SWRConfiguration<
   Data = any,
   Error = any,
   Fn extends BareFetcher<any> = BareFetcher<any>
-> = Partial<PublicConfiguration<Data, Error, Fn>>
+> = Partial<PublicConfiguration<Data, Error, Fn>> &
+  Partial<ProviderConfiguration> & {
+    provider?: (cache: Readonly<Cache>) => Cache
+  }
 
 export type IsLoadingResponse<
   Data = any,

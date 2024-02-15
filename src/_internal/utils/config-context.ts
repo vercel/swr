@@ -11,23 +11,15 @@ import { initCache } from './cache'
 import { mergeConfigs } from './merge-config'
 import { UNDEFINED, mergeObjects, isFunction } from './shared'
 import { useIsomorphicLayoutEffect } from './env'
-import type {
-  SWRConfiguration,
-  FullConfiguration,
-  ProviderConfiguration,
-  Cache
-} from '../types'
-
-type Config = SWRConfiguration &
-  Partial<ProviderConfiguration> & {
-    provider?: (cache: Readonly<Cache>) => Cache
-  }
+import type { SWRConfiguration, FullConfiguration } from '../types'
 
 export const SWRConfigContext = createContext<Partial<FullConfiguration>>({})
 
 const SWRConfig: FC<
   PropsWithChildren<{
-    value?: Config | ((parentConfig?: Config) => Config)
+    value?:
+      | SWRConfiguration
+      | ((parentConfig?: SWRConfiguration) => SWRConfiguration)
   }>
 > = props => {
   const { value } = props
