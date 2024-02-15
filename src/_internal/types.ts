@@ -315,7 +315,7 @@ export type MutatorCallback<Data = any> = (
  * @typeParam MutationData - The type of the data returned by the mutator
  */
 export type MutatorOptions<Data = any, MutationData = Data> = {
-  revalidate?: boolean
+  revalidate?: boolean | ((data: Data, key: Arguments) => boolean)
   populateCache?:
     | boolean
     | ((result: MutationData, currentData: Data | undefined) => Data)
