@@ -26,7 +26,8 @@ import {
   getTimestamp,
   internalMutate,
   revalidateEvents,
-  mergeObjects
+  mergeObjects,
+  isPromiseLike
 } from '../_internal'
 import type {
   State,
@@ -45,7 +46,9 @@ import type {
 
 const use =
   ReactExports.use ||
-  (<T>(
+  // This extra generic is to avoid TypeScript mixing up the generic and JSX sytax
+  // and emitting an error.
+  (<T, _>(
     promise: Promise<T> & {
       status?: 'pending' | 'fulfilled' | 'rejected'
       value?: T
@@ -140,9 +143,13 @@ export const useSWRHandler = <Data = any, Error = any>(
     >(cache, key)
 
   const stateDependencies = useRef<StateDependencies>({}).current
-  const fallback = isUndefined(fallbackData)
-    ? config.fallback[key]
-    : fallbackData
+
+  // Resolve the fallback data from either the inline option, or the global provider.
+  // If it's a promise, we simply let React suspend and resolve it for us.
+  let fallback = isUndefined(fallbackData) ? config.fallback[key] : fallbackData
+  if (fallback && isPromiseLike(fallback)) {
+    fallback = use(fallback)
+  }
 
   const isEqual = (prev: State<Data, any>, current: State<Data, any>) => {
     for (const _ in stateDependencies) {
