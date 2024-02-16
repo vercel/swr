@@ -28,7 +28,7 @@ if (releaseType === 'beta') {
   if (semver.prerelease(version)) {
     version = semver.inc(version, 'prerelease')
   } else {
-    version = semver.inc(version, 'prepatch', 'beta')
+    version = semver.inc(version, 'pre' + semverType, 'beta')
   }
 } else if (releaseType === 'stable') {
   if (!semverType) {
