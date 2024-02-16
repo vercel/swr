@@ -1,5 +1,9 @@
 lockfileVersion: '6.0'
 
+settings:
+  autoInstallPeers: false
+  excludeLinksFromLockfile: false
+
 importers:
 
   .:
@@ -9,7 +13,7 @@ importers:
         version: 0.0.1
       use-sync-external-store:
         specifier: ^1.2.0
-        version: 1.2.0(react@18.2.0)
+        version: 1.2.0(react@18.3.0-canary-2e470a788-20240214)
     devDependencies:
       '@arethetypeswrong/cli':
         specifier: ^0.7.0
@@ -27,8 +31,8 @@ importers:
         specifier: ^5.16.5
         version: 5.16.5
       '@testing-library/react':
-        specifier: ^14.0.0
-        version: 14.0.0(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^14.2.1
+        version: 14.2.1(react-dom@18.3.0-canary-2e470a788-20240214)(react@18.3.0-canary-2e470a788-20240214)
       '@type-challenges/utils':
         specifier: 0.1.1
         version: 0.1.1
@@ -85,19 +89,19 @@ importers:
         version: 13.2.2
       next:
         specifier: ^13.4.4
-        version: 13.4.4(react-dom@18.2.0)(react@18.2.0)
+        version: 13.4.4(react-dom@18.3.0-canary-2e470a788-20240214)(react@18.3.0-canary-2e470a788-20240214)
       prettier:
         specifier: 2.8.8
         version: 2.8.8
       react:
-        specifier: ^18.2.0
-        version: 18.2.0
+        specifier: 18.3.0-canary-2e470a788-20240214
+        version: 18.3.0-canary-2e470a788-20240214
       react-dom:
-        specifier: ^18.2.0
-        version: 18.2.0(react@18.2.0)
+        specifier: 18.3.0-canary-2e470a788-20240214
+        version: 18.3.0-canary-2e470a788-20240214(react@18.3.0-canary-2e470a788-20240214)
       react-error-boundary:
         specifier: ^4.0.9
-        version: 4.0.9(react@18.2.0)
+        version: 4.0.9(react@18.3.0-canary-2e470a788-20240214)
       rimraf:
         specifier: 5.0.1
         version: 5.0.1
@@ -162,13 +166,6 @@ packages:
       validate-npm-package-name: 5.0.0
     transitivePeerDependencies:
       - encoding
-    dev: true
-
-  /@babel/code-frame@7.18.6:
-    resolution: {integrity: sha512-TDCmlK5eOvH+eH7cdAFlNXeVJqWIQ7gW9tY1GJIpUtFb6CmjVyq2VM3u71bOyR8CRihcCgMUYoDNyLXao3+70Q==}
-    engines: {node: '>=6.9.0'}
-    dependencies:
-      '@babel/highlight': 7.18.6
     dev: true
 
   /@babel/code-frame@7.21.4:
@@ -1508,7 +1505,7 @@ packages:
     resolution: {integrity: sha512-xTEnpUKiV/bMyEsE5bT4oYA0x0Z/colMtxzUY8bKyPXBNLn/e0V4ZjBZkEhms0xE4pv9QsPfSRu9AWS4y5wGvA==}
     engines: {node: '>=14'}
     dependencies:
-      '@babel/code-frame': 7.18.6
+      '@babel/code-frame': 7.23.5
       '@babel/runtime': 7.18.9
       '@types/aria-query': 5.0.1
       aria-query: 5.0.0
@@ -1533,8 +1530,8 @@ packages:
       redent: 3.0.0
     dev: true
 
-  /@testing-library/react@14.0.0(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-S04gSNJbYE30TlIMLTzv6QCTzt9AqIF5y6s6SzVFILNcNvbV/jU96GeiTPillGQo+Ny64M/5PV7klNYYgv5Dfg==}
+  /@testing-library/react@14.2.1(react-dom@18.3.0-canary-2e470a788-20240214)(react@18.3.0-canary-2e470a788-20240214):
+    resolution: {integrity: sha512-sGdjws32ai5TLerhvzThYFbpnF9XtL65Cjf+gB0Dhr29BGqK+mAeN7SURSdu+eqgET4ANcWoC7FQpkaiGvBr+A==}
     engines: {node: '>=14'}
     peerDependencies:
       react: ^18.0.0
@@ -1543,8 +1540,8 @@ packages:
       '@babel/runtime': 7.18.9
       '@testing-library/dom': 9.2.0
       '@types/react-dom': 18.0.6
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
+      react: 18.3.0-canary-2e470a788-20240214
+      react-dom: 18.3.0-canary-2e470a788-20240214(react@18.3.0-canary-2e470a788-20240214)
     dev: true
 
   /@tootallnate/once@2.0.0:
@@ -4355,7 +4352,7 @@ packages:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
     dev: true
 
-  /next@13.4.4(react-dom@18.2.0)(react@18.2.0):
+  /next@13.4.4(react-dom@18.3.0-canary-2e470a788-20240214)(react@18.3.0-canary-2e470a788-20240214):
     resolution: {integrity: sha512-C5S0ysM0Ily9McL4Jb48nOQHT1BukOWI59uC3X/xCMlYIh9rJZCv7nzG92J6e1cOBqQbKovlpgvHWFmz4eKKEA==}
     engines: {node: '>=16.8.0'}
     hasBin: true
@@ -4378,9 +4375,9 @@ packages:
       busboy: 1.6.0
       caniuse-lite: 1.0.30001439
       postcss: 8.4.14
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-      styled-jsx: 5.1.1(react@18.2.0)
+      react: 18.3.0-canary-2e470a788-20240214
+      react-dom: 18.3.0-canary-2e470a788-20240214(react@18.3.0-canary-2e470a788-20240214)
+      styled-jsx: 5.1.1(react@18.3.0-canary-2e470a788-20240214)
       zod: 3.21.4
     optionalDependencies:
       '@next/swc-darwin-arm64': 13.4.4
@@ -4799,23 +4796,23 @@ packages:
     resolution: {integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==}
     dev: true
 
-  /react-dom@18.2.0(react@18.2.0):
-    resolution: {integrity: sha512-6IMTriUmvsjHUjNtEDudZfuDQUoWXVxKHhlEGSk81n4YFS+r/Kl99wXiwlVXtPBtJenozv2P+hxDsw9eA7Xo6g==}
+  /react-dom@18.3.0-canary-2e470a788-20240214(react@18.3.0-canary-2e470a788-20240214):
+    resolution: {integrity: sha512-NC6NkyJxgF45vRqqPthcIl3ZPgc6jKH3bzyVG99pWV6DL9RM+y81qaRXm3PK0K96BdwKB+HkIkzKlZe8LYNSFQ==}
     peerDependencies:
-      react: ^18.2.0
+      react: 18.3.0-canary-2e470a788-20240214
     dependencies:
       loose-envify: 1.4.0
-      react: 18.2.0
-      scheduler: 0.23.0
+      react: 18.3.0-canary-2e470a788-20240214
+      scheduler: 0.24.0-canary-2e470a788-20240214
     dev: true
 
-  /react-error-boundary@4.0.9(react@18.2.0):
+  /react-error-boundary@4.0.9(react@18.3.0-canary-2e470a788-20240214):
     resolution: {integrity: sha512-f6DcHVdTDZmc9ixmRmuLDZpkdghYR/HKZdUzMLHD58s4cR2C4R6y4ktYztCosM6pyeK4/C8IofwqxgID25W6kw==}
     peerDependencies:
       react: '>=16.13.1'
     dependencies:
       '@babel/runtime': 7.18.9
-      react: 18.2.0
+      react: 18.3.0-canary-2e470a788-20240214
     dev: true
 
   /react-is@16.13.1:
@@ -4830,8 +4827,8 @@ packages:
     resolution: {integrity: sha512-xWGDIW6x921xtzPkhiULtthJHoJvBbF3q26fzloPCK0hsvxtPVelvftw3zjbHWSkR2km9Z+4uxbDDK/6Zw9B8w==}
     dev: true
 
-  /react@18.2.0:
-    resolution: {integrity: sha512-/3IjMdb2L9QbBdWiW5e3P2/npwMBaU9mHCSCUzNln0ZCYbcfTsGbTJrU/kGemdH2IWmB2ioZ+zkxtmq6g09fGQ==}
+  /react@18.3.0-canary-2e470a788-20240214:
+    resolution: {integrity: sha512-yAKIu2SdFpKjw21QaLzT6hDLCHBBKbSq/28yLraOAUR/y5jXxu6u5CzKU5lRIIy2ZAB7MnO8gjHRH39ssnOkJw==}
     engines: {node: '>=0.10.0'}
     dependencies:
       loose-envify: 1.4.0
@@ -5056,8 +5053,8 @@ packages:
       xmlchars: 2.2.0
     dev: true
 
-  /scheduler@0.23.0:
-    resolution: {integrity: sha512-CtuThmgHNg7zIZWAXi3AsyIzA3n4xx7aNyjwC2VJldO2LMVDhFK+63xGqq6CsJH4rTAt6/M+N4GhZiDYPx9eUw==}
+  /scheduler@0.24.0-canary-2e470a788-20240214:
+    resolution: {integrity: sha512-9KARZ5unFpeX2YVL8kWQz4E/HqghewAoI2yhXITKpIVNyM8ZbeIklaUcQpFuVJ39T3M5pOGhMl3Mp9YNXWOsXA==}
     dependencies:
       loose-envify: 1.4.0
     dev: true
@@ -5281,7 +5278,7 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /styled-jsx@5.1.1(react@18.2.0):
+  /styled-jsx@5.1.1(react@18.3.0-canary-2e470a788-20240214):
     resolution: {integrity: sha512-pW7uC1l4mBZ8ugbiZrcIsiIvVx1UmTfw7UkC3Um2tmfUq9Bhk8IiyEIPl6F8agHgjzku6j0xQEZbfA5uSgSaCw==}
     engines: {node: '>= 12.0.0'}
     peerDependencies:
@@ -5295,7 +5292,7 @@ packages:
         optional: true
     dependencies:
       client-only: 0.0.1
-      react: 18.2.0
+      react: 18.3.0-canary-2e470a788-20240214
     dev: true
 
   /supports-color@5.5.0:
@@ -5490,12 +5487,12 @@ packages:
       requires-port: 1.0.0
     dev: true
 
-  /use-sync-external-store@1.2.0(react@18.2.0):
+  /use-sync-external-store@1.2.0(react@18.3.0-canary-2e470a788-20240214):
     resolution: {integrity: sha512-eEgnFxGQ1Ife9bzYs6VLi8/4X6CObHMw9Qr9tPY43iKwsPw8xE8+EFsf/2cFZ5S3esXgpWgtSCtLNS41F+sKPA==}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0
     dependencies:
-      react: 18.2.0
+      react: 18.3.0-canary-2e470a788-20240214
     dev: false
 
   /v8-to-istanbul@9.0.1:
@@ -5687,7 +5684,3 @@ packages:
   /zod@3.21.4:
     resolution: {integrity: sha512-m46AKbrzKVzOzs/DZgVnG5H55N1sv1M8qZU3A8RIKbs3mrACDNeIOeilDymVb2HdmP8uwshOCF4uJ8uM9rCqJw==}
     dev: true
-
-settings:
-  autoInstallPeers: false
-  excludeLinksFromLockfile: false

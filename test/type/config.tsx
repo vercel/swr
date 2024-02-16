@@ -21,6 +21,14 @@ export function testCustomSWRConfig() {
       {noNull}
       <SWRConfig value={undefined} />
       <SWRConfig value={() => ({})} />
+      <SWRConfig
+        value={{
+          fallback: {
+            '/api': 'fallback',
+            '/api2': Promise.resolve('fallback2')
+          }
+        }}
+      />
 
       <SWRConfig
         // @ts-expect-error
@@ -36,7 +44,7 @@ export function testFullConfiguration() {
   type IConfig = FullConfiguration<IData, IError>
 
   const config: IConfig = SWRConfig.defaultValue
-  expectType<IData | undefined>(config.fallbackData)
+  expectType<IData | Promise<IData> | undefined>(config.fallbackData)
 }
 
 export function testSWRResponseCachedDataTypes() {
@@ -129,6 +137,25 @@ export function testFallbackData() {
     { fallbackData: 'fallback' }
   )
   expectType<string>(data6)
+
+  // Promise
+  const { data: data7 } = useSWR<
+    string,
+    any,
+    { fallbackData: Promise<'fallback'> }
+  >('/api', (k: string) => Promise.resolve(k), {
+    fallbackData: Promise.resolve('fallback')
+  })
+  expectType<string>(data7)
+
+  // Declare that the fallback is existing (i.e. provided by SWRConfig).
+  const { data: data8 } = useSWR<string, any, { fallbackData: string }>('/api')
+  const { data: data9 } = useSWR<string, any, { fallbackData: string }>(
+    '/api',
+    {}
+  )
+  expectType<string>(data8)
+  expectType<string>(data9)
 }
 
 export function testConfigAsSWRConfiguration() {
