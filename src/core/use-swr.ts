@@ -1,13 +1,6 @@
 /// <reference types="react/experimental" />
-import ReactExports, {
-  useCallback,
-  useRef,
-  useDebugValue,
-  useMemo
-} from 'react'
+import React, { useCallback, useRef, useDebugValue, useMemo } from 'react'
 import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js'
-
-console.log('ReactExports.version', ReactExports.version)
 
 import {
   defaultConfig,
@@ -47,7 +40,7 @@ import type {
 } from '../_internal'
 
 const use =
-  ReactExports.use ||
+  React.use ||
   // This extra generic is to avoid TypeScript mixing up the generic and JSX sytax
   // and emitting an error.
   (<T, _>(
@@ -149,7 +142,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   // Resolve the fallback data from either the inline option, or the global provider.
   // If it's a promise, we simply let React suspend and resolve it for us.
   let fallback = isUndefined(fallbackData) ? config.fallback[key] : fallbackData
-  if (fallback && isPromiseLike(fallback)) {
+  if (fallback && isPromiseLike(fallback) && typeof React.use === 'function') {
     fallback = use(fallback)
   }
 
