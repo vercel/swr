@@ -4,8 +4,8 @@
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
-    "react": "18.1.0",
-    "react-dom": "18.1.0",
+    "react": "latest",
+    "react-dom": "latest",
     "next": "latest",
     "swr": "latest"
   },
