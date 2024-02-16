@@ -142,7 +142,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   // Resolve the fallback data from either the inline option, or the global provider.
   // If it's a promise, we simply let React suspend and resolve it for us.
   let fallback = isUndefined(fallbackData) ? config.fallback[key] : fallbackData
-  if (fallback && isPromiseLike(fallback) && typeof React.use === 'function') {
+  if (fallback && isPromiseLike(fallback)) {
     fallback = use(fallback)
   }
 
