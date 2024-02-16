@@ -4,11 +4,6 @@ import { createKey, createResponse, renderWithConfig, sleep } from './utils'
 import { Suspense } from 'react'
 
 describe('useSWR - promise', () => {
-  if (!process.env.REACT_CANARY) {
-    it('skip test non version of react', () => {})
-    return
-  }
-
   it('should allow passing promises as fallback', async () => {
     const key = createKey()
 
