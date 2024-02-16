@@ -4,6 +4,10 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '0 0 * * *'
+  workflow_run: 
+    workflows: [Test and Release]
+    types:
+      - completed
 
 jobs:
   test:
@@ -23,5 +27,4 @@ jobs:
           pnpm clean
           pnpm build
           pnpm run-all-checks
-          pnpm test
-          pnpm test:build
+          pnpm test:canary

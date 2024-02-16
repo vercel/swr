@@ -117,6 +117,7 @@
     "test": "jest",
     "test:build": "jest --config jest.config.build.js",
     "test:e2e": "playwright test",
+    "test:canary": "jest --config jest.config.canary.js",
     "run-all-checks": "pnpm types:check && pnpm lint && pnpm test-typing"
   },
   "lint-staged": {
@@ -152,8 +153,8 @@
     "lint-staged": "13.2.2",
     "next": "^13.4.4",
     "prettier": "2.8.8",
-    "react": "18.3.0-canary-2e470a788-20240214",
-    "react-dom": "18.3.0-canary-2e470a788-20240214",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
     "react-error-boundary": "^4.0.9",
     "rimraf": "5.0.1",
     "semver": "^7.5.1",
