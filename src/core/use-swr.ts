@@ -1,10 +1,5 @@
 /// <reference types="react/experimental" />
-import ReactExports, {
-  useCallback,
-  useRef,
-  useDebugValue,
-  useMemo
-} from 'react'
+import React, { useCallback, useRef, useDebugValue, useMemo } from 'react'
 import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js'
 
 import {
@@ -26,7 +21,8 @@ import {
   getTimestamp,
   internalMutate,
   revalidateEvents,
-  mergeObjects
+  mergeObjects,
+  isPromiseLike
 } from '../_internal'
 import type {
   State,
@@ -44,8 +40,10 @@ import type {
 } from '../_internal'
 
 const use =
-  ReactExports.use ||
-  (<T>(
+  React.use ||
+  // This extra generic is to avoid TypeScript mixing up the generic and JSX sytax
+  // and emitting an error.
+  (<T, _>(
     promise: Promise<T> & {
       status?: 'pending' | 'fulfilled' | 'rejected'
       value?: T
@@ -140,9 +138,13 @@ export const useSWRHandler = <Data = any, Error = any>(
     >(cache, key)
 
   const stateDependencies = useRef<StateDependencies>({}).current
-  const fallback = isUndefined(fallbackData)
-    ? config.fallback[key]
-    : fallbackData
+
+  // Resolve the fallback data from either the inline option, or the global provider.
+  // If it's a promise, we simply let React suspend and resolve it for us.
+  let fallback = isUndefined(fallbackData) ? config.fallback[key] : fallbackData
+  if (fallback && isPromiseLike(fallback)) {
+    fallback = use(fallback)
+  }
 
   const isEqual = (prev: State<Data, any>, current: State<Data, any>) => {
     for (const _ in stateDependencies) {
@@ -495,7 +497,11 @@ export const useSWRHandler = <Data = any, Error = any>(
               (isFunction(shouldRetryOnError) &&
                 shouldRetryOnError(err as Error))
             ) {
-              if (!getConfig().revalidateOnFocus || !getConfig().revalidateOnReconnect || isActive()) {
+              if (
+                !getConfig().revalidateOnFocus ||
+                !getConfig().revalidateOnReconnect ||
+                isActive()
+              ) {
                 // If it's inactive, stop. It will auto-revalidate when
                 // refocusing or reconnecting.
                 // When retrying, deduplication is always enabled.
