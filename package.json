@@ -1,6 +1,6 @@
 {
   "name": "swr",
-  "version": "2.2.4",
+  "version": "2.2.5",
   "description": "React Hooks library for remote data fetching",
   "keywords": [
     "swr",
@@ -106,7 +106,7 @@
     "build": "bunchee",
     "build:e2e": "pnpm next build e2e/site",
     "attw": "attw --pack",
-    "types:check": "pnpm -r run types:check",
+    "types:check": "tsc --noEmit",
     "prepublishOnly": "pnpm clean && pnpm build",
     "publish-beta": "pnpm publish --tag beta",
     "format": "prettier --write ./**/*.{ts,tsx}",

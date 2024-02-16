@@ -60,7 +60,6 @@ export async function internalMutate<Data>(
   const rollbackOnErrorOption = options.rollbackOnError
   let optimisticData = options.optimisticData
 
-  const revalidate = options.revalidate !== false
   const rollbackOnError = (error: unknown): boolean => {
     return typeof rollbackOnErrorOption === 'function'
       ? rollbackOnErrorOption(error)
@@ -99,6 +98,9 @@ export async function internalMutate<Data>(
 
     const startRevalidate = () => {
       const revalidators = EVENT_REVALIDATORS[key]
+      const revalidate = isFunction(options.revalidate)
+        ? options.revalidate(get().data, _k)
+        : options.revalidate !== false
       if (revalidate) {
         // Invalidate the key by deleting the concurrent request markers so new
         // requests will not be deduped.

@@ -184,3 +184,36 @@ export function testFallbackDataConfig() {
   expectType<Equal<typeof data, { value: string }>>(true)
   expectType<Equal<typeof isLoading, boolean>>(true)
 }
+
+export function testProviderConfig() {
+  const GlobalSetting = ({ children }: { children: React.ReactNode }) => {
+    return (
+      <SWRConfig
+        value={{
+          provider: () => new Map(),
+          isOnline() {
+            /* Customize the network state detector */
+            return true
+          },
+          isVisible() {
+            /* Customize the visibility state detector */
+            return true
+          },
+          initFocus(_callback) {
+            /* Register the listener with your state provider */
+          },
+          initReconnect(_callback) {
+            /* Register the listener with your state provider */
+          }
+        }}
+      >
+        {children}
+      </SWRConfig>
+    )
+  }
+  return (
+    <GlobalSetting>
+      <div />
+    </GlobalSetting>
+  )
+}

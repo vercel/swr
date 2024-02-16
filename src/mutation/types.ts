@@ -1,4 +1,4 @@
-import type { SWRResponse, Key } from '../core'
+import type { SWRResponse, Key, Arguments } from '../core'
 
 type FetcherResponse<Data> = Data | Promise<Data>
 
@@ -25,7 +25,7 @@ export type SWRMutationConfiguration<
   ExtraArg = any,
   SWRData = any
 > = {
-  revalidate?: boolean
+  revalidate?: boolean | ((data: Data, key: Arguments) => boolean)
   populateCache?:
     | boolean
     | ((result: Data, currentData: SWRData | undefined) => SWRData)

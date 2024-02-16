@@ -502,7 +502,7 @@ export const useSWRHandler = <Data = any, Error = any>(
               (isFunction(shouldRetryOnError) &&
                 shouldRetryOnError(err as Error))
             ) {
-              if (isActive()) {
+              if (!getConfig().revalidateOnFocus || !getConfig().revalidateOnReconnect || isActive()) {
                 // If it's inactive, stop. It will auto-revalidate when
                 // refocusing or reconnecting.
                 // When retrying, deduplication is always enabled.
