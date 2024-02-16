@@ -7,6 +7,8 @@ import ReactExports, {
 } from 'react'
 import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js'
 
+console.log('ReactExports.version', ReactExports.version)
+
 import {
   defaultConfig,
   IS_REACT_LEGACY,
@@ -502,7 +504,11 @@ export const useSWRHandler = <Data = any, Error = any>(
               (isFunction(shouldRetryOnError) &&
                 shouldRetryOnError(err as Error))
             ) {
-              if (!getConfig().revalidateOnFocus || !getConfig().revalidateOnReconnect || isActive()) {
+              if (
+                !getConfig().revalidateOnFocus ||
+                !getConfig().revalidateOnReconnect ||
+                isActive()
+              ) {
                 // If it's inactive, stop. It will auto-revalidate when
                 // refocusing or reconnecting.
                 // When retrying, deduplication is always enabled.

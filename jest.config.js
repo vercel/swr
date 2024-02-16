@@ -10,7 +10,7 @@ module.exports = {
     '^swr/immutable$': '<rootDir>/src/immutable/index.ts',
     '^swr/subscription$': '<rootDir>/src/subscription/index.ts',
     '^swr/mutation$': '<rootDir>/src/mutation/index.ts',
-    '^swr/_internal$': '<rootDir>/src/_internal/index.ts'
+    '^swr/_internal$': '<rootDir>/src/_internal/index.ts',
   },
   transform: {
     '^.+\\.(t|j)sx?$': ['@swc/jest']

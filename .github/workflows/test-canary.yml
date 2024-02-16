@@ -23,5 +23,5 @@ jobs:
           pnpm clean
           pnpm build
           pnpm run-all-checks
-          pnpm test
-          pnpm test:build
+          REACT_CANARY=1 pnpm test
+          REACT_CANARY=1 pnpm test:build
