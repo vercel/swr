@@ -1,2 +1,2 @@
 export { unstable_serialize } from '../core/serialize'
-export { SWRConfig } from './config'
+export { default as SWRConfig } from '../_internal/utils/config-context'
