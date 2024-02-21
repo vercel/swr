@@ -47,7 +47,7 @@ interface SWRInfiniteRevalidateFn<Data = any> {
   (data: Data, key: Arguments): boolean
 }
 
-type InfiniteKeyedMutator<Data> = <MutationData = Data>(
+export type InfiniteKeyedMutator<Data> = <MutationData = Data>(
   data?: Data | Promise<Data | undefined> | MutatorCallback<Data>,
   opts?: boolean | SWRInfiniteMutatorOptions<Data, MutationData>
 ) => Promise<Data | MutationData | undefined>
