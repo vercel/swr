@@ -1,16 +1,6 @@
 {
-  "main": "./dist/index.js",
-  "module": "./dist/index.esm.js",
-  "types": "./dist/index.d.ts",
-  "exports": "./dist/index.mjs",
-  "private": true,
-  "scripts": {
-    "watch": "bunchee index.ts -w",
-    "build": "bunchee index.ts",
-    "types:check": "tsc --noEmit",
-    "clean": "rimraf dist"
-  },
-  "peerDependencies": {
-    "react": "*"
-  }
+  "main": "../dist/_internal/index.js",
+  "module": "../dist/_internal/index.esm.js",
+  "types": "../dist/_internal/index.d.ts",
+  "private": true
 }

@@ -1,5 +1,4 @@
 import { screen, fireEvent, createEvent } from '@testing-library/react'
-import React from 'react'
 import useSWR from 'swr'
 import {
   nextTick as waitForNextTick,

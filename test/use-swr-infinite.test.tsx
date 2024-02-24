@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { fireEvent, act, screen } from '@testing-library/react'
 import useSWR, { mutate as globalMutate, useSWRConfig, SWRConfig } from 'swr'
 import useSWRInfinite, { unstable_serialize } from 'swr/infinite'
@@ -24,6 +24,7 @@ describe('useSWRInfinite', () => {
       return (
         <div>
           <div>data:{data}</div>
+          <div>isArray:{Array.isArray(data) ? 'true' : 'false'}</div>
           <div>error:{error}</div>
           <div>isValidating:{isValidating.toString()}</div>
         </div>
@@ -34,6 +35,7 @@ describe('useSWRInfinite', () => {
     screen.getByText('data:')
 
     await screen.findByText(`data:page-0-${key}`)
+    await screen.findByText(`isArray:true`)
     await screen.findByText(`error:`)
     await screen.findByText(`isValidating:false`)
   })
@@ -1392,7 +1394,7 @@ describe('useSWRInfinite', () => {
           <button
             onClick={() => {
               mutate(updater, {
-                populateCache: (result: string, currentData: string[]) => {
+                populateCache: (result: string[], currentData: string[]) => {
                   return [...currentData, ...result]
                 },
                 revalidate: false
@@ -1474,7 +1476,7 @@ describe('useSWRInfinite', () => {
             onClick={() => {
               mutate(updater, {
                 optimisticData: current => [current[0], [...current[1], 'B4']],
-                populateCache: (result: string, currentData: string[]) => {
+                populateCache: (result: string[], currentData: string[]) => {
                   return [currentData[0], [...currentData[1], ...result]]
                 },
                 revalidate: false
@@ -1840,5 +1842,49 @@ describe('useSWRInfinite', () => {
     await act(() => sleep(100))
     screen.getByText('data:apple, banana, pineapple,')
     expect(previousPageDataLogs.every(d => d === null)).toBeTruthy()
+  })
+
+  it('should support revalidate as a function', async () => {
+    // mock api
+    let pageData = ['apple', 'banana', 'pineapple']
+
+    const key = createKey()
+    function Page() {
+      const { data, mutate: boundMutate } = useSWRInfinite(
+        index => [key, index],
+        ([_, index]) => createResponse(pageData[index]),
+        {
+          initialSize: 3
+        }
+      )
+
+      return (
+        <div
+          onClick={() => {
+            boundMutate(undefined, {
+              // only revalidate 'apple' & 'pineapple' (page=2)
+              revalidate: (d, [_, i]: [string, number]) => {
+                return d === 'apple' || i === 2
+              }
+            })
+          }}
+        >
+          data:{Array.isArray(data) && data.join(',')}
+        </div>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('data:')
+
+    await screen.findByText('data:apple,banana,pineapple')
+
+    // update response data
+    pageData = pageData.map(data => `[${data}]`)
+
+    // revalidate
+    fireEvent.click(screen.getByText('data:apple,banana,pineapple'))
+
+    await screen.findByText('data:[apple],banana,[pineapple]')
   })
 })

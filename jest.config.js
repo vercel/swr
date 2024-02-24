@@ -5,15 +5,15 @@ module.exports = {
   modulePathIgnorePatterns: ['<rootDir>/examples/'],
   setupFilesAfterEnv: ['<rootDir>/test/jest-setup.ts'],
   moduleNameMapper: {
-    '^swr$': '<rootDir>/core/index.ts',
-    '^swr/infinite$': '<rootDir>/infinite/index.ts',
-    '^swr/immutable$': '<rootDir>/immutable/index.ts',
-    '^swr/subscription$': '<rootDir>/subscription/index.ts',
-    '^swr/mutation$': '<rootDir>/mutation/index.ts',
-    '^swr/_internal$': '<rootDir>/_internal/index.ts'
+    '^swr$': '<rootDir>/src/index/index.ts',
+    '^swr/infinite$': '<rootDir>/src/infinite/index.ts',
+    '^swr/immutable$': '<rootDir>/src/immutable/index.ts',
+    '^swr/subscription$': '<rootDir>/src/subscription/index.ts',
+    '^swr/mutation$': '<rootDir>/src/mutation/index.ts',
+    '^swr/_internal$': '<rootDir>/src/_internal/index.ts',
   },
   transform: {
-    '^.+\\.(t|j)sx?$': '@swc/jest'
+    '^.+\\.(t|j)sx?$': ['@swc/jest']
   },
   coveragePathIgnorePatterns: ['/node_modules/', '/dist/', '/test/'],
   coverageReporters: ['text', 'html'],

@@ -1,6 +1,6 @@
 import { act, fireEvent, screen } from '@testing-library/react'
-import type { ReactNode, PropsWithChildren } from 'react'
-import React, { Suspense, useEffect, useReducer, useState } from 'react'
+import { Profiler } from 'react'
+import { Suspense, useReducer, useState } from 'react'
 import useSWR, { mutate } from 'swr'
 import {
   createKey,
@@ -9,23 +9,7 @@ import {
   renderWithGlobalCache,
   sleep
 } from './utils'
-
-class ErrorBoundary extends React.Component<
-  PropsWithChildren<{ fallback: ReactNode }>
-> {
-  state = { hasError: false }
-  static getDerivedStateFromError() {
-    return {
-      hasError: true
-    }
-  }
-  render() {
-    if (this.state.hasError) {
-      return this.props.fallback
-    }
-    return this.props.children
-  }
-}
+import { ErrorBoundary } from 'react-error-boundary'
 
 describe('useSWR - suspense', () => {
   afterEach(() => {
@@ -190,38 +174,41 @@ describe('useSWR - suspense', () => {
   })
 
   it('should pause when key changes', async () => {
-    const renderedResults = []
+    // fixes https://github.com/vercel/swr/issues/57
+    // initialKey' -> undefined -> updatedKey
     const initialKey = createKey()
     const updatedKey = createKey()
+    const onRender = jest.fn()
     function Section() {
       const [key, setKey] = useState(initialKey)
       const { data } = useSWR(key, k => createResponse(k), {
         suspense: true
       })
-
-      useEffect(() => {
-        if (data === initialKey) {
-          setKey(updatedKey)
-        }
-      }, [data])
-
-      if (data !== renderedResults[renderedResults.length - 1]) {
-        renderedResults.push(data)
-      }
-
-      return <>{data}</>
+      return (
+        <>
+          <div>data: {data}</div>
+          <button onClick={() => setKey(updatedKey)}>change</button>
+        </>
+      )
     }
 
     renderWithConfig(
-      <Suspense fallback={<div>fallback</div>}>
+      <Suspense
+        fallback={
+          <Profiler id={initialKey} onRender={onRender}>
+            <div>fallback</div>
+          </Profiler>
+        }
+      >
         <Section />
       </Suspense>
     )
-
-    await screen.findByText(updatedKey)
-    // fixes https://github.com/vercel/swr/issues/57
-    // initialKey' -> undefined -> updatedKey
-    expect(renderedResults).toEqual([initialKey, updatedKey])
+    await screen.findByText('fallback')
+    await screen.findByText(`data: ${initialKey}`)
+    fireEvent.click(screen.getByText('change'))
+    await screen.findByText('fallback')
+    await screen.findByText(`data: ${updatedKey}`)
+    expect(onRender).toHaveBeenCalledTimes(2)
   })
 
   it('should render correctly when key changes (but with same response data)', async () => {
@@ -396,5 +383,43 @@ describe('useSWR - suspense', () => {
     screen.getByText('fallback')
 
     await screen.findByText('SWR')
+  })
+
+  it('should only render fallback once when `keepPreviousData` is set to true', async () => {
+    const originKey = createKey()
+    const newKey = createKey()
+    const onRender = jest.fn()
+    const Result = ({ query }: { query: string }) => {
+      const { data } = useSWR(query, q => createResponse(q, { delay: 200 }), {
+        suspense: true,
+        keepPreviousData: true
+      })
+      return <div>data: {data}</div>
+    }
+    const App = () => {
+      const [query, setQuery] = useState(originKey)
+      return (
+        <>
+          <button onClick={() => setQuery(newKey)}>change</button>
+          <br />
+          <Suspense
+            fallback={
+              <Profiler id={originKey} onRender={onRender}>
+                <div>loading</div>
+              </Profiler>
+            }
+          >
+            <Result query={query}></Result>
+          </Suspense>
+        </>
+      )
+    }
+    renderWithConfig(<App />)
+    await act(() => sleep(200))
+    await screen.findByText(`data: ${originKey}`)
+    fireEvent.click(screen.getByText('change'))
+    await act(() => sleep(200))
+    await screen.findByText(`data: ${newKey}`)
+    expect(onRender).toHaveBeenCalledTimes(1)
   })
 })

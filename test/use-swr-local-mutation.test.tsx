@@ -1,5 +1,5 @@
 import { act, screen, fireEvent } from '@testing-library/react'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import useSWR, { mutate as globalMutate, useSWRConfig } from 'swr'
 import useSWRInfinite from 'swr/infinite'
 import { serialize } from 'swr/_internal'
@@ -544,6 +544,32 @@ describe('useSWR - local mutation', () => {
     expect(cacheError).toBeUndefined()
   })
 
+  it('should update error in global cache when mutate succeeded', async () => {
+    const key = createKey()
+
+    let mutate
+    function Page() {
+      const {
+        data,
+        error,
+        mutate: mutate_
+      } = useSWR<string>(key, async () => {
+        throw new Error('error')
+      })
+      mutate = mutate_
+      return <div>{error ? error.message : `data: ${data}`}</div>
+    }
+
+    renderWithConfig(<Page />)
+
+    // Mount
+    await screen.findByText('error')
+    act(() => {
+      mutate(v => v, { revalidate: false })
+    })
+    await screen.findByText('data: undefined')
+  })
+
   it('should keep the `mutate` function referential equal', async () => {
     const refs = []
 
@@ -1029,7 +1055,7 @@ describe('useSWR - local mutation', () => {
         optimisticData: 'bar'
       })
     )
-    await sleep(30)
+    await act(() => sleep(30))
     expect(renderedData).toEqual([undefined, 'foo', 'bar', 'baz', 'foo'])
   })
 
@@ -1055,7 +1081,7 @@ describe('useSWR - local mutation', () => {
         optimisticData: data => 'function_' + data
       })
     )
-    await sleep(30)
+    await act(() => sleep(30))
     expect(renderedData).toEqual([
       undefined,
       'foo',
@@ -1097,6 +1123,90 @@ describe('useSWR - local mutation', () => {
     await act(() => sleep(30))
 
     expect(renderedData).toEqual([undefined, 'loading', 'final'])
+  })
+
+  it('should be able to use functional optimistic data config and use second param `displayedData` to keep UI consistent in slow networks', async () => {
+    const key1 = createKey()
+    const key2 = createKey()
+    let data1 = 0
+    let data2 = 0
+
+    function useOptimisticData1Mutate() {
+      const { mutate } = useSWRConfig()
+      return () => {
+        return mutate(key1, () => createResponse(data1++, { delay: 1000 }), {
+          optimisticData(currentData) {
+            return currentData + 1 // optimistic update current data
+          }
+        })
+      }
+    }
+
+    function useOptimisticData2Mutate() {
+      const { mutate } = useSWRConfig()
+      return () => {
+        return mutate(key2, () => createResponse(data2++, { delay: 1000 }), {
+          optimisticData(_, displayedData) {
+            return displayedData + 1 // optimistic update displayed data
+          }
+        })
+      }
+    }
+
+    function Page() {
+      const mutateWithOptimisticallyUpdatedCurrentData =
+        useOptimisticData1Mutate()
+      const mutateWithOptimisticallyUpdatedDisplayedData =
+        useOptimisticData2Mutate()
+      const { data: renderedData1 } = useSWR<number>(key1, () =>
+        createResponse(data1, { delay: 1000 })
+      )
+      const { data: renderedData2 } = useSWR<number>(key2, () =>
+        createResponse(data2, { delay: 1000 })
+      )
+
+      return (
+        <div>
+          <button onClick={mutateWithOptimisticallyUpdatedCurrentData}>
+            incrementCurrent
+          </button>
+          <button onClick={mutateWithOptimisticallyUpdatedDisplayedData}>
+            incrementDisplayed
+          </button>
+          <div>
+            data: <span data-testid="data1">{renderedData1}</span>
+          </div>
+          <div>
+            data: <span data-testid="data2">{renderedData2}</span>
+          </div>
+        </div>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await act(() => sleep(1000)) // Wait for initial data to load
+    fireEvent.click(screen.getByText('incrementCurrent'))
+    fireEvent.click(screen.getByText('incrementDisplayed'))
+    fireEvent.click(screen.getByText('incrementCurrent'))
+    fireEvent.click(screen.getByText('incrementDisplayed'))
+    const renderedData1 = parseInt(
+      (await screen.findByTestId('data1')).innerHTML,
+      10
+    )
+    const renderedData2 = Number((await screen.findByTestId('data2')).innerHTML)
+    await act(() => sleep(2000)) // Wait for revalidation roundtrip
+    const renderedRevalidatedData1 = Number(
+      (await screen.findByTestId('data1')).innerHTML
+    )
+    const renderedRevalidatedData2 = Number(
+      (await screen.findByTestId('data2')).innerHTML
+    )
+    expect(data1).toEqual(2)
+    expect(renderedData1).toEqual(1)
+    expect(renderedRevalidatedData1).toEqual(2)
+    expect(data2).toEqual(2)
+    expect(renderedData2).toEqual(2)
+    expect(renderedRevalidatedData2).toEqual(2)
   })
 
   it('should prevent race conditions with optimistic UI', async () => {
@@ -1257,7 +1367,7 @@ describe('useSWR - local mutation', () => {
         }
       )
     })
-
+    await sleep(30)
     try {
       // data == "baz", then reverted back to "bar"
       await executeWithoutBatching(() =>
@@ -1459,8 +1569,8 @@ describe('useSWR - local mutation', () => {
 
     let appendData
 
-    const sendRequest = <Data,>(newItem) => {
-      return new Promise<Data>(res =>
+    const sendRequest = (newItem: string) => {
+      return new Promise<string>(res =>
         setTimeout(() => {
           // The server capitalizes the new item.
           const modifiedData =
@@ -1472,10 +1582,11 @@ describe('useSWR - local mutation', () => {
     }
 
     function Page() {
-      const { data, mutate } = useSWR(key, () => serverData)
+      const { mutate } = useSWRConfig()
+      const { data } = useSWR(key, () => serverData)
 
       appendData = () => {
-        return mutate(sendRequest('cherry'), {
+        return mutate<string[], string>(key, sendRequest('cherry'), {
           optimisticData: [...data, 'cherry (optimistic)'],
           populateCache: (result, currentData) => [
             ...currentData,
@@ -1698,5 +1809,120 @@ describe('useSWR - local mutation', () => {
       [key, 'inf', 0],
       [key, 'inf', 1]
     ])
+  })
+  it('should support revalidate as a function', async () => {
+    let value = 0,
+      mutate
+    const key = createKey()
+    function Page() {
+      mutate = useSWRConfig().mutate
+      const { data } = useSWR(key, () => value++)
+      return <div>data: {data}</div>
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('data:')
+
+    // mount
+    await screen.findByText('data: 0')
+
+    act(() => {
+      // value 0 -> 0
+      mutate(key, 100, { revalidate: () => false })
+    })
+    await screen.findByText('data: 100')
+
+    act(() => {
+      // value 0 -> 1
+      mutate(key, 200, { revalidate: () => true })
+    })
+    await screen.findByText('data: 200')
+    await screen.findByText('data: 1')
+  })
+
+  it('the function-style relivadate option receives the key and current data', async () => {
+    let value = 0,
+      mutate
+    const key = createKey()
+    function Page() {
+      mutate = useSWRConfig().mutate
+      const { data } = useSWR(key, () => value++)
+      return <div>data: {data}</div>
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('data:')
+
+    // mount
+    await screen.findByText('data: 0')
+
+    act(() => {
+      // value 0 -> 0
+      mutate(key, 100, { revalidate: (d, k) => k === key && d === 200 }) // revalidate = false
+    })
+    await screen.findByText('data: 100')
+
+    act(() => {
+      // value 0 -> 1
+      mutate(key, 200, { revalidate: (d, k) => k === key && d === 200 }) // revalidate = true
+    })
+    await screen.findByText('data: 200')
+    await screen.findByText('data: 1')
+  })
+
+  it('the function-style relivadate option works with mutate filter', async () => {
+    const key1 = createKey()
+    const key2 = createKey()
+    const key3 = createKey()
+
+    let mockData = {
+      [key1]: 'page1',
+      [key2]: 'page2',
+      [key3]: 'page3'
+    }
+    function Page() {
+      const mutate = useSWRConfig().mutate
+      const { data: data1 } = useSWR(key1, () => mockData[key1])
+      const { data: data2 } = useSWR(key2, () => mockData[key2])
+      const { data: data3 } = useSWR(key3, () => mockData[key3])
+
+      return (
+        <>
+          <div>data1: {data1}</div>
+          <div>data2: {data2}</div>
+          <div>data3: {data3}</div>
+          <button
+            onClick={() => {
+              // key1 is filtered
+              mutate(k => k !== key1, 'updated', {
+                // only revalidate key3
+                revalidate: (d, k) => d === 'updated' && k === key3
+              })
+            }}
+          >
+            click
+          </button>
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+
+    // mount
+    await screen.findByText('data1: page1')
+    await screen.findByText('data2: page2')
+    await screen.findByText('data3: page3')
+
+    mockData = {
+      [key1]: '<page1>',
+      [key2]: '<page2>',
+      [key3]: '<page3>'
+    }
+
+    fireEvent.click(screen.getByText('click'))
+
+    await screen.findByText('data1: page1')
+    await screen.findByText('data2: updated')
+    await screen.findByText('data3: <page3>')
   })
 })

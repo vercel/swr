@@ -6,8 +6,8 @@ import {
   executeWithoutBatching,
   renderWithConfig
 } from './utils'
-
 import React from 'react'
+
 import useSWR from 'swr'
 
 describe('useSWR - concurrent rendering', () => {

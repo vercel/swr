@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import React, { useState } from 'react'
 import useSWR from 'swr'
 import useSWRMutation from 'swr/mutation'
-import { createKey, sleep, nextTick } from './utils'
+import { createKey, sleep, nextTick, createResponse } from './utils'
 
 const waitForNextTick = () => act(() => sleep(1))
 
@@ -537,6 +537,51 @@ describe('useSWR - remote mutation', () => {
     expect(logger).not.toHaveBeenCalledWith('bar')
   })
 
+  it('should revalidate the SWR request that starts during the mutation', async () => {
+    const key = createKey()
+
+    function Page() {
+      const [triggered, setTriggered] = React.useState(false)
+      const { data } = useSWR(
+        triggered ? key : null,
+        async () => {
+          await sleep(10)
+          return 'foo'
+        },
+        { revalidateOnMount: false }
+      )
+      const { trigger } = useSWRMutation(key, async () => {
+        await sleep(20)
+        return 'bar'
+      })
+
+      return (
+        <div>
+          <button
+            onClick={() => {
+              trigger(undefined)
+              setTriggered(true)
+            }}
+          >
+            trigger
+          </button>
+          <div>data:{data || 'none'}</div>
+        </div>
+      )
+    }
+
+    render(<Page />)
+
+    // mount
+    await screen.findByText('data:none')
+
+    fireEvent.click(screen.getByText('trigger'))
+    await act(() => sleep(50))
+
+    // The SWR request that starts during the mutation should be revalidated.
+    await screen.findByText('data:foo')
+  })
+
   it('should revalidate after populating the cache', async () => {
     const key = createKey()
     const logger = jest.fn()
@@ -987,5 +1032,53 @@ describe('useSWR - remote mutation', () => {
     fireEvent.click(screen.getByText('trigger'))
     await screen.findByText('data:1,count:1')
     expect(logs).toEqual([0, 1])
+  })
+
+  it('should support revalidate as a function', async () => {
+    const key = createKey()
+
+    let value = 0
+
+    function Page() {
+      const { data } = useSWR(key, () => createResponse(++value))
+      const { trigger } = useSWRMutation(key, () => {
+        value += 10
+        return createResponse(value)
+      })
+
+      return (
+        <div>
+          <button
+            onClick={() =>
+              trigger(undefined, {
+                revalidate: (d, k) => k === key && d < 30,
+                populateCache: true
+              })
+            }
+          >
+            trigger
+          </button>
+          <div>data:{data || 'none'}</div>
+        </div>
+      )
+    }
+
+    render(<Page />)
+
+    // mount
+    await screen.findByText('data:1')
+
+    fireEvent.click(screen.getByText('trigger'))
+    await screen.findByText('data:12')
+    fireEvent.click(screen.getByText('trigger'))
+    await screen.findByText('data:23')
+    fireEvent.click(screen.getByText('trigger'))
+    await screen.findByText('data:33')
+
+    // stop revalidation because value > 30
+    fireEvent.click(screen.getByText('trigger'))
+    await screen.findByText('data:43')
+    fireEvent.click(screen.getByText('trigger'))
+    await screen.findByText('data:53')
   })
 })

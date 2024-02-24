@@ -6,8 +6,8 @@
   "dependencies": {
     "immer": "9.0.5",
     "next": "latest",
-    "react": "18.1.0",
-    "react-dom": "18.1.0",
+    "react": "latest",
+    "react-dom": "latest",
     "swr": "latest"
   },
   "scripts": {

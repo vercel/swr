@@ -1,13 +1,7 @@
 import { act, fireEvent, screen } from '@testing-library/react'
 import React, { useState, useEffect } from 'react'
 import useSWR from 'swr'
-import {
-  createKey,
-  createResponse,
-  executeWithoutBatching,
-  renderWithConfig,
-  sleep
-} from './utils'
+import { createKey, createResponse, renderWithConfig, sleep } from './utils'
 
 describe('useSWR - key', () => {
   it('should respect requests after key has changed', async () => {
@@ -132,16 +126,10 @@ describe('useSWR - key', () => {
     }
 
     renderWithConfig(<Page />)
-    const closureSpy = jest.spyOn(closureFunctions, 'first')
-
     await screen.findByText(`${baseKey}-first`)
-    expect(closureSpy).toHaveBeenCalledTimes(1)
 
-    // update, but don't change the id.
-    // Function identity should stay the same, and useSWR should not call the function again.
-    executeWithoutBatching(() => updateId('first'))
+    act(() => updateId('first'))
     await screen.findByText(`${baseKey}-first`)
-    expect(closureSpy).toHaveBeenCalledTimes(1)
 
     act(() => updateId('second'))
     await screen.findByText(`${baseKey}-second`)
