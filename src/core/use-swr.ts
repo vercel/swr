@@ -43,32 +43,35 @@ const use =
   React.use ||
   // This extra generic is to avoid TypeScript mixing up the generic and JSX sytax
   // and emitting an error.
+  // We assume that this is only for the `use(thenable)` case, not `use(context)`.
+  // https://github.com/facebook/react/blob/aed00dacfb79d17c53218404c52b1c7aa59c4a89/packages/react-server/src/ReactFizzThenable.js#L45
   (<T, _>(
-    promise: Promise<T> & {
+    thenable: Promise<T> & {
       status?: 'pending' | 'fulfilled' | 'rejected'
       value?: T
       reason?: unknown
     }
   ): T => {
-    if (promise.status === 'pending') {
-      throw promise
-    } else if (promise.status === 'fulfilled') {
-      return promise.value as T
-    } else if (promise.status === 'rejected') {
-      throw promise.reason
-    } else {
-      promise.status = 'pending'
-      promise.then(
-        v => {
-          promise.status = 'fulfilled'
-          promise.value = v
-        },
-        e => {
-          promise.status = 'rejected'
-          promise.reason = e
-        }
-      )
-      throw promise
+    switch (thenable.status) {
+      case 'pending':
+        throw thenable
+      case 'fulfilled':
+        return thenable.value as T
+      case 'rejected':
+        throw thenable.reason
+      default:
+        thenable.status = 'pending'
+        thenable.then(
+          v => {
+            thenable.status = 'fulfilled'
+            thenable.value = v
+          },
+          e => {
+            thenable.status = 'rejected'
+            thenable.reason = e
+          }
+        )
+        throw thenable
     }
   })
 
@@ -176,8 +179,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       // If it's paused, we skip revalidation.
       if (getConfig().isPaused()) return false
       if (suspense) return false
-      if (!isUndefined(revalidateIfStale)) return revalidateIfStale
-      return true
+      return revalidateIfStale !== false
     })()
 
     // Get the cache and merge it with expected states.
@@ -694,10 +696,10 @@ export const useSWRHandler = <Data = any, Error = any>(
   // the suspense boundary.
   if (suspense && isUndefined(data) && key) {
     // SWR should throw when trying to use Suspense on the server with React 18,
-    // without providing any initial data. See:
+    // without providing any fallback data. This causes hydration errors. See:
     // https://github.com/vercel/swr/issues/1832
     if (!IS_REACT_LEGACY && IS_SERVER) {
-      throw new Error('Fallback data is required when using suspense in SSR.')
+      throw new Error('Fallback data is required when using Suspense in SSR.')
     }
 
     // Always update fetcher and config refs even with the Suspense mode.

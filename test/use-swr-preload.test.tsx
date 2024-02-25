@@ -1,7 +1,12 @@
 import { act, fireEvent, screen } from '@testing-library/react'
 import { Suspense, useEffect, useState, Profiler } from 'react'
 import useSWR, { preload, useSWRConfig } from 'swr'
-import { createKey, createResponse, renderWithConfig, sleep } from './utils'
+import {
+  createKey,
+  createResponse,
+  renderWithGlobalCache,
+  sleep
+} from './utils'
 
 describe('useSWR - preload', () => {
   it('preload the fetcher function', async () => {
@@ -17,7 +22,7 @@ describe('useSWR - preload', () => {
     preload(key, fetcher)
     expect(fetcher).toBeCalledTimes(1)
 
-    renderWithConfig(<Page />)
+    renderWithGlobalCache(<Page />)
     await screen.findByText('data:foo')
     expect(fetcher).toBeCalledTimes(1)
   })
@@ -36,7 +41,7 @@ describe('useSWR - preload', () => {
     preload(key, fetcher)
     expect(fetcher).toBeCalledTimes(1)
 
-    renderWithConfig(<Page />)
+    renderWithGlobalCache(<Page />)
     await screen.findByText('data:foo')
     expect(fetcher).toBeCalledTimes(1)
   })
@@ -62,7 +67,7 @@ describe('useSWR - preload', () => {
       )
     }
 
-    renderWithConfig(<Page />)
+    renderWithGlobalCache(<Page />)
     expect(fetcher).toBeCalledTimes(1)
 
     fireEvent.click(screen.getByText('click'))
@@ -83,7 +88,7 @@ describe('useSWR - preload', () => {
     preload(key, fetcher)
     expect(fetcher).toBeCalledTimes(1)
 
-    renderWithConfig(
+    renderWithGlobalCache(
       <Suspense
         fallback={
           <Profiler id={key} onRender={onRender}>
@@ -123,7 +128,7 @@ describe('useSWR - preload', () => {
     preload(key1, fetcher1)
     preload(key2, fetcher2)
 
-    renderWithConfig(
+    renderWithGlobalCache(
       <Suspense fallback="loading">
         <Page />
       </Suspense>
@@ -161,7 +166,7 @@ describe('useSWR - preload', () => {
       // noop
     }
 
-    renderWithConfig(<Page />)
+    renderWithGlobalCache(<Page />)
     screen.getByText('data:')
 
     // use the preloaded result
@@ -196,7 +201,7 @@ describe('useSWR - preload', () => {
     preload(key, fetcher)
     expect(fetcher).toBeCalledTimes(1)
 
-    const { rerender } = renderWithConfig(<Page />)
+    const { rerender } = renderWithGlobalCache(<Page />)
     expect(onRender).toBeCalledTimes(1)
     // rerender when the preloading is in-flight, and the deduping interval is over
     await act(() => sleep(10))

@@ -1,7 +1,7 @@
 import { screen, act, fireEvent } from '@testing-library/react'
 import { useState } from 'react'
 import useSWR from 'swr'
-import useSWRImmutable from 'swr/immutable'
+import useSWRImmutable, { immutable } from 'swr/immutable'
 import {
   sleep,
   createKey,
@@ -105,6 +105,54 @@ describe('useSWR - immutable', () => {
     const key = createKey()
     const useData = () =>
       useSWRImmutable(key, () => value++, { dedupingInterval: 0 })
+
+    function Component() {
+      useData()
+      return null
+    }
+    function Page() {
+      const [showComponent, setShowComponent] = useState(false)
+      const { data } = useData()
+      return (
+        <div>
+          <button onClick={() => setShowComponent(true)}>
+            mount component
+          </button>
+          <p>data: {data}</p>
+          {showComponent ? <Component /> : null}
+        </div>
+      )
+    }
+
+    renderWithConfig(<Page />)
+
+    // hydration
+    screen.getByText('mount component')
+    screen.getByText('data:')
+
+    // ready
+    await screen.findByText('data: 0')
+
+    // mount <Component/> by clicking the button
+    fireEvent.click(screen.getByText('mount component'))
+
+    // trigger window focus
+    await waitForNextTick()
+    await focusWindow()
+
+    // wait for rerender
+    await act(() => sleep(50))
+    await screen.findByText('data: 0')
+  })
+
+  it('should not revalidate with the immutable middleware', async () => {
+    let value = 0
+    const key = createKey()
+    const useData = () =>
+      useSWR(key, () => value++, {
+        dedupingInterval: 0,
+        use: [immutable]
+      })
 
     function Component() {
       useData()
