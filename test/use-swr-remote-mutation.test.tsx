@@ -1081,4 +1081,35 @@ describe('useSWR - remote mutation', () => {
     fireEvent.click(screen.getByText('trigger'))
     await screen.findByText('data:53')
   })
+
+  it('should error when triggering an empty key', async () => {
+    let error = null
+
+    function Page() {
+      const { trigger } = useSWRMutation(null, () => {})
+      return (
+        <button
+          onClick={async () => {
+            try {
+              await trigger()
+            } catch (err) {
+              error = err
+            }
+          }}
+        >
+          {'pending'}
+        </button>
+      )
+    }
+
+    render(<Page />)
+
+    // mount
+    await screen.findByText('pending')
+
+    fireEvent.click(screen.getByText('pending'))
+    await waitForNextTick()
+
+    expect(error.message).toBe('Can’t trigger the mutation: missing key.')
+  })
 })
