@@ -20,38 +20,41 @@ async function withServer(runner: () => Promise<void>) {
 }
 
 describe('useSWR - SSR', () => {
-  it('should enable the IS_SERVER flag - suspense on server without fallback', async () => {
-    await withServer(async () => {
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
-      jest.spyOn(console, 'error').mockImplementation(() => {})
+  ;(process.env.__SWR_TEST_BUILD ? it.skip : it)(
+    'should enable the IS_SERVER flag - suspense on server without fallback',
+    async () => {
+      await withServer(async () => {
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        jest.spyOn(console, 'error').mockImplementation(() => {})
 
-      const useSWR = (await import('swr')).default
+        const useSWR = (await import('swr')).default
 
-      const key = Math.random().toString()
+        const key = Math.random().toString()
 
-      const Page = () => {
-        const { data } = useSWR(key, () => 'SWR', {
-          suspense: true
-        })
-        return <div>{data || 'empty'}</div>
-      }
+        const Page = () => {
+          const { data } = useSWR(key, () => 'SWR', {
+            suspense: true
+          })
+          return <div>{data || 'empty'}</div>
+        }
 
-      render(
-        <ErrorBoundary
-          fallbackRender={({ error }) => {
-            console.error(error)
-            return <div>{error.message}</div>
-          }}
-        >
-          <Suspense>
-            <Page />
-          </Suspense>
-        </ErrorBoundary>
-      )
+        render(
+          <ErrorBoundary
+            fallbackRender={({ error }) => {
+              console.error(error)
+              return <div>{error.message}</div>
+            }}
+          >
+            <Suspense>
+              <Page />
+            </Suspense>
+          </ErrorBoundary>
+        )
 
-      await screen.findByText(
-        'Fallback data is required when using Suspense in SSR.'
-      )
-    })
-  })
+        await screen.findByText(
+          'Fallback data is required when using Suspense in SSR.'
+        )
+      })
+    }
+  )
 })
