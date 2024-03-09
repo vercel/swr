@@ -1,0 +1,32 @@
+name: Test React 17
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - v*
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install
+        uses: ./.github/workflows/install
+
+      - name: Install Canary
+        run: corepack pnpm upgrade react@17 react-dom@17
+
+      - name: Lint and test
+        env:
+          REACT_LEGACY: 1
+        run: |
+          pnpm clean
+          pnpm build
+          pnpm run-all-checks
+          pnpm test
+          pnpm test:build
