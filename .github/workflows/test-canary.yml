@@ -20,7 +20,7 @@ jobs:
 
       - name: Lint and test
         env:
-          REACT_CANARY: 1
+          TEST_REACT_LEGACY: 1
         run: |
           pnpm clean
           pnpm build
