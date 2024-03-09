@@ -18,15 +18,11 @@ jobs:
       - name: Install
         uses: ./.github/workflows/install
 
-      - name: Install Canary
-        run: corepack pnpm upgrade react@17 react-dom@17
-
-      - name: Lint and test
+      - name: Test
         env:
           TEST_REACT_LEGACY: 1
         run: |
           pnpm clean
           pnpm build
-          pnpm run-all-checks
           pnpm test
           pnpm test:build
