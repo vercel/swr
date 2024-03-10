@@ -12,21 +12,19 @@ export default function api(req, res) {
       setTimeout(() => {
         res.json({ msg: 'not found' })
       })
-
-      return
+    } else {
+      // a slow endpoint for getting repo data
+      fetch(`https://api.github.com/repos/${req.query.id}`)
+        .then(res => res.json())
+        .then(data => {
+          setTimeout(() => {
+            res.json(data)
+          }, 2000)
+        })
     }
-    // a slow endpoint for getting repo data
-    fetch(`https://api.github.com/repos/${req.query.id}`)
-      .then(res => res.json())
-      .then(data => {
-        setTimeout(() => {
-          res.json(data)
-        }, 2000)
-      })
-
-    return
+  } else {
+    setTimeout(() => {
+      res.json(projects)
+    }, 2000)
   }
-  setTimeout(() => {
-    res.json(projects)
-  }, 2000)
 }
