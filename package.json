@@ -14,6 +14,7 @@
   "main": "./dist/core/index.js",
   "module": "./dist/core/index.mjs",
   "types": "./dist/core/index.d.ts",
+  "sideEffects": false,
   "exports": {
     "./package.json": "./package.json",
     ".": {
@@ -133,7 +134,7 @@
     "@types/use-sync-external-store": "^0.0.3",
     "@typescript-eslint/eslint-plugin": "5.59.8",
     "@typescript-eslint/parser": "5.59.8",
-    "bunchee": "^4.3.4",
+    "bunchee": "^4.4.8",
     "eslint": "8.42.0",
     "eslint-config-prettier": "8.8.0",
     "eslint-plugin-jest-dom": "5.1.0",
@@ -166,7 +167,6 @@
     "trailingComma": "none"
   },
   "dependencies": {
-    "client-only": "^0.0.1",
     "use-sync-external-store": "^1.2.0"
   }
 }
