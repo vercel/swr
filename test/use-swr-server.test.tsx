@@ -9,52 +9,56 @@ jest.mock('react', () => jest.requireActual('react'))
 
 async function withServer(runner: () => Promise<void>) {
   await jest.isolateModulesAsync(async () => {
-    process.env.__SWR_TEST_SERVER = '1'
-
-    try {
-      await runner()
-    } finally {
-      process.env.__SWR_TEST_SERVER = ''
-    }
+    await runner()
   })
 }
 
 describe('useSWR - SSR', () => {
-  ;(process.env.__SWR_TEST_BUILD ? it.skip : it)(
-    'should enable the IS_SERVER flag - suspense on server without fallback',
-    async () => {
-      await withServer(async () => {
-        // eslint-disable-next-line @typescript-eslint/no-empty-function
-        jest.spyOn(console, 'error').mockImplementation(() => {})
+  beforeAll(() => {
+    // Store the original window object
+    // @ts-expect-error
+    global.window.Deno = '1'
 
-        const useSWR = (await import('swr')).default
+    // Mock window to undefined
+    // delete global.window;
+  })
 
-        const key = Math.random().toString()
+  afterAll(() => {
+    // Restore window back to its original value
+    // @ts-expect-error
+    delete global.window.Deno
+  })
+  it('should enable the IS_SERVER flag - suspense on server without fallback', async () => {
+    await withServer(async () => {
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      jest.spyOn(console, 'error').mockImplementation(() => {})
+      const useSWR = (await import('swr')).default
 
-        const Page = () => {
-          const { data } = useSWR(key, () => 'SWR', {
-            suspense: true
-          })
-          return <div>{data || 'empty'}</div>
-        }
+      const key = Math.random().toString()
 
-        render(
-          <ErrorBoundary
-            fallbackRender={({ error }) => {
-              console.error(error)
-              return <div>{error.message}</div>
-            }}
-          >
-            <Suspense>
-              <Page />
-            </Suspense>
-          </ErrorBoundary>
-        )
+      const Page = () => {
+        const { data } = useSWR(key, () => 'SWR', {
+          suspense: true
+        })
+        return <div>{data || 'empty'}</div>
+      }
 
-        await screen.findByText(
-          'Fallback data is required when using Suspense in SSR.'
-        )
-      })
-    }
-  )
+      render(
+        <ErrorBoundary
+          fallbackRender={({ error }) => {
+            console.error(error)
+            return <div>{error.message}</div>
+          }}
+        >
+          <Suspense>
+            <Page />
+          </Suspense>
+        </ErrorBoundary>
+      )
+
+      await screen.findByText(
+        'Fallback data is required when using Suspense in SSR.'
+      )
+    })
+  })
 })

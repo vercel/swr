@@ -62,7 +62,12 @@ export const hydrateWithConfig = (
   const TestSWRConfig = ({ children }: { children: React.ReactNode }) => (
     <SWRConfig value={{ provider, ...config }}>{children}</SWRConfig>
   )
-  return render(element, { container, wrapper: TestSWRConfig, hydrate: true })
+  return render(element, {
+    container,
+    wrapper: TestSWRConfig,
+    hydrate: true,
+    legacyRoot: process.env.TEST_REACT_LEGACY === '1'
+  })
 }
 
 export const mockVisibilityHidden = () => {
