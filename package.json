@@ -12,7 +12,7 @@
   ],
   "packageManager": "pnpm@8.4.0",
   "main": "./dist/core/index.js",
-  "module": "./dist/core/index.esm.js",
+  "module": "./dist/core/index.mjs",
   "types": "./dist/core/index.d.ts",
   "sideEffects": false,
   "exports": {
@@ -23,7 +23,6 @@
         "types": "./dist/core/index.d.mts",
         "default": "./dist/core/index.mjs"
       },
-      "module": "./dist/core/index.esm.js",
       "require": {
         "types": "./dist/core/index.d.ts",
         "default": "./dist/core/index.js"
@@ -35,7 +34,6 @@
         "types": "./dist/infinite/index.d.mts",
         "default": "./dist/infinite/index.mjs"
       },
-      "module": "./dist/infinite/index.esm.js",
       "require": {
         "types": "./dist/infinite/index.d.ts",
         "default": "./dist/infinite/index.js"
@@ -46,7 +44,6 @@
         "types": "./dist/immutable/index.d.mts",
         "default": "./dist/immutable/index.mjs"
       },
-      "module": "./dist/immutable/index.esm.js",
       "require": {
         "types": "./dist/immutable/index.d.ts",
         "default": "./dist/immutable/index.js"
@@ -57,7 +54,6 @@
         "types": "./dist/subscription/index.d.mts",
         "default": "./dist/subscription/index.mjs"
       },
-      "module": "./dist/subscription/index.esm.js",
       "require": {
         "types": "./dist/subscription/index.d.ts",
         "default": "./dist/subscription/index.js"
@@ -68,7 +64,6 @@
         "types": "./dist/mutation/index.d.mts",
         "default": "./dist/mutation/index.mjs"
       },
-      "module": "./dist/mutation/index.esm.js",
       "require": {
         "types": "./dist/mutation/index.d.ts",
         "default": "./dist/mutation/index.js"
@@ -80,7 +75,6 @@
         "types": "./dist/_internal/index.d.mts",
         "default": "./dist/_internal/index.mjs"
       },
-      "module": "./dist/_internal/index.esm.js",
       "require": {
         "types": "./dist/_internal/index.d.ts",
         "default": "./dist/_internal/index.js"
