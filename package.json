@@ -14,6 +14,7 @@
   "main": "./dist/core/index.js",
   "module": "./dist/core/index.esm.js",
   "types": "./dist/core/index.d.ts",
+  "sideEffects": false,
   "exports": {
     "./package.json": "./package.json",
     ".": {
