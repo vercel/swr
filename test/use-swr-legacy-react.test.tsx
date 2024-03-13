@@ -7,13 +7,7 @@ jest.mock('react', () => jest.requireActual('react'))
 
 async function withLegacyReact(runner: () => Promise<void>) {
   await jest.isolateModulesAsync(async () => {
-    process.env.__SWR_TEST_REACT_LEGACY = '1'
-
-    try {
-      await runner()
-    } finally {
-      process.env.__SWR_TEST_REACT_LEGACY = ''
-    }
+    await runner()
   })
 }
 

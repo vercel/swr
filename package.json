@@ -12,8 +12,9 @@
   ],
   "packageManager": "pnpm@8.4.0",
   "main": "./dist/core/index.js",
-  "module": "./dist/core/index.esm.js",
+  "module": "./dist/core/index.mjs",
   "types": "./dist/core/index.d.ts",
+  "sideEffects": false,
   "exports": {
     "./package.json": "./package.json",
     ".": {
@@ -22,7 +23,6 @@
         "types": "./dist/core/index.d.mts",
         "default": "./dist/core/index.mjs"
       },
-      "module": "./dist/core/index.esm.js",
       "require": {
         "types": "./dist/core/index.d.ts",
         "default": "./dist/core/index.js"
@@ -34,7 +34,6 @@
         "types": "./dist/infinite/index.d.mts",
         "default": "./dist/infinite/index.mjs"
       },
-      "module": "./dist/infinite/index.esm.js",
       "require": {
         "types": "./dist/infinite/index.d.ts",
         "default": "./dist/infinite/index.js"
@@ -45,7 +44,6 @@
         "types": "./dist/immutable/index.d.mts",
         "default": "./dist/immutable/index.mjs"
       },
-      "module": "./dist/immutable/index.esm.js",
       "require": {
         "types": "./dist/immutable/index.d.ts",
         "default": "./dist/immutable/index.js"
@@ -56,7 +54,6 @@
         "types": "./dist/subscription/index.d.mts",
         "default": "./dist/subscription/index.mjs"
       },
-      "module": "./dist/subscription/index.esm.js",
       "require": {
         "types": "./dist/subscription/index.d.ts",
         "default": "./dist/subscription/index.js"
@@ -67,7 +64,6 @@
         "types": "./dist/mutation/index.d.mts",
         "default": "./dist/mutation/index.mjs"
       },
-      "module": "./dist/mutation/index.esm.js",
       "require": {
         "types": "./dist/mutation/index.d.ts",
         "default": "./dist/mutation/index.js"
@@ -79,7 +75,6 @@
         "types": "./dist/_internal/index.d.mts",
         "default": "./dist/_internal/index.mjs"
       },
-      "module": "./dist/_internal/index.esm.js",
       "require": {
         "types": "./dist/_internal/index.d.ts",
         "default": "./dist/_internal/index.js"
@@ -103,7 +98,7 @@
     "csb:build": "pnpm build",
     "clean": "rimraf ./dist && rimraf playwright-report test-result",
     "watch": "pnpm -r run watch",
-    "build": "__SWR_TEST_REACT_LEGACY='' __SWR_TEST_SERVER='' bunchee --env=__SWR_TEST_REACT_LEGACY,__SWR_TEST_SERVER",
+    "build": "bunchee",
     "build:e2e": "pnpm next build e2e/site",
     "attw": "attw --pack",
     "types:check": "tsc --noEmit",
@@ -115,8 +110,7 @@
     "coverage": "jest --coverage",
     "test-typing": "tsc --noEmit -p test/type/tsconfig.json && tsc --noEmit -p test/tsconfig.json",
     "test": "jest",
-    "test-canary": "REACT_CANARY=1 jest",
-    "test:build": "__SWR_TEST_BUILD=1 jest --config jest.config.build.js",
+    "test:build": "jest --config jest.config.build.js",
     "test:e2e": "playwright test",
     "run-all-checks": "pnpm types:check && pnpm lint && pnpm test-typing"
   },
@@ -140,7 +134,7 @@
     "@types/use-sync-external-store": "^0.0.3",
     "@typescript-eslint/eslint-plugin": "5.59.8",
     "@typescript-eslint/parser": "5.59.8",
-    "bunchee": "^4.3.4",
+    "bunchee": "^4.4.8",
     "eslint": "8.42.0",
     "eslint-config-prettier": "8.8.0",
     "eslint-plugin-jest-dom": "5.1.0",
@@ -173,7 +167,6 @@
     "trailingComma": "none"
   },
   "dependencies": {
-    "client-only": "^0.0.1",
     "use-sync-external-store": "^1.2.0"
   }
 }
