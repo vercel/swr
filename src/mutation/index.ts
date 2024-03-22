@@ -81,7 +81,7 @@ const mutation = (<Data, Error>() =>
             startTransition(() =>
               setState({ data, isMutating: false, error: undefined })
             )
-            options.onSuccess?.(data as Data, serializedKey, options)
+            options.onSuccess?.(data as Data, serializedKey, options, arg)
           }
           return data
         } catch (error) {
@@ -91,7 +91,7 @@ const mutation = (<Data, Error>() =>
             startTransition(() =>
               setState({ error: error as Error, isMutating: false })
             )
-            options.onError?.(error as Error, serializedKey, options)
+            options.onError?.(error as Error, serializedKey, options, arg)
             if (options.throwOnError) {
               throw error as Error
             }
