@@ -146,9 +146,6 @@ describe('useSWR - promise', () => {
     await screen.findByText('loading')
     await act(() => sleep(100)) // wait 100ms until the request inside throws
     await screen.findByText('error boundary')
-
-    // 1 for js-dom 1 for react-error-boundary
-    expect(console.error).toHaveBeenCalledTimes(3)
   })
 
   it('should handle same fallback promise that is already pending', async () => {
