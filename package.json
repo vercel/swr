@@ -97,7 +97,7 @@
     "csb:install": "corepack enable && corepack pnpm i",
     "csb:build": "pnpm build",
     "clean": "rimraf ./dist && rimraf playwright-report test-result",
-    "watch": "pnpm -r run watch",
+    "watch": "bunchee -w",
     "build": "bunchee",
     "build:e2e": "pnpm next build e2e/site",
     "attw": "attw --pack",
