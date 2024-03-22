@@ -46,6 +46,7 @@ export type SWRMutationConfiguration<
       SWRMutationConfiguration<Data, Error, SWRMutationKey, ExtraArg, SWRData>
     >
   ) => void
+  throwOnError?: boolean
 }
 
 type RemoveUndefined<T> = T extends undefined ? never : T
