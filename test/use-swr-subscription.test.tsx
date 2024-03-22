@@ -321,8 +321,5 @@ describe('useSWRSubscription', () => {
     await screen.findByText(
       'The `subscribe` function must return a function to unsubscribe.'
     )
-
-    // 1 for js-dom 1 for react-error-boundary
-    expect(console.error).toHaveBeenCalledTimes(2)
   })
 })

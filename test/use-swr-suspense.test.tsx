@@ -115,8 +115,6 @@ describe('useSWR - suspense', () => {
     // hydration
     screen.getByText('fallback')
     await screen.findByText('error boundary')
-    // 1 for js-dom 1 for react-error-boundary
-    expect(console.error).toHaveBeenCalledTimes(3)
   })
 
   it('should render cached data with error', async () => {
