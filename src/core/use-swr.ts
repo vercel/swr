@@ -581,9 +581,15 @@ export const useSWRHandler = <Data = any, Error = any>(
 
     const softRevalidate = revalidate.bind(UNDEFINED, WITH_DEDUPE)
 
+    let nextFocusRevalidatedAt = 0
+
+    if (getConfig().revalidateOnFocus) {
+      const initNow = Date.now()
+      nextFocusRevalidatedAt = initNow + getConfig().focusThrottleInterval
+    }
+
     // Expose revalidators to global event listeners. So we can trigger
     // revalidation from the outside.
-    let nextFocusRevalidatedAt = 0
     const onRevalidate = (
       type: RevalidateEvent,
       opts: {
