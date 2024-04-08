@@ -383,11 +383,11 @@ export interface ScopedMutator {
    * @typeParam Data - The type of the data related to the key
    * @typeParam MutationData - The type of the data returned by the mutator
    */
-  <Data = any, T = Data>(
+  <Data = any, MutationData = Data>(
     key: Arguments,
-    data?: T | Promise<T> | MutatorCallback<T>,
-    opts?: boolean | MutatorOptions<Data, T>
-  ): Promise<T | undefined>
+    data?: MutationData | Promise<MutationData> | MutatorCallback<MutationData>,
+    opts?: boolean | MutatorOptions<Data, MutationData>
+  ): Promise<MutationData | undefined>
 }
 
 /**
