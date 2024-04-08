@@ -37,7 +37,7 @@ export type BlockingData<
   ? false
   : Options extends { suspense: true }
   ? true
-  : Options extends { fallbackData: Data }
+  : Options extends { fallbackData: Data | Promise<Data> }
   ? true
   : false
 
@@ -134,8 +134,9 @@ export interface PublicConfiguration<
   suspense?: boolean
   /**
    * initial data to be returned (note: ***This is per-hook***)
+   * @link https://swr.vercel.app/docs/with-nextjs
    */
-  fallbackData?: Data
+  fallbackData?: Data | Promise<Data>
   /**
    * the fetcher function
    */
@@ -245,8 +246,33 @@ export interface SWRHook {
       | SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>>
       | undefined
   >(
+    key: SWRKey
+  ): SWRResponse<Data, Error, SWROptions>
+  <
+    Data = any,
+    Error = any,
+    SWRKey extends Key = StrictKey,
+    SWROptions extends
+      | SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>>
+      | undefined =
+      | SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>>
+      | undefined
+  >(
     key: SWRKey,
-    config: SWROptions
+    fetcher: Fetcher<Data, SWRKey> | null
+  ): SWRResponse<Data, Error, SWROptions>
+  <
+    Data = any,
+    Error = any,
+    SWRKey extends Key = StrictKey,
+    SWROptions extends
+      | SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>>
+      | undefined =
+      | SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>>
+      | undefined
+  >(
+    key: SWRKey,
+    config: SWRConfigurationWithOptionalFallback<SWROptions>
   ): SWRResponse<Data, Error, SWROptions>
   <
     Data = any,
@@ -260,7 +286,7 @@ export interface SWRHook {
   >(
     key: SWRKey,
     fetcher: Fetcher<Data, SWRKey> | null,
-    config: SWROptions
+    config: SWRConfigurationWithOptionalFallback<SWROptions>
   ): SWRResponse<Data, Error, SWROptions>
   <Data = any, Error = any>(key: Key): SWRResponse<Data, Error>
   <
@@ -270,8 +296,27 @@ export interface SWRHook {
       | SWRConfiguration<Data, Error, BareFetcher<Data>>
       | undefined = SWRConfiguration<Data, Error, BareFetcher<Data>> | undefined
   >(
+    key: Key
+  ): SWRResponse<Data, Error, SWROptions>
+  <
+    Data = any,
+    Error = any,
+    SWROptions extends
+      | SWRConfiguration<Data, Error, BareFetcher<Data>>
+      | undefined = SWRConfiguration<Data, Error, BareFetcher<Data>> | undefined
+  >(
     key: Key,
-    config: SWROptions
+    fetcher: BareFetcher<Data> | null
+  ): SWRResponse<Data, Error, SWROptions>
+  <
+    Data = any,
+    Error = any,
+    SWROptions extends
+      | SWRConfiguration<Data, Error, BareFetcher<Data>>
+      | undefined = SWRConfiguration<Data, Error, BareFetcher<Data>> | undefined
+  >(
+    key: Key,
+    config: SWRConfigurationWithOptionalFallback<SWROptions>
   ): SWRResponse<Data, Error, SWROptions>
   <
     Data = any,
@@ -282,7 +327,7 @@ export interface SWRHook {
   >(
     key: Key,
     fetcher: BareFetcher<Data> | null,
-    config: SWROptions
+    config: SWRConfigurationWithOptionalFallback<SWROptions>
   ): SWRResponse<Data, Error, SWROptions>
 }
 
@@ -417,6 +462,13 @@ export type IsLoadingResponse<
 > = Options extends { suspense: true } ? false : boolean
 
 type SWROptions<Data> = SWRConfiguration<Data, Error, Fetcher<Data, Key>>
+type SWRConfigurationWithOptionalFallback<Options> =
+  // If `Options` has `fallbackData`, this turns it to optional instead.
+  Options extends SWRConfiguration &
+    Required<Pick<SWRConfiguration, 'fallbackData'>>
+    ? Omit<Options, 'fallbackData'> & Pick<Partial<Options>, 'fallbackData'>
+    : Options
+
 export interface SWRResponse<Data = any, Error = any, Config = any> {
   /**
    * The returned data of the fetcher function.

@@ -1,10 +1,5 @@
 /// <reference types="react/experimental" />
-import ReactExports, {
-  useCallback,
-  useRef,
-  useDebugValue,
-  useMemo
-} from 'react'
+import React, { useCallback, useRef, useDebugValue, useMemo } from 'react'
 import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js'
 
 import {
@@ -26,7 +21,8 @@ import {
   getTimestamp,
   internalMutate,
   revalidateEvents,
-  mergeObjects
+  mergeObjects,
+  isPromiseLike
 } from '../_internal'
 import type {
   State,
@@ -44,33 +40,38 @@ import type {
 } from '../_internal'
 
 const use =
-  ReactExports.use ||
-  (<T>(
-    promise: Promise<T> & {
+  React.use ||
+  // This extra generic is to avoid TypeScript mixing up the generic and JSX sytax
+  // and emitting an error.
+  // We assume that this is only for the `use(thenable)` case, not `use(context)`.
+  // https://github.com/facebook/react/blob/aed00dacfb79d17c53218404c52b1c7aa59c4a89/packages/react-server/src/ReactFizzThenable.js#L45
+  (<T, _>(
+    thenable: Promise<T> & {
       status?: 'pending' | 'fulfilled' | 'rejected'
       value?: T
       reason?: unknown
     }
   ): T => {
-    if (promise.status === 'pending') {
-      throw promise
-    } else if (promise.status === 'fulfilled') {
-      return promise.value as T
-    } else if (promise.status === 'rejected') {
-      throw promise.reason
-    } else {
-      promise.status = 'pending'
-      promise.then(
-        v => {
-          promise.status = 'fulfilled'
-          promise.value = v
-        },
-        e => {
-          promise.status = 'rejected'
-          promise.reason = e
-        }
-      )
-      throw promise
+    switch (thenable.status) {
+      case 'pending':
+        throw thenable
+      case 'fulfilled':
+        return thenable.value as T
+      case 'rejected':
+        throw thenable.reason
+      default:
+        thenable.status = 'pending'
+        thenable.then(
+          v => {
+            thenable.status = 'fulfilled'
+            thenable.value = v
+          },
+          e => {
+            thenable.status = 'rejected'
+            thenable.reason = e
+          }
+        )
+        throw thenable
     }
   })
 
@@ -140,9 +141,13 @@ export const useSWRHandler = <Data = any, Error = any>(
     >(cache, key)
 
   const stateDependencies = useRef<StateDependencies>({}).current
-  const fallback = isUndefined(fallbackData)
-    ? config.fallback[key]
-    : fallbackData
+
+  // Resolve the fallback data from either the inline option, or the global provider.
+  // If it's a promise, we simply let React suspend and resolve it for us.
+  let fallback = isUndefined(fallbackData) ? config.fallback[key] : fallbackData
+  if (fallback && isPromiseLike(fallback)) {
+    fallback = use(fallback)
+  }
 
   const isEqual = (prev: State<Data, any>, current: State<Data, any>) => {
     for (const _ in stateDependencies) {
@@ -174,8 +179,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       // If it's paused, we skip revalidation.
       if (getConfig().isPaused()) return false
       if (suspense) return false
-      if (!isUndefined(revalidateIfStale)) return revalidateIfStale
-      return true
+      return revalidateIfStale !== false
     })()
 
     // Get the cache and merge it with expected states.
@@ -495,7 +499,11 @@ export const useSWRHandler = <Data = any, Error = any>(
               (isFunction(shouldRetryOnError) &&
                 shouldRetryOnError(err as Error))
             ) {
-              if (!getConfig().revalidateOnFocus || !getConfig().revalidateOnReconnect || isActive()) {
+              if (
+                !getConfig().revalidateOnFocus ||
+                !getConfig().revalidateOnReconnect ||
+                isActive()
+              ) {
                 // If it's inactive, stop. It will auto-revalidate when
                 // refocusing or reconnecting.
                 // When retrying, deduplication is always enabled.
@@ -688,10 +696,10 @@ export const useSWRHandler = <Data = any, Error = any>(
   // the suspense boundary.
   if (suspense && isUndefined(data) && key) {
     // SWR should throw when trying to use Suspense on the server with React 18,
-    // without providing any initial data. See:
+    // without providing any fallback data. This causes hydration errors. See:
     // https://github.com/vercel/swr/issues/1832
     if (!IS_REACT_LEGACY && IS_SERVER) {
-      throw new Error('Fallback data is required when using suspense in SSR.')
+      throw new Error('Fallback data is required when using Suspense in SSR.')
     }
 
     // Always update fetcher and config refs even with the Suspense mode.

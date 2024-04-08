@@ -1,0 +1,28 @@
+name: Test React 17
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - v*
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install
+        uses: ./.github/workflows/install
+
+      - name: Test
+        env:
+          TEST_REACT_LEGACY: 1
+        run: |
+          pnpm clean
+          pnpm build
+          pnpm test
+          pnpm test:build
