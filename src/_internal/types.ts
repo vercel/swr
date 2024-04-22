@@ -377,7 +377,7 @@ export type MutatorConfig = {
 }
 
 export type Broadcaster<Data = any, Error = any> = (
-  cache: Cache<Data>,
+  cache: Cache,
   key: string,
   data: Data,
   error?: Error,
@@ -509,10 +509,10 @@ export type RevalidateCallback = <K extends RevalidateEvent>(
   opts?: any
 ) => RevalidateCallbackReturnType[K]
 
-export interface Cache<Data = any> {
+export interface Cache {
   keys(): IterableIterator<string>
-  get(key: string): State<Data> | undefined
-  set(key: string, value: State<Data>): void
+  get<T = any>(key: string): State<T> | undefined
+  set<T = any>(key: string, value: State<T>): void
   delete(key: string): void
 }
 
