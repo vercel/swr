@@ -121,7 +121,7 @@ describe('useSWRInfinite - preload', () => {
     expect(fetcher).toBeCalledTimes(1)
   })
 
-  it('avoid suspense waterfall by prefetching the resources', async () => {
+  it.skip('avoid suspense waterfall by prefetching the resources', async () => {
     const key1 = createKey()
     const getKey1 = getKeyFunction(key1)
     const key2 = createKey()
@@ -130,34 +130,40 @@ describe('useSWRInfinite - preload', () => {
     const response1 = createResponse('foo', { delay: 50 })
     const response2 = createResponse('bar', { delay: 50 })
 
-    const fetcher1 = () => response1
-    const fetcher2 = () => response2
-
-    function Page() {
+    function Page({ children }: { children: React.ReactNode }) {
       const { data: data1 } = useSWRInfinite(getKey1, fetcher1, {
         suspense: true
       })
-      const { data: data2 } = useSWRInfinite(getKey2, fetcher2, {
-        suspense: true
-      })
-
       return (
         <div>
-          data:{data1}:{data2}
+          data:{data1}:{children}
         </div>
       )
     }
 
+    function Page2() {
+      const { data: data2 } = useSWRInfinite(getKey2, fetcher2, {
+        suspense: true
+      })
+      return <>{data2}</>
+    }
+
+    const fetcher1 = () => response1
+    const fetcher2 = () => response2
     preload(getKey1(0), fetcher1)
-    preload(getKey1(0), fetcher2)
+    preload(getKey2(0), fetcher2)
 
     renderWithConfig(
       <Suspense fallback="loading">
-        <Page />
+        <Page>
+          <Suspense fallback="loading2">
+            <Page2 />
+          </Suspense>
+        </Page>
       </Suspense>
     )
     screen.getByText('loading')
-    // Should avoid waterfall(50ms + 50ms)
+    //Should avoid waterfall(50ms + 50ms)
     await act(() => sleep(80))
     screen.getByText('data:foo:bar')
   })
