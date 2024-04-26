@@ -100,7 +100,7 @@
     "watch": "bunchee -w",
     "build": "bunchee",
     "build:e2e": "pnpm next build e2e/site",
-    "attw": "attw --pack",
+    "attw": "attw $(npm pack)",
     "types:check": "tsc --noEmit",
     "prepublishOnly": "pnpm clean && pnpm build",
     "publish-beta": "pnpm publish --tag beta",
