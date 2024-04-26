@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install
         uses: ./.github/workflows/install
@@ -32,7 +32,7 @@ jobs:
       image: mcr.microsoft.com/playwright:v1.34.3-focal
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install
         uses: ./.github/workflows/install
@@ -57,7 +57,7 @@ jobs:
       id-token: write
     steps:
       - name: Check out
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install
         uses: ./.github/workflows/install
