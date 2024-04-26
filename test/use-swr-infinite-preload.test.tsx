@@ -130,22 +130,18 @@ describe('useSWRInfinite - preload', () => {
     const response1 = createResponse('foo', { delay: 50 })
     const response2 = createResponse('bar', { delay: 50 })
 
-    function Page({ children }: { children: React.ReactNode }) {
+    function Page() {
       const { data: data1 } = useSWRInfinite(getKey1, fetcher1, {
+        suspense: true
+      })
+      const { data: data2 } = useSWRInfinite(getKey2, fetcher2, {
         suspense: true
       })
       return (
         <div>
-          data:{data1}:{children}
+          data:{data1}:{data2}
         </div>
       )
-    }
-
-    function Page2() {
-      const { data: data2 } = useSWRInfinite(getKey2, fetcher2, {
-        suspense: true
-      })
-      return <>{data2}</>
     }
 
     const fetcher1 = () => response1
@@ -155,11 +151,7 @@ describe('useSWRInfinite - preload', () => {
 
     renderWithConfig(
       <Suspense fallback="loading">
-        <Page>
-          <Suspense fallback="loading2">
-            <Page2 />
-          </Suspense>
-        </Page>
+        <Page />
       </Suspense>
     )
     screen.getByText('loading')
