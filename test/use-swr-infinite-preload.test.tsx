@@ -130,6 +130,8 @@ describe('useSWRInfinite - preload', () => {
     const response1 = createResponse('foo', { delay: 50 })
     const response2 = createResponse('bar', { delay: 50 })
 
+    const fetcher1 = () => response1
+    const fetcher2 = () => response2
     function Page() {
       const { data: data1 } = useSWRInfinite(getKey1, fetcher1, {
         suspense: true
@@ -143,9 +145,6 @@ describe('useSWRInfinite - preload', () => {
         </div>
       )
     }
-
-    const fetcher1 = () => response1
-    const fetcher2 = () => response2
     preload(getKey1(0), fetcher1)
     preload(getKey2(0), fetcher2)
 
