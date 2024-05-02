@@ -1861,7 +1861,7 @@ describe('useSWRInfinite', () => {
       return (
         <div
           onClick={() => {
-            boundMutate(undefined, {
+            boundMutate(data, {
               // only revalidate 'apple' & 'pineapple' (page=2)
               revalidate: (d, [_, i]: [string, number]) => {
                 return d === 'apple' || i === 2
