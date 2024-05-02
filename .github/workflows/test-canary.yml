@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install
         uses: ./.github/workflows/install
@@ -19,8 +19,6 @@ jobs:
         run: corepack pnpm upgrade react@canary react-dom@canary use-sync-external-store@canary
 
       - name: Lint and test
-        env:
-          TEST_REACT_LEGACY: 1
         run: |
           pnpm clean
           pnpm build

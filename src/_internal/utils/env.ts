@@ -3,7 +3,7 @@ import { hasRequestAnimationFrame, isWindowDefined } from './helper'
 
 export const IS_REACT_LEGACY = !React.useId
 
-export const IS_SERVER = !isWindowDefined || 'Deno' in window
+export const IS_SERVER = !isWindowDefined || 'Deno' in globalThis
 
 // Polyfill requestAnimationFrame
 export const rAF = (
