@@ -358,5 +358,6 @@ export {
   SWRInfiniteHook,
   SWRInfiniteKeyLoader,
   SWRInfiniteFetcher,
-  SWRInfiniteCompareFn
+  SWRInfiniteCompareFn,
+  SWRInfiniteMutatorOptions
 }

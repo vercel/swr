@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install
         uses: ./.github/workflows/install
@@ -23,6 +23,7 @@ jobs:
           pnpm clean
           pnpm build
           pnpm run-all-checks
+          npm pack
           pnpm attw
           pnpm test
           pnpm test:build
@@ -32,7 +33,7 @@ jobs:
       image: mcr.microsoft.com/playwright:v1.34.3-focal
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install
         uses: ./.github/workflows/install
@@ -45,7 +46,7 @@ jobs:
           pnpm test:e2e
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: playwright-report
           path: playwright-report
@@ -57,7 +58,7 @@ jobs:
       id-token: write
     steps:
       - name: Check out
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install
         uses: ./.github/workflows/install
