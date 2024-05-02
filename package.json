@@ -100,7 +100,7 @@
     "watch": "bunchee -w",
     "build": "bunchee",
     "build:e2e": "pnpm next build e2e/site",
-    "attw": "attw --pack",
+    "attw": "attw --pack .",
     "types:check": "tsc --noEmit",
     "prepublishOnly": "pnpm clean && pnpm build",
     "publish-beta": "pnpm publish --tag beta",
@@ -121,7 +121,7 @@
     ]
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "^0.7.0",
+    "@arethetypeswrong/cli": "^0.15.3",
     "@playwright/test": "^1.34.3",
     "@swc/core": "^1.3.62",
     "@swc/jest": "0.2.26",

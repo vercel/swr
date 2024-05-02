@@ -17,10 +17,6 @@ on:
           - minor
           - major
 
-    secrets:
-      RELEASE_BOT_GITHUB_TOKEN:
-        required: true
-
 name: Trigger Release
 
 env:
@@ -34,36 +30,13 @@ jobs:
 
     environment: release-${{ github.event.inputs.releaseType }}-${{ github.event.inputs.semverType }}
     steps:
-      - name: Setup node
-        uses: actions/setup-node@v3
-        if: ${{ steps.docs-change.outputs.docsChange == 'nope' }}
-        with:
-          node-version: 18
-          check-latest: true
-
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 10
           token: ${{ secrets.RELEASE_BOT_GITHUB_TOKEN }}
-
-      - run: npm i -g pnpm@${PNPM_VERSION}
-
-      - id: get-store-path
-        run: echo STORE_PATH=$(pnpm store path) >> $GITHUB_OUTPUT
-
-      - uses: actions/cache@v3
-        timeout-minutes: 5
-        id: cache-pnpm-store
-        with:
-          path: ${{ steps.get-store-path.outputs.STORE_PATH }}
-          key: pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            pnpm-store-
-            pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
-
-      - run: pnpm install
-
+      - name: Install
+        uses: ./.github/workflows/install
       - run: |
           pnpm clean
           pnpm build
