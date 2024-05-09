@@ -184,4 +184,23 @@ describe('useSWR - configs', () => {
     expect(config.fallback).toEqual({ a: 2, c: 2 })
     expect(config.use).toEqual([middleware2])
   })
+
+  it('should not occur error when fallback is undefined', async () => {
+    const key = createKey()
+    const fetcher = () => 'data'
+
+    function Page() {
+      const { data } = useSWR(key)
+      return <div>data: {data}</div>
+    }
+
+    renderWithConfig(<Page />, {
+      fetcher,
+      fallback: undefined
+    })
+    // hydration
+    screen.getByText('data:')
+    // mount
+    await screen.findByText('data: data')
+  })
 })
