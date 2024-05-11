@@ -1,5 +1,3 @@
-import 'client-only'
-
 // useSWR
 import useSWR from './use-swr'
 export default useSWR
@@ -27,5 +25,6 @@ export type {
   MutatorOptions,
   Middleware,
   Arguments,
-  State
+  State,
+  ScopedMutator
 } from '../_internal'

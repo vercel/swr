@@ -1,9 +1,12 @@
-name: Test React Canary
+name: Test React 17
 
 on:
-  workflow_dispatch:
-  schedule:
-    - cron: '0 0 * * *'
+  push:
+    branches:
+      - main
+    tags:
+      - v*
+  pull_request:
 
 jobs:
   test:
@@ -15,10 +18,9 @@ jobs:
       - name: Install
         uses: ./.github/workflows/install
 
-      - name: Install Canary
-        run: corepack pnpm upgrade react@canary react-dom@canary use-sync-external-store@canary
-
-      - name: Lint and test
+      - name: Test
+        env:
+          TEST_REACT_LEGACY: 1
         run: |
           pnpm clean
           pnpm build

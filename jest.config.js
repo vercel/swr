@@ -15,7 +15,12 @@ module.exports = {
   transform: {
     '^.+\\.(t|j)sx?$': ['@swc/jest']
   },
-  coveragePathIgnorePatterns: ['/node_modules/', '/dist/', '/test/'],
+  coveragePathIgnorePatterns: [
+    '/node_modules/', 
+    '/dist/', 
+    '/test/',
+    '<rootDir>/src/_internal/utils/env.ts',
+  ],
   coverageReporters: ['text', 'html'],
   reporters: [['github-actions', { silent: false }], 'summary']
 }

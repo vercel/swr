@@ -1,13 +1,14 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
-import fetcher from '../libs/fetch';
+import fetcher from '../libs/fetch'
 
 import useSWR from 'swr'
 
-const isServer = typeof window === 'undefined'
-
-const Repos = () => {
-  const { data } = useSWR('/api/data', fetcher, { suspense: true })
+const Repos = ({ serverData }) => {
+  const { data } = useSWR('/api/data', fetcher, {
+    suspense: true,
+    fallbackData: serverData
+  })
 
   return (
     <>
@@ -22,15 +23,18 @@ const Repos = () => {
   )
 }
 
-export default function Index() {
+export default function Index({ serverData }) {
   return (
     <div style={{ textAlign: 'center' }}>
       <h1>Trending Projects</h1>
-      {!isServer ? (
-        <Suspense fallback={<div>loading...</div>}>
-          <Repos></Repos>
-        </Suspense>
-      ) : null}
+      <Suspense fallback={<div>loading...</div>}>
+        <Repos serverData={serverData}></Repos>
+      </Suspense>
     </div>
   )
+}
+
+export const getServerSideProps = async () => {
+  const data = await fetcher('http://localhost:3000/api/data')
+  return { props: { serverData: data } }
 }

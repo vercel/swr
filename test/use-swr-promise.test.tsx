@@ -2,6 +2,7 @@ import { act, screen } from '@testing-library/react'
 import useSWR, { SWRConfig } from 'swr'
 import { createKey, createResponse, renderWithConfig, sleep } from './utils'
 import { Suspense } from 'react'
+import { ErrorBoundary } from 'react-error-boundary'
 
 describe('useSWR - promise', () => {
   it('should allow passing promises as fallback', async () => {
@@ -109,5 +110,73 @@ describe('useSWR - promise', () => {
     await screen.findByText('data:new data')
 
     expect(firstRender[1]).toEqual('initial data')
+  })
+
+  it('should handle errors with fallback promises', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    jest.spyOn(console, 'error').mockImplementation(() => {})
+
+    const key = createKey()
+
+    function Page() {
+      const { data } = useSWR(key)
+      return <div>data:{data}</div>
+    }
+
+    const fetchDataError = createResponse(new Error('error'), {
+      delay: 100
+    })
+
+    renderWithConfig(
+      <ErrorBoundary fallback={<div>error boundary</div>}>
+        <SWRConfig
+          value={{
+            fallback: {
+              [key]: fetchDataError
+            }
+          }}
+        >
+          <Suspense fallback={<div>loading</div>}>
+            <Page />
+          </Suspense>
+        </SWRConfig>
+      </ErrorBoundary>
+    )
+
+    await screen.findByText('loading')
+    await act(() => sleep(100)) // wait 100ms until the request inside throws
+    await screen.findByText('error boundary')
+  })
+
+  it('should handle same fallback promise that is already pending', async () => {
+    const key = createKey()
+
+    function Comp() {
+      const { data } = useSWR(key)
+      return <>data:{data},</>
+    }
+
+    const fetchDataError = createResponse('value', {
+      delay: 100
+    })
+
+    renderWithConfig(
+      <SWRConfig
+        value={{
+          fallback: {
+            [key]: fetchDataError
+          }
+        }}
+      >
+        <Suspense fallback={<div>loading</div>}>
+          <Comp />
+          <Comp />
+        </Suspense>
+      </SWRConfig>
+    )
+
+    await screen.findByText('loading')
+    await act(() => sleep(100)) // wait 100ms until the request inside resolves
+    await screen.findByText('data:value,data:value,')
   })
 })

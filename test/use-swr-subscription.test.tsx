@@ -3,6 +3,7 @@ import { sleep, renderWithConfig, createKey } from './utils'
 import useSWRSubscription from 'swr/subscription'
 import useSWR from 'swr'
 import { useEffect, useState } from 'react'
+import { ErrorBoundary } from 'react-error-boundary'
 
 describe('useSWRSubscription', () => {
   it('should update the state', async () => {
@@ -117,6 +118,42 @@ describe('useSWRSubscription', () => {
     clearInterval(intervalId)
     await sleep(100)
     screen.getByText(`error:`)
+  })
+
+  it('should support updating keys', async () => {
+    const swrKey = createKey()
+    const subscriptions: string[] = []
+
+    function subscribe(key, { next }) {
+      subscriptions.push(key)
+      next(undefined, key)
+      return () => {}
+    }
+
+    function Page() {
+      const [key, setKey] = useState(undefined)
+      const { data } = useSWRSubscription(key, subscribe, {
+        fallbackData: 'fallback'
+      })
+
+      useEffect(() => {
+        const timeout = setTimeout(() => {
+          setKey(swrKey)
+        }, 100)
+        return () => clearTimeout(timeout)
+      }, [])
+
+      return <div data-testid="data">{'data:' + data}</div>
+    }
+
+    renderWithConfig(<Page />)
+
+    await screen.findByText(`data:fallback`)
+    await act(() => sleep(100))
+    await screen.findByText(`data:` + swrKey)
+
+    // `undefined` should not trigger a subscription.
+    expect(subscriptions).toEqual([swrKey])
   })
 
   it('should deduplicate subscriptions', async () => {
@@ -254,5 +291,35 @@ describe('useSWRSubscription', () => {
     await act(() => sleep(100))
     await screen.findByText(`key: 1`)
     await screen.findByText(`data: 3`)
+  })
+
+  it('should require a dispose function', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    jest.spyOn(console, 'error').mockImplementation(() => {})
+
+    const swrKey = createKey()
+
+    function subscribe() {
+      return 'no-dispose'
+    }
+
+    function Page() {
+      useSWRSubscription(swrKey, subscribe)
+      return null
+    }
+
+    renderWithConfig(
+      <ErrorBoundary
+        fallbackRender={({ error }) => {
+          return <div>{error.message}</div>
+        }}
+      >
+        <Page />
+      </ErrorBoundary>
+    )
+
+    await screen.findByText(
+      'The `subscribe` function must return a function to unsubscribe.'
+    )
   })
 })
