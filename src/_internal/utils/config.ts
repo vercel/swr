@@ -6,11 +6,13 @@ import type {
   ScopedMutator,
   Cache
 } from '../types'
-import { stableHash } from './hash'
+
 import { initCache } from './cache'
 import { preset } from './web-preset'
 import { slowConnection } from './env'
 import { isUndefined, noop, mergeObjects } from './shared'
+
+import { dequal } from 'dequal/lite'
 
 // error retry
 const onErrorRetry = (
@@ -37,8 +39,7 @@ const onErrorRetry = (
   setTimeout(revalidate, timeout, opts)
 }
 
-const compare = (currentData: any, newData: any) =>
-  stableHash(currentData) == stableHash(newData)
+const compare = dequal
 
 // Default cache provider
 const [cache, mutate] = initCache(new Map()) as [Cache<any>, ScopedMutator]
