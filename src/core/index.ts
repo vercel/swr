@@ -25,5 +25,6 @@ export type {
   MutatorOptions,
   Middleware,
   Arguments,
-  State
+  State,
+  ScopedMutator
 } from '../_internal'
