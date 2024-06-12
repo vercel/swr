@@ -5,5 +5,7 @@ import { mergeObjects } from './shared'
 import type { FullConfiguration } from '../types'
 
 export const useSWRConfig = (): FullConfiguration => {
-  return mergeObjects(defaultConfig, useContext(SWRConfigContext))
+  const config = useContext(SWRConfigContext)
+
+  return mergeObjects(defaultConfig, config)
 }

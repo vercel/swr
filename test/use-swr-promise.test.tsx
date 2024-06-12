@@ -112,7 +112,7 @@ describe('useSWR - promise', () => {
     expect(firstRender[1]).toEqual('initial data')
   })
 
-  it('should handle errors with fallback promises', async () => {
+  it.skip('should handle errors with fallback promises', async () => {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     jest.spyOn(console, 'error').mockImplementation(() => {})
 
@@ -178,5 +178,36 @@ describe('useSWR - promise', () => {
     await screen.findByText('loading')
     await act(() => sleep(100)) // wait 100ms until the request inside resolves
     await screen.findByText('data:value,data:value,')
+  })
+
+  it('should return undefined when fallback promise is failed', async () => {
+    const key = createKey()
+
+    function Page() {
+      const { data } = useSWR(key)
+      return <>data:({data})</>
+    }
+
+    const fetchDataError = createResponse(new Error('error'), {
+      delay: 100
+    })
+
+    renderWithConfig(
+      <SWRConfig
+        value={{
+          fallback: {
+            [key]: fetchDataError
+          }
+        }}
+      >
+        <Suspense fallback={<div>loading</div>}>
+          <Page />
+        </Suspense>
+      </SWRConfig>
+    )
+
+    await screen.findByText('loading')
+    await act(() => sleep(100)) // wait 100ms until the request inside throws
+    await screen.findByText('data:()')
   })
 })

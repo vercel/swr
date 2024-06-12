@@ -14,6 +14,7 @@ import { mergeConfigs } from './merge-config'
 import { UNDEFINED, mergeObjects, isFunction } from './shared'
 import { useIsomorphicLayoutEffect } from './env'
 import type { SWRConfiguration, FullConfiguration } from '../types'
+import { isPromise } from 'util/types'
 
 export const SWRConfigContext = createContext<Partial<FullConfiguration>>({})
 
@@ -32,10 +33,20 @@ const SWRConfig: FC<
     [isFunctionalConfig, parentConfig, value]
   )
   // Extend parent context values and middleware.
-  const extendedConfig = useMemo(
-    () => (isFunctionalConfig ? config : mergeConfigs(parentConfig, config)),
-    [isFunctionalConfig, parentConfig, config]
-  )
+  const extendedConfig = useMemo(() => {
+    const normalizedConfig = isFunctionalConfig
+      ? config
+      : mergeConfigs(parentConfig, config)
+    if (normalizedConfig?.fallback) {
+      for (const key in normalizedConfig.fallback) {
+        const fallback = normalizedConfig.fallback[key]
+        if (isPromise(fallback)) {
+          normalizedConfig.fallback[key] = fallback.catch(() => {})
+        }
+      }
+    }
+    return normalizedConfig
+  }, [isFunctionalConfig, parentConfig, config])
 
   // Should not use the inherited provider.
   const provider = config && config.provider

@@ -19,3 +19,5 @@ export const isFunction = <
 export const mergeObjects = (a: any, b?: any) => ({ ...a, ...b })
 export const isPromiseLike = (x: unknown): x is PromiseLike<unknown> =>
   isFunction((x as any).then)
+export const isPromise = (x: unknown): x is Promise<unknown> =>
+  isPromiseLike(x) && isFunction((x as any).catch)
