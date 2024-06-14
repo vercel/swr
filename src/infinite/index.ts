@@ -240,12 +240,13 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
 
     const mutate = useCallback(
       // eslint-disable-next-line func-names
-      function <MutationData = Data[]>(
+      function <T = Data[]>(
         data?:
-          | MutationData
-          | Promise<MutationData | undefined>
-          | MutatorCallback<MutationData>,
-        opts?: boolean | SWRInfiniteMutatorOptions<Data[], MutationData>
+          | undefined
+          | Data[]
+          | Promise<Data[] | undefined>
+          | MutatorCallback<Data[]>,
+        opts?: undefined | boolean | SWRInfiniteMutatorOptions<Data[], T>
       ) {
         // When passing as a boolean, it's explicitly used to disable/enable
         // revalidation.
