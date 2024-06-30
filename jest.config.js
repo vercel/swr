@@ -22,5 +22,7 @@ module.exports = {
     '<rootDir>/src/_internal/utils/env.ts',
   ],
   coverageReporters: ['text', 'html'],
-  reporters: [['github-actions', { silent: false }], 'summary']
+  ...(process.env.CI && {
+    reporters: [['github-actions', { silent: false }], 'summary']
+  }),
 }

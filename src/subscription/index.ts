@@ -4,14 +4,14 @@ import type {
   Middleware,
   SWRConfiguration,
   SWRConfig
-} from '../core'
+} from '../core/core'
 import type {
   SWRSubscriptionOptions,
   SWRSubscription,
   SWRSubscriptionResponse,
   SWRSubscriptionHook
 } from './types'
-import useSWR from '../core'
+import useSWR from '../core/core'
 import {
   withMiddleware,
   serialize,

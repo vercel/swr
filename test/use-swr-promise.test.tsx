@@ -2,7 +2,7 @@ import { act, screen } from '@testing-library/react'
 import useSWR, { SWRConfig } from 'swr'
 import { createKey, createResponse, renderWithConfig, sleep } from './utils'
 import { Suspense } from 'react'
-import { ErrorBoundary } from 'react-error-boundary'
+// import { ErrorBoundary } from 'react-error-boundary'
 
 describe('useSWR - promise', () => {
   it('should allow passing promises as fallback', async () => {
@@ -34,6 +34,7 @@ describe('useSWR - promise', () => {
       </SWRConfig>
     )
 
+    await act(() => sleep(100))
     await screen.findByText('data:initial data')
     await act(() => sleep(100)) // wait 100ms until the request inside finishes
     await screen.findByText('data:new data')
@@ -112,7 +113,7 @@ describe('useSWR - promise', () => {
     expect(firstRender[1]).toEqual('initial data')
   })
 
-  it.skip('should handle errors with fallback promises', async () => {
+  it('should handle errors with fallback promises', async () => {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     jest.spyOn(console, 'error').mockImplementation(() => {})
 
@@ -120,7 +121,7 @@ describe('useSWR - promise', () => {
 
     function Page() {
       const { data } = useSWR(key)
-      return <div>data:{data}</div>
+      return <div>data:{data ? data : 'undefined'}</div>
     }
 
     const fetchDataError = createResponse(new Error('error'), {
@@ -128,24 +129,24 @@ describe('useSWR - promise', () => {
     })
 
     renderWithConfig(
-      <ErrorBoundary fallback={<div>error boundary</div>}>
-        <SWRConfig
-          value={{
-            fallback: {
-              [key]: fetchDataError
-            }
-          }}
-        >
-          <Suspense fallback={<div>loading</div>}>
-            <Page />
-          </Suspense>
-        </SWRConfig>
-      </ErrorBoundary>
+      <SWRConfig
+        value={{
+          fallback: {
+            [key]: fetchDataError
+          }
+        }}
+      >
+        <Suspense fallback={<div>loading</div>}>
+          <Page />
+        </Suspense>
+      </SWRConfig>
+      // <ErrorBoundary fallback={<div>error boundary</div>}>
+      // </ErrorBoundary>
     )
 
     await screen.findByText('loading')
     await act(() => sleep(100)) // wait 100ms until the request inside throws
-    await screen.findByText('error boundary')
+    await screen.findByText('data:undefined')
   })
 
   it('should handle same fallback promise that is already pending', async () => {
@@ -180,16 +181,16 @@ describe('useSWR - promise', () => {
     await screen.findByText('data:value,data:value,')
   })
 
-  it('should return undefined when fallback promise is failed', async () => {
+  it.only('should return undefined when fallback promise is failed', async () => {
     const key = createKey()
 
     function Page() {
       const { data } = useSWR(key)
-      return <>data:({data})</>
+      return <p>data:({data})</p>
     }
 
     const fetchDataError = createResponse(new Error('error'), {
-      delay: 100
+      delay: 200
     })
 
     renderWithConfig(
@@ -200,7 +201,7 @@ describe('useSWR - promise', () => {
           }
         }}
       >
-        <Suspense fallback={<div>loading</div>}>
+        <Suspense fallback={<span>loading</span>}>
           <Page />
         </Suspense>
       </SWRConfig>

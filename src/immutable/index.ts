@@ -1,5 +1,5 @@
-import type { Middleware } from '../core'
-import useSWR from '../core'
+import type { Middleware } from '../core/core'
+import useSWR from '../core/core'
 import { withMiddleware } from '../_internal'
 
 export const immutable: Middleware = useSWRNext => (key, fetcher, config) => {

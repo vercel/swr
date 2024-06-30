@@ -2,8 +2,8 @@
 // hook where `key` and return type are not like the normal `useSWR` types.
 
 import { useRef, useCallback } from 'react'
-import type { SWRConfig } from '../core'
-import useSWR from '../core'
+import type { SWRConfig } from '../core/core'
+import useSWR from '../core/core'
 import {
   isUndefined,
   isFunction,

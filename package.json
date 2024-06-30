@@ -28,7 +28,7 @@
         "default": "./dist/core/index.js"
       }
     },
-    "./infinite": {
+    "./infinite.x": {
       "react-server": "./dist/infinite/react-server.mjs",
       "import": {
         "types": "./dist/infinite/index.d.mts",
@@ -39,7 +39,7 @@
         "default": "./dist/infinite/index.js"
       }
     },
-    "./immutable": {
+    "./immutable.x": {
       "import": {
         "types": "./dist/immutable/index.d.mts",
         "default": "./dist/immutable/index.mjs"
@@ -49,7 +49,7 @@
         "default": "./dist/immutable/index.js"
       }
     },
-    "./subscription": {
+    "./subscription.x": {
       "import": {
         "types": "./dist/subscription/index.d.mts",
         "default": "./dist/subscription/index.mjs"
@@ -59,7 +59,7 @@
         "default": "./dist/subscription/index.js"
       }
     },
-    "./mutation": {
+    "./mutation.x": {
       "import": {
         "types": "./dist/mutation/index.d.mts",
         "default": "./dist/mutation/index.mjs"
@@ -134,7 +134,7 @@
     "@types/use-sync-external-store": "^0.0.3",
     "@typescript-eslint/eslint-plugin": "5.59.8",
     "@typescript-eslint/parser": "5.59.8",
-    "bunchee": "^5.1.1",
+    "bunchee": "^5.2.2",
     "eslint": "8.42.0",
     "eslint-config-prettier": "8.8.0",
     "eslint-plugin-jest-dom": "5.1.0",
@@ -145,7 +145,7 @@
     "jest": "29.7.0",
     "jest-environment-jsdom": "29.7.0",
     "lint-staged": "13.2.2",
-    "next": "14.1.4",
+    "next": "14.2.4",
     "prettier": "2.8.8",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
