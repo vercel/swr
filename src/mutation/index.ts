@@ -33,11 +33,22 @@ const mutation = (<Data, Error>() =>
     // Ditch all mutation results that happened earlier than this timestamp.
     const ditchMutationsUntilRef = useRef(0)
 
-    const [stateRef, stateDependencies, setState] = useStateWithDeps({
-      data: UNDEFINED,
-      error: UNDEFINED,
+    const [stateRef, stateDependencies, setState] = useStateWithDeps<{
+      data: Data | undefined
+      error: Error | undefined
+      isMutating: boolean
+    }>({
+      data: undefined,
+      error: undefined,
       isMutating: false
-    })
+    }) //Modified the initial state setup so that data can be Data | undefined instead of just undefined
+    // allows data to hold both undefined initially and the resolved Data type after the fetcher runs.
+
+    // ({
+    //   data: UNDEFINED,
+    //   error: UNDEFINED,
+    //   isMutating: false
+    // })
     const currentState = stateRef.current
 
     const trigger = useCallback(
