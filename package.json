@@ -167,6 +167,7 @@
     "trailingComma": "none"
   },
   "dependencies": {
+    "@edge-runtime/jest-environment": "^3.0.4",
     "dequal": "^2.0.3",
     "use-sync-external-store": "^1.2.0"
   }
