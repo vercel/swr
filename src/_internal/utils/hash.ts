@@ -6,6 +6,9 @@ import { OBJECT, isUndefined } from './shared'
 // complexity is almost O(1).
 const table = new WeakMap<object, number | string>()
 
+const isObjectType = (value: any, type: string) =>
+  OBJECT.prototype.toString.call(value) === `[object ${type}]`
+
 // counter of the key
 let counter = 0
 
@@ -19,10 +22,9 @@ let counter = 0
 // parsable.
 export const stableHash = (arg: any): string => {
   const type = typeof arg
-  const objectTypeName = OBJECT.prototype.toString.call(arg).slice(8, -1)
-  const isDate = objectTypeName === 'Date'
-  const isRegex = objectTypeName === 'RegExp'
-  const isPlainObject = objectTypeName === 'Object'
+  const isDate = isObjectType(arg, 'Date')
+  const isRegex = isObjectType(arg, 'RegExp')
+  const isPlainObject = isObjectType(arg, 'Object')
   let result: any
   let index: any
 
