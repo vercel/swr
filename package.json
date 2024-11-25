@@ -121,6 +121,7 @@
     ]
   },
   "devDependencies": {
+    "@edge-runtime/jest-environment": "^3.0.4",
     "@arethetypeswrong/cli": "^0.15.3",
     "@playwright/test": "^1.34.3",
     "@swc/core": "^1.3.62",

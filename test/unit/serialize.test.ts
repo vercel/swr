@@ -1,3 +1,6 @@
+/**
+ * @jest-environment @edge-runtime/jest-environment
+ */
 import { unstable_serialize } from 'swr'
 import { stableHash } from 'swr/_internal'
 

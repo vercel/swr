@@ -1,3 +1,6 @@
+/**
+ * @jest-environment @edge-runtime/jest-environment
+ */
 import {
   stableHash as hash,
   serialize,

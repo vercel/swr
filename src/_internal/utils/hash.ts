@@ -6,6 +6,9 @@ import { OBJECT, isUndefined } from './shared'
 // complexity is almost O(1).
 const table = new WeakMap<object, number | string>()
 
+const isObjectType = (value: any, type: string) =>
+  OBJECT.prototype.toString.call(value) === `[object ${type}]`
+
 // counter of the key
 let counter = 0
 
@@ -19,13 +22,13 @@ let counter = 0
 // parsable.
 export const stableHash = (arg: any): string => {
   const type = typeof arg
-  const constructor = arg && arg.constructor
-  const isDate = constructor == Date
-
+  const isDate = isObjectType(arg, 'Date')
+  const isRegex = isObjectType(arg, 'RegExp')
+  const isPlainObject = isObjectType(arg, 'Object')
   let result: any
   let index: any
 
-  if (OBJECT(arg) === arg && !isDate && constructor != RegExp) {
+  if (OBJECT(arg) === arg && !isDate && !isRegex) {
     // Object/function, not null/date/regexp. Use WeakMap to store the id first.
     // If it's already hashed, directly return the result.
     result = table.get(arg)
@@ -37,7 +40,7 @@ export const stableHash = (arg: any): string => {
     result = ++counter + '~'
     table.set(arg, result)
 
-    if (constructor == Array) {
+    if (Array.isArray(arg)) {
       // Array.
       result = '@'
       for (index = 0; index < arg.length; index++) {
@@ -45,7 +48,7 @@ export const stableHash = (arg: any): string => {
       }
       table.set(arg, result)
     }
-    if (constructor == OBJECT) {
+    if (isPlainObject) {
       // Object, sort keys.
       result = '#'
       const keys = OBJECT.keys(arg).sort()
