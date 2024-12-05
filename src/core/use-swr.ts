@@ -144,14 +144,11 @@ export const useSWRHandler = <Data = any, Error = any>(
 
   // Resolve the fallback data from either the inline option, or the global provider.
   // If it's a promise, we simply let React suspend and resolve it for us.
-  let fallback = isUndefined(fallbackData)
+  const fallback = isUndefined(fallbackData)
     ? isUndefined(config.fallback)
       ? UNDEFINED
       : config.fallback[key]
     : fallbackData
-  if (fallback && isPromiseLike(fallback)) {
-    fallback = use(fallback)
-  }
 
   const isEqual = (prev: State<Data, any>, current: State<Data, any>) => {
     for (const _ in stateDependencies) {
@@ -269,7 +266,11 @@ export const useSWRHandler = <Data = any, Error = any>(
 
   const cachedData = cached.data
 
-  const data = isUndefined(cachedData) ? fallback : cachedData
+  const data = isUndefined(cachedData)
+    ? (fallback && isPromiseLike(fallback))
+      ? use(fallback)
+      : fallback
+    : cachedData
   const error = cached.error
 
   // Use a ref to store previously returned data. Use the initial data as its initial value.
