@@ -1,4 +1,4 @@
-import type { Key, SWRConfiguration, MutatorCallback } from '../core'
+import type { Key, SWRConfiguration, MutatorCallback } from '../index'
 
 export type SWRSubscriptionOptions<Data = any, Error = any> = {
   next: (err?: Error | null, data?: Data | MutatorCallback<Data>) => void

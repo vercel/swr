@@ -11,21 +11,21 @@
     "fetch"
   ],
   "packageManager": "pnpm@8.4.0",
-  "main": "./dist/core/index.js",
-  "module": "./dist/core/index.mjs",
-  "types": "./dist/core/index.d.ts",
+  "main": "./dist/index/index.js",
+  "module": "./dist/index/index.mjs",
+  "types": "./dist/index/index.d.ts",
   "sideEffects": false,
   "exports": {
     "./package.json": "./package.json",
     ".": {
-      "react-server": "./dist/core/react-server.mjs",
+      "react-server": "./dist/index/react-server.mjs",
       "import": {
-        "types": "./dist/core/index.d.mts",
-        "default": "./dist/core/index.mjs"
+        "types": "./dist/index/index.d.mts",
+        "default": "./dist/index/index.mjs"
       },
       "require": {
-        "types": "./dist/core/index.d.ts",
-        "default": "./dist/core/index.js"
+        "types": "./dist/index/index.d.ts",
+        "default": "./dist/index/index.js"
       }
     },
     "./infinite": {
