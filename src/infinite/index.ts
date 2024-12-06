@@ -2,8 +2,8 @@
 // hook where `key` and return type are not like the normal `useSWR` types.
 
 import { useRef, useCallback } from 'react'
-import type { SWRConfig } from '../core'
-import useSWR from '../core'
+import type { SWRConfig } from '../index'
+import useSWR from '../index'
 import {
   isUndefined,
   isFunction,
@@ -37,18 +37,9 @@ import type {
 import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js'
 import { getFirstPageKey } from './serialize'
 
-// const INFINITE_PREFIX = '$inf$'
 const EMPTY_PROMISE = Promise.resolve() as Promise<undefined>
 
-// const getFirstPageKey = (getKey: SWRInfiniteKeyLoader) => {
-//   return serialize(getKey ? getKey(0, null) : null)[0]
-// }
-
 export { unstable_serialize } from './serialize'
-
-// export const unstable_serialize = (getKey: SWRInfiniteKeyLoader) => {
-//   return INFINITE_PREFIX + getFirstPageKey(getKey)
-// }
 
 export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
   (
