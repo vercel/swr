@@ -1,5 +1,6 @@
 import type { SWRInfiniteKeyLoader } from './types'
-import { serialize, INFINITE_PREFIX } from '../_internal'
+import { serialize } from '../_internal/utils/serialize'
+import { INFINITE_PREFIX } from '../_internal/constants'
 
 export const getFirstPageKey = (getKey: SWRInfiniteKeyLoader) => {
   return serialize(getKey ? getKey(0, null) : null)[0]
