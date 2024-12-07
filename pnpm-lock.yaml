@@ -18,7 +18,7 @@ importers:
         specifier: ^3.0.4
         version: 3.0.4
       '@playwright/test':
-        specifier: ^1.34.3
+        specifier: 1.34.3
         version: 1.34.3
       '@swc/core':
         specifier: ^1.3.62
@@ -1208,6 +1208,7 @@ packages:
   /@playwright/test@1.34.3:
     resolution: {integrity: sha512-zPLef6w9P6T/iT6XDYG3mvGOqOyb6eHaV9XtkunYs0+OzxBtrPAAaHotc0X+PJ00WPPnLfFBTl7mf45Mn8DBmw==}
     engines: {node: '>=14'}
+    deprecated: Please update to the latest version of Playwright to test up-to-date browsers.
     hasBin: true
     dependencies:
       '@types/node': 20.2.5
