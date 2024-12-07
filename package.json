@@ -169,6 +169,6 @@
   },
   "dependencies": {
     "dequal": "^2.0.3",
-    "use-sync-external-store": "^1.2.0"
+    "use-sync-external-store": "^1.4.0"
   }
 }
