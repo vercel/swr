@@ -36,7 +36,6 @@ jobs:
         uses: ./.github/workflows/install
       - name: Test
         run: |
-          pnpm run-all-checks
           pnpm clean
           pnpm build
           pnpm run-all-checks
