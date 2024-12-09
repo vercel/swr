@@ -267,7 +267,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   const cachedData = cached.data
 
   const data = isUndefined(cachedData)
-    ? (fallback && isPromiseLike(fallback))
+    ? fallback && isPromiseLike(fallback)
       ? use(fallback)
       : fallback
     : cachedData
