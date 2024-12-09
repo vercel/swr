@@ -2,7 +2,16 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "strict": false,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "baseUrl": "..",
+    "paths": {
+      "swr": ["./core/src/index.ts"],
+      "swr/infinite": ["./infinite/src/index.ts"],
+      "swr/immutable": ["./immutable/src/index.ts"],
+      "swr/mutation": ["./mutation/src/index.ts"],
+      "swr/_internal": ["./_internal/src/index.ts"],
+      "swr/subscription": ["subscription/src/index.ts"],
+    },
   },
   "include": [".", "./jest-setup.ts"],
   "exclude": ["./type"]
