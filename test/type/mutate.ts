@@ -62,11 +62,18 @@ export function useMutatorTypes() {
 
   mutate(async () => '1')
   mutate(async () => '1', { populateCache: false })
+  mutate(async () => 1, {
+    populateCache: (result: number) => `${result}`
+  })
 
   // @ts-expect-error
   mutate(async () => 1)
   // @ts-expect-error
   mutate(async () => 1, { populateCache: false })
+  // @ts-expect-error
+  mutate(async () => 1, {
+    populateCache: (result: number) => result
+  })
 }
 
 export function useConfigMutate() {
