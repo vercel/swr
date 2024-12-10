@@ -63,7 +63,8 @@ export const useStateWithDeps = <S = Record<string, any>>(
         // If the property has changed, update the state and mark rerender as
         // needed.
         if (currentState[k] !== payload[k]) {
-          currentState[k] = payload[k]! //Added the non-null assertion to fix TS errors
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          currentState[k] = payload[k]!
 
           // If the property is accessed by the component, a rerender should be
           // triggered.

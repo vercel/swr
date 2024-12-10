@@ -38,17 +38,11 @@ const mutation = (<Data, Error>() =>
       error: Error | undefined
       isMutating: boolean
     }>({
-      data: undefined,
-      error: undefined,
+      data: UNDEFINED,
+      error: UNDEFINED,
       isMutating: false
-    }) //Modified the initial state setup so that data can be Data | undefined instead of just undefined
-    // allows data to hold both undefined initially and the resolved Data type after the fetcher runs.
+    })
 
-    // ({
-    //   data: UNDEFINED,
-    //   error: UNDEFINED,
-    //   isMutating: false
-    // })
     const currentState = stateRef.current
 
     const trigger = useCallback(
