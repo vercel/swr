@@ -11,17 +11,18 @@ export const startTransition: (scope: TransitionFunction) => void =
 
 /**
  * An implementation of state with dependency-tracking.
+ * @param initialState - The initial state object.
  */
-export const useStateWithDeps = <S = any>(
-  state: any
+export const useStateWithDeps = <S = Record<string, any>>(
+  initialState: S
 ): [
-  MutableRefObject<any>,
+  MutableRefObject<S>,
   Record<keyof S, boolean>,
   (payload: Partial<S>) => void
 ] => {
   const [, rerender] = useState<Record<string, unknown>>({})
   const unmountedRef = useRef(false)
-  const stateRef = useRef(state)
+  const stateRef = useRef<S>(initialState)
 
   // If a state property (data, error, or isValidating) is accessed by the render
   // function, we mark the property as a dependency so if it is updated again
@@ -31,9 +32,10 @@ export const useStateWithDeps = <S = any>(
     data: false,
     error: false,
     isValidating: false
-  } as any)
+  } as Record<keyof S, boolean>)
 
   /**
+   * Updates state and triggers re-render if necessary.
    * @param payload To change stateRef, pass the values explicitly to setState:
    * @example
    * ```js
@@ -54,18 +56,21 @@ export const useStateWithDeps = <S = any>(
     let shouldRerender = false
 
     const currentState = stateRef.current
-    for (const _ in payload) {
-      const k = _ as keyof S
+    for (const key in payload) {
+      if (Object.prototype.hasOwnProperty.call(payload, key)) {
+        const k = key as keyof S
 
-      // If the property has changed, update the state and mark rerender as
-      // needed.
-      if (currentState[k] !== payload[k]) {
-        currentState[k] = payload[k]
+        // If the property has changed, update the state and mark rerender as
+        // needed.
+        if (currentState[k] !== payload[k]) {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          currentState[k] = payload[k]!
 
-        // If the property is accessed by the component, a rerender should be
-        // triggered.
-        if (stateDependenciesRef.current[k]) {
-          shouldRerender = true
+          // If the property is accessed by the component, a rerender should be
+          // triggered.
+          if (stateDependenciesRef.current[k]) {
+            shouldRerender = true
+          }
         }
       }
     }
