@@ -224,7 +224,7 @@ export interface SWRMutationHook {
       SWRMutationKey,
       ExtraArg,
       SWRData
-    > & { throwOnError: boolean }
+    > & { throwOnError?: boolean }
   ): SWRMutationResponse<Data, Error, SWRMutationKey, ExtraArg>
   <
     Data = any,
