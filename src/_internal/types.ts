@@ -428,21 +428,35 @@ export interface ScopedMutator {
    * @typeParam Data - The type of the data related to the key
    * @typeParam MutationData - The type of the data returned by the mutator
    */
-  <Data = any, T = Data>(
+  <Data = any, MutationData = Data>(
     key: Arguments,
-    data?: T | Promise<T> | MutatorCallback<T>,
-    opts?: boolean | MutatorOptions<Data, T>
-  ): Promise<T | undefined>
+    data?: MutationData | Promise<MutationData> | MutatorCallback<MutationData>,
+    opts?: boolean | MutatorOptions<Data, MutationData>
+  ): Promise<MutationData | undefined>
 }
 
 /**
  * @typeParam Data - The type of the data related to the key
  * @typeParam MutationData - The type of the data returned by the mutator
  */
-export type KeyedMutator<Data> = <MutationData = Data>(
-  data?: Data | Promise<Data | undefined> | MutatorCallback<Data>,
-  opts?: boolean | MutatorOptions<Data, MutationData>
-) => Promise<Data | MutationData | undefined>
+export type KeyedMutator<Data> = {
+  (
+    data?: Data | Promise<Data | undefined> | MutatorCallback<Data>,
+    opts?: boolean | MutatorOptions<Data, Data>
+  ): Promise<Data | undefined>
+  <MutationData = Data>(
+    data:
+      | MutationData
+      | Promise<MutationData | undefined>
+      | MutatorCallback<MutationData>,
+    opts: Omit<MutatorOptions<Data, MutationData>, 'populateCache'> & {
+      populateCache: (
+        result: MutationData,
+        currentData: Data | undefined
+      ) => Data
+    }
+  ): Promise<Data | MutationData | undefined>
+}
 
 export type SWRConfiguration<
   Data = any,
