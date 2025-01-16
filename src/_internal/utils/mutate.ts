@@ -19,33 +19,23 @@ import type {
   Arguments,
   Key
 } from '../types'
+import type { SWRInfiniteCacheValue } from '../../infinite/types'
 
 type KeyFilter = (key?: Arguments) => boolean
 type MutateState<Data> = State<Data, any> & {
   // The previously committed data.
   _c?: Data
 }
+type InternalMutateArgs<Data, MutateKey> = [
+  cache: Cache,
+  _key: MutateKey,
+  _data?: Data | Promise<Data | undefined> | MutatorCallback<Data>,
+  _opts?: boolean | MutatorOptions<Data>
+]
 
-export async function internalMutate<Data>(
-  cache: Cache,
-  _key: KeyFilter,
-  _data?: Data | Promise<Data | undefined> | MutatorCallback<Data>,
-  _opts?: boolean | MutatorOptions<Data>
-): Promise<Array<Data | undefined>>
-export async function internalMutate<Data>(
-  cache: Cache,
-  _key: Arguments,
-  _data?: Data | Promise<Data | undefined> | MutatorCallback<Data>,
-  _opts?: boolean | MutatorOptions<Data>
-): Promise<Data | undefined>
-export async function internalMutate<Data>(
-  ...args: [
-    cache: Cache,
-    _key: KeyFilter | Arguments,
-    _data?: Data | Promise<Data | undefined> | MutatorCallback<Data>,
-    _opts?: boolean | MutatorOptions<Data>
-  ]
-): Promise<any> {
+async function mutateByKey<Data>(
+  ...args: InternalMutateArgs<Data, KeyFilter | Arguments>
+): Promise<Data | undefined> {
   const [cache, _key, _data, _opts] = args
 
   // When passing as a boolean, it's explicitly used to disable/enable
@@ -67,6 +57,149 @@ export async function internalMutate<Data>(
   }
   const throwOnError = options.throwOnError
 
+  // Serialize key
+  const [key] = serialize(_key)
+  if (!key) return
+  const [get, set] = createCacheHelper<Data, MutateState<Data>>(cache, key)
+  const [EVENT_REVALIDATORS, MUTATION, FETCH, PRELOAD] = SWRGlobalState.get(
+    cache
+  ) as GlobalState
+
+  const startRevalidate = () => {
+    const revalidators = EVENT_REVALIDATORS[key]
+    const revalidate = isFunction(options.revalidate)
+      ? options.revalidate(get().data, _key)
+      : options.revalidate !== false
+    if (revalidate) {
+      // Invalidate the key by deleting the concurrent request markers so new
+      // requests will not be deduped.
+      delete FETCH[key]
+      delete PRELOAD[key]
+      if (revalidators && revalidators[0]) {
+        return revalidators[0](revalidateEvents.MUTATE_EVENT).then(
+          () => get().data
+        )
+      }
+    }
+    return get().data
+  }
+
+  // If there is no new data provided, revalidate the key with current state.
+  if (args.length < 3) {
+    // Revalidate and broadcast state.
+    return startRevalidate()
+  }
+
+  let data: any = _data
+  let error: unknown
+
+  // Update global timestamps.
+  const beforeMutationTs = getTimestamp()
+  MUTATION[key] = [beforeMutationTs, 0]
+
+  const hasOptimisticData = !isUndefined(optimisticData)
+  const state = get()
+
+  // `displayedData` is the current value on screen. It could be the optimistic value
+  // that is going to be overridden by a `committedData`, or get reverted back.
+  // `committedData` is the validated value that comes from a fetch or mutation.
+  const displayedData = state.data
+  const currentData = state._c
+  const committedData = isUndefined(currentData) ? displayedData : currentData
+
+  // Do optimistic data update.
+  if (hasOptimisticData) {
+    optimisticData = isFunction(optimisticData)
+      ? optimisticData(committedData, displayedData)
+      : optimisticData
+
+    // When we set optimistic data, backup the current committedData data in `_c`.
+    set({ data: optimisticData, _c: committedData })
+  }
+
+  if (isFunction(data)) {
+    // `data` is a function, call it passing current cache value.
+    try {
+      data = (data as MutatorCallback<Data>)(committedData)
+    } catch (err) {
+      // If it throws an error synchronously, we shouldn't update the cache.
+      error = err
+    }
+  }
+
+  // `data` is a promise/thenable, resolve the final data first.
+  if (data && isPromiseLike(data)) {
+    // This means that the mutation is async, we need to check timestamps to
+    // avoid race conditions.
+    data = await (data as Promise<Data>).catch(err => {
+      error = err
+    })
+
+    // Check if other mutations have occurred since we've started this mutation.
+    // If there's a race we don't update cache or broadcast the change,
+    // just return the data.
+    if (beforeMutationTs !== MUTATION[key][0]) {
+      if (error) throw error
+      return data
+    } else if (error && hasOptimisticData && rollbackOnError(error)) {
+      // Rollback. Always populate the cache in this case but without
+      // transforming the data.
+      populateCache = true
+
+      // Reset data to be the latest committed data, and clear the `_c` value.
+      set({ data: committedData, _c: UNDEFINED })
+    }
+  }
+
+  // If we should write back the cache after request.
+  if (populateCache) {
+    if (!error) {
+      // Transform the result into data.
+      if (isFunction(populateCache)) {
+        const populateCachedData = populateCache(data, committedData)
+        set({ data: populateCachedData, error: UNDEFINED, _c: UNDEFINED })
+      } else {
+        // Only update cached data and reset the error if there's no error. Data can be `undefined` here.
+        set({ data, error: UNDEFINED, _c: UNDEFINED })
+      }
+    }
+  }
+
+  // Reset the timestamp to mark the mutation has ended.
+  MUTATION[key][1] = getTimestamp()
+
+  // Update existing SWR Hooks' internal states:
+  Promise.resolve(startRevalidate()).then(() => {
+    // The mutation and revalidation are ended, we can clear it since the data is
+    // not an optimistic value anymore.
+    set({ _c: UNDEFINED })
+  })
+
+  // Throw error or return data
+  if (error) {
+    if (throwOnError) throw error
+    return
+  }
+  return data
+}
+
+export async function internalMutate<Data>(
+  cache: Cache,
+  _key: KeyFilter,
+  _data?: Data | Promise<Data | undefined> | MutatorCallback<Data>,
+  _opts?: boolean | MutatorOptions<Data>
+): Promise<Array<Data | undefined>>
+export async function internalMutate<Data>(
+  cache: Cache,
+  _key: Arguments,
+  _data?: Data | Promise<Data | undefined> | MutatorCallback<Data>,
+  _opts?: boolean | MutatorOptions<Data>
+): Promise<Data | undefined>
+export async function internalMutate<Data>(
+  ...args: InternalMutateArgs<Data, KeyFilter | Arguments>
+): Promise<any> {
+  const [cache, _key, _data, _opts] = args
+
   // If the second argument is a key filter, return the mutation results for all
   // filtered keys.
   if (isFunction(_key)) {
@@ -82,135 +215,45 @@ export async function internalMutate<Data>(
         matchedKeys.push(key)
       }
     }
-    return Promise.all(matchedKeys.map(mutateByKey))
-  }
-
-  return mutateByKey(_key)
-
-  async function mutateByKey(_k: Key): Promise<Data | undefined> {
-    // Serialize key
-    const [key] = serialize(_k)
-    if (!key) return
-    const [get, set] = createCacheHelper<Data, MutateState<Data>>(cache, key)
-    const [EVENT_REVALIDATORS, MUTATION, FETCH, PRELOAD] = SWRGlobalState.get(
-      cache
-    ) as GlobalState
-
-    const startRevalidate = () => {
-      const revalidators = EVENT_REVALIDATORS[key]
-      const revalidate = isFunction(options.revalidate)
-        ? options.revalidate(get().data, _k)
-        : options.revalidate !== false
-      if (revalidate) {
-        // Invalidate the key by deleting the concurrent request markers so new
-        // requests will not be deduped.
-        delete FETCH[key]
-        delete PRELOAD[key]
-        if (revalidators && revalidators[0]) {
-          return revalidators[0](revalidateEvents.MUTATE_EVENT).then(
-            () => get().data
-          )
-        }
-      }
-      return get().data
-    }
-
-    // If there is no new data provided, revalidate the key with current state.
-    if (args.length < 3) {
-      // Revalidate and broadcast state.
-      return startRevalidate()
-    }
-
-    let data: any = _data
-    let error: unknown
-
-    // Update global timestamps.
-    const beforeMutationTs = getTimestamp()
-    MUTATION[key] = [beforeMutationTs, 0]
-
-    const hasOptimisticData = !isUndefined(optimisticData)
-    const state = get()
-
-    // `displayedData` is the current value on screen. It could be the optimistic value
-    // that is going to be overridden by a `committedData`, or get reverted back.
-    // `committedData` is the validated value that comes from a fetch or mutation.
-    const displayedData = state.data
-    const currentData = state._c
-    const committedData = isUndefined(currentData) ? displayedData : currentData
-
-    // Do optimistic data update.
-    if (hasOptimisticData) {
-      optimisticData = isFunction(optimisticData)
-        ? optimisticData(committedData, displayedData)
-        : optimisticData
-
-      // When we set optimistic data, backup the current committedData data in `_c`.
-      set({ data: optimisticData, _c: committedData })
-    }
-
-    if (isFunction(data)) {
-      // `data` is a function, call it passing current cache value.
-      try {
-        data = (data as MutatorCallback<Data>)(committedData)
-      } catch (err) {
-        // If it throws an error synchronously, we shouldn't update the cache.
-        error = err
-      }
-    }
-
-    // `data` is a promise/thenable, resolve the final data first.
-    if (data && isPromiseLike(data)) {
-      // This means that the mutation is async, we need to check timestamps to
-      // avoid race conditions.
-      data = await (data as Promise<Data>).catch(err => {
-        error = err
+    return Promise.all(
+      matchedKeys.map(key => {
+        const newArgs: InternalMutateArgs<Data, KeyFilter | Arguments> = [
+          ...args
+        ]
+        newArgs[1] = key
+        return mutateByKey(...newArgs)
       })
-
-      // Check if other mutations have occurred since we've started this mutation.
-      // If there's a race we don't update cache or broadcast the change,
-      // just return the data.
-      if (beforeMutationTs !== MUTATION[key][0]) {
-        if (error) throw error
-        return data
-      } else if (error && hasOptimisticData && rollbackOnError(error)) {
-        // Rollback. Always populate the cache in this case but without
-        // transforming the data.
-        populateCache = true
-
-        // Reset data to be the latest committed data, and clear the `_c` value.
-        set({ data: committedData, _c: UNDEFINED })
-      }
-    }
-
-    // If we should write back the cache after request.
-    if (populateCache) {
-      if (!error) {
-        // Transform the result into data.
-        if (isFunction(populateCache)) {
-          const populateCachedData = populateCache(data, committedData)
-          set({ data: populateCachedData, error: UNDEFINED, _c: UNDEFINED })
-        } else {
-          // Only update cached data and reset the error if there's no error. Data can be `undefined` here.
-          set({ data, error: UNDEFINED, _c: UNDEFINED })
-        }
-      }
-    }
-
-    // Reset the timestamp to mark the mutation has ended.
-    MUTATION[key][1] = getTimestamp()
-
-    // Update existing SWR Hooks' internal states:
-    Promise.resolve(startRevalidate()).then(() => {
-      // The mutation and revalidation are ended, we can clear it since the data is
-      // not an optimistic value anymore.
-      set({ _c: UNDEFINED })
-    })
-
-    // Throw error or return data
-    if (error) {
-      if (throwOnError) throw error
-      return
-    }
-    return data
+    )
   }
+  return mutateByKey(...args)
+}
+
+export async function internalMutateTag<Data>(
+  ...args: InternalMutateArgs<Data, string>
+): Promise<any> {
+  const [cache, _tag, _data, _opts] = args
+
+  const matchedKeys: Key[] = []
+  const it = cache.keys()
+  for (const key of it) {
+    if (_tag && cache.get(key)?._tag?.includes(_tag)) {
+      matchedKeys.push(key)
+      if (/^\$inf\$/.test(key)) {
+        const [_, set] = createCacheHelper<
+          Data,
+          SWRInfiniteCacheValue<Data, any>
+        >(cache, key)
+        // mutate all pages
+        set({ _i: true })
+      }
+    }
+  }
+
+  return Promise.all(
+    matchedKeys.map(key => {
+      const newArgs: InternalMutateArgs<Data, Key> = [...args]
+      newArgs[1] = key
+      return mutateByKey(...newArgs)
+    })
+  )
 }

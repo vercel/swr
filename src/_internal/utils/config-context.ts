@@ -54,13 +54,14 @@ const SWRConfig: FC<
   if (cacheContext) {
     ;(extendedConfig as any).cache = cacheContext[0]
     ;(extendedConfig as any).mutate = cacheContext[1]
+    ;(extendedConfig as any).mutateTag = cacheContext[2]
   }
 
   // Unsubscribe events.
   useIsomorphicLayoutEffect(() => {
     if (cacheContext) {
-      cacheContext[2] && cacheContext[2]()
-      return cacheContext[3]
+      cacheContext[3] && cacheContext[3]()
+      return cacheContext[4]
     }
   }, [])
 
