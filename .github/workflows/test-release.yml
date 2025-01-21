@@ -27,6 +27,7 @@ jobs:
           pnpm attw
           pnpm test
           pnpm test:build
+          pnpm test-typing
   e2e:
     runs-on: ubuntu-latest
     container:

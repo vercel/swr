@@ -1,5 +1,5 @@
 import { useCallback, useRef } from 'react'
-import useSWR, { useSWRConfig } from '../core'
+import useSWR, { useSWRConfig } from '../index'
 import type { Middleware, Key } from '../_internal'
 import { useStateWithDeps, startTransition } from './state'
 import {
@@ -33,11 +33,16 @@ const mutation = (<Data, Error>() =>
     // Ditch all mutation results that happened earlier than this timestamp.
     const ditchMutationsUntilRef = useRef(0)
 
-    const [stateRef, stateDependencies, setState] = useStateWithDeps({
+    const [stateRef, stateDependencies, setState] = useStateWithDeps<{
+      data: Data | undefined
+      error: Error | undefined
+      isMutating: boolean
+    }>({
       data: UNDEFINED,
       error: UNDEFINED,
       isMutating: false
     })
+
     const currentState = stateRef.current
 
     const trigger = useCallback(

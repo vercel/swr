@@ -1,4 +1,4 @@
-import type { SWRResponse, Key, Arguments } from '../core'
+import type { SWRResponse, Key, Arguments } from '../index'
 
 type FetcherResponse<Data> = Data | Promise<Data>
 
@@ -224,7 +224,7 @@ export interface SWRMutationHook {
       SWRMutationKey,
       ExtraArg,
       SWRData
-    >
+    > & { throwOnError?: boolean }
   ): SWRMutationResponse<Data, Error, SWRMutationKey, ExtraArg>
   <
     Data = any,
