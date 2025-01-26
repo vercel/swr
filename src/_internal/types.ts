@@ -466,7 +466,7 @@ type SWRConfigurationWithOptionalFallback<Options> =
     ? Omit<Options, 'fallbackData'> & Pick<Partial<Options>, 'fallbackData'>
     : Options
 
-export interface SWRResponse<Data = any, Error = any, Config = any> {
+export interface SWRBaseResponse<Data = any, Error = any, Config = any> {
   /**
    * The returned data of the fetcher function.
    */
@@ -478,8 +478,25 @@ export interface SWRResponse<Data = any, Error = any, Config = any> {
   mutate: KeyedMutator<Data>
   isValidating: boolean
   isLoading: IsLoadingResponse<Data, Config>
+  /**
+   * A derived boolean from {@link isLoading} and {@link error} which indicates if the request has completed successfully.
+   */
+  isSuccess: boolean
+}
+export interface SWRSuccessResponse<Data = any, Error = any, Config = any>
+  extends SWRBaseResponse<Data, Error, Config> {
+  data: Data
+  isSuccess: true
+}
+export interface SWRErrorResponse<Data = any, Error = any, Config = any>
+  extends SWRBaseResponse<Data, Error, Config> {
+  error: Error
+  isSuccess: false
 }
 
+export type SWRResponse<Data = any, Error = any, Config = any> =
+  | SWRSuccessResponse<Data, Error, Config>
+  | SWRErrorResponse<Data, Error, Config>
 export type KeyLoader<Args extends Arguments = Arguments> =
   | ((index: number, previousPageData: any | null) => Args)
   | null

@@ -746,6 +746,11 @@ export const useSWRHandler = <Data = any, Error = any>(
     get isLoading() {
       stateDependencies.isLoading = true
       return isLoading
+    },
+    get isSuccess() {
+      stateDependencies.isLoading = true
+      stateDependencies.error = true
+      return !isLoading && isUndefined(error)
     }
   } as SWRResponse<Data, Error>
 }
