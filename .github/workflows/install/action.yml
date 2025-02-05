@@ -4,12 +4,16 @@ runs:
   using: composite
   steps:
     - name: Setup pnpm
-      uses: pnpm/action-setup@v3
+      uses: pnpm/action-setup@v4
+
+    - name: Lock Corepack version
+      shell: bash
+      run: pnpm i -g corepack@0.31.0
 
     - name: Use Node.js 18
       uses: actions/setup-node@v4
       with:
-        node-version: 18
+        node-version: 20
         cache: pnpm
         registry-url: 'https://registry.npmjs.org'
 
