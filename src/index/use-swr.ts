@@ -729,7 +729,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     }
   }
 
-  return {
+  const swrResponse: SWRResponse<Data, Error> = {
     mutate: boundMutate,
     get data() {
       stateDependencies.data = true
@@ -747,7 +747,8 @@ export const useSWRHandler = <Data = any, Error = any>(
       stateDependencies.isLoading = true
       return isLoading
     }
-  } as SWRResponse<Data, Error>
+  }
+  return swrResponse
 }
 
 export const SWRConfig = OBJECT.defineProperty(ConfigProvider, 'defaultValue', {
