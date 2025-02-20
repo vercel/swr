@@ -41,13 +41,13 @@ export const initCache = <Data = any>(
 
     // If there's no global state bound to the provider, create a new one with the
     // new mutate function.
-    const EVENT_REVALIDATORS = {}
+    const EVENT_REVALIDATORS = Object.create(null)
 
     const mutate = internalMutate.bind(UNDEFINED, provider) as ScopedMutator
     let unmount = noop
 
     const subscriptions: Record<string, ((current: any, prev: any) => void)[]> =
-      {}
+      Object.create(null)
     const subscribe = (
       key: string,
       callback: (current: any, prev: any) => void
@@ -73,9 +73,9 @@ export const initCache = <Data = any>(
         // Update the state if it's new, or if the provider has been extended.
         SWRGlobalState.set(provider, [
           EVENT_REVALIDATORS,
-          {},
-          {},
-          {},
+          Object.create(null),
+          Object.create(null),
+          Object.create(null),
           mutate,
           setter,
           subscribe
