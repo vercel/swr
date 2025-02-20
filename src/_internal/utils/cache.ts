@@ -47,7 +47,7 @@ export const initCache = <Data = any>(
     let unmount = noop
 
     const subscriptions: Record<string, ((current: any, prev: any) => void)[]> =
-      {}
+      Object.create(null)
     const subscribe = (
       key: string,
       callback: (current: any, prev: any) => void
