@@ -34,11 +34,11 @@ export const createCacheHelper = <Data = any, T = State<Data, any>>(
           INITIAL_CACHE[key] = prev
         }
 
-        state[5](key, mergeObjects(prev, info), prev || EMPTY_CACHE)
+        state[6](key, mergeObjects(prev, info), prev || EMPTY_CACHE)
       }
     },
     // Subscriber
-    state[6],
+    state[7],
     // Get server cache snapshot
     () => {
       if (!isUndefined(key)) {

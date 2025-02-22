@@ -56,7 +56,8 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
       persistSize = false,
       revalidateFirstPage = true,
       revalidateOnMount = false,
-      parallel = false
+      parallel = false,
+      tag
     } = config
     const [, , , PRELOAD] = SWRGlobalState.get(defaultCache) as GlobalState
 
@@ -133,7 +134,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
         // get the revalidate context
         const forceRevalidateAll = get()._i
         const shouldRevalidatePage = get()._r
-        set({ _r: UNDEFINED })
+        set({ _r: UNDEFINED, _tag: tag })
 
         // return an array of page data
         const data: Data[] = []

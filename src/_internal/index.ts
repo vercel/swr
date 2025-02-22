@@ -5,7 +5,13 @@ import { INFINITE_PREFIX } from './constants'
 export { SWRConfig, revalidateEvents, INFINITE_PREFIX }
 
 export { initCache } from './utils/cache'
-export { defaultConfig, cache, mutate, compare } from './utils/config'
+export {
+  defaultConfig,
+  cache,
+  mutate,
+  mutateTag,
+  compare
+} from './utils/config'
 import { setupDevTools } from './utils/devtools'
 export * from './utils/env'
 export { SWRGlobalState } from './utils/global-state'
