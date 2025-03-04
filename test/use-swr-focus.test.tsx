@@ -17,7 +17,8 @@ describe('useSWR - focus', () => {
     const key = createKey()
     function Page() {
       const { data } = useSWR(key, () => value++, {
-        dedupingInterval: 0
+        dedupingInterval: 0,
+        focusThrottleInterval: 0
       })
       return <div>data: {data}</div>
     }
@@ -131,19 +132,17 @@ describe('useSWR - focus', () => {
     await screen.findByText('data: 0')
 
     await waitForNextTick()
-    // trigger revalidation
-    await focusWindow()
     // still in throttling interval
     await act(() => sleep(20))
     // should be throttled
     await focusWindow()
-    await screen.findByText('data: 1')
+    await screen.findByText('data: 0')
     // wait for focusThrottleInterval
     await act(() => sleep(100))
 
     // trigger revalidation again
     await focusWindow()
-    await screen.findByText('data: 2')
+    await screen.findByText('data: 1')
   })
 
   it('focusThrottleInterval should be stateful', async () => {
@@ -168,17 +167,17 @@ describe('useSWR - focus', () => {
     await screen.findByText('data: 0')
 
     await waitForNextTick()
-    // trigger revalidation
+    // trigger revalidation, won't revalidate as within 50ms
     await focusWindow()
     // wait for throttle interval
     await act(() => sleep(100))
-    // trigger revalidation
+    // trigger revalidation, will revalidate as 50ms passed
     await focusWindow()
-    await screen.findByText('data: 2')
+    await screen.findByText('data: 1')
 
     await waitForNextTick()
     // increase focusThrottleInterval
-    fireEvent.click(screen.getByText('data: 2'))
+    fireEvent.click(screen.getByText('data: 1'))
     // wait for throttle interval
     await act(() => sleep(100))
     // trigger revalidation
@@ -187,7 +186,7 @@ describe('useSWR - focus', () => {
     await act(() => sleep(100))
     // should be throttled
     await focusWindow()
-    await screen.findByText('data: 3')
+    await screen.findByText('data: 2')
 
     // wait for throttle interval
     await act(() => sleep(150))
@@ -195,7 +194,7 @@ describe('useSWR - focus', () => {
     await focusWindow()
     // wait for throttle intervals
     await act(() => sleep(150))
-    await screen.findByText('data: 4')
+    await screen.findByText('data: 3')
   })
 
   it('should revalidate on focus even with custom cache', async () => {
@@ -205,7 +204,8 @@ describe('useSWR - focus', () => {
     function Page() {
       const { data } = useSWR(key, () => value++, {
         revalidateOnFocus: true,
-        dedupingInterval: 0
+        dedupingInterval: 0,
+        focusThrottleInterval: 0
       })
       return <div>data: {data}</div>
     }
