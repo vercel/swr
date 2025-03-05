@@ -180,7 +180,8 @@ describe('useSWR - cache provider', () => {
     let value = 0
     function Page() {
       const { data } = useSWR(key, () => value++, {
-        dedupingInterval: 0
+        dedupingInterval: 0,
+        focusThrottleInterval: 0
       })
       return <>{String(data)}</>
     }
@@ -402,7 +403,8 @@ describe('useSWR - global cache', () => {
     let value = 0
     function Page() {
       const { data } = useSWR(key, () => value++, {
-        dedupingInterval: 0
+        dedupingInterval: 0,
+        focusThrottleInterval: 0
       })
       return <>{String(data)}</>
     }
