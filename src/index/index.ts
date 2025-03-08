@@ -5,7 +5,7 @@ export default useSWR
 export { SWRConfig } from './use-swr'
 export { unstable_serialize } from './serialize'
 export { useSWRConfig } from '../_internal'
-export { mutate } from '../_internal'
+export { mutate, mutateTag } from '../_internal'
 export { preload } from '../_internal'
 
 // Types

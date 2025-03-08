@@ -6,6 +6,7 @@ export type GlobalState = [
   Record<string, [any, number]>, // FETCH: [data, ts]
   Record<string, FetcherResponse<any>>, // PRELOAD
   ScopedMutator, // Mutator
+  TagMutator, // TagMutator
   (key: string, value: any, prev: any) => void, // Setter
   (key: string, callback: (current: any, prev: any) => void) => () => void // Subscriber
 ]
@@ -45,6 +46,7 @@ export type BlockingData<
 export interface InternalConfiguration {
   cache: Cache
   mutate: ScopedMutator
+  mutateTag: TagMutator
 }
 
 /**
@@ -206,6 +208,10 @@ export interface PublicConfiguration<
    * @link https://swr.vercel.app/docs/advanced/react-native#customize-focus-and-reconnect-events
    */
   isVisible: () => boolean
+  /**
+   * tags to associate with the data, you can mutate data based on these tags
+   */
+  tag: string[]
 }
 
 export type FullConfiguration<
@@ -391,6 +397,7 @@ export type State<Data = any, Error = any> = {
   error?: Error
   isValidating?: boolean
   isLoading?: boolean
+  _tag?: string[]
 }
 
 export type MutatorFn<Data = any> = (
@@ -434,6 +441,12 @@ export interface ScopedMutator {
     opts?: boolean | MutatorOptions<Data, T>
   ): Promise<T | undefined>
 }
+
+export type TagMutator = <Data = any, MutationData = Data>(
+  tag: string,
+  data?: MutationData | Promise<MutationData> | MutatorCallback<MutationData>,
+  opts?: boolean | MutatorOptions<Data, MutationData>
+) => Promise<Array<MutationData | undefined>>
 
 /**
  * @typeParam Data - The type of the data related to the key
