@@ -86,7 +86,7 @@ library to handle that part.
 This library is created by the team behind [Next.js](https://nextjs.org), with contributions from our community:
 
 - Shu Ding ([@shuding\_](https://x.com/shuding_)) - [Vercel](https://vercel.com)
-- Jiachi Liu ([@huozhi])(https://x.com/huozhi)) - [Vercel](https://vercel.com)
+- Jiachi Liu ([@huozhi](https://x.com/huozhi)) - [Vercel](https://vercel.com)
 - Guillermo Rauch ([@rauchg](https://x.com/rauchg)) - [Vercel](https://vercel.com)
 - Joe Haddad ([@timer150](https://x.com/timer150)) - [Vercel](https://vercel.com)
 - Paco Coursey ([@pacocoursey](https://x.com/pacocoursey)) - [Vercel](https://vercel.com)
