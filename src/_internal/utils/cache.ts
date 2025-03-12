@@ -1,7 +1,7 @@
 import { defaultConfigOptions } from './web-preset'
 import { IS_SERVER } from './env'
 import { UNDEFINED, mergeObjects, noop } from './shared'
-import { internalMutate } from './mutate'
+import { internalMutate, internalMutateTag } from './mutate'
 import { SWRGlobalState } from './global-state'
 import * as revalidateEvents from '../events'
 
@@ -11,7 +11,8 @@ import type {
   RevalidateEvent,
   RevalidateCallback,
   ProviderConfiguration,
-  GlobalState
+  GlobalState,
+  TagMutator
 } from '../types'
 
 const revalidateAllKeys = (
@@ -27,8 +28,8 @@ export const initCache = <Data = any>(
   provider: Cache<Data>,
   options?: Partial<ProviderConfiguration>
 ):
-  | [Cache<Data>, ScopedMutator, () => void, () => void]
-  | [Cache<Data>, ScopedMutator]
+  | [Cache<Data>, ScopedMutator, TagMutator, () => void, () => void]
+  | [Cache<Data>, ScopedMutator, TagMutator]
   | undefined => {
   // The global state for a specific provider will be used to deduplicate
   // requests and store listeners. As well as a mutate function that is bound to
@@ -44,6 +45,7 @@ export const initCache = <Data = any>(
     const EVENT_REVALIDATORS = Object.create(null)
 
     const mutate = internalMutate.bind(UNDEFINED, provider) as ScopedMutator
+    const mutateTag = internalMutateTag.bind(UNDEFINED, provider) as TagMutator
     let unmount = noop
 
     const subscriptions: Record<string, ((current: any, prev: any) => void)[]> =
@@ -77,6 +79,7 @@ export const initCache = <Data = any>(
           Object.create(null),
           Object.create(null),
           mutate,
+          mutateTag,
           setter,
           subscribe
         ])
@@ -126,8 +129,12 @@ export const initCache = <Data = any>(
     // We might want to inject an extra layer on top of `provider` in the future,
     // such as key serialization, auto GC, etc.
     // For now, it's just a `Map` interface without any modifications.
-    return [provider, mutate, initProvider, unmount]
+    return [provider, mutate, mutateTag, initProvider, unmount]
   }
 
-  return [provider, (SWRGlobalState.get(provider) as GlobalState)[4]]
+  return [
+    provider,
+    (SWRGlobalState.get(provider) as GlobalState)[4],
+    (SWRGlobalState.get(provider) as GlobalState)[5]
+  ]
 }
