@@ -514,6 +514,7 @@ export interface Cache<Data = any> {
   get(key: string): State<Data> | undefined
   set(key: string, value: State<Data>): void
   delete(key: string): void
+  clear(): void
 }
 
 export interface StateDependencies {
