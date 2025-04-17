@@ -1112,4 +1112,32 @@ describe('useSWR - remote mutation', () => {
 
     expect(error.message).toBe('Can’t trigger the mutation: missing key.')
   })
+
+  it('should call `onError` and `onRejected` but do not call `onSuccess` if value an error is cast to false', async () => {
+    const key = createKey()
+    const onSuccess = jest.fn()
+    const onError = jest.fn()
+    const onRejected = jest.fn()
+
+    const fetcher = () => {
+      return new Promise((_, reject) => reject(''));
+    };
+
+    function Page() {
+      const { trigger } = useSWRMutation(key, fetcher, { onError, onSuccess })
+
+      return <button onClick={() => trigger().catch(onRejected)}>trigger</button>
+    }
+
+    render(<Page />)
+
+    await screen.findByText('trigger')
+    fireEvent.click(screen.getByText('trigger'))
+
+    await nextTick()
+
+    expect(onSuccess).not.toHaveBeenCalled()
+    expect(onError).toHaveBeenCalled()
+    expect(onRejected).toHaveBeenCalled()
+  })
 })
