@@ -542,7 +542,7 @@ export const useSWRHandler = <Data = any, Error = any>(
                     const revalidators = EVENT_REVALIDATORS[key]
                     triggerRevalidators(
                       key,
-                      EVENT_REVALIDATORS[key],
+                      revalidators,
                       revalidateEvents.ERROR_REVALIDATE_EVENT,
                       _opts
                     )
