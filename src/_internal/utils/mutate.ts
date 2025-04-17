@@ -123,6 +123,7 @@ export async function internalMutate<Data>(
 
     let data: any = _data
     let error: unknown
+    let isError = false
 
     // Update global timestamps.
     const beforeMutationTs = getTimestamp()
@@ -155,6 +156,7 @@ export async function internalMutate<Data>(
       } catch (err) {
         // If it throws an error synchronously, we shouldn't update the cache.
         error = err
+        isError = true
       }
     }
 
@@ -164,15 +166,16 @@ export async function internalMutate<Data>(
       // avoid race conditions.
       data = await (data as Promise<Data>).catch(err => {
         error = err
+        isError = true
       })
 
       // Check if other mutations have occurred since we've started this mutation.
       // If there's a race we don't update cache or broadcast the change,
       // just return the data.
       if (beforeMutationTs !== MUTATION[key][0]) {
-        if (error) throw error
+        if (isError) throw error
         return data
-      } else if (error && hasOptimisticData && rollbackOnError(error)) {
+      } else if (isError && hasOptimisticData && rollbackOnError(error)) {
         // Rollback. Always populate the cache in this case but without
         // transforming the data.
         populateCache = true
@@ -184,7 +187,7 @@ export async function internalMutate<Data>(
 
     // If we should write back the cache after request.
     if (populateCache) {
-      if (!error) {
+      if (!isError) {
         // Transform the result into data.
         if (isFunction(populateCache)) {
           const populateCachedData = populateCache(data, committedData)
@@ -207,7 +210,7 @@ export async function internalMutate<Data>(
     })
 
     // Throw error or return data
-    if (error) {
+    if (isError) {
       if (throwOnError) throw error
       return
     }
