@@ -60,6 +60,7 @@ export const defaultConfig: FullConfiguration = mergeObjects(
     revalidateOnReconnect: true,
     revalidateIfStale: true,
     shouldRetryOnError: true,
+    revalidateOnRSCFallback: false,
 
     // timeouts
     errorRetryInterval: slowConnection ? 10000 : 5000,
