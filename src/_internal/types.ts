@@ -117,6 +117,11 @@ export interface PublicConfiguration<
    */
   revalidateIfStale: boolean
   /**
+   * automatically revalidate when data comes from RSC fallback
+   * @defaultValue false
+   */
+  revalidateOnRSCFallback?: boolean
+  /**
    * retry when fetcher has an error
    * @defaultValue true
    */
