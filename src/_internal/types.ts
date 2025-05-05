@@ -1,3 +1,4 @@
+import type { SWRGlobalConfig } from '../index'
 import type * as revalidateEvents from './events'
 
 export type GlobalState = [
@@ -33,7 +34,9 @@ export type ReactUsePromise<T = unknown, Error = unknown> = Promise<any> & {
 export type BlockingData<
   Data = any,
   Options = SWROptions<Data>
-> = Options extends undefined
+> = SWRGlobalConfig extends { suspense: true }
+  ? true
+  : Options extends undefined
   ? false
   : Options extends { suspense: true }
   ? true
@@ -456,7 +459,11 @@ export type SWRConfiguration<
 export type IsLoadingResponse<
   Data = any,
   Options = SWROptions<Data>
-> = Options extends { suspense: true } ? false : boolean
+> = SWRGlobalConfig extends { suspense: true }
+  ? Options extends { suspense: true }
+    ? false
+    : false
+  : boolean
 
 type SWROptions<Data> = SWRConfiguration<Data, Error, Fetcher<Data, Key>>
 type SWRConfigurationWithOptionalFallback<Options> =
