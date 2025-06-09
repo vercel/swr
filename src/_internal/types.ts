@@ -192,7 +192,7 @@ export interface PublicConfiguration<
     revalidateOpts: Required<RevalidatorOptions>
   ) => void
   /**
-   * callback function when a request is ignored
+   * callback function when a request is ignored due to race conditions
    */
   onDiscarded: (key: string) => void
   /**
