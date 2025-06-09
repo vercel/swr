@@ -108,7 +108,7 @@
     "lint": "eslint . --ext .ts,.tsx --cache",
     "lint:fix": "pnpm lint --fix",
     "coverage": "jest --coverage",
-    "test-typing": "tsc --noEmit -p test/type/tsconfig.json && tsc --noEmit -p test/tsconfig.json",
+    "test-typing": "tsc -p test/tsconfig.json && tsc -p test/type/tsconfig.json && tsc -p test/type/suspense/tsconfig.json",
     "test": "jest",
     "test:build": "jest --config jest.config.build.js",
     "test:e2e": "playwright test",
