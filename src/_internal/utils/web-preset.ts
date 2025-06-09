@@ -1,6 +1,6 @@
 import type { ProviderConfiguration } from '../types'
 import { isWindowDefined, isDocumentDefined } from './helper'
-import { isUndefined, noop } from './shared'
+import { noop } from './shared'
 
 /**
  * Due to the bug https://bugs.chromium.org/p/chromium/issues/detail?id=678075,
@@ -22,8 +22,18 @@ const [onWindowEvent, offWindowEvent] =
     : [noop, noop]
 
 const isVisible = () => {
-  const visibilityState = isDocumentDefined && document.visibilityState
-  return isUndefined(visibilityState) || visibilityState !== 'hidden'
+  if (!isDocumentDefined) return true
+
+  try {
+    const isDocVisible = document.visibilityState !== 'hidden'
+    
+    const isDocFocused =
+      typeof document.hasFocus === 'function' ? document.hasFocus() : true
+    
+    return isDocVisible && isDocFocused
+  } catch (err) {
+    return true
+  }
 }
 
 const initFocus = (callback: () => void) => {
