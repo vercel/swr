@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
-    "immer": "9.0.5",
+    "immer": "9.0.6",
     "next": "latest",
     "react": "latest",
     "react-dom": "latest",
