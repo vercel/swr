@@ -18,7 +18,7 @@ const HookUser = () => {
  * when using swr.
  */
 const CheapComponent = () => {
-  const cheapComponents = Array.from({ length: 10_000 }, (_, i) => (
+  const cheapComponents = Array.from({ length: elementCount }, (_, i) => (
     <div key={i}>{i}</div>
   ))
   return (
@@ -33,7 +33,7 @@ const CheapComponent = () => {
  * This renders 10,000 divs, each of which uses the same swr hook.
  */
 const ExpensiveComponent = () => {
-  const hookComponents = Array.from({ length: 10_000 }, (_, i) => (
+  const hookComponents = Array.from({ length: elementCount }, (_, i) => (
     <HookUser key={i} />
   ))
   return (
