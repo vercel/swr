@@ -55,7 +55,7 @@ export default function PerformancePage() {
           checked={renderExpensive}
           onChange={e => setRenderExpensive(e.target.checked)}
         />
-        Toggle Expensive Component
+        Render with swr
       </label>
       {!renderExpensive ? <CheapComponent /> : <ExpensiveComponent />}
     </div>
