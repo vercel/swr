@@ -32,5 +32,6 @@ export type {
   Middleware,
   Arguments,
   State,
-  ScopedMutator
+  ScopedMutator,
+  FetcherResponse
 } from '../_internal'
