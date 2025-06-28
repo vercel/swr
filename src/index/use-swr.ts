@@ -195,7 +195,7 @@ export const useSWRHandler = <Data = any, Error = any>(
 
       return {
         isValidating: true,
-        isLoading: true,
+        isLoading: isUndefined(fallback),
         ...snapshot
       }
     }
@@ -278,8 +278,8 @@ export const useSWRHandler = <Data = any, Error = any>(
 
   const returnedData = keepPreviousData
     ? isUndefined(cachedData)
-      // checking undefined to avoid null being fallback as well
-      ? isUndefined(laggyDataRef.current)
+      ? // checking undefined to avoid null being fallback as well
+        isUndefined(laggyDataRef.current)
         ? data
         : laggyDataRef.current
       : cachedData
