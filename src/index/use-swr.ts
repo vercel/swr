@@ -278,8 +278,8 @@ export const useSWRHandler = <Data = any, Error = any>(
 
   const returnedData = keepPreviousData
     ? isUndefined(cachedData)
-      // checking undefined to avoid null being fallback as well
-      ? isUndefined(laggyDataRef.current)
+      ? // checking undefined to avoid null being fallback as well
+        isUndefined(laggyDataRef.current)
         ? data
         : laggyDataRef.current
       : cachedData
@@ -639,13 +639,17 @@ export const useSWRHandler = <Data = any, Error = any>(
 
     // Trigger a revalidation
     if (shouldDoInitialRevalidation) {
-      if (isUndefined(data) || IS_SERVER) {
-        // Revalidate immediately.
-        softRevalidate()
-      } else {
-        // Delay the revalidate if we have data to return so we won't block
-        // rendering.
-        rAF(softRevalidate)
+      // Performance optimization: if a request is already in progress for this key,
+      // skip the revalidation to avoid redundant work
+      if (!FETCH[key]) {
+        if (isUndefined(data) || IS_SERVER) {
+          // Revalidate immediately.
+          softRevalidate()
+        } else {
+          // Delay the revalidate if we have data to return so we won't block
+          // rendering.
+          rAF(softRevalidate)
+        }
       }
     }
 
