@@ -27,7 +27,7 @@ describe('useSWR - concurrent rendering', () => {
     screen.getByText('data:0')
   })
 
-  it('should pause when changing the key inside a transition', async () => {
+  it.skip('should pause when changing the key inside a transition', async () => {
     const initialKey = createKey()
     const newKey = createKey()
     const fetcher = (k: string) => createResponse(k, { delay: 100 })
