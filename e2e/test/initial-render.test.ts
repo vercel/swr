@@ -7,28 +7,32 @@ test.describe('rendering', () => {
     await page.getByRole('button', { name: 'preload' }).click()
     await expect(page.getByText('suspense-after-preload')).toBeVisible()
   })
-  test('should be able to retry in suspense with react 18.3', async ({
+
+  test('should be able to retry in suspense with react 19 (app router)', async ({
     page
   }) => {
-    await page.goto('./suspense-retry-18-3', { waitUntil: 'commit' })
+    await page.goto('./suspense-retry', { waitUntil: 'commit' })
     await expect(page.getByText('Something went wrong')).toBeVisible()
     await page.getByRole('button', { name: 'retry' }).click()
     await expect(page.getByText('data: SWR suspense retry works')).toBeVisible()
   })
-  test('should be able to retry in suspense with react 18.2', async ({
+
+  test('should be able to retry in suspense with react 19 (pages router)', async ({
     page
   }) => {
-    await page.goto('./suspense-retry-18-2', { waitUntil: 'commit' })
+    await page.goto('./suspense-retry-19', { waitUntil: 'commit' })
     await expect(page.getByText('Something went wrong')).toBeVisible()
     await page.getByRole('button', { name: 'retry' }).click()
     await expect(page.getByText('data: SWR suspense retry works')).toBeVisible()
   })
+
   test('should be able to retry in suspense with mutate', async ({ page }) => {
     await page.goto('./suspense-retry-mutate', { waitUntil: 'commit' })
     await expect(page.getByText('Something went wrong')).toBeVisible()
     await page.getByRole('button', { name: 'retry' }).click()
     await expect(page.getByText('data: SWR suspense retry works')).toBeVisible()
   })
+
   test('should be able to use `unstable_serialize` in server component', async ({
     page
   }) => {

@@ -25,12 +25,6 @@ export type Fetcher<
   ? (arg: Arg) => FetcherResponse<Data>
   : never
 
-export type ReactUsePromise<T = unknown, Error = unknown> = Promise<any> & {
-  status?: 'pending' | 'fulfilled' | 'rejected'
-  value?: T
-  reason?: Error
-}
-
 export type BlockingData<
   Data = any,
   Options = SWROptions<Data>
