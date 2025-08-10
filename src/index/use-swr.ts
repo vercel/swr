@@ -714,14 +714,14 @@ export const useSWRHandler = <Data = any, Error = any>(
   // If there is no `error`, the `revalidation` promise needs to be thrown to
   // the suspense boundary.
   if (suspense) {
+    const hasKeyButNoData = key && isUndefined(data)
     // SWR should throw when trying to use Suspense on the server with React 18,
     // without providing any fallback data. This causes hydration errors. See:
     // https://github.com/vercel/swr/issues/1832
-    if (!IS_REACT_LEGACY && IS_SERVER) {
+    if (!IS_REACT_LEGACY && IS_SERVER && hasKeyButNoData) {
       throw new Error('Fallback data is required when using Suspense in SSR.')
     }
 
-    const hasKeyButNoData = key && isUndefined(data)
     // Always update fetcher and config refs even with the Suspense mode.
     if (hasKeyButNoData) {
       fetcherRef.current = fetcher
