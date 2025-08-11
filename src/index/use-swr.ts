@@ -196,7 +196,7 @@ export const useSWRHandler = <Data = any, Error = any>(
 
       return {
         isValidating: true,
-        isLoading: true,
+        isLoading: isUndefined(fallback),
         ...snapshot
       }
     }
