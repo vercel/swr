@@ -47,10 +47,27 @@ interface SWRInfiniteRevalidateFn<Data = any> {
   (data: Data, key: Arguments): boolean
 }
 
-export type SWRInfiniteKeyedMutator<Data> = <MutationData = Data>(
-  data?: Data | Promise<Data | undefined> | MutatorCallback<Data>,
-  opts?: boolean | SWRInfiniteMutatorOptions<Data, MutationData>
-) => Promise<Data | MutationData | undefined>
+export type SWRInfiniteKeyedMutator<Data> = {
+  (
+    data?: Data | Promise<Data | undefined> | MutatorCallback<Data>,
+    opts?: boolean | SWRInfiniteMutatorOptions<Data, Data>
+  ): Promise<Data | undefined>
+  <MutationData = Data>(
+    data:
+      | MutationData
+      | Promise<MutationData | undefined>
+      | MutatorCallback<MutationData>,
+    opts: Omit<
+      SWRInfiniteMutatorOptions<Data, MutationData>,
+      'populateCache'
+    > & {
+      populateCache: (
+        result: MutationData,
+        currentData: Data | undefined
+      ) => Data
+    }
+  ): Promise<Data | MutationData | undefined>
+}
 
 export interface SWRInfiniteMutatorOptions<Data = any, MutationData = Data>
   extends Omit<MutatorOptions<Data, MutationData>, 'revalidate'> {
