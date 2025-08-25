@@ -930,6 +930,7 @@ export type MutatorOptions<Data = any, MutationData = Data> = {
    * @defaultValue false
    */
   throwOnError?: boolean
+  includeSpecialKeys?: boolean
 }
 
 export type MutatorConfig = {
