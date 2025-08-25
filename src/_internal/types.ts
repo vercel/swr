@@ -366,6 +366,7 @@ export type MutatorOptions<Data = any, MutationData = Data> = {
     | ((currentData: Data | undefined, displayedData: Data | undefined) => Data)
   rollbackOnError?: boolean | ((error: unknown) => boolean)
   throwOnError?: boolean
+  includeSpecialKeys?: boolean
 }
 
 export type MutatorConfig = {
