@@ -61,7 +61,7 @@ export async function internalMutate<Data>(
   const rollbackOnErrorOption = options.rollbackOnError
   let optimisticData = options.optimisticData
 
-  const includeSpecialKeys = (options as any).includeSpecialKeys === true
+  const includeSpecialKeys = options.includeSpecialKeys === true
 
   const rollbackOnError = (error: unknown): boolean => {
     return typeof rollbackOnErrorOption === 'function'
