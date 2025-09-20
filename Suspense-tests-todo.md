@@ -3,8 +3,8 @@
 - [x] test/use-swr-infinite.test.tsx — should update the getKey reference with the suspense mode (migrated to e2e/test/suspense-infinite-get-key.test.ts)
 - [x] test/use-swr-suspense.test.tsx — should render fallback (migrated to e2e/test/suspense-render-fallback.test.ts)
 - [x] test/use-swr-suspense.test.tsx — should render multiple SWR fallbacks (migrated to e2e/test/render-suspense-multiple-fallbacks.test.ts)
-- [ ] test/use-swr-suspense.test.tsx — should work for non-promises
-- [ ] test/use-swr-suspense.test.tsx — should throw errors
+- [x] test/use-swr-suspense.test.tsx — should work for non-promises (migrated to e2e/test/render-suspense-non-promise.test.ts)
+- [x] test/use-swr-suspense.test.tsx — should throw errors (migrated to e2e/test/render-suspense-error.test.ts)
 - [ ] test/use-swr-suspense.test.tsx — should render cached data with error
 - [ ] test/use-swr-suspense.test.tsx — should not fetch when cached data is present and `revalidateIfStale` is false
 - [ ] test/use-swr-suspense.test.tsx — should pause when key changes
