@@ -17,7 +17,7 @@ describe('useSWR - suspense', () => {
     jest.restoreAllMocks()
   })
 
-  it('should render fallback', async () => {
+  it('should render suspense fallback', async () => {
     const key = createKey()
     function Section() {
       const { data } = useSWR(key, () => createResponse('SWR'), {

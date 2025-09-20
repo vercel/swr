@@ -24,6 +24,7 @@ export default defineConfig([
     '**/scripts',
     '**/examples',
     '**/.next',
+    '**/next-env.d.ts',
     '**/next.config.js',
     'eslint.config.mjs',
     'playwright.config.js',
