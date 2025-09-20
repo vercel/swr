@@ -30,7 +30,6 @@ describe('useSWR - SSR', () => {
   })
   it('should enable the IS_SERVER flag - suspense on server without fallback', async () => {
     await withServer(async () => {
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       jest.spyOn(console, 'error').mockImplementation(() => {})
       const useSWR = (await import('swr')).default
 

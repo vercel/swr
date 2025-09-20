@@ -20,10 +20,10 @@ export type Fetcher<
 > = SWRKey extends () => infer Arg | null | undefined | false
   ? (arg: Arg) => FetcherResponse<Data>
   : SWRKey extends null | undefined | false
-  ? never
-  : SWRKey extends infer Arg
-  ? (arg: Arg) => FetcherResponse<Data>
-  : never
+    ? never
+    : SWRKey extends infer Arg
+      ? (arg: Arg) => FetcherResponse<Data>
+      : never
 
 export type BlockingData<
   Data = any,
@@ -31,12 +31,12 @@ export type BlockingData<
 > = SWRGlobalConfig extends { suspense: true }
   ? true
   : Options extends undefined
-  ? false
-  : Options extends { suspense: true }
-  ? true
-  : Options extends { fallbackData: Data | Promise<Data> }
-  ? true
-  : false
+    ? false
+    : Options extends { suspense: true }
+      ? true
+      : Options extends { fallbackData: Data | Promise<Data> }
+        ? true
+        : false
 
 // Configuration types that are only used internally, not exposed to the user.
 export interface InternalConfiguration {
@@ -237,19 +237,19 @@ export interface SWRHook {
     Data = any,
     Error = any,
     SWRKey extends Key = StrictKey,
-    SWROptions extends
+    SWRHookOptions extends
       | SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>>
       | undefined =
       | SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>>
       | undefined
   >(
     key: SWRKey
-  ): SWRResponse<Data, Error, SWROptions>
+  ): SWRResponse<Data, Error, SWRHookOptions>
   <
     Data = any,
     Error = any,
     SWRKey extends Key = StrictKey,
-    SWROptions extends
+    SWRHookOptions extends
       | SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>>
       | undefined =
       | SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>>
@@ -257,25 +257,25 @@ export interface SWRHook {
   >(
     key: SWRKey,
     fetcher: Fetcher<Data, SWRKey> | null
-  ): SWRResponse<Data, Error, SWROptions>
+  ): SWRResponse<Data, Error, SWRHookOptions>
   <
     Data = any,
     Error = any,
     SWRKey extends Key = StrictKey,
-    SWROptions extends
+    SWRHookOptions extends
       | SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>>
       | undefined =
       | SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>>
       | undefined
   >(
     key: SWRKey,
-    config: SWRConfigurationWithOptionalFallback<SWROptions>
-  ): SWRResponse<Data, Error, SWROptions>
+    config: SWRConfigurationWithOptionalFallback<SWRHookOptions>
+  ): SWRResponse<Data, Error, SWRHookOptions>
   <
     Data = any,
     Error = any,
     SWRKey extends Key = StrictKey,
-    SWROptions extends
+    SWRHookOptions extends
       | SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>>
       | undefined =
       | SWRConfiguration<Data, Error, Fetcher<Data, SWRKey>>
@@ -283,49 +283,49 @@ export interface SWRHook {
   >(
     key: SWRKey,
     fetcher: Fetcher<Data, SWRKey> | null,
-    config: SWRConfigurationWithOptionalFallback<SWROptions>
-  ): SWRResponse<Data, Error, SWROptions>
+    config: SWRConfigurationWithOptionalFallback<SWRHookOptions>
+  ): SWRResponse<Data, Error, SWRHookOptions>
   <Data = any, Error = any>(key: Key): SWRResponse<Data, Error>
   <
     Data = any,
     Error = any,
-    SWROptions extends
+    SWRHookOptions extends
       | SWRConfiguration<Data, Error, BareFetcher<Data>>
       | undefined = SWRConfiguration<Data, Error, BareFetcher<Data>> | undefined
   >(
     key: Key
-  ): SWRResponse<Data, Error, SWROptions>
+  ): SWRResponse<Data, Error, SWRHookOptions>
   <
     Data = any,
     Error = any,
-    SWROptions extends
+    SWRHookOptions extends
       | SWRConfiguration<Data, Error, BareFetcher<Data>>
       | undefined = SWRConfiguration<Data, Error, BareFetcher<Data>> | undefined
   >(
     key: Key,
     fetcher: BareFetcher<Data> | null
-  ): SWRResponse<Data, Error, SWROptions>
+  ): SWRResponse<Data, Error, SWRHookOptions>
   <
     Data = any,
     Error = any,
-    SWROptions extends
+    SWRHookOptions extends
       | SWRConfiguration<Data, Error, BareFetcher<Data>>
       | undefined = SWRConfiguration<Data, Error, BareFetcher<Data>> | undefined
   >(
     key: Key,
-    config: SWRConfigurationWithOptionalFallback<SWROptions>
-  ): SWRResponse<Data, Error, SWROptions>
+    config: SWRConfigurationWithOptionalFallback<SWRHookOptions>
+  ): SWRResponse<Data, Error, SWRHookOptions>
   <
     Data = any,
     Error = any,
-    SWROptions extends
+    SWRHookOptions extends
       | SWRConfiguration<Data, Error, BareFetcher<Data>>
       | undefined = SWRConfiguration<Data, Error, BareFetcher<Data>> | undefined
   >(
     key: Key,
     fetcher: BareFetcher<Data> | null,
-    config: SWRConfigurationWithOptionalFallback<SWROptions>
-  ): SWRResponse<Data, Error, SWROptions>
+    config: SWRConfigurationWithOptionalFallback<SWRHookOptions>
+  ): SWRResponse<Data, Error, SWRHookOptions>
 }
 
 // Middleware guarantees that a SWRHook receives a key, fetcher, and config as the argument
@@ -403,10 +403,10 @@ export type MutatorWrapper<Fn> = Fn extends (
   ? Parameters[3] extends boolean
     ? Result
     : Parameters[3] extends Required<Pick<MutatorOptions, 'populateCache'>>
-    ? Parameters[3]['populateCache'] extends false
-      ? never
+      ? Parameters[3]['populateCache'] extends false
+        ? never
+        : Result
       : Result
-    : Result
   : never
 
 export type Mutator<Data = any> = MutatorWrapper<MutatorFn<Data>>

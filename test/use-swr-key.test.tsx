@@ -149,7 +149,7 @@ describe('useSWR - key', () => {
 
     renderWithConfig(<Page />)
     await screen.findByText(`key-undefined`)
-    expect(fetcher).toBeCalledTimes(0)
+    expect(fetcher).toHaveBeenCalledTimes(0)
   })
 
   it('should cleanup state when key turns to empty', async () => {
@@ -222,6 +222,6 @@ describe('useSWR - key', () => {
     await screen.findByText('data,data')
 
     // Only 1 request since the keys are the same.
-    expect(fetcher).toBeCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledTimes(1)
   })
 })

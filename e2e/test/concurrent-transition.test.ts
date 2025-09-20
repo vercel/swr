@@ -1,4 +1,3 @@
-/* eslint-disable testing-library/prefer-screen-queries */
 import { test, expect } from '@playwright/test'
 
 test.describe('concurrent rendering transitions', () => {

@@ -1,6 +1,6 @@
 /// <reference types="react/experimental" />
 import React, { useCallback, useRef, useDebugValue, useMemo } from 'react'
-import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js'
+import { useSyncExternalStore } from 'use-sync-external-store/shim'
 
 import {
   defaultConfig,
@@ -79,14 +79,14 @@ const WITH_DEDUPE = { dedupe: true }
 type DefinitelyTruthy<T> = false extends T
   ? never
   : 0 extends T
-  ? never
-  : '' extends T
-  ? never
-  : null extends T
-  ? never
-  : undefined extends T
-  ? never
-  : T
+    ? never
+    : '' extends T
+      ? never
+      : null extends T
+        ? never
+        : undefined extends T
+          ? never
+          : T
 
 const resolvedUndef = Promise.resolve(UNDEFINED)
 

@@ -89,7 +89,6 @@ describe('useSWR - suspense', () => {
   })
 
   it('should throw errors', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
     jest.spyOn(console, 'error').mockImplementation(() => {})
     const key = createKey()
     function Section() {
@@ -317,7 +316,7 @@ describe('useSWR - suspense', () => {
       </Suspense>
     )
 
-    expect(fetcher).not.toBeCalled()
+    expect(fetcher).not.toHaveBeenCalled()
     screen.getByText('hello, Initial')
   })
 

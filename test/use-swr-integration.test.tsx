@@ -52,7 +52,7 @@ describe('useSWR', () => {
     screen.getByText('hello,')
 
     await screen.findByText('hello, SWR')
-    expect(fetcher).toBeCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledTimes(1)
   })
 
   it('should not call fetch function when revalidateOnMount is false', async () => {
@@ -154,7 +154,7 @@ describe('useSWR', () => {
     screen.getByText(',')
 
     await screen.findByText('SWR, SWR')
-    expect(fetcher).toBeCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledTimes(1)
   })
 
   it('should trigger the onSuccess event', async () => {
@@ -363,7 +363,7 @@ describe('useSWR', () => {
     renderWithConfig(<Page />)
 
     await screen.findByText('hello, Initial')
-    expect(fetcher).not.toBeCalled()
+    expect(fetcher).not.toHaveBeenCalled()
   })
 
   it('should revalidate even if fallbackData is provided', async () => {
@@ -421,7 +421,7 @@ describe('useSWR', () => {
 
     renderWithConfig(<Page />)
     screen.getByText('hello,')
-    expect(fetcher).toBeCalled()
+    expect(fetcher).toHaveBeenCalled()
     await screen.findByText('hello, SWR')
   })
 

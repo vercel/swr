@@ -4,7 +4,7 @@ import { expectType } from './utils'
 import type { FullConfiguration, SWRConfiguration } from 'swr/_internal'
 import type { Equal } from '@type-challenges/utils'
 
-export function testCache() {
+export function useTestCache() {
   expectType<Cache<any>>(useSWRConfig().cache)
 }
 
@@ -59,7 +59,7 @@ export function testSWRResponseCachedDataTypes() {
   expectType<Equal<FilledConditionalData, string | number>>(true)
 }
 
-export function testSuspense() {
+export function useTestSuspense() {
   // Basic
   const { data: data1 } = useSWR('/api', (k: string) => Promise.resolve(k), {
     suspense: true
@@ -90,7 +90,7 @@ export function testSuspense() {
   expectType<string>(data4)
 }
 
-export function testFallbackData() {
+export function useTestFallbackData() {
   // Need to specify the type of Data returning from fetcher
 
   // Basic
@@ -158,13 +158,13 @@ export function testFallbackData() {
   expectType<string>(data9)
 }
 
-export function testConfigAsSWRConfiguration() {
+export function useTestConfigAsSWRConfiguration() {
   const fetcher = (k: string) => Promise.resolve({ value: k })
   const { data } = useSWR('/api', fetcher, {} as SWRConfiguration)
   expectType<Equal<typeof data, { value: string } | undefined>>(true)
 }
 
-export function testEmptyConfig() {
+export function useTestEmptyConfig() {
   const fetcher = (k: string) => Promise.resolve({ value: k })
   const { data, error, isLoading } = useSWR<{ value: string }, Error>(
     '/api',
@@ -176,7 +176,7 @@ export function testEmptyConfig() {
   expectType<Equal<typeof isLoading, boolean>>(true)
 }
 
-export function testFallbackDataConfig() {
+export function useTestFallbackDataConfig() {
   const fetcher = (k: string) => Promise.resolve({ value: k })
   const { data, isLoading } = useSWR('/api', fetcher, {
     fallbackData: { value: 'fallback' }

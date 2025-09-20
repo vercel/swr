@@ -19,7 +19,7 @@
     "downlevelIteration": true,
     "incremental": true
   },
-  "include": ["./src/**/*", "env.d.ts"],
+  "include": ["./src/**/*", "env.d.ts", "jest.config.js", "jest.config.build.js", "eslint.config.mjs", "playwright.config.js"],
   "exclude": ["./**/dist", "examples"],
   "watchOptions": {
     "watchFile": "useFsEvents",

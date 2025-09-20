@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 import { screen } from '@testing-library/react'
 import React from 'react'
 

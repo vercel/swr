@@ -850,7 +850,7 @@ describe('useSWR - remote mutation', () => {
 
     fireEvent.click(screen.getByText('trigger'))
     await nextTick()
-    expect(catchError).toBeCalled()
+    expect(catchError).toHaveBeenCalled()
   })
 
   it('should support optimistic updates', async () => {
@@ -1120,13 +1120,15 @@ describe('useSWR - remote mutation', () => {
     const onRejected = jest.fn()
 
     const fetcher = () => {
-      return new Promise((_, reject) => reject(''));
-    };
+      return new Promise((_, reject) => reject(''))
+    }
 
     function Page() {
       const { trigger } = useSWRMutation(key, fetcher, { onError, onSuccess })
 
-      return <button onClick={() => trigger().catch(onRejected)}>trigger</button>
+      return (
+        <button onClick={() => trigger().catch(onRejected)}>trigger</button>
+      )
     }
 
     render(<Page />)

@@ -12,9 +12,7 @@ describe('useSWR - refresh', () => {
   beforeAll(() => {
     jest.useFakeTimers()
   })
-  afterAll(() => {
-    jest.useRealTimers()
-  })
+
   it('should rerender automatically on interval', async () => {
     let count = 0
 
@@ -79,13 +77,13 @@ describe('useSWR - refresh', () => {
     let count = 0
     const key = createKey()
     function Page() {
-      const [int, setInt] = React.useState(100)
+      const [int, setInt] = React.useState(200)
       const { data } = useSWR(key, () => count++, {
         refreshInterval: int,
         dedupingInterval: 50
       })
       return (
-        <div onClick={() => setInt(num => (num < 200 ? num + 50 : 0))}>
+        <div onClick={() => setInt(num => (num < 300 ? num + 50 : 0))}>
           count: {data}
         </div>
       )
@@ -97,31 +95,31 @@ describe('useSWR - refresh', () => {
     // mount
     await screen.findByText('count: 0')
 
-    await act(() => advanceTimers(100))
+    await act(() => advanceTimers(200)) // update
     screen.getByText('count: 1')
     await act(() => advanceTimers(50))
     screen.getByText('count: 1')
-    await act(() => advanceTimers(50))
+    await act(() => advanceTimers(200))
     screen.getByText('count: 2')
-    fireEvent.click(screen.getByText('count: 2'))
-
-    await act(() => advanceTimers(100))
-
-    screen.getByText('count: 2')
+    fireEvent.click(screen.getByText('count: 2')) // interval change to 250ms
 
     await act(() => advanceTimers(50))
+
+    screen.getByText('count: 2')
+
+    await act(() => advanceTimers(200))
 
     screen.getByText('count: 3')
 
-    await act(() => advanceTimers(150))
+    await act(() => advanceTimers(250))
     screen.getByText('count: 4')
     fireEvent.click(screen.getByText('count: 4'))
     await act(() => {
-      // it will clear the 150ms timer and set up a new 200ms timer
+      // it will clear the 250ms timer and set up a new 300ms timer
       return advanceTimers(150)
     })
     screen.getByText('count: 4')
-    await act(() => advanceTimers(50))
+    await act(() => advanceTimers(150))
     screen.getByText('count: 5')
     fireEvent.click(screen.getByText('count: 5'))
     await act(() => {
@@ -129,7 +127,7 @@ describe('useSWR - refresh', () => {
       return advanceTimers(50)
     })
     screen.getByText('count: 5')
-    await act(() => advanceTimers(50))
+    await act(() => advanceTimers(300))
     screen.getByText('count: 5')
   })
 
@@ -141,7 +139,7 @@ describe('useSWR - refresh', () => {
       const [flag, setFlag] = useState(0)
       const shouldPoll = flag < STOP_POLLING_THRESHOLD
       const { data } = useSWR(key, () => count++, {
-        refreshInterval: shouldPoll ? 100 : 0,
+        refreshInterval: shouldPoll ? 200 : 0,
         dedupingInterval: 50,
         onSuccess() {
           setFlag(value => value + 1)
@@ -159,41 +157,41 @@ describe('useSWR - refresh', () => {
 
     await screen.findByText('count: 0 1')
 
-    await act(() => advanceTimers(100))
+    await act(() => advanceTimers(200))
 
     screen.getByText('count: 1 2')
 
-    await act(() => advanceTimers(100))
+    await act(() => advanceTimers(200))
     screen.getByText('count: 1 2')
 
-    await act(() => advanceTimers(100))
+    await act(() => advanceTimers(200))
     screen.getByText('count: 1 2')
 
-    await act(() => advanceTimers(100))
+    await act(() => advanceTimers(200))
     screen.getByText('count: 1 2')
 
     fireEvent.click(screen.getByText('count: 1 2'))
 
     await act(() => {
-      // it will set up a new 100ms timer
+      // it will set up a new 200ms timer
       return advanceTimers(50)
     })
 
     screen.getByText('count: 1 0')
 
-    await act(() => advanceTimers(50))
+    await act(() => advanceTimers(150))
 
     screen.getByText('count: 2 1')
 
-    await act(() => advanceTimers(100))
+    await act(() => advanceTimers(200))
 
     screen.getByText('count: 3 2')
 
-    await act(() => advanceTimers(100))
+    await act(() => advanceTimers(200))
 
     screen.getByText('count: 3 2')
 
-    await act(() => advanceTimers(100))
+    await act(() => advanceTimers(200))
 
     screen.getByText('count: 3 2')
   })
@@ -245,16 +243,16 @@ describe('useSWR - refresh', () => {
     screen.getByText('loading')
 
     await screen.findByText('1')
-    expect(fetcher).toBeCalledTimes(1)
-    expect(fetcher).toReturnWith({
+    expect(fetcher).toHaveBeenCalledTimes(1)
+    expect(fetcher).toHaveReturnedWith({
       timestamp: 1,
       version: '1.0'
     })
 
     fireEvent.click(screen.getByText('1'))
     await act(() => advanceTimers(1))
-    expect(fetcher).toBeCalledTimes(2)
-    expect(fetcher).toReturnWith({
+    expect(fetcher).toHaveBeenCalledTimes(2)
+    expect(fetcher).toHaveReturnedWith({
       timestamp: 2,
       version: '1.0'
     })
@@ -524,17 +522,17 @@ describe('useSWR - refresh', () => {
 
     // initial revalidate
     await act(() => advanceTimers(200))
-    expect(fetcherWithToken).toBeCalledTimes(1)
+    expect(fetcherWithToken).toHaveBeenCalledTimes(1)
 
     // first refresh
     await act(() => advanceTimers(100))
-    expect(fetcherWithToken).toBeCalledTimes(2)
+    expect(fetcherWithToken).toHaveBeenCalledTimes(2)
     expect(fetcherWithToken).toHaveBeenLastCalledWith(`${key}-0`)
     await act(() => advanceTimers(200))
 
     // second refresh start
     await act(() => advanceTimers(100))
-    expect(fetcherWithToken).toBeCalledTimes(3)
+    expect(fetcherWithToken).toHaveBeenCalledTimes(3)
     expect(fetcherWithToken).toHaveBeenLastCalledWith(`${key}-0`)
     // change the key during revalidation
     // The second refresh will not start a new timer
@@ -542,13 +540,13 @@ describe('useSWR - refresh', () => {
 
     // first, refresh with new key 1
     await act(() => advanceTimers(100))
-    expect(fetcherWithToken).toBeCalledTimes(4)
+    expect(fetcherWithToken).toHaveBeenCalledTimes(4)
     expect(fetcherWithToken).toHaveBeenLastCalledWith(`${key}-1`)
     await act(() => advanceTimers(200))
 
     // second refresh with new key 1
     await act(() => advanceTimers(100))
-    expect(fetcherWithToken).toBeCalledTimes(5)
+    expect(fetcherWithToken).toHaveBeenCalledTimes(5)
     expect(fetcherWithToken).toHaveBeenLastCalledWith(`${key}-1`)
   })
 
@@ -579,20 +577,20 @@ describe('useSWR - refresh', () => {
 
     // initial revalidate
     await act(() => advanceTimers(100))
-    expect(fetcherWithToken).toBeCalledTimes(1)
-    expect(onSuccess).toBeCalledTimes(1)
+    expect(fetcherWithToken).toHaveBeenCalledTimes(1)
+    expect(onSuccess).toHaveBeenCalledTimes(1)
     expect(onSuccess).toHaveLastReturnedWith(`0-${key} 0-${key}`)
     // first refresh
     await act(() => advanceTimers(50))
-    expect(fetcherWithToken).toBeCalledTimes(2)
+    expect(fetcherWithToken).toHaveBeenCalledTimes(2)
     expect(fetcherWithToken).toHaveBeenLastCalledWith(`0-${key}`)
     await act(() => advanceTimers(100))
-    expect(onSuccess).toBeCalledTimes(2)
+    expect(onSuccess).toHaveBeenCalledTimes(2)
     expect(onSuccess).toHaveLastReturnedWith(`0-${key} 0-${key}`)
 
     // second refresh start
     await act(() => advanceTimers(50))
-    expect(fetcherWithToken).toBeCalledTimes(3)
+    expect(fetcherWithToken).toHaveBeenCalledTimes(3)
     expect(fetcherWithToken).toHaveBeenLastCalledWith(`0-${key}`)
     // change the key during revalidation
     // The second refresh will not start a new timer
@@ -600,15 +598,15 @@ describe('useSWR - refresh', () => {
 
     // first, refresh with new key 1
     await act(() => advanceTimers(50))
-    expect(fetcherWithToken).toBeCalledTimes(4)
+    expect(fetcherWithToken).toHaveBeenCalledTimes(4)
     expect(fetcherWithToken).toHaveBeenLastCalledWith(`1-${key}`)
     await act(() => advanceTimers(100))
-    expect(onSuccess).toBeCalledTimes(3)
+    expect(onSuccess).toHaveBeenCalledTimes(3)
     expect(onSuccess).toHaveLastReturnedWith(`1-${key} 1-${key}`)
 
     // second refresh with new key 1
     await act(() => advanceTimers(50))
-    expect(fetcherWithToken).toBeCalledTimes(5)
+    expect(fetcherWithToken).toHaveBeenCalledTimes(5)
     expect(fetcherWithToken).toHaveBeenLastCalledWith(`1-${key}`)
   })
 

@@ -94,12 +94,13 @@ describe('useSWR - fetcher', () => {
         <Page />
       </Suspense>
     )
+
+    await nextTick()
     await screen.findByText('data:foo')
 
     // Change the fetcher and make sure the ref is updated.
     fetcher = () => 'bar'
     fireEvent.click(screen.getByText('mutate'))
-
     // Should fetch with the new fetcher.
     await screen.findByText('data:bar')
   })
