@@ -3,13 +3,10 @@
 import { Suspense } from 'react'
 import useSWR from 'swr'
 import { OnlyRenderInClient } from '~/component/only-render-in-client'
-
-function delay(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms))
-}
+import { sleep } from '~/lib/sleep'
 
 async function fetchGreeting() {
-  await delay(500)
+  await sleep(500)
   return 'SWR'
 }
 

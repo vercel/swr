@@ -4,13 +4,10 @@ import { Suspense } from 'react'
 import useSWR from 'swr'
 import { ErrorBoundary } from 'react-error-boundary'
 import { OnlyRenderInClient } from '~/component/only-render-in-client'
-
-function delay(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms))
-}
+import { sleep } from '~/lib/sleep'
 
 async function fetchWithError(): Promise<string> {
-  await delay(120)
+  await sleep(120)
   throw new Error('error')
 }
 

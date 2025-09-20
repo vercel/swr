@@ -1,26 +1,26 @@
 # Suspense Tests To-Do
 
-- [x] test/use-swr-infinite.test.tsx — should update the getKey reference with the suspense mode (migrated to e2e/test/suspense-infinite-get-key.test.ts)
-- [x] test/use-swr-suspense.test.tsx — should render fallback (migrated to e2e/test/suspense-render-fallback.test.ts)
-- [x] test/use-swr-suspense.test.tsx — should render multiple SWR fallbacks (migrated to e2e/test/render-suspense-multiple-fallbacks.test.ts)
-- [x] test/use-swr-suspense.test.tsx — should work for non-promises (migrated to e2e/test/render-suspense-non-promise.test.ts)
-- [x] test/use-swr-suspense.test.tsx — should throw errors (migrated to e2e/test/render-suspense-error.test.ts)
-- [ ] test/use-swr-suspense.test.tsx — should render cached data with error
-- [ ] test/use-swr-suspense.test.tsx — should not fetch when cached data is present and `revalidateIfStale` is false
-- [ ] test/use-swr-suspense.test.tsx — should pause when key changes
-- [ ] test/use-swr-suspense.test.tsx — should render correctly when key changes (but with same response data)
-- [ ] test/use-swr-suspense.test.tsx — should render correctly when key changes (from null to valid key)
-- [ ] test/use-swr-suspense.test.tsx — should render initial data if set
-- [ ] test/use-swr-suspense.test.tsx — should avoid unnecessary re-renders
-- [ ] test/use-swr-suspense.test.tsx — should return `undefined` data for falsy key
-- [ ] test/use-swr-suspense.test.tsx — should only render fallback once when `keepPreviousData` is set to true
-- [ ] test/use-swr-streaming-ssr.test.tsx — should match the ssr result when streaming and partially hydrating (failing)
-- [ ] test/use-swr-fetcher.test.tsx — should use the latest fetcher reference with the suspense mode when the key has been changed
-- [ ] test/use-swr-infinite-preload.test.tsx — preload the fetcher function with the suspense mode
-- [ ] test/use-swr-infinite-preload.test.tsx — avoid suspense waterfall by prefetching the resources (skipped)
-- [ ] test/use-swr-server.test.tsx — should enable the IS_SERVER flag - suspense on server without fallback
-- [ ] test/use-swr-promise.test.tsx — should suspend when resolving the fallback promise
-- [ ] test/use-swr-promise.test.tsx — should handle errors with fallback promises
-- [ ] test/use-swr-promise.test.tsx — should handle same fallback promise that is already pending
-- [ ] test/use-swr-preload.test.tsx — preload the fetcher function with the suspense mode
-- [ ] test/use-swr-preload.test.tsx — avoid suspense waterfall by prefetching the resources
+- [x] test/use-swr-infinite.test.tsx — should update the getKey reference with the suspense mode (covered in e2e/test/suspense-scenarios.test.ts)
+- [x] test/use-swr-suspense.test.tsx — should render fallback (covered in e2e/test/suspense-scenarios.test.ts)
+- [x] test/use-swr-suspense.test.tsx — should render multiple SWR fallbacks (covered in e2e/test/suspense-scenarios.test.ts)
+- [x] test/use-swr-suspense.test.tsx — should work for non-promises (covered in e2e/test/suspense-scenarios.test.ts)
+- [x] test/use-swr-suspense.test.tsx — should throw errors (covered in e2e/test/suspense-scenarios.test.ts)
+- [x] test/use-swr-suspense.test.tsx — should render cached data with error (covered in e2e/test/suspense-scenarios.test.ts)
+- [x] test/use-swr-suspense.test.tsx — should not fetch when cached data is present and `revalidateIfStale` is false (covered in e2e/test/suspense-scenarios.test.ts)
+- [x] test/use-swr-suspense.test.tsx — should pause when key changes (covered in e2e/test/suspense-scenarios.test.ts)
+- [x] test/use-swr-suspense.test.tsx — should render correctly when key changes (but with same response data) (covered in e2e/test/suspense-scenarios.test.ts)
+- [x] test/use-swr-suspense.test.tsx — should render correctly when key changes (from null to valid key) (covered in e2e/test/suspense-scenarios.test.ts)
+- [x] test/use-swr-suspense.test.tsx — should render initial data if set (covered in e2e/test/suspense-scenarios.test.ts)
+- [x] test/use-swr-suspense.test.tsx — should avoid unnecessary re-renders (covered in e2e/test/suspense-scenarios.test.ts)
+- [x] test/use-swr-suspense.test.tsx — should return `undefined` data for falsy key (covered in e2e/test/suspense-scenarios.test.ts)
+- [x] test/use-swr-suspense.test.tsx — should only render fallback once when `keepPreviousData` is set to true (covered in e2e/test/suspense-scenarios.test.ts)
+- [x] test/use-swr-streaming-ssr.test.tsx — should match the ssr result when streaming and partially hydrating (covered in e2e/test/streaming-partial-hydration.test.ts)
+- [x] test/use-swr-fetcher.test.tsx — should use the latest fetcher reference with the suspense mode when the key has been changed (covered in e2e/test/suspense-scenarios.test.ts)
+- [x] test/use-swr-infinite-preload.test.tsx — preload the fetcher function with the suspense mode (covered in e2e/test/suspense-scenarios.test.ts)
+- [x] test/use-swr-infinite-preload.test.tsx — avoid suspense waterfall by prefetching the resources (covered in e2e/test/preload-scenarios.test.ts)
+- [x] test/use-swr-server.test.tsx — should enable the IS_SERVER flag - suspense on server without fallback (covered in e2e/test/server-suspense.test.ts)
+- [x] test/use-swr-promise.test.tsx — should suspend when resolving the fallback promise (covered in e2e/test/promise-scenarios.test.ts)
+- [x] test/use-swr-promise.test.tsx — should handle errors with fallback promises (covered in e2e/test/promise-scenarios.test.ts)
+- [x] test/use-swr-promise.test.tsx — should handle same fallback promise that is already pending (covered in e2e/test/promise-scenarios.test.ts)
+- [x] test/use-swr-preload.test.tsx — preload the fetcher function (covered in e2e/test/preload-scenarios.test.ts) with the suspense mode
+- [x] test/use-swr-preload.test.tsx — avoid suspense waterfall by prefetching the resources (covered in e2e/test/preload-scenarios.test.ts)

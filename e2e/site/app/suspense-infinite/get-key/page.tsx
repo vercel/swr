@@ -3,6 +3,7 @@
 import { Suspense, useState } from 'react'
 import useSWRInfinite from 'swr/infinite'
 import { OnlyRenderInClient } from '~/component/only-render-in-client'
+import { sleep } from '~/lib/sleep'
 
 const DATA: Record<string, string[]> = {
   'suspense-key-a': ['A1', 'A2', 'A3'],
@@ -10,7 +11,7 @@ const DATA: Record<string, string[]> = {
 }
 
 async function fetchList(key: string) {
-  await new Promise(resolve => setTimeout(resolve, 150))
+  await sleep(150)
   return DATA[key]
 }
 

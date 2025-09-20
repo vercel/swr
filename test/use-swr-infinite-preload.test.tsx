@@ -2,7 +2,13 @@ import { act, fireEvent, screen } from '@testing-library/react'
 import { Suspense, useEffect, useState, Profiler } from 'react'
 import { preload } from 'swr'
 import useSWRInfinite from 'swr/infinite'
-import { createKey, createResponse, renderWithConfig, sleep } from './utils'
+import {
+  createKey,
+  createResponse,
+  itShouldSkipForReactCanary,
+  renderWithConfig,
+  sleep
+} from './utils'
 
 describe('useSWRInfinite - preload', () => {
   const getKeyFunction = (key: string) => (index: number) =>
@@ -92,34 +98,37 @@ describe('useSWRInfinite - preload', () => {
     expect(fetcher).toHaveBeenCalledTimes(1)
   })
 
-  it('preload the fetcher function with the suspense mode', async () => {
-    const key = createKey()
-    const getKey = getKeyFunction(key)
-    const fetcher = jest.fn(() => createResponse('foo'))
-    const onRender = jest.fn()
-    function Page() {
-      const { data } = useSWRInfinite(getKey, fetcher, { suspense: true })
-      return <div>data:{data}</div>
+  itShouldSkipForReactCanary(
+    'preload the fetcher function with the suspense mode',
+    async () => {
+      const key = createKey()
+      const getKey = getKeyFunction(key)
+      const fetcher = jest.fn(() => createResponse('foo'))
+      const onRender = jest.fn()
+      function Page() {
+        const { data } = useSWRInfinite(getKey, fetcher, { suspense: true })
+        return <div>data:{data}</div>
+      }
+
+      preload(getKey(0), fetcher)
+      expect(fetcher).toHaveBeenCalledTimes(1)
+
+      renderWithConfig(
+        <Suspense
+          fallback={
+            <Profiler id={key} onRender={onRender}>
+              loading
+            </Profiler>
+          }
+        >
+          <Page />
+        </Suspense>
+      )
+      await screen.findByText('data:foo')
+      expect(onRender).toHaveBeenCalledTimes(1)
+      expect(fetcher).toHaveBeenCalledTimes(1)
     }
-
-    preload(getKey(0), fetcher)
-    expect(fetcher).toHaveBeenCalledTimes(1)
-
-    renderWithConfig(
-      <Suspense
-        fallback={
-          <Profiler id={key} onRender={onRender}>
-            loading
-          </Profiler>
-        }
-      >
-        <Page />
-      </Suspense>
-    )
-    await screen.findByText('data:foo')
-    expect(onRender).toHaveBeenCalledTimes(1)
-    expect(fetcher).toHaveBeenCalledTimes(1)
-  })
+  )
 
   it.skip('avoid suspense waterfall by prefetching the resources', async () => {
     const key1 = createKey()

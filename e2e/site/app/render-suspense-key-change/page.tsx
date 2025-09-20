@@ -1,32 +1,35 @@
 'use client'
 
-import { Suspense } from 'react'
+import { Suspense, useState } from 'react'
 import useSWR from 'swr'
 import { OnlyRenderInClient } from '~/component/only-render-in-client'
 import { sleep } from '~/lib/sleep'
 
 async function fetchValue(key: string) {
-  if (key === 'render-suspense-multiple-fallbacks-1') {
-    await sleep(50)
-    return 1
-  }
-  await sleep(140)
-  return 2
+  await sleep(120)
+  return key
 }
 
 function Section() {
-  const { data: v1 } = useSWR<number>(
-    'render-suspense-multiple-fallbacks-1',
-    fetchValue,
-    { suspense: true }
-  )
-  const { data: v2 } = useSWR<number>(
-    'render-suspense-multiple-fallbacks-2',
+  const [key, setKey] = useState('initial')
+  const { data } = useSWR(
+    key ? `render-suspense-key-change-${key}` : null,
     fetchValue,
     { suspense: true }
   )
 
-  return <div data-testid="data">{(v1 ?? 0) + (v2 ?? 0)}</div>
+  return (
+    <div>
+      <div data-testid="data">data: {data}</div>
+      <button
+        type="button"
+        onClick={() => setKey('updated')}
+        data-testid="toggle"
+      >
+        change
+      </button>
+    </div>
+  )
 }
 
 export default function Page() {
