@@ -1,3 +1,4 @@
+import type { SWRGlobalConfig } from '../index'
 import type * as revalidateEvents from './events'
 
 export type GlobalState = [
@@ -24,16 +25,12 @@ export type Fetcher<
   ? (arg: Arg) => FetcherResponse<Data>
   : never
 
-export type ReactUsePromise<T = unknown, Error = unknown> = Promise<any> & {
-  status?: 'pending' | 'fulfilled' | 'rejected'
-  value?: T
-  reason?: Error
-}
-
 export type BlockingData<
   Data = any,
   Options = SWROptions<Data>
-> = Options extends undefined
+> = SWRGlobalConfig extends { suspense: true }
+  ? true
+  : Options extends undefined
   ? false
   : Options extends { suspense: true }
   ? true
@@ -189,7 +186,7 @@ export interface PublicConfiguration<
     revalidateOpts: Required<RevalidatorOptions>
   ) => void
   /**
-   * callback function when a request is ignored
+   * callback function when a request is ignored due to race conditions
    */
   onDiscarded: (key: string) => void
   /**
@@ -456,7 +453,11 @@ export type SWRConfiguration<
 export type IsLoadingResponse<
   Data = any,
   Options = SWROptions<Data>
-> = Options extends { suspense: true } ? false : boolean
+> = SWRGlobalConfig extends { suspense: true }
+  ? Options extends { suspense: true }
+    ? false
+    : false
+  : boolean
 
 type SWROptions<Data> = SWRConfiguration<Data, Error, Fetcher<Data, Key>>
 type SWRConfigurationWithOptionalFallback<Options> =

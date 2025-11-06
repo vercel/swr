@@ -35,8 +35,7 @@ import type {
   SWRHook,
   RevalidateEvent,
   StateDependencies,
-  GlobalState,
-  ReactUsePromise
+  GlobalState
 } from '../_internal'
 
 const use =
@@ -107,6 +106,7 @@ function triggerRevalidators(
     }
   }
 }
+const resolvedUndef = Promise.resolve(UNDEFINED)
 
 export const useSWRHandler = <Data = any, Error = any>(
   _key: Key,
@@ -297,8 +297,8 @@ export const useSWRHandler = <Data = any, Error = any>(
 
   const returnedData = keepPreviousData
     ? isUndefined(cachedData)
-      // checking undefined to avoid null being fallback as well
-      ? isUndefined(laggyDataRef.current)
+      ? // checking undefined to avoid null being fallback as well
+        isUndefined(laggyDataRef.current)
         ? data
         : laggyDataRef.current
       : cachedData
@@ -658,13 +658,17 @@ export const useSWRHandler = <Data = any, Error = any>(
 
     // Trigger a revalidation
     if (shouldDoInitialRevalidation) {
-      if (isUndefined(data) || IS_SERVER) {
-        // Revalidate immediately.
-        softRevalidate()
-      } else {
-        // Delay the revalidate if we have data to return so we won't block
-        // rendering.
-        rAF(softRevalidate)
+      // Performance optimization: if a request is already in progress for this key,
+      // skip the revalidation to avoid redundant work
+      if (!FETCH[key]) {
+        if (isUndefined(data) || IS_SERVER) {
+          // Revalidate immediately.
+          softRevalidate()
+        } else {
+          // Delay the revalidate if we have data to return so we won't block
+          // rendering.
+          rAF(softRevalidate)
+        }
       }
     }
 
@@ -727,34 +731,41 @@ export const useSWRHandler = <Data = any, Error = any>(
   // If there is an `error`, the `error` needs to be thrown to the error boundary.
   // If there is no `error`, the `revalidation` promise needs to be thrown to
   // the suspense boundary.
-  if (suspense && isUndefined(data) && key) {
+  if (suspense) {
+    const hasKeyButNoData = key && isUndefined(data)
     // SWR should throw when trying to use Suspense on the server with React 18,
     // without providing any fallback data. This causes hydration errors. See:
     // https://github.com/vercel/swr/issues/1832
-    if (!IS_REACT_LEGACY && IS_SERVER) {
+    if (!IS_REACT_LEGACY && IS_SERVER && hasKeyButNoData) {
       throw new Error('Fallback data is required when using Suspense in SSR.')
     }
 
     // Always update fetcher and config refs even with the Suspense mode.
-    fetcherRef.current = fetcher
-    configRef.current = config
-    unmountedRef.current = false
-    const req = PRELOAD[key]
-    if (!isUndefined(req)) {
-      const promise = boundMutate(req)
-      use(promise)
+    if (hasKeyButNoData) {
+      fetcherRef.current = fetcher
+      configRef.current = config
+      unmountedRef.current = false
     }
 
-    if (isUndefined(error)) {
-      const promise: ReactUsePromise<boolean> = revalidate(WITH_DEDUPE)
-      if (!isUndefined(returnedData)) {
-        promise.status = 'fulfilled'
-        promise.value = true
-      }
-      use(promise as Promise<boolean>)
-    } else {
+    const req = PRELOAD[key]
+
+    const mutateReq =
+      !isUndefined(req) && hasKeyButNoData ? boundMutate(req) : resolvedUndef
+    use(mutateReq)
+
+    if (!isUndefined(error) && hasKeyButNoData) {
       throw error
     }
+    const revalidation = hasKeyButNoData
+      ? revalidate(WITH_DEDUPE)
+      : resolvedUndef
+    if (!isUndefined(returnedData) && hasKeyButNoData) {
+      // @ts-ignore modify react promise status
+      revalidation.status = 'fulfilled'
+      // @ts-ignore modify react promise value
+      revalidation.value = true
+    }
+    use(revalidation)
   }
 
   const swrResponse: SWRResponse<Data, Error> = {
