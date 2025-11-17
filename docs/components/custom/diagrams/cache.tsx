@@ -1,8 +1,8 @@
-import useLocalesMap from "../use-locales-map";
-import { diagramCachePathsMap } from "../../translations/svgs";
+import useLocalesMap from '../use-locales-map'
+import { diagramCachePathsMap } from '../../translations/svgs'
 
-export const Cache = () => {
-  const paths = useLocalesMap(diagramCachePathsMap);
+export const Cache = (): JSX.Element => {
+  const paths = useLocalesMap(diagramCachePathsMap)
 
   return (
     <svg viewBox="0 0 588 311" fill="none" className="invert-on-dark">
@@ -18,5 +18,5 @@ export const Cache = () => {
       <path fill="#141414" d={paths.secondCacheProvider} />
       <path fill="#9A9A9A" d={paths.defaultCacheProvider} />
     </svg>
-  );
-};
+  )
+}

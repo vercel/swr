@@ -1,8 +1,8 @@
-import useLocalesMap from "../use-locales-map";
-import { diagramPaginationPathsMap } from "../../translations/svgs";
+import useLocalesMap from '../use-locales-map'
+import { diagramPaginationPathsMap } from '../../translations/svgs'
 
-export const Pagination = () => {
-  const paths = useLocalesMap(diagramPaginationPathsMap);
+export const Pagination = (): JSX.Element => {
+  const paths = useLocalesMap(diagramPaginationPathsMap)
 
   return (
     <svg viewBox="0 0 769 356" fill="none" className="invert-on-dark">
@@ -73,5 +73,5 @@ export const Pagination = () => {
       />
       <path d={paths.three} fill="#454545" />
     </svg>
-  );
-};
+  )
+}
