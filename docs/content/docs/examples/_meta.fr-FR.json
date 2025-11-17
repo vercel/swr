@@ -1,9 +1,0 @@
-{
-  "basic": "Utilisation de Base",
-  "auth": "Authentification",
-  "optimistic-ui": "UI Optimiste",
-  "infinite-loading": "Chargement Infini",
-  "error-handling": "Gestion des Erreurs",
-  "ssr": "Next.js SSR",
-  "subscription": "Abonnement"
-}
