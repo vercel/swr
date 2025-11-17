@@ -1,7 +1,9 @@
+'use client'
+
 import { useId } from 'react'
 import type { ReactNode } from 'react'
-import useLocalesMap from './use-locales-map'
 import { featuresMap, titleMap } from '../translations/text'
+import { useParams } from 'next/navigation'
 
 import BackendAgnosticIcon from './icons/backend-agnostic'
 import LightweightIcon from './icons/lightweight'
@@ -36,8 +38,9 @@ const FEATURES_LIST: { key: string; icon: ReactNode }[] = [
 
 export default function Features() {
   const keyId = useId()
-  const title = useLocalesMap(titleMap)
-  const features = useLocalesMap(featuresMap)
+  const { lang } = useParams()
+  const title = titleMap[lang as keyof typeof titleMap]
+  const features = featuresMap[lang as keyof typeof featuresMap]
 
   return (
     <div className="mx-auto max-w-full w-[880px] text-center px-4 mb-10">

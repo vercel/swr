@@ -1,8 +1,12 @@
-import useLocalesMap from '../use-locales-map'
+'use client'
+
 import { diagramPaginationPathsMap } from '../../translations/svgs'
+import { useParams } from 'next/navigation'
 
 export const Pagination = (): JSX.Element => {
-  const paths = useLocalesMap(diagramPaginationPathsMap)
+  const { lang } = useParams()
+  const paths =
+    diagramPaginationPathsMap[lang as keyof typeof diagramPaginationPathsMap]
 
   return (
     <svg viewBox="0 0 769 356" fill="none" className="invert-on-dark">

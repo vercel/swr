@@ -1,20 +1,13 @@
-'use client'
-
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
 import { source } from '@/lib/geistdocs/source'
 
 export default function BlogIndex({ more = 'Read more' }: { more?: string }) {
-  const params = useParams()
-  const lang = params.lang as string
-
   // Get all pages and filter for blog posts in the current locale
   const blogPages = source.getPages().filter(page => {
     // Check if the page URL includes /blog/
     const isBlogPost = page.url.includes('/blog/')
-    // Check if the page matches the current locale
-    const matchesLocale = page.locale === lang
-    return isBlogPost && matchesLocale
+
+    return isBlogPost
   })
 
   return (

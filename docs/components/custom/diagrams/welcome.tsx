@@ -1,8 +1,11 @@
-import useLocalesMap from '../use-locales-map'
+'use client'
+
 import { diagramWelcomePathMap } from '../../translations/svgs'
+import { useParams } from 'next/navigation'
 
 export const Welcome = (): JSX.Element => {
-  const path = useLocalesMap(diagramWelcomePathMap)
+  const { lang } = useParams()
+  const path = diagramWelcomePathMap[lang as keyof typeof diagramWelcomePathMap]
 
   return (
     <svg fill="none" viewBox="0 0 769 193" className="invert-on-dark">
