@@ -3,7 +3,7 @@ import { source } from '@/lib/geistdocs/source'
 
 export default function BlogIndex({ more = 'Read more' }: { more?: string }) {
   // Get all pages and filter for blog posts in the current locale
-  const blogPages = source.getPages().filter(page => {
+  const blogPages = source.getPages('en-US').filter(page => {
     // Check if the page URL includes /blog/
     const isBlogPost = page.url.includes('/blog/')
 
