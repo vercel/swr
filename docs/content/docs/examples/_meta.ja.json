@@ -1,9 +1,0 @@
-{
-  "basic": "基本的な使用法",
-  "auth": "認証",
-  "optimistic-ui": "楽観的なUI",
-  "infinite-loading": "無限ローディング",
-  "error-handling": "エラーハンドリング",
-  "ssr": "Next.js SSR",
-  "subscription": "Subscription"
-}
