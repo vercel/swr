@@ -32,7 +32,7 @@ import Link from 'next/link'
 const Page = async (props: PageProps<'/[lang]/docs/[[...slug]]'>) => {
   const params = await props.params
 
-  const page = source.getPage(params.slug)
+  const page = source.getPage(params.slug, params.lang)
 
   if (!page) {
     notFound()
@@ -44,6 +44,7 @@ const Page = async (props: PageProps<'/[lang]/docs/[[...slug]]'>) => {
   return (
     <DocsPage
       slug={params.slug}
+      lang={params.lang}
       tableOfContent={{
         component: (
           <TableOfContents>
@@ -92,7 +93,7 @@ export const generateMetadata = async (
 ) => {
   const params = await props.params
 
-  return generatePageMetadata(params.slug)
+  return generatePageMetadata(params.slug, params.lang)
 }
 
 export default Page

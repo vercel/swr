@@ -1,10 +1,10 @@
-import { getLLMText, source } from "@/lib/geistdocs/source";
+import { getLLMText, source } from '@/lib/geistdocs/source'
 
-export const revalidate = false;
+export const revalidate = false
 
 export const GET = async () => {
-  const scan = source.getPages().map(getLLMText);
-  const scanned = await Promise.all(scan);
+  const scan = source.getPages('en-US').map(getLLMText)
+  const scanned = await Promise.all(scan)
 
-  return new Response(scanned.join("\n\n"));
-};
+  return new Response(scanned.join('\n\n'))
+}
