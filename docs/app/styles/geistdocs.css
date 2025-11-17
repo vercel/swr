@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+/* This layer is by next-forge */
+@layer base {
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    @apply border-border;
+  }
+  * {
+    @apply min-w-0;
+  }
+  html {
+    text-rendering: optimizelegibility;
+  }
+  body {
+    @apply min-h-dvh;
+  }
+  input::placeholder,
+  textarea::placeholder {
+    @apply text-muted-foreground;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    @apply cursor-pointer;
+  }
+}
+
+/* Prose styles */
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
+  @apply tracking-tight;
+}
+
+/* Line numbers styles for code blocks */
+@layer utilities {
+  .line-numbers code {
+    counter-reset: step;
+    counter-increment: step 0;
+  }
+
+  .line-numbers code .line::before {
+    @apply w-4 mr-6 inline-block text-right text-muted-foreground;
+
+    content: counter(step);
+    counter-increment: step;
+  }
+}
+
+:root {
+  --fd-layout-width: 100%;
+  --fd-page-width: 100%;
+}
+
+/* Overlay should sit below the navbar */
+#nd-docs-layout > div[data-state] {
+  @apply top-16;
+}
+
+/* Fix mobile sidebar offset */
+#nd-sidebar-mobile {
+  @apply mt-16;
+}
+
+/* Hide the collapsible trigger in the mobile navbar */
+#nd-sidebar-mobile > div:first-child > div:first-child {
+  @apply hidden;
+}
