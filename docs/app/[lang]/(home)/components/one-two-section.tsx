@@ -1,15 +1,15 @@
-import type { ReactNode } from "react";
+import type { ReactNode } from 'react'
 
 type OneTwoSectionProps = {
-  title: string;
-  description: string;
-  children?: ReactNode;
-};
+  title: string
+  description: string
+  children?: ReactNode
+}
 
 export const OneTwoSection = ({
   title,
   description,
-  children,
+  children
 }: OneTwoSectionProps) => (
   <div className="grid gap-12 p-8 sm:grid-cols-3 sm:gap-0 sm:divide-x sm:p-0">
     <div className="flex flex-col gap-2 text-balance sm:p-12">
@@ -22,4 +22,4 @@ export const OneTwoSection = ({
     </div>
     <div className="col-span-2 sm:p-12">{children}</div>
   </div>
-);
+)
