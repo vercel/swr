@@ -21,6 +21,7 @@ import { getLLMText, source } from '@/lib/geistdocs/source'
 import { Bleed, Callout, Tabs, Tab } from 'nextra-theme-docs'
 import Authors, { Author } from 'components/authors'
 import Features from 'components/features'
+import BlogIndex from 'components/blog-index'
 import { Welcome } from 'components/diagrams/welcome'
 import { Pagination } from 'components/diagrams/pagination'
 import { Infinite } from 'components/diagrams/infinite'
@@ -71,6 +72,7 @@ const Page = async (props: PageProps<'/docs/[[...slug]]'>) => {
             Authors,
             Author,
             Features,
+            BlogIndex,
             Welcome,
             Pagination,
             Infinite,
