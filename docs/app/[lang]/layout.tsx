@@ -6,6 +6,7 @@ import { mono, sans } from '@/lib/geistdocs/fonts'
 import { cn } from '@/lib/utils'
 import { defineI18nUI } from 'fumadocs-ui/i18n'
 import { i18n } from '@/lib/geistdocs/i18n'
+import type { ReactNode } from 'react'
 
 const Logo = () => <CommandIcon className="size-5" />
 
@@ -25,45 +26,42 @@ const suggestions = [
 
 const { provider } = defineI18nUI(i18n, {
   translations: {
-    en: {
+    'en-US': {
       displayName: 'English'
     },
-    fr: {
+    'fr-FR': {
       displayName: 'French'
     },
-    ja: {
+    'ja-FR': {
       displayName: 'Japanese'
     },
     ko: {
       displayName: 'Korean'
     },
-    pt: {
+    'pt-BR': {
       displayName: 'Portuguese'
     },
     ru: {
       displayName: 'Russian'
     },
-    zh: {
+    'zh-CN': {
       displayName: 'Chinese'
     }
   }
 })
 
-type Params = Promise<{ lang: string }>
+type LayoutProps = {
+  children: ReactNode
+  params: Promise<{ lang: string }>
+}
 
-const Layout = async ({
-  children,
-  params
-}: {
-  children: React.ReactNode
-  params: Params
-}) => {
+const Layout = async ({ children, params }: LayoutProps) => {
   const { lang } = await params
 
   return (
     <html
       className={cn(sans.variable, mono.variable, 'scroll-smooth antialiased')}
-      lang="en"
+      lang={lang}
       suppressHydrationWarning
     >
       <body>
