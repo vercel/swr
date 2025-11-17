@@ -18,15 +18,15 @@ import { ScrollTop } from '@/components/geistdocs/scroll-top'
 import { TableOfContents } from '@/components/geistdocs/toc'
 import { getLLMText, source } from '@/lib/geistdocs/source'
 
-import { Bleed } from 'nextra-theme-docs'
-import { Tabs, Tab } from '@/components/geistdocs/tabs'
-import Authors, { Author } from '@/components/authors'
-import Features from '@/components/features'
-import BlogIndex from '@/components/blog-index'
-import { Welcome } from '@/components/diagrams/welcome'
-import { Pagination } from '@/components/diagrams/pagination'
-import { Infinite } from '@/components/diagrams/infinite'
-import { Cache } from '@/components/diagrams/cache'
+import { Bleed } from '@/components/custom/bleed'
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs'
+import Authors, { Author } from '@/components/custom/authors'
+import Features from '@/components/custom/features'
+import BlogIndex from '@/components/custom/blog-index'
+import { Welcome } from '@/components/custom/diagrams/welcome'
+import { Pagination } from '@/components/custom/diagrams/pagination'
+import { Infinite } from '@/components/custom/diagrams/infinite'
+import { Cache } from '@/components/custom/diagrams/cache'
 import Link from 'next/link'
 
 const Page = async (props: PageProps<'/[lang]/docs/[[...slug]]'>) => {
@@ -88,7 +88,7 @@ const Page = async (props: PageProps<'/[lang]/docs/[[...slug]]'>) => {
 export const generateStaticParams = generateStaticPageParams
 
 export const generateMetadata = async (
-  props: PageProps<'/docs/[[...slug]]'>
+  props: PageProps<'/[lang]/docs/[[...slug]]'>
 ) => {
   const params = await props.params
 
