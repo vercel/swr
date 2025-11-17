@@ -1,28 +1,30 @@
-import { DocsLayout as FumadocsDocsLayout } from "fumadocs-ui/layouts/docs";
-import { source } from "@/lib/geistdocs/source";
+import { DocsLayout as FumadocsDocsLayout } from 'fumadocs-ui/layouts/docs'
+import { source } from '@/lib/geistdocs/source'
+import { i18n } from '@/lib/geistdocs/i18n'
 
 export const HomeLayout = ({
-  children,
-}: Pick<LayoutProps<"/">, "children">) => (
+  children
+}: Pick<LayoutProps<'/'>, 'children'>) => (
   <FumadocsDocsLayout
+    i18n={i18n}
     containerProps={{
-      className: "p-0!",
+      className: 'p-0!'
     }}
     nav={{
-      enabled: false,
+      enabled: false
     }}
     searchToggle={{
-      enabled: false,
+      enabled: false
     }}
     sidebar={{
-      className: "md:hidden",
+      className: 'md:hidden'
     }}
     tabMode="auto"
     themeSwitch={{
-      enabled: false,
+      enabled: false
     }}
     tree={source.pageTree}
   >
     {children}
   </FumadocsDocsLayout>
-);
+)

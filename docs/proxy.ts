@@ -1,18 +1,20 @@
-import { isMarkdownPreferred, rewritePath } from "fumadocs-core/negotiation";
-import { type NextRequest, NextResponse } from "next/server";
+import { createI18nMiddleware } from 'fumadocs-core/i18n/middleware'
+import { isMarkdownPreferred, rewritePath } from 'fumadocs-core/negotiation'
+import { type NextRequest, NextResponse } from 'next/server'
+import { i18n } from '@/lib/geistdocs/i18n'
 
-const { rewrite: rewriteLLM } = rewritePath("/docs/*path", "/llms.mdx/*path");
+const { rewrite: rewriteLLM } = rewritePath('/docs/*path', '/llms.mdx/*path')
 
 const proxy = (request: NextRequest) => {
   if (isMarkdownPreferred(request)) {
-    const result = rewriteLLM(request.nextUrl.pathname);
+    const result = rewriteLLM(request.nextUrl.pathname)
 
     if (result) {
-      return NextResponse.rewrite(new URL(result, request.nextUrl));
+      return NextResponse.rewrite(new URL(result, request.nextUrl))
     }
   }
 
-  return NextResponse.next();
-};
+  return createI18nMiddleware(i18n)
+}
 
-export default proxy;
+export default proxy
