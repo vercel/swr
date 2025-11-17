@@ -1,8 +1,8 @@
-import useLocalesMap from "../use-locales-map";
-import { diagramWelcomePathMap } from "../../translations/svgs";
+import useLocalesMap from '../use-locales-map'
+import { diagramWelcomePathMap } from '../../translations/svgs'
 
-export const Welcome = () => {
-  const path = useLocalesMap(diagramWelcomePathMap);
+export const Welcome = (): JSX.Element => {
+  const path = useLocalesMap(diagramWelcomePathMap)
 
   return (
     <svg fill="none" viewBox="0 0 769 193" className="invert-on-dark">
@@ -33,5 +33,5 @@ export const Welcome = () => {
         clipRule="evenodd"
       />
     </svg>
-  );
-};
+  )
+}

@@ -1,8 +1,8 @@
-import useLocalesMap from "../use-locales-map";
-import { diagramInfinitePathMap } from "../../translations/svgs";
+import useLocalesMap from '../use-locales-map'
+import { diagramInfinitePathMap } from '../../translations/svgs'
 
-export const Infinite = () => {
-  const path = useLocalesMap(diagramInfinitePathMap);
+export const Infinite = (): JSX.Element => {
+  const path = useLocalesMap(diagramInfinitePathMap)
 
   return (
     <svg viewBox="0 0 769 356" fill="none" className="invert-on-dark">
@@ -28,5 +28,5 @@ export const Infinite = () => {
       />
       <path d={path} fill="#454545" />
     </svg>
-  );
-};
+  )
+}

@@ -1,4 +1,4 @@
-export default function Logo({ height }) {
+export default function Logo({ height }: { height: number }) {
   return (
     <svg height={height} viewBox="0 0 291 69" fill="none">
       <path
@@ -6,6 +6,5 @@ export default function Logo({ height }) {
         fill="currentColor"
       />
     </svg>
-  );
+  )
 }
-

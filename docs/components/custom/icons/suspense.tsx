@@ -1,4 +1,4 @@
-export default function SuspenseIcon() {
+export default function SuspenseIcon(): JSX.Element {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -14,5 +14,5 @@ export default function SuspenseIcon() {
       <line x1="10" y1="15" x2="10" y2="9" />
       <line x1="14" y1="15" x2="14" y2="9" />
     </svg>
-  );
+  )
 }
