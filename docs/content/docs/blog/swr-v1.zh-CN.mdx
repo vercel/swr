@@ -3,7 +3,6 @@ title: "SWR 1.0 发布"
 description: "大约两年前，我们开源了 SWR——广受大家喜爱的小巧 React 数据请求库。今天，我们迎来了另一个里程碑：SWR 1.0 版本发布了！"
 ---
 
-import { Callout } from 'nextra-theme-docs'
 import { Bleed } from 'nextra-theme-docs'
 
 import Authors, { Author } from 'components/authors'
@@ -162,9 +161,7 @@ useSWR(key, fetcher, { use: [...middleware] })
 - const { revalidate } = useSWR(key, fetcher, options)
 + const { mutate } = useSWR(key, fetcher, options)
 
-
   // ...
-
 
 - revalidate()
 + mutate()
@@ -197,7 +194,6 @@ useSWR(key, (url) => fetch(url).then(res => res.json()))
 ```diff
 - import { mutate } from 'swr'
 + import { useSWRConfig } from 'swr'
-
 
   function Foo () {
 +   const { mutate } = useSWRConfig()

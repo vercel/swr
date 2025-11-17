@@ -2,8 +2,6 @@
 title: 'Arguments'
 ---
 
-import { Callout } from 'nextra-theme-docs'
-
 Par défaut, `key` sera passé à `fetcher` comme argument. Donc les 3 expressions suivantes sont équivalentes:
 
 ```js
@@ -33,7 +31,6 @@ La fonction `fetcher` accepte le paramètre `key` tel quel, et la clé de cache 
 <Callout emoji="⚠️">
   Dans les précédentes versions (< 2.0.0), la fonction `fetcher` recevait les arguments étalés de la clé d'origine lorsque l'argument `key` était de type tableau. Par exemple, la clé `[url, token]` deviendra 2 arguments `(url, token)` pour la fonction `fetcher`.
 </Callout>
-
 
 ## Passer des Objets [#passing-objects]
 

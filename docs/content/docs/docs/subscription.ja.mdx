@@ -2,8 +2,6 @@
 title: 'サブスクリプション'
 ---
 
-import { Callout } from 'nextra-theme-docs'
-
 <Callout emoji="✅">
   この API を利用するには最新バージョン (≥ 2.1.0) に更新してください。
 </Callout>
@@ -28,7 +26,6 @@ useSWRSubscription<Data, Error>(key: Key, subscribe: (key: Key, options: { next:
   - `options`: an object with the following properties:
     - `next`: A function that accepts an error and data, and updates the state with the latest data received from the real-time data source.
 
-
 例えば
 
 ```tsx
@@ -52,7 +49,6 @@ function subscribe(key, { next }) {
 - `state`: 次のプロパティを持つオブジェクト
   - `data`: リアルタイムデータソースから受け取った最新のデータ
   - `error`: リアルタイムデータソースの購読で発生したエラーのオブジェクト、もしくは `undefined`
-
 
 新しいデータを受け取った時には、`error` は `undefined` にリセットされます。
 

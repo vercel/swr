@@ -2,9 +2,6 @@
 title: '理解 SWR'
 ---
 
-import { Callout } from 'nextra-theme-docs'
-import Video from 'components/video'
-
 ## 状态机制 [#state-machine]
 
 `useSWR` 会根据 `fetcher` 函数的状态返回 `data`，`error`，`isLoading` 和 `isValidating`。以下这些图片描述了 SWR 在不同情况下是如何返回值的。
@@ -69,7 +66,6 @@ function Stock() {
 
   if (isLoading) return <div className="skeleton" />;
 
-
   // 否则展示响应数据和一个表示后台正在重新请求的加载器。
   return (
     <>
@@ -83,7 +79,6 @@ function Stock() {
 ![An example of using the isLoading state](/img/understanding/isloading.gif)
 
 点击 [这里](https://codesandbox.io/s/swr-isloading-jtopow) 查看完整代码示例。
-
 
 ## 返回之前的数据以获得更好的用户体验 [#return-previous-data-for-better-ux]
 

@@ -34,8 +34,6 @@ const { data: user } = useSWR(['/api/user', token], ([url, token]) => fetchWithT
 
 ## 传入对象 [#passing-objects]
 
-import { Callout } from 'nextra-theme-docs'
-
 <Callout>
   从 SWR 1.1.0 开始，object 类型的 keys 可以在内部自动被序列化。
 </Callout>

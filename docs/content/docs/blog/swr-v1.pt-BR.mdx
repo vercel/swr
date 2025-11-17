@@ -3,7 +3,6 @@ title: "Anunciando SWR v1.0"
 description: "Há quase 2 anos, abrimos o SWR para código aberto, a pequena biblioteca React de data fetching que as pessoas adoram. Hoje estamos alcançando outro marco: a versão 1.0 do SWR."
 ---
 
-import { Callout } from 'nextra-theme-docs'
 import { Bleed } from 'nextra-theme-docs'
 
 import Authors, { Author } from 'components/authors'
@@ -162,9 +161,7 @@ Se você está usand os tipos correspondentes, atualize o caminho de importaçã
 - const { revalidate } = useSWR(key, fetcher, options)
 + const { mutate } = useSWR(key, fetcher, options)
 
-
   // ...
-
 
 - revalidate()
 + mutate()
@@ -197,7 +194,6 @@ Esta **não** é uma mudança importante, mas agora _recomendaremos_ usar sempre
 ```diff
 - import { mutate } from 'swr'
 + import { useSWRConfig } from 'swr'
-
 
   function Foo () {
 +   const { mutate } = useSWRConfig()

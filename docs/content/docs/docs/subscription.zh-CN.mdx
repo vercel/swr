@@ -2,8 +2,6 @@
 title: '订阅'
 ---
 
-import { Callout } from 'nextra-theme-docs'
-
 <Callout emoji="✅">
   请升级到最新版本 (≥ 2.1.0) 来使用这个 API.
 </Callout>
@@ -27,7 +25,6 @@ useSWRSubscription<Data, Error>(key: Key, subscribe: (key: Key, options: { next:
   - `key`: 与 `useSWRSubscription` 的 key 参数相同。
   - `options`: 一个带有以下属性的对象：
     - `next`: 一个函数，它接收一个错误和数据，然后使用从实时数据源接收到的最新数据来更新状态。
-
 
 一个 subscribe 函数的例子
 

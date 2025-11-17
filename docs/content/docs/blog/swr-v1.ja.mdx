@@ -3,7 +3,6 @@ title: "SWR 1.0 の発表"
 description: "ほぼ二年前、みんなが愛する小さなデータフェッチ React ライブラリである SWR をオープンソースにしました。そして本日、私たちは大きな節目を迎えました： SWR の 1.0 バージョンです。"
 ---
 
-import { Callout } from 'nextra-theme-docs'
 import { Bleed } from 'nextra-theme-docs'
 
 import Authors, { Author } from 'components/authors'
@@ -162,9 +161,7 @@ useSWR(key, fetcher, { use: [...middleware] })
 - const { revalidate } = useSWR(key, fetcher, options)
 + const { mutate } = useSWR(key, fetcher, options)
 
-
   // ...
-
 
 - revalidate()
 + mutate()
@@ -197,7 +194,6 @@ useSWR(key, (url) => fetch(url).then(res => res.json()))
 ```diff
 - import { mutate } from 'swr'
 + import { useSWRConfig } from 'swr'
-
 
   function Foo () {
 +   const { mutate } = useSWRConfig()

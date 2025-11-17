@@ -2,8 +2,6 @@
 title: 'Paginação'
 ---
 
-import { Callout } from 'nextra-theme-docs'
-
 <Callout emoji="✅">
     Por favor atualize para a versão mais recente (≥ 0.3.0) para usar esta API. A API anterior <code>useSWRPages</code> está descontinuada.
 </Callout>
@@ -320,7 +318,6 @@ const getKey = (pageIndex, previousPageData) => {
 <Callout emoji="✅">
   Por favor atualize para a última versão (≥ 2.1.0) para usar essa API.
 </Callout>
-
 
 O comportamento padrão do `useSWRInfinite` é de obter dados para cada página em sequênciaa, pois a criação de chaves é baseada nos dados previamente obtidos. No entanto, fazer fetching de dados sequencialmente para um grande número de páginas pode não ser otimizado, particularmente se as páginas não são interdependentes.
 

@@ -3,12 +3,9 @@ title: "SWR 2.0 の発表"
 description: "本日、SWR 2.0 のリリースを発表できることに興奮しています！新しいバージョンには、新しいミューテーション API や楽観的更新パターンに対する改善、DevTools、React の並行処理機能のサポートといった多くの改善と新しい機能が含まれています。"
 ---
 
-import { Callout } from 'nextra-theme-docs'
 import { Bleed } from 'nextra-theme-docs'
 
 import Authors, { Author } from 'components/authors'
-import Video from 'components/video'
-
 ![SWR 2.0](https://assets.vercel.com/image/upload/v1670542323/swr/v2.png)
 
 <Authors date="December 9th, 2022">
@@ -333,7 +330,6 @@ SWR 2.0 と全ての新しい機能は引き続き、React 16 や 17 に対し�
 
 もしグローバルな `mutate` に対して関数を渡した場合、それは [フィルター関数](/blog/swr-v2#mutate-multiple-keys) として使われます。これまでは、グローバルの `mutate` に対してキーを返す関数を渡すことができました。
 
-
 ```diff
 - mutate(() => '/api/item') // キーを返す関数
 + mutate('/api/item')       // 直接キーを渡すようにする
@@ -406,6 +402,5 @@ IE 11 をサポートしたい場合、フレームワークやバンドラで E
 新しい [Next.js 13](https://nextjs.org/blog/next-13) のリリースにおいては、多くのエキサイティングな新機能だけでなく、[React Server Components](https://beta.nextjs.org/docs/rendering/server-and-client-components) やストリーミング SSR、[非同期コンポーネント](https://beta.nextjs.org/docs/data-fetching/fetching#asyncawait-in-server-components)、[`use` フック](https://github.com/acdlite/rfcs/blob/first-class-promises/text/0000-first-class-support-for-promises.md#usepromise) といった React のエコシステムにおけるパラダイムシフトがありました。それらの多くはデータ取得に関するものであり、いくつかは SWR のユースケースとも被るものです。
 
 しかしながら、SWR プロジェクトのゴールは引き続き変わらないままです。私たちは軽量に導入可能で、フレームワークに依存せず、少し _こだわりのある_ (例: フォーカス時の再検証) を目指しています。標準的な手法になるのを目指す代わりに、よりよい UX を実現するためイノベーションにフォーカスしたいと考えています。その一方で私たちは React の新しい力を用いてどのように SWR を改善できるのかを調査しています。
-
 
 [143](https://github.com/vercel/swr/graphs/contributors) 人のコントリビュータ (+ [106](https://github.com/vercel/swr-site/graphs/contributors) のドキュメントコントリビュータ)、そしてご協力いただいた皆様、フィードバックをいただいた皆様にも感謝しています。[Toru Kobayashi](https://twitter.com/koba04) さんの DevTools やドキュメントに対する貢献には特に感謝しています。彼の貢献なしにはこのリリースは実現できませんでした！

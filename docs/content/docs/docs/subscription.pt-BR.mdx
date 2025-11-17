@@ -2,8 +2,6 @@
 title: 'Inscrição'
 ---
 
-import { Callout } from 'nextra-theme-docs'
-
 <Callout emoji="✅">
   Por favor atualize para a última versão (≥ 2.1.0) para usar essa API.
 </Callout>
@@ -28,7 +26,6 @@ Esse hook se inscreve em uma fonte de dados em tempo real usando a função de i
   - `options`: um objeto com as seguintes propriedades:
     - `next`: Uma função que aceita um erro e dados, e atualiza o estado com os dados mais recentes recebidos da fonte de dados em tempo real.
 
-
 Por exemplo,
 
 ```tsx
@@ -46,7 +43,6 @@ function subscribe(key, { next }) {
   return () => sub.close()
 }
 ```
-
 
 #### Valores de Retorno [#return-values]
 

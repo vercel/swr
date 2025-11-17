@@ -34,10 +34,7 @@ The `fetcher` function accepts the `key` parameter as is, and the cache key will
   In the previous versions (< 2.0.0), The `fetcher` function will receive the spreaded arguments from original `key` when the `key` argument is array type. E.g., key `[url, token]` will become 2 arguments `(url, token)` for `fetcher` function.
 </Callout>
 
-
 ## Passing Objects [#passing-objects]
-
-import { Callout } from 'nextra-theme-docs'
 
 <Callout>
   Since SWR 1.1.0, object-like keys will be serialized under the hood automatically. 

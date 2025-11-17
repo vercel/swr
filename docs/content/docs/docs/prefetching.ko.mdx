@@ -26,7 +26,6 @@ import useSWR, { preload } from 'swr'
 
 const fetcher = (url) => fetch(url).then((res) => res.json())
 
-
 // 아래 사용자 구성 요소를 렌더링하기 전에 리소스를 미리 로드합니다.
 // 이는 waterfall 현상을 막을 수 있습니다.
 // 버튼이나 링크를 호버할 때도 preload를 시작할 수 있습니다.

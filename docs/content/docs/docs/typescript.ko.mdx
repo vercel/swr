@@ -19,7 +19,6 @@ useSWR(() => '/api/user', key => {})
 useSWR({ a: '1', b: { c: '3', d: 2 } }, key => {})
 useSWR(() => ({ a: '1', b: { c: '3', d: 2 } }), key => {})
 
-
 // `arg0`은 stirng으로 추론됨.  `arg1`은 number로 추론됨
 useSWR(['user', 8], ([arg0, arg1]) => {})
 useSWR(() => ['user', 8], ([arg0, arg1]) => {})
