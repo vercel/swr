@@ -3,12 +3,9 @@ title: "SWR 2.0 发布"
 description: "SWR 2.0 发布：新的数据更改 API、经过优化的乐观 UI 功能、新的 DevTools、以及对并发渲染的更好支持，以及更多功能。"
 ---
 
-import { Callout } from 'nextra-theme-docs'
 import { Bleed } from 'nextra-theme-docs'
 
 import Authors, { Author } from 'components/authors'
-import Video from 'components/video'
-
 ![SWR 2.0](https://assets.vercel.com/image/upload/v1670542323/swr/v2.png)
 
 <Authors date="December 9th, 2022">
@@ -115,7 +112,6 @@ SWR 将立即用 `optimisticData` 值去更新 `data`，然后将请求发送到
 
 像许多 API 一样，如果 `addNewTodo(...)` 请求会从服务端返回最新的数据，我们也可以直接显示这个结果（而不是开始一个新的重新验证）! 还有一个新的 `populateCache` 选项，告诉 SWR 用 mutate 的响应去更新本地数据：
 
-
 ```jsx {9}
 const { mutate, data } = useSWR('/api/todos')
 
@@ -205,7 +201,6 @@ mutate(
 ## SWR 开发者工具 [#swr-devtools]
 
 [SWRDevTools](https://swr-devtools.vercel.app) 是一个用于帮助你调试你的 SWR 缓存及请求结果的浏览器拓展程序。请查看我们的 [devtools](/docs/advanced/devtools) 查结，了解如何在你的应用程序中使用 devtools。
-
 
 ![](/img/devtools/cache-view.jpg)
 
@@ -399,7 +394,6 @@ interface Cache<Data> {
 ### 以 ES2018 为构建目标 [#es2018-as-the-build-target]
 
 如果你想支持 IE 11，你必须在你的框架或 bundler 指定构建目标为 ES5。这一变化使 SSR 的性能得到了优化，并使构建产物的体积变小。
-
 
 ## 更新日志 [#changelog]
 

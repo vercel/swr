@@ -3,7 +3,6 @@ title: "SWR 1.0 발표"
 description: "약 2년 전에 우리는 사람들이 사랑하는 조그만 데이터 가져오기 React 라이브러리인 SWR을 공개했습니다. 오늘 우리는 SWR 버전 1.0이라는 또 다른 마일스톤에 도달하였습니다."
 ---
 
-import { Callout } from 'nextra-theme-docs'
 import { Bleed } from 'nextra-theme-docs'
 
 import Authors, { Author } from 'components/authors'
@@ -162,9 +161,7 @@ useSWR(key, fetcher, { use: [...middleware] })
 - const { revalidate } = useSWR(key, fetcher, options)
 + const { mutate } = useSWR(key, fetcher, options)
 
-
   // ...
-
 
 - revalidate()
 + mutate()
@@ -197,7 +194,6 @@ useSWR(key, (url) => fetch(url).then(res => res.json()))
 ```diff
 - import { mutate } from 'swr'
 + import { useSWRConfig } from 'swr'
-
 
   function Foo () {
 +   const { mutate } = useSWRConfig()

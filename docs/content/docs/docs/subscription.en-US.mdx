@@ -2,8 +2,6 @@
 title: 'Subscription'
 ---
 
-import { Callout } from 'nextra-theme-docs'
-
 <Callout emoji="✅">
   Please update to the latest version (≥ 2.1.0) to use this API.
 </Callout>
@@ -28,7 +26,6 @@ This hook subscribes to a real-time data source using the subscribe function pro
   - `options`: an object with the following properties:
     - `next`: A function that accepts an error and data, and updates the state with the latest data received from the real-time data source.
 
-
 For instance
 
 ```tsx
@@ -52,7 +49,6 @@ function subscribe(key, { next }) {
 - `state`: An object with the following properties:
   - `data`: The latest data received from the real-time data source.
   - `error`: An Error object if an error occurred while subscribing to the real-time data source, otherwise undefined.
-
 
 When new data is received, the `error` will be reset to `undefined`.
 

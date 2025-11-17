@@ -58,7 +58,6 @@ const getKey: SWRInfiniteKeyLoader = (index, previousPageData) => {
 const { data } = useSWRInfinite(getKey, fetcher)
 ```
 
-
 ### useSWRSubscription [#useswrsubscription]
 
 * Inline subscribe function and manually specify the type of `next` using `SWRSubscriptionOptions`.
@@ -97,8 +96,6 @@ const sub: SWRSubscription<string, number, Error> = (key, { next }) => {
 }
 const { data, error } = useSWRSubscription('key', sub)
 ```
-
-
 
 ## Generics [#generics]
 

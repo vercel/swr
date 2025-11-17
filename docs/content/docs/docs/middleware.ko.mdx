@@ -2,8 +2,6 @@
 title: '미들웨어'
 ---
 
-import { Callout } from 'nextra-theme-docs'
-
 <Callout>
   이 기능을 사용하시려면 최신 버전(≥ 1.0.0)으로 업그레이드하세요.
 </Callout>
@@ -97,7 +95,6 @@ exit  a
 ### Request Logger [#request-logger]
 
 예시로 간단한 request logger 미들웨어를 만들어봅시다. 이 SWR hook으로부터 전송된 모든 가져오기 요청을 출력합니다. 이 미들웨어를 `SWRConfig`에 추가하여 모든 SWR hook에 대해 사용할 수도 있습니다.
-
 
 ```jsx
 function logger(useSWRNext) {
