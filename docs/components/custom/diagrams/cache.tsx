@@ -1,8 +1,11 @@
-import useLocalesMap from '../use-locales-map'
+'use client'
+
 import { diagramCachePathsMap } from '../../translations/svgs'
+import { useParams } from 'next/navigation'
 
 export const Cache = (): JSX.Element => {
-  const paths = useLocalesMap(diagramCachePathsMap)
+  const { lang } = useParams()
+  const paths = diagramCachePathsMap[lang as keyof typeof diagramCachePathsMap]
 
   return (
     <svg viewBox="0 0 588 311" fill="none" className="invert-on-dark">

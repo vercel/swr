@@ -1,8 +1,12 @@
-import useLocalesMap from '../use-locales-map'
+'use client'
+
 import { diagramInfinitePathMap } from '../../translations/svgs'
+import { useParams } from 'next/navigation'
 
 export const Infinite = (): JSX.Element => {
-  const path = useLocalesMap(diagramInfinitePathMap)
+  const { lang } = useParams()
+  const path =
+    diagramInfinitePathMap[lang as keyof typeof diagramInfinitePathMap]
 
   return (
     <svg viewBox="0 0 769 356" fill="none" className="invert-on-dark">
