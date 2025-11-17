@@ -1,6 +1,6 @@
 import { DocsLayout } from '@/components/geistdocs/docs-layout'
 
-const Layout = ({ children }: LayoutProps<'/docs'>) => (
+const Layout = ({ children }: LayoutProps<'/[lang]/docs'>) => (
   <DocsLayout>{children}</DocsLayout>
 )
 
