@@ -14,8 +14,6 @@ SWR은 **페이지네이션**과 **인피니트 로딩**과 같은 일반적인 
 
 다음과 같은 무언가를 구축한다면 우선 `useSWRInfinite`은 필요하지 **않고** `useSWR`만 사용하면 됩니다.
 
-import { Pagination } from 'components/diagrams/pagination'
-
 <div className="mt-8">
   <Pagination/>
 </div>
@@ -85,8 +83,6 @@ function App () {
 
 리스트에 데이터를 이어 붙이는 "더 보기" 버튼(또는 스크롤할 때 자동으로 완료)으로
 **인피니트 로딩** UI를 구축하길 원하는 경우가 있습니다.
-
-import { Infinite } from 'components/diagrams/infinite'
 
 <div className="mt-8">
   <Infinite/>

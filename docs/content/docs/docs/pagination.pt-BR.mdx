@@ -14,8 +14,6 @@ SWR provê uma API `useSWRInfinite` dedicada para lidar com padrões de interfac
 
 Antes de tudo, nós podemos **NÃO** precisar de `useSWRInfinite` mas podemos usar apenas `useSWR` se estamos construindo algo como isso:
 
-import { Pagination } from 'components/diagrams/pagination'
-
 <div className="mt-8">
   <Pagination/>
 </div>
@@ -83,8 +81,6 @@ Com apenas 1 linha de código, obtemos uma UX muito melhor. O hook `useSWR` é t
 
 Às vezes, queremos criar uma UI de **carregamento infinito**, com um botão "Carregar mais" que anexa dados
 para a lista (ou feito automaticamente quando você rola):
-
-import { Infinite } from 'components/diagrams/infinite'
 
 <div className="mt-8">
   <Infinite/>

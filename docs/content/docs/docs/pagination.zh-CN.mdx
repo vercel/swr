@@ -14,8 +14,6 @@ SWR 提供了一个专用 API `useSWRInfinite` 来支持常见的 UI 模式，�
 
 首先，我们可能 **并不** 需要使用 `useSWRInfinite`，而是直接使用 `useSWR`，例如我们正在构建以下场景：
 
-import { Pagination } from 'components/diagrams/pagination'
-
 <div className="mt-8">
   <Pagination/>
 </div>
@@ -81,8 +79,6 @@ function App () {
 ### 无限加载 [#infinite-loading]
 
 有时我们想构建一个**无限加载**的界面，通过一个 "Load More" 按钮向列表追加数据（或者当你滚动时自动加载）：
-
-import { Infinite } from 'components/diagrams/infinite'
 
 <div className="mt-8">
   <Infinite/>

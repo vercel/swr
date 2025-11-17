@@ -14,8 +14,6 @@ SWR provides a dedicated API `useSWRInfinite` to support common UI patterns such
 
 First of all, we might **NOT** need `useSWRInfinite` but can use just `useSWR` if we are building something like this:
 
-import { Pagination } from 'components/diagrams/pagination'
-
 <div className="mt-8">
   <Pagination/>
 </div>
@@ -85,8 +83,6 @@ that most scenarios are covered by it.
 
 Sometimes we want to build an **infinite loading** UI, with a "Load More" button that appends data
 to the list (or done automatically when you scroll):
-
-import { Infinite } from 'components/diagrams/infinite'
 
 <div className="mt-8">
   <Infinite/>
