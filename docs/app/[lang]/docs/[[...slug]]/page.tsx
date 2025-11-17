@@ -18,6 +18,15 @@ import { ScrollTop } from '@/components/geistdocs/scroll-top'
 import { TableOfContents } from '@/components/geistdocs/toc'
 import { getLLMText, source } from '@/lib/geistdocs/source'
 
+import { Bleed, Callout, Tabs, Tab } from 'nextra-theme-docs'
+import Authors, { Author } from 'components/authors'
+import Features from 'components/features'
+import { Welcome } from 'components/diagrams/welcome'
+import { Pagination } from 'components/diagrams/pagination'
+import { Infinite } from 'components/diagrams/infinite'
+import { Cache } from 'components/diagrams/cache'
+import Link from 'next/link'
+
 const Page = async (props: PageProps<'/docs/[[...slug]]'>) => {
   const params = await props.params
 
@@ -52,9 +61,21 @@ const Page = async (props: PageProps<'/docs/[[...slug]]'>) => {
       <DocsBody>
         <MDX
           components={getMDXComponents({
-            a: createRelativeLink(source, page)
+            a: createRelativeLink(source, page),
 
             // Add your custom components here
+            Bleed,
+            Callout,
+            Tabs,
+            Tab,
+            Authors,
+            Author,
+            Features,
+            Welcome,
+            Pagination,
+            Infinite,
+            Cache,
+            Link
           })}
         />
       </DocsBody>

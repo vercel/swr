@@ -14,8 +14,6 @@ SWR は、**ページネーション**や**無限ローディング**などの�
 
 まず第一に、`useSWRInfinite` は必要**ない**かもしれませんが、次のようなものを構築しようとするときには `useSWR` を使用できます：
 
-import { Pagination } from 'components/diagrams/pagination'
-
 <div className="mt-8">
   <Pagination/>
 </div>
@@ -85,8 +83,6 @@ function App () {
 
 「さらに読み込む」ボタンを使用して（またはスクロールすると自動的に実行されて）リストにデータを
 追加する**無限ローディング** UI を構築したい場合があります：
-
-import { Infinite } from 'components/diagrams/infinite'
 
 <div className="mt-8">
   <Infinite/>
