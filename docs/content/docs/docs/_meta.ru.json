@@ -1,0 +1,24 @@
+{
+  "getting-started": "Начало работы",
+  "api": "API",
+  "global-configuration": "Глобальная конфигурация",
+  "data-fetching": "Выборка данных",
+  "error-handling": "Обработка ошибок",
+  "revalidation": "Авто-ревалидация",
+  "conditional-fetching": "Условная выборка данных",
+  "arguments": "Аргументы",
+  "mutation": "Мутация",
+  "pagination": "Пагинация",
+  "subscription": "Подписка",
+  "prefetching": "Пред-выборка",
+  "with-nextjs": "Next.js SSG и SSR",
+  "typescript": "TypeScript",
+  "suspense": "Задержка (Suspense)",
+  "middleware": "Промежуточное ПО (Middleware)",
+  "advanced": "Продвинутые",
+  "change-log": {
+    "title": "Журнал изменений",
+    "href": "https://github.com/vercel/swr/releases",
+    "newWindow": true
+  }
+}

@@ -1,0 +1,192 @@
+import { Callout, Tabs, Tab } from 'nextra-theme-docs'
+import Link from 'next/link'
+
+# Getting Started
+
+## Installation [#installation]
+
+Inside your React project directory, run the following:
+
+<Tabs items={['pnpm', 'npm', 'yarn']}>
+  <Tab>
+    ```bash
+    pnpm add swr
+    ```
+  </Tab>
+  <Tab>
+    ```bash
+    npm i swr
+    ```
+  </Tab>
+  <Tab>
+    ```bash
+    yarn add swr
+    ```
+  </Tab>
+</Tabs>
+
+## Quick Start [#quick-start]
+
+For normal RESTful APIs with JSON data, first you need to create a `fetcher` function, which is just a wrapper of the native `fetch`:
+
+```jsx
+const fetcher = (...args) => fetch(...args).then(res => res.json())
+```
+
+<Callout emoji="💡">
+  If you want to use GraphQL API or libs like Axios, you can create your own fetcher function.
+  Check <Link href="/docs/data-fetching">here</Link> for more examples.
+</Callout>
+
+Then you can import `useSWR` and start using it inside any function components:
+
+```jsx
+import useSWR from 'swr'
+
+function Profile ({ userId }) {
+  const { data, error, isLoading } = useSWR(`/api/user/${userId}`, fetcher)
+
+  if (error) return <div>failed to load</div>
+  if (isLoading) return <div>loading...</div>
+
+  // render data
+  return <div>hello {data.name}!</div>
+}
+```
+
+Normally, there're 3 possible states of a request: "loading", "ready", or "error". You can use the value of `data`, `error` and `isLoading` to
+determine the current state of the request, and return the corresponding UI.
+
+## Make It Reusable [#make-it-reusable]
+
+When building a web app, you might need to reuse the data in many places of the UI. It is incredibly easy to create reusable data hooks
+on top of SWR:
+
+```jsx
+function useUser (id) {
+  const { data, error, isLoading } = useSWR(`/api/user/${id}`, fetcher)
+
+  return {
+    user: data,
+    isLoading,
+    isError: error
+  }
+}
+```
+
+And use it in your components:
+
+```jsx
+function Avatar ({ userId }) {
+  const { user, isLoading, isError } = useUser(userId)
+
+  if (isLoading) return <Spinner />
+  if (isError) return <Error />
+  return <img src={user.avatar} />
+}
+```
+
+By adopting this pattern, you can forget about **fetching** data in the imperative way: start the request, update the loading state, and return the final result.
+Instead, your code is more declarative: you just need to specify what data is used by the component.
+
+## Example [#example]
+
+In a real-world example, our website shows a navbar and the content, both depend on `user`:
+
+import { Welcome } from 'components/diagrams/welcome'
+
+<div className="mt-8">
+  <Welcome/>
+</div>
+
+Traditionally, we fetch data once using `useEffect` in the top level component, and pass it to child components via props (notice that we don't handle error state for now):
+
+```jsx {7-11,17,18,27}
+// page component
+
+function Page ({ userId }) {
+  const [user, setUser] = useState(null)
+
+  // fetch data
+  useEffect(() => {
+    fetch(`/api/user/${userId}`)
+      .then(res => res.json())
+      .then(data => setUser(data))
+  }, [userId])
+
+  // global loading state
+  if (!user) return <Spinner/>
+
+  return <div>
+    <Navbar user={user} />
+    <Content user={user} />
+  </div>
+}
+
+// child components
+
+function Navbar ({ user }) {
+  return <div>
+    ...
+    <Avatar user={user} />
+  </div>
+}
+
+function Content ({ user }) {
+  return <h1>Welcome back, {user.name}</h1>
+}
+
+function Avatar ({ user }) {
+  return <img src={user.avatar} alt={user.name} />
+}
+```
+
+Usually, we need to keep all the data fetching in the top level component and add props to every component deep down the tree.
+The code will become harder to maintain if we add more data dependency to the page.
+
+Although we can avoid passing props using [Context](https://react.dev/learn/passing-data-deeply-with-context), there's still the dynamic content problem:
+components inside the page content can be dynamic, and the top level component might not know what data will be needed by its child components.
+
+SWR solves the problem perfectly. With the `useUser` hook we just created, the code can be refactored to:
+
+```jsx {20,26}
+// page component
+
+function Page ({ userId }) {
+  return <div>
+    <Navbar userId={userId} />
+    <Content userId={userId} />
+  </div>
+}
+
+// child components
+
+function Navbar ({ userId }) {
+  return <div>
+    ...
+    <Avatar userId={userId} />
+  </div>
+}
+
+function Content ({ userId }) {
+  const { user, isLoading } = useUser(userId)
+  if (isLoading) return <Spinner />
+  return <h1>Welcome back, {user.name}</h1>
+}
+
+function Avatar ({ userId }) {
+  const { user, isLoading } = useUser(userId)
+  if (isLoading) return <Spinner />
+  return <img src={user.avatar} alt={user.name} />
+}
+```
+
+Data is now **bound** to the components which need the data, and all components are **independent** to each other.
+All the parent components don't need to know anything about the data or passing data around. They just render.
+The code is much simpler and easier to maintain now.
+
+The most beautiful thing is that there will be only **1 request** sent to the API, because they use the same SWR key and
+the request is **deduped**, **cached** and **shared** automatically.
+
+Also, the application now has the ability to refetch the data on [user focus or network reconnect](/docs/revalidation)!
+That means, when the user's laptop wakes from sleep or they switch between browser tabs, the data will be refreshed automatically.

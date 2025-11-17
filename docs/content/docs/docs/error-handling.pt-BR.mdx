@@ -1,0 +1,104 @@
+import { Callout } from 'nextra-theme-docs'
+import Link from 'next/link'
+
+# Manipulação de Erros
+
+Se um erro é lançado dentro de [`fetcher`](/docs/data-fetching), ele será retornado como `error` pelo hook.
+
+```js
+const fetcher = url => fetch(url).then(r => r.json())
+
+// ...
+const { data, error } = useSWR('/api/user', fetcher)
+```
+
+O objeto `error` será definido se a fetch promise for rejeitada.
+
+## Código de Status e Objeto de Erro [#status-code-and-error-object]
+
+As vezes queremos uma API para retornar um objeto de erro junto ao código de status.
+Ambos são úteis para o cliente.
+
+Nós podemos customizar nossa função `fetcher` para retornar mais informações. Se o código de status não for `2xx`,
+consideramos que é um erro mesmo se ele puder ser lido como JSON:
+
+```js
+const fetcher = async url => {
+  const res = await fetch(url)
+
+  // Se o código de status não estiver no raio 200-299,
+  // nós ainda tentamos ler o JSON e retornar o objeto de erro
+  if (!res.ok) {
+    const error = new Error('An error occurred while fetching the data.')
+    // Adicionar informação extra ao objeto de erro.
+    error.info = await res.json()
+    error.status = res.status
+    throw error
+  }
+
+  return res.json()
+}
+
+// ...
+const { data, error } = useSWR('/api/user', fetcher)
+// error.info === {
+//   message: "You are not authorized to access this resource.",
+//   documentation_url: "..."
+// }
+// error.status === 403
+```
+
+<Callout emoji="💡">
+    Note que <code>data</code> e <code>error</code> podem existir ao mesmo tempo. Então a UI pode mostrar os dados existentes,
+    enquanto sabe que o próximo pedido falhou.
+</Callout>
+
+[Aqui](/examples/error-handling) nós temos um exemplo.
+
+## Retentativas [#error-retry]
+
+SWR usa o [algoritmo de retentativa exponencial (em inglês)](https://en.wikipedia.org/wiki/Exponential_backoff) para tentar novamente a requisição em caso de erro.
+O algoritmo permite a aplicação se recuperar rapidamente de erros, mas não gasta muitos recursos tentando novamente muito frequentemente.
+
+Você também pode sobrescrever este comportamento através da opção [onErrorRetry](/docs/api#options):
+
+```js
+useSWR('/api/user', fetcher, {
+  onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
+    // Nunca tentar ao 404.
+    if (error.status === 404) return
+
+    // Nunca tentar para uma chave específica
+    if (key === '/api/user') return
+
+    // Tentar até 10 vezes.
+    if (retryCount >= 10) return
+
+    // Tentar novamente depois de 5 segundos
+    setTimeout(() => revalidate({ retryCount }), 5000)
+  }
+})
+```
+
+Esse callback dá a você a flexibilidade de tentar novamente baseado em várias condições. Você também pode desativá-lo definindo `shouldRetryOnError: false`.
+
+Também é possível provê-lo via contexto de [Configuração Global](/docs/global-configuration).
+
+## Relatório de Erros Globais [#global-error-report]
+
+Você pode sempre obter o objeto de erro dentro do componente reativamente.
+Mas, no caso de você querer lidar com o erro globalmente, para notificar a UI para mostrar um [toast](https://vercel.com/design/toast) ou [snackbar](https://material.io/components/snackbars), ou reportá-lo em algum lugar como [Sentry](https://sentry.io),
+há um evento chamado [`onError`](/docs/api#options):
+
+```jsx
+<SWRConfig value={{
+  onError: (error, key) => {
+    if (error.status !== 403 && error.status !== 404) {
+      // Nós podemos enviar o erro para Sentry,
+      // ou mostrar uma notificação na interface.
+    }
+  }
+}}>
+  <MyApp />
+</SWRConfig>
+```

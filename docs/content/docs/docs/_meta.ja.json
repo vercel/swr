@@ -1,0 +1,24 @@
+{
+  "getting-started": "はじめに",
+  "api": "API",
+  "global-configuration": "グローバルな設定",
+  "data-fetching": "データの取得",
+  "error-handling": "エラーハンドリング",
+  "revalidation": "自動再検証",
+  "conditional-fetching": "条件付きフェッチ",
+  "arguments": "引数",
+  "mutation": "ミューテーションと再検証",
+  "pagination": "ページネーション",
+  "subscription": "サブスクリプション",
+  "prefetching": "プリフェッチ",
+  "with-nextjs": "Next.js の SSG と SSR",
+  "typescript": "TypeScript",
+  "suspense": "サスペンス",
+  "middleware": "ミドルウェア",
+  "advanced": "高度な使い方",
+  "change-log": {
+    "title": "変更履歴",
+    "href": "https://github.com/vercel/swr/releases",
+    "newWindow": true
+  }
+}

@@ -1,0 +1,78 @@
+import { Callout } from 'nextra-theme-docs'
+import Link from 'next/link'
+
+# Récupération des données
+
+```js
+const { data, error } = useSWR(key, fetcher)
+```
+
+C'est l'API fondamentale de SWR. Le `fetcher` est une fonction asynchrone qui **accepte la `key`** de SWR, et retourne les données.
+
+La valeur retournée sera passée en tant que `data`, et si elle lance une erreur, elle sera attrapée en tant que `error`.
+
+<Callout emoji="💡">
+  Notez que <code>fetcher</code> peut être omis des paramètres s'il est{' '}
+  <Link href="/docs/global-configuration">fourni globalement</Link>.
+</Callout>
+
+## Récupération [#fetch]
+
+Vous pouvez utiliser n'importe quelle bibliothèque pour gérer la récupération des données, par exemple un polyfill `fetch` [developit/unfetch](https://github.com/developit/unfetch):
+
+```js
+import fetch from 'unfetch'
+
+const fetcher = url => fetch(url).then(r => r.json())
+
+function App () {
+  const { data, error } = useSWR('/api/data', fetcher)
+  // ...
+}
+```
+
+<Callout emoji="💡">
+  Si vous utilisez <strong>Next.js</strong>, vous n'avez pas besoin d'importer ce polyfill :<br/>
+  <a target="_blank" rel="noopener" href="https://nextjs.org/blog/next-9-1-7#new-built-in-polyfills-fetch-url-and-objectassign">New Built-In Polyfills: fetch(), URL, and Object.assign</a>
+  If you are using <strong>Next.js</strong>, you don't need to import this polyfill:<br/>
+</Callout>
+
+## Axios [#axios]
+
+```js
+import axios from 'axios'
+
+const fetcher = url => axios.get(url).then(res => res.data)
+
+function App () {
+  const { data, error } = useSWR('/api/data', fetcher)
+  // ...
+}
+```
+
+## GraphQL [#graphql]
+
+Ou avec GraphQL et des bibliothèques comme [graphql-request](https://github.com/prisma-labs/graphql-request):
+
+```js
+import { request } from 'graphql-request'
+
+const fetcher = query => request('/api/graphql', query)
+
+function App () {
+  const { data, error } = useSWR(
+    `{
+      Movie(title: "Inception") {
+        releaseDate
+        actors {
+          name
+        }
+      }
+    }`,
+    fetcher
+  )
+  // ...
+}
+```
+
+_Si vous voulez passer des variables à une requête GraphQL, consultez [Multiple Arguments](/docs/arguments)._

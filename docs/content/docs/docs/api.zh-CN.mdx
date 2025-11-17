@@ -1,0 +1,62 @@
+import { Callout } from 'nextra-theme-docs'
+
+# API
+
+```js
+const { data, error, isLoading, isValidating, mutate } = useSWR(key, fetcher, options)
+```
+
+## 参数 [#parameters]
+
+- `key`: 请求的唯一 key string（或者是 function / array / null） [(详情)](/docs/arguments), [（高级用法）](/docs/conditional-fetching)
+- `fetcher`:（_可选_）一个请求数据的 Promise 返回函数 [（详情）](/docs/data-fetching)
+- `options`:（_可选_）该 SWR hook 的选项对象
+
+## 返回值 [#return-values]
+
+- `data`: 通过 `fetcher` 用给定的 key 获取的数据（如未完全加载，返回 undefined）
+- `error`: `fetcher` 抛出的错误（或者是 undefined）
+- `isLoading`: 是否有一个正在进行中的请求且当前没有“已加载的数据“。预设数据及之前的数据不会被视为“已加载的数据“ 
+- `isValidating`: 是否有请求或重新验证加载
+- `mutate(data?, options?)`: 更改缓存数据的函数 [（详情）](/docs/mutation)
+
+更多信息可以参考[这里](/docs/advanced/understanding).
+
+## 选项 [#options]
+
+- `suspense = false`: 启用 React Suspense 模式 [（详情）](/docs/suspense)
+- `fetcher(args)`: fetcher 函数
+- `revalidateIfStale = true`: 即使存在陈旧数据，也自动重新验证[（详情）](/docs/revalidation#disable-automatic-revalidations)
+- `revalidateOnMount`: 在挂载组件时启用或禁用自动重新验证 [（详情）](/docs/revalidation#revalidate-on-mount)
+- `revalidateOnFocus = true`: 窗口聚焦时自动重新验证 [（详情）](/docs/revalidation)
+- `revalidateOnReconnect = true`: 浏览器恢复网络连接时自动重新验证（通过 `navigator.onLine`） [（详情）](/docs/revalidation)
+- `refreshInterval` [（详情）](/docs/revalidation):
+  - 默认 disabled: `refreshInterval = 0`
+  - 如果设置为数字，轮询间隔（以毫秒为单位）
+  - 如果设置为函数，该函数将接收最新数据，并且应以毫秒为单位返回间隔
+- `refreshWhenHidden = false`: 窗口不可见时进行轮询（如果启用了 `refreshInterval`）
+- `refreshWhenOffline = false`: 浏览器离线时轮询（由 `navigator.onLine` 确定）
+- `shouldRetryOnError = true`: fetcher 有错误时重试
+- `dedupingInterval = 2000`: 删除一段时间内相同 key 的重复请求（以毫秒为单位）
+- `focusThrottleInterval = 5000`: 在一段时间内只重新验证一次（以毫秒为单位）
+- `loadingTimeout = 3000`: 超时触发 `onLoadingSlow` 事件（以毫秒为单位）
+- `errorRetryInterval = 5000`: 错误重试的时间间隔（以毫秒为单位）
+- `errorRetryCount`: 错误重试的最大次数
+- `fallback`: 多个回退数据的 key-value 对象[（示例）](/docs/with-nextjs)
+- `fallbackData`: 此 hook 需要返回的初始数据
+- `keepPreviousData = false`: 在新数据加载完成之前使用 key 上一次缓存过的数据 [（详情）](/docs/advanced/understanding#return-previous-data-for-better-ux)
+- `onLoadingSlow(key, config)`: 请求加载时间过长时的回调函数（参考 `loadingTimeout`）
+- `onSuccess(data, key, config)`: 请求成功完成时的回调函数
+- `onError(err, key, config)`: 请求返回错误时的回调函数
+- `onErrorRetry(err, key, config, revalidate, revalidateOps)`: 错误重试的处理函数
+- `onDiscarded(key)`: 请求由于竞态条件而被忽略时的回调函数
+- `compare(a, b)`: 比较函数，用来检测返回的数据何时已更改，以防止伪造的重新渲染。默认情况下使用 [stable-hash](https://github.com/shuding/stable-hash)。
+- `isPaused()`: 用于暂停所有数据请求，如果返回值为 `true`，请求的数据和错误都会被忽略。默认返回值为 `false`。
+- `use`: 中间件函数数组 [（详情）](/docs/middleware)
+
+<Callout emoji="💡">
+  网络较慢（2G, {'<='} 70Kbps）时， 默认情况下 <code>errorRetryInterval</code> 为 10s， {' '}
+  <code>loadingTimeout</code> 为 5s。
+</Callout>
+
+你还可以使用 [全局配置](/docs/global-configuration) 来提供默认选项。

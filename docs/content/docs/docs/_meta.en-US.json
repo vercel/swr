@@ -1,0 +1,24 @@
+{
+  "getting-started": "Getting Started",
+  "api": "API",
+  "global-configuration": "Global Configuration",
+  "data-fetching": "Data Fetching",
+  "revalidation": "Auto Revalidation",
+  "arguments": "Arguments",
+  "mutation": "Mutation & Revalidation",
+  "error-handling": "Error Handling",
+  "conditional-fetching": "Conditional Data Fetching",
+  "pagination": "Pagination",
+  "subscription": "Subscription",
+  "prefetching": "Prefetching",
+  "with-nextjs": "Next.js SSG and SSR",
+  "typescript": "TypeScript",
+  "suspense": "Suspense",
+  "middleware": "Middleware",
+  "advanced": "Advanced",
+  "change-log": {
+    "title": "Change Log",
+    "href": "https://github.com/vercel/swr/releases",
+    "newWindow": true
+  }
+}

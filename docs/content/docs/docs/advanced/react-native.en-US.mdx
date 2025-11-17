@@ -1,0 +1,95 @@
+import { Callout } from 'nextra-theme-docs'
+
+# React Native
+
+<Callout>
+  Upgrade to the latest version (≥ 1.0.0) to experience this customization.
+</Callout>
+
+Unlike React running inside the browsers, React Native has a very different user experience. For example there is no “tab focus”, switching from the background to the app is considered as a “focus” instead.
+To customize these behaviors, you can replace the default browser `focus` and `online` events listeners with React Native’s app state detection and other native ported API, and configure SWR to use them.
+
+## Example [#example]
+
+### Global Setup [#global-setup]
+
+You can wrap your app under `SWRConfig` and preconfig all configurations there
+
+```jsx
+<SWRConfig
+  value={{
+    /* ... */
+  }}
+>
+  <App>
+</SWRConfig>
+```
+
+### Customize `focus` and `reconnect` Events [#customize-focus-and-reconnect-events]
+
+There're few configurations you need to take care of such as `isOnline`, `isVisible`, `initFocus` and `initReconnect`.
+
+`isOnline` and `isVisible` are functions that return a boolean, to determine if the application is "active". By default, SWR will bail out a revalidation if these conditions are not met.
+
+When using `initFocus` and `initReconnect`, it's required to also set up a [custom cache provider](/docs/advanced/cache). You can use an empty `Map()` or any storage you prefer.
+
+```jsx
+<SWRConfig
+  value={{
+    provider: () => new Map(),
+    isOnline() {
+      /* Customize the network state detector */
+      return true
+    },
+    isVisible() {
+      /* Customize the visibility state detector */
+      return true
+    },
+    initFocus(callback) {
+      /* Register the listener with your state provider */
+    },
+    initReconnect(callback) {
+      /* Register the listener with your state provider */
+    }
+  }}
+>
+  <App />
+</SWRConfig>
+```
+
+Let's take `initFocus` as example:
+
+```jsx
+import { AppState } from 'react-native'
+
+// ...
+
+<SWRConfig
+  value={{
+    provider: () => new Map(),
+    isVisible: () => { return true },
+    initFocus(callback) {
+      let appState = AppState.currentState
+
+      const onAppStateChange = (nextAppState) => {
+        /* If it's resuming from background or inactive mode to active one */
+        if (appState.match(/inactive|background/) && nextAppState === 'active') {
+          callback()
+        }
+        appState = nextAppState
+      }
+
+      // Subscribe to the app state change events
+      const subscription = AppState.addEventListener('change', onAppStateChange)
+
+      return () => {
+        subscription.remove()
+      }
+    }
+  }}
+>
+  <App>
+</SWRConfig>
+```
+
+For `initReconnect`, it requires some 3rd party libraries such as [NetInfo](https://github.com/react-native-netinfo/react-native-netinfo) to subscribe to the network status. The implementation will be similar to the example above: receiving a `callback` function and trigger it when the network recovers from offline, so SWR can start a revalidation to keep your data up-to-date.

@@ -1,0 +1,109 @@
+# 성능
+
+SWR은 모든 종류의 웹 앱에서 중요한 기능들을 제공하므로 **성능**을 가장 중요시합니다.
+
+SWR의 내장 **캐싱**과 **[중복 제거](/advanced/performance#deduplication)** 기능은 불필요한 네트워크 요청을 생략하지만,
+`useSWR` hook 자체의 성능은 여전히 중요합니다. 복잡한 앱에서는 단일 페이지 렌더링에 `useSWR`이 수백 번 호출될 수 있습니다.
+
+SWR은 앱에서 다음을 보장합니다:
+- _불필요한 요청 없음_
+- _불필요한 리렌더링 없음_
+- _불필요한 코드 임포트 없음_
+
+어떠한 코드 수정도 필요 없습니다.
+
+## 중복 제거 [#deduplication]
+
+앱에서 SWR hook을 재사용하는 것은 아주 일반적입니다. 예를 들어, 앱이 현재 사용자의 아바타를 다섯 번 렌더링한다면:
+
+```jsx
+function useUser () {
+  return useSWR('/api/user', fetcher)
+}
+
+function Avatar () {
+  const { data, error } = useUser()
+
+  if (error) return <Error />
+  if (!data) return <Spinner />
+
+  return <img src={data.avatar_url} />
+}
+
+function App () {
+  return <>
+    <Avatar />
+    <Avatar />
+    <Avatar />
+    <Avatar />
+    <Avatar />
+  </>
+}
+```
+
+각각의 `<Avatar>` 컴포넌트는 내부에 `useSWR` hook을 갖습니다. 이들이 동일한 SWR 키를 갖고 있으므로 거의 동시에 렌더링 되며 **단 한 번의 네트워크 요청만 발생합니다**.
+
+성능이나 중복된 요청에 대한 걱정 없이 위 예시의 `useUser`와 같은 데이터 hook을 어디에서든 재사용할 수 있습니다.
+
+기본 중복 제거 인터벌을 오버라이딩할 수 있는 [`dedupingInterval` 옵션](/docs/api)도 있습니다.
+
+## 깊은 비교 [#deep-comparison]
+
+SWR은 기본적으로 데이터 변경을 **깊게 비교**합니다. `data` 값이 변경되지 않았다면 리렌더링을 트리거 하지 않습니다.
+
+이 동작을 변경하길 원한다면 [`compare` 옵션](/docs/api)을 통해 비교 함수를 커스터마이징할 수도 있습니다.
+예를 들면, 일부 API의 응답이 데이터 diff에서 제외하길 원하는 서버의 타임 스탬프를 반환합니다.
+
+## 의존성 수집 [#dependency-collection]
+
+`useSWR` returns 4 **stateful** values: `data`, `error`, `isLoading` and `isValidating`, each one can be updated independently.
+예를 들어, 전체 데이터 가져오기 생명 주기에서 이 값들을 출력한다면 뭔가 다음과 같은 것입니다.
+
+```jsx
+function App () {
+  const { data, error,　isLoading, isValidating } = useSWR('/api', fetcher)
+  console.log(data, error, isLoading, isValidating)
+  return null
+}
+```
+
+최악의 경우에는(첫 번째 요청이 실패하고, 재시도가 성공), 네 줄의 로그가 보일 것입니다.
+
+```js
+// console.log(data, error, isLoading, isValidating)
+undefined undefined true true  // => 가져오기 시작
+undefined Error false false    // => 가져오기 종료, 에러 발생
+undefined Error true true      // => 재시도 시작
+Data undefined false false     // => 재시도 종료, 데이터 얻음
+```
+
+상태 변화는 말이 됩니다. 하지만 이는 컴포넌트가 **네 번 리렌더링 되었음**을 의미하기도 합니다.
+
+`data`만을 사용하도록 컴포넌트를 변경한다면:
+
+```jsx
+function App () {
+  const { data } = useSWR('/api', fetcher)
+  console.log(data)
+  return null
+}
+```
+
+마법이 발생합니다 - 이제 단 **두 번의 리렌더링**이 있습니다:
+
+```js
+// console.log(data)
+undefined // => 하이드레이션 / 초기 렌더
+Data      // => 재시도 종료, 데이터 얻음
+```
+
+내부적으로는 완전히 동일한 과정이 발생했습니다. 첫 번째 요청에서 에러가 발생했고 재시도에서 데이터를 얻었습니다.
+그런데 **SWR은 컴포넌트가 사용한 상태만을 업데이트하며**, 이제는 `data`만 그렇습니다.
+
+이 모든 세 가지 상태를 항상 사용하고 있지 않다면, 이미 이 기능의 이점을 누리고 있는 것입니다.
+[Vercel](https://vercel.com)에서, 이 최적화의 결과 ~60% 더 적은 리렌더링의 결과를 얻었습니다.
+
+## 트리 쉐이킹 [#tree-shaking]
+
+SWR 패키지는 [트리 쉐이킹이 가능](https://webpack.js.org/guides/tree-shaking)하며 부작용도 없습니다.
+이는 코어 `useSWR` API만을 임포팅한다면 `useSWRInfinite`와 같은 사용하지 않는 API는 애플리케이션에 번들링되지 않는다는 것을 의미합니다.

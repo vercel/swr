@@ -1,0 +1,64 @@
+import { Callout } from 'nextra-theme-docs'
+
+# API
+
+```js
+const { data, error, isLoading, isValidating, mutate } = useSWR(key, fetcher, options)
+```
+
+## Parâmetros [#parameters]
+
+- `key`: uma chave única em string para o pedido (ou uma função / array / null) [(detalhes)](/docs/arguments), [(uso avançado)](/docs/conditional-fetching)
+- `fetcher`: (_opcional_) uma Promise retornando uma função para obter seus dados [(detalhes)](/docs/data-fetching)
+- `options`: (_opcional_) um objeto de opções para esse hook SWR
+
+## Valores Retornados [#return-values]
+
+- `data`: dados para a chave fornecida pelo `fetcher` (ou undefined se não carregado)
+- `error`: erro lançado pelo `fetcher` (ou undefined)
+- `isLoading`: if there's an ongoing request and no "loaded data". Fallback data and previous data are not considered "loaded data"
+- `isValidating`: se há um pedido ou revalidação carregando
+- `mutate(data?, options?)`: função para mutar os dados em cache [(detalhes)](/docs/mutation)
+
+More information can be found [here](/docs/advanced/understanding).
+
+## Opções [#options]
+
+- `suspense = false`: habilita o modo Suspense do React [(detalhes)](/docs/suspense)
+- `fetcher(args)`: a função fetcher
+- `revalidateIfStale = true`: revalida automaticamente mesmo que tenha dados obsoletos [(detalhes)](/docs/revalidation#disable-automatic-revalidations)
+- `revalidateOnMount`: habilita ou desabilita a revalidação automática quando o componente é montado [(details)](/docs/revalidation#revalidate-on-mount)
+- `revalidateOnFocus = true`: revalida automaticamente quando a janela é focada [(detalhes)](/docs/revalidation)
+- `revalidateOnReconnect = true`: revalida automaticamente quando a conexão é restaurada (via `navigator.onLine`) [(detalhes)](/docs/revalidation)
+- `refreshInterval` [(detalhes)](/docs/revalidation):
+  - Desativado por padrão: `refreshInterval = 0`
+  - Se definido como um número, o intervalo de sondagem (polling) em milisegundos
+  - Se definido como uma função, a função recebe o último dado e deve retornar o intervalo em milisegundos
+- `refreshWhenHidden = false`: sondagem (polling) quando a janela está invisivel (se `refreshInterval` está ativado)
+- `refreshWhenOffline = false`: sondagem (polling) quando o navegador está offline (determinado por `navigator.onLine`)
+- `shouldRetryOnError = true`: se deve tentar novamente quando o fetcher retorna um erro
+- `dedupingInterval = 2000`: deduplicar pedidos com a mesma chave em este intervalo em milisegundos
+- `focusThrottleInterval = 5000`: somente revalidar uma vez durante um intervalo em milisegundos
+- `loadingTimeout = 3000`: tempo limite para o evento onLoadingSlow
+- `errorRetryInterval = 5000`: intervalo de tentativa de erro em milisegundos
+- `errorRetryCount`: número máximo de tentativas de erro
+- `fallback`: um objeto de chave-valor de vários dados de fallback [(exemplo)](/docs/with-nextjs)
+- `fallbackData`: dados iniciais para ser retornado (nota: isto é por-hook)
+- `keepPreviousData = false`: return the previous key's data until the new data has been loaded [(detalhes)](/docs/advanced/understanding#return-previous-data-for-better-ux)
+- `onLoadingSlow(key, config)`: função callback quando um pedido demora muito tempo a carregar (veja `loadingTimeout`)
+- `onSuccess(data, key, config)`: função callback quando um pedido é bem-sucedido
+- `onError(err, key, config)`: função callback quando um pedido retorna um erro
+- `onErrorRetry(err, key, config, revalidate, revalidateOps)`: função callback quando um pedido retorna um erro
+- `onDiscarded(key)`: callback function when a request is ignored due to race conditions
+- `compare(a, b)`: função de comparação para detectar quando o dado retornado está diferente, para evitar rerenderizações desnecessárias. Por padrão, [stable-hash](https://github.com/shuding/stable-hash) é usado.
+- `isPaused()`: função para detectar quando o revalidador está pausado, e deve ignorar os dados e erros quando retorna `true`. Por padrão, retorna `false`.
+- `use`: array de middleware functions [(details)](/docs/middleware)
+
+<Callout emoji="💡">
+
+    Quando estiver usando uma conexão lenta (2G, {'<='} 70Kbps), <code>errorRetryInterval</code> será de 10s, e{' '}
+    <code>loadingTimeout</code> será de 5s por padrão.
+
+</Callout>
+
+Você também pode usar a [configuração global](/docs/global-configuration) para fornecer opções padrão.

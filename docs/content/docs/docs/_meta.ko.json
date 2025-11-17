@@ -1,0 +1,24 @@
+{
+  "getting-started": "시작하기",
+  "api": "API",
+  "global-configuration": "전역 설정",
+  "data-fetching": "데이터 가져오기",
+  "error-handling": "에러 처리",
+  "revalidation": "자동 갱신",
+  "conditional-fetching": "조건부 데이터 가져오기",
+  "arguments": "인자",
+  "mutation": "뮤테이션",
+  "pagination": "페이지네이션",
+  "subscription": "구독",
+  "prefetching": "프리패칭",
+  "with-nextjs": "Next.js SSG 및 SSR",
+  "typescript": "TypeScript",
+  "suspense": "서스펜스",
+  "middleware": "미들웨어",
+  "advanced": "고급",
+  "change-log": {
+    "title": "변경 로그",
+    "href": "https://github.com/vercel/swr/releases",
+    "newWindow": true
+  }
+}

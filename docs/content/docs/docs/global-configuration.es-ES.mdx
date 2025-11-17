@@ -1,0 +1,140 @@
+# Configuración Global
+
+El contexto `SWRConfig` puede proporcionar configuraciones globales ([opciones](/docs/api)) para todos los hooks de SWR.
+
+```jsx
+<SWRConfig value={options}>
+  <Component/>
+</SWRConfig>
+```
+
+En este ejemplo, todos los hooks de SWR utilizarán el mismo fetcher proporcionando para cargar datos JSON, 
+y se actualizarán cada 3 segundos por defecto:
+
+```jsx
+import useSWR, { SWRConfig } from 'swr'
+
+function Dashboard () {
+  const { data: events } = useSWR('/api/events')
+  const { data: projects } = useSWR('/api/projects')
+  const { data: user } = useSWR('/api/user', { refreshInterval: 0 }) // override
+
+  // ...
+}
+
+function App () {
+  return (
+    <SWRConfig 
+      value={{
+        refreshInterval: 3000,
+        fetcher: (resource, init) => fetch(resource, init).then(res => res.json())
+      }}
+    >
+      <Dashboard />
+    </SWRConfig>
+  )
+}
+```
+
+## Anidando configuraciones [#nesting-configurations]
+
+`SWRConfig` fusiona la configuración del contexto padre. Puede recibir un objeto o una configuración funcional. La funcional recibe la configuración padre como argumento y devuelve una nueva configuración que puedes personalizar tú mismo. 
+
+### Ejemplo de configuración de objetos [#object-configuration-example]
+
+```jsx
+import { SWRConfig, useSWRConfig } from 'swr'
+
+function App() {
+  return (
+    <SWRConfig
+      value={{
+        dedupingInterval: 100,
+        refreshInterval: 100,
+        fallback: { a: 1, b: 1 },
+      }}
+    >
+      <SWRConfig
+        value={{
+          dedupingInterval: 200, // anulará el valor del objeto padre, ya que el valor es primitivo
+          fallback: { a: 2, c: 2 }, // se fusionará con el valor del objeto padre, ya que el valor es un objeto fusionable
+        }}
+      >
+        <Page />
+      </SWRConfig>
+    </SWRConfig>
+  )
+}
+
+function Page() {
+  const config = useSWRConfig()
+  // {
+  //   dedupingInterval: 200,
+  //   refreshInterval: 100,
+  //   fallback: { a: 2,  b: 1, c: 2 },
+  // }
+}
+```
+
+### Ejemplo de configuración funcional [#functional-configuration-example]
+
+```jsx
+import { SWRConfig, useSWRConfig } from 'swr'
+
+function App() {
+  return (
+    <SWRConfig
+      value={{
+        dedupingInterval: 100,
+        refreshInterval: 100,
+        fallback: { a: 1, b: 1 },
+      }}
+    >
+      <SWRConfig
+        value={parent => ({
+          dedupingInterval: parent.dedupingInterval * 5,
+          fallback: { a: 2, c: 2 },
+        })}
+      >
+        <Page />
+      </SWRConfig>
+    </SWRConfig>
+  )
+}
+
+function Page() {
+  const config = useSWRConfig()
+  // {
+  //   dedupingInterval: 500,
+  //   fallback: { a: 2, c: 2 },
+  // }
+}
+```
+
+## Extra APIs [#extra-apis]
+
+### Proveedor de caché(Cache provider) [#cache-provider]
+
+Además de todas las [opciones](/docs/api) listadas, `SWRConfig` también acepta una función opcional `provider`. Consulte la sección [Cache](/docs/cache) para obtener más detalles.
+
+```jsx
+<SWRConfig value={{ provider: () => new Map() }}>
+  <Dashboard />
+</SWRConfig>
+```
+
+### Acceso a configuraciones globales [#access-to-global-configurations]
+
+Puedes utilizar el hook `useSWRConfig`para obtener las configuraciones globales, así como [`mutate`](/docs/mutation) y [`cache`](/docs/advanced/cache):
+
+```jsx
+import { useSWRConfig } from 'swr'
+
+function Component () {
+  const { refreshInterval, mutate, cache, ...restConfig } = useSWRConfig()
+
+  // ...
+}
+```
+
+Se extenderán las configuraciones anidadas. Si no se utiliza `SWRConfig` devolverá las predeterminadas.

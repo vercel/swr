@@ -1,0 +1,100 @@
+import Video from 'components/video'
+import { Callout } from 'nextra-theme-docs'
+import { Bleed } from 'nextra-theme-docs'
+import Link from 'next/link'
+
+# 자동 갱신
+
+<Callout>
+  수동으로 데이터를 갱신하려면 <Link href="/docs/mutation">뮤테이션</Link>을 확인하세요.
+</Callout>
+
+## 포커스 시에 갱신하기 [#revalidate-on-focus]
+
+페이지에 다시 포커스하거나 탭을 전환할 때, SWR은 자동으로 데이터를 갱신합니다.
+
+최신 상태로 즉시 동기화할 수 있어 유용합니다. 오래된 모바일 탭 또는 **슬립 모드로 빠진** 노트북과 같은 시나리오에서 데이터를 새로 고치는데 유용합니다.
+
+<Bleed>
+  <Video
+    src="https://raw.githubusercontent.com/vercel/swr-site/master/.github/videos/focus-revalidate.mp4"
+    caption="영상: 포커스 갱신을 사용하여 페이지 간 로그인 자동 동기화."
+    ratio={307/768}
+    className="mx-8 2xl:mx-24"
+  />
+</Bleed>
+
+이 기능은 기본적으로 활성화되어 있습니다. [`revalidateOnFocus`](/docs/api) 옵션을 통해 이를 비활성화할 수 있습니다.
+
+## 인터벌 시에 갱신하기 [#revalidate-on-interval]
+
+많은 경우에 데이터는 다중 기기, 다중 사용자, 다중 탭으로 인해 변경됩니다. 시간이 지남에 따라 화면상의 데이터를 어떻게 업데이트할 수 있을까요?
+
+SWR은 자동 데이터 다시 가져오기 옵션을 제공합니다. hook과 관련된 컴포넌트가 **화면상에** 있을 때만 다시 가져오기가 발생하므로 **똑똑**합니다.
+
+<Bleed>
+  <Video
+    src="https://raw.githubusercontent.com/vercel/swr-site/master/.github/videos/refetch-interval.mp4"
+    caption="영상: 사용자가 변경할 때, 두 세션이 최종적으로 동일한 데이터를 렌더링합니다."
+    ratio={307/768}
+    className="mx-8 2xl:mx-24"
+  />
+</Bleed>
+
+[`refreshInterval`](/docs/api) 값을 설정하여 활성화할 수 있습니다.
+
+```js
+useSWR('/api/todos', fetcher, { refreshInterval: 1000 })
+```
+
+`refreshWhenHidden`, `refreshWhenOffline`과 같은 옵션도 있습니다. 둘은 기본적으로 비활성이므로 SWR은 웹 페이지가 화면상에 있지 않거나 네트워크 연결이 없으면 가져오기를 하지 않습니다.
+
+## 재연결 시에 갱신하기 [#revalidate-on-reconnect]
+
+사용자가 온라인으로 돌아올 때 갱신하는 것 또한 유용합니다. 이는 사용자가 컴퓨터를 잠금 해제하고 동시에 인터넷이 아직 연결되지 않았을 때 많이 발생하는 시나리오입니다.
+
+데이터를 항상 최신으로 보장하기 위해 네트워크가 회복될 때 SWR은 자동으로 갱신합니다.
+
+이 기능은 기본적으로 활성화되어 있습니다. [`revalidateOnReconnect`](/docs/api) 옵션을 통해 비활성화할 수 있습니다.
+
+## 자동 갱신 비활성화하기 [#disable-automatic-revalidations]
+
+리소스가 **불변**할 경우, 다시 갱신해도 변경되지 않습니다. 이런 경우를 대비해 모든 종류의 자동 갱신을 비활성화 할 수 있습니다.
+
+1.0 버전부터 SWR은 리소스가 불변함을 표시할 수 있도록 `useSWRImmutable` 헬퍼 hook을 제공합니다.
+
+```js
+import useSWRImmutable from 'swr/immutable'
+
+// ...
+useSWRImmutable(key, fetcher, options)
+```
+
+일반적인 `useSWR` hook과 동일한 API 인터페이스를 갖고 있습니다. 갱신 옵션을 다음과 같이 비활성화하여 동일한 작업을 수행할 수도 있습니다.
+
+```js
+useSWR(key, fetcher, {
+  revalidateIfStale: false,
+  revalidateOnFocus: false,
+  revalidateOnReconnect: false
+})
+
+// 다음과 동일
+useSWRImmutable(key, fetcher)
+```
+
+`revalidateIfStale`은 마운트 시에 오래된 데이터가 존재할 경우 SWR이 갱신해야 할지 여부를 제어합니다.
+
+위의 두 개의 hook은 **완전히 동일한** 작업을 수행합니다. 데이터가 캐시 되기만 하면 절대 다시 요청하지 않습니다.
+
+## 마운트 시 자동 갱신[#revalidate-on-mount]
+
+마운트 시 SWR의 재검증 동작을 강제로 변경하는 것이 유용할 수 있습니다. 기본적으로 `revalidateOnMount`의 값은 `undefined`로 설정되어 있습니다.
+
+SWR 훅이 마운트될 때의 동작:
+
+- 먼저 `revalidateOnMount`가 정의되어 있는지 확인합니다. true이면 요청을 시작하고, false이면 요청을 중단합니다.
+
+또한, `revalidateIfStale` 옵션은 마운트 시 자동 갱신 동작을 제어하는 데 유용합니다. 기본적으로 `revalidateIfStale`의 값은 true입니다.
+
+`revalidateIfStale`가 true이면, 캐시된 데이터가 있을 경우에만 다시 가져오고, 캐시 데이터가 없으면 가져오지 않습니다.

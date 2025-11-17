@@ -1,0 +1,100 @@
+import Video from 'components/video'
+import { Callout } from 'nextra-theme-docs'
+import { Bleed } from 'nextra-theme-docs'
+import Link from 'next/link'
+
+# Automatic Revalidation
+
+<Callout>
+  If you want to manually revalidate the data, check <Link href="/docs/mutation">mutation</Link>.
+</Callout>
+
+## Revalidate on Focus [#revalidate-on-focus]
+
+When you re-focus a page or switch between tabs, SWR automatically revalidates data.
+
+This can be useful to immediately synchronize to the latest state. This is helpful for refreshing data in scenarios like stale mobile tabs, or laptops that **went to sleep**.
+
+<Bleed>
+  <Video
+    src="https://raw.githubusercontent.com/vercel/swr-site/master/.github/videos/focus-revalidate.mp4"
+    caption="Video: using focus revalidation to automatically sync login state between pages."
+    ratio={307/768}
+    className="mx-8 2xl:mx-24"
+/>
+</Bleed>
+
+This feature is enabled by default. You can disable it via the [`revalidateOnFocus`](/docs/api) option.
+
+## Revalidate on Interval [#revalidate-on-interval]
+
+In many cases, data changes because of multiple devices, multiple users, multiple tabs. How can we over time update the data on screen?
+
+SWR will give you the option to automatically refetch data. It’s **smart** which means refetching will only happen if the component associated with the hook is **on screen**.
+
+<Bleed>
+  <Video
+    src="https://raw.githubusercontent.com/vercel/swr-site/master/.github/videos/refetch-interval.mp4"
+    caption="Video: when a user makes a change, both sessions will eventually render the same data."
+    ratio={307/768}
+    className="mx-8 2xl:mx-24"
+  />
+</Bleed>
+
+You can enable it by setting a [`refreshInterval`](/docs/api) value:
+
+```js
+useSWR('/api/todos', fetcher, { refreshInterval: 1000 })
+```
+
+There're also options such as `refreshWhenHidden` and `refreshWhenOffline`. Both are disabled by default so SWR won't fetch when the webpage is not on screen, or there's no network connection.
+
+## Revalidate on Reconnect [#revalidate-on-reconnect]
+
+It's useful to also revalidate when the user is back online. This scenario happens a lot when the user unlocks their computer, but the internet is not yet connected at the same moment.
+
+To make sure the data is always up-to-date, SWR automatically revalidates when network recovers.
+
+This feature is enabled by default. You can disable it via the [`revalidateOnReconnect`](/docs/api) option.
+
+## Disable Automatic Revalidations [#disable-automatic-revalidations]
+
+If the resource is **immutable**, that will never change if we revalidate again, we can disable all kinds of automatic revalidations for it.
+
+Since version 1.0, SWR provides a helper hook `useSWRImmutable` to mark the resource as immutable:
+
+```js
+import useSWRImmutable from 'swr/immutable'
+
+// ...
+useSWRImmutable(key, fetcher, options)
+```
+
+It has the same API interface as the normal `useSWR` hook. You can also do the same thing by disabling the following revalidation options:
+
+```js
+useSWR(key, fetcher, {
+  revalidateIfStale: false,
+  revalidateOnFocus: false,
+  revalidateOnReconnect: false
+})
+
+// equivalent to
+useSWRImmutable(key, fetcher)
+```
+
+The `revalidateIfStale` controls if SWR should revalidate when it mounts and there is stale data.
+
+These 2 hooks above do the **exact same** thing. Once the data is cached, they will never request it again.
+
+## Revalidate on Mount[#revalidate-on-mount]
+
+It's useful to force override SWR revalidation on mounting. By default, the value of `revalidateOnMount` is set to undefined.
+
+A SWR hook mounts as:
+
+- First it checks if `revalidateOnMount` is defined. It starts request if it's true, stop if it's false.
+
+`revalidateIfStale` useful to control the mount behaviour. By default `revalidateIfStale` is set to true.
+
+If `revalidateIfStale` is set to true it only refetches if there's any cache data else it will not refetch.

@@ -1,0 +1,105 @@
+import Video from 'components/video'
+import { Callout } from 'nextra-theme-docs'
+import { Bleed } from 'nextra-theme-docs'
+import Link from 'next/link'
+
+# Revalidación Automática
+
+<Callout>
+  Si quiere revalidar manualmente los datos, compruebe <Link href="/docs/mutation">mutation</Link>.
+</Callout>
+
+## Revalidar on focus [#revalidate-on-focus]
+
+Al reenfocar una pagina o cambiar entre tabs, SWR revalida automáticamente los datos.
+
+Esto puede ser útil para sincronizar inmediatamente a el último estado. Esto es útil para refrescar los datos en escenarios
+como stale mobile tabs, o laptops que están **suspendida**.
+
+<Bleed>
+  <Video
+    src="https://raw.githubusercontent.com/vercel/swr-site/master/.github/videos/focus-revalidate.mp4"
+    caption="Vídeo: uso de la revalidación focus para sincronizar automáticamente el estado login entre páginas."
+    ratio={307/768}
+    className="mx-8 2xl:mx-24"
+  />
+</Bleed>
+
+Esta caracteristica está activada por defecto. Puede desactivarla mediante de la opción [`revalidateOnFocus`](/docs/api).
+
+## Revalidar on interval [#revalidate-on-interval]
+
+En muchos casos, los datos cambian debido a los múltiples dispositivos, los múltiples usuarios, los múltiples tabs. ¿Cómo podemos
+con el tiempo actualizar los datos en pantalla?
+
+SWR le dará la opción de recuperar los datos automáticamente. Es **inteligente**, lo que significa que el refetching sólo se producirá si el
+componente asociado al hook está **en la pantalla**.
+
+<Bleed>
+  <Video
+    src="https://raw.githubusercontent.com/vercel/swr-site/master/.github/videos/refetch-interval.mp4"
+    caption="Vídeo: cuando un usuario realiza un cambio, ambas sesiones acabarán por mostrar los mismo datos."
+    ratio={307/768}
+    className="mx-8 2xl:mx-24"
+  />
+</Bleed>
+
+Puede activarlo estableciendo un valor de [`refreshInterval`](/docs/api).
+
+```js
+useSWR('/api/todos', fetcher, { refreshInterval: 1000 })
+```
+
+También hay opciones como `refreshWhenHidden` y `refreshWhenOffline`. Ambas están deshabilitadas por defecto,
+para que SWR no recupere la información cuando la página web no esté en pantalla o no haya conexión de red.
+
+## Revalidar on reconnect [#revalidate-on-reconnect]
+
+También es útil revalidar cuando el usuario vuelve a estar conectado.
+Este escenario se da con frecuencia cuando el usuario desbloquea su ordenador, pero en ese mismo momento no está conectado a Internet.
+
+Para asegurarse de que los datos están siempre actualizados, SWR revalida automáticamente cuando la red se recupera.
+
+Esta función está activada por defecto. Puede desactivarla mediante la opción [`revalidateOnReconnect`](/docs/api).
+
+## Desactivar las revalidaciones automáticas [#disable-automatic-revalidations]
+
+Si el recurso es **inmutable** (que nunca cambiará si revalidamos de nuevo), podemos desactivar todo tipo de revalidaciones automáticas para él.
+
+Desde la versión 1.0, SWR proporciona un "helper hook" llamado `useSWRImmutable` para marcar el recurso como inmutable:
+
+```js
+import useSWRImmutable from 'swr/immutable'
+
+// ...
+useSWRImmutable(key, fetcher, options)
+```
+
+Tiene la misma interfaz API que el hook normal `useSWR`. También puedes hacer lo mismo deshabilitando las siguientes opciones de revalidación:
+
+```js
+useSWR(key, fetcher, {
+  revalidateIfStale: false,
+  revalidateOnFocus: false,
+  revalidateOnReconnect: false
+})
+
+// equivalent to
+useSWRImmutable(key, fetcher)
+```
+
+El `revalidateIfStale` controla si SWR debe revalidar cuando se monta y hay datos obsoletos.
+
+Estos dos hooks hacen exactamente lo mismo. Una vez que los datos se almacenan en caché, no volverán a solicitarlos.
+
+## Revalidate on Mount[#revalidate-on-mount]
+
+It's useful to force override SWR revalidation on mounting. By default, the value of `revalidateOnMount` is set to undefined.
+
+A SWR hook mounts as:
+
+- First it checks if `revalidateOnMount` is defined. It starts request if it's true, stop if it's false.
+
+`revalidateIfStale` useful to control the mount behaviour. By default `revalidateIfStale` is set to true.
+
+If `revalidateIfStale` is set to true it only refetches if there's any cache data else it will not refetch.

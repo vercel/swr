@@ -1,0 +1,110 @@
+# Performance
+
+SWR provides critical functionality in all kinds of web apps, so **performance** is a top priority.
+
+SWR’s built-in **caching** and **[deduplication](#deduplication)** skips unnecessary network requests, but
+the performance of the `useSWR` hook itself still matters. In a complex app, there could be hundreds of `useSWR` calls in a single page render.
+
+SWR ensures that your app has:
+
+- _no unnecessary requests_
+- _no unnecessary re-renders_
+- _no unnecessary code imported_
+
+without any code changes from you.
+
+## Deduplication [#deduplication]
+
+It’s very common to reuse SWR hooks in your app. For example, an app that renders the current user’s avatar 5 times:
+
+```jsx
+function useUser () {
+  return useSWR('/api/user', fetcher)
+}
+
+function Avatar () {
+  const { data, error } = useUser()
+
+  if (error) return <Error />
+  if (!data) return <Spinner />
+
+  return <img src={data.avatar_url} />
+}
+
+function App () {
+  return <>
+    <Avatar />
+    <Avatar />
+    <Avatar />
+    <Avatar />
+    <Avatar />
+  </>
+}
+```
+
+Each `<Avatar>` component has a `useSWR` hook inside. Since they have the same SWR key and are rendered almost at the same time, **only 1 network request will be made**.
+
+You can reuse your data hooks (like `useUser` in the example above) everywhere, without worrying about performance or duplicated requests.
+
+There is also a [`dedupingInterval` option](/docs/api) for overriding the default deduplication interval.
+
+## Deep Comparison [#deep-comparison]
+
+SWR **deep compares** data changes by default. If the `data` value isn’t changed, a re-render will not be triggered.
+
+You can also customize the comparison function via the [`compare` option](/docs/api) if you want to change the behavior.
+For example, some API responses return a server timestamp that you might want to exclude from the data diff.
+
+## Dependency Collection [#dependency-collection]
+
+`useSWR` returns 4 **stateful** values: `data`, `error`, `isLoading` and `isValidating`, each one can be updated independently.
+For example, if we print those values within a full data-fetching lifecycle, it will be something like this:
+
+```jsx
+function App () {
+  const { data, error, isLoading, isValidating } = useSWR('/api', fetcher)
+  console.log(data, error, isLoading, isValidating)
+  return null
+}
+```
+
+In the worst case (the first request failed, then the retry was successful), you will see 4 lines of logs:
+
+```js
+// console.log(data, error, isLoading, isValidating)
+undefined undefined true true  // => start fetching
+undefined Error false false    // => end fetching, got an error
+undefined Error true true      // => start retrying
+Data undefined false false     // => end retrying, get the data
+```
+
+The state changes make sense. But that also means our component **rendered 4 times**.
+
+If we change our component to only use `data`:
+
+```jsx
+function App () {
+  const { data } = useSWR('/api', fetcher)
+  console.log(data)
+  return null
+}
+```
+
+The magic happens — there are only **2 re-renders** now:
+
+```js
+// console.log(data)
+undefined // => hydration / initial render
+Data      // => end retrying, get the data
+```
+
+The exact same process has happened internally, there was an error from the first request, then we got the data from the retry.
+However, **SWR only updates the states that are used by the component**, which is only `data` now.
+
+If you are not always using all these 3 states, you are already benefitting from this feature.
+At [Vercel](https://vercel.com), this optimization results in ~60% fewer re-renders.
+
+## Tree Shaking [#tree-shaking]
+
+The SWR package is [tree-shakeable](https://webpack.js.org/guides/tree-shaking) and side-effect free.
+That means if you are only importing the core `useSWR` API, unused APIs like `useSWRInfinite` won't be bundled in your application.

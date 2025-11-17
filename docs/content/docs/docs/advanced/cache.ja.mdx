@@ -1,0 +1,172 @@
+import { Callout } from 'nextra-theme-docs'
+
+# Cache
+
+<Callout>
+  この機能を使用するには、最新のバージョン（ ≥ 1.0.0 ）にアップグレードしてください。
+</Callout>
+
+<Callout emoji="⚠️">
+  ほとんどの場合、キャッシュを直接変更しないでください。予期しない動作が発生する可能性があります。キーを手動で変更する必要がある場合は、 SWR API の使用を検討してください。<br/>
+  参照：[ミューテーション](/docs/mutation), [テストケース間のキャッシュのリセット](#テストケース間のキャッシュのリセット)
+</Callout>
+
+デフォルトでは、 SWR はグローバルキャッシュを使用して、すべてのコンポーネント間でデータを保存および共有します。ただし、 `SWRConfig` の `provider` オプションを使用して、その挙動をカスタマイズできます。
+
+キャッシュプロバイダーは、よりカスタマイズされたストレージで SWR を実現することを目的としています。
+
+## キャッシュプロバイダー [#cache-provider]
+
+キャッシュプロバイダーは、次の TypeScript 定義（ `swr` からインポート可能 ）に一致する Map のようなオブジェクトです：
+
+```typescript
+interface Cache<Data> {
+  get(key: string): Data | undefined
+  set(key: string, value: Data): void
+  delete(key: string): void
+  keys(): IterableIterator<string>
+}
+```
+
+たとえば、[JavaScript Map](https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Map) インスタンスを SWR のキャッシュプロバイダーとして直接使用できます。
+
+## キャッシュプロバイダーの作成 [#create-cache-provider]
+
+`SWRConfig` の `provider` オプションは、 [キャッシュプロバイダー](#キャッシュプロバイダー)を返す関数を受け取ります。受け取ったプロバイダーは、その `SWRConfig` の範囲内のすべての SWR フックで使用されます。例：
+
+```jsx
+import useSWR, { SWRConfig } from 'swr'
+
+function App() {
+  return (
+    <SWRConfig value={{ provider: () => new Map() }}>
+      <Page/>
+    </SWRConfig>
+  )
+}
+```
+
+`<Page />` 内のすべての SWR フックは、その Map インスタンスから読み取りと書き込みを行います。また、特定のユースケースに合わせて、他のキャッシュプロバイダーの実装を使用することもできます。
+
+<Callout>
+  上記の例では、 `<App />` コンポーネントが再マウントされると、プロバイダーも再生成します。キャッシュプロバイダーは、コンポーネントツリーの上位、またはレンダリングの外部に配置する必要があります。
+</Callout>
+
+import { Cache } from 'components/diagrams/cache'
+
+<div className="my-8">
+  <Cache/>
+</div>
+
+ネストされている場合、 SWR フックは上位レベルのキャッシュプロバイダーを使用します。もし上位レベルのキャッシュプロバイダーが無い場合は、空の `Map` をデフォルトのキャッシュプロバイダーとして使用します。
+
+<Callout emoji="⚠️">
+  キャッシュプロバイダーを使用している場合、グローバルな `mutate` は `<SWRConfig />` 以下の SWR フックでは**機能しません**。代わりに [こちら](#現在のキャッシュプロバイダーにアクセスする) を使用してください。
+</Callout>
+
+## 現在のキャッシュプロバイダーにアクセスする [#access-current-cache-provider]
+
+React コンポーネント内では、 `mutate` を含む他の設定と同様に、現在のキャッシュプロバイダーへアクセスするために、 [useSWRConfig](/docs/global-configuration#グローバル設定へアクセス) フックを使用する必要があります。
+
+```jsx
+import { useSWRConfig } from 'swr'
+
+function Avatar() {
+  const { cache, mutate, ...extraConfig } = useSWRConfig()
+  // ...
+}
+```
+
+`<SWRConfig>` 以下でない場合は、デフォルトの設定を返します。
+
+## 実験的：キャッシュプロバイダーの拡張 [#experimental-extend-cache-provider]
+
+<Callout emoji="🧪">
+  これは実験的な機能であり、将来のアップグレードで動作が変更される可能性があります。
+</Callout>
+
+複数の `<SWRConfig>` コンポーネントがネストされている場合、キャッシュプロバイダーを拡張できます。
+
+`provider` の最初の引数は、上位レベルの `<SWRConfig>` のキャッシュプロバイダー（ 親が `<SWRConfig>` でない場合はデフォルトのキャッシュ ）です。これを使用して、キャッシュプロバイダーを拡張できます：
+
+```jsx
+<SWRConfig value={{ provider: (cache) => newCache }}>
+  ...
+</SWRConfig>
+```
+
+## 例 [#examples]
+
+### LocalStorage を使った永続キャッシュ [#localstorage-based-persistent-cache]
+
+キャッシュを `localStorage` で同期しても良いかもしれません。実装例は次の通りです：
+
+```jsx
+function localStorageProvider() {
+  // 初期化時に、 `localStorage` から Map にデータを復元します。
+  const map = new Map(JSON.parse(localStorage.getItem('app-cache') || '[]'))
+
+  // アプリが終了する前に、すべてのデータを `localStorage` に保存します。
+  window.addEventListener('beforeunload', () => {
+    const appCache = JSON.stringify(Array.from(map.entries()))
+    localStorage.setItem('app-cache', appCache)
+  })
+
+  // パフォーマンスのために、書き込みと読み取りには引き続き Map を使用します。
+  return map
+}
+```
+
+次に、プロバイダーとして使用します：
+
+```jsx
+<SWRConfig value={{ provider: localStorageProvider }}>
+  <App/>
+</SWRConfig>
+```
+
+<Callout>
+  改善点として、メモリキャッシュをバッファとして使用し、定期的に `localStorage` に書き込むこともできます。 IndexedDB または WebSQL を使用して同様の階層化キャッシュを実装することもできます。
+</Callout>
+
+### テストケース間のキャッシュのリセット [#reset-cache-between-test-cases]
+
+アプリケーションをテストするときは、テストケース間で SWR キャッシュをリセットすることをオススメします。空のキャッシュプロバイダーでアプリケーションをラップするだけです。 Jest の例を次に示します：
+
+```jsx
+describe('test suite', async () => {
+  it('test case', async () => {
+    render(
+      <SWRConfig value={{ provider: () => new Map() }}>
+        <App/>
+      </SWRConfig>
+    )
+  })
+})
+```
+
+### キャッシュを更新する [#modify-the-cache-data]
+
+```jsx
+const { cache } = useSWRConfig()
+
+cache.get(key) // キーの現在のデータを取得します。
+```
+
+<Callout emoji="🚨" type="error">
+  キャッシュに直接書き込むことはするべきではありません。予期しない動作が発生する可能性があります。
+</Callout>
+
+[`mutate`](/docs/mutation) をキャッシュを更新するために利用できます。例えば、下記のようにすることで全てのキャッシュデータをクリアできます。
+
+```jsx
+const { mutate } = useSWRConfig()
+
+mutate(
+  key => true, // どのキャッシュキーを更新するか
+  undefined, // キャッシュデータを `undefined` に更新する
+  { revalidate: false } // 再検証しない
+)
+```
+
+更なる情報は [こちら](/docs/arguments#multiple-arguments) から確認できます。

@@ -1,0 +1,94 @@
+import { Callout } from 'nextra-theme-docs'
+
+# React Native
+
+<Callout>
+  升级到最新版本（≥ 1.0.0）来体验该定制。
+</Callout>
+
+与在浏览器中运行的 React 不同，React Native 有着非常不同的使用体验。比如没有“标签聚焦”，而从后台切换到 app 则被视为“聚焦”。要想自定义这些行为，你可以使用 React Native 的 app 状态检测和其他原生移植 API 替换默认的 `focus` 和 `online`，并配置 SWR 来使用。
+
+## 示例 [#example]
+
+### 全局设置 [#global-setup]
+
+你可以将 app 包装在 `SWRConfig` 下并预设置所有配置
+
+```jsx
+<SWRConfig 
+  value={{
+    /* ... */
+  }}
+>
+  <App>
+</SWRConfig>
+```
+
+### 自定义 `focus` 和 `reconnect` 事件 [#customize-focus-and-reconnect-events]
+
+只有很少的的配置需要你来处理，诸如 `isOnline`、`isVisible`、`initFocus` 以及 `initReconnect`。
+
+`isOnline` 和 `isVisible` 是两个返回布尔值的函数，它们用来确定应用程序是否是 "active" 的。默认情况下，如果不满足这些条件，SWR 将取消重新请求。
+
+在使用 `initFocus` 和 `initReconnect` 时，还需要设置一个[自定义缓存 provider](/docs/advanced/cache)。可以使用空的 `Map()` 或任何你喜欢的。
+
+```jsx
+<SWRConfig
+  value={{
+    provider: () => new Map(),
+    isOnline() {
+      /* 自定义网络状态检测器 */
+      return true
+    },
+    isVisible() {
+      /* 自定义 visibility 状态检测器 */
+      return true
+    },
+    initFocus(callback) {
+      /* 向状态 provider 注册侦听器 */
+    },
+    initReconnect(callback) {
+      /* 向状态 provider 注册侦听器 */
+    }
+  }}
+>
+  <App />
+</SWRConfig>
+```
+
+以 `initFocus` 为例：
+
+```jsx
+import { AppState } from 'react-native'
+
+// ...
+
+<SWRConfig
+  value={{
+    provider: () => new Map(),
+    isVisible: () => { return true },
+    initFocus(callback) {
+      let appState = AppState.currentState
+      
+      const onAppStateChange = (nextAppState) => {
+        /* 如果正在从后台或非 active 模式恢复到 active 模式 */
+        if (appState.match(/inactive|background/) && nextAppState === 'active') {
+          callback()
+        }
+        appState = nextAppState
+      }
+
+      // 订阅 app 状态更改事件
+      const subscription = AppState.addEventListener('change', onAppStateChange)
+      
+      return () => {
+        subscription.remove()
+      }
+    }
+  }}
+>
+  <App>
+</SWRConfig>
+```
+
+关于 `initReconnect`，它需要第三方库例如 [NetInfo](https://github.com/react-native-netinfo/react-native-netinfo) 来订阅网络状态。具体实现和上面的例子类似：接收 `callback` 函数并在网络从离线状态恢复时触发它，然后 SWR 会启动重新请求以确保数据始终是最新的。

@@ -1,0 +1,480 @@
+# 数据更改 & 重新验证
+
+SWR 提供了 `mutate` 和 `useSWRMutation` 两个 API 用于更改远程数据及相关缓存。
+
+## `mutate` [#mutate]
+
+有两种方法可以使用 `mutate` API 来进行数据更改，全局数据更改 API 可以更改任何 key 的数据，而绑定数据更改只能更改对应 SWR hook 的数据。
+
+#### 全局数据更改 [#global-mutate]
+
+推荐使用 [`useSWRConfig`](/docs/global-configuration#access-to-global-configurations) hook 获取全局 `mutator`：
+
+```js
+import { useSWRConfig } from "swr"
+
+function App() {
+  const { mutate } = useSWRConfig()
+  mutate(key, data, options)
+}
+```
+
+你也可以全局引入它：
+
+```js
+import { mutate } from "swr"
+
+function App() {
+  mutate(key, data, options)
+}
+```
+
+<Callout emoji="⚠️">
+  如果在调用全局 mutator 函数时只提供了 key 参数，那么除非有一个使用相同 key 的 SWR hook 被挂载，否则缓存不会被更新，也不会触发重新验证。
+</Callout>
+
+#### 绑定数据更改 [#bound-mutate]
+
+绑定数据更改可以更便捷的更改当前 key 数据，它的 `key` 与传递给 `useSWR` 的 `key` 相绑定，并接收 `data` 作为第一个参数。
+
+它在功能上等同于上文提到的的全局 `mutate` 函数，但它不需要传入 `key` 参数：
+
+```jsx
+import useSWR from 'swr'
+
+function Profile () {
+  const { data, mutate } = useSWR('/api/user', fetcher)
+
+  return (
+    <div>
+      <h1>My name is {data.name}.</h1>
+      <button onClick={async () => {
+        const newName = data.name.toUpperCase()
+        // 发送请求给 API 以更新数据
+        await requestUpdateUsername(newName)
+        // 立即更新并重新验证本地数据（重新请求）
+        // 注意： 当使用 useSWR 的 mutate 时，key 并不是必须的，因为它已经预先绑定了。
+        mutate({ ...data, name: newName })
+      }}>Uppercase my name!</button>
+    </div>
+  )
+}
+```
+
+#### 重新验证 [#revalidation]
+
+当你调用 `mutate(key)`（或者只是使用绑定数据更改 API `mutate()`）时没有传入任何数据，它会触发资源的重新验证(将数据标记为已过期并触发重新请求)。这个例子展示了当用户点击 “Logout” 按钮时如何自动重新请求登陆信息。
+
+```jsx {14}
+import useSWR, { useSWRConfig } from 'swr'
+
+function App () {
+  const { mutate } = useSWRConfig()
+
+  return (
+    <div>
+      <Profile />
+      <button onClick={() => {
+        // 设置 cookie 为已过期
+        document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+
+        // 通知所有拥有这个 key SWR 重新验证
+        mutate('/api/user')
+      }}>
+        Logout
+      </button>
+    </div>
+  )
+}
+```
+
+import { Callout } from 'nextra-theme-docs'
+
+<Callout>
+它向同一个 [缓存 provider](/docs/advanced/cache) 范围内的 SWR hook 进行广播。如果不存在缓存 provider 就会向 SWR hook 进行广播。
+</Callout>
+
+### API [#api]
+
+#### Parameters [#parameters]
+
+- `key`：与 `useSWR` 的 `key` 相同，但函数表现为一个 [过滤函数](/docs/mutation#mutate-multiple-items)。
+- `data`：用于更新客户端缓存的数据，或者是一个用于进行远程数据更改的异步函数。
+- `options`：接受下列选项
+  - `optimisticData`：用于立即更新客户端缓存的数据，或是一个接受当前数据并返回新的客户端缓存数据的函数，通常用于乐观 UI。
+  - `revalidate = true`: 异步更新完成后是否应该重新验证缓存。如果设置为函数，该函数将接收 `data` 和 `key` 作为参数。
+  - `populateCache = true`：将远程数据更改的结果写入缓存，或者将接收新结果和当前结果作为参数并返回数据更改结果的函数。
+  - `rollbackOnError = true`：如果远程数据更改失败，缓存会回滚。或者接受一个函数，它接收从 fetcher 抛出的错误作为参数，并返回一个布尔值判断是否应该回滚。
+  - `throwOnError = true`：数据更改失败时抛出错误。
+
+#### 返回值 [#return-values]
+
+`mutate` 返回参数的 `data` 是被解析过的结果。传递给 `mutate` 的函数将返回一个更新后的数据，用于更新相应的缓存值。如果在执行函数时出现错误，错误将被抛出，以便进行合适的处理。
+
+```jsx
+try {
+  const user = await mutate('/api/user', updateUser(newUser))
+} catch (error) {
+  // 处理更新用户时出现的错误
+}
+```
+
+## `useSWRMutation` [#useswrmutation]
+
+SWR 还提供了 `useSWRMutation` 作为一个远程数据更改的 hook。远程数据更改只能手动触发，而不像 `useSWR` 那样会自动触发。
+
+另外，这个 hook 不会与其他 `useSWRMutation` hook 共享状态。
+
+```tsx
+import useSWRMutation from 'swr/mutation'
+
+// 实现 fetcher
+// 额外的参数可以通过第二个参数 `arg` 传入
+// 在下例中，`arg` 为 `'my_token'`
+async function updateUser(url, { arg }: { arg: string }) {
+  await fetch(url, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${arg}`
+    }
+  })
+}
+
+function Profile() {
+  // 一个类似 useSWR + mutate 的 API，但是它不会自动发送请求
+  const { trigger } = useSWRMutation('/api/user', updateUser, options)
+
+  return <button onClick={() => {
+    // 以特定参数触发 `updateUser` 函数
+    trigger('my_token')
+  }}>Update User</button>
+}
+```
+
+### API [#useswrmutation-api]
+
+#### 参数 [#useswrmutation-parameters]
+
+- `key`: 与 [`mutate`](/docs/mutation#mutate) 的 `key` 相同
+- `fetcher(key, { arg })`：一个用于远程数据更改的异步函数
+- `options`：一个可选的对象，包含了下列属性：
+  - `optimisticData`：与 `mutate` 的 `optimisticData` 相同
+  - `revalidate = true`：与 `mutate` 的 `revalidate` 相同
+  - `populateCache = false`：与 `mutate`' 的 `populateCache` 相同 ，但默认值为 `false`
+  - `rollbackOnError = true`：与 `mutate` 的 `rollbackOnError` 相同
+  - `throwOnError = true`： 与 `mutate`' 的 `throwOnError` 相同
+  - `onSuccess(data, key, config)`:　远程数据更改完成时的回调函数
+  - `onError(err, key, config)`: 远程数据更改返回错误时的回调函数
+
+#### 返回值 [#useswrmutation-return-values]
+
+- `data`：从 `fetcher` 返回给定 key 的数据
+- `error`：`fetcher` 中抛出的错误（或 undefined）
+- `trigger(arg, options)`：一个用于触发远程数据更改的函数
+- `reset`：一个用于重置状态的函数（ `data`, `error`, `isMutating` ）
+- `isMutating`：有一个正在进行中的远程数据变更
+
+### 基本用法 [#useswrmutation-basic-usage]
+
+```tsx
+import useSWRMutation from 'swr/mutation'
+
+async function sendRequest(url, { arg }: { arg: { username: string }}) {
+  return fetch(url, {
+    method: 'POST',
+    body: JSON.stringify(arg)
+  }).then(res => res.json())
+}
+
+function App() {
+  const { trigger, isMutating } = useSWRMutation('/api/user', sendRequest, /* options */)
+
+  return (
+    <button
+      disabled={isMutating}
+      onClick={async () => {
+        try {
+          const result = await trigger({ username: 'johndoe' }, /* options */)
+        } catch (e) {
+          // 错误处理
+        }
+      }}
+    >
+      Create User
+    </button>
+  )
+}
+```
+
+如果你想在渲染时使用数据更改的结果，你可以从 `useSWRMutation` 的返回值中获得它。
+
+```jsx
+const { trigger, data, error } = useSWRMutation('/api/user', sendRequest)
+```
+
+`useSWRMutation` 与 `useSWR` 共享一个缓存空间，所以它可以检测并避免 `useSWR` 间的竞态条件。它还支持 `mutate` 的功能，如乐观更新和错误回滚。你可以将这些选项传入 `useSWRMutation` 和它的 `trigger` 函数。
+
+```jsx
+const { trigger } = useSWRMutation('/api/user', updateUser, {
+  optimisticData: current => ({ ...current, name: newName })
+})
+
+// 或者
+
+trigger(newName, {
+  optimisticData: current => ({ ...current, name: newName })
+})
+```
+
+### 延迟加载数据，直到需要的时候 [#defer-loading-data-until-needed]
+
+你也可以使用 `useSWRMutation` 来加载数据。`useSWRMutation` 在 `trigger` 被调用之前永远不会开始请求，所以你可以推迟到真正需要时再加载数据。
+
+```jsx
+import { useState } from 'react'
+import useSWRMutation from 'swr/mutation'
+
+const fetcher = url => fetch(url).then(res => res.json())
+
+const Page = () => {
+  const [show, setShow] = useState(false)
+  // 直到 trigger 被调用前，data 都为 undefined
+  const { data: user, trigger } = useSWRMutation('/api/user', fetcher);
+
+  return (
+    <div>
+      <button onClick={() => {
+        trigger();
+        setShow(true);
+      }}>Show User</button>
+      {show && user ? <div>{user.name}</div> : null}
+    </div>
+  );
+}
+```
+
+## 乐观更新 [#optimistic-updates]
+
+很多情况下，应用本地的数据更改是一个让人感觉快速的好方法——不需要等待远程数据源。
+
+使用 `optimisticData` 选项，你可以手动更新你的本地数据，同时等待远程数据更改的完成。搭配 `rollbackOnError` 使用，你还可以控制何时回滚数据。
+
+```jsx
+import useSWR, { useSWRConfig } from 'swr'
+
+function Profile () {
+  const { mutate } = useSWRConfig()
+  const { data } = useSWR('/api/user', fetcher)
+
+  return (
+    <div>
+      <h1>My name is {data.name}.</h1>
+      <button onClick={async () => {
+        const newName = data.name.toUpperCase()
+        const user = { ...data, name: newName }
+        const options = {
+          optimisticData: user,
+          rollbackOnError(error) {
+            // 如果超时中止请求的错误，不执行回滚
+            return error.name !== 'AbortError'
+          },
+        }
+
+        // 立即更新本地数据
+        // 发送一个请求以更新数据
+        // 触发重新验证（重新请求）确保本地数据正确
+        mutate('/api/user', updateFn(user), options);
+      }}>Uppercase my name!</button>
+    </div>
+  )
+}
+```
+
+> **`updateFn`** 应该是一个 promise 或者异步函数以处理远程数据更改，它应该返回更新后的数据。
+
+你也可以为 `optimisticData` 传入一个函数使其可以获取当前数据：
+
+```jsx
+import useSWR, { useSWRConfig } from 'swr'
+
+function Profile () {
+  const { mutate } = useSWRConfig()
+  const { data } = useSWR('/api/user', fetcher)
+
+  return (
+    <div>
+      <h1>My name is {data.name}.</h1>
+      <button onClick={async () => {
+        const newName = data.name.toUpperCase()
+        mutate('/api/user', updateUserName(newName), {
+          optimisticData: user => ({ ...user, name: newName }),
+          rollbackOnError: true
+        });
+      }}>Uppercase my name!</button>
+    </div>
+  )
+}
+```
+
+你还可以通过 `useSWRMutation` 和 `trigger` 实现相同的功能：
+
+```jsx
+import useSWRMutation from 'swr/mutation'
+
+function Profile () {
+  const { trigger } = useSWRMutation('/api/user', updateUserName)
+
+  return (
+    <div>
+      <h1>My name is {data.name}.</h1>
+      <button onClick={async () => {
+        const newName = data.name.toUpperCase()
+
+        trigger(newName, {
+          optimisticData: user => ({ ...user, name: newName }),
+          rollbackOnError: true
+        })
+      }}>Uppercase my name!</button>
+    </div>
+  )
+}
+```
+
+## 错误回滚 [#rollback-on-errors]
+
+当你设置了`optimisticData` 选项时，有可能在乐观数据展示给用户后，远程数据更改却失败了。在这种情况下，你可以启用`rollbackOnError`，将本地缓存恢复到之前的状态，确保用户看到的是正确的数据。
+
+## 在数据更改后更新缓存 [#update-cache-after-mutation]
+
+有时远程数据更改的请求会直接返回更新后的数据，因此不需要发送额外的请求来加载它。
+你可以启用 `populateCache` 选项，用数据更改的响应来更新 `useSWR` 的缓存。
+
+```jsx
+const updateTodo = () => fetch('/api/todos/1', {
+  method: 'PATCH',
+  body: JSON.stringify({ completed: true })
+})
+
+mutate('/api/todos', updateTodo, {
+  populateCache: (updatedTodo, todos) => {
+   // 过滤列表并返回更新后的待办项
+    const filteredTodos = todos.filter(todo => todo.id !== '1')
+    return [...filteredTodos, updatedTodo]
+  },
+
+  // 因为 API 已经给了我们更新后的数据，所以我们不需要重新请求验证它。
+  revalidate: false
+})
+```
+
+或使用 `useSWRMutation` hook：
+
+```jsx
+useSWRMutation('/api/todos', updateTodo, {
+  populateCache: (updatedTodo, todos) => {
+    // 过滤列表并返回更新后的待办项
+    const filteredTodos = todos.filter(todo => todo.id !== '1')
+    return [...filteredTodos, updatedTodo]
+  },
+  // 因为 API 已经给了我们更新后的数据，所以我们不需要重新请求验证它。
+  revalidate: false
+})
+```
+
+当 `optimisticData` 与 `rollbackOnError` 搭配使用时，你将获得最佳的乐观 UI 体验。
+
+## 避免竞态条件 [#avoid-race-conditions]
+
+`mutate` 和 `useSWRMutation` 都可以避免 `useSWR` 之间的竞态条件。例如：
+
+```tsx
+function Profile() {
+  const { data } = useSWR('/api/user', getUser, { revalidateInterval: 3000 })
+  const { trigger } = useSWRMutation('/api/user', updateUser)
+
+  return <>
+    {data ? data.username : null}
+    <button onClick={() => trigger()}>Update User</button>
+  </>
+}
+```
+
+正常情况下 `useSWR` hook 可能会因为聚焦，轮询或者其他条件在任何时间刷新，这使得展示的 username 尽可能是最新的。然而，由于我们在`useSWR` 的刷新过程中几乎同时发生了一个数据更改，可能会出现 `getUser` 请求更早开始，但是花的时间比 `updateUser` 更长，导致竞态情况。
+
+幸运的是 `useSWRMutation` 可以为你自动处理这种情况。在数据更改后，它会告诉 `useSWR` 放弃正在进行的请求和重新验证，所以旧的数据永远不会被显示。
+
+## 基于当前数据进行数据更改 [#mutate-based-on-current-data]
+
+有时你想根据当前的数据来更新部分数据。
+
+通过 `mutate`，你可以传入一个接收当前缓存值的异步函数，如果有的话，并返回一个更新的文档。
+
+```jsx
+mutate('/api/todos', async todos => {
+  // 让我们将 ID 为 `1` 的待办事项更新为已完成
+  const updatedTodo = await fetch('/api/todos/1', {
+    method: 'PATCH',
+    body: JSON.stringify({ completed: true })
+  })
+
+  // 过滤列表并返回更新后的待办项
+  const filteredTodos = todos.filter(todo => todo.id !== '1')
+  return [...filteredTodos, updatedTodo]
+  // 因为 API 已经给了我们更新后的信息，所以我们不需要去重新验证它。
+}, { revalidate: false })
+```
+
+## 更改多项数据 [#mutate-multiple-items]
+
+全局 `mutate` API 接受一个过滤函数，它接受 `key` 作为参数并返回需要重新验证的 key。过滤函数会被应用于所有已有的缓存 key。
+
+```jsx
+import { mutate } from 'swr'
+// 如果你自定义了缓存 provider，也可以从 hook 上获取。
+// { mutate } = useSWRConfig()
+
+mutate(
+  key => typeof key === 'string' && key.startsWith('/api/item?id='),
+  undefined,
+  { revalidate: true }
+)
+```
+
+这同时适用于如数组等任何类型的 key 。这个数据更改会匹配所有第一个元素为 `'item'` 的 key。
+
+```jsx
+useSWR(['item', 123], ...)
+useSWR(['item', 124], ...)
+useSWR(['item', 125], ...)
+
+mutate(
+  key => Array.isArray(key) && key[0] === 'item',
+  undefined,
+  { revalidate: false }
+)
+```
+
+过滤函数应用于所有现有的缓存 key，所以当使用多种类型的 key 时，你不应该假设 key 的类型。
+
+```jsx
+// ✅ 匹配的数组 key 值
+mutate((key) => key[0].startsWith('/api'), data)
+// ✅ 匹配字符串 key 值
+mutate((key) => typeof key === 'string' && key.startsWith('/api'), data)
+
+// ❌ ERROR: 更改不确定类型的 key 的数据 (array 或 string)
+mutate((key: any) => /\/api/.test(key.toString()))
+```
+
+你可以使用过滤函数来清除所有的缓存数据，这在退出登陆时很有用：
+
+```js
+const clearCache = () => mutate(
+  () => true,
+  undefined,
+  { revalidate: false }
+)
+
+// ...退出登陆时清除所有缓存
+clearCache()
+```

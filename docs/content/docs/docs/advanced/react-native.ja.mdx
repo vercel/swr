@@ -1,0 +1,95 @@
+import { Callout } from 'nextra-theme-docs'
+
+# React Native
+
+<Callout>
+  このカスタマイズを体験するには、最新バージョン（ ≥ 1.0.0 ）にアップグレードしてください。
+</Callout>
+
+ブラウザ内で実行されている React とは異なり、React Native の使用体験は大きく異なります。たとえば、“タブフォーカス”はなく、バックグラウンドからアプリの切り替えは“フォーカス”とみなされます。
+これらの動作をカスタマイズするには、デフォルトの `focus` と `online` のイベントリスナーを React Native のアプリの状態検出や、その他のネイティブ移植 API に置き換えて使用するように SWR を構成します。
+
+## 例 [#example]
+
+### グローバル設定 [#global-setup]
+
+アプリを `SWRConfig` でラップし、すべての構成を事前に設定できます。
+
+```jsx
+<SWRConfig
+  value={{
+    /* ... */
+  }}
+>
+  <App>
+</SWRConfig>
+```
+
+### `focus` と `reconnect` イベントのカスタマイズ [#customize-focus-and-reconnect-events]
+
+`isOnline` 、 `isVisible` 、 `initFocus` 、 `initReconnect` など、いくつかの設定を行う必要があります。
+
+`isOnline` と `isVisible` は、アプリケーションが"アクティブ"であるかどうかを判断するための真偽値を返す関数です。デフォルトでは、これらの条件が満たされてない場合、 SWR は再検証を中止します。
+
+`initFocus` と `initReconnect` を使用する場合は、[カスタムキャッシュプロバイダー](/docs/advanced/cache)も設定する必要があります。空の `Map()` 、または任意のストレージを使用できます。
+
+```jsx
+<SWRConfig
+  value={{
+    provider: () => new Map(),
+    isOnline() {
+      /* ネットワーク状態の検出器をカスタマイズ */
+      return true
+    },
+    isVisible() {
+      /* 視認状態の検出器をカスタマイズ */
+      return true
+    },
+    initFocus(callback) {
+      /* リスナーをステートプロバイダーに登録 */
+    },
+    initReconnect(callback) {
+      /* リスナーをステートプロバイダーに登録 */
+    }
+  }}
+>
+  <App />
+</SWRConfig>
+```
+
+ここでは、 `initFocus` を例に説明します：
+
+```jsx
+import { AppState } from 'react-native'
+
+// ...
+
+<SWRConfig
+  value={{
+    provider: () => new Map(),
+    isVisible: () => { return true },
+    initFocus(callback) {
+      let appState = AppState.currentState
+
+      const onAppStateChange = (nextAppState) => {
+        /* バックグラウンドモードまたは非アクティブモードからアクティブモードに再開する場合 */
+        if (appState.match(/inactive|background/) && nextAppState === 'active') {
+          callback()
+        }
+        appState = nextAppState
+      }
+
+      // アプリの状態変更を監視する
+      const subscription = AppState.addEventListener('change', onAppStateChange)
+
+      return () => {
+        subscription.remove()
+      }
+    }
+  }}
+>
+  <App>
+</SWRConfig>
+```
+
+`initReconnect` の場合、ネットワーク状態を監視するには [NetInfo](https://github.com/react-native-netinfo/react-native-netinfo) などのサードパーティ製のライブラリが必要です。実装は上記の例と同様です： `callback` 関数を受け取り、ネットワークがオフラインから復帰したときに実行するため、 SWR は再検証を開始してデータを最新の状態に保つことができます。

@@ -1,0 +1,138 @@
+# TypeScript
+
+SWR дружелюбен к приложениям, написанным на TypeScript, с предустановленной типизацией.
+
+## Основное использование [#basic-usage]
+
+По умолчанию SWR также выводит типы аргументов `fetcher` из `key`, так чтобы вам были доступны предпочтительные типы автоматически.
+
+### useSWR [#useswr]
+
+```typescript
+// `key` подразумевается как `string`
+useSWR('/api/user', key => {})
+useSWR(() => '/api/user', key => {})
+
+// `key` подразумевается как { a: string; b: { c: string; d: number } }
+useSWR({ a: '1', b: { c: '3', d: 2 } }, key => {})
+useSWR(() => ({ a: '1', b: { c: '3', d: 2 } }), key => {})
+
+// `arg0` подразумевается как строка.  `arg1` подразумевается как число
+useSWR(['user', 8], ([arg0, arg1]) => {})
+useSWR(() => ['user', 8], ([arg0, arg1]) => {})
+```
+
+Вы также можете явно указать типы аргументов `key` и `fetcher`
+
+```typescript
+import useSWR, { Fetcher } from 'swr'
+
+const uid = '<user_id>'
+const fetcher: Fetcher<User, string> = (id) => getUserById(id)
+
+const { data } = useSWR(uid, fetcher)
+// `data` будет `User | undefined`.
+```
+
+По умолчанию [ошибка вызванная](/docs/error-handling) внутри функции `fetcher` имеет тип `any`. Тип также может быть указан явно.
+
+```typescript
+const { data, error } = useSWR<User, Error>(uid, fetcher);
+// `data` будет `User | undefined`.
+// `error` будет `Error | undefined`.
+```
+
+### useSWRInfinite [#useswrinfinite]
+
+То же самое для `swr/infinite`, вы можете либо полагаться на автоматический вывод типа, либо явно указывать типы самостоятельно.
+
+```typescript
+import { SWRInfiniteKeyLoader } from 'swr/infinite'
+
+const getKey: SWRInfiniteKeyLoader = (index, previousPageData) => {
+  // ...
+}
+
+const { data } = useSWRInfinite(getKey, fetcher)
+```
+
+### useSWRSubscription [#useswrsubscription]
+
+* Встроенная функция подписки и ручное указание типа `next` с использованием `SWRSubscriptionOptions`.
+
+```tsx
+import useSWRSubscription from 'swr/subscription'
+import type { SWRSubscriptionOptions } from 'swr/subscription'
+
+const { data, error } = useSWRSubscription('key', 
+  (key, { next }: SWRSubscriptionOptions<number, Error>) => {
+  //^ key будет выведен как тип `string`
+  //....
+  })
+  return {
+    data,
+    //^ data будет выведен как `number | undefined`
+    error
+    //^ error будет выведен как `Error | undefined`
+  }
+}
+```
+
+* объявление функции подписки с использованием `SWRSubscription`
+
+```tsx
+import useSWRSubscription from 'swr/subscription'
+import type { SWRSubscription } from 'swr/subscription'
+
+/** 
+ * Первый параметр типа — это ключ (Key)
+ * Второй параметр — данные (Data)
+ * Третий параметр — ошибка (Error)
+ */
+const sub: SWRSubscription<string, number, Error> = (key, { next }) => {                         
+  //......
+}
+const { data, error } = useSWRSubscription('key', sub)
+```
+
+## Обобщения (Generics) [#generics]
+
+Указывать тип `data` легко. По умолчанию он будет использовать возвращаемый тип `fetcher` (с `undefined` для неготового состояния) в качестве типа `data`, но вы также можете передать его в качестве параметра:
+
+```typescript
+// 🔹 A. Используйте типизированный fetcher:
+// `getUser` является `(endpoint: string) => User`.
+const { data } = useSWR('/api/user', getUser)
+
+// 🔹 B. Укажите тип данных:
+// `fetcher` обычно возвращает `any`.
+const { data } = useSWR<User>('/api/user', fetcher)
+```
+
+Если вы хотите добавить типы для других параметров SWR, вы также можете напрямую импортировать эти типы:
+
+```typescript
+import useSWR from 'swr'
+import type { SWRConfiguration } from 'swr'
+
+const config: SWRConfiguration = {
+  fallbackData: "fallback",
+  revalidateOnMount: false
+  // ...
+}
+
+const { data } = useSWR<string[]>('/api/data', fetcher, config)
+```
+
+## Типы промежуточного ПО [#middleware-types]
+
+Есть несколько дополнительных определений типов, которые вы можете импортировать, чтобы упростить добавление типов в ваше пользовательское промежуточное ПО.
+
+```typescript
+import useSWR, { Middleware, SWRHook } from 'swr'
+
+const swrMiddleware: Middleware = (useSWRNext: SWRHook) => (key, fetcher, config) => {
+  // ...
+  return useSWRNext(key, fetcher, config)
+}
+```

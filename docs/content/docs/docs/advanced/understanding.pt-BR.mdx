@@ -1,0 +1,125 @@
+import { Callout } from 'nextra-theme-docs'
+import Video from 'components/video'
+
+# Entendendo o SWR
+
+## Máquina de Estado [#state-machine]
+
+`useSWR` retorna `data`, `error`, `isLoading` e `isValidating` dependendo do estado da função `fetcher`. Esses diagramas descrevem como o SWR retorna valores em alguns cenários.
+
+### Obter e Revalidar [#fetch-and-revalidate]
+
+Esse padrão é para obter dados e revalidar depois.
+
+![Um padrão para obter e revalidar](/img/understanding/fetch-and-revalidate.svg)
+
+### Mudança de Chave [#key-change]
+
+Esse padrão é para obter dados, mudar a chave, e revalidar depois.
+
+![Um padrão para mudança de chave.](/img/understanding/key-change.svg)i
+
+### Mudança de Chave + Dados Antigos [#key-change--previous-data]
+
+Esse padrão é para obter dados, mudar a chave e revalidar depois usando a opção `keepPreviousData`.
+
+![Um padrão para mudança de chave + dados antigos](/img/understanding/key-change-previous-data.svg)
+
+### Fallback [#fallback]
+
+Esse padrão é para obter dados e revalidar depois usando dados de fallback.
+
+![Um padrão para fallback](/img/understanding/fallback.svg)
+
+### Mudança de Chave + Fallback [#key-change--fallback]
+
+Esse padrão é para obter dados, mudar a chave e revalidar depois com dados de fallback.
+
+![Um padrão para mudança de chave + fallback](/img/understanding/key-change-fallback.svg)
+
+### Mudança de Chave + Dados Antigos + Fallback [#key-change--previous-data--fallback]
+
+Esse padrão é para obter dados, mudar a chave, revalidar depois usando a opção `keepPreviousData` e com dados de fallback.
+
+![Um padrão para mudança de chave + dados antigos + fallback](/img/understanding/key-change-previous-data-fallback.svg)
+
+## Combinando com isLoading e isValidating para melhorar a UX [#combining-with-isloading-and-isvalidating-for-better-ux]
+
+Comparado com o valor existente de `isValidating`, `isLoading` é uma nova propriedade que pode te ajudar para os casos de carregamento mais gerais para UX.
+
+- `isValidating` se torna `true` toda vez que há um requisição em andamento **independente se os dados foram carregados ou não**
+- `isLoading` se torna `true` quando há uma requisiçãoo em andamento e **os dados ainda não foram carregados**.
+
+Simplesmente dizendo que você pode usar `isValidating` para indicar toda vez que há uma requisição em andamento e `isLoading` para indicar que o SWR está revalidando mas ainda não há dados para exibir.
+
+<Callout emoji="📝">
+  Dados de fallback e dados antigos não são considerados "dados carregados", então quando você usa dados de fallback ou habilita a opção `keepPreviousData`, você talvez terá dados para exibir.
+</Callout>
+
+```jsx
+function Stock() {
+  const { data, isLoading, isValidating } = useSWR(STOCK_API, fetcher, {
+    refreshInterval: 3000
+  });
+
+  // Se ainda estiver carregando os dados iniciais, não há nada para exibir.
+  // Iremos retornar um skeleton aqui.
+  if (isLoading) return <div className="skeleton" />;
+
+  // Se não, exibiremos os dados e um spinner que indica a revalidação
+  //em segundo plano.
+  return (
+    <>
+      <div>${data}</div>
+      {isValidating ? <div className="spinner" /> : null}
+    </>
+  );
+}
+```
+
+![Um exemplo de uso do isLoading](/img/understanding/isloading.gif)
+
+Você pode achar o código de exemplo [aqui](https://codesandbox.io/s/swr-isloading-jtopow)
+
+## Retorne dados antigos para melhorar a UX [#return-previous-data-for-better-ux]
+
+Quando estiver obtendo dados baseado em ações contínuas do usuário, como por exemplo, pesquisa em tempo real enquanto digita, manter os últimos dados obtidos pode melhorar bastante a UX. `keepPreviousData` é uma opção para habilitar esse comportamento. Aqui está uma UI de pesquisa simples:
+
+```jsx
+function Search() {
+  const [search, setSearch] = React.useState('');
+
+  const { data, isLoading } = useSWR(`/search?q=${search}`, fetcher, {
+    keepPreviousData: true
+  });
+
+  return (
+    <div>
+      <input
+        type="text"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Pesquisar..."
+      />
+
+      <div className={isLoading ? "loading" : ""}>
+        {data?.products.map(item => <Product key={item.id} name={item.name} />)
+      </div>
+    </div>
+  );
+}
+```
+
+Com o `keepPreviousData` habilitado, você ainda obterá os dados antigos mesmo se você mudar a chave do SWR e a data com a chave nova começar a carregar denovo.
+
+<Video
+  src="https://user-images.githubusercontent.com/3676859/163695903-a3eb1259-180e-41e0-821e-21c320201194.mp4"
+  caption="Manter resultados de busca antigos quando keepPreviousData estiver habilitado"
+  ratio={640/730}
+/>
+
+Você pode achar o código completo para esse exemplo aqui: (https://codesandbox.io/s/swr-keeppreviousdata-fsjz3m).
+
+## Coleção de Dependência para performance [#dependency-collection-for-performance]
+
+SWR apenas aciona a nova renderização quando os estados usados no componente forem atualizados. Se você apenas usar `data` no componente, o SWR irá ignorar as atualizações das outras propriedades como `isValidating` e `isLoading`. Isso reduz bastante o número de renderizações. Mais informações podem ser encontradas [aqui](/docs/advanced/performance#dependency-collection).

@@ -1,0 +1,59 @@
+import { Callout } from 'nextra-theme-docs'
+
+# Arguments
+
+Par défaut, `key` sera passé à `fetcher` comme argument. Donc les 3 expressions suivantes sont équivalentes:
+
+```js
+useSWR('/api/user', () => fetcher('/api/user'))
+useSWR('/api/user', url => fetcher(url))
+useSWR('/api/user', fetcher)
+```
+
+## Arguments multiples [#multiple-arguments]
+
+Dans certains cas, il est utile de passer plusieurs arguments (pouvant être de n'importe quelle valeur ou objet) à la fonction `fetcher`. Par exemple, une requête fetch autorisée:
+
+```js
+useSWR('/api/user', url => fetchWithToken(url, token))
+```
+
+C'est **incorrect**. Parce que l'identifiant (également la clé de cache) des données est `'/api/user'`, même si `token` change, SWR utilisera toujours la même clé et renverra les mauvaises données.
+
+A la place, vous pouvez utiliser un **tableau** comme paramètre `key`, qui contient plusieurs arguments de `fetcher`:
+
+```js
+const { data: user } = useSWR(['/api/user', token], ([url, token]) => fetchWithToken(url, token))
+```
+
+La fonction `fetcher` accepte le paramètre `key` tel quel, et la clé de cache sera également associée à l'ensemble de l'argument `key`. Dans l'exemple ci-dessus, `url` et `token` sont tous deux liés à la clé de cache.
+
+<Callout emoji="⚠️">
+  Dans les précédentes versions (< 2.0.0), la fonction `fetcher` recevait les arguments étalés de la clé d'origine lorsque l'argument `key` était de type tableau. Par exemple, la clé `[url, token]` deviendra 2 arguments `(url, token)` pour la fonction `fetcher`.
+</Callout>
+
+
+## Passer des Objets [#passing-objects]
+
+<Callout>
+  Depuis SWR 1.1.0, les clés de type objet seront automatiquement sérialisées en arrière-plan.
+</Callout>
+
+Disons que vous avez une autre fonction qui récupère des données avec une portée utilisateur: `fetchWithUser(api, user)`. Vous pouvez faire ce qui suit:
+
+```js
+const { data: user } = useSWR(['/api/user', token], fetchWithToken)
+
+// ...et ensuite le passer en argument à un autre hook useSWR
+const { data: orders } = useSWR(user ? ['/api/orders', user] : null, fetchWithUser)
+```
+
+Vous pouvez également utiliser un objet comme clé, et `fetcher` recevra cet objet en tant qu'argument:
+
+```js
+const { data: orders } = useSWR({ url: '/api/orders', args: user }, fetcher)
+```
+
+<Callout emoji="⚠️">
+  Dans les versions antérieures (< 1.1.0), SWR **superficiellement** compare les arguments à chaque rendu, et déclenche une revalidation si l'un d'entre eux a changé.
+</Callout>

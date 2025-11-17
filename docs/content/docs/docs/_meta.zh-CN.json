@@ -1,0 +1,24 @@
+{
+  "getting-started": "入门",
+  "api": "API",
+  "global-configuration": "全局配置",
+  "data-fetching": "数据请求",
+  "error-handling": "错误处理",
+  "revalidation": "自动重新请求",
+  "conditional-fetching": "条件数据请求",
+  "arguments": "传入参数",
+  "mutation": "数据更改",
+  "pagination": "分页",
+  "subscription": "订阅",
+  "prefetching": "预请求",
+  "with-nextjs": "Next.js SSG 和 SSR",
+  "typescript": "TypeScript",
+  "suspense": "Suspense",
+  "middleware": "中间件",
+  "advanced": "高级",
+  "change-log": {
+    "title": "更新日志",
+    "href": "https://github.com/vercel/swr/releases",
+    "newWindow": true
+  }
+}

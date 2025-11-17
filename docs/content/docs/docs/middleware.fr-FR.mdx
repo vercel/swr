@@ -1,0 +1,208 @@
+import { Callout } from 'nextra-theme-docs'
+
+# Middleware
+
+<Callout>
+  Mettez à jour vers la dernière version (≥ 1.0.0) pour utiliser cette fonctionnalité.
+</Callout>
+
+La fonctionnalité middleware est un ajout récent dans SWR 1.0 qui vous permet d'exécuter une logique avant et après les hooks SWR.
+
+## Utilisation [#usage]
+
+Les middleware reçoivent le hook SWR et peuvent exécuter la logique avant et après son exécution. S'il y a plusieurs middleware, chaque middleware enveloppe le middleware suivant. Le dernier middleware de la liste recevra le hook SWR d'origine `useSWR`.
+
+### API [#api]
+
+_Notes: Le nom de la fonction ne doit pas être mis en majuscule (par exemple `myMiddleware` au lieu de `MyMiddleware`) ou les règles de lint React lanceront une erreur `Rules of Hook`_
+
+[TypeScript](https://swr.vercel.app/docs/typescript#middleware-types)
+
+```jsx
+function myMiddleware (useSWRNext) {
+  return (key, fetcher, config) => {
+    // Avant l'exécution du hook...
+
+    // Exécutez le hook suivant, ou le hook `useSWR` si c'est le dernier.
+    const swr = useSWRNext(key, fetcher, config)
+
+    // Après l'exécution du hook...
+    return swr
+  }
+}
+```
+
+Vous pouvez passer un tableau de middleware en option à `SWRConfig` ou `useSWR` :
+
+```jsx
+<SWRConfig value={{ use: [myMiddleware] }} />
+
+// ou...
+
+useSWR(key, fetcher, { use: [myMiddleware] })
+```
+
+### Etendre [#extend]
+
+Les middleware seront étendus comme des options régulières. Par exemple :
+
+```jsx
+function Bar () {
+  useSWR(key, fetcher, { use: [c] })
+  // ...
+}
+
+function Foo() {
+  return (
+    <SWRConfig value={{ use: [a] }}>
+      <SWRConfig value={{ use: [b] }}>
+        <Bar/>
+      </SWRConfig>
+    </SWRConfig>
+  )
+}
+```
+
+est équivalent à :
+
+```js
+useSWR(key, fetcher, { use: [a, b, c] })
+```
+
+### Multiple Middleware [#multiple-middleware]
+
+Chaque middleware enveloppe le middleware suivant, et le dernier ne fait que envelopper le hook SWR. Par exemple :
+
+```jsx
+useSWR(key, fetcher, { use: [a, b, c] })
+```
+
+L'ordre d'exécution des middleware sera `a → b → c`, comme indiqué ci-dessous :
+
+```plaintext
+enter a
+  enter b
+    enter c
+      useSWR()
+    exit  c
+  exit  b
+exit  a
+```
+
+## Exemples [#examples]
+
+### Journal des requêtes [#request-logger]
+
+Construisons un simple middleware de journalisation des requêtes à titre d'exemple. Il imprime toutes les requêtes fetcher envoyées depuis ce hook SWR. Vous pouvez également utiliser ce middleware pour tous les hooks SWR en l'ajoutant à `SWRConfig`.
+
+```jsx
+function logger(useSWRNext) {
+  return (key, fetcher, config) => {
+    // ajout du journal au fetcher d'origine.
+    const extendedFetcher = (...args) => {
+      console.log('SWR Request:', key)
+      return fetcher(...args)
+    }
+
+    // Exécute le hook avec le nouveau fetcher.
+    return useSWRNext(key, extendedFetcher, config)
+  }
+}
+
+// ... a l'intérieur de votre composant
+useSWR(key, fetcher, { use: [logger] })
+```
+
+Chaque fois que la requête est envoyée, elle affiche la clé SWR dans la console :
+
+```plaintext
+SWR Request: /api/user1
+SWR Request: /api/user2
+```
+
+### Conservation du résultat précédent [#keep-previous-result]
+
+Parfois vous voulez que les données retournées par `useSWR` soient "laggy". Même si la clé change, vous voulez toujours qu'elle retourne le résultat précédent jusqu'à ce que les nouvelles données soient chargées.
+
+Cela peut être construit comme un middleware laggy avec `useRef`. Dans cet exemple, nous allons également étendre l'objet retourné par le hook `useSWR` :
+
+```jsx
+import { useRef, useEffect, useCallback } from 'react'
+
+// Ceci est un middleware SWR pour conserver les données même si la clé change.
+function laggy(useSWRNext) {
+  return (key, fetcher, config) => {
+    // Utilisez une ref pour stocker les données précédemment retournées.
+    const laggyDataRef = useRef()
+
+    // SWR hook actuel.
+    const swr = useSWRNext(key, fetcher, config)
+
+    useEffect(() => {
+      // Mettre à jour la ref si les données ne sont pas undefined.
+      if (swr.data !== undefined) {
+        laggyDataRef.current = swr.data
+      }
+    }, [swr.data])
+
+    // Exposez une méthode pour effacer les données laggy, le cas échéant.
+    const resetLaggy = useCallback(() => {
+      laggyDataRef.current = undefined
+    }, [])
+
+    // Fallback des données précédentes si les données actuelles sont undefined.
+    const dataOrLaggyData = swr.data === undefined ? laggyDataRef.current : swr.data
+
+    // Est-ce qu'il affiche les données précédentes ?
+    const isLagging = swr.data === undefined && laggyDataRef.current !== undefined
+
+    // Ajoutez un champ `isLagging` à SWR.
+    return Object.assign({}, swr, {
+      data: dataOrLaggyData,
+      isLagging,
+      resetLaggy,
+    })
+  }
+}
+```
+
+Quant vous avez besoin d'un hook SWR laggy, vous pouvez alors utiliser ce middleware :
+
+```js
+const { data, isLagging, resetLaggy } = useSWR(key, fetcher, { use: [laggy] })
+```
+
+### Sérialisation des clés d'objet [#serialize-object-keys]
+
+<Callout>
+  Depuis SWR 1.1.0, les clés de type objet seront automatiquement sérialisées en arrière-plan.
+</Callout>
+
+<Callout emoji="⚠️">
+  Dans d'ancienne version (< 1.1.0), SWR **compare superficiellement** les arguments à chaque rendu, et déclenche une revalidation si l'un d'eux a changé.
+  Si vous passez des objets sérialisables comme clé. Vous pouvez sérialiser les clés d'objet pour assurer sa stabilité, un middleware simple peut aider :
+</Callout>
+
+```jsx
+function serialize(useSWRNext) {
+  return (key, fetcher, config) => {
+    // Sérialise la clé.
+    const serializedKey = Array.isArray(key) ? JSON.stringify(key) : key
+
+    // Passe la clé sérialisée, et la désérialise dans le fetcher.
+    return useSWRNext(serializedKey, (k) => fetcher(...JSON.parse(k)), config)
+  }
+}
+
+// ...
+useSWR(['/api/user', { id: '73' }], fetcher, { use: [serialize] })
+
+// ... ou activez-le globalement avec
+<SWRConfig value={{ use: [serialize] }}>
+```
+
+Vous n'avez pas besoin de vous soucier que l'objet puisse changer entre les rendus. Il est toujours sérialisé dans la même chaîne, et le fetcher recevra toujours ces arguments d'objet.
+
+<Callout>
+  En outre, vous pouvez utiliser des librairies comme [fast-json-stable-stringify](https://github.com/epoberezkin/fast-json-stable-stringify) à la place de `JSON.stringify` — plus rapide et plus stable.
+</Callout>

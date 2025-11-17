@@ -1,0 +1,127 @@
+import { Callout } from 'nextra-theme-docs'
+import Video from 'components/video'
+
+# 理解 SWR
+
+## 状态机制 [#state-machine]
+
+`useSWR` 会根据 `fetcher` 函数的状态返回 `data`，`error`，`isLoading` 和 `isValidating`。以下这些图片描述了 SWR 在不同情况下是如何返回值的。
+
+### 请求与重新请求 [#fetch-and-revalidate]
+
+这种模式表示请求数据，并在之后重新请求的场景。
+
+![A pattern for fetch and revalidate](/img/understanding/fetch-and-revalidate.svg)
+
+### Key 的变化 [#key-change]
+
+这种模式表示在请求数据，再改变 key 值，并在之后重新请求的场景。
+
+![A pattern for key change](/img/understanding/key-change.svg)
+
+### Key 的变化 + 保留之前的数据 [#key-change--previous-data]
+
+这种模式表示在开启 `keepPreviousData` 选项时，请求数据，再改变 key 值，并在之后重新请求的场景。
+
+![A pattern for key change + previous data](/img/understanding/key-change-previous-data.svg)
+
+### 设置预设数据 [#fallback]
+
+这种模式表示设置了预设数据时，请求数据，并在之后进行重新请求的场景。
+
+![A pattern for fallback](/img/understanding/fallback.svg)
+
+### Key 的变化 + 设置预设数据 [#key-change--fallback]
+
+这种模式表示在设置预设数据时，请求数据，再改变 key 值，并在之后进行重新请求的场景。
+
+![A pattern for key change + fallback](/img/understanding/key-change-fallback.svg)
+
+### Key 的变化 + 保留之前的数据 + 设置预设数据 [#key-change--previous-data--fallback]
+
+这种模式表示在开启 `keepPreviousData` 选项并设置预设数据时，请求数据，再改变 key 值，并在之后进行重新请求的场景。
+
+![A pattern for key change + previous data + fallback](/img/understanding/key-change-previous-data-fallback.svg)
+
+## 结合 `isLoading` 和 `isValidating` 以获得更好的用户体验 [#combining-with-isloading-and-isvalidating-for-better-ux]
+
+相比于现有的 `isValidating` ，`isLoading` 是一个新的属性，它可以帮助我们应对更加普遍的用户加载场景。
+
+- 无论数据是否已加载，只要有一个正在进行中的请求，`isValidating` 都会变为 `true` 。
+- 当数据尚未加载并且有一个正在进行的请求时，`isLoading` 会变为 `true` 。
+
+简而言之，我们可以使用 `isValidating` 来表示每次正在进行的重新请求；使用 `isLoading` 来表示 SWR 正在重新请求中，但目前还没有数据可以展示。
+
+<Callout emoji="📝">
+  预设数据（Fallback Data）和之前的数据（Previous Data）不会被认为是“已加载的数据”，因此在设置了预设数据或启用 `keepPreviousData` 选项时，你可能有数据要展示。
+</Callout>
+
+```jsx
+function Stock() {
+  const { data, isLoading, isValidating } = useSWR(STOCK_API, fetcher, {
+    refreshInterval: 3000
+  });
+
+  // 如果初始数据仍在加载，这里将不展示任何内容。
+  // 我们在这里返回一个骨架屏。
+
+  if (isLoading) return <div className="skeleton" />;
+
+
+  // 否则展示响应数据和一个表示后台正在重新请求的加载器。
+  return (
+    <>
+      <div>${data}</div>
+      {isValidating ? <div className="spinner" /> : null}
+    </>
+  );
+}
+```
+
+![An example of using the isLoading state](/img/understanding/isloading.gif)
+
+点击 [这里](https://codesandbox.io/s/swr-isloading-jtopow) 查看完整代码示例。
+
+
+## 返回之前的数据以获得更好的用户体验 [#return-previous-data-for-better-ux]
+
+在用户连续操作的情况下进行数据请求时，例如输入时实时搜索，保留之前的数据可以极大提升用户体验，`keepPreviousData` 选项可以用于启用该行为。下例是一个简单的用户搜索界面:
+
+```jsx
+function Search() {
+  const [search, setSearch] = React.useState('');
+
+  const { data, isLoading } = useSWR(`/search?q=${search}`, fetcher, {
+    keepPreviousData: true
+  });
+
+  return (
+    <div>
+      <input
+        type="text"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Search..."
+      />
+
+      <div className={isLoading ? "loading" : ""}>
+        {data?.products.map(item => <Product key={item.id} name={item.name} />)
+      </div>
+    </div>
+  );
+}
+```
+
+如果启用了 `keepPreviousData`，即使我们改变了 SWR key 值并以新的 key 值重新开始加载，我们仍然可以保留之前的数据。
+
+<Video
+  src="https://user-images.githubusercontent.com/3676859/163695903-a3eb1259-180e-41e0-821e-21c320201194.mp4"
+  caption="当启用 keepPreviousData 时，保留上一次搜索的结果"
+  ratio={640/730}
+/>
+
+在这里查看完整代码示例：https://codesandbox.io/s/swr-keeppreviousdata-fsjz3m
+
+## 性能依赖关系收集 [#dependency-collection-for-performance]
+
+SWR 只会在组件中所使用的状态被更新时，触发重新渲染。如果只在组件中使用 `data`，SWR 将忽略其他属性（如 `isValidating` 和 `isLoading`）的更新。这大大减少了渲染次数。点击 [这里](/docs/advanced/performance#dependency-collection) 查看更多信息。

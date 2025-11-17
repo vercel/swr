@@ -1,0 +1,124 @@
+import { Callout } from 'nextra-theme-docs'
+import Video from 'components/video'
+
+# Compréhension SWR
+
+## Etat de la Machine [#state-machine]
+
+`useSWR` renvoie `data`, `error`, `isLoading`, et `isValidating`, en fonction de l'état de la fonction `fetcher`. Ces diagrammes décrivent comment SWR renvoie ces valeurs dans plusieurs scénarios.
+
+### Récupération et Revalidation [#fetch-and-revalidate]
+
+Ce diagramme montre la récupéreration des données et la revalidation plus tard.
+
+![Récupération et revalidation](/img/understanding/fetch-and-revalidate.svg)
+
+### Changement de Clé [#key-change]
+
+Ce diagramme montre la récupération des données et le changement de clé plus tard.
+
+![Changement de Clé](/img/understanding/key-change.svg)
+
+### Changement de Clé + Données Précédentes [#key-change--previous-data]
+
+Ce diagramme montre la récupération des données et le changement de clé plus tard avec l'option `keepPreviousData`.
+
+![Changement de Clé + Données Précédentes](/img/understanding/key-change-previous-data.svg)
+
+### Repli [#fallback]
+
+Ce diagramme montre la récupération des données et la revalidation plus tard avec les données de repli.
+
+![Repli](/img/understanding/fallback.svg)
+
+### Changement de Clé + Repli [#key-change--fallback]
+
+Ce diagramme montre la récupération des données et le changement de clé plus tard avec les données de repli.
+
+![Changement de Clé + Repli](/img/understanding/key-change-fallback.svg)
+
+### Changement de Clé + Données Précédentes + Repli [#key-change--previous-data--fallback]
+
+Ce diagramme montre la récupération des données et le changement de clé plus tard avec les données de repli et l'option `keepPreviousData`.
+
+![Changement de Clé + Données Précédentes + Repli](/img/understanding/key-change-previous-data-fallback.svg)
+
+## Combiner isLoading et isValidating pour une meilleure UX [#combining-with-isloading-and-isvalidating-for-better-ux]
+
+Comparé à la valeur existante `isValidating`, `isLoading` est une nouvelle propriété qui peut vous aider pour les cas de chargement plus généraux pour l'UX.
+
+- `isValidating` devient `true` à chaque fois qu'il y a une requête en cours **que les données soient chargées ou non**
+- `isLoading` devient `true` lorsqu'il y a une requête en cours et que **les données ne sont pas encore chargées**.
+
+En d'autres termes, `isLoading` est une propriété plus spécifique pour indiquer que les données ne sont pas encore chargées. `isValidating` est une propriété plus générale pour indiquer qu'il y a une revalidation en cours, que les données soient chargées ou non.
+
+<Callout emoji="📝">
+  Les données de repli et précédentes ne sont pas considérées comme des "données chargées", donc lorsque vous utilisez des données de repli ou que vous activez l'option keepPreviousData, vous pouvez avoir des données à afficher.
+</Callout>
+
+```jsx
+function Stock() {
+  const { data, isLoading, isValidating } = useSWR(STOCK_API, fetcher, {
+    refreshInterval: 3000
+  });
+
+  // Si les données initiales sont toujours en cours de chargement, il n'y a rien à afficher.
+  // Nous retournons un squelette ici.
+  if (isLoading) return <div className="skeleton" />;
+
+  // Sinon, nous affichons les données et un spinner qui indique une revalidation en arrière-plan.
+  return (
+    <>
+      <div>${data}</div>
+      {isValidating ? <div className="spinner" /> : null}
+    </>
+  );
+}
+```
+
+![Un exemple d'utilisation de isLoading](/img/understanding/isloading.gif)
+
+Vous pouvez trouver l'exemple [ici](https://codesandbox.io/s/swr-isloading-jtopow)
+
+## Renvoi de données précédentes pour une meilleure UX [#return-previous-data-for-better-ux]
+
+Lors de la récupération de données basée sur des actions utilisateurs, par exemple une recherche en temps réel, garder les données précédentes peut aléliorer l'UX. `keepPreviousData` est une option pour activer ce comportement. Voici une simple interface de recherche :
+
+```jsx
+function Search() {
+  const [search, setSearch] = React.useState('');
+
+  const { data, isLoading } = useSWR(`/search?q=${search}`, fetcher, {
+    keepPreviousData: true
+  });
+
+  return (
+    <div>
+      <input
+        type="text"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Rechercher..."
+      />
+
+      <div className={isLoading ? "chargement" : ""}>
+        {data?.products.map(item => <Product key={item.id} name={item.name} />)}
+      </div>
+    </div>
+  );
+}
+```
+
+Avec `keepPreviousData` activé, vous obtiendrez toujours les données précédentes même si vous changez la clé SWR et que les données pour la nouvelle clé commencent à se charger à nouveau.
+
+<Video
+  src="https://user-images.githubusercontent.com/3676859/163695903-a3eb1259-180e-41e0-821e-21c320201194.mp4"
+  caption="Sauvegarde des précédents résultats de recherche quant keepPreviousData est actif"
+  ratio={640/730}
+/>
+
+Vous pouvez trouver l'exemple [ici](https://codesandbox.io/s/swr-keeppreviousdata-fsjz3m).
+
+## Collection de dépendances pour les performances [#dependency-collection-for-performance]
+
+SWR ne déclenche le re-rendering que lorsque les états utilisés dans le composant ont été mis à jour. Si vous n'utilisez que `data` dans le composant, SWR ignore les mises à jour des autres propriétés comme `isValidating` et `isLoading`. Cela réduit considérablement le nombre de rendus. Vous pouvez trouver plus d'informations [ici](/docs/advanced/performance#dependency-collection).

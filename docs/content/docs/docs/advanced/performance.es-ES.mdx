@@ -1,0 +1,122 @@
+# Rendimiento
+
+SWR proporciona una funcionalidad crítica en todo tipo de aplicaciónes web, por lo que el **rendimiento**
+es una prioridad absoluta.
+
+SWR’s tiene **caché** incorporado y la **[deduplicación](/advanced/performance#deduplication)** evitan las solicitudes de red innecesarias,
+pero el rendimiento del propio hook `useSWR` sigue siendo importante. En una aplicación compleja, puede haber cientos de llamadas `useSWR`
+en una solo página.
+
+SWR asegura que su aplicación tiene:
+
+- _no hay peticiones de red innecesarias_
+- _no hay renderizado innecesarios_
+- _no se importa código innecesario_
+
+sin ningún cambio de código por su parte.
+
+## Deduplicación [#deduplication]
+
+Es muy común reutilizar los hooks SWR en tu aplicación. Por ejemplo, una aplicación que muestra el avatar del usuario
+actual 5 veces:
+
+```jsx
+
+function useUser() {
+   return useSWR('/api/user', fetcher)
+}
+
+function Avatar () {
+   const { data, error } = useUser()
+   if (error) return <Error />
+   if (!data) return <Spinner />
+
+   return <img src={data.avatar_url} />
+}
+
+function App() {
+  return <>
+    <Avatar />
+    <Avatar />
+    <Avatar />
+    <Avatar />
+    <Avatar />
+  </>
+}
+
+```
+
+Cada componente `<Avatar/>` tiene un hook `useSWR` en su interior. Dado que tienen el mismo key SWR y
+que se renderizan casi al mismo tiempo, **sólo se hará 1 solicitud de red**.
+
+Se pueden reutilizar los hooks de datos (como `useUser` en el ejemplo anterior) en todas partes, sin preocuparse por el rendimiento
+o las peticiones duplicadas.
+
+También existe la [opción `dedupingInterval`](/docs/api) para anular el intervalo de deduplicación por defecto.
+
+## Comparación profunda [#deep-comparison]
+
+SWR por defecto tiene  **deep compares** al cambio de datos. Si el valor de `data` no ha cambiado, no se
+activará una nueva renderización.
+
+También puede personalizar la función de comparación mediante la [opción `compare`](/docs/api) si quieres cambiar el comportamiento.
+Por ejemplo, algunas respuestas de la API devuelven una marca de tiempo del servidor que tal vez quiera excluir de la difusión de datos.
+
+## Colección de dependencias [#dependency-collection]
+
+`useSWR` devuelve 4 valores de **estado**: `data`, `error`, `isLoading` y `isValidating` cada uno de ellos puede actualizarse de forma independientemente.
+Por ejemplo, si imprimimos esos valores dentro de un ciclo de vida completo de obtención de datos, será algo como esto:
+
+```jsx
+
+function App () {
+  const { data, error, isLoading, isValidating } = useSWR('/api', fetcher)
+  console.log(data, error, isLoading, isValidating)
+  return null
+}
+
+```
+
+En el peor de los casos (si la primera solicitud falló, entonces el reintento fue exitoso). Se verán 4 líneas de registros:
+
+```js
+// console.log(data, error, isLoading, isValidating)
+
+undefined undefined true true  // => start fetching
+undefined Error false false    // => end fetching, got an error
+undefined Error true true      // => start retrying
+Data undefined false false     // => end retrying, get the data
+```
+
+Los cambios de estado tienen sentido. Pero eso también significa que nuestro componente se **renderizo 4 veces.**
+
+Si cambiamos nuestro componente para usar solo `data`:
+
+```jsx
+
+function App () {
+   const { data } = useSWR('/api', fetcher)
+   console.log(data)
+   return null
+}
+```
+
+La magia ocurre - ahora solo hay **2 rederizaciones**:
+
+```js
+// console.log(data)
+undefined // => hydration / initial render
+Data      // => end retrying, get the data
+```
+
+El mismo proceso ha ocurrido internamente, hubo un error de la primera solicitud, entonces tenemos los datos del reintento.
+Sin embargo, **SWR sólo actualiza los estados que utiliza el componente**, que ahora sólo es `data`.
+
+Si no se utilizan siempre estos 3 estados, ya se está beneficiando de esta función. En [Vercel](https://vercel.com), esta optimización se
+traduce en un 60% menos de repeticiones.
+
+## Tree Shaking [#tree-shaking]
+
+El paquete SWR es [tree-shakeable](https://webpack.js.org/guides/tree-shaking) y no tiene efectos secundarios.
+Esto significa que si sólo se importa `useSWR` core API, las APIs no utilizadas, como `useSWRInfinite`, no se incluirán en la aplicación.
+

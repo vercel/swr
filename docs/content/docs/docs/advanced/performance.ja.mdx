@@ -1,0 +1,110 @@
+# パフォーマンス
+
+SWR はあらゆる種類のウェブアプリで重要な機能を提供するため、**パフォーマンス**は最優先事項です。
+
+SWR に組み込まれた**キャッシュ**と **[重複排除](/ja/docs/advanced/performance#重複排除)** は、不要なネットワークリクエストをスキップしますが、`useSWR` フック自体の
+パフォーマンスは依然として重要です。複雑なアプリでは、`useSWR` はひとつのページのレンダリングで数百回の呼び出しが発生してしまう可能性があります。
+
+SWR は、アプリが次のようになっていることを確認します：
+
+- _不要なリクエストがないこと_
+- _不要な再レンダリングがないこと_
+- _不要なコードがインポートされていないこと_
+
+この確認のためにコードに変更を加える必要はありません。
+
+## 重複排除 [#deduplication]
+
+アプリ内で SWR フックを再利用することは非常に一般的です。たとえば、現在のユーザーのアバターを 5 回レンダリングするアプリを考えてみましょう：
+
+```jsx
+function useUser () {
+  return useSWR('/api/user', fetcher)
+}
+
+function Avatar () {
+  const { data, error } = useUser()
+
+  if (error) return <Error />
+  if (!data) return <Spinner />
+
+  return <img src={data.avatar_url} />
+}
+
+function App () {
+  return <>
+    <Avatar />
+    <Avatar />
+    <Avatar />
+    <Avatar />
+    <Avatar />
+  </>
+}
+```
+
+各 `<Avatar>` コンポーネントは内部的に `useSWR` フックを使用しています。それらは同じ SWR キーを持ち、ほぼ同時にレンダリングされるため、**たった一度のネットワークリクエストのみが行われます**。
+
+パフォーマンスや重複したリクエストを心配することなく、どこでも（上記の例にあった `useUser` のように）データフックを再利用できます。
+
+デフォルトの重複排除間隔を上書きする [`dedupingInterval`](/docs/api) オプションもあります。
+
+## 詳細な比較 [#deep-comparison]
+
+SWR は、デフォルトでデータの変更を**詳細に比較**します。`data` という値が変更されていない場合、再レンダリングは開始されません。
+
+動作を変更したい場合は、[`compare` オプション](/docs/api)を使用して比較機能をカスタマイズすることもできます。
+たとえば、一部の API レスポンスは、データ差分から除外したいサーバーのタイムスタンプを返します。
+
+## 依存関係のコレクション [#dependency-collection]
+
+`useSWR` が返す四つの**ステートフルな**値、つまり `data` 、`error` `isLoading`、そして `isValidating` は、それぞれが独立して更新されます。
+たとえば、完全なデータフェッチのライフサイクル内でこれらの値を出力すると次のようになります：
+
+```jsx
+function App () {
+  const { data, error, isLoading, isValidating } = useSWR('/api', fetcher)
+  console.log(data, error, isLoading, isValidating)
+  return null
+}
+```
+
+最悪の場合（最初のリクエストが失敗し、次に再試行が成功した場合）には、4 行のログが表示されます：
+
+```js
+// console.log(data, error, isLoading, isValidating)
+undefined undefined true true  // => フェッチの開始
+undefined Error false false    // => フェッチの完了、エラーを取得
+undefined Error false true     // => 再試行の開始
+Data undefined false false     // => 再試行の完了、データを取得
+```
+
+この状態変化は理にかなっています。しかし、それはまた、コンポーネントが **4 回レンダリングされる**ことを意味します。
+
+コンポーネントを変更して `data` だけを使用する場合：
+
+```jsx
+function App () {
+  const { data } = useSWR('/api', fetcher)
+  console.log(data)
+  return null
+}
+```
+
+魔法が起こります — 今回は**二つの再レンダリング**しかありません：
+
+```js
+// console.log(data)
+undefined // => 再利用 / 初期レンダリング
+Data      // => 再試行の完了、データを取得
+```
+
+まったく同じプロセスが内部で発生して、最初のリクエストでエラーが発生し、再試行でデータを取得しました。
+ただし、**SWR はコンポーネントによって使用されている状態のみを更新します**、つまり今回は `data` だけです。
+
+これら三つの状態すべてを常に使用しているわけではない場合は、すでにこの機能の恩恵を受けています。
+[Vercel](https://vercel.com) では、この最適化により再レンダリングが最大 60% 少なくなります。
+
+## ツリーシェイク [#tree-shaking]
+
+SWR パッケージは、[ツリーシェイク可能](https://webpack.js.org/guides/tree-shaking)で副作用がありません。
+つまり、コアな `useSWR` API のみをインポートする場合、`useSWRInfinite` のような未使用の API はアプリケーションにバンドルされません。

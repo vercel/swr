@@ -1,0 +1,104 @@
+import { Callout } from 'nextra-theme-docs'
+
+# 구독
+
+<Callout emoji="✅">
+  이 API를 사용하려면 최신 버전(≥ 2.1.0)으로 업데이트해 주세요.
+</Callout>
+
+## `useSWRSubscription` [#useswrsubscription]
+
+`useSWRSubscription`은 SWR을 사용하여 실시간 데이터를 구독할 수 있는 훅입니다.
+
+```tsx
+useSWRSubscription<Data, Error>(key: Key, subscribe: (key: Key, options: { next: (error?: Error | null, data: Data) => void }) => () => void): { data?: Data, error?: Error }
+```
+
+### API [#api]
+
+이 훅은 실시간 데이터를 구독하고, 가장 최근에 수신된 데이터와 발생한 에러를 반환합니다. 훅은 새 이벤트가 수신되면 반환된 데이터를 자동으로 업데이트 합니다.
+
+#### 파라미터 [#parameters]
+
+- `key`: 구독 중인 데이터를 식별하는 고유 키로, `useSWR`와 동일합니다.
+- `subscribe`: 실시간 데이터 원본을 구독하는 함수입니다. 다음 인자를 받습니다:
+  - `key`: 위 키와 같음
+  - `options`: 다음의 인자를 갖는 객체
+    - `next`: 오류 및 데이터를 수신하고 실시간 데이터 원본에서 수신한 최신 데이터로 상태를 업데이트하는 함수
+
+예시
+
+```tsx
+function subscribe(key, { next }) {
+  const sub = remote.subscribe(key, (err, data) => next(err, data))
+  return () => sub.close()
+}
+```
+
+You could also pass a updater function as `data` to `next`, which will receive the previous data as the first argument and return the new data.
+
+```tsx
+function subscribe(key, { next }) {
+  const sub = remote.subscribe(key, (err, data) => next(err, prev => prev.concat(data)))
+  return () => sub.close()
+}
+```
+
+#### 반환 값 [#return-values]
+
+- `state`: 다음 속성을 가진 객체:
+  - `data`: 실시간으로 수신한 최신 데이터.
+  - `error`: 실시간 데이터를 구독하는 동안 에러가 발생하면 Error 객체, 그렇지 않으면 undefined.
+
+새 데이터가 수신되면 `error`는 `undefined`로 초기화됩니다.
+
+### 사용법 [#usage]
+
+`useSWRSubscription`을 사용하여 Firestore 데이터 구독하기:
+
+```tsx
+import useSWRSubscription from 'swr/subscription'
+
+function Post({ id }) {
+  const { data } = useSWRSubscription(['views', id], ([_, postId], { next }) => {
+    const ref = firebase.database().ref('views/' + postId)
+    ref.on('value',
+      snapshot => next(null, snapshot.data()),
+      err => next(err)
+    )
+    return () => ref.off()
+  })
+
+  return <span>Your post has {data} views!</span>
+}
+```
+
+`useSWRSubscription`을 사용하여 WebSocket 데이터 구독하기:
+
+```tsx
+import useSWRSubscription from 'swr/subscription'
+
+function App() {
+  const { data, error } = useSWRSubscription('ws://...', (key, { next }) => {
+    const socket = new WebSocket(key)
+    socket.addEventListener('message', (event) => next(null, event.data))
+    socket.addEventListener('error', (event) => next(event.error))
+    return () => socket.close()
+  })
+
+  if (error) return <div>failed to load</div>
+  if (!data) return <div>loading...</div>
+  return <div>hello {data}!</div>
+}
+```
+
+You could also check TypeScript examples of `useSWRSubscription` at [this page](/docs/typescript#useswrsubscription)
+
+### 중복 제거 [#deduplication]
+
+`useSWRSubscription`은 동일한 키의 구독 요청 중복을 제거합니다.
+동일한 키를 사용하는 여러 개의 컴포넌트가 있다면, 동일한 구독을 공유합니다.
+키를 사용하는 마지막 컴포넌트가 마운트 해제되면 구독이 닫힙니다.
+
+즉, 동일한 키를 사용하는 여러 개의 컴포넌트가 있는 경우 모두 동일한 데이터를 수신합니다.
+키 당 실시간 데이터에 대한 구독은 하나뿐입니다.

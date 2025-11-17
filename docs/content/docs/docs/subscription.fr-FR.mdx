@@ -1,0 +1,103 @@
+import { Callout } from 'nextra-theme-docs'
+
+# Abonnement
+
+<Callout emoji="✅">
+  Merci de mettre à jour vers la dernière version (≥ 2.1.0) pour utiliser cette API.
+</Callout>
+
+## `useSWRSubscription` [#useswrsubscription]
+
+`useSWRSubscription` est un hook React qui permet de s'abonner à des sources de données en temps réel avec SWR.
+
+```tsx
+useSWRSubscription<Data, Error>(key: Key, subscribe: (key: Key, options: { next: (error?: Error | null, data: Data) => void }) => () => void): { data?: Data, error?: Error }
+```
+
+### API [#api]
+
+Ce hook s'abonne à une source de données en temps réel en utilisant la fonction subscribe fournie, et renvoie les dernières données reçues et les erreurs rencontrées. Le hook met automatiquement à jour les données renvoyées à mesure que de nouveaux événements sont reçus.
+
+#### Paramètres [#parameters]
+
+- `key`: Une clé unique qui identifie les données auxquelles on s'abonne, la même clé que celle de `useSWR`.
+- `subscribe`: Une fonction qui s'abonne à la source de données en temps réel. Elle reçoit les arguments suivants :
+  - `key`: même clé que ci-dessus
+  - `options`: un objet avec les propriétés suivantes :
+    - `next`: Une fonction qui accepte une erreur et des données, et met à jour l'état avec les dernières données reçues de la source de données en temps réel.
+
+Par exemple
+
+```tsx
+function subscribe(key, { next }) {
+  const sub = remote.subscribe(key, (err, data) => next(err, data))
+  return () => sub.close()
+}
+```
+
+Vous pouvez également passer une fonction de mise à jour en tant que `data` à `next`, qui recevra les données précédentes comme premier argument et renverra les nouvelles données.
+
+```tsx
+function subscribe(key, { next }) {
+  const sub = remote.subscribe(key, (err, data) => next(err, prev => prev.concat(data)))
+  return () => sub.close()
+}
+```
+
+#### Valeurs Retournées [#return-values]
+
+- `state`: Un objet avec les propriétés suivantes :
+  - `data`: Les dernières données reçues de la source de données en temps réel.
+  - `error`: Un objet Error si une erreur s'est produite lors de l'abonnement à la source de données en temps réel, sinon undefined.
+
+Lorsque de nouvelles données sont reçues, l'`error` sera réinitialisé à `undefined`.
+
+### Utilisation [#usage]
+
+Utilisation de `useSWRSubscription` pour s'abonner à une source de données Firestore :
+
+```tsx
+import useSWRSubscription from 'swr/subscription'
+
+function Post({ id }) {
+  const { data } = useSWRSubscription(['views', id], ([_, postId], { next }) => {
+    const ref = firebase.database().ref('views/' + postId)
+    ref.on('value',
+      snapshot => next(null, snapshot.data()),
+      err => next(err)
+    )
+    return () => ref.off()
+  })
+
+  return <span>Votre message a {data} vues!</span>
+}
+```
+
+Utilisation de `useSWRSubscription` pour s'abonner à une source de données WebSocket :
+
+```tsx
+import useSWRSubscription from 'swr/subscription'
+
+function App() {
+  const { data, error } = useSWRSubscription('ws://...', (key, { next }) => {
+    const socket = new WebSocket(key)
+    socket.addEventListener('message', (event) => next(null, event.data))
+    socket.addEventListener('error', (event) => next(event.error))
+    return () => socket.close()
+  })
+  if (error) return <div>échec du chargement</div>
+  if (!data) return <div>chargement...</div>
+  return <div>bonjour {data}!</div>
+}
+```
+
+Vous pouvez également regarder les exemples TypeScript de `useSWRSubscription` à [cette page](/docs/typescript#useswrsubscription)
+
+### Déduplication [#deduplication]
+
+`useSWRSubscription` déduplique les requêtes d'abonnement avec la même clé.
+Si plusieurs composants utilisent la même clé, ils partageront le même abonnement.
+Lorsque le dernier composant utilisant la clé se démonte, l'abonnement sera fermé.
+
+Cela signifie que si vous avez plusieurs composants utilisant la même clé, ils recevront tous les mêmes données.
+Et il n'y a qu'un seul abonnement à la source de données en temps réel par clé.

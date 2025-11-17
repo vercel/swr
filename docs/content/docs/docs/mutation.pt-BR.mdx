@@ -1,0 +1,481 @@
+# Mutação e Revalidação
+
+SWR fornece as APIs [`mutate`](/docs/mutation#mutate) e [`useSWRMutation`](/docs/mutation#useswrmutation) para mutação de dados remotos e caches relacionados.
+
+## `mutate` [#mutate]
+
+Existem 2 formas de usar a API `mutate` para modificar os dados, a API de mutação global que consegue mudar qualquer chave e a API de mutação vinculada que só pode alterar os dados do hook SWR correspondente.
+
+### Mutação Global [#global-mutate]
+
+A maneira recomendada de obter o modificador global é usar o hook [`useSWRConfig`](/docs/global-configuration#access-to-global-configurations):
+
+```js
+import { useSWRConfig } from "swr"
+
+function App() {
+  const { mutate } = useSWRConfig()
+  mutate(key, data, options)
+}
+```
+
+Você também pode importá-lo globalmente:
+
+```js
+import { mutate } from "swr"
+
+function App() {
+  mutate(key, data, options)
+}
+```
+
+<Callout emoji="⚠️">
+  Usar o modificador global apenas com o parâmetro `key` ***não irá atualizar o cache ou disparar uma revalidação*** a menos que haja um hook SWR montado usando a mesma chave.
+</Callout>
+
+#### Mutação vinculada [#bound-mutate]
+
+Mutação vinculada é o caminho curto para modificar a chave atual com dados. Onde `key` é vinculada a `key` repassada para `useSWR` e recebe `data` como primeiro argumento.
+
+É funcionalmente equivalente a função global `mutate` da seção anterior, mas não requer o parâmetro `key`:
+
+```jsx
+import useSWR from 'swr'
+
+function Profile () {
+  const { data, mutate } = useSWR('/api/user', fetcher)
+
+  return (
+    <div>
+      <h1>Meu nome é {data.name}.</h1>
+      <button onClick={async () => {
+        const newName = data.name.toUpperCase()
+        // envia um request para a API para atualizar os dados
+        await requestUpdateUsername(newName)
+        // atualiza os dados locais imediatamente e revalida (refetch)
+        // NOTA: `key` não é necessário quando estiver usando o mutate pré-vinculado do useSWR
+        mutate({ ...data, name: newName })
+      }}>Deixe meu nome em caixa alta!</button>
+    </div>
+  )
+}
+```
+
+#### Revalidação [#revalidation]
+
+Quando você chama `mutate(key)` (ou apenas `mutate()` com a API de mutação vinculada) sem nenhum dado, ele irá disparar uma revalidação (marcar os dados como expirados e disparar um refetch) para o recurso. Esse exemplo mostra como fazer refetch automático das informações de login (ex.: dentro de `<Profile />`) quando o usuário clicar no botão de "Logout":
+
+```jsx {14}
+import useSWR, { useSWRConfig } from 'swr'
+
+function App () {
+  const { mutate } = useSWRConfig()
+
+  return (
+    <div>
+      <Profile />
+      <button onClick={() => {
+        // define o cookie como expirado
+        document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+
+        // avisa todos os SWR com essa chave para revalidar
+        mutate('/api/user')
+      }}>
+        Logout
+      </button>
+    </div>
+  )
+}
+```
+
+import { Callout } from 'nextra-theme-docs'
+
+<Callout>
+O hook transmite para todos os hooks SWR sob o mesmo escopo de [provedor de cache](/docs/advanced/cache). Se 	nenhum provedor de cache existir, irá transmitir para todos os hooks SWR.
+</Callout>
+
+### API [#api]
+
+#### Parâmetros [#parameters]
+
+- `key`: mesmo que `key` do `useSWR`, mas uma função irá se comportar como uma [função filtro](/docs/mutation#mutate-multiple-items)
+- `data`: dados para atualizar o cache do cliente, ou uma função assíncrona para mutação remota
+- `options`: aceita as seguintes opções
+  - `optimisticData`: dados para imediatamente atualizar o cache do cliente, ou uma função que recebe os dados atuais e retorna os novos dados do cache do cliente, normalmente usado para UI otimista.
+  - `revalidate = true`: should the cache revalidate once the asynchronous update resolves. If set to a function, the function receives `data` and `key`.
+  - `populateCache = true`: o resultado da mutação remota será escrita no cache, ou uma função que recebe o novo resultado e o resultado atual como argumentos e retorna o resultado da mutação.
+  - `rollbackOnError = true`: o cache deve reverter se a mutação remota der erro, ou uma função que recebe o erro lançado pelo fetcher como argumentos e retorna um boolean se deve reverter ou não.
+  - `throwOnError = true`: a chamada de mutação deve lançar um erro quando falhar
+
+#### Valores de Retorno [#return-values]
+
+`mutate` retorna os resultados em que o parâmetro `data` foi resolvido. A função passada para `mutate` irá retornar os dados atualizados nos quais são usados para atualizar o valor correspondente em cache. Se ocorrer um erro durante a execução da função, o erro será lançado para que possa ser lidado corretamente.
+
+```jsx
+try {
+  const user = await mutate('/api/user', updateUser(newUser))
+} catch (error) {
+  // Lide com o erro enqunato atualiza o usuário aqui
+}
+```
+
+## `useSWRMutation` [#useswrmutation]
+
+SWR também fornece `useSWRMutation` como um hook para mutações remotas. As mutações remotas são apenas disparadas manualmente, ao invés de automaticamente como no `useSWR`.
+
+Também, esse hook não compartilha estado com outros hooks `useSWRMutation`.
+
+```tsx
+import useSWRMutation from 'swr/mutation'
+
+// Implementação do fetcher.
+// O argumento extra será passado via propriedade `arg` do segundo parâmetro.
+// No exemplo abaixo, `arg` será `my_token`
+async function updateUser(url, { arg }: { arg: string }) {
+  await fetch(url, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${arg}`
+    }
+  })
+}
+
+function Profile() {
+  // Uma API como useSWR + mutate, mas não irá começar o request automaticamente.
+  const { trigger } = useSWRMutation('/api/user', updateUser, options)
+
+  return <button onClick={() => {
+    // Dispara `updateUser` com um argumento específico
+    trigger('my_token')
+  }}>Atualizar usuário</button>
+}
+```
+
+### API [#useswrmutation-api]
+
+#### Parâmetros [#useswrmutation-parameters]
+
+- `key`: mesmo que `key` do [`mutate`](/docs/mutation#mutate)
+- `fetcher(key, { arg })`: uma função assíncrona para mutação remota
+- `options`: um objeto opcional com as seguintes propriedades:
+  - `optimisticData`: mesmo que `optimisticData` do `mutate`
+  - `revalidate = true`: mesmo que `revalidate` do `mutate`
+  - `populateCache = false`: mesmo que `populateCache` do `mutate`, mas o valor padrão é `false`
+  - `rollbackOnError = true`: mesmo que `rollbackOnError` do `mutate`
+  - `throwOnError = true`: mesmo que `throwOnError` do `mutate`
+  - `onSuccess(data, key, config)`: função callback quando a mutação remota for finalizada com sucesso
+  - `onError(err, key, config)`: função callback quando a mutação remota retornar um erro
+
+#### Valores de Retorno [#useswrmutation-return-values]
+
+- `data`: dados para a chave fornecida retornada de `fetcher`
+- `error`: erro lançado pelo `fetcher` (ou undefined)
+- `trigger(arg, options)`: uma função para disparar uma mutação remota
+- `reset`: uma função para redefinir o estado (`data`, `error`, `isMutating`)
+- `isMutating`: se houver uma mutação remota em andamento
+
+### Uso Básico [#useswrmutation-basic-usage]
+
+```jsx
+import useSWRMutation from 'swr/mutation'
+
+async function sendRequest(url, { arg }: { arg: { username: string } }) {
+  return fetch(url, {
+    method: 'POST',
+    body: JSON.stringify(arg)
+  }).then(res => res.json())
+}
+
+function App() {
+  const { trigger, isMutating } = useSWRMutation('/api/user', sendRequest, /* opções */)
+
+  return (
+    <button
+      disabled={isMutating}
+      onClick={async () => {
+        try {
+          const result = await trigger({ username: 'johndoe' }, /* opções */)
+        } catch (e) {
+          // lidando com erros
+        }
+      }}
+    >
+      Criar Usuário
+    </button>
+  )
+}
+```
+
+Se você quiser usar os resultados da mutação na renderização, você pode obtê-los dos valores de retorno do `useSWRMutation`.
+
+```jsx
+const { trigger, data, error } = useSWRMutation('/api/user', sendRequest)
+```
+
+`useSWRMutation` compartilha um armazenamento de cache com `useSWR`, então ele pode detectar e evitar condições de corrida entre os `useSWR`. Ele também oferece suporte às funcionalidades do `mutate`, como atualizações otimistas e reversão de erros. Você pode passar essas opções `useSWRMutation` e sua função `trigger`.
+
+```jsx
+const { trigger } = useSWRMutation('/api/user', updateUser, {
+  optimisticData: current => ({ ...current, name: newName })
+})
+
+// or
+
+trigger(newName, {
+  optimisticData: current => ({ ...current, name: newName })
+})
+```
+
+### Adiando o carregamento de dados até que seja necessário [#defer-loading-data-until-needed]
+
+Você também pode usar `useSWRMutation` para carregar dados. `useSWRMutation` nunca começa um request até que `trigger` seja chamado, então você pode adiar o carregamento de dados quando realmente precisar.
+
+```jsx
+import { useState } from 'react'
+import useSWRMutation from 'swr/mutation'
+
+const fetcher = url => fetch(url).then(res => res.json())
+
+const Page = () => {
+  const [show, setShow] = useState(false)
+  // data é undefined até que trigger seja chamado
+  const { data: user, trigger } = useSWRMutation('/api/user', fetcher);
+
+  return (
+    <div>
+      <button onClick={() => {
+        trigger();
+        setShow(true);
+      }}>Mostrar Usuário</button>
+      {show && user ? <div>{user.name}</div> : null}
+    </div>
+  );
+}
+```
+
+## Atualizações otimistas [#optimistic-updates]
+
+Em muitos casos, a aplicação de mutações locais aos dados é uma boa maneira de tornar as alterações mais rápidas, sem a necessidade de esperar pela fonte remota de dados.
+
+Com a opção `optimisticData`, você pode atualizar seus dados locais manualmente, enquanto aguarda a conclusão da mutação remota. Compondo `rollbackOnError`, você também pode controlar quando reverter os dados.
+
+```jsx
+import useSWR, { useSWRConfig } from 'swr'
+
+function Profile () {
+  const { mutate } = useSWRConfig()
+  const { data } = useSWR('/api/user', fetcher)
+
+  return (
+    <div>
+      <h1>My name is {data.name}.</h1>
+      <button onClick={async () => {
+        const newName = data.name.toUpperCase()
+        const user = { ...data, name: newName }
+        const options = {
+          optimisticData: user,
+          rollbackOnError(error) {
+            // Se for um erro de abortamento por timeout, não reverta
+            return error.name !== 'AbortError'
+          },
+        }
+
+        // atualiza os dados locais imediatamente
+        // envia um request para atualizar os dados
+        // aciona uma revalidação (nova busca) para garantir que nossos dados locais estejam corretos
+        mutate('/api/user', updateFn(user), options);
+      }}>Deixe meu nome em caixa alta!</button>
+    </div>
+  )
+}
+```
+
+> O **`updateFn`** deve ser uma Promise ou função assíncrona para lidar com a mutação remota, deve retornar dados atualizados.
+
+Você também pode passar uma função para `optimisticData` para torná-lo dependente dos dados atuais:
+
+```jsx
+import useSWR, { useSWRConfig } from 'swr'
+
+function Profile () {
+  const { mutate } = useSWRConfig()
+  const { data } = useSWR('/api/user', fetcher)
+
+  return (
+    <div>
+      <h1>Meu nome é {data.name}.</h1>
+      <button onClick={async () => {
+        const newName = data.name.toUpperCase()
+        mutate('/api/user', updateUserName(newName), {
+          optimisticData: user => ({ ...user, name: newName }),
+          rollbackOnError: true
+        });
+      }}>Deixe meu nome em caixa alta!</button>
+    </div>
+  )
+}
+```
+
+Você também pode criar a mesma coisa com `useSWRMutation` e `trigger`:
+
+```jsx
+import useSWRMutation from 'swr/mutation'
+
+function Profile () {
+  const { trigger } = useSWRMutation('/api/user', updateUserName)
+
+  return (
+    <div>
+      <h1>My name is {data.name}.</h1>
+      <button onClick={async () => {
+        const newName = data.name.toUpperCase()
+
+        trigger(newName, {
+          optimisticData: user => ({ ...user, name: newName }),
+          rollbackOnError: true
+        })
+      }}>Deixe meu nome em caixa alta!</button>
+    </div>
+  )
+}
+```
+
+## Reversão de Erros [#rollback-on-errors]
+
+Quando você tem `optimisticData` definido, é possível que os dados otimistas sejam exibidos para o usuário, mas a mutação remota falha. Nesse caso, você pode aproveitar `rollbackOnError` para reverter o cache local ao estado anterior, para garantir que o usuário esteja vendo os dados corretos.
+
+## Atualizar Cache após Mutação [#update-cache-after-mutation]
+
+Às vezes, a solicitação de mutação remota retorna diretamente os dados atualizados, portanto, não há necessidade de fazer uma busca extra para carregá-lo. Você pode habilitar a opção `populateCache` para atualizar o cache para `useSWR` com a resposta da mutação:
+
+```jsx
+const updateTodo = () => fetch('/api/todos/1', {
+  method: 'PATCH',
+  body: JSON.stringify({ completed: true })
+})
+
+mutate('/api/todos', updateTodo, {
+  populateCache: (updatedTodo, todos) => {
+    // filtre a lista e a retorne com o item atualizado
+    const filteredTodos = todos.filter(todo => todo.id !== '1')
+    return [...filteredTodos, updatedTodo]
+  },
+
+  revalidate: false
+})
+```
+
+Ou com o hook `useSWRMutation`:
+
+```jsx
+useSWRMutation('/api/todos', updateTodo, {
+  populateCache: (updatedTodo, todos) => {
+    // filtre a lista e a retorne com o item atualizado
+    const filteredTodos = todos.filter(todo => todo.id !== '1')
+    return [...filteredTodos, updatedTodo]
+  },
+  // Como a API já nos fornece as informações atualizadas,
+  // não precisamos revalidar aqui.
+  revalidate: false
+})
+```
+
+Quando combinado com `optimisticData` e `rollbackOnError`, você obterá uma experiência de UI otimista perfeita.
+
+## Evitando Condições de Corrida [#avoid-race-conditions]
+
+Ambos `mutate` e `useSWRMutation` podem evitar condições de corrida entre `useSWR`. Por exemplo,
+
+```tsx
+function Profile() {
+  const { data } = useSWR('/api/user', getUser, { revalidateInterval: 3000 })
+  const { trigger } = useSWRMutation('/api/user', updateUser)
+
+  return <>
+    {data ? data.username : null}
+    <button onClick={() => trigger()}>Update User</button>
+  </>
+}
+```
+
+O hook `useSWR` normal pode atualizar seus dados a qualquer momento devido ao foco, polling ou outras condições. Dessa forma, o nome de usuário exibido pode ser o mais atualizado possível. No entanto, uma vez que temos uma mutação que pode ocorrer quase ao mesmo tempo de um refetch do `useSWR`, pode haver uma condição de corrida em que a solicitação `getUser` começa antes, mas leva mais tempo do que `updateUser`.
+
+Felizmente, `useSWRMutation` lida com isso para você automaticamente. Após a mutação, ele dirá a `useSWR` para descartar o request em andamento e revalidar, para que os dados obsoletos nunca sejam exibidos.
+
+## Mutação com Base nos Dados Atuais [#mutate-based-on-current-data]
+
+Às vezes, você deseja atualizar uma parte de seus dados com base nos dados atuais.
+
+Com `mutate`, você pode passar uma função assíncrona que receberá o valor atual em cache, se houver, e retornará um documento atualizado.
+
+```jsx
+mutate('/api/todos', async todos => {
+  // vamos atualizar o todo com ID `1` para ser concluído,
+  // esta API retorna os dados atualizados
+  const updatedTodo = await fetch('/api/todos/1', {
+    method: 'PATCH',
+    body: JSON.stringify({ completed: true })
+  })
+
+  // filtra a lista e retorna com os dados atualizados
+  const filteredTodos = todos.filter(todo => todo.id !== '1')
+  return [...filteredTodos, updatedTodo]
+// Como a API já nos fornece as informações atualizadas,
+// não precisamos revalidar aqui.
+}, { revalidate: false })
+```
+
+## Modificando Múltiplos Items [#mutate-multiple-items]
+
+A API global `mutate` aceita uma função de filtro, que aceita `key` como argumento e retorna quais chaves revalidar. A função de filtro é aplicada a todas as chaves de cache existentes:
+
+```jsx
+import { mutate } from 'swr'
+// Ou do hook se você personalizou o provedor de cache:
+// { mutar } = useSWRConfig()
+
+mutate(
+  key => typeof key === 'string' && key.startsWith('/api/item?id='),
+  undefined,
+  { revalidate: true }
+)
+```
+
+Isso também funciona com qualquer tipo de chave, como uma lista. A mutação corresponde a todas as chaves, das quais o primeiro elemento é `'item'`.
+
+```jsx
+useSWR(['item', 123], ...)
+useSWR(['item', 124], ...)
+useSWR(['item', 125], ...)
+
+mutate(
+  key => Array.isArray(key) && key[0] === 'item',
+  undefined,
+  { revalidate: false }
+)
+```
+
+A função de filtro é aplicada a todas as chaves de cache existentes, portanto, você não deve assumir o formato de chaves ao usar vários formatos de chaves.
+
+```jsx
+// ✅ chave de lista correspondente
+mutate((key) => key[0].startsWith('/api'), data)
+// ✅ chave de string correspondente
+mutate((key) => typeof key === 'string' && key.startsWith('/api'), data)
+
+// ❌ ERRO: modificar chaves incertas (array ou string)
+mutate((key: any) => /\/api/.test(key.toString()))
+```
+
+Você pode usar a função de filtro para limpar todos os dados do cache, o que é útil ao fazer logout:
+
+```js
+const clearCache = () => mutate(
+  () => true,
+  undefined,
+  { revalidate: false }
+)
+
+// ...limpar cache ao sair
+clearCache()
+```

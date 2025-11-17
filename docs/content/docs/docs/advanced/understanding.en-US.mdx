@@ -1,0 +1,125 @@
+import { Callout } from 'nextra-theme-docs'
+import Video from 'components/video'
+
+# Understanding SWR
+
+## State Machine [#state-machine]
+
+`useSWR` returns `data`, `error`, `isLoading`, and `isValidating` depending on the state of the `fetcher` function. This diagrams describe how SWR returns values in some scenarios.
+
+### Fetch and Revalidate [#fetch-and-revalidate]
+
+This pattern is to fetch data and revalidate it later.
+
+![A pattern for fetch and revalidate](/img/understanding/fetch-and-revalidate.svg)
+
+### Key Change [#key-change]
+
+This pattern is to fetch data and change the key and revalidate it later.
+
+![A pattern for key change](/img/understanding/key-change.svg)
+
+### Key Change + Previous Data [#key-change--previous-data]
+
+This pattern is to fetch data and change the key and revalidate it later with the `keepPreviousData` option.
+
+![A pattern for key change + previous data](/img/understanding/key-change-previous-data.svg)
+
+### Fallback [#fallback]
+
+This pattern is to fetch data and revalidate it later with fallback data.
+
+![A pattern for fallback](/img/understanding/fallback.svg)
+
+### Key Change + Fallback [#key-change--fallback]
+
+This pattern is to fetch data and change the key and revalidate it later with fallback data.
+
+![A pattern for key change + fallback](/img/understanding/key-change-fallback.svg)
+
+### Key Change + Previous Data + Fallback [#key-change--previous-data--fallback]
+
+This pattern is to fetch data and change the key and revalidate it later with the `keepPreviousData` option and fallback data.
+
+![A pattern for key change + previous data + fallback](/img/understanding/key-change-previous-data-fallback.svg)
+
+## Combining with isLoading and isValidating for better UX [#combining-with-isloading-and-isvalidating-for-better-ux]
+
+Comparing to the existing `isValidating` value, `isLoading` is a new property that can help you for the more general loading cases for UX.
+
+- `isValidating` becomes `true` whenever there is an ongoing request **whether the data is loaded or not**
+- `isLoading` becomes `true` when there is an ongoing request and **data is not loaded yet**.
+
+Simply saying you can use `isValidating` for indicating everytime there is an ongoing revalidation, and `isLoading` for indicating that SWR is revalidating but there is no data yet to display.
+
+<Callout emoji="📝">
+  Fallback data and previous data are not considered "loaded data," so when you use fallback data or enable the keepPreviousData option, you might have data to display.
+</Callout>
+
+```jsx
+function Stock() {
+  const { data, isLoading, isValidating } = useSWR(STOCK_API, fetcher, {
+    refreshInterval: 3000
+  });
+
+  // If it's still loading the initial data, there is nothing to display.
+  // We return a skeleton here.
+  if (isLoading) return <div className="skeleton" />;
+
+  // Otherwise, display the data and a spinner that indicates a background
+  // revalidation.
+  return (
+    <>
+      <div>${data}</div>
+      {isValidating ? <div className="spinner" /> : null}
+    </>
+  );
+}
+```
+
+![An example of using the isLoading state](/img/understanding/isloading.gif)
+
+You can find the code example [here](https://codesandbox.io/s/swr-isloading-jtopow)
+
+## Return previous data for better UX [#return-previous-data-for-better-ux]
+
+When doing data fetching based on continuous user actions, e.g. real-time search when typing, keeping the previous fetched data can improve the UX a lot. `keepPreviousData` is an option to enable that behavior. Here's a simple search UI:
+
+```jsx
+function Search() {
+  const [search, setSearch] = React.useState('');
+
+  const { data, isLoading } = useSWR(`/search?q=${search}`, fetcher, {
+    keepPreviousData: true
+  });
+
+  return (
+    <div>
+      <input
+        type="text"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Search..."
+      />
+
+      <div className={isLoading ? "loading" : ""}>
+        {data?.products.map(item => <Product key={item.id} name={item.name} />)
+      </div>
+    </div>
+  );
+}
+```
+
+With `keepPreviousData` enabled, you will still get the previous data even if you change the SWR key and the data for the new key starts loading again.
+
+<Video
+  src="https://user-images.githubusercontent.com/3676859/163695903-a3eb1259-180e-41e0-821e-21c320201194.mp4"
+  caption="Keep previous search results when keepPreviousData has been enabled"
+  ratio={640/730}
+/>
+
+You can find the full code for this example here: https://codesandbox.io/s/swr-keeppreviousdata-fsjz3m.
+
+## Dependency Collection for performance [#dependency-collection-for-performance]
+
+SWR only triggers re-rendering when the states used in the component have been updated. If you only use `data` in the component, SWR ignores the updates of other properties like `isValidating`, and `isLoading`. This reduces rendering counts a lot. More information can be found [here](/docs/advanced/performance#dependency-collection).

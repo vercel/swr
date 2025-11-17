@@ -1,0 +1,104 @@
+import { Callout } from 'nextra-theme-docs'
+
+# Подписка
+
+<Callout emoji="✅">
+  Пожалуйста, обновитесь до последней версии (≥ 2.1.0), чтобы использовать этот API.
+</Callout>
+
+## `useSWRSubscription` [#useswrsubscription]
+
+`useSWRSubscription` это хук React, который позволяет подписываться на реальные источники данных в реальном времени с помощью SWR.
+
+```tsx
+useSWRSubscription<Data, Error>(key: Key, subscribe: (key: Key, options: { next: (error?: Error | null, data: Data) => void }) => () => void): { data?: Data, error?: Error }
+```
+
+### API [#api]
+
+Этот хук подписывается на реальный источник данных с помощью предоставленной функции подписки, и возвращает последние полученные данные и любые возникшие ошибки. Хук автоматически обновляет возвращаемые данные по мере получения новых событий.
+
+#### Параметры [#parameters]
+
+- `key`: уникальный ключ, который идентифицирует данные, на которые подписывается, тот же ключ, что и ключ `useSWR`.
+- `subscribe`: Функция, которая подписывается на источник данных в реальном времени. Она получает следующие аргументы:
+  - `key`: тот же ключ, что и выше
+  - `options`: Объект со следующими свойствами:
+    - `next`: Функция, которая принимает ошибку и данные и обновляет состояние последними данными, полученными от источника данных в реальном времени.
+
+Например:
+
+```tsx
+function subscribe(key, { next }) {
+  const sub = remote.subscribe(key, (err, data) => next(err, data))
+  return () => sub.close()
+}
+```
+
+Можно также передать функцию обновления в качестве `data` в `next`, которая получит предыдущие данные в качестве первого аргумента и вернет новые данные.
+
+```tsx
+function subscribe(key, { next }) {
+  const sub = remote.subscribe(key, (err, data) => next(err, prev => prev.concat(data)))
+  return () => sub.close()
+}
+```
+
+#### Возвращаемые значения [#return-values]
+
+- `state`: Объект со следующими свойствами:
+  - `data`: Последние полученные данные от реального источника данных.
+  - `error`: Объект ошибки, если при подписке на реальный источник данных произошла ошибка, в противном случае undefined.
+
+Когда получены новые данные, `error` будет сброшен на `undefined`.
+
+### Применение [#usage]
+
+Использование `useSWRSubscription` для подписки на источник данных Firestore:
+
+```tsx
+import useSWRSubscription from 'swr/subscription'
+
+function Post({ id }) {
+  const { data } = useSWRSubscription(['views', id], ([_, postId], { next }) => {
+    const ref = firebase.database().ref('views/' + postId)
+    ref.on('value',
+      snapshot => next(null, snapshot.data()),
+      err => next(err)
+    )
+    return () => ref.off()
+  })
+
+  return <span>У вашего поста {data} просмотров!</span>
+}
+```
+
+Использование `useSWRSubscription` для подписки на источник данных WebSocket:
+
+```tsx
+import useSWRSubscription from 'swr/subscription'
+
+function App() {
+  const { data, error } = useSWRSubscription('ws://...', (key, { next }) => {
+    const socket = new WebSocket(key)
+    socket.addEventListener('message', (event) => next(null, event.data))
+    socket.addEventListener('error', (event) => next(event.error))
+    return () => socket.close()
+  })
+
+  if (error) return <div>failed to load</div>
+  if (!data) return <div>loading...</div>
+  return <div>привет {data}!</div>
+}
+```
+
+Вы также можете посмотреть TypeScript-примеры `useSWRSubscription` на [этой](/docs/typescript#useswrsubscription) странице.
+
+### Дедупликация [#deduplication]
+
+`useSWRSubscription` дедуплицирует запросы подписки с одинаковым ключом.
+Если есть несколько компонентов, использующих один и тот же ключ, они будут использовать одну и ту же подписку.
+Когда последний компонент, использующий ключ, отмонтируется, подписка будет закрыта.
+
+Это означает, что если у вас есть несколько компонентов, использующих один и тот же ключ, они все получат одни и те же данные.
+И есть только одна подписка на реальный источник данных в реальном времени на ключ.
