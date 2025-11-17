@@ -1,0 +1,102 @@
+import { Callout } from 'nextra-theme-docs'
+
+# 订阅
+
+<Callout emoji="✅">
+  请升级到最新版本 (≥ 2.1.0) 来使用这个 API.
+</Callout>
+
+## `useSWRSubscription` [#useswrsubscription]
+
+`useSWRSubscription` 是一个使用 SWR 订阅实时数据源的 React Hook。
+
+```tsx
+useSWRSubscription<Data, Error>(key: Key, subscribe: (key: Key, options: { next: (error?: Error | null, data: Data) => void }) => () => void): { data?: Data, error?: Error }
+```
+
+### API [#api]
+
+这个 hook 使用提供的 subscribe 函数订阅实时数据源，并返回接收到的最新数据和遇到的任何错误。当接收到新事件时，该 hook 会自动更新返回的数据。
+
+#### 参数 [#parameters]
+
+- `key`: 这是一个用于标识所订阅数据的唯一 key 值, 与 `useSWR` key 参数的用法相同。
+- `subscribe`: 这是一个用于订阅实时数据源的函数。它接收以下参数:
+  - `key`: 与 `useSWRSubscription` 的 key 参数相同。
+  - `options`: 一个带有以下属性的对象：
+    - `next`: 一个函数，它接收一个错误和数据，然后使用从实时数据源接收到的最新数据来更新状态。
+
+
+一个 subscribe 函数的例子
+
+```tsx
+function subscribe(key, { next }) {
+  const sub = remote.subscribe(key, (err, data) => next(err, data))
+  return () => sub.close()
+}
+```
+
+你也可以给 `next` 函数的 `data` 参数一个函数，它接收上一次的数据作为第一个参数，然后返回一个新的数据。
+
+```tsx
+function subscribe(key, { next }) {
+  const sub = remote.subscribe(key, (err, data) => next(err, prev => prev.concat(data)))
+  return () => sub.close()
+}
+```
+
+#### 返回值 [#return-values]
+
+- `state`: 一个带有以下属性的对象:
+  - `data`: 来自实时数据源的最新数据。
+  - `error`: 如果在订阅实时数据源时发生错误，则为一个 `Error` 对象，否则为 `undefined` 。
+
+当接收到新数据时，error 会被重置为 `undefined`。
+
+### 基本用法 [#usage]
+
+使用 `useSWRSubscription` 订阅 Firestore 数据源的示例代码：
+
+```tsx
+import useSWRSubscription from 'swr/subscription'
+
+function Post({ id }) {
+  const { data } = useSWRSubscription(['views', id], ([_, postId], { next }) => {
+    const ref = firebase.database().ref('views/' + postId)
+    ref.on('value',
+      snapshot => next(null, snapshot.data()),
+      err => next(err)
+    )
+    return () => ref.off()
+  })
+
+  return <span>Your post has {data} views!</span>
+}
+```
+
+使用 `useSWRSubscription` 订阅 WebSocket 数据源的示例代码：
+
+```tsx
+import useSWRSubscription from 'swr/subscription'
+
+function App() {
+  const { data, error } = useSWRSubscription('ws://...', (key, { next }) => {
+    const socket = new WebSocket(key)
+    socket.addEventListener('message', (event) => next(null, event.data))
+    socket.addEventListener('error', (event) => next(event.error))
+    return () => socket.close()
+  })
+
+  if (error) return <div>failed to load</div>
+  if (!data) return <div>loading...</div>
+  return <div>hello {data}!</div>
+}
+```
+
+你也可以在[这个页面](/docs/typescript#)查看 `useSWRSubscription` 的 TypeScript 示例。
+
+### 去重 [#deduplication]
+
+`useSWRSubscription` 会对具有相同 `key` 的订阅请求进行去重。如果有多个组件使用相同的键，它们将共享相同的订阅。当最后一个使用该键的组件卸载时，订阅将被关闭。
+
+这意味着如果您有多个使用相同键的组件，它们都将接收到相同的数据。并且每个 `key` 只有一个对实时数据源的订阅。

@@ -1,0 +1,399 @@
+import { Callout } from 'nextra-theme-docs'
+
+# ページネーション
+
+<Callout emoji="✅">
+  このAPIを使用するには、最新バージョン (≥ 0.3.0) に更新してください。以前の useSWRPages API は非推奨になりました。
+</Callout>
+
+SWR は、**ページネーション**や**無限ローディング**などの一般的な UI パターンをサポートするための専用 API である useSWRInfinite を提供しています。
+
+## いつ `useSWR` を使用するか [#when-to-use-useswr]
+
+### ページネーション [#pagination]
+
+まず第一に、`useSWRInfinite` は必要**ない**かもしれませんが、次のようなものを構築しようとするときには `useSWR` を使用できます：
+
+import { Pagination } from 'components/diagrams/pagination'
+
+<div className="mt-8">
+  <Pagination/>
+</div>
+
+...これは典型的なページネーション UI です。`useSWR` を使って簡単に実装する方法を
+みてみましょう：
+
+```jsx {5}
+function App () {
+  const [pageIndex, setPageIndex] = useState(0);
+
+  // この API URL は、React の状態としてページのインデックスを含んでいます
+  const { data } = useSWR(`/api/data?page=${pageIndex}`, fetcher);
+
+  // ... ローディングとエラー状態を処理します
+
+  return <div>
+    {data.map(item => <div key={item.id}>{item.name}</div>)}
+    <button onClick={() => setPageIndex(pageIndex - 1)}>Previous</button>
+    <button onClick={() => setPageIndex(pageIndex + 1)}>Next</button>
+  </div>
+}
+```
+
+さらに、この「ページコンポーネント」を抽象化できます：
+
+```jsx {13}
+function Page ({ index }) {
+  const { data } = useSWR(`/api/data?page=${index}`, fetcher);
+
+  // ... ローディングとエラー状態を処理します
+
+  return data.map(item => <div key={item.id}>{item.name}</div>)
+}
+
+function App () {
+  const [pageIndex, setPageIndex] = useState(0);
+
+  return <div>
+    <Page index={pageIndex}/>
+    <button onClick={() => setPageIndex(pageIndex - 1)}>Previous</button>
+    <button onClick={() => setPageIndex(pageIndex + 1)}>Next</button>
+  </div>
+}
+```
+
+SWR のキャッシュがあるため、次のページを事前にロードできるという利点があります。次のページを非表示の div 内にレンダリングすると、
+SWR は次のページのデータフェッチを開始します。ユーザーが次のページに移動したときには、データはすでにそこにあります。
+
+```jsx {6}
+function App () {
+  const [pageIndex, setPageIndex] = useState(0);
+
+  return <div>
+    <Page index={pageIndex}/>
+    <div style={{ display: 'none' }}><Page index={pageIndex + 1}/></div>
+    <button onClick={() => setPageIndex(pageIndex - 1)}>Previous</button>
+    <button onClick={() => setPageIndex(pageIndex + 1)}>Next</button>
+  </div>
+}
+```
+
+たった 1 行のコードで、とても優れた UX を実現できます。`useSWR` フックは非常に強力で、
+ほとんどのシナリオをカバーしています。
+
+### 無限ローディング [#infinite-loading]
+
+「さらに読み込む」ボタンを使用して（またはスクロールすると自動的に実行されて）リストにデータを
+追加する**無限ローディング** UI を構築したい場合があります：
+
+import { Infinite } from 'components/diagrams/infinite'
+
+<div className="mt-8">
+  <Infinite/>
+</div>
+
+実装するには、このページで**動的な多くのリクエスト**を行う必要があります。
+React フックには[いくつかのルール](https://react.dev/reference/rules/rules-of-hooks)があるため、次のようなことは**できません**：
+
+```jsx {5,6,7,8,9}
+function App () {
+  const [cnt, setCnt] = useState(1)
+
+  const list = []
+  for (let i = 0; i < cnt; i++) {
+    // 🚨 これは間違いです！通常、ループの中でフックは使えません
+    const { data } = useSWR(`/api/data?page=${i}`)
+    list.push(data)
+  }
+
+  return <div>
+    {list.map((data, i) =>
+      <div key={i}>{
+        data.map(item => <div key={item.id}>{item.name}</div>)
+      }</div>)}
+    <button onClick={() => setCnt(cnt + 1)}>さらに読み込む</button>
+  </div>
+}
+```
+
+代わりに、抽象化して作成した `<Page />` を使うことができます：
+
+```jsx {5,6,7}
+function App () {
+  const [cnt, setCnt] = useState(1)
+
+  const pages = []
+  for (let i = 0; i < cnt; i++) {
+    pages.push(<Page index={i} key={i} />)
+  }
+
+  return <div>
+    {pages}
+    <button onClick={() => setCnt(cnt + 1)}>さらに読み込む</button>
+  </div>
+}
+```
+
+### 高度なケース [#advanced-cases]
+
+しかし、一部の高度なユースケースでは、上記のソリューションが機能しません。
+
+たとえば、先ほどの「さらに読み込む」UI をまだ実装しているときに、合計でいくつのアイテムがあるかの数値も
+表示する必要がでてきました。トップレベルの UI （`<App />`）が各ページ内のデータを必要とするため、
+`<Page />` を使ったソリューションは使えなくなってしまいました：
+
+```jsx {10}
+function App () {
+  const [cnt, setCnt] = useState(1)
+
+  const pages = []
+  for (let i = 0; i < cnt; i++) {
+    pages.push(<Page index={i} key={i} />)
+  }
+
+  return <div>
+    <p>??? items</p>
+    {pages}
+    <button onClick={() => setCnt(cnt + 1)}>さらに読み込む</button>
+  </div>
+}
+```
+
+また、ページネーション API が**カーソルベース**の場合も、このソリューションは機能しません。
+各ページには前ページのデータが必要なため、分離されていません。
+
+ここで新しい `useSWRInfinite` フックが役立ちます。
+
+## useSWRInfinite [#useswrinfinite]
+
+`useSWRInfinite` は、一つのフックで多数のリクエストを開始する機能を提供します。このような形になります：
+
+```jsx
+import useSWRInfinite from 'swr/infinite'
+
+// ...
+const { data, error, isLoading, isValidating, mutate, size, setSize } = useSWRInfinite(
+  getKey, fetcher?, options?
+)
+```
+
+`useSWR` と同様に、この新しいフックは、リクエストキー、フェッチャー関数、およびオプションを返す関数を受け取ります。
+これは `useSWR` が返すすべての値を返します。これらの値には、ページサイズと、React の状態のようなページサイズのセッターの二つの追加の値が含まれます。
+
+無限ローディングでは、1 *ページ*が一つのリクエストであり、目標は複数ページをフェッチしてレンダリングすることです。
+
+<Callout emoji="⚠️">
+  もし SWR 0.x バージョンを使っている場合は、 `swr` から `useSWRInfinite` をインポートする必要があります：<br/>
+  `import { useSWRInfinite } from 'swr'`
+</Callout>
+
+### API [#api]
+
+#### 引数 [#parameters]
+
+- `getKey`: インデックスと前ページのデータを受け取る関数であり、ページのキーを返します
+- `fetcher`: `useSWR` の[フェッチャー関数](/docs/data-fetching)と同じ
+- `options`: `useSWR` がサポートしているすべてのオプションに加えて、三つの追加オプションを受け取ります：
+  - `initialSize = 1`: 最初にロードするページ数
+  - `revalidateAll = false`: 常にすべてのページに対して再検証を試みる
+  - `revalidateFirstPage = true`: 常に最初のページを再検証します
+  - `persistSize = false`: 最初のページのキーが変更されたときに、ページサイズを 1 （またはセットされていれば `initialSize`）にリセットしない
+  - `parallel = false`: fetches multiple pages in parallel
+
+<Callout>
+  `initialSize` オプションはライフサイクルで変更できないことに注意してください。
+</Callout>
+
+#### 返り値 [#return-values]
+
+- `data`: 各ページのフェッチしたレスポンス値の配列
+- `error`: `useSWR` の `error` と同じ
+- `isLoading`: `useSWR` の `isLoading` と同じ
+- `isValidating`: `useSWR` の `isValidating` と同じ
+- `mutate`: `useSWR` のバインドされたミューテート関数と同じですが、データ配列を操作します
+- `size`: フェッチして返される*だろう*ページ数
+- `setSize`: フェッチする必要のあるページ数を設定します
+
+### 例 1： インデックスにもとづいたページネーション API [#example-1-index-based-paginated-api]
+
+通常のインデックスにもとづいた API の場合：
+
+```plaintext
+GET /users?page=0&limit=10
+[
+  { name: 'Alice', ... },
+  { name: 'Bob', ... },
+  { name: 'Cathy', ... },
+  ...
+]
+```
+
+```jsx {4,5,6,7,10}
+// 各ページの SWR キーを取得する関数であり、
+// その返り値は `fetcher` に渡されます。
+// `null` が返ってきた場合は、そのページのリクエストは開始されません。
+const getKey = (pageIndex, previousPageData) => {
+  if (previousPageData && !previousPageData.length) return null // 最後に到達した
+  return `/users?page=${pageIndex}&limit=10`                    // SWR キー
+}
+
+function App () {
+  const { data, size, setSize } = useSWRInfinite(getKey, fetcher)
+  if (!data) return 'loading'
+
+  // これで、すべてのユーザー数を計算できます
+  let totalUsers = 0
+  for (let i = 0; i < data.length; i++) {
+    totalUsers += data[i].length
+  }
+
+  return <div>
+    <p>{totalUsers} ユーザーがリストされています</p>
+    {data.map((users, index) => {
+      // `data` は、各ページの API レスポンスの配列です
+      return users.map(user => <div key={user.id}>{user.name}</div>)
+    })}
+    <button onClick={() => setSize(size + 1)}>さらに読み込む</button>
+  </div>
+}
+```
+
+`getKey` 関数は、`useSWRInfinite` と `useSWR` とで大きな違いがあります。
+現在のページのインデックスに加えて、前のページのデータも受け入れます。
+したがって、インデックスベースとカーソルベースの両方のページネーション API を適切にサポートできます。
+
+また、`data` は一つの API レスポンスだけではありません。複数の API レスポンスの配列になります：
+
+```js
+// `data` はこのようになります
+[
+  [
+    { name: 'Alice', ... },
+    { name: 'Bob', ... },
+    { name: 'Cathy', ... },
+    ...
+  ],
+  [
+    { name: 'John', ... },
+    { name: 'Paul', ... },
+    { name: 'George', ... },
+    ...
+  ],
+  ...
+]
+```
+
+### 例 2： カーソルまたはオフセットにもとづいたページネーション API [#example-2-cursor-or-offset-based-paginated-api]
+
+API がカーソルを必要とし、データと一緒に次のカーソルを返すとしましょう：
+
+```plaintext
+GET /users?cursor=123&limit=10
+{
+  data: [
+    { name: 'Alice' },
+    { name: 'Bob' },
+    { name: 'Cathy' },
+    ...
+  ],
+  nextCursor: 456
+}
+```
+
+`getKey` 関数を次のように変更できます：
+
+```jsx
+const getKey = (pageIndex, previousPageData) => {
+  // 最後に到達した
+  if (previousPageData && !previousPageData.data) return null
+
+  // 最初のページでは、`previousPageData` がありません
+  if (pageIndex === 0) return `/users?limit=10`
+
+  // API のエンドポイントにカーソルを追加します
+  return `/users?cursor=${previousPageData.nextCursor}&limit=10`
+}
+```
+
+### Parallel Fetching Mode [#parallel-fetching-mode]
+
+<Callout emoji="✅">
+  この API を利用するには最新バージョン (≥ 2.1.0) に更新してください。
+</Callout>
+
+useSWRInfinite のデフォルトの挙動は、キー作成を前のページのフェッチしたデータを元に行えるように各ページのフェッチを順番に行います。しかしながら、特にページのキー生成に依存関係がない場合ページ数が増えた場合においては 1 ページずつ順番にフェッチするのは最適な方法ではありません。`parallel` オプションを `true` にすることでページのフェッチがそれぞれ独立して並列に実行されるようになり、ローディング速度が劇的に向上します。
+
+```jsx
+// parallel = false (default)
+// page1 ===> page2 ===> page3 ===> done
+//
+// parallel = true
+// page1 ==> done
+// page2 =====> done
+// page3 ===> done
+//
+// previousPageData は常に `null`
+const getKey = (pageIndex, previousPageData) => {
+  return `/users?page=${pageIndex}&limit=10`
+}
+
+function App () {
+  const { data } = useSWRInfinite(getKey, fetcher, { parallel: true })
+}
+```
+
+<Callout emoji="⚠️">
+    `parallel` オプションを有効にした場合、`getKey` 関数の `previousPageData` 引数は `null` になります。
+</Callout>
+
+### 特定のページのみ再検証する [#revalidate-specific-pages]
+
+<Callout emoji="✅">
+  この API を利用するには最新バージョン (≥ 2.2.5) に更新してください。
+</Callout>
+
+`useSWRInfinite` のミューテーションのデフォルトの挙動はすでにロードされた全てのページを再検証することです。しかし、変更されたページのみを再検証したいこともあります。`revalidate` オプションに関数を渡すことで特定のページのみを再検証できます。
+
+`useSWRInfinite` の `revadalite` オプションに関数を渡した場合、この関数はページ毎に呼ばれます。
+
+```jsx
+function App() {
+  const { data, mutate, size } = useSWRInfinite(
+    (index) => [`/api/?page=${index + 1}`, index + 1],
+    fetcher
+  );
+
+  mutate(data, {
+    // 最後のページのみを再検証する
+    revalidate: (pageData, [url, page]) => page === size
+  });
+}
+```
+
+### Global Mutate with `useSWRInfinite` [#global-mutate-with-useswrinfinite]
+
+`useSWRInfinite` は各ページのデータに加え、全てのページデータを特別な形式のキーでキャッシュに保存するため、グローバルなミューテートを使い再検証するためには、`swr/infinite` にある `unstable_serialize` を使う必要があります。
+
+```jsx
+import { useSWRConfig } from "swr"
+import { unstable_serialize } from "swr/infinite"
+
+function App() {
+    const { mutate } = useSWRConfig()
+    mutate(unstable_serialize(getKey))
+}
+```
+
+<Callout emoji="⚠️">
+    名前が示す通り、`unstable_serialize` は安定した API ではなく、将来的に変更される可能性があります。
+</Callout>
+
+### 高度な機能 [#advanced-features]
+
+`useSWRInfinite` を使って次の機能を実装する方法は、[こちらに例があります](/examples/infinite-loading)：
+
+- 状態の読み込み
+- 空のときには特別な UI を表示する
+- 最後に到達したときには「さらに読み込む」ボタンを無効化する
+- 変更可能なデータソース
+- リスト全体を更新する

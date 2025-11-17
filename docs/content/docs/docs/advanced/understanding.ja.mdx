@@ -1,0 +1,125 @@
+import { Callout } from 'nextra-theme-docs'
+import Video from 'components/video'
+
+# SWR を理解する
+
+## 状態機械 [#state-machine]
+
+`useSWR` は `data`、`error`、`isLoading` と `isValidating` を `fetcher` 関数の状態に応じて返します。これらの図は SWR がそれぞれでどのように値を返すのかを示しています。
+
+### フェッチして再検証する [#fetch-and-revalidate]
+
+これはフェッチして再検証するパターンです。
+
+![フェッチと再検証のパターン](/img/understanding/fetch-and-revalidate.svg)
+
+### キーの変更 [#key-change]
+
+これはフェッチした後にキーを変更し、さらにその後再検証するパターンです。
+
+![キーが変更されたパターン](/img/understanding/key-change.svg)
+
+### キーの変更と以前のデータ [#key-change--previous-data]
+
+これはフェッチした後にキーを変更し再検証するのを `keepPreviousData` オプション付きで行うパターンです。
+
+![キーの変更を keepPreviousData オプションありで行うパターン](/img/understanding/key-change-previous-data.svg)
+
+### フォールバック [#fallback]
+
+これはフェッチした後に再検証するのをフォールバックデータと一緒に行うパターンです。
+
+![フォールバックのパターン](/img/understanding/fallback.svg)
+
+### キーの変更とフォールバック [#key-change--fallback]
+
+これはフェッチした後にキーを変更し再検証するのをフォールバックデータと一緒に行うパターンです。
+
+![キーの変更をフォールバックありで行うパターン](/img/understanding/key-change-fallback.svg)
+
+### キーの変更と以前のデータとフォールバック [#key-change--previous-data--fallback]
+
+これはフェッチした後にキーを変更し再検証するのを `keepPreviousData` オプションとフォールバックデータと一緒に行うパターンです。
+
+![キーの変更を keepPreviousData オプションとフォールバックありで行うパターン](/img/understanding/key-change-previous-data-fallback.svg)
+
+## よりよい UX のために isLoading と isValidating を組み合わせる [#combining-with-isloading-and-isvalidating-for-better-ux]
+
+既存の `isValidating` の値と比較して、`isLoading` はより一般的なローディングのための UX に役に立つ新しいプロパティです。
+
+- `isValidating` は実行中のリクエストがある場合に **データがロード済みかどうかに関わらず** `true` になります
+- `isLoading` は実行中のリクエストがあり **ロード済みのデータがまだない場合** に `true` になります
+
+わかりやすく言うと、`isValidating` は実行中の再検証が存在する場合全てで、`isLoading` は SWR が再検証中だけど表示するためのデータがない場合に使えます。
+
+<Callout emoji="📝">
+  フォールバックデータと以前のデータ (previous data) は "ロードされたデータ" とは扱われません。そのため、フォールバックデータや `keepPreviousData` オプションを使う場合には、表示するためのデータがあるかもしれません。
+</Callout>
+
+```jsx
+function Stock() {
+  const { data, isLoading, isValidating } = useSWR(STOCK_API, fetcher, {
+    refreshInterval: 3000
+  });
+
+  // 初期データのローディング中の場合には、表示するためのデータはありません
+  // そのため、スケルトンの表示を返します
+  if (isLoading) return <div className="skeleton" />;
+
+  // そうでなければ、データとバックグラウンドで再検証中であることを示す
+  // UI を表示します
+  return (
+    <>
+      <div>${data}</div>
+      {isValidating ? <div className="spinner" /> : null}
+    </>
+  );
+}
+```
+
+![isLoading を使った例](/img/understanding/isloading.gif)
+
+[こちら](https://codesandbox.io/s/swr-isloading-jtopow) から実際のコードを確認できます。
+
+## よりよいユーザー体験のために以前のデータを返す [#return-previous-data-for-better-ux]
+
+キー入力に応じたリアルタイム検索など継続的なユーザーアクションをベースにしたデータ取得を行う時、以前のデータを維持することによりユーザー体験を改善できます。`keepPreviousData` はこれを可能にするオプションです。これはシンプルな検索の例です。
+
+```jsx
+function Search() {
+  const [search, setSearch] = React.useState('');
+
+  const { data, isLoading } = useSWR(`/search?q=${search}`, fetcher, {
+    keepPreviousData: true
+  });
+
+  return (
+    <div>
+      <input
+        type="text"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Search..."
+      />
+
+      <div className={isLoading ? "loading" : ""}>
+        {data?.products.map(item => <Product key={item.id} name={item.name} />)
+      </div>
+    </div>
+  );
+}
+```
+
+`keepPreviousData` が有効にされている場合、SWR のキーが変わり新しいデータの取得が開始された場合にも以前のキーに対応するデータが返されます。
+
+<Video
+  src="https://user-images.githubusercontent.com/3676859/163695903-a3eb1259-180e-41e0-821e-21c320201194.mp4"
+  caption="keepPreviousData が有効な場合には以前の検索結果が維持されます"
+  ratio={640/730}
+/>
+
+この例のコードはこちらです: https://codesandbox.io/s/swr-keeppreviousdata-fsjz3m.
+
+## パフォーマンスのための依存収集 [#dependency-collection-for-performance]
+
+SWR はコンポーネントで使われているデータが更新された場合のみ再レンダリングします。コンポーネントの中で `data` しか使っていない場合、SWR は `isValidating` や `isLoading` のプロパティの更新を無視します。これはレンダリングの回数を減らします。詳細については [こちら](/docs/advanced/performance#dependency-collection)。

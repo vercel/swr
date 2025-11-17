@@ -1,0 +1,138 @@
+# TypeScript
+
+SWR 对于使用 TypeScript 编写的 app 是友好的，开箱即用，类型安全。
+
+## 基本用法 [#basic-usage]
+
+默认情况下，SWR 会从 `key` 推断出 `fetcher` 的参数类型，因此你可以自动获得首选类型。
+
+### useSWR [#useswr]
+
+```typescript
+// `key` 被推断为 `string`
+useSWR('/api/user', key => {})
+useSWR(() => '/api/user', key => {})
+
+// `key` 将被推断为 { a: string; b: { c: string; d: number } }
+useSWR({ a: '1', b: { c: '3', d: 2 } }, key => {})
+useSWR(() => ({ a: '1', b: { c: '3', d: 2 } }), key => {})
+
+// `arg0` 将被推断为 string.  `arg1` 将被推断为 number
+useSWR(['user', 8], ([arg0, arg1]) => {})
+useSWR(() => ['user', 8], ([arg0, arg1]) => {})
+```
+
+你还可以显式地指定 `key` 和 `fetcher` 参数的类型。
+
+```typescript
+import useSWR, { Fetcher } from 'swr'
+
+const uid = '<user_id>'
+const fetcher: Fetcher<User, string> = (id) => getUserById(id)
+
+const { data } = useSWR(uid, fetcher)
+// `data` 将会是 `User | undefined`.
+```
+
+默认情况下，在 `fetcher` 函数内部[抛出的错误](/docs/error-handling)具有 `any` 类型。该类型也可以明确指定。
+
+```typescript
+const { data, error } = useSWR<User, Error>(uid, fetcher);
+// `data` 将会是 `User | undefined`.
+// `error` 将会是 `Error | undefined`.
+```
+
+### useSWRInfinite [#useswrinfinite]
+
+同样适用于 `swr/infinite`，你可以依靠自动类型推断或自己显式地指定类型。
+
+```typescript
+import { SWRInfiniteKeyLoader } from 'swr/infinite'
+
+const getKey: SWRInfiniteKeyLoader = (index, previousPageData) => {
+  // ...
+}
+
+const { data } = useSWRInfinite(getKey, fetcher)
+```
+
+### useSWRSubscription [#useswrsubscription]
+
+* 内联的 `subscribe` 函数，手动指定 `next` 类型为 `SWRSubscriptionOptions` 的示例代码：
+
+```tsx
+import useSWRSubscription from 'swr/subscription'
+import type { SWRSubscriptionOptions } from 'swr/subscription'
+
+const { data, error } = useSWRSubscription('key', 
+  (key, { next }: SWRSubscriptionOptions<number, Error>) => {
+  //^ key 将会被推导为 `string`
+  //....
+  })
+  return {
+    data,
+    //^ data 将会被推导为 as `number | undefined`
+    error
+    //^ error 将会被推导为 as `Error | undefined`
+  }
+}
+```
+
+* 使用 `SWRSubscription` 声明 `subscribe` 函数的示例代码：
+
+```tsx
+import useSWRSubscription from 'swr/subscription'
+import type { SWRSubscription } from 'swr/subscription'
+
+/** 
+ * 第一个泛型是 Key
+ * 第二个泛型是 Data
+ * 第三个泛型是 Error
+ */
+const sub: SWRSubscription<string, number, Error> = (key, { next }) => {                         
+  //......
+}
+const { data, error } = useSWRSubscription('key', sub)
+```
+
+## 泛型 [#generics]
+
+指定 `data` 的类型很容易。默认情况下，它将使用 `fetcher` 的返回类型（未就绪状态为 `undefined`）作为 `data` 的类型，但你也可以将其作为参数传递：
+
+```typescript
+// 🔹 A. 使用一个有类型的 fetcher:
+// `getUser` 是 `(endpoint: string) => User`.
+const { data } = useSWR('/api/user', getUser)
+
+// 🔹 B. 指定 data 类型:
+// `fetcher` 一般会返回 `any`.
+const { data } = useSWR<User>('/api/user', fetcher)
+```
+
+如果要为 SWR 的其他选项添加类型，你也可以直接导入这些类型：
+
+```typescript
+import useSWR from 'swr'
+import type { SWRConfiguration } from 'swr'
+
+const config: SWRConfiguration = {
+  fallbackData: "fallback",
+  revalidateOnMount: false
+  // ...
+}
+
+const { data } = useSWR<string[]>('/api/data', fetcher, config)
+```
+
+## 中间件类型 [#middleware-types]
+
+你可以导入一些额外的类型定义，以帮助你向自定义的中间件添加类型。
+
+```typescript
+import useSWR, { Middleware, SWRHook } from 'swr'
+
+const swrMiddleware: Middleware = (useSWRNext: SWRHook) => (key, fetcher, config) => {
+  // ...
+  return useSWRNext(key, fetcher, config)
+}
+```

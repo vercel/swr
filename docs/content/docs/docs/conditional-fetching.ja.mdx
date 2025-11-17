@@ -1,0 +1,34 @@
+# 条件付きフェッチ
+
+## 条件付き [#conditional]
+
+条件付きでデータを取得するには `null` を使用するか、 `key` として関数を渡します。関数がスローまたは falsy な値を返した場合、 SWR はリクエストを開始しません。
+
+```js
+// 条件付きでフェッチする
+const { data } = useSWR(shouldFetch ? '/api/data' : null, fetcher)
+
+// ...または、falsyな値を返します
+const { data } = useSWR(() => shouldFetch ? '/api/data' : null, fetcher)
+
+// ...または、user.id が定義されてない場合にスローします
+const { data } = useSWR(() => '/api/data?uid=' + user.id, fetcher)
+```
+
+## 依存性 [#dependent]
+
+SWR では、他のデータに依存するデータをフェッチすることもできます。これにより、可能な限り最大の並列性（ウォーターフォールの回避）を確保するとともに、次のデータフェッチのために動的なデータの一部が必要な場合には、シリアルフェッチを行うことができます。
+
+```js
+function MyProjects () {
+  const { data: user } = useSWR('/api/user')
+  const { data: projects } = useSWR(() => '/api/projects?uid=' + user.id)
+  // 関数を渡す場合、SWRは返り値を`key`として使用します。
+  // 関数がスローまたはfalsyな値を返す場合、
+  // SWRはいくつかの依存関係が準備できてないことを知ることができます。
+  // この例では、`user.id`は`user`がロードされてない時にスローします。
+
+  if (!projects) return 'loading...'
+  return 'You have ' + projects.length + ' projects'
+}
+```

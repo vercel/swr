@@ -1,0 +1,106 @@
+import { Callout } from 'nextra-theme-docs'
+
+# サブスクリプション
+
+<Callout emoji="✅">
+  この API を利用するには最新バージョン (≥ 2.1.0) に更新してください。
+</Callout>
+
+## `useSWRSubscription` [#useswrsubscription]
+
+`useSWRSubscription` はリアルタイムのデータソースを SWR で購読するための React フックです。
+
+```tsx
+useSWRSubscription<Data, Error>(key: Key, subscribe: (key: Key, options: { next: (error?: Error | null, data: Data) => void }) => () => void): { data?: Data, error?: Error }
+```
+
+### API [#api]
+
+このフックは提供された購読関数を使ってリアルタイムのデータソースを購読し、受け取った最新のデータや発生したエラーを返します。このフックは新しいイベントを受け取った時には自動的に更新されたデータを返します。
+
+#### 引数 [#parameters]
+
+- `key`: A unique key that identifies the data being subscribed to, same key as `useSWR` key.
+- `subscribe`: A function that subscribes to the real-time data source. It receives the following arguments:
+  - `key`: same key as above
+  - `options`: an object with the following properties:
+    - `next`: A function that accepts an error and data, and updates the state with the latest data received from the real-time data source.
+
+
+例えば
+
+```tsx
+function subscribe(key, { next }) {
+  const sub = remote.subscribe(key, (err, data) => next(err, data))
+  return () => sub.close()
+}
+```
+
+You could also pass a updater function as `data` to `next`, which will receive the previous data as the first argument and return the new data.
+
+```tsx
+function subscribe(key, { next }) {
+  const sub = remote.subscribe(key, (err, data) => next(err, prev => prev.concat(data)))
+  return () => sub.close()
+}
+```
+
+#### 返り値 [#return-values]
+
+- `state`: 次のプロパティを持つオブジェクト
+  - `data`: リアルタイムデータソースから受け取った最新のデータ
+  - `error`: リアルタイムデータソースの購読で発生したエラーのオブジェクト、もしくは `undefined`
+
+
+新しいデータを受け取った時には、`error` は `undefined` にリセットされます。
+
+### 利用方法 [#usage]
+
+`useSWRSubscription` を使って Firestore のデータソースを購読する
+
+```tsx
+import useSWRSubscription from 'swr/subscription'
+
+function Post({ id }) {
+  const { data } = useSWRSubscription(['views', id], ([_, postId], { next }) => {
+    const ref = firebase.database().ref('views/' + postId)
+    ref.on('value',
+      snapshot => next(null, snapshot.data()),
+      err => next(err)
+    )
+    return () => ref.off()
+  })
+
+  return <span>Your post has {data} views!</span>
+}
+```
+
+`useSWRSubscription` を使って WebSocket のデータソースを購読する
+
+```tsx
+import useSWRSubscription from 'swr/subscription'
+
+function App() {
+  const { data, error } = useSWRSubscription('ws://...', (key, { next }) => {
+    const socket = new WebSocket(key)
+    socket.addEventListener('message', (event) => next(null, event.data))
+    socket.addEventListener('error', (event) => next(event.error))
+    return () => socket.close()
+  })
+
+  if (error) return <div>failed to load</div>
+  if (!data) return <div>loading...</div>
+  return <div>hello {data}!</div>
+}
+```
+
+You could also check TypeScript examples of `useSWRSubscription` at [this page](/docs/typescript#useswrsubscription)
+
+### 重複排除 [#deduplication]
+
+`useSWRSubscription` は同じキーを用いた購読リクエストに対して重複排除を行います。
+複数のコンポーネントで同じキーを使っている場合には、それらは同じ購読処理を共有します。
+最後のコンポーネントがアンマウントされた時に、購読は解除されます。
+
+これは、もし複数のコンポーネントでそれぞれ同じキーに対する購読処理を行なっている場合には、全てのコンポーネントが同じデータを受け取ることを意味します。
+加えて、リアルタイムデータソースに対しては、キー毎に一つだけ購読処理が登録されます。

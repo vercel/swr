@@ -1,0 +1,74 @@
+import { Callout } from 'nextra-theme-docs'
+
+# Suspense
+
+Вы можете включить опцию `suspense`, чтобы использовать SWR с React [Suspense](https://react.dev/reference/react/Suspense):
+
+```jsx
+import { Suspense } from 'react'
+import useSWR from 'swr'
+
+function Profile () {
+  const { data } = useSWR('/api/user', fetcher, { suspense: true })
+  return <div>привет, {data.name}</div>
+}
+
+function App () {
+  return (
+    <Suspense fallback={<div>загрузка...</div>}>
+      <Profile/>
+    </Suspense>
+  )
+}
+```
+
+<Callout>
+  Обратите внимание, что опцию `suspense` нельзя изменять в жизненном цикле.
+</Callout>
+
+В режиме задержки `data` всегда является ответом выборки (поэтому вам не нужно проверять, является ли она `undefined`).
+Но если произошла ошибка, вам нужно использовать [предохранители](https://ru.reactjs.org/docs/concurrent-mode-suspense.html#handling-errors), чтобы её отловить:
+
+```jsx
+<ErrorBoundary fallback={<h2>Не удалось получить посты.</h2>}>
+  <Suspense fallback={<h1>Загрузка постов...</h1>}>
+    <Profile />
+  </Suspense>
+</ErrorBoundary>
+```
+
+<Callout>
+Режим Suspense приостанавливает рендеринг до тех пор, пока данные не будут готовы, что означает, что он легко вызывает проблемы водопада. Чтобы избежать этого, вы должны делать предвыборку ресурсов перед рендерингом. [Дополнительная информация](/docs/prefetching)
+</Callout>
+
+---
+
+### Примечание: используя условную выборку [#note-with-conditional-fetching]
+
+Обычно, когда вы включаете `suspense`, гарантируется, что `data` всегда будет готова к рендерингу:
+
+```jsx
+function Profile () {
+  const { data } = useSWR('/api/user', fetcher, { suspense: true })
+
+  // `data` никогда не будет `undefined`
+  // ...
+}
+```
+
+Однако при её использовании вместе с условной выборкой или зависимой выборкой — `data` будет `undefined`, если запрос **приостановлен**:
+
+```jsx
+function Profile () {
+  const { data } = useSWR(isReady ? '/api/user' : null, fetcher, { suspense: true })
+
+  // `data` будет `undefined` если `isReady` имеет значение false
+  // ...
+}
+```
+
+Если вы хотите узнать больше технических подробностей об этом ограничении, смотрите [обсуждения здесь](https://github.com/vercel/swr/pull/357#issuecomment-627089889).
+
+### Серверный рендеринг (SSR) [#server-side-rendering]
+
+При использовании режима задержки на сервере (включая предварительный рендеринг в Next.js) **требуется** предоставить исходные данные через [fallbackData или fallback](/docs/with-nextjs#предварительный-рендеринг-с-исходными-данными). Это означает, что вы не можете использовать `Suspense` для получения данных на сервере, а либо полностью извлекаете данные на стороне клиента, либо извлекаете данные с помощью метода извлечения данных на уровне фреймворка (например, getStaticProps в Next.js). Больше обсуждений можно найти [здесь](https://github.com/vercel/swr/issues/1906).

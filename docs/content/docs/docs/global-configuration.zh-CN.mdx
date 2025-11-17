@@ -1,0 +1,139 @@
+# 全局配置
+
+`SWRConfig` 可以为所有的 SWR hook 提供全局配置 ([选项](/docs/api))。
+
+```jsx
+<SWRConfig value={options}>
+  <Component/>
+</SWRConfig>
+```
+
+在以下示例中，所有的 SWR hook 都将使用提供的相同的 fetcher 来加载 JSON 数据，默认每 3 秒刷新一次：
+
+```jsx
+import useSWR, { SWRConfig } from 'swr'
+
+function Dashboard () {
+  const { data: events } = useSWR('/api/events')
+  const { data: projects } = useSWR('/api/projects')
+  const { data: user } = useSWR('/api/user', { refreshInterval: 0 }) // override
+
+  // ...
+}
+
+function App () {
+  return (
+    <SWRConfig 
+      value={{
+        refreshInterval: 3000,
+        fetcher: (resource, init) => fetch(resource, init).then(res => res.json())
+      }}
+    >
+      <Dashboard />
+    </SWRConfig>
+  )
+}
+```
+
+## 嵌套配置 [#nesting-configurations]
+
+`SWRConfig` 会合并来自父层上下文的配置。它可以接收一个对象式或函数式配置。函数式配置可以从参数中得到父层的配置信息，并返回一个你自定义定制的配置。
+
+### 对象式配置示例 [#object-configuration-example]
+
+```jsx
+import { SWRConfig, useSWRConfig } from 'swr'
+
+function App() {
+  return (
+    <SWRConfig
+      value={{
+        dedupingInterval: 100,
+        refreshInterval: 100,
+        fallback: { a: 1, b: 1 },
+      }}
+    >
+      <SWRConfig
+        value={{
+          dedupingInterval: 200, // 这里将会覆盖父层配置，因为这里的优先级更高
+          fallback: { a: 2, c: 2 }, // 这里将与父值合并，因为当前的值是可合并的对象
+        }}
+      >
+        <Page />
+      </SWRConfig>
+    </SWRConfig>
+  )
+}
+
+function Page() {
+  const config = useSWRConfig()
+  // {
+  //   dedupingInterval: 200,
+  //   refreshInterval: 100,
+  //   fallback: { a: 2,  b: 1, c: 2 },
+  // }
+}
+```
+
+### 函数式配置示例 [#functional-configuration-example]
+
+```jsx
+import { SWRConfig, useSWRConfig } from 'swr'
+
+function App() {
+  return (
+    <SWRConfig
+      value={{
+        dedupingInterval: 100,
+        refreshInterval: 100,
+        fallback: { a: 1, b: 1 },
+      }}
+    >
+      <SWRConfig
+        value={parent => ({
+          dedupingInterval: parent.dedupingInterval * 5,
+          fallback: { a: 2, c: 2 },
+        })}
+      >
+        <Page />
+      </SWRConfig>
+    </SWRConfig>
+  )
+}
+
+function Page() {
+  const config = useSWRConfig()
+  // {
+  //   dedupingInterval: 500,
+  //   fallback: { a: 2, c: 2 },
+  // }
+}
+```
+
+## 额外的 API [#extra-apis]
+
+### 缓存 Provider [#cache-provider]
+
+除去以上所列的 [选项](/docs/api)，`SWRConfig` 还接受一个可选的 `provider` 函数。详细信息请参考 [缓存](/docs/advanced/cache) 这一节。
+
+```jsx
+<SWRConfig value={{ provider: () => new Map() }}>
+  <Dashboard />
+</SWRConfig>
+```
+
+### 访问全局配置 [#access-to-global-configurations]
+
+你可以使用 `useSWRConfig` hook 来获取全局配置，以及[`数据更改`](/docs/mutation)和[`缓存`](/docs/advanced/cache)：
+
+```jsx
+import { useSWRConfig } from 'swr'
+
+function Component () {
+  const { refreshInterval, mutate, cache, ...restConfig } = useSWRConfig()
+
+  // ...
+}
+```
+
+嵌套配置将会被扩展。如果没有使用 `<SWRConfig>`，将返回默认配置。

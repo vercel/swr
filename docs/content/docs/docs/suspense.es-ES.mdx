@@ -1,0 +1,74 @@
+import { Callout } from 'nextra-theme-docs'
+
+# Suspense
+
+Puede activar la opción `suspense` para utilizar SWR con React [Suspense](https://react.dev/reference/react/Suspense):
+
+```jsx
+import { Suspense } from 'react'
+import useSWR from 'swr'
+
+function Profile () {
+  const { data } = useSWR('/api/user', fetcher, { suspense: true })
+  return <div>hello, {data.name}</div>
+}
+
+function App () {
+  return (
+    <Suspense fallback={<div>loading...</div>}>
+      <Profile/>
+    </Suspense>
+  )
+}
+```
+
+<Callout>
+    Tenga en cuenta que la opción `suspense` no puede cambiar en el ciclo de vida.
+</Callout>
+
+En el modo Suspense, `data` es siempre la respuesta fetch (por lo que no es necesario comprobar si es `undefined`).
+Pero si se produce un error, es necesario utilizar un [error boundary](https://reactjs.org/docs/concurrent-mode-suspense.html#handling-errors) para atraparlo:
+
+```jsx
+<ErrorBoundary fallback={<h2>Could not fetch posts.</h2>}>
+  <Suspense fallback={<h1>Loading posts...</h1>}>
+    <Profile />
+  </Suspense>
+</ErrorBoundary>
+```
+
+<Callout>
+Suspense mode suspends rendering until the data is ready, which means it causes waterfall problems easily. To avoid that, you should prefetch resources before rendering. [More information](/docs/prefetching)
+</Callout>
+
+---
+
+### Note: With Conditional Fetching [#note-with-conditional-fetching]
+
+Normalmente, cuando se habilita `suspense` se garantiza que `data` siempre estarán lista al renderizar:
+
+```jsx
+function Profile () {
+  const { data } = useSWR('/api/user', fetcher, { suspense: true })
+
+  // `data` nunca sera `undefined`
+  // ...
+}
+```
+
+Sin embargo, cuando se utiliza junto con el conditional fetching o dependent fetching, `data` estará `undefined` si la solicitud está **paused**:
+
+```jsx
+function Profile () {
+  const { data } = useSWR(isReady ? '/api/user' : null, fetcher, { suspense: true })
+
+  // `data` será `undefined` si `isReady` es false
+  // ...
+}
+```
+
+Si quiere leer más detalles técnicos sobre esta restricción, consulte [la discusión aquí](https://github.com/vercel/swr/pull/357#issuecomment-627089889).
+
+### Server-Side Rendering [#server-side-rendering]
+
+When using suspense mode on the server-side (including pre-rendering in Next.js), it's **required** to provide the initial data via [fallbackData or fallback](/docs/with-nextjs#pre-rendering-with-default-data). This means that you can't use `Suspense` to fetch data on the server side, but either doing fully client-side data fetching, or fetch the data via the framework level data fetching method(such as getStaticProps in Next.js). More discussions can be found [here](https://github.com/vercel/swr/issues/1906).

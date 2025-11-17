@@ -1,0 +1,192 @@
+import { Callout, Tabs, Tab } from 'nextra-theme-docs'
+import Link from 'next/link'
+
+# 시작하기
+
+## 설치 [#installation]
+
+React 프로젝트 폴더 안에서 다음을 실행하세요.
+
+<Tabs items={['pnpm', 'npm', 'yarn']}>
+  <Tab>
+    ```bash
+    pnpm add swr
+    ```
+  </Tab>
+  <Tab>
+    ```bash
+    npm i swr
+    ```
+  </Tab>
+  <Tab>
+    ```bash
+    yarn add swr
+    ```
+  </Tab>
+</Tabs>
+
+## 빠른 시작 [#quick-start]
+
+JSON 데이터를 사용하는 일반적인 RESTful API라면 먼저 네이티브 `fetch`의 단순한 래퍼인 `fetcher` 함수를 생성해야 합니다.
+
+```jsx
+const fetcher = (...args) => fetch(...args).then(res => res.json())
+```
+
+<Callout emoji="💡">
+  GraphQL API 또는 Axios와 같은 라이브러리를 사용하려면 여러분만의 fetcher 함수를 생성하면 됩니다.
+  <Link href="/docs/data-fetching">여기</Link>에서 더 많은 예시를 확인하세요.
+</Callout>
+
+그 다음, `useSWR`을 임포트하고 함수 컴포넌트 내에서 사용하여 시작하면 됩니다.
+
+```jsx
+import useSWR from 'swr'
+
+function Profile ({ userId }) {
+  const { data, error, isLoading } = useSWR(`/api/user/${userId}`, fetcher)
+
+  if (error) return <div>failed to load</div>
+  if (isLoading) return <div>loading...</div>
+
+  // 데이터 렌더링
+  return <div>hello {data.name}!</div>
+}
+```
+
+일반적으로 요청에는 "loading", "ready", "error"의 세 가지 상태가 있습니다. `data`, `error`, `isLoading` 값을 사용하여
+요청의 현재 상태를 확인하고 해당 UI를 반환합니다.
+
+## 재사용 가능하게 만들기 [#make-it-reusable]
+
+웹 앱을 구축할 때, UI의 많은 곳에서 데이터를 재사용할 필요가 있을 것입니다. SWR 위에서는 재사용 가능한 데이터 hook을 만드는 것이 믿을 수 없을 정도로
+쉽습니다.
+
+```jsx
+function useUser (id) {
+  const { data, error, isLoading } = useSWR(`/api/user/${id}`, fetcher)
+
+  return {
+    user: data,
+    isLoading,
+    isError: error
+  }
+}
+```
+
+그리고 컴포넌트에서 사용합니다.
+
+```jsx
+function Avatar ({ id }) {
+  const { user, isLoading, isError } = useUser(id)
+
+  if (isLoading) return <Spinner />
+  if (isError) return <Error />
+  return <img src={user.avatar} />
+}
+```
+
+이 패턴을 적용함으로써 명령형 방식으로 데이터를 **가져오는** 것에 대해 잊을 수 있습니다: 요청을 시작, 로딩 상태를 업데이트, 최종 결과를 반환.
+대신, 코드는 더 선언적입니다: 컴포넌트에서 사용되는 데이터가 무엇인지만 명시하면 됩니다.
+
+## 예시 [#example]
+
+실제 예시로, 저희 웹 사이트는 모두 `user`에 의존하는 navbar와 그 콘텐츠를 보여줍니다.
+
+import { Welcome } from 'components/diagrams/welcome'
+
+<div className="mt-8">
+  <Welcome/>
+</div>
+
+전통적으로는 최상위 레벨 컴포넌트에서 `useEffect`를 사용해 데이터를 한 번 가져오고, 이를 props를 통해 자식 컴포넌트에 전달합니다(현재는 에러 상태를 처리하지 않습니다)
+
+```jsx {7-11,17,18,27}
+// 페이지 컴포넌트
+
+function Page ({ userId }) {
+  const [user, setUser] = useState(null)
+
+  // 데이터 가져오기
+  useEffect(() => {
+    fetch(`/api/user/${userId}`)
+      .then(res => res.json())
+      .then(data => setUser(data))
+  }, [userId])
+
+  // 전역 로딩 상태
+  if (!user) return <Spinner/>
+
+  return <div>
+    <Navbar user={user} />
+    <Content user={user} />
+  </div>
+}
+
+// 자식 컴포넌트
+
+function Navbar ({ user }) {
+  return <div>
+    ...
+    <Avatar user={user} />
+  </div>
+}
+
+function Content ({ user }) {
+  return <h1>Welcome back, {user.name}</h1>
+}
+
+function Avatar ({ user }) {
+  return <img src={user.avatar} alt={user.name} />
+}
+```
+
+보통 최상위 레벨 컴포넌트에서 가져온 모든 데이터를 유지하고 트리 아래의 모든 자식 컴포넌트의 props로 추가해야 합니다.
+페이지에 더 많은 데이터 의존성을 추가한다면 코드는 점점 유지하기가 힘들어집니다.
+
+[Context](https://react.dev/learn/passing-data-deeply-with-context)를 사용하여 props 전달을 피할 수 있습니다만 동적 콘텐츠 문제가 여전히 존재합니다:
+페이지 콘텐츠 내 컴포넌트들은 동적일 수 있으며, 최상위 레벨 컴포넌트는 그 자식 컴포넌트가 필요로하는 데이터가 무엇인지 알 수 없을 수도 있습니다.
+
+SWR은 이 문제를 완벽하게 해결합니다. 우리가 막 생성한 `useUser` hook을 사용해 다음과 같이 리팩토링할 수 있습니다.
+
+```jsx {20,26}
+// 페이지 컴포넌트
+
+function Page ({ userId }) {
+  return <div>
+    <Navbar userId={userId} />
+    <Content userId={userId} />
+  </div>
+}
+
+// 자식 컴포넌트
+
+function Navbar ({ userId }) {
+  return <div>
+    ...
+    <Avatar userId={userId} />
+  </div>
+}
+
+function Content ({ userId }) {
+  const { user, isLoading } = useUser(userId)
+  if (isLoading) return <Spinner />
+  return <h1>Welcome back, {user.name}</h1>
+}
+
+function Avatar ({ userId }) {
+  const { user, isLoading } = useUser(userId)
+  if (isLoading) return <Spinner />
+  return <img src={user.avatar} alt={user.name} />
+}
+```
+
+데이터는 이제 데이터가 필요한 컴포넌트로 **범위가 제한**되었으며 모든 컴포넌트는 서로에게 **독립적**입니다.
+모든 부모 컴포넌트들은 데이터나 데이터 전달에 관련된 것들을 알 필요가 없습니다. 그냥 렌더링할 뿐입니다.
+코드는 이제 유지하기에 더 간단하고 쉽습니다.
+
+가장 아름다운 것은 이들이 동일한 SWR 키를 사용하며 그 요청이 자동으로 **중복 제거**, **캐시**, **공유**되므로,
+단 **한 번의 요청**만 API로 전송된다는 것입니다.
+
+또한, 애플리케이션은 이제 [사용자 포커스나 네트워크 재연결](/docs/revalidation) 시에 데이터를 갱신할 수 있습니다!
+이는 사용자의 노트북이 슬립으로부터 깨어나거나 브라우저 탭을 전환할 때 자동으로 데이터가 갱신된다는 것을 의미합니다.

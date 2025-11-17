@@ -1,0 +1,84 @@
+---
+title: React Hooks pour la récupération de données
+---
+
+import { Callout } from 'nextra-theme-docs'
+import Features from 'components/features'
+import { Bleed } from 'nextra-theme-docs'
+
+{
+// wrapped with {} to mark it as javascript so mdx will not put it under a p tag
+}
+{<h1 className="text-center text-4xl tracking-tighter font-extrabold md:text-5xl mt-8">SWR</h1>}
+
+<Bleed><Features/></Bleed>
+
+Le nom "SWR" vient de `stale-while-revalidate` (obsolète lors de la réactualisation), une stratégie d'invalidation du cache HTTP popularisée par [HTTP RFC 5861](https://tools.ietf.org/html/rfc5861).
+SWR est une stratégie qui consiste à d'abord renvoyer les données du cache (obsolètes), puis à envoyer la requête fetch (réactualiser), et enfin à revenir avec les données à jour.
+
+<Callout emoji="✅">
+  Avec SWR, les composants reçoivent un flux de données <strong>constamment</strong> et <strong>automatiquement</strong> mise à jour.<br/>
+  Et l'interface utilisateur sera toujours <strong>rapide</strong> et <strong>réactive</strong>.
+</Callout>
+
+<div className="mt-16 mb-20 text-center">
+  [Démarrage rapide](/docs/getting-started) · [Exemples](/examples/basic) · [Blog](/blog) · [Dépôt GitHub](https://github.com/vercel/swr)
+</div>
+
+## Vue d'ensemble [#overview]
+
+```jsx
+import useSWR from 'swr'
+
+function Profile() {
+  const { data, error, isLoading } = useSWR('/api/user', fetcher)
+
+  if (error) return <div>échec du chargement</div>
+  if (isLoading) return <div>chargement...</div>
+  return <div>Salut {data.name}!</div>
+}
+```
+
+Dans cet exemple, le hook `useSWR` accepte un string `key` et une fonction `fetcher`. `key` est un identifiant unique de la donnée (normalement l'URL de l'API)
+et sera passé à `fetcher`. `fetcher` peut être n'importe quelle fonction asynchrone qui renvoie la donnée, vous pouvez utiliser le fetch natif ou des outils comme Axios.
+
+Le hook renvoie 2 valeurs: `data` et `error`, en fonction du statut de la requête.
+
+## Fonctionnalités [#features]
+
+Avec une seule ligne de code, vous pouvez simplifier la logique de récupération des données dans votre projet, et aussi avoir toutes ces fonctionnalités incroyables prêtes à l'emploi:
+
+- Récupérateur de donnée **rapide**, **léger** et **réutilisable**
+- Built-in **cache** et requête deduplication
+- Expérience en **temps réel**
+- Transport et protocole agnostique
+- Support SSR / ISR / SSG
+- TypeScript prêt à l'emploi
+- React Native
+
+SWR est également livré avec un ensemble d'outils pour vous aider à créer des expériences plus rapides et plus fluides:
+
+- Navigation rapide entre les pages
+- Demande sur intervalle
+- Dépendance de données
+- Réactualisation après focus
+- Réactualisation après récupération du réseau
+- Mutation locale (UI optimiste)
+- Nouvelle tentative automatique
+- Récupération de la pagination et du défilement
+- React Suspense
+
+Et bien [plus](/docs/getting-started).
+
+## Communauté [#community]
+
+<p className="flex h-6 mt-4 gap-2">
+  <img alt="stars" src="https://badgen.net/github/stars/vercel/swr" />
+  <img alt="downloads" src="https://badgen.net/npm/dt/swr" />
+  <img alt="license" src="https://badgen.net/npm/license/swr" />
+</p>
+
+SWR est créé par l'équipe derrière [Next.js](https://nextjs.org), le framework React.
+Suivez [@vercel](https://twitter.com/vercel) sur Twitter pour les futures mises à jour du projet.
+
+N'hésitez pas à rejoindre les [discussions sur GitHub](https://github.com/vercel/swr/discussions)!

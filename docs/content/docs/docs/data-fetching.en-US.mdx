@@ -1,0 +1,77 @@
+import { Callout } from 'nextra-theme-docs'
+import Link from 'next/link'
+
+# Data Fetching
+
+```js
+const { data, error } = useSWR(key, fetcher)
+```
+
+This is the very fundamental API of SWR. The `fetcher` here is an async function that **accepts the `key`** of SWR, and returns the data.
+
+The returned value will be passed as `data`, and if it throws, it will be caught as `error`.
+
+<Callout emoji="💡">
+  Note that <code>fetcher</code> can be omitted from the parameters if it's{' '}
+  <Link href="/docs/global-configuration">provided globally</Link>.
+</Callout>
+
+## Fetch [#fetch]
+
+You can use any library to handle data fetching, for example a `fetch` polyfill [developit/unfetch](https://github.com/developit/unfetch):
+
+```js
+import fetch from 'unfetch'
+
+const fetcher = url => fetch(url).then(r => r.json())
+
+function App () {
+  const { data, error } = useSWR('/api/data', fetcher)
+  // ...
+}
+```
+
+<Callout emoji="💡">
+  If you are using <strong>Next.js</strong>, you don't need to import this polyfill:<br/>
+  <a target="_blank" rel="noopener" href="https://nextjs.org/blog/next-9-1-7#new-built-in-polyfills-fetch-url-and-objectassign">New Built-In Polyfills: fetch(), URL, and Object.assign</a>
+</Callout>
+
+## Axios [#axios]
+
+```js
+import axios from 'axios'
+
+const fetcher = url => axios.get(url).then(res => res.data)
+
+function App () {
+  const { data, error } = useSWR('/api/data', fetcher)
+  // ...
+}
+```
+
+## GraphQL [#graphql]
+
+Or using GraphQL with libs like [graphql-request](https://github.com/prisma-labs/graphql-request):
+
+```js
+import { request } from 'graphql-request'
+
+const fetcher = query => request('/api/graphql', query)
+
+function App () {
+  const { data, error } = useSWR(
+    `{
+      Movie(title: "Inception") {
+        releaseDate
+        actors {
+          name
+        }
+      }
+    }`,
+    fetcher
+  )
+  // ...
+}
+```
+
+_If you want to pass variables to a GraphQL query, check out [Multiple Arguments](/docs/arguments)._

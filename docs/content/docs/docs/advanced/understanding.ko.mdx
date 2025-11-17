@@ -1,0 +1,127 @@
+import { Callout } from 'nextra-theme-docs'
+import Video from 'components/video'
+
+# SWR 이해하기
+
+## 상태 머신 [#state-machine]
+
+`useSWR`은 `fetcher` 함수에 따라 `data`, `error`, `isLoading` 그리고 `isValidating`을 반환합니다. 이 다이어그램은 일부 시나리오에서 SWR이 값을 반환하는 방법을 설명합니다.
+
+### 데이터 가져오기 및 재검증 [#fetch-and-revalidate]
+
+이 패턴은 데이터를 가져온 후 나중에 다시 유효성을 검사하는 패턴입니다.
+
+![A pattern for fetch and revalidate](/img/understanding/fetch-and-revalidate.svg)
+
+### 키 변경 [#key-change]
+
+This pattern is to fetch data and change the key and revalidate it later.
+이 패턴은 데이터를 가져온 후 키를 변경하고 나중에 다시 검증(revalidate)하는 방식입니다.
+
+![A pattern for key change](/img/understanding/key-change.svg)
+
+### 키 변경 + 이전 데이터 [#key-change--previous-data]
+
+이 패턴은 데이터를 가져온 후 키를 변경하고, `keepPreviousData` 옵션을 사용하여 기존 데이터를 유지한 채 나중에 다시 검증하는 방식입니다.
+
+![A pattern for key change + previous data](/img/understanding/key-change-previous-data.svg)
+
+### 폴백 [#fallback]
+
+이 패턴은 데이터를 가져온 후, 폴백 데이터(fallback data)를 사용하여 나중에 다시 검증하는 방식입니다.
+
+![A pattern for fallback](/img/understanding/fallback.svg)
+
+### 키 변경 + 폴백 [#key-change--fallback]
+
+이 패턴은 데이터를 가져온 후 키를 변경하고, 폴백 데이터를 사용하여 나중에 다시 검증하는 방식입니다.
+
+![A pattern for key change + fallback](/img/understanding/key-change-fallback.svg)
+
+### 키 변경 + 이전 데이터 + 폴백 [#key-change--previous-data--fallback]
+
+이 패턴은 데이터를 가져온 후 키를 변경하고, `keepPreviousData` 옵션과 폴백 데이터를 함께 사용하여 나중에 다시 검증하는 방식입니다.
+
+![A pattern for key change + previous data + fallback](/img/understanding/key-change-previous-data-fallback.svg)
+
+## isLoading 및 isValidating을 활용한 UX 개선 [#combining-with-isloading-and-isvalidating-for-better-ux]
+
+Comparing to the existing `isValidating` value, `isLoading` is a new property that can help you for the more general loading cases for UX.
+기존의 `isValidating` 값과 비교했을 때, `isLoading`은 보다 일반적인 로딩 상태를 다루는 새로운 속성입니다.
+
+- `isValidating`은 **데이터가 로드되었는지 여부와 상관없이** 요청이 진행 중이면 항상 true가 됩니다.
+- `isLoading`은 요청이 진행 중이면서 **아직 데이터가 로드되지 않은 경우에만** true가 됩니다.
+
+간단히 말해, `isValidating`은 재검증이 진행될 때마다 이를 나타내는 데 사용하고, `isLoading`은 SWR이 재검증 중이지만 아직 표시할 데이터가 없는 경우 이를 나타내는 데 사용할 수 있습니다.
+
+<Callout emoji="📝">
+  폴백 데이터와 이전 데이터는 "로드된 데이터"로 간주되지 않으므로 폴백 데이터를 사용하거나 keepPreviousData 옵션을 활성화하면 표시할 데이터가 있을 수 있습니다.
+</Callout>
+
+```jsx
+function Stock() {
+  const { data, isLoading, isValidating } = useSWR(STOCK_API, fetcher, {
+    refreshInterval: 3000
+  });
+
+  // 여전히 초기 데이터를 로드하는 중이라면 표시할 내용이 없습니다.
+  // 여기서 스켈레톤을 반환합니다.
+  if (isLoading) return <div className="skeleton" />;
+
+  // 그렇지 않으면 데이터와 배경을 나타내는 스피너를 표시합니다.
+  // 재검증합니다.
+  return (
+    <>
+      <div>${data}</div>
+      {isValidating ? <div className="spinner" /> : null}
+    </>
+  );
+}
+```
+
+![An example of using the isLoading state](/img/understanding/isloading.gif)
+
+코드 예제는 [여기](https://codesandbox.io/s/swr-isloading-jtopow)에서 찾을 수 있습니다.
+
+## 이전 데이터를 반환하여 UX 개선 [#return-previous-data-for-better-ux]
+
+입력 시 실시간으로 검색하는 것과 같이 지속적인 사용자 동작을 기반으로 데이터를 가져오는 경우 이전에 가져온 데이터를 유지하면 UX를 크게 개선할 수 있습니다. `keepPreviousData`는 해당 동작을 활성화하는 옵션입니다. 다음은 간단한 검색 UI입니다:
+
+```jsx
+function Search() {
+  const [search, setSearch] = React.useState('');
+
+  const { data, isLoading } = useSWR(`/search?q=${search}`, fetcher, {
+    keepPreviousData: true
+  });
+
+  return (
+    <div>
+      <input
+        type="text"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Search..."
+      />
+
+      <div className={isLoading ? "loading" : ""}>
+        {data?.products.map(item => <Product key={item.id} name={item.name} />)
+      </div>
+    </div>
+  );
+}
+```
+
+`keepPreviousData`를 활성화하면 SWR 키를 변경하고 새 키의 데이터가 다시 로딩되기 시작하더라도 이전 데이터를 계속 가져올 수 있습니다.
+
+<Video
+  src="https://user-images.githubusercontent.com/3676859/163695903-a3eb1259-180e-41e0-821e-21c320201194.mp4"
+  caption="Keep previous search results when keepPreviousData has been enabled"
+  ratio={640/730}
+/>
+
+이 예제의 전체 코드는 여기에서 확인할 수 있습니다: https://codesandbox.io/s/swr-keeppreviousdata-fsjz3m.
+
+## 성능을 위한 의존성 수집 [#dependency-collection-for-performance]
+
+SWR은 컴포넌트에서 사용된 상태가 업데이트될 때만 리렌더링을 트리거합니다. 즉, 컴포넌트에서 `data`만 사용한다면, SWR은 `isValidating`이나 `isLoading` 같은 다른 속성의 변경을 무시합니다. 이를 통해 렌더링 횟수를 크게 줄일 수 있습니다. 더 자세한 내용은 [여기](/docs/advanced/performance#dependency-collection)에서 확인할 수 있습니다.

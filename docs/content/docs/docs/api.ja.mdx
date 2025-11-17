@@ -1,0 +1,62 @@
+import { Callout } from 'nextra-theme-docs'
+
+# API
+
+```js
+const { data, error, isLoading, isValidating, mutate } = useSWR(key, fetcher, options)
+```
+
+## パラメーター [#parameters]
+
+- `key`: このリクエストのためのユニークなキー文字列（または関数、配列、null） [(詳細)](/docs/arguments), [（高度な使用法）](/docs/conditional-fetching)
+- `fetcher`: （_任意_） データをフェッチするための Promise を返す関数 [（ 詳細 ）](/docs/data-fetching)
+- `options`: （_任意_） この SWR フックのオプションオブジェクト
+
+## 返り値 [#return-values]
+
+- `data`: `fetcher` によって解決された、指定されたキーのデータ（もしくは、ロードされていない場合は undefined）
+- `error`: `fetcher` によって投げられたエラー （もしくは undefined）
+- `isLoading`: 実行中のリクエストがあり "ロードされたデータ" がない状態。フォールバックのためのデータや `keepPreviousData` による以前のデータは "ロードされたデータ" ではありません
+- `isValidating`: リクエストまたは再検証の読み込みがある場合
+- `mutate(data?, options?)`: キャッシュされたデータを更新する関数 [（ 詳細 ）](/docs/mutation)
+
+詳細は[こちら](/docs/advanced/understanding)をご覧ください。
+
+## オプション [#options]
+
+- `suspense = false`: React Suspense モードを有効にする [（ 詳細 ）](/docs/suspense)
+- `fetcher(args)`: フェッチャー関数
+- `revalidateIfStale = true`: 古いデータがある場合でも、自動再検証をする [（ 詳細 ）](/docs/revalidation#disable-automatic-revalidations)
+- `revalidateOnMount`: コンポーネントのマウント時に行われる自動再検証を有効または無効にします [（ 詳細 ）](/docs/revalidation#revalidate-on-mount)
+- `revalidateOnFocus = true`: ウィンドウがフォーカスされたときに自動的に再検証します [（ 詳細 ）](/docs/revalidation)
+- `revalidateOnReconnect = true`: ブラウザがネットワーク接続を回復すると自動的に再検証します（ `navigator.onLine` 経由） [（ 詳細 ）](/docs/revalidation)
+- `refreshInterval` [（ 詳細 ）](/docs/revalidation):
+  - デフォルトでは無効: `refreshInterval = 0`
+  - 数値が設定されている場合、ミリ秒単位のポーリングの間隔
+  - 関数を設定した場合、その関数は最新のデータを受け取り、ミリ秒単位の間隔で返す必要があります
+- `refreshWhenHidden = false`: ウィンドウが非表示の場合にポーリングします（`refreshInterval` が有効になっているときのみ）
+- `refreshWhenOffline = false`: ブラウザがオフラインのときにポーリングします（`navigator.onLine` によって決定される）
+- `shouldRetryOnError = true`: フェッチャーでエラーが発生したときに再試行します
+- `dedupingInterval = 2000`: この期間内での同じキーのリクエストを重複として排除します
+- `focusThrottleInterval = 5000`: この期間中に一度だけ再検証をします
+- `loadingTimeout = 3000`: `onLoadingSlow` イベントをトリガーするためのタイムアウト
+- `errorRetryInterval = 5000`: エラー再試行の間隔
+- `errorRetryCount`: 最大エラー再試行回数
+- `fallback`: 初期データの key-value オブジェクト [（ 例 ）](/docs/with-nextjs)
+- `fallbackData`: 返される初期データ（注：フックごとに）
+- `keepPreviousData = false`: 新しいキーに対するデータがロードされるまで以前のキーのデータを返すかどうか [（詳細）](/docs/advanced/understanding#return-previous-data-for-better-ux)
+- `onLoadingSlow(key, config)`: リクエストの読み込みに時間がかかりすぎる場合のコールバック関数（`loadingTimeout` を参照してください）
+- `onSuccess(data, key, config)`: リクエストが正常に終了したときのコールバック関数
+- `onError(err, key, config)`: リクエストがエラーを返したときのコールバック関数
+- `onErrorRetry(err, key, config, revalidate, revalidateOps)`: エラー再試行のハンドラー
+- `onDiscarded(key)`: レースコンディションによりリクエストが無視されたときのコールバック関数
+- `compare(a, b)`: 誤った再レンダリングを回避するために、返されたデータがいつ変更されたかを検出するために使用される比較関数。デフォルトでは、[stable-hash](https://github.com/shuding/stable-hash) が使用されます
+- `isPaused()`: 再検証を一時停止するかどうかを検出する関数であり、この関数が `true` を返す場合はフェッチしたデータとエラーを無視します。デフォルトでは `false` を返します
+- `use`: ミドルウェア関数の配列 [（ 詳細 ）](/docs/middleware)
+
+<Callout emoji="💡">
+  低速ネットワーク（2G、{'<='} 70Kbps）のとき、デフォルトで <code>errorRetryInterval</code> は 10s になり、
+  <code>loadingTimeout</code> は 5s になります。
+</Callout>
+
+[グローバルな設定](/docs/global-configuration) を使用して、デフォルトのオプションを提供することもできます。

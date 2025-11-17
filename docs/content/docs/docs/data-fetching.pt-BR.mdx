@@ -1,0 +1,77 @@
+import { Callout } from 'nextra-theme-docs'
+import Link from 'next/link'
+
+# Data Fetching
+
+```js
+const { data, error } = useSWR(key, fetcher)
+```
+
+Essa é a API mais fundamental do SWR. A função `fetcher` aqui é uma função assíncrona que **aceita a chave do SWR**, e retorna os dados.
+
+O valor retornado será passado como `data`, e se ele der erro, será capturado como `error`.
+
+<Callout emoji="💡">
+    Note que <code>fetcher</code> pode ser omitido dos parâmetros se ele for{' '}
+    <Link href="/docs/global-configuration">fornecido globalmente</Link>.
+</Callout>
+
+## Fetch [#fetch]
+
+Você pode usar qualquer biblioteca para lidar com a obtenção de dados, por exemplo o `fetch` polyfill [developit/unfetch](https://github.com/developit/unfetch):
+
+```js
+import fetch from 'unfetch'
+
+const fetcher = url => fetch(url).then(r => r.json())
+
+function App () {
+  const { data, error } = useSWR('/api/data', fetcher)
+  // ...
+}
+```
+
+<Callout emoji="💡">
+    Se você está usando <strong>Next.js</strong>, você não precisa importar este polyfill:<br/>
+    <a target="_blank" rel="noopener" href="https://nextjs.org/blog/next-9-1-7#new-built-in-polyfills-fetch-url-and-objectassign">New Built-In Polyfills: fetch(), URL, and Object.assign</a>
+</Callout>
+
+## Axios [#axios]
+
+```js
+import axios from 'axios'
+
+const fetcher = url => axios.get(url).then(res => res.data)
+
+function App () {
+  const { data, error } = useSWR('/api/data', fetcher)
+  // ...
+}
+```
+
+## GraphQL [#graphql]
+
+Ou usando GraphQL com bibliotecas como [graphql-request](https://github.com/prisma-labs/graphql-request):
+
+```js
+import { request } from 'graphql-request'
+
+const fetcher = query => request('/api/graphql', query)
+
+function App () {
+  const { data, error } = useSWR(
+    `{
+      Movie(title: "Inception") {
+        releaseDate
+        actors {
+          name
+        }
+      }
+    }`,
+    fetcher
+  )
+  // ...
+}
+```
+
+_Se você quiser passar variáveis para uma query GraphQL, cheque [Argumentos Múltiplos](/docs/arguments)._

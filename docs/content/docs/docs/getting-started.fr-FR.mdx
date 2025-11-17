@@ -1,0 +1,189 @@
+import { Callout, Tabs, Tab } from 'nextra-theme-docs'
+import Link from 'next/link'
+
+# Démarrage rapide
+
+## Installation [#installation]
+
+A l'intérieur de votre projet React, exécutez la commande suivante :
+
+<Tabs items={['pnpm', 'npm', 'yarn']}>
+  <Tab>
+    ```bash
+    pnpm add swr
+    ```
+  </Tab>
+  <Tab>
+    ```bash
+    npm i swr
+    ```
+  </Tab>
+  <Tab>
+    ```bash
+    yarn add swr
+    ```
+  </Tab>
+</Tabs>
+
+## Démarrage rapide [#quick-start]
+
+Pour les API RESTful normales avec des données JSON, vous devez d'abord créer une fonction `fetcher` qui n'est qu'un encapsuleur de la fonction native `fetch` :
+
+```jsx
+const fetcher = (...args) => fetch(...args).then(res => res.json())
+```
+
+<Callout emoji="💡">
+  Si vous souhaitez utiliser l'API GraphQL ou des librairies comme Axios, vous pouvez créer votre propre fonction fetcher.
+  Consultez <Link href="/docs/data-fetching">cette page</Link> pour plus d'exemples.
+</Callout>
+
+Ensuite, vous pouvez importer `useSWR` et commencer à l'utiliser dans n'importe quelle fonction composant :
+
+```jsx
+import useSWR from 'swr'
+
+function Profile ({ userId }) {
+  const { data, error, isLoading } = useSWR(`/api/user/${userId}`, fetcher)
+
+  if (error) return <div>échec du chargement</div>
+  if (isLoading) return <div>chargement...</div>
+
+  // rendu des données
+  return <div>bonjour {data.name}!</div>
+}
+```
+
+Normalement, il y a 3 états possibles pour une requête : "loading", "ready" ou "error". Vous pouvez utiliser la valeur de `data`, `error` et `isLoading` pour déterminer l'état actuel de la requête, et renvoyer l'interface utilisateur correspondante.
+
+## Réutilisation [#make-it-reusable]
+
+Quand vous construisez une application web, vous pouvez avoir besoin de réutiliser les données à plusieurs endroits de l'interface utilisateur. Il est incroyablement facile de créer des hooks de données réutilisables au-dessus de SWR :
+
+```jsx
+function useUser (id) {
+  const { data, error, isLoading } = useSWR(`/api/user/${id}`, fetcher)
+
+  return {
+    user: data,
+    isLoading,
+    isError: error
+  }
+}
+```
+
+Et l'utiliser dans vos composants :
+
+```jsx
+function Avatar ({ id }) {
+  const { user, isLoading, isError } = useUser(id)
+
+  if (isLoading) return <Spinner />
+  if (isError) return <Error />
+  return <img src={user.avatar} />
+}
+```
+
+En utilisant ce motif, vous pouvez oublier la logique de **récupération de données** de manière impérative : démarrer la requête, mettre à jour l'état de chargement, et renvoyer le résultat final.
+Au lieu de cela, votre code est plus déclaratif : vous devez simplement spécifier quelles données sont utilisées par le composant.
+
+## Exemple [#example]
+
+Avec un example réel, notre site web affiche une barre de navigation et du contenu, tous deux dépendent de `user` :
+
+import { Welcome } from 'components/diagrams/welcome'
+
+<div className="mt-8">
+  <Welcome/>
+</div>
+
+D'habitude, on récupére les données une fois en utilisant `useEffect` dans le composant primaire, et on passe les données aux composants enfants via les props (remarquez que nous ne gérons pas l'état d'erreur pour le moment) :
+
+```jsx {7-11,17,18,27}
+// Composant Page
+
+function Page ({ userId }) {
+  const [user, setUser] = useState(null)
+
+  // Récupération des données
+  useEffect(() => {
+    fetch(`/api/user/${userId}`)
+      .then(res => res.json())
+      .then(data => setUser(data))
+  }, [userId])
+
+  // Etat de chargement global
+  if (!user) return <Spinner/>
+
+  return <div>
+    <Navbar user={user} />
+    <Content user={user} />
+  </div>
+}
+
+// Composants enfants
+
+function Navbar ({ user }) {
+  return <div>
+    ...
+    <Avatar user={user} />
+  </div>
+}
+
+function Content ({ user }) {
+  return <h1>Bon retour, {user.name}</h1>
+}
+
+function Avatar ({ user }) {
+  return <img src={user.avatar} alt={user.name} />
+}
+```
+
+Normalement, on doit garder toutes les données dans le composant primaire et ajouter des props à chaque composant dans l'arborescence.
+Le code devient plus difficile à maintenir si on ajoute plus de données à la page.
+
+Bien que l'on puisse éviter de passer les données via les props en utilisant [Context](https://react.dev/learn/passing-data-deeply-with-context), il y a toujours le problème du contenu dynamique :
+Les composants à l'intérieur des pages peuvent être dynamiques, et le composant de niveau supérieur ne sait peut-être pas quelles données seront nécessaires par ses composants enfants.
+
+SWR résout parfaitement le problème. Avec le hook `useUser` que nous venons de créer, le code peut être refactorisé en :
+
+```jsx {20,26}
+// Composant Page
+
+function Page ({ userId }) {
+  return <div>
+    <Navbar userId={userId} />
+    <Content userId={userId} />
+  </div>
+}
+
+// Composants enfants
+
+function Navbar ({ userId }) {
+  return <div>
+    ...
+    <Avatar userId={userId} />
+  </div>
+}
+
+function Content ({ userId }) {
+  const { user, isLoading } = useUser(userId)
+  if (isLoading) return <Spinner />
+  return <h1>Welcome back, {user.name}</h1>
+}
+
+function Avatar ({ userId }) {
+  const { user, isLoading } = useUser(userId)
+  if (isLoading) return <Spinner />
+  return <img src={user.avatar} alt={user.name} />
+}
+```
+
+Les données sont maintenant **liées** aux composants qui en ont besoin, et tous les composants sont **indépendants** les uns des autres.
+Tous les composants parents n'ont pas besoin de savoir quoi que ce soit sur les données ou de passer des données. Ils se contentent de les afficher.
+Le code est beaucoup plus simple et plus facile à maintenir maintenant.
+
+Le plus beau, c'est qu'il n'y aura **qu'une seule requête** envoyée à l'API, car ils utilisent la même clé SWR et la requête est **dédupliquée**, **mise en cache** et **partagée** automatiquement.
+
+Aussi, l'application a maintenant la possibilité de réactualiser les données sur [le focus de l'utilisateur ou la reconnexion du réseau](/docs/revalidation) !
+Cela signifie que lorsque l'ordinateur de l'utilisateur se réveille ou qu'il passe d'un onglet à l'autre, les données seront automatiquement actualiser.

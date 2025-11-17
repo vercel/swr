@@ -1,0 +1,100 @@
+import Video from 'components/video'
+import { Callout } from 'nextra-theme-docs'
+import { Bleed } from 'nextra-theme-docs'
+import Link from 'next/link'
+
+# 自動再検証
+
+<Callout>
+  データを手動で再検証する場合は、<Link href="/docs/mutation">ミューテーション</Link>を確認してください。
+</Callout>
+
+## フォーカス時の再検証 [#revalidate-on-focus]
+
+ページにフォーカスを合わせるかタブを切りかえると、SWR は自動的にデータを再検証します。
+
+これは、すぐに最新の状態に同期するのに便利です。古いモバイルタブや**スリープ状態になった**ラップトップなどのシナリオでデータを更新する場合に役立ちます。
+
+<Bleed>
+  <Video
+    src="https://raw.githubusercontent.com/vercel/swr-site/master/.github/videos/focus-revalidate.mp4"
+    caption="ビデオ：フォーカスの再検証を使用して、ページ間でログイン状態を自動的に同期します。"
+    ratio={307/768}
+    className="mx-8 2xl:mx-24"
+  />
+</Bleed>
+
+この機能はデフォルトで有効になっています。[`revalidateOnFocus`](/docs/api) オプションで無効にできます。
+
+## 定期的な再検証 [#revalidate-on-interval]
+
+多くの場合、複数のデバイス、複数のユーザー、複数のタブが原因でデータが変更されます。画面上のデータを時間の経過とともに更新するにはどうすればよいのでしょうか？
+
+SWR には、データを自動的に再フェッチするオプションがあります。その動きは非常に**スマート**で、フックに関連付けられているコンポーネントが**画面に表示されている**場合にのみ、再フェッチが行われます。
+
+<Bleed>
+  <Video
+    src="https://raw.githubusercontent.com/vercel/swr-site/master/.github/videos/refetch-interval.mp4"
+    caption="ビデオ：ユーザーが変更を加えると、両方のセッションで最終的に同じデータをレンダリングします。"
+    ratio={307/768}
+    className="mx-8 2xl:mx-24"
+  />
+</Bleed>
+
+[`refreshInterval`](/docs/api) 値を設定することで有効にできます：
+
+```js
+useSWR('/api/todos', fetcher, { refreshInterval: 1000 })
+```
+
+`refreshWhenHidden` や `refreshWhenOffline` などのオプションもあります。両方ともデフォルトで無効になっているため、ウェブページが画面に表示されていない場合、またはネットワーク接続がない場合、SWR はフェッチしません
+
+## 再接続時の再検証 [#revalidate-on-reconnect]
+
+ユーザーがオンラインに戻ったときに再検証することも役立ちます。このシナリオは、ユーザーがコンピューターのロックを解除したときに頻繁に発生しますが、この時点ではまだインターネットは接続されていません。
+
+データが常に最新であることを確認するために、SWR はネットワークが回復したときに自動的に再検証します。
+
+この機能はデフォルトで有効になっています。[`revalidateOnReconnect`](/docs/api) オプションで無効にできます。
+
+## 自動再検証の無効化 [#disable-automatic-revalidations]
+
+もしリソースが **イミュータブル** で、再検証を行っても変更されない場合は、そのリソースのすべての種類の自動再検証を無効にできます。
+
+バージョン 1.0 以降から、 SWR はリソースをイミュータブルとして扱うヘルパーフックの `useSWRImmutable` を提供します：
+
+```js
+import useSWRImmutable from 'swr/immutable'
+
+// ...
+useSWRImmutable(key, fetcher, options)
+```
+
+上記のフックは、通常の `useSWR` フックと同じ API インターフェースを備えています。また、次の再検証オプションを無効にすることで、同じ処理を行うこともできます：
+
+```js
+useSWR(key, fetcher, {
+  revalidateIfStale: false,
+  revalidateOnFocus: false,
+  revalidateOnReconnect: false
+})
+
+// 上記に相当します
+useSWRImmutable(key, fetcher)
+```
+
+`revalidateIfStale` は、 SWR がマウントされ、古いデータがある場合に SWR を再検証する必要があるかどうかを制御します。
+
+上記の二つのフックは、**まったく同じ**処理を行います。データがキャッシュされると、二度とリクエストされなくなります。
+
+## マウント時の再検証[#revalidate-on-mount]
+
+マウント時に SWR の再検証を強制的にオーバライドするのに役立ちます。デフォルトでは、 `revalidateOnMount` の値は未定義に設定されています。
+
+SWR フックは以下のようにマウントします。
+
+- まず、 `revalidateOnMount` が定義されているかどうかを確認します。値が true ならリクエストを開始し、false なら停止します。
+
+`revalidateIfStale` はマウントの動作を制御するのに役立ちます。デフォルトでは `revalidateIfStale` は true に設定されています。
+
+`revalidateIfStale` を true に設定すると、キャッシュデータがある時のみ再フェッチし、ない場合は再フェッチしません。

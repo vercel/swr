@@ -1,0 +1,166 @@
+import { Callout } from 'nextra-theme-docs'
+
+# Cache
+
+<Callout>
+  Mettre à jour vers la dernière version (≥ 1.0.0) pour utiliser cette fonctionnalité.
+</Callout>
+
+<Callout emoji="⚠️">
+  Dans la plupart des cas, vous ne devriez pas écrire directement dans le cache, ce qui peut entraîner des comportements indéfinis de SWR. Si vous avez besoin de muter manuellement une clé, veuillez envisager d'utiliser les API SWR.<br/>
+  A voir aussi: [Mutation](/docs/mutation), [Réinitialisation du Cache entre les tests](#reset-cache-between-test-cases).
+</Callout>
+
+Par défaut, SWR utilise un cache global pour stocker et partager les données entre tous les composants. Mais vous pouvez également personnaliser ce comportement avec l'option `provider` de `SWRConfig`.
+
+Les fournisseurs de cache sont destinés à permettre SWR avec des stockages plus personnalisés.
+
+## Fournisseur de Cache [#cache-provider]
+
+Un fournisseur de cache est un objet de type Map qui correspond à la définition TypeScript suivante (qui peut être importée depuis `swr`):
+
+```typescript
+interface Cache<Data> {
+  get(key: string): Data | undefined
+  set(key: string, value: Data): void
+  delete(key: string): void
+  keys(): IterableIterator<string>
+}
+```
+
+Par exemple, une instance de [JavaScript Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map) peut être directement utilisée comme fournisseur de cache pour SWR.
+
+## Creation du Fournisseur de Cache [#create-cache-provider]
+
+L'option `provider` de `SWRConfig` reçoit une fonction qui renvoie un [fournisseur de cache](#cache-provider). Le fournisseur sera ensuite utilisé par tous les hooks SWR à l'intérieur de cette limite `SWRConfig`. Par exemple:
+
+```jsx
+import useSWR, { SWRConfig } from 'swr'
+
+function App() {
+  return (
+    <SWRConfig value={{ provider: () => new Map() }}>
+      <Page/>
+    </SWRConfig>
+  )
+}
+```
+
+Tous les hooks SWR à l'intérieur de `<Page/>` liront et écriront à partir de cette instance de Map. Vous pouvez également utiliser d'autres implémentations de fournisseurs de cache pour votre cas d'utilisation spécifique.
+
+<Callout>
+  Dans l'exemple ci-dessus, lorsque le composant `<App/>` est remonté, le fournisseur sera également recréé. Les fournisseurs de cache doivent être placés plus haut dans l'arbre de composants, ou en dehors du rendu.
+</Callout>
+
+import { Cache } from 'components/diagrams/cache'
+
+<div className="my-8">
+  <Cache/>
+</div>
+
+Lorsqu'ils sont imbriqués, les hooks SWR utiliseront le fournisseur de cache de niveau supérieur. S'il n'y a pas de fournisseur de cache de niveau supérieur, il se replie sur le fournisseur de cache par défaut, qui est une `Map` vide.
+
+<Callout emoji="⚠️">
+  Si un fournisseur de cache est utilisé, le `mutate` global ne fonctionnera **pas** pour les hooks SWR sous cette limite `<SWRConfig>`. Veuillez utiliser [celui-ci](#access-current-cache-provider) à la place.
+</Callout>
+
+## Accès au Fournisseur de Cache Actuel [#access-current-cache-provider]
+
+Lorsqu'il est à l'intérieur d'un composant React, vous devez utiliser le hook [`useSWRConfig`](/docs/global-configuration#access-to-global-configurations) pour accéder au fournisseur de cache actuel ainsi qu'à d'autres configurations, y compris `mutate`:
+
+```jsx
+import { useSWRConfig } from 'swr'
+
+function Avatar() {
+  const { cache, mutate, ...extraConfig } = useSWRConfig()
+  // ...
+}
+```
+
+Si il n'est pas sous une limite `<SWRConfig>`, il renverra les configurations par défaut.
+
+## Experimental: Etendre le Fournisseur de Cache [#experimental-extend-cache-provider]
+
+<Callout emoji="🧪">
+  Ceci est une fonctionnalité expérimentale, le comportement pourrait changer dans les futures mises à jour.
+</Callout>
+
+Lorsque plusieurs composants `<SWRConfig>` sont imbriqués, le fournisseur de cache peut être étendu.
+
+Le premier argument de la fonction `provider` est le fournisseur de cache de la limite `<SWRConfig>` de niveau supérieur (ou le cache par défaut s'il n'y a pas de limite `<SWRConfig>` parent), vous pouvez l'utiliser pour étendre le fournisseur de cache:
+
+```jsx
+<SWRConfig value={{ provider: (cache) => newCache }}>
+  ...
+</SWRConfig>
+```
+
+## Exemples [#examples]
+
+### Cache Persistant Basé sur le LocalStorage [#localstorage-based-persistent-cache]
+
+Vous pouvez synchroniser votre cache avec `localStorage`. Voici un exemple d'implémentation:
+
+```jsx
+function localStorageProvider() {
+  // Pendant l'initialisation, nous restaurons les données de `localStorage` dans une map.
+  const map = new Map(JSON.parse(localStorage.getItem('app-cache') || '[]'))
+
+  // Abant de décharger l'application, nous réécrivons toutes les données dans `localStorage`.
+  window.addEventListener('beforeunload', () => {
+    const appCache = JSON.stringify(Array.from(map.entries()))
+    localStorage.setItem('app-cache', appCache)
+  })
+
+  // Nous utilisons la map comme cache pour écrire et lire pour des raisons de performance.
+  return map
+}
+```
+
+Enfin utilisez-le comme fournisseur:
+
+```jsx
+<SWRConfig value={{ provider: localStorageProvider }}>
+  <App/>
+</SWRConfig>
+```
+
+<Callout>
+  Comme amélioration, vous pouvez également utiliser le cache mémoire comme tampon, et écrire dans `localStorage` périodiquement. Vous pouvez également implémenter un cache en couches similaire avec IndexedDB ou WebSQL.
+</Callout>
+
+### Réinitialisation du Cache entre les tests [#reset-cache-between-test-cases]
+
+Lorsque vous testez votre application, vous voudrez peut-être réinitialiser le cache SWR entre les cas de test. Vous pouvez simplement envelopper votre application avec un fournisseur de cache vide. Voici un exemple avec Jest:
+
+```jsx
+describe('test suite', async () => {
+  it('test case', async () => {
+    render(
+      <SWRConfig value={{ provider: () => new Map() }}>
+        <App/>
+      </SWRConfig>
+    )
+  })
+})
+```
+
+### Modifier les Données du Cache [#modify-the-cache-data]
+
+<Callout emoji="🚨" type="error">
+  Vous ne devriez pas écrire directement dans le cache, cela peut entraîner des comportements indéfinis.
+</Callout>
+
+Vous pouvez utiliser [`mutate`](/docs/mutation) pour modifier le cache. Par exemple, vous pouvez effacer toutes les données du cache comme suit.
+
+```jsx
+const { mutate } = useSWRConfig()
+
+mutate(
+  key => true, // quelles clés de cache sont mises à jour
+  undefined, // mettre à jour les données du cache avec `undefined`
+  { revalidate: false } // ne pas revalider les données
+)
+```
+
+Plus d'informations peuvent être trouvées [ici](/docs/arguments#multiple-arguments).

@@ -1,0 +1,9 @@
+{
+  "basic": "基本用法",
+  "auth": "身份验证",
+  "optimistic-ui": "Optimistic UI",
+  "infinite-loading": "无限加载",
+  "error-handling": "错误处理",
+  "ssr": "Next.js SSR",
+  "subscription": "订阅"
+}

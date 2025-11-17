@@ -1,0 +1,252 @@
+---
+title: 'Annonce SWR 1.0'
+image: https://assets.vercel.com/image/upload/v1630059453/swr/v1.png
+description: 'Il y a presque 2 ans, nous avons ouvert SWR, la petite librairie React de récupération de données que les gens adorent. Aujourd’hui, nous atteignons une autre étape : la version 1.0 de SWR !'
+date: 27 Août 2021
+---
+
+import { Callout } from 'nextra-theme-docs'
+import { Bleed } from 'nextra-theme-docs'
+
+import Authors, { Author } from 'components/authors'
+
+# Annonce SWR 1.0 [#announcing-swr-10]
+
+<Authors date="27 Août 2021" by="par">
+  <Author name="Shu Ding" link="https://twitter.com/shuding_" />
+  <Author name="Jiachi Liu" link="https://twitter.com/huozhi" />
+</Authors>
+
+Il y a presque 2 ans, nous avons [ouvert](https://twitter.com/vercel/status/1188911002626097157) SWR, la petite librairie React de récupération de données que les gens adorent. Aujourd’hui, nous atteignons une autre étape : la version 1.0 de SWR !
+
+## Les Nouveautés [#whats-new]
+
+### Plus petite taille [#smaller-size]
+
+La [Performance](/docs/advanced/performance) est l’une des choses les plus importantes de SWR. En 1.0, nous avons rendu la librairie significativement plus petite **sans supprimer aucune fonctionnalité existante** :
+
+- 41% de réduction pour le coeur (24% de réduction quand gzippée, **3.9 kB**)
+- 52% de réduction pour la taille d’installation du package
+- Amélioration du tree-shaking
+
+There are many reasons to make the library lightweight: your application will have a smaller bundle, a leaner runtime, and a smaller `node_modules` directory.
+
+Nous avons aussi amélioré le groupage des packages, et il supporte maintenant les imports de chemin :
+
+```js
+import useSWR from 'swr'
+import useSWRInfinite from 'swr/infinite'
+```
+
+Si vous n’utilisez pas `useSWRInfinite`, il ne sera pas inclus dans votre application.
+
+### Données de secours [#fallback-data]
+
+En 1.0, il y a une nouvelle option `fallback` que vous pouvez fournir pour chaque hook SWR avec des clés spécifiques :
+
+```jsx
+<SWRConfig value={{
+  fallback: {
+    '/api/user': { name: 'Bob', ... },
+    '/api/items': ...,
+    ...
+  }
+}}>
+  <App/>
+</SWRConfig>
+```
+
+C’est très utile pour les rendering SSG, SSR, et pour la création de données mockup pour les tests. Consultez la documentation [Next.js SSG et SSR](/docs/with-nextjs) pour plus de détails.
+
+Pour une meilleure cohérence et pour évité la confusion, `initialData` est maintenant renommé en `fallbackData`, qui fournit toujours une valeur de secours pour le hook donné.
+
+### Mode Immuable [#immutable-mode]
+
+Parfois, vous voulez marquer une ressource comme **immuable** pour qu’elle ne change jamais. Il est préférable de désactiver la revalidation automatique et de ne faire la requête qu’une seule fois. Il y a maintenant un hook helper pour rendre cela plus facile :
+
+```jsx
+import useSWRImmutable from 'swr/immutable'
+
+// ...
+
+useSWRImmutable(key, fetcher, options)
+```
+
+C’est la même API que `useSWR`, mais la revalidation ne se fera pas sur un changement d’onglet ou sur une reconnexion. Il y a aussi une nouvelle option, `revalidateIfStale`, que vous pouvez utiliser pour contrôler le comportement précisément. Plus d’informations [ici](/docs/revalidation#disable-automatic-revalidations).
+
+### Fournisseur de Cache Personnalisable [#custom-cache-provider]
+
+Par défaut, SWR utilise un cache global et unique pour stocker l’ensemble des données. En 1.0, vous pouvez le personnalisé avec la nouvelle option `provider` :
+
+```jsx
+<SWRConfig value={{
+  provider: () => myCache
+}}>
+  <App/>
+</SWRConfig>
+```
+
+Vous pouvez utiliser cette nouvelle fonctionnalité pour faire beaucoup de choses. Nous avons quelques exemples ici : [_Mutate Multiples Clés avec RegEx_](/docs/advanced/cache#mutate-multiple-keys-from-regex), [_Cache Persistant avec LocalStorage_](/docs/advanced/cache#localstorage-based-persistent-cache), [_Réinitialisation Cache entre les Testes_](/docs/advanced/cache#reset-cache-between-test-cases).
+
+Cette nouvelle API est aussi plus compatible avec le rendu concurrent de React 18. Si vous ajoutez un fournisseur de cache, assurez-vous d’utiliser la fonction `mutate` globale retournée par `useSWRConfig()`.
+
+Vous pouvez lire la documentation [Fournisseur de Cache](/docs/advanced/cache) pour plus de détails.
+
+### useSWRConfig() [#useswrconfig]
+
+Il y a un nouveau Hook API pour retourner toutes les configurations globales, incluant le fournisseur de cache actuel et la fonction `mutate` globale :
+
+```jsx
+import { useSWRConfig } from 'swr'
+
+function Foo () {
+  const { refreshInterval, cache, mutate, ...restConfig } = useSWRConfig()
+
+  // ...
+}
+```
+
+Plus d’informations [ici](/docs/global-configuration#access-to-global-configurations).
+
+### Middleware [#middleware]
+
+SWR Middleware est une nouvelle fonctionnalité qui vous permet de créer des abstractions réutilisables au-dessus des hooks SWR :
+
+```jsx
+<SWRConfig value={{ use: [...middleware] }} />
+
+// ... or directly in `useSWR`:
+useSWR(key, fetcher, { use: [...middleware] })
+```
+
+Beaucoup de nouvelles idées peuvent être implémentées avec cette fonctionnalité, et nous avons construit quelques exemples : [_Request Logger_](/docs/middleware#request-logger), [_Keep Previous Data When Changing the Key_](/docs/middleware#keep-previous-result), et [_Serialize Object Keys_](/docs/middleware#serialize-object-keys).
+
+Visitez la documentation [Middleware API](/docs/middleware) pour plus de détails.
+
+### Amélioration et Meilleure Test de couverture [#improvements-and-better-test-coverage]
+
+Depuis la 0.x, nous avons fait des centaines de petites améliorations et de corrections de bugs. SWR a maintenant 157 tests qui couvrent la plupart des effets de bord dans la récupération de données. Lisez le [Changelog](https://github.com/vercel/swr/releases) pour plus de détails.
+
+### Traductions de la documentation [#docs-translations]
+
+Grâce à nos [contributeurs](https://github.com/vercel/swr-site/graphs/contributors) et à la fonctionnalité [i18n](https://nextra.vercel.app/features/i18n) de Nextra, nous proposons maintenant la documentation SWR dans six langues différentes :
+
+- [Anglais](https://swr.vercel.app)
+- [Espagnol](https://swr.vercel.app/es-ES)
+- [Chinois Simplifié](https://swr.vercel.app/zh-CN)
+- [Japonnais](https://swr.vercel.app/ja)
+- [Coréen](https://swr.vercel.app/ko)
+- [Russe](https://swr.vercel.app/ru)
+
+## Guide de Migration [#migration-guide]
+
+### Update de l’import de `useSWRInfinite` [#update-useswrinfinite-imports]
+
+`useSWRInfinite` a besoin d’être importé depuis `swr/infinite`:
+
+```diff
+- import { useSWRInfinite } from 'swr'
++ import useSWRInfinite from 'swr/infinite'
+```
+
+Si vous utilisez les types correspondants, mettez à jour le chemin d’importation aussi :
+
+```diff
+- import { SWRInfiniteConfiguration, SWRInfiniteResponse } from 'swr'
++ import { SWRInfiniteConfiguration, SWRInfiniteResponse } from 'swr/infinite'
+```
+
+### Remplacement de `revalidate` par `mutate` [#change-revalidate-to-mutate]
+
+`useSWR` ne renvoid plus la méthode `revalidate`, modifier plutôt par `mutate`:
+
+```diff
+- const { revalidate } = useSWR(key, fetcher, options)
++ const { mutate } = useSWR(key, fetcher, options)
+
+
+  // ...
+
+
+- revalidate()
++ mutate()
+```
+
+### Renommage de `initialData` par `fallbackData` [#rename-initialdata-to-fallbackdata]
+
+```diff
+- useSWR(key, fetcher, { initialData: ... })
++ useSWR(key, fetcher, { fallbackData: ... })
+```
+
+### Plus de méthode de récupération par défaut [#no-more-default-fetcher]
+
+SWR ne fourni plus de méthode de récupération par défaut (un appel `fetch` qui parse les données en JSON). La manière la plus simple de migrer ce changement est d’utiliser le composant `<SWRConfig>` :
+
+```jsx
+<SWRConfig value={{ fetcher: (url) => fetch(url).then(res => res.json()) }}>
+  <App/>
+</SWRConfig>
+
+// ... or
+useSWR(key, (url) => fetch(url).then(res => res.json()))
+```
+
+### Recommandation d’utiliser le Hook-Returned `mutate` [#recommend-to-use-the-hook-returned-mutate]
+
+Ce **n’est pas** un changement bloquant, mais nous _recommandons_ de toujours utiliser l’objet `mutate` renvoyé par le hook `useSWRConfig`:
+
+```diff
+- import { mutate } from 'swr'
++ import { useSWRConfig } from 'swr'
+
+
+  function Foo () {
++   const { mutate } = useSWRConfig()
+
+    return <button onClick={() => mutate('key')}>
+      Mutate Key
+    </button>
+  }
+```
+
+Si vous n’utilisez pas de cache provider, l’import global `import { mutate } from ’swr’` fonctionne toujours.
+
+### Renommage des Types [#renamed-types]
+
+Si vous utilisez TypeScript, les noms de types suivants ont été changés pour plus de cohérence :
+
+| 0.x (déprécier)                | 1.0                        | Note                    |
+| ------------------------------ | -------------------------- | ----------------------- |
+| `ConfigInterface`              | `SWRConfiguration`         |                         |
+| `keyInterface`                 | `Key`                      |                         |
+| `responseInterface`            | `SWRResponse`              |                         |
+| `RevalidateOptionInterface`    | `RevalidatorOptions`       |                         |
+| `revalidateType`               | `Revalidator`              |                         |
+| `SWRInfiniteResponseInterface` | `SWRInfiniteResponse`      | moved to `swr/infinite` |
+| `SWRInfiniteConfigInterface`   | `SWRInfiniteConfiguration` | moved to `swr/infinite` |
+
+### Fonctionnalités Utilisateurs en Beta et Non-officiel [#beta-and-unofficial-feature-users]
+
+Si vous utilisez une version beta de SWR, ou utilisez des APIs non documentées, veuillez prendre en compte les changements suivants :
+
+- `import { cache } from ’swr’` est supprimé; utilisez plutôt la nouvelle [API `useSWRConfig`](#useswrconfig).
+- `import { createCache } from ’swr’` est supprimé; utilisez plutôt la nouvelle [API fournisseur de cache](/docs/advanced/cache).
+- `revalidateWhenStale` est renommé par `revalidateIfStale`.
+- `middlewares` est renommé par `use`.
+
+### Changelog [#changelog]
+
+Lisez le Changelog complet [sur GitHub](https://github.com/vercel/swr/releases).
+
+## La suite ? [#whats-next]
+
+Dans les futures releases, nous allons continuer à améliorer la librairie tout en maintenant la stabilité. Nous visons aussi à coller aux futures versions de React, car plusieurs nouvelles fonctionnalités et améliorations dans la version 1.0 sont déjà en préparation. Aussi, nous travaillons aussi sur de nouvelles fonctionnalités pour améliorer l’expérience de récupération de données avec React et l’expérience d’utilisation de cette librairie.
+
+Si vous avez des retours sur cette release, merci de [nous le faire savoir](https://github.com/vercel/swr/discussions).
+
+## Merci ! [#thank-you]
+
+Nous remercions [Toru Kobayashi](https://twitter.com/koba04) et [Yixuan Xu](https://twitter.com/yixuanxu94) pour leurs contributions à la librairie, et [Paco Coursey](https://twitter.com/pacocoursey), [uttk](https://github.com/uttk), [Tomohiro SHIOYA](https://github.com/shioyang), [Markoz Peña](https://github.com/markozxuu), [SeulGi Choi](https://github.com/cs09g), [Fang Lu](https://github.com/huzhengen), [Valentin Politov](https://github.com/valentinpolitov) pour leur travail sur les traductions et la documentation. Cette release n’aurait pas pu exister sans eux.
+
+Nous voulons aussi remercier toute la communauté, nos [110 contributeurs](https://github.com/vercel/swr/graphs/contributors) (+ [45 contributeurs à la documentation](https://github.com/vercel/swr-site/graphs/contributors)), et tout ceux qui nous ont aidé et donné des retours !

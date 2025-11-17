@@ -1,0 +1,35 @@
+# 조건부 가져오기
+
+## 조건부 [#conditional]
+
+`null`을 사용하거나 함수를 `key`로 전달하여 데이터를 조건부로 가져옵니다. 함수가 falsy 값을 던지거나 반환하면 SWR은 요청을 시작하지 않습니다.
+
+```js
+// 조건부 가져오기
+const { data } = useSWR(shouldFetch ? '/api/data' : null, fetcher)
+
+// ...또는 falsy 값 반환
+const { data } = useSWR(() => shouldFetch ? '/api/data' : null, fetcher)
+
+// ...또는 user.id가 정의되지 않았을 때 에러 throw
+const { data } = useSWR(() => '/api/data?uid=' + user.id, fetcher)
+```
+
+## 의존 [#dependent]
+
+SWR은 다른 데이터에 의존하는 데이터를 가져오는 것 또한 허용합니다. 이는 다음 데이터 가져오기를 위한 동적 데이터 조각이 필요할 때, 직렬 가져오기뿐만 아니라 가능한 최대 병렬 처리(폭포수 방지)를 보장합니다.
+
+```js
+function MyProjects () {
+  const { data: user } = useSWR('/api/user')
+  const { data: projects } = useSWR(() => '/api/projects?uid=' + user.id)
+  // 함수를 전달할 때, SWR은 반환 값을 `key`로 사용합니다.
+  // 함수가 falsy를 던지거나 반환한다면,
+  // SWR은 일부 의존성이 준비되지 않은 것을 알게 됩니다.
+  // 이 예시의 경우 `user.id`는 `user`가 로드되지 않았을 때
+  // 에러를 던집니다.
+
+  if (!projects) return 'loading...'
+  return 'You have ' + projects.length + ' projects'
+}
+```

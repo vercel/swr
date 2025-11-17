@@ -1,0 +1,63 @@
+import { Callout } from 'nextra-theme-docs'
+
+# API
+
+```js
+const { data, error, isLoading, isValidating, mutate } = useSWR(key, fetcher, options)
+```
+
+
+## Parameters [#parameters]
+
+- `key`: a unique key string for the request (or a function / array / null) [(details)](/docs/arguments), [(advanced usage)](/docs/conditional-fetching)
+- `fetcher`: (_optional_) a Promise-returning function to fetch your data [(details)](/docs/data-fetching)
+- `options`: (_optional_) an object of options for this SWR hook
+
+## Return Values [#return-values]
+
+- `data`: data for the given key resolved by `fetcher` (or undefined if not loaded)
+- `error`: error thrown by `fetcher` (or undefined)
+- `isLoading`: if there's an ongoing request and no "loaded data". Fallback data and previous data are not considered "loaded data"
+- `isValidating`: if there's a request or revalidation loading
+- `mutate(data?, options?)`: function to mutate the cached data [(details)](/docs/mutation)
+
+More information can be found [here](/docs/advanced/understanding).
+
+## Options [#options]
+
+- `suspense = false`: enable React Suspense mode [(details)](/docs/suspense)
+- `fetcher(args)`: the fetcher function
+- `revalidateIfStale = true`: automatically revalidate even if there is stale data [(details)](/docs/revalidation#disable-automatic-revalidations)
+- `revalidateOnMount`: enable or disable automatic revalidation when component is mounted [(details)](/docs/revalidation#revalidate-on-mount)
+- `revalidateOnFocus = true`: automatically revalidate when window gets focused [(details)](/docs/revalidation)
+- `revalidateOnReconnect = true`: automatically revalidate when the browser regains a network connection (via `navigator.onLine`) [(details)](/docs/revalidation)
+- `refreshInterval` [(details)](/docs/revalidation):
+  - Disabled by default: `refreshInterval = 0`
+  - If set to a number, polling interval in milliseconds
+  - If set to a function, the function will receive the latest data and should return the interval in milliseconds
+- `refreshWhenHidden = false`: polling when the window is invisible (if `refreshInterval` is enabled)
+- `refreshWhenOffline = false`: polling when the browser is offline (determined by `navigator.onLine`)
+- `shouldRetryOnError = true`: retry when fetcher has an error
+- `dedupingInterval = 2000`: dedupe requests with the same key in this time span in milliseconds
+- `focusThrottleInterval = 5000`: only revalidate once during a time span in milliseconds
+- `loadingTimeout = 3000`: timeout to trigger the onLoadingSlow event in milliseconds
+- `errorRetryInterval = 5000`: error retry interval in milliseconds
+- `errorRetryCount`: max error retry count
+- `fallback`: a key-value object of multiple fallback data [(example)](/docs/with-nextjs)
+- `fallbackData`: initial data to be returned (note: This is per-hook)
+- `keepPreviousData = false`: return the previous key's data until the new data has been loaded [(details)](/docs/advanced/understanding#return-previous-data-for-better-ux)
+- `onLoadingSlow(key, config)`: callback function when a request takes too long to load (see `loadingTimeout`)
+- `onSuccess(data, key, config)`: callback function when a request finishes successfully
+- `onError(err, key, config)`: callback function when a request returns an error
+- `onErrorRetry(err, key, config, revalidate, revalidateOps)`: handler for error retry
+- `onDiscarded(key)`: callback function when a request is ignored due to race conditions
+- `compare(a, b)`: comparison function used to detect when returned data has changed, to avoid spurious rerenders. By default, [stable-hash](https://github.com/shuding/stable-hash) is used.
+- `isPaused()`: function to detect whether pause revalidations, will ignore fetched data and errors when it returns `true`. Returns `false` by default.
+- `use`: array of middleware functions [(details)](/docs/middleware)
+
+<Callout emoji="💡">
+  When under a slow network (2G, {'<='} 70Kbps), <code>errorRetryInterval</code> will be 10s, and{' '}
+  <code>loadingTimeout</code> will be 5s by default.
+</Callout>
+
+You can also use [global configuration](/docs/global-configuration) to provide default options.

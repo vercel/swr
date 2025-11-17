@@ -1,0 +1,84 @@
+---
+title: 데이터 가져오기를 위한 React Hooks
+---
+
+import { Callout } from 'nextra-theme-docs'
+import Features from 'components/features'
+import { Bleed } from 'nextra-theme-docs'
+
+{
+// wrapped with {} to mark it as javascript so mdx will not put it under a p tag
+}
+{<h1 className="text-center text-4xl tracking-tighter font-extrabold md:text-5xl mt-8">SWR</h1>}
+
+<Bleed><Features/></Bleed>
+
+"SWR"이라는 이름은 [HTTP RFC 5861](https://tools.ietf.org/html/rfc5861)에 의해 알려진 HTTP 캐시 무효 전략인 `stale-while-revalidate`에서 유래되었습니다.
+SWR은 먼저 캐시(stale)로부터 데이터를 반환한 후, fetch 요청(revalidate)을 하고, 최종적으로 최신화된 데이터를 가져오는 전략입니다.
+
+<Callout emoji="✅">
+  SWR을 사용하면 컴포넌트는 <strong>지속적</strong>이며 <strong>자동으로</strong> 데이터 업데이트 스트림을 받게 됩니다.<br/>
+  그리고 UI는 항상 <strong>빠르고</strong> <strong>반응적</strong>입니다.
+</Callout>
+
+<div className="mt-16 mb-20 text-center">
+  [시작하기](/docs/getting-started) · [예시](/examples/basic) · [블로그](/blog) · [GitHub 리포지터리](https://github.com/vercel/swr)
+</div>
+
+## 개요 [#overview]
+
+```jsx
+import useSWR from 'swr'
+
+function Profile() {
+  const { data, error, isLoading } = useSWR('/api/user', fetcher)
+
+  if (error) return <div>failed to load</div>
+  if (isLoading) return <div>loading...</div>
+  return <div>hello {data.name}!</div>
+}
+```
+
+이 예시에서, `useSWR` hook은 `key` 문자열과 `fetcher` 함수를 받습니다. `key`는 데이터의 고유한 식별자이며(일반적으로 API URL)
+`fetcher`로 전달될 것입니다. `fetcher`는 데이터를 반환하는 어떠한 비동기 함수도 될 수 있습니다. 네이티브 fetch 또는 Axios와 같은 도구를 사용할 수 있습니다.
+
+hook은 세 개의 값을 반환합니다: 요청의 상태에 기반한 `data`, `isLoading` 그리고 `error`.
+
+## 기능 [#features]
+
+단 한 줄의 코드로 프로젝트 내의 데이터 가져오기 로직을 단순화할 수 있으며, 다음과 같은 모든 놀라운 기능들을 바로 사용할 수도 있습니다.
+
+- **빠르고**, **가볍고**, **재사용 가능한** 데이터 가져오기
+- 내장된 **캐시** 및 요청 중복 제거
+- **실시간** 경험
+- 전송 및 프로토콜에 구애받지 않음
+- SSR / ISR / SSG 지원
+- TypeScript 지원
+- React Native
+
+SWR은 더 나은 경험을 구축할 수 있도록 속도, 정확성, 안정성의 모든 측면을 다룹니다.
+
+- 빠른 페이지 네비게이션
+- 인터벌 폴링
+- 데이터 의존성
+- 포커스시 재검증
+- 네트워크 회복시 재검증
+- 로컬 뮤테이션(Optimistic UI)
+- 스마트한 에러 재시도
+- 페이지 및 스크롤 위치 복구
+- React Suspense
+
+그리고 [더 많이](/docs/getting-started) 있습니다.
+
+## 커뮤니티 [#community]
+
+<p className="flex h-6 mt-4 gap-2">
+  <img alt="stars" src="https://badgen.net/github/stars/vercel/swr" />
+  <img alt="downloads" src="https://badgen.net/npm/dt/swr" />
+  <img alt="license" src="https://badgen.net/npm/license/swr" />
+</p>
+
+SWR은 React 프레임워크인 [Next.js](https://nextjs.org)를 만든 동일한 팀이 만들었습니다.
+앞으로의 프로젝트 업데이트를 위해 Twitter에서 [@vercel](https://twitter.com/vercel)을 팔로우해주세요.
+
+언제라도 편하게 [GitHub discussions](https://github.com/vercel/swr/discussions)에 참여해주세요!

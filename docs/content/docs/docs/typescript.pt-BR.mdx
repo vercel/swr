@@ -1,0 +1,130 @@
+# TypeScript
+
+SWR é amigável para aplicações escritas em TypeScript, com tipos prontos para uso.
+
+## Uso Básico [#basic-usage]
+
+Por padrão, SWR irá inferir os tipos de argumento de `fetcher` a partir de `key`, então você pode ter os tipos preferidos automaticamente.
+
+### useSWR [#useswr]
+
+```typescript
+// `key` é inferido para ser `string`
+useSWR('/api/user', key => {})
+useSWR(() => '/api/user', key => {})
+
+// `key` será inferida como { a: string; b: { c: string; d: number } }
+useSWR({ a: '1', b: { c: '3', d: 2 } }, key => {})
+useSWR(() => ({ a: '1', b: { c: '3', d: 2 } }), key => {})
+
+// `arg0` será inferido como string. `arg1` será inferido como number
+useSWR(['user', 8], ([arg0, arg1]) => {})
+useSWR(() => ['user', 8], ([arg0, arg1]) => {})
+```
+
+Você pode também especificar os tipos para `key` e argumentos de `fetcher` explicitamente.
+
+```typescript
+import useSWR, { Fetcher } from 'swr'
+
+const uid = '<user_id>'
+const fetcher: Fetcher<User, string> = (id) => getUserById(id)
+
+const { data } = useSWR(uid, fetcher)
+// `data`será `User | undefined`.
+```
+
+### useSWRInfinite [#useswrinfinite]
+
+O mesmo para `swr/infinite`, você pode confiar na inferência automática de tipos ou especificar explicitamente os tipos por conta própria:
+
+```typescript
+import { SWRInfiniteKeyLoader } from 'swr/infinite'
+
+const getKey: SWRInfiniteKeyLoader = (index, previousPageData) => {
+  // ...
+}
+
+const { data } = useSWRInfinite(getKey, fetcher)
+```
+
+### useSWRSubscription [#useswrsubscription]
+
+* Inline subscribe function and mamually specify the type of `next`  using `SWRSubscriptionOptions`.
+
+```tsx
+import useSWRSubscription from 'swr/subscription'
+import type { SWRSubscriptionOptions } from 'swr/subscription'
+
+const { data, error } = useSWRSubscription('key', 
+  (key, { next }: SWRSubscriptionOptions<number, Error>) => {
+  //^ key will be inferred as `string`
+  //....
+  })
+  return {
+    data,
+    //^ data will be inferred as `number | undefined`
+    error
+    //^ error will be inferred as `Error | undefined`
+  }
+}
+```
+
+* declare subscribe function using `SWRSubscription`
+
+```tsx
+import useSWRSubscription from 'swr/subscription'
+import type { SWRSubscription } from 'swr/subscription'
+
+/** 
+ * The first generic is Key
+ * The second generic is Data
+ * The Third generic is Error
+ */
+const sub: SWRSubscription<string, number, Error> = (key, { next }) => {                         
+  //......
+}
+const { data, error } = useSWRSubscription('key', sub)
+```
+
+## Genéricos [#generics]
+
+Especificar o tipo de `data` é fácil. Por padrão, usará o tipo de retorno de `fetcher` (com `undefined` para o estado não pronto) como o tipo de `data`, mas você pode passá-lo como um parâmetro:
+
+```typescript
+// 🔹 A. Use um fetcher tipado:
+// `getUser` é (endpoint: string) => User.
+const { data } = useSWR('/api/user', getUser)
+
+// 🔹 B. Especifique o tipo de dados:
+// `fetcher` é geralmente retornado como `any`.
+const { data } = useSWR<User>('/api/user', fetcher)
+```
+
+Se você quer adicionar tipos para outras opções de SWR, você também pode importar esses tipos diretamente:
+
+```typescript
+import useSWR from 'swr'
+import type { SWRConfiguration } from 'swr'
+
+const config: SWRConfiguration = {
+  fallbackData: "fallback",
+  revalidateOnMount: false
+  // ...
+}
+
+const { data } = useSWR<string[]>('/api/data', fetcher, config)
+```
+
+## Tipos de Middleware [#middleware-types]
+
+Existem alguns definições de tipo extras que você pode importar para ajudar a adicionar tipos ao seu middleware personalizado.
+
+```typescript
+import useSWR, { Middleware, SWRHook } from 'swr'
+
+const swrMiddleware: Middleware = (useSWRNext: SWRHook) => (key, fetcher, config) => {
+  // ...
+  return useSWRNext(key, fetcher, config)
+}
+```

@@ -1,0 +1,100 @@
+import Video from 'components/video'
+import { Callout } from 'nextra-theme-docs'
+import { Bleed } from 'nextra-theme-docs'
+import Link from 'next/link'
+
+# 自动重新请求
+
+<Callout>
+  如果你想手动重新请求数据，请查看 <Link href="/docs/mutation">mutation</Link>。
+</Callout>
+
+## 聚焦时重新请求 [#revalidate-on-focus]
+
+当你重新聚焦一个页面或在标签页之间切换时，SWR 会自动重新请求数据。
+
+这个功能非常实用，可以保持网站同步到最新数据。对于在长时间位于后台的标签页，或 **休眠** 的电脑等情况下刷新数据也很有帮助。
+
+<Bleed>
+  <Video
+    src="https://raw.githubusercontent.com/vercel/swr-site/master/.github/videos/focus-revalidate.mp4"
+    caption="视频：使用聚焦时重新验证在页面间自动同步登陆状态。"
+    ratio={307/768}
+    className="mx-8 2xl:mx-24"
+  />
+</Bleed>
+
+该特性默认是启用的。你可以通过 [`revalidateOnFocus`](/docs/api) 选项禁用它。
+
+## 定期重新请求 [#revalidate-on-interval]
+
+在很多情况下，数据会因为多个设备、多个用户、多个选项卡而发生改变。那么我们如何随着时间的推移更新屏幕上的数据呢？
+
+SWR 会为你提供自动重新请求数据的选项。这很 **智能**，意味着只有与 hook 相关的组件 **在屏幕上** 时，才会重新请求。
+
+<Bleed>
+  <Video
+    src="https://raw.githubusercontent.com/vercel/swr-site/master/.github/videos/refetch-interval.mp4"
+    caption="视频：当用户进行更改时，两个会话最终将呈现相同的数据。"
+    ratio={307/768}
+    className="mx-8 2xl:mx-24"
+  />
+</Bleed>
+
+你可以通过设置 [`refreshInterval`](/docs/api) 值来启用它：
+
+```js
+useSWR('/api/todos', fetcher, { refreshInterval: 1000 })
+```
+
+还有其他选项，例如 `refreshWhenHidden` 和 `refreshWhenOffline`。这两项默认都是禁用的，所以当网页不在屏幕上或没有网络连接时，SWR 不会请求。
+
+## 重新连接时重新请求 [#revalidate-on-reconnect]
+
+当用户重新联机时重新请求非常有用。这种情况经常发生在用户解锁了他们的计算机但网络还没有连上时。
+
+为了确保数据始终是最新的，SWR 会在网络恢复时自动重新请求。
+
+该特性默认是启用的。你可以通过 [`revalidateOnReconnect`](/docs/api) 选项禁用它。
+
+## 禁用自动重新请求 [#disable-automatic-revalidations]
+
+如果资源是**不可变的**，即使我们再怎么重新请求也永远不会发生任何改变，那么我们可以禁用它的所有的自动重新请求。
+
+从 1.0 版本开始，SWR 提供了一个辅助 hook `useSWRImmutable` 来标记资源为不可变的：
+
+```js
+import useSWRImmutable from 'swr/immutable'
+
+// ...
+useSWRImmutable(key, fetcher, options)
+```
+
+它具有与普通 `useSWR` hook 相同的 API 接口。你还可以通过禁用以下重新请求​​选项来执行相同的操作：
+
+```js
+useSWR(key, fetcher, {
+  revalidateIfStale: false,
+  revalidateOnFocus: false,
+  revalidateOnReconnect: false
+})
+
+// 相当于
+useSWRImmutable(key, fetcher)
+```
+
+`revalidateIfStale` 控制 SWR 在挂载并且存在陈旧数据时是否应重新请求。
+
+上面这两个 hook 做**完全相同的**事情。一旦数据被缓存，他们将永远不会再次请求它。
+
+## 挂载时重新请求[#revalidate-on-mount]
+
+在组件挂载时，强制覆盖 SWR 的重新请求，这非常有用。默认情况下，`revalidateOnMount`的值为`undefined`。
+
+SWR hook 挂载过程如下:
+
+- 首先，它检查是否定义了 `revalidateOnMount`。如果为 `true`，则开始请求，如果为 `false`，则停止请求。
+
+`revalidateIfStale` 有助于控制挂载行为。默认情况下，`revalidateIfStale` 设置为 `true`。
+
+如果 `revalidateIfStale` 设置为 `true`，则只有存在缓存数据时才会重新获取数据，否则不会重新获取。

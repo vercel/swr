@@ -1,0 +1,109 @@
+# Pre-obtendo Dados
+
+## Dados de Página _Top-Level_ [#top-level-page-data]
+
+Existem muitos jeitos de pre-obter os dados para SWR. Para requisições de página top-level, [`rel="preload"`](https://developer.mozilla.org/en-US/docs/Web/HTML/Preloading_content) é altamente recomendado:
+
+```html
+<link rel="preload" href="/api/data" as="fetch" crossorigin="anonymous">
+```
+
+Basta apenas colocá-lo dentro do seu `<head>` do HTML. É fácil, rápido e nativo.
+
+Irá pré-obter os dados quando o HTML carregar, antes mesmo de iniciar a baixar o JavaScript. Todos os seus pedidos de obtenção de dados com o mesmo URL vão usar o resultado (inclusive SWR, de modo que você pode usar o SWR para obter os dados de página top-level).
+
+## Pré-obtenção Programática [#programmatically-prefetch]
+
+SWR fornece a API `preload` para pré-obter os recursos programáticamente e armazenar os resultados em cache. `preload` aceita `key` e `fetcher` como argumentos.
+
+Você pode chamar a função `preload` até fora do React.
+
+```jsx
+import { useState } from 'react'
+import useSWR, { preload } from 'swr'
+
+const fetcher = (url) => fetch(url).then((res) => res.json())
+
+// Pré-obtenha o recurso antes de renderizar o componente User abaixo,
+// isso previne potenciais cascatas de requisição na sua aplicação.
+// Você pode também começar a pré-obter quando passar o mouse sobre o botão ou link, também.
+preload('/api/user', fetcher)
+
+function User() {
+  const { data } = useSWR('/api/user', fetcher)
+  ...
+}
+
+export default function App() {
+  const [show, setShow] = useState(false)
+  return (
+    <div>
+      <button onClick={() => setShow(true)}>Show User</button>
+      {show ? <User /> : null}
+    </div>
+  )
+}
+```
+
+Dentro da árvore de renderização do React, `preload` também está disponível para usar em manipuladores de eventos ou efeitos.
+
+```jsx
+function App({ userId }) {
+  const [show, setShow] = useState(false)
+
+  // pre-obtenha em efeitos
+  useEffect(() => {
+    preload('/api/user?id=' + userId, fetcher)
+  }, [userId])
+
+  return (
+    <div>
+      <button
+        onClick={() => setShow(true)}
+        {/* pre-obtenha em callbacks */}
+        onHover={() => preload('/api/user?id=' + userId, fetcher)}
+      >
+        Show User
+      </button>
+      {show ? <User /> : null}
+    </div>
+  )
+}
+```
+
+Junto com técnicas como [page prefetching](https://nextjs.org/docs/api-reference/next/router#routerprefetch) no Next.js, você vai ser capaz de carregar ambos a próxima página e os dados instantaneamente.
+
+No Modo Suspense, você deve utilizar `preload` para evitar problemas de cascata.
+
+```jsx
+import useSWR, { preload } from 'swr'
+
+// should call before rendering
+preload('/api/user', fetcher);
+preload('/api/movies', fetcher);
+
+const Page = () => {
+  // Os hooks useSWR abaixo vão suspender a renderização, mas as requisições para `/api/user` e `/api/movies` já começaram por `preload`,
+  // então o problema de cascata não acontece.
+  const { data: user } = useSWR('/api/user', fetcher, { suspense: true });
+  const { data: movies } = useSWR('/api/movies', fetcher, { suspense: true });
+  return (
+    <div>
+      <User user={user} />
+      <Movies movies={movies} />
+    </div>
+  );
+}
+```
+
+## Dados de Pré-preenchimento [#pre-fill-data]
+
+Se você quiser preencher dados existentes no cache do SWR, você pode usar a opção `fallbackData`. Por exemplo:
+
+```jsx
+useSWR('/api/data', fetcher, { fallbackData: prefetchedData })
+```
+
+Se o SWR ainda não obtiver os dados, este hook retornará `prefetchedData` como um fallback.
+
+Você pode também configurar isso para todos os hooks SWR e várias chaves com `<SWRConfig>` e a opção `fallback`. Veja [SSG e SSR com Next.js](/docs/with-nextjs) para mais detalhes.

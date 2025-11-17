@@ -1,0 +1,60 @@
+# Argumentos
+
+Por defecto, `key` se pasará a `fetcher` como argumento. Así que las siguientes 3 expresiones son equivalentes:
+
+```js
+useSWR('/api/user', () => fetcher('/api/user'))
+useSWR('/api/user', url => fetcher(url))
+useSWR('/api/user', fetcher)
+```
+
+## Argumentos múltiples [#multiple-arguments]
+
+En algunos escenarios, es útil pasar múltiples argumentos (puede pasar cualquier valor u objeto) a
+la función `fetcher`. Por ejemplo una solicitud de obtención autorizada:
+
+```js
+useSWR('/api/user', url => fetchWithToken(url, token))
+```
+
+Esto es **incorrecto**. Dado que el identificador (también la key del caché) de los datos es `'/api/user'`, incluso si el token cambia, SWR seguirá utilizando la misma key y devolverá los datos incorrectos.
+
+En su lugar, puedes utilizar un **array** como parámetro `key`, que contiene múltiples argumentos de `fetcher`:
+
+```js
+const { data: user } = useSWR(['/api/user', token], ([url, token]) => fetchWithToken(url, token))
+```
+
+La función `fetcher` acepta el parámetro `key` tal cual, y la clave de caché se asociará también al argumento `key` completo. En el ejemplo anterior, `url` y `token` están unidos a la clave de caché.
+
+<Callout emoji="⚠️">
+  En versiones anteriores (< 2), la función `fetcher` acepta el parámetro `key` como argumentos por separado
+</Callout>
+
+## Pasar objetos [#passing-objects]
+
+import { Callout } from 'nextra-theme-docs'
+
+<Callout>
+  Since SWR 1.1.0, object-like keys will be serialized under the hood automatically. 
+</Callout>
+  
+Digamos que tienes otra función que obtiene datos con un ámbito de usuario: `fetchWithUser(api, user)`. Puedes hacer lo siguiente:
+
+```js
+const { data: user } = useSWR(['/api/user', token], fetchWithToken)
+
+// ...y luego pasarlo como argumento a otro useSWR "hook"
+const { data: orders } = useSWR(user ? ['/api/orders', user] : null, fetchWithUser)
+```
+
+Puedes pasar directamente un objeto como clave, y `fetcher` también recibirá ese objeto:
+
+```js
+const { data: orders } = useSWR({ url: '/api/orders', args: user }, fetcher)
+```
+
+<Callout emoji="⚠️">
+  En versiones anteriores (< 1.1.0), SWR <b>compara superficialmente</b> (shallowly) los argumentos en cada renderización, y activa la revalidación si alguno de ellos ha cambiado. 
+</Callout>
+

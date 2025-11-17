@@ -1,0 +1,172 @@
+import { Callout } from 'nextra-theme-docs'
+
+# 캐시
+
+<Callout>
+  이 기능을 사용하시려면 최신 버전(≥ 1.0.0)으로 업그레이드하세요.
+</Callout>
+
+<Callout emoji="⚠️">
+  대부분의 경우에 캐시를 직접 _작성_ 하면 안 됩니다. 이는 SWR에 정의되지 않은 동작을 유발할 수 있습니다. 수동으로 키를 변경해야 하는 경우 SWR APIs 사용을 고려해 주세요.<br/>
+  여기도 확인해보세요: [뮤테이션](/docs/mutation), [테스트 케이스 간 캐시 초기화](#reset-cache-between-test-cases).
+</Callout>
+
+기본적으로 SWR은 전역 캐시를 사용해 모든 컴포넌트 사이에 데이터를 저장하고 공유합니다. 하지만 `SWRConfig`의 `provider` 옵션으로 이 동작을 커스터마이징 할 수도 있습니다.
+
+캐시 공급자는 더 맞춤화된 저장소로 SWR을 활성화하기 위한 것입니다.
+
+## 캐시 공급자 [#cache-provider]
+
+캐시 공급자는 다음 TypeScript 정의와 일치하는 Map과 유사한 객체입니다(`swr`로부터 임포트할 수 있습니다).
+
+```typescript
+interface Cache<Data> {
+  get(key: string): Data | undefined
+  set(key: string, value: Data): void
+  delete(key: string): void
+  keys(): IterableIterator<string>
+}
+```
+
+예를 들어, [JavaScript Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map) 인스턴스는 SWR을 위한 캐시 공급자로 직접 사용할 수 있습니다.
+
+## 캐시 공급자 생성하기 [#create-cache-provider]
+
+`SWRConfig`의 `provider` 옵션은 [캐시 공급자](#cache-provider)를 반환하는 함수를 받습니다. 그러면 공급자를 `SWRConfig` 경계 내의 모든 SWR hook에서 사용할 수 있습니다.
+
+```jsx
+import useSWR, { SWRConfig } from 'swr'
+
+function App() {
+  return (
+    <SWRConfig value={{ provider: () => new Map() }}>
+      <Page/>
+    </SWRConfig>
+  )
+}
+```
+
+`<Page/>`내의 모든 SWR hook은 Map 인스턴스로부터 읽고 씁니다. 또한 특정 사례에 대해 다른 캐시 공급자 구현을 사용할 수도 있습니다.
+
+<Callout>
+  위 예시에서는 `<App/>` 컴포넌트가 다시 마운트될 때, 공급자 또한 다시 생성됩니다. 캐시 공급자는 컴포넌트 트리의 상위 또는 렌더링의 외부에 배치해야 합니다.
+</Callout>
+
+import { Cache } from 'components/diagrams/cache'
+
+<div className="my-8">
+  <Cache/>
+</div>
+
+중첩된 경우, SWR hook은 상위 레벨의 캐시 공급자를 사용합니다. 상위 레벨의 캐시 공급자가 존재하지 않을 경우, 빈 `Map`인 기본 캐시 공급자로 대체됩니다.
+
+<Callout emoji="⚠️">
+  캐시 공급자가 사용되는 경우, 전역 `mutate`는 `<SWRConfig>` 경계 내의 SWR hook에서 작동하지 **않습니다**. 대신에 [이것](#access-current-cache-provider)을 사용하세요.
+</Callout>
+
+## 현재 캐시 공급자에 접근하기 [#access-current-cache-provider]
+
+React 컴포넌트 내에 있을 때, `mutate`를 포함해 다른 설정과 마찬가지로 현재 캐시 공급자에 접근하려면 [`useSWRConfig`](/docs/global-configuration#access-to-global-configurations) hook을 사용해야 합니다.
+
+```jsx
+import { useSWRConfig } from 'swr'
+
+function Avatar() {
+  const { cache, mutate, ...extraConfig } = useSWRConfig()
+  // ...
+}
+```
+
+`<SWRConfig>` 아래에 존재하지 않는다면 기본 설정을 반환합니다.
+
+## 실험적: 캐시 공급자 확장하기 [#experimental-extend-cache-provider]
+
+<Callout emoji="🧪">
+  실험적인 기능입니다. 향후 업그레이드에서 동작이 변경될 수 있습니다.
+</Callout>
+
+여러 `<SWRConfig>` 컴포넌트가 중첩되어 있을 때, 캐시 공급자를 확장할 수 있습니다.
+
+`provider` 함수의 첫 번째 인자는 상위 레벨 `<SWRConfig>`(또는 부모 `<SWRConfig>`가 존재하지 않을 경우 기본 캐시)의 캐시 공급자입니다. 이를 사용해 캐시 공급자를 확장할 수 있습니다.
+
+```jsx
+<SWRConfig value={{ provider: (cache) => newCache }}>
+  ...
+</SWRConfig>
+```
+
+## 예시 [#examples]
+
+### LocalStorage 기반 영구 캐시 [#localstorage-based-persistent-cache]
+
+캐시를 `localStorage`와 동기화하길 원할 수도 있습니다. 다음은 구현 예시입니다.
+
+```jsx
+function localStorageProvider() {
+  // 초기화할 때, `localStorage`의 데이터를 map으로 복구합니다.
+  const map = new Map(JSON.parse(localStorage.getItem('app-cache') || '[]'))
+
+  // app을 unloading하기 전에, 모든 데이터를 `localStorage`에 다시 씁니다.
+  window.addEventListener('beforeunload', () => {
+    const appCache = JSON.stringify(Array.from(map.entries()))
+    localStorage.setItem('app-cache', appCache)
+  })
+
+  // 성능을 위해 여전히 map을 사용해 쓰고 읽습니다.
+  return map
+}
+```
+
+그 후 이를 공급자로서 사용합니다.
+
+```jsx
+<SWRConfig value={{ provider: localStorageProvider }}>
+  <App/>
+</SWRConfig>
+```
+
+<Callout>
+  개선 사항으로, 메모리 캐시를 버퍼로 사용하고 주기적으로 `localStorage`에 쓸 수도 있습니다. IndexedDB 또는 WebSQL을 사용해 유사한 계층화된 캐시를 구현할 수도 있습니다.
+</Callout>
+
+### 테스트 케이스 간 캐시 초기화 [#reset-cache-between-test-cases]
+
+애플리케이션을 테스트할 때, 테스트 케이스 간 SWR 캐시를 초기화하길 원할 수도 있습니다. 간단하게 빈 캐시 공급자로 애플리케이션을 감싸면 됩니다. 다음은 Jest를 사용한 예시입니다.
+
+```jsx
+describe('test suite', async () => {
+  it('test case', async () => {
+    render(
+      <SWRConfig value={{ provider: () => new Map() }}>
+        <App/>
+      </SWRConfig>
+    )
+  })
+})
+```
+
+### Modify the Cache Data [#modify-the-cache-data]
+
+```jsx
+const { cache } = useSWRConfig()
+
+cache.get(key) // 키에 대한 현재 데이터 가져오기.
+```
+
+<Callout emoji="🚨" type="error">
+  캐시를 직접 쓰면 안 됩니다. 정의되지 않은 동작을 유발할 수도 있습니다.
+</Callout>
+
+You can use [`mutate`](/docs/mutation) to modify the cache. For example, you can clear all cache data like the following.
+
+```jsx
+const { mutate } = useSWRConfig()
+
+mutate(
+  key => true, // which cache keys are updated
+  undefined, // update cache data to `undefined`
+  { revalidate: false } // do not revalidate
+)
+```
+
+More information can be found [here](/docs/arguments#multiple-arguments).

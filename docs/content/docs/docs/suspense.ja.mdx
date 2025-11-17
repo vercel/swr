@@ -1,0 +1,74 @@
+import { Callout } from 'nextra-theme-docs'
+
+# Suspense
+
+React [サスペンスで](https://react.dev/reference/react/Suspense) SWR を使用するには、 `suspense` オプションを有効にします。
+
+```jsx
+import { Suspense } from 'react'
+import useSWR from 'swr'
+
+function Profile () {
+  const { data } = useSWR('/api/user', fetcher, { suspense: true })
+  return <div>hello, {data.name}</div>
+}
+
+function App () {
+  return (
+    <Suspense fallback={<div>loading...</div>}>
+      <Profile/>
+    </Suspense>
+  )
+}
+```
+
+<Callout>
+  `suspense` オプションは、ライフサイクル内では変更できないことに注意してください。
+</Callout>
+
+サスペンスモードでの `data` は常にフェッチのレスポンスです（よって `undefined` かどうかをチェックする必要はありません）。
+ただし、エラーが発生した場合は、エラーをキャッチするために[エラーバウンダリー](https://reactjs.org/docs/concurrent-mode-suspense.html#handling-errors)を使う必要があります：
+
+```jsx
+<ErrorBoundary fallback={<h2>Could not fetch posts.</h2>}>
+  <Suspense fallback={<h1>Loading posts...</h1>}>
+    <Profile />
+  </Suspense>
+</ErrorBoundary>
+```
+
+<Callout>
+サスペンスモードはデータが利用可能になるまでレンダリングを中断します。これは簡単にウォーターフォール問題を引き起こすことを意味します。これを避けるためにはレンダリングの前にリソースをプリフェッチする必要があります。[詳細はこちら](/docs/prefetching)
+</Callout>
+
+---
+
+### 注：条件付きフェッチを使用する場合 [#note-with-conditional-fetching]
+
+通常、`suspense` を有効にすると、レンダリング時に `data` が常に準備ができていることが保証されます：
+
+```jsx
+function Profile () {
+  const { data } = useSWR('/api/user', fetcher, { suspense: true })
+
+  // `data` は決して `undefined` にはなりません
+  // ...
+}
+```
+
+ただし、条件付きフェッチまたは依存フェッチと一緒に使用すると、リクエストが**一時停止**された場合に `data` は `undefined` なります：
+
+```jsx
+function Profile () {
+  const { data } = useSWR(isReady ? '/api/user' : null, fetcher, { suspense: true })
+
+  // `isReady` が false のときには `data` は `undefined` になります
+  // ...
+}
+```
+
+この制限に関する技術的な詳細を読みたい場合は、[こちらの議論](https://github.com/vercel/swr/pull/357#issuecomment-627089889)を確認してください。
+
+### サーバサイドレンダリング [#server-side-rendering]
+
+サスペンスモードをサーバサイド（Next.js によるプリレンダリングを含む）で使う場合、[fallbackData や fallback](/docs/with-nextjs#pre-rendering-with-default-data) により初期データが提供されている**必要があります**。これはサスペンスをサーバサイドでのデータ取得に使うことができないことを意味しており、クライアントサイドでのデータ取得を行うか、フレームワークを通じたデータ取得（Next.js の getStaticProps のような）のどちらかを行う必要があります。これについての議論は[こちら](https://github.com/vercel/swr/issues/1906)です。

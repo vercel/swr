@@ -1,0 +1,191 @@
+import { Callout, Tabs, Tab } from 'nextra-theme-docs'
+import Link from 'next/link'
+
+# はじめに
+
+## インストール [#installation]
+
+React のプロジェクトディレクトリ内で、以下を実行します：
+
+<Tabs items={['pnpm', 'npm', 'yarn']}>
+  <Tab>
+    ```bash
+    pnpm add swr
+    ```
+  </Tab>
+  <Tab>
+    ```bash
+    npm i swr
+    ```
+  </Tab>
+  <Tab>
+    ```bash
+    yarn add swr
+    ```
+  </Tab>
+</Tabs>
+
+## クイックスタート [#quick-start]
+
+JSON データを使用する通常の RESTful API の場合、まずネイティブの `fetch` をラップした `fetcher` 関数を作成する必要があります：
+
+```jsx
+const fetcher = (...args) => fetch(...args).then(res => res.json())
+```
+
+<Callout emoji="💡">
+  もし GraphQL API または Axios のようなライブラリを使いたい場合は、独自のフェッチャー関数を作ることができます。
+  その他の例は<Link href="/docs/data-fetching">こちら</Link>をご覧ください。
+</Callout>
+
+そして、 `useSWR` をインポートして、任意の関数コンポーネント内で使用することができます：
+
+```jsx
+import useSWR from 'swr'
+
+function Profile ({ userId }) {
+  const { data, error, isLoading } = useSWR(`/api/user/${userId}`, fetcher)
+
+  if (error) return <div>failed to load</div>
+  if (isLoading) return <div>loading...</div>
+
+  // データをレンダリングする
+  return <div>hello {data.name}!</div>
+}
+```
+
+通常、 リクエストには "loading" 、 "ready" 、 "error" の三つの状態があります。 `data` と `error` と `isLoading` の値を使ってリクエストの現在の状態を判断し、
+対応する UI を返すことができます。
+
+## 再利用可能にする [#make-it-reusable]
+
+ウェブアプリを構築する際に、 UI の多くの場所でデータを再利用する必要があるかもしれません。 SWR では再利用可能なデータフックを作るのは驚くほど簡単です：
+
+```jsx
+function useUser (id) {
+  const { data, error, isLoading } = useSWR(`/api/user/${id}`, fetcher)
+
+  return {
+    user: data,
+    isLoading,
+    isError: error
+  }
+}
+```
+
+そして、それをコンポーネント内で使用します：
+
+```jsx
+function Avatar ({ id }) {
+  const { user, isLoading, isError } = useUser(id)
+
+  if (isLoading) return <Spinner />
+  if (isError) return <Error />
+  return <img src={user.avatar} />
+}
+```
+
+このパターンを採用することで、リクエストを開始し、ロード状態を更新し、最終的な結果を返す、という命令的な方法でデータを**取得**することを忘れることができます。
+代わりに、コードはより宣言的になります：コンポーネントが使用するデータを指定するだけです。
+
+## 例 [#example]
+
+現実世界の例では、ウェブサイトにナビゲーションバーとコンテンツが表示されています。どちらも `user` に依存しています：
+
+import { Welcome } from 'components/diagrams/welcome'
+
+<div className="mt-8">
+  <Welcome/>
+</div>
+
+従来では、トップレベルのコンポーネントで `useEffect` を使用してデータを一度だけ取得し、 props を介して子コンポーネントに渡しています（現時点ではエラー状態を処理してないことに注意してください）:
+
+```jsx {7-11,17,18,27}
+// ページコンポーネント
+
+function Page ({ userId }) {
+  const [user, setUser] = useState(null)
+
+  // データの取得
+  useEffect(() => {
+    fetch(`/api/user/${userId}`)
+      .then(res => res.json())
+      .then(data => setUser(data))
+  }, [userId])
+
+  // グローバルなローディング状態
+  if (!user) return <Spinner/>
+
+  return <div>
+    <Navbar user={user} />
+    <Content user={user} />
+  </div>
+}
+
+// 子コンポーネント
+
+function Navbar ({ user }) {
+  return <div>
+    ...
+    <Avatar user={user} />
+  </div>
+}
+
+function Content ({ user }) {
+  return <h1>Welcome back, {user.name}</h1>
+}
+
+function Avatar ({ user }) {
+  return <img src={user.avatar} alt={user.name} />
+}
+```
+
+通常、すべてのデータをトップレベルのコンポーネントに保持し、ツリーの奥深くにあるすべてのコンポーネントに props を追加する必要があります。
+ページにデータの依存関係を追加すると、コードの保守が難しくなります。
+
+[Context](https://react.dev/learn/passing-data-deeply-with-context) を使って props を渡すことは避けられますが、動的なコンテンツの問題は残ります：
+ページコンテンツ内のコンポーネントは動的に変化する可能性があり、トップレベルのコンポーネントは、子コンポーネントがどのようなデータが必要かを知らないかもしれません。
+
+SWR はその問題を完璧に解決してくれます。 先ほど作成した `useUser` フックを使って、コードをリファクタリングしましょう：
+
+```jsx {20,26}
+// ページコンポーネント
+
+function Page ({ userId }) {
+  return <div>
+    <Navbar userId={userId} />
+    <Content userId={userId} />
+  </div>
+}
+
+// 子コンポーネント
+
+function Navbar ({ userId }) {
+  return <div>
+    ...
+    <Avatar userId={userId} />
+  </div>
+}
+
+function Content ({ userId }) {
+  const { user, isLoading } = useUser(userId)
+  if (isLoading) return <Spinner />
+  return <h1>Welcome back, {user.name}</h1>
+}
+
+function Avatar ({ userId }) {
+  const { user, isLoading } = useUser(userId)
+  if (isLoading) return <Spinner />
+  return <img src={user.avatar} alt={user.name} />
+}
+```
+
+Data は、そのデータを必要とするコンポーネントに**結合**され、すべてのコンポーネントは互いに**独立**しています。
+すべての親コンポーネントは、データやデータの受け渡しについて何も知る必要はありません。レンダリングするだけです。
+コードはずっとシンプルになり、メンテナンスも簡単になりました。
+
+最も素晴らしいのは、 API に送られるリクエストがたった**一つ**であることです。なぜなら、同じ SWR キーを使用した
+リクエストは自動的に**重複排除**、**キャッシュ**、**共有**されるからです。
+
+また、 [ユーザーのフォーカスやネットワークの再接続時](/docs/revalidation) に、アプリケーションがデータを再取得できるようになりました！
+つまり、ユーザーのノート PC がスリープから復帰した時や、ブラウザのタブを切り替えた時に、自動的にデータが更新されるのです。

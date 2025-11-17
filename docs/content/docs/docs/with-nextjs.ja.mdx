@@ -1,0 +1,150 @@
+import { Callout } from 'nextra-theme-docs'
+
+# Next.js の SSG と SSR
+
+## App Router [#app-dir]
+
+### サーバーコンポーネント [#rsc]
+
+<Callout type="default" emoji="✅">
+    Next.js の App Router では、デフォルトですべてのコンポーネントが React Server Components (RSC) です。**RSC では SWR からキーシリアライゼーション API のみをインポートできます。**
+</Callout>
+
+```tsx filename="app/page.tsx" copy
+import { unstable_serialize } from 'swr' // ✅ サーバーコンポーネントで利用可能
+import { unstable_serialize as infinite_unstable_serialize } from 'swr/infinite' // ✅ サーバーコンポーネントで利用可能
+```
+
+<Callout type="error">
+    他の SWR の API は RSC では利用できないためインポートすることはできません。
+</Callout>
+
+```tsx filename="app/page.tsx" highlight={1}
+import useSWR from 'swr' // ❌ これはサーバーコンポーネントでは利用できません
+```
+
+### クライアントコンポーネント
+
+コンポーネントに `'use client'` ディレクティブを付けるか、クライアントコンポーネントから SWR をインポートすることで、SWR クライアントのデータ取得フックを使用できます。
+
+```tsx filename="app/page.tsx" highlight={1} copy
+'use client'
+import useSWR from 'swr'
+export default function Page() {
+  const { data } = useSWR('/api/user', fetcher)
+  return <h1>{data.name}</h1>
+}
+```
+
+サーバーコンポーネントの `layout` または `page` でグローバル設定を構成するために `SWRConfig` を使用する必要がある場合、設定を行うためのクライアントコンポーネントを別に作成し、そのプロバイダーコンポーネントをサーバーコンポーネントのページ内で使用します。
+
+```tsx filename="app/swr-provider.tsx" copy
+'use client';
+import { SWRConfig } from 'swr'
+export const SWRProvider = ({ children }) => {
+  return <SWRConfig>{children}</SWRConfig>
+};
+```
+
+```tsx filename="app/page.tsx" copy
+// これはサーバーコンポーネントです
+import { SWRProvider } from './swr-provider'
+export default function Page() {
+  return (
+    <SWRProvider>
+      <h1>hello SWR</h1>
+    </SWRProvider>
+  )
+}
+```
+
+## クライアントサイドでのデータフェッチ [#client-side-data-fetching]
+
+ページが頻繁に更新されるデータを含み、それをプリレンダリングする必要がない場合、useSWR は最適です。特別な設定は不要で、データを使用するコンポーネント内で `useSWR` をインポートしてフックを使用するだけです。
+
+以下のように動作します:
+
+- まず、データなしでページを即座に表示します。データがない場合のローディング状態を表示できます。
+- 次に、クライアントサイドでデータをフェッチし、準備ができたら表示します。
+
+このアプローチは、例えばユーザーのダッシュボードページに適しています。ダッシュボードはプライベートかつユーザー固有のページであるため、SEO は関係なく、ページを事前にレンダリングする必要もありません。データは頻繁に更新されるため、リクエスト時のデータフェッチが必要です。
+
+## デフォルトデータを使ったプリレンダリング [#pre-rendering-with-default-data]
+
+ページを事前にレンダリングする必要がある場合、Next.js は [2 つのプリレンダリング形式](https://nextjs.org/docs/basic-features/data-fetching):
+**Static Generation (SSG)** と **Server-side Rendering (SSR)** をサポートしています。
+
+SWR と組み合わせることで、SEO のためにページをプリレンダリングし、さらにキャッシュ、再検証、フォーカストラッキング、クライアントサイドで行われる一定間隔での再フェッチなどの機能も利用できます。
+
+[`SWRConfig`](/docs/global-configuration) の `fallback` オプションを使用して、事前に取得したデータをすべての SWR フックの初期値として渡すことができます。
+
+`getStaticProps` の例:
+
+```jsx
+ export async function getStaticProps () {
+  // `getStaticProps` はサーバーサイドで実行されます
+  const article = await getArticleFromAPI()
+  return {
+    props: {
+      fallback: {
+        '/api/article': article
+      }
+    }
+  }
+}
+
+function Article() {
+  // `data` は `fallback` 内にあるため常に利用可能です
+  const { data } = useSWR('/api/article', fetcher)
+  return <h1>{data.title}</h1>
+}
+
+export default function Page({ fallback }) {
+  // `SWRConfig` 内の SWR フックはそれらの値を使用します
+  return (
+    <SWRConfig value={{ fallback }}>
+      <Article />
+    </SWRConfig>
+  )
+}
+```
+
+このページはプリレンダリングされます。SEO に優れ、迅速に応答しますが、クライアントサイドでは完全に SWR によって駆動されています。データは動的で、時間の経過とともに自動更新されます。
+
+<Callout emoji="💡">
+  `Article` コンポーネントは最初は事前に生成されたデータをレンダリングし、ページがハイドレートされた後、最新のデータを再度フェッチして更新します。
+</Callout>
+
+### 複雑なキー [#complex-keys]
+
+`useSWR` は、`array` 型および `function` 型のキーとともに使用できます。これらの種類のキーで事前にフェッチしたデータを利用するには、`fallback` キーを `unstable_serialize` でシリアライズする必要があります。
+
+```jsx
+import useSWR, { unstable_serialize } from 'swr'
+
+export async function getStaticProps () {
+  const article = await getArticleFromAPI(1)
+  return {
+    props: {
+      fallback: {
+        // unstable_serialize() を使用した配列スタイルのキー
+        [unstable_serialize(['api', 'article', 1])]: article,
+      }
+    }
+  }
+}
+
+function Article() {
+　// 配列スタイルのキーを使用しています
+  const { data } = useSWR(['api', 'article', 1], fetcher)
+  return <h1>{data.title}</h1>
+}
+
+export default function Page({ fallback }) {
+  return (
+    <SWRConfig value={{ fallback }}>
+      <Article />
+    </SWRConfig>
+  )
+}
+```
