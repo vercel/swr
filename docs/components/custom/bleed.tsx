@@ -1,12 +1,11 @@
-import type { FC, HTMLAttributes } from 'react'
 import { cn } from '@/lib/utils'
+import type { ComponentProps } from 'react'
 
-export const Bleed: FC<
-  {
-    /** Extend content to the very edges of its container. */
-    full: boolean
-  } & HTMLAttributes<HTMLDivElement>
-> = ({ full, className, ...props }) => {
+type BleedProps = ComponentProps<'div'> & {
+  full?: boolean
+}
+
+export const Bleed = ({ full, className, ...props }: BleedProps) => {
   return (
     <div
       className={cn(
