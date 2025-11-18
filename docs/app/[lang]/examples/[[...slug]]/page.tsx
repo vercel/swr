@@ -6,9 +6,7 @@ import {
   DocsBody,
   DocsDescription,
   DocsPage,
-  DocsTitle,
-  generatePageMetadata,
-  generateStaticPageParams
+  DocsTitle
 } from '@/components/geistdocs/docs-page'
 import { EditSource } from '@/components/geistdocs/edit-source'
 import { Feedback } from '@/components/geistdocs/feedback'
@@ -16,7 +14,11 @@ import { getMDXComponents } from '@/components/geistdocs/mdx-components'
 import { OpenInChat } from '@/components/geistdocs/open-in-chat'
 import { ScrollTop } from '@/components/geistdocs/scroll-top'
 import { TableOfContents } from '@/components/geistdocs/toc'
-import { getLLMText, source } from '@/lib/geistdocs/source'
+import {
+  examplesSource,
+  getLLMText,
+  getPageImage
+} from '@/lib/geistdocs/source'
 
 import { Bleed } from '@/components/custom/bleed'
 import { Tabs, Tab } from 'fumadocs-ui/components/tabs'
@@ -27,11 +29,12 @@ import { Pagination } from '@/components/custom/diagrams/pagination'
 import { Infinite } from '@/components/custom/diagrams/infinite'
 import { Cache } from '@/components/custom/diagrams/cache'
 import Link from 'next/link'
+import type { Metadata } from 'next'
 
 const Page = async (props: PageProps<'/[lang]/examples/[[...slug]]'>) => {
   const params = await props.params
 
-  const page = source.getPage(params.slug, params.lang)
+  const page = examplesSource.getPage(params.slug, params.lang)
 
   if (!page) {
     notFound()
@@ -63,7 +66,7 @@ const Page = async (props: PageProps<'/[lang]/examples/[[...slug]]'>) => {
       <DocsBody>
         <MDX
           components={getMDXComponents({
-            a: createRelativeLink(source, page),
+            a: createRelativeLink(examplesSource, page),
 
             // Add your custom components here
             Bleed,
@@ -84,14 +87,25 @@ const Page = async (props: PageProps<'/[lang]/examples/[[...slug]]'>) => {
   )
 }
 
-export const generateStaticParams = generateStaticPageParams
+export const generateStaticParams = () => examplesSource.generateParams()
 
 export const generateMetadata = async (
   props: PageProps<'/[lang]/examples/[[...slug]]'>
 ) => {
-  const params = await props.params
+  const { slug, lang } = await props.params
+  const page = examplesSource.getPage(slug, lang)
 
-  return generatePageMetadata(params.slug, params.lang)
+  if (!page) {
+    notFound()
+  }
+
+  const metadata: Metadata = {
+    title: page.data.title,
+    description: page.data.description,
+    openGraph: {
+      images: getPageImage(page).url
+    }
+  }
+
+  return metadata
 }
-
-export default Page

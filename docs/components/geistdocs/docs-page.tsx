@@ -63,23 +63,3 @@ export const DocsBody = ({
 }: ComponentProps<typeof FumadocsDocsBody>) => (
   <FumadocsDocsBody className={cn('mx-auto w-full', className)} {...props} />
 )
-
-export const generateStaticPageParams = () => source.generateParams()
-
-export const generatePageMetadata = (slug: PageProps['slug'], lang: string) => {
-  const page = source.getPage(slug, lang)
-
-  if (!page) {
-    notFound()
-  }
-
-  const metadata: Metadata = {
-    title: page.data.title,
-    description: page.data.description,
-    openGraph: {
-      images: getPageImage(page).url
-    }
-  }
-
-  return metadata
-}

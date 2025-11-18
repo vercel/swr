@@ -1,9 +1,15 @@
 import Link from 'next/link'
-import { source } from '@/lib/geistdocs/source'
+import { blogSource } from '@/lib/geistdocs/source'
 
-export default function BlogIndex({ more = 'Read more' }: { more?: string }) {
+type BlogIndexProps = {
+  params: Promise<{ lang: string }>
+}
+
+const BlogIndex = async ({ params }: BlogIndexProps) => {
+  const { lang } = await params
+
   // Get all pages and filter for blog posts in the current locale
-  const blogPages = source.getPages('en-US').filter(page => {
+  const blogPages = blogSource.getPages(lang).filter(page => {
     // Check if the page URL includes /blog/
     const isBlogPost = page.url.includes('/blog/')
 
@@ -11,7 +17,7 @@ export default function BlogIndex({ more = 'Read more' }: { more?: string }) {
   })
 
   return (
-    <>
+    <div>
       <h1 className="text-4xl tracking-tighter text-center font-extrabold md:text-5xl mt-8 pb-6">
         SWR Blog
       </h1>
@@ -34,13 +40,15 @@ export default function BlogIndex({ more = 'Read more' }: { more?: string }) {
                   href={page.url}
                   className="text-[hsl(var(--nextra-primary-hue),100%,50%)] underline underline-offset-2 decoration-from-font"
                 >
-                  {more + ' →'}
+                  Read more →
                 </Link>
               </span>
             </p>
           )}
         </div>
       ))}
-    </>
+    </div>
   )
 }
+
+export default BlogIndex
