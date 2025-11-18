@@ -24,7 +24,7 @@ export const DocsLayout = ({ children, tree }: DocsLayoutProps) => (
     }}
     sidebar={{
       className:
-        'md:static md:sticky md:top-16 md:h-fit md:w-auto! bg-background! md:bg-transparent! border-none transition-none',
+        'md:static md:sticky md:top-16 md:h-fit md:w-auto! bg-background! md:bg-transparent! border-none transition-none [&>div:last-child]:hidden',
       collapsible: false,
       components: {
         Folder,
