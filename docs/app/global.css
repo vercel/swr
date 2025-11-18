@@ -121,3 +121,7 @@
     @apply bg-background text-foreground;
   }
 }
+
+.prose iframe {
+  @apply min-h-[70vh]
+}
