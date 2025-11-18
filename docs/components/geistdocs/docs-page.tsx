@@ -4,44 +4,28 @@ import {
   DocsPage as FumadocsDocsPage,
   DocsTitle as FumadocsDocsTitle
 } from 'fumadocs-ui/page'
-import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
 import type { ComponentProps, CSSProperties } from 'react'
-import { getPageImage, source } from '@/lib/geistdocs/source'
 import { cn } from '@/lib/utils'
 
 const containerStyle = {
   '--fd-nav-height': '4rem'
 } as CSSProperties
 
-type PageProps = ComponentProps<typeof FumadocsDocsPage> & {
-  slug: string[] | undefined
-  lang: string
-}
+type PageProps = ComponentProps<typeof FumadocsDocsPage>
 
-export const DocsPage = ({ slug, lang, children, ...props }: PageProps) => {
-  const page = source.getPage(slug, lang)
-
-  if (!page) {
-    notFound()
-  }
-
-  return (
-    <FumadocsDocsPage
-      full={page.data.full}
-      toc={page.data.toc}
-      {...props}
-      article={{ className: 'max-w-[754px]', ...props.article }}
-      container={{
-        style: containerStyle,
-        className: 'col-span-2',
-        ...props.container
-      }}
-    >
-      {children}
-    </FumadocsDocsPage>
-  )
-}
+export const DocsPage = ({ children, container, ...props }: PageProps) => (
+  <FumadocsDocsPage
+    {...props}
+    article={{ className: 'max-w-[754px]', ...props.article }}
+    container={{
+      style: containerStyle,
+      className: 'col-span-2',
+      ...container
+    }}
+  >
+    {children}
+  </FumadocsDocsPage>
+)
 
 export const DocsTitle = ({
   className,

@@ -41,8 +41,8 @@ const Page = async (props: PageProps<'/[lang]/blog/[...slug]'>) => {
 
   return (
     <DocsPage
-      slug={params.slug}
-      lang={params.lang}
+      full={page.data.full}
+      toc={page.data.toc}
       tableOfContent={{
         component: (
           <TableOfContents>
@@ -55,7 +55,6 @@ const Page = async (props: PageProps<'/[lang]/blog/[...slug]'>) => {
           </TableOfContents>
         )
       }}
-      toc={page.data.toc}
     >
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
