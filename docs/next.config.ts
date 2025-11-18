@@ -23,6 +23,21 @@ const config: NextConfig = {
     ]
   },
 
+  async redirects() {
+    return [
+      {
+        source: '/docs',
+        destination: '/docs/getting-started',
+        permanent: true
+      },
+      {
+        source: '/examples',
+        destination: '/examples/basic',
+        permanent: true
+      }
+    ]
+  },
+
   images: {
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [
