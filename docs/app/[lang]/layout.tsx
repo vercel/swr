@@ -1,5 +1,4 @@
 import '../global.css'
-import { CommandIcon } from 'lucide-react'
 import { Navbar } from '@/components/geistdocs/navbar'
 import { GeistdocsProvider } from '@/components/geistdocs/provider'
 import { mono, sans } from '@/lib/geistdocs/fonts'
