@@ -1,6 +1,6 @@
 import { type InferPageType, loader } from 'fumadocs-core/source'
 import { lucideIconsPlugin } from 'fumadocs-core/source/lucide-icons'
-import { docs } from '@/.source'
+import { blog, docs, examples } from '@/.source'
 import { i18n } from '@/lib/geistdocs/i18n'
 
 // See https://fumadocs.dev/docs/headless/source-api for more info
@@ -8,6 +8,20 @@ export const source = loader({
   i18n,
   baseUrl: '/docs',
   source: docs.toFumadocsSource(),
+  plugins: [lucideIconsPlugin()]
+})
+
+export const blogSource = loader({
+  i18n,
+  baseUrl: '/blog',
+  source: blog.toFumadocsSource(),
+  plugins: [lucideIconsPlugin()]
+})
+
+export const examplesSource = loader({
+  i18n,
+  baseUrl: '/examples',
+  source: examples.toFumadocsSource(),
   plugins: [lucideIconsPlugin()]
 })
 
