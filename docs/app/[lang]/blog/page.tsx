@@ -12,6 +12,9 @@ export default function BlogIndex({ more = 'Read more' }: { more?: string }) {
 
   return (
     <>
+      <h1 className="text-4xl tracking-tighter text-center font-extrabold md:text-5xl mt-8 pb-6">
+        SWR Blog
+      </h1>
       {blogPages.map(page => (
         <div key={page.url} className="mb-10">
           <h3>

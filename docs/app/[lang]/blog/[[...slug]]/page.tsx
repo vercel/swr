@@ -22,7 +22,6 @@ import { Bleed } from '@/components/custom/bleed'
 import { Tabs, Tab } from 'fumadocs-ui/components/tabs'
 import Authors, { Author } from '@/components/custom/authors'
 import Features from '@/components/custom/features'
-import BlogIndex from '@/components/custom/blog-index'
 import { Welcome } from '@/components/custom/diagrams/welcome'
 import { Pagination } from '@/components/custom/diagrams/pagination'
 import { Infinite } from '@/components/custom/diagrams/infinite'
@@ -73,7 +72,6 @@ const Page = async (props: PageProps<'/[lang]/blog/[[...slug]]'>) => {
             Authors,
             Author,
             Features,
-            BlogIndex,
             Welcome,
             Pagination,
             Infinite,
