@@ -16,7 +16,7 @@ type PageProps = ComponentProps<typeof FumadocsDocsPage>
 export const DocsPage = ({ children, container, ...props }: PageProps) => (
   <FumadocsDocsPage
     {...props}
-    article={{ className: 'max-w-[754px]', ...props.article }}
+    article={{ className: props.full ? '' : 'max-w-[754px]', ...props.article }}
     container={{
       style: containerStyle,
       className: 'col-span-2',
