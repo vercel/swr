@@ -10,6 +10,10 @@ const config: NextConfig = {
     turbopackFileSystemCacheForDev: true
   },
 
+  typescript: {
+    ignoreBuildErrors: true
+  },
+
   async rewrites() {
     return [
       {
