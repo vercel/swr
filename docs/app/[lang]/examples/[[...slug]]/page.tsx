@@ -108,3 +108,5 @@ export const generateMetadata = async (
 
   return metadata
 }
+
+export default Page
