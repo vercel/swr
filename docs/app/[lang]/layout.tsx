@@ -14,6 +14,14 @@ const links = [
   {
     label: 'Docs',
     href: '/docs'
+  },
+  {
+    label: 'Blog',
+    href: '/blog'
+  },
+  {
+    label: 'Examples',
+    href: '/examples'
   }
 ]
 
