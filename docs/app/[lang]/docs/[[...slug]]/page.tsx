@@ -6,9 +6,7 @@ import {
   DocsBody,
   DocsDescription,
   DocsPage,
-  DocsTitle,
-  generatePageMetadata,
-  generateStaticPageParams
+  DocsTitle
 } from '@/components/geistdocs/docs-page'
 import { EditSource } from '@/components/geistdocs/edit-source'
 import { Feedback } from '@/components/geistdocs/feedback'
@@ -19,7 +17,6 @@ import { TableOfContents } from '@/components/geistdocs/toc'
 import { getLLMText, getPageImage, source } from '@/lib/geistdocs/source'
 
 import { Bleed } from '@/components/custom/bleed'
-import { Tabs, Tab } from 'fumadocs-ui/components/tabs'
 import Authors, { Author } from '@/components/custom/authors'
 import Features from '@/components/custom/features'
 import { Welcome } from '@/components/custom/diagrams/welcome'
@@ -67,8 +64,6 @@ const Page = async (props: PageProps<'/[lang]/docs/[[...slug]]'>) => {
 
             // Add your custom components here
             Bleed,
-            Tabs,
-            Tab,
             Authors,
             Author,
             Features,

@@ -21,7 +21,6 @@ import {
 } from '@/lib/geistdocs/source'
 
 import { Bleed } from '@/components/custom/bleed'
-import { Tabs, Tab } from 'fumadocs-ui/components/tabs'
 import Authors, { Author } from '@/components/custom/authors'
 import Features from '@/components/custom/features'
 import { Welcome } from '@/components/custom/diagrams/welcome'
@@ -69,8 +68,6 @@ const Page = async (props: PageProps<'/[lang]/examples/[[...slug]]'>) => {
 
             // Add your custom components here
             Bleed,
-            Tabs,
-            Tab,
             Authors,
             Author,
             Features,
