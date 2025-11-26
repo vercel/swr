@@ -22,7 +22,8 @@ import {
   internalMutate,
   revalidateEvents,
   mergeObjects,
-  isPromiseLike
+  isPromiseLike,
+  noop
 } from '../_internal'
 import type {
   State,
@@ -105,7 +106,8 @@ export const useSWRHandler = <Data = any, Error = any>(
     refreshInterval,
     refreshWhenHidden,
     refreshWhenOffline,
-    keepPreviousData
+    keepPreviousData,
+    strictServerPrefetchWarning
   } = config
 
   const [EVENT_REVALIDATORS, MUTATION, FETCH, PRELOAD] = SWRGlobalState.get(
@@ -285,6 +287,23 @@ export const useSWRHandler = <Data = any, Error = any>(
         : laggyDataRef.current
       : cachedData
     : data
+
+  // Only true for SSR and hydration
+  const isSSR = useSyncExternalStore(
+    () => noop,
+    () => false,
+    () => true
+  )
+
+  // During the initial SSR render, warn if the key has no data pre-fetched via:
+  // - fallback data
+  // - preload calls
+  // - initial data from the cache provider
+  if (strictServerPrefetchWarning && isSSR && key && isUndefined(data)) {
+    console.warn(
+      `Missing pre-initiated data for serialized key "${key}" during hydration. Data fethcing should be initiated on the server and provided to SWR via fallback data. You can set "strictServerPrefetchWarning: false" to disable this warning.`
+    )
+  }
 
   // - Suspense mode and there's stale data for the initial render.
   // - Not suspense mode and there is no fallback data and `revalidateIfStale` is enabled.

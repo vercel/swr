@@ -139,7 +139,7 @@ export interface PublicConfiguration<
    * data, preload calls, or initial data from the cache provider
    * @defaultValue false
    */
-  missingPreloadWarning?: boolean
+  strictServerPrefetchWarning?: boolean
   /**
    * the fetcher function
    */
