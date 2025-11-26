@@ -289,16 +289,18 @@ export const useSWRHandler = <Data = any, Error = any>(
     : data
 
   // Only true for SSR and hydration
-  const isSSR = useSyncExternalStore(
+  const isSSROrHydration = useSyncExternalStore(
     () => noop,
     () => false,
     () => true
   )
+  const isSSR = isSSROrHydration && IS_SERVER
 
   // During the initial SSR render, warn if the key has no data pre-fetched via:
   // - fallback data
   // - preload calls
   // - initial data from the cache provider
+  // We only warn once for each key during hydration.
   if (strictServerPrefetchWarning && isSSR && key && isUndefined(data)) {
     console.warn(
       `Missing pre-initiated data for serialized key "${key}" during hydration. Data fethcing should be initiated on the server and provided to SWR via fallback data. You can set "strictServerPrefetchWarning: false" to disable this warning.`
