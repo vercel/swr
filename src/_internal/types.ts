@@ -135,6 +135,12 @@ export interface PublicConfiguration<
    */
   fallbackData?: Data | Promise<Data>
   /**
+   * warns when preload data is missing for a given key, this includes fallback
+   * data, preload calls, or initial data from the cache provider
+   * @defaultValue false
+   */
+  missingPreloadWarning?: boolean
+  /**
    * the fetcher function
    */
   fetcher?: Fn
