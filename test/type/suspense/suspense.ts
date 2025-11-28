@@ -7,7 +7,7 @@ declare module 'swr' {
   }
 }
 
-export function testSuspense() {
+export function useTestSuspense() {
   const { data } = useSWR('/api', (k: string) => Promise.resolve(k))
   expectType<string>(data)
 }

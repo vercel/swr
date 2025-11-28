@@ -341,7 +341,6 @@ describe('useSWR - local mutation', () => {
   it('should get bound mutate from useSWR', async () => {
     const key = createKey()
     function Page() {
-      // eslint-disable-next-line no-shadow
       const { data, mutate: boundMutate } = useSWR(key, () => 'fetched')
       return (
         <div onClick={() => boundMutate('mutated', false)}>data: {data}</div>
