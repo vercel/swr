@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 import type { Equal, Expect } from '@type-challenges/utils'
 import useSWR, { useSWRConfig } from 'swr'
 import type {

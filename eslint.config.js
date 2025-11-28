@@ -27,7 +27,9 @@ export default defineConfig([
     'eslint.config.mjs',
     'playwright.config.js',
     'jest.config.js',
-    'jest.config.build.js'
+    'jest.config.build.js',
+    'test-result/**',
+    'playwright-report/**'
   ]),
   {
     extends: compat.extends(

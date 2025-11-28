@@ -44,6 +44,7 @@ function runTests(propertyName) {
         globalSpy.document.mockImplementation(() => target)
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       initFocus = require('swr/_internal').defaultConfigOptions.initFocus
 
       const fn = jest.fn()
@@ -69,6 +70,7 @@ function runTests(propertyName) {
         globalSpy.document.mockImplementation(() => undefined)
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       initFocus = require('swr/_internal').defaultConfigOptions.initFocus
 
       const fn = jest.fn()

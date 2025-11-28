@@ -1,4 +1,3 @@
-/* eslint-disable testing-library/prefer-screen-queries */
 import { test, expect } from '@playwright/test'
 
 test('mutate-server-action', async ({ page }) => {
