@@ -10,7 +10,7 @@
     "cache",
     "fetch"
   ],
-  "packageManager": "pnpm@8.4.0",
+  "packageManager": "pnpm@10.24.0",
   "main": "./dist/index/index.js",
   "module": "./dist/index/index.mjs",
   "types": "./dist/index/index.d.ts",
