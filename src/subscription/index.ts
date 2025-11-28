@@ -48,7 +48,6 @@ export const subscription = (<Data = any, Error = any>(useSWRNext: SWRHook) =>
       ])
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const [subscriptions, disposers] = subscriptionStorage.get(cache)!
 
     useIsomorphicLayoutEffect(() => {
@@ -83,7 +82,6 @@ export const subscription = (<Data = any, Error = any>(useSWRNext: SWRHook) =>
       }
 
       return () => {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const count = subscriptions.get(subscriptionKey)! - 1
 
         subscriptions.set(subscriptionKey, count)
@@ -94,8 +92,6 @@ export const subscription = (<Data = any, Error = any>(useSWRNext: SWRHook) =>
           dispose?.()
         }
       }
-
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [subscriptionKey])
 
     return {

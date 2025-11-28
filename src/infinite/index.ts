@@ -120,7 +120,6 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
       }
 
       // `initialSize` isn't allowed to change during the lifecycle
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [infiniteKey, cache])
 
     // Needs to check didMountRef during mounting, not in the fetcher
