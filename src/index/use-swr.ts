@@ -22,7 +22,8 @@ import {
   internalMutate,
   revalidateEvents,
   mergeObjects,
-  isPromiseLike
+  isPromiseLike,
+  noop
 } from '../_internal'
 import type {
   State,
@@ -105,7 +106,8 @@ export const useSWRHandler = <Data = any, Error = any>(
     refreshInterval,
     refreshWhenHidden,
     refreshWhenOffline,
-    keepPreviousData
+    keepPreviousData,
+    strictServerPrefetchWarning
   } = config
 
   const [EVENT_REVALIDATORS, MUTATION, FETCH, PRELOAD] = SWRGlobalState.get(
@@ -285,6 +287,35 @@ export const useSWRHandler = <Data = any, Error = any>(
         : laggyDataRef.current
       : cachedData
     : data
+
+  const hasKeyButNoData = key && isUndefined(data)
+
+  // Note: the conditionally hook call is fine because the environment
+  // `IS_SERVER` never changes.
+  const isHydration =
+    !IS_SERVER &&
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useSyncExternalStore(
+      () => noop,
+      () => false,
+      () => true
+    )
+
+  // During the initial SSR render, warn if the key has no data pre-fetched via:
+  // - fallback data
+  // - preload calls
+  // - initial data from the cache provider
+  // We only warn once for each key during SSR.
+  if (
+    strictServerPrefetchWarning &&
+    isHydration &&
+    !suspense &&
+    hasKeyButNoData
+  ) {
+    console.warn(
+      `Missing pre-initiated data for serialized key "${key}" during server-side rendering. Data fethcing should be initiated on the server and provided to SWR via fallback data. You can set "strictServerPrefetchWarning: false" to disable this warning.`
+    )
+  }
 
   // - Suspense mode and there's stale data for the initial render.
   // - Not suspense mode and there is no fallback data and `revalidateIfStale` is enabled.
@@ -714,7 +745,6 @@ export const useSWRHandler = <Data = any, Error = any>(
   // If there is no `error`, the `revalidation` promise needs to be thrown to
   // the suspense boundary.
   if (suspense) {
-    const hasKeyButNoData = key && isUndefined(data)
     // SWR should throw when trying to use Suspense on the server with React 18,
     // without providing any fallback data. This causes hydration errors. See:
     // https://github.com/vercel/swr/issues/1832
