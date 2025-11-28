@@ -293,7 +293,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   // Note: the conditionally hook call is fine because the environment
   // `IS_SERVER` never changes.
   const isHydration =
-    !(typeof window === 'undefined') &&
+    !IS_SERVER &&
     // eslint-disable-next-line react-hooks/rules-of-hooks
     useSyncExternalStore(
       () => noop,
