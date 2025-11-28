@@ -34,7 +34,7 @@ import type {
   SWRInfiniteKeyedMutator,
   SWRInfiniteMutatorOptions
 } from './types'
-import { useSyncExternalStore } from 'use-sync-external-store/shim'
+import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js'
 import { getFirstPageKey } from './serialize'
 
 const EMPTY_PROMISE = Promise.resolve() as Promise<undefined>
