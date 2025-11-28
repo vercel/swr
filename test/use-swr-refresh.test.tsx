@@ -79,13 +79,13 @@ describe('useSWR - refresh', () => {
     let count = 0
     const key = createKey()
     function Page() {
-      const [int, setInt] = React.useState(100)
+      const [int, setInt] = React.useState(200)
       const { data } = useSWR(key, () => count++, {
         refreshInterval: int,
         dedupingInterval: 50
       })
       return (
-        <div onClick={() => setInt(num => (num < 200 ? num + 50 : 0))}>
+        <div onClick={() => setInt(num => (num < 300 ? num + 50 : 0))}>
           count: {data}
         </div>
       )
@@ -97,31 +97,31 @@ describe('useSWR - refresh', () => {
     // mount
     await screen.findByText('count: 0')
 
-    await act(() => advanceTimers(100))
+    await act(() => advanceTimers(200))
     screen.getByText('count: 1')
     await act(() => advanceTimers(50))
     screen.getByText('count: 1')
-    await act(() => advanceTimers(50))
+    await act(() => advanceTimers(200))
     screen.getByText('count: 2')
     fireEvent.click(screen.getByText('count: 2'))
 
-    await act(() => advanceTimers(100))
+    await act(() => advanceTimers(50))
 
     screen.getByText('count: 2')
 
-    await act(() => advanceTimers(50))
+    await act(() => advanceTimers(200))
 
     screen.getByText('count: 3')
 
-    await act(() => advanceTimers(150))
+    await act(() => advanceTimers(250))
     screen.getByText('count: 4')
     fireEvent.click(screen.getByText('count: 4'))
     await act(() => {
-      // it will clear the 150ms timer and set up a new 200ms timer
+      // it will clear the 250ms timer and set up a new 300ms timer
       return advanceTimers(150)
     })
     screen.getByText('count: 4')
-    await act(() => advanceTimers(50))
+    await act(() => advanceTimers(150))
     screen.getByText('count: 5')
     fireEvent.click(screen.getByText('count: 5'))
     await act(() => {
@@ -129,7 +129,7 @@ describe('useSWR - refresh', () => {
       return advanceTimers(50)
     })
     screen.getByText('count: 5')
-    await act(() => advanceTimers(50))
+    await act(() => advanceTimers(300))
     screen.getByText('count: 5')
   })
 
@@ -141,7 +141,7 @@ describe('useSWR - refresh', () => {
       const [flag, setFlag] = useState(0)
       const shouldPoll = flag < STOP_POLLING_THRESHOLD
       const { data } = useSWR(key, () => count++, {
-        refreshInterval: shouldPoll ? 100 : 0,
+        refreshInterval: shouldPoll ? 200 : 0,
         dedupingInterval: 50,
         onSuccess() {
           setFlag(value => value + 1)
@@ -159,14 +159,14 @@ describe('useSWR - refresh', () => {
 
     await screen.findByText('count: 0 1')
 
-    await act(() => advanceTimers(100))
+    await act(() => advanceTimers(200))
 
     screen.getByText('count: 1 2')
 
-    await act(() => advanceTimers(100))
+    await act(() => advanceTimers(200))
     screen.getByText('count: 1 2')
 
-    await act(() => advanceTimers(100))
+    await act(() => advanceTimers(200))
     screen.getByText('count: 1 2')
 
     await act(() => advanceTimers(100))
@@ -175,25 +175,25 @@ describe('useSWR - refresh', () => {
     fireEvent.click(screen.getByText('count: 1 2'))
 
     await act(() => {
-      // it will set up a new 100ms timer
+      // it will set up a new 200ms timer
       return advanceTimers(50)
     })
 
     screen.getByText('count: 1 0')
 
-    await act(() => advanceTimers(50))
+    await act(() => advanceTimers(150))
 
     screen.getByText('count: 2 1')
 
-    await act(() => advanceTimers(100))
+    await act(() => advanceTimers(200))
 
     screen.getByText('count: 3 2')
 
-    await act(() => advanceTimers(100))
+    await act(() => advanceTimers(200))
 
     screen.getByText('count: 3 2')
 
-    await act(() => advanceTimers(100))
+    await act(() => advanceTimers(200))
 
     screen.getByText('count: 3 2')
   })
