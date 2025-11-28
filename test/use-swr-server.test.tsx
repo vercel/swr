@@ -72,8 +72,7 @@ describe('useSWR - SSR', () => {
         warnings.push(msg as string)
       })
 
-      const useSWR = (await import('swr')).default
-      const SWRConfig = (await import('swr')).SWRConfig
+      const { default: useSWR, SWRConfig } = await import('swr')
 
       let resolve: (() => void) | null = null
       const promise = new Promise<void>(r => {
@@ -123,6 +122,7 @@ describe('useSWR - SSR', () => {
         [
           "Missing pre-initiated data for serialized key "ssr:1" during server-side rendering. Data fethcing should be initiated on the server and provided to SWR via fallback data. You can set "strictServerPrefetchWarning: false" to disable this warning.",
           "Missing pre-initiated data for serialized key "ssr:2" during server-side rendering. Data fethcing should be initiated on the server and provided to SWR via fallback data. You can set "strictServerPrefetchWarning: false" to disable this warning.",
+          "Missing pre-initiated data for serialized key "ssr:6" during server-side rendering. Data fethcing should be initiated on the server and provided to SWR via fallback data. You can set "strictServerPrefetchWarning: false" to disable this warning.",
         ]
       `)
     })
