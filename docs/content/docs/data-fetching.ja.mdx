@@ -1,0 +1,77 @@
+---
+title: 'データフェッチ'
+---
+
+```js
+const { data, error } = useSWR(key, fetcher)
+```
+
+こちらは SWR のとても基本的な API です。この `fetcher` は非同期関数であり、SWR の **`key` を受け取り**データを返します。
+
+返り値は `data` として渡されます。もし例外が投げられた場合は `error` としてキャッチされます。
+
+<Callout emoji="💡">
+  <code>fetcher</code> が{' '}
+  <Link href="/docs/global-configuration">グローバルで提供されている</Link>{' '}
+  場合は、パラメーターから省略できることに注意してください。
+</Callout>
+
+## Fetch [#fetch]
+
+fetch ポリフィル [developit/unfetch](https://github.com/developit/unfetch) など、任意のライブラリを使用してデータのフェッチを処理できます：
+
+```js
+import fetch from 'unfetch'
+
+const fetcher = url => fetch(url).then(r => r.json())
+
+function App () {
+  const { data, error } = useSWR('/api/data', fetcher)
+  // ...
+}
+```
+
+<Callout emoji="💡">
+  <strong>Next.js</strong> を使用している場合は、次のポリフィルをインポートする必要はありません：<br/>
+  <a target="_blank" rel="noopener" href="https://nextjs.org/blog/next-9-1-7#new-built-in-polyfills-fetch-url-and-objectassign">New Built-In Polyfills: fetch(), URL, and Object.assign</a>
+</Callout>
+
+## Axios [#axios]
+
+```js
+import axios from 'axios'
+
+const fetcher = url => axios.get(url).then(res => res.data)
+
+function App () {
+  const { data, error } = useSWR('/api/data', fetcher)
+  // ...
+}
+```
+
+## GraphQL [#graphql]
+
+または、[graphql-request](https://github.com/prisma-labs/graphql-request) のようなライブラリで GraphQL を使う場合：
+
+```js
+import { request } from 'graphql-request'
+
+const fetcher = query => request('/api/graphql', query)
+
+function App () {
+  const { data, error } = useSWR(
+    `{
+      Movie(title: "Inception") {
+        releaseDate
+        actors {
+          name
+        }
+      }
+    }`,
+    fetcher
+  )
+  // ...
+}
+```
+
+_変数を GraphQL クエリーに渡したい場合は、[複数の引数](/docs/arguments) を確認してください。_
