@@ -22,8 +22,7 @@ import {
   internalMutate,
   revalidateEvents,
   mergeObjects,
-  isPromiseLike,
-  noop
+  isPromiseLike
 } from '../_internal'
 import type {
   State,
@@ -288,22 +287,21 @@ export const useSWRHandler = <Data = any, Error = any>(
       : cachedData
     : data
 
-  // Only true for SSR and hydration
-  const isSSROrHydration = useSyncExternalStore(
-    () => noop,
-    () => false,
-    () => true
-  )
-  const isSSR = isSSROrHydration && IS_SERVER
+  const hasKeyButNoData = key && isUndefined(data)
 
   // During the initial SSR render, warn if the key has no data pre-fetched via:
   // - fallback data
   // - preload calls
   // - initial data from the cache provider
-  // We only warn once for each key during hydration.
-  if (strictServerPrefetchWarning && isSSR && key && isUndefined(data)) {
+  // We only warn once for each key during SSR.
+  if (
+    strictServerPrefetchWarning &&
+    !suspense &&
+    IS_SERVER &&
+    hasKeyButNoData
+  ) {
     console.warn(
-      `Missing pre-initiated data for serialized key "${key}" during hydration. Data fethcing should be initiated on the server and provided to SWR via fallback data. You can set "strictServerPrefetchWarning: false" to disable this warning.`
+      `Missing pre-initiated data for serialized key "${key}" during server-side rendering. Data fethcing should be initiated on the server and provided to SWR via fallback data. You can set "strictServerPrefetchWarning: false" to disable this warning.`
     )
   }
 
@@ -735,7 +733,6 @@ export const useSWRHandler = <Data = any, Error = any>(
   // If there is no `error`, the `revalidation` promise needs to be thrown to
   // the suspense boundary.
   if (suspense) {
-    const hasKeyButNoData = key && isUndefined(data)
     // SWR should throw when trying to use Suspense on the server with React 18,
     // without providing any fallback data. This causes hydration errors. See:
     // https://github.com/vercel/swr/issues/1832
