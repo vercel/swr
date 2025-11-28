@@ -22,7 +22,8 @@ import {
   internalMutate,
   revalidateEvents,
   mergeObjects,
-  isPromiseLike
+  isPromiseLike,
+  noop
 } from '../_internal'
 import type {
   State,
@@ -289,6 +290,17 @@ export const useSWRHandler = <Data = any, Error = any>(
 
   const hasKeyButNoData = key && isUndefined(data)
 
+  // Note: the conditionally hook call is fine because the environment
+  // `IS_SERVER` never changes.
+  const isHydration =
+    !(typeof window === 'undefined') &&
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useSyncExternalStore(
+      () => noop,
+      () => false,
+      () => true
+    )
+
   // During the initial SSR render, warn if the key has no data pre-fetched via:
   // - fallback data
   // - preload calls
@@ -296,8 +308,8 @@ export const useSWRHandler = <Data = any, Error = any>(
   // We only warn once for each key during SSR.
   if (
     strictServerPrefetchWarning &&
+    isHydration &&
     !suspense &&
-    IS_SERVER &&
     hasKeyButNoData
   ) {
     console.warn(
