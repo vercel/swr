@@ -51,11 +51,11 @@ function runTests(propertyName) {
       const release = initFocus(fn) as () => void
 
       target.emit(eventName)
-      expect(fn).toBeCalledTimes(1)
+      expect(fn).toHaveBeenCalledTimes(1)
 
       release()
       target.emit(eventName)
-      expect(fn).toBeCalledTimes(1)
+      expect(fn).toHaveBeenCalledTimes(1)
     })
 
     it(`should not trigger listener when ${propertyName} is falsy`, async () => {
@@ -79,13 +79,13 @@ function runTests(propertyName) {
 
       target?.emit?.(eventName)
 
-      expect(fn).toBeCalledTimes(0)
+      expect(fn).toHaveBeenCalledTimes(0)
 
       release()
       if (target && target.emit) {
         target.emit(eventName)
       }
-      expect(fn).toBeCalledTimes(0)
+      expect(fn).toHaveBeenCalledTimes(0)
     })
   })
 }
