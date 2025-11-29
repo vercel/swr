@@ -1115,7 +1115,7 @@ describe('useSWRInfinite', () => {
 
     fireEvent.click(screen.getByText('mutate'))
     await screen.findByText('data: foo-1')
-    expect(fetcher).toBeCalledTimes(2)
+    expect(fetcher).toHaveBeenCalledTimes(2)
 
     expect(logger).toEqual([undefined, ['foo-0'], ['foo-1']])
   })
@@ -1268,7 +1268,7 @@ describe('useSWRInfinite', () => {
 
     fireEvent.click(screen.getByText('mutate'))
     await screen.findByText('data: foo-1')
-    expect(fetcher).toBeCalledTimes(2)
+    expect(fetcher).toHaveBeenCalledTimes(2)
 
     expect(logger).toEqual([undefined, ['foo-0'], ['foo-1']])
   })
@@ -1300,7 +1300,7 @@ describe('useSWRInfinite', () => {
     await screen.findByText('data: foo-0')
 
     fireEvent.click(screen.getByText('mutate'))
-    expect(fetcher).toBeCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledTimes(1)
 
     expect(logger).toEqual([undefined, ['foo-0']])
   })
