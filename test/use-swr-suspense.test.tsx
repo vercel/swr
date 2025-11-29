@@ -316,7 +316,7 @@ describe('useSWR - suspense', () => {
       </Suspense>
     )
 
-    expect(fetcher).not.toBeCalled()
+    expect(fetcher).not.toHaveBeenCalled()
     screen.getByText('hello, Initial')
   })
 

@@ -20,11 +20,11 @@ describe('useSWR - preload', () => {
     }
 
     preload(key, fetcher)
-    expect(fetcher).toBeCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledTimes(1)
 
     renderWithGlobalCache(<Page />)
     await screen.findByText('data:foo')
-    expect(fetcher).toBeCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledTimes(1)
   })
 
   it('should avoid preloading the resource multiple times', async () => {
@@ -39,11 +39,11 @@ describe('useSWR - preload', () => {
     preload(key, fetcher)
     preload(key, fetcher)
     preload(key, fetcher)
-    expect(fetcher).toBeCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledTimes(1)
 
     renderWithGlobalCache(<Page />)
     await screen.findByText('data:foo')
-    expect(fetcher).toBeCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledTimes(1)
   })
 
   it('should be able to prealod resources in effects', async () => {
@@ -68,12 +68,12 @@ describe('useSWR - preload', () => {
     }
 
     renderWithGlobalCache(<Page />)
-    expect(fetcher).toBeCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledTimes(1)
 
     fireEvent.click(screen.getByText('click'))
 
     await screen.findByText('data:foo')
-    expect(fetcher).toBeCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledTimes(1)
   })
 
   it('preload the fetcher function with the suspense mode', async () => {
@@ -86,7 +86,7 @@ describe('useSWR - preload', () => {
     }
 
     preload(key, fetcher)
-    expect(fetcher).toBeCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledTimes(1)
 
     renderWithGlobalCache(
       <Suspense
@@ -100,8 +100,8 @@ describe('useSWR - preload', () => {
       </Suspense>
     )
     await screen.findByText('data:foo')
-    expect(onRender).toBeCalledTimes(1)
-    expect(fetcher).toBeCalledTimes(1)
+    expect(onRender).toHaveBeenCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledTimes(1)
   })
 
   it('avoid suspense waterfall by prefetching the resources', async () => {
@@ -199,18 +199,18 @@ describe('useSWR - preload', () => {
     }
 
     preload(key, fetcher)
-    expect(fetcher).toBeCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledTimes(1)
 
     const { rerender } = renderWithGlobalCache(<Page />)
-    expect(onRender).toBeCalledTimes(1)
+    expect(onRender).toHaveBeenCalledTimes(1)
     // rerender when the preloading is in-flight, and the deduping interval is over
     await act(() => sleep(10))
     rerender(<Page />)
-    expect(onRender).toBeCalledTimes(2)
+    expect(onRender).toHaveBeenCalledTimes(2)
 
     await screen.findByText('data:foo')
-    expect(fetcher).toBeCalledTimes(1)
-    expect(onRender).toBeCalledTimes(3)
+    expect(fetcher).toHaveBeenCalledTimes(1)
+    expect(onRender).toHaveBeenCalledTimes(3)
   })
 
   it('should pass serialize key to fetcher', async () => {

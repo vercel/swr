@@ -256,7 +256,7 @@ describe('useSWR - middleware', () => {
     screen.getByText('hello,')
     await nextTick()
 
-    expect(logger).toBeCalledWith(true)
+    expect(logger).toHaveBeenCalledWith(true)
     screen.getByText('hello, world')
   })
 })
