@@ -122,7 +122,7 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.2",
-    "@edge-runtime/jest-environment": "^3.0.4",
+    "@edge-runtime/jest-environment": "^4.0.0",
     "@eslint/compat": "^2.0.0",
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.39.1",

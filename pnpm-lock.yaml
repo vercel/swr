@@ -19,8 +19,8 @@ importers:
         specifier: ^0.18.2
         version: 0.18.2
       '@edge-runtime/jest-environment':
-        specifier: ^3.0.4
-        version: 3.0.4
+        specifier: ^4.0.0
+        version: 4.0.0
       '@eslint/compat':
         specifier: ^2.0.0
         version: 2.0.0(eslint@9.39.1)
@@ -337,17 +337,17 @@ packages:
     resolution: {integrity: sha512-ooWCrlZP11i8GImSjTHYHLkvFDP48nS4+204nGb1RiX/WXYHmJA2III9/e2DWVabCESdW7hBAEzHRqUn9OUVvQ==}
     engines: {node: '>=0.1.90'}
 
-  '@edge-runtime/jest-environment@3.0.4':
-    resolution: {integrity: sha512-2VpMtS0mcc0qodGQ5ZJRC0OdPkbD029eYahTL5WrbItID4xzcbgF89wVJFIU2stHuFg0q/meCGiAbpgM3/57+Q==}
-    engines: {node: '>=16'}
+  '@edge-runtime/jest-environment@4.0.0':
+    resolution: {integrity: sha512-75bTOg+coJO0YRfwzlSzCxdNi7KRKcRBeCYSmnKrvYiS++iF2kif0TLL8oKu6Z70pcFO3ugC6AjOloLe0WxOzw==}
+    engines: {node: '>=18'}
 
-  '@edge-runtime/primitives@5.1.1':
-    resolution: {integrity: sha512-osrHE4ObQ3XFkvd1sGBLkheV2mcHUqJI/Bum2AWA0R3U78h9lif3xZAdl6eLD/XnW4xhsdwjPUejLusXbjvI4Q==}
-    engines: {node: '>=16'}
+  '@edge-runtime/primitives@6.0.0':
+    resolution: {integrity: sha512-FqoxaBT+prPBHBwE1WXS1ocnu/VLTQyZ6NMUBAdbP7N2hsFTTxMC/jMu2D/8GAlMQfxeuppcPuCUk/HO3fpIvA==}
+    engines: {node: '>=18'}
 
-  '@edge-runtime/vm@4.0.4':
-    resolution: {integrity: sha512-LqPw+yaSPpCNnVZl5XoHQAySEzlnZiC9gReUuQHMh9GI03KKqwpVqWkIK1UfK116Yww7f2WZuAgnY/nhHwTsJA==}
-    engines: {node: '>=16'}
+  '@edge-runtime/vm@5.0.0':
+    resolution: {integrity: sha512-NKBGBSIKUG584qrS1tyxVpX/AKJKQw5HgjYEnPLC0QsTw79JrGn+qUr8CXFb955Iy7GUdiiUv1rJ6JBGvaKb6w==}
+    engines: {node: '>=18'}
 
   '@emnapi/core@1.7.1':
     resolution: {integrity: sha512-o1uhUASyo921r2XtHYOHy7gdkGLge8ghBEQHMWmyJFoXlpU58kIrhhN3w26lpQb6dspetweapMn2CSNwQ8I4wg==}
@@ -3699,19 +3699,19 @@ snapshots:
   '@colors/colors@1.5.0':
     optional: true
 
-  '@edge-runtime/jest-environment@3.0.4':
+  '@edge-runtime/jest-environment@4.0.0':
     dependencies:
-      '@edge-runtime/vm': 4.0.4
+      '@edge-runtime/vm': 5.0.0
       '@jest/environment': 29.5.0
       '@jest/fake-timers': 29.5.0
       jest-mock: 29.5.0
       jest-util: 29.5.0
 
-  '@edge-runtime/primitives@5.1.1': {}
+  '@edge-runtime/primitives@6.0.0': {}
 
-  '@edge-runtime/vm@4.0.4':
+  '@edge-runtime/vm@5.0.0':
     dependencies:
-      '@edge-runtime/primitives': 5.1.1
+      '@edge-runtime/primitives': 6.0.0
 
   '@emnapi/core@1.7.1':
     dependencies:
@@ -3973,10 +3973,10 @@ snapshots:
 
   '@jest/environment@29.5.0':
     dependencies:
-      '@jest/fake-timers': 29.5.0
+      '@jest/fake-timers': 29.7.0
       '@jest/types': 29.6.3
       '@types/node': 22.19.1
-      jest-mock: 29.5.0
+      jest-mock: 29.7.0
 
   '@jest/environment@29.7.0':
     dependencies:
@@ -4009,8 +4009,8 @@ snapshots:
       '@sinonjs/fake-timers': 10.3.0
       '@types/node': 22.19.1
       jest-message-util: 29.7.0
-      jest-mock: 29.5.0
-      jest-util: 29.5.0
+      jest-mock: 29.7.0
+      jest-util: 29.7.0
 
   '@jest/fake-timers@29.7.0':
     dependencies:
@@ -6018,7 +6018,7 @@ snapshots:
     dependencies:
       '@jest/types': 29.6.3
       '@types/node': 22.19.1
-      jest-util: 29.5.0
+      jest-util: 29.7.0
 
   jest-mock@29.7.0:
     dependencies:
