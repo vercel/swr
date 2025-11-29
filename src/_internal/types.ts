@@ -27,7 +27,7 @@ export type Fetcher<
 
 export type BlockingData<
   Data = any,
-  Options = SWROptions<Data>
+  Options = SWRDefaultOptions<Data>
 > = SWRGlobalConfig extends { suspense: true }
   ? true
   : Options extends undefined
@@ -134,6 +134,12 @@ export interface PublicConfiguration<
    * @link https://swr.vercel.app/docs/with-nextjs
    */
   fallbackData?: Data | Promise<Data>
+  /**
+   * warns when preload data is missing for a given key, this includes fallback
+   * data, preload calls, or initial data from the cache provider
+   * @defaultValue false
+   */
+  strictServerPrefetchWarning?: boolean
   /**
    * the fetcher function
    */
@@ -452,14 +458,14 @@ export type SWRConfiguration<
 
 export type IsLoadingResponse<
   Data = any,
-  Options = SWROptions<Data>
+  Options = SWRDefaultOptions<Data>
 > = SWRGlobalConfig extends { suspense: true }
   ? Options extends { suspense: true }
     ? false
     : false
   : boolean
 
-type SWROptions<Data> = SWRConfiguration<Data, Error, Fetcher<Data, Key>>
+type SWRDefaultOptions<Data> = SWRConfiguration<Data, Error, Fetcher<Data, Key>>
 type SWRConfigurationWithOptionalFallback<Options> =
   // If `Options` has `fallbackData`, this turns it to optional instead.
   Options extends SWRConfiguration &

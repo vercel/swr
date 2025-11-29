@@ -113,7 +113,6 @@ describe('useSWR - promise', () => {
   })
 
   it('should handle errors with fallback promises', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
     jest.spyOn(console, 'error').mockImplementation(() => {})
 
     const key = createKey()

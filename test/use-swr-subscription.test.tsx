@@ -294,7 +294,6 @@ describe('useSWRSubscription', () => {
   })
 
   it('should require a dispose function', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
     jest.spyOn(console, 'error').mockImplementation(() => {})
 
     const swrKey = createKey()
