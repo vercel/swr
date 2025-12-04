@@ -22,7 +22,7 @@ export { getTimestamp } from './utils/timestamp'
 export { useSWRConfig } from './utils/use-swr-config'
 export { preset, defaultConfigOptions } from './utils/web-preset'
 export { withMiddleware } from './utils/with-middleware'
-export { preload } from './utils/preload'
+export { preload, clearPreloadCache } from './utils/preload'
 
 export * from './types'
 

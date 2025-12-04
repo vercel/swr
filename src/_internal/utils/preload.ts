@@ -39,6 +39,13 @@ export const preload = <
   return req
 }
 
+export const clearPreloadCache = () => {
+  const globalState = SWRGlobalState.get(cache) as GlobalState
+
+  // index 3 are PRELOAD
+  globalState[3] = Object.create(null)
+}
+
 export const middleware: Middleware =
   useSWRNext => (key_, fetcher_, config) => {
     // fetcher might be a sync function, so this should not be an async function
