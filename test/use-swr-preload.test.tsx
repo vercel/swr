@@ -1,6 +1,6 @@
 import { act, fireEvent, screen } from '@testing-library/react'
 import { Suspense, useEffect, useState, Profiler } from 'react'
-import useSWR, { preload, useSWRConfig } from 'swr'
+import useSWR, { preload, clearPreloadCache, useSWRConfig } from 'swr'
 import {
   createKey,
   createResponse,
@@ -223,5 +223,25 @@ describe('useSWR - preload', () => {
 
     preload(() => key, fetcher)
     expect(calledWith).toBe(key)
+  })
+
+  it('re-call fetcher when preload cache are cleared', async () => {
+    const key = createKey()
+
+    const fetcher = jest.fn(() => createResponse('foo'))
+
+    function Page() {
+      const { data } = useSWR(key, fetcher)
+      return <div>data:{data}</div>
+    }
+
+    preload(key, fetcher)
+    expect(fetcher).toBeCalledTimes(1)
+
+    clearPreloadCache()
+
+    renderWithGlobalCache(<Page />)
+    await screen.findByText('data:foo')
+    expect(fetcher).toBeCalledTimes(2)
   })
 })
