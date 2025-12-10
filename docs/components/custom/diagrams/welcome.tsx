@@ -3,7 +3,7 @@
 import { diagramWelcomePathMap } from '../../translations/svgs'
 import { useParams } from 'next/navigation'
 
-export const Welcome = (): JSX.Element => {
+export const Welcome = () => {
   const { lang } = useParams()
   const path = diagramWelcomePathMap[lang as keyof typeof diagramWelcomePathMap]
 

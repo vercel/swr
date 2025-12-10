@@ -3,7 +3,7 @@
 import { diagramInfinitePathMap } from '../../translations/svgs'
 import { useParams } from 'next/navigation'
 
-export const Infinite = (): JSX.Element => {
+export const Infinite = () => {
   const { lang } = useParams()
   const path =
     diagramInfinitePathMap[lang as keyof typeof diagramInfinitePathMap]

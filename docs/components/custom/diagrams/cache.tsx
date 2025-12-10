@@ -3,7 +3,7 @@
 import { diagramCachePathsMap } from '../../translations/svgs'
 import { useParams } from 'next/navigation'
 
-export const Cache = (): JSX.Element => {
+export const Cache = () => {
   const { lang } = useParams()
   const paths = diagramCachePathsMap[lang as keyof typeof diagramCachePathsMap]
 

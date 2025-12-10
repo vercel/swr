@@ -3,7 +3,7 @@
 import { diagramPaginationPathsMap } from '../../translations/svgs'
 import { useParams } from 'next/navigation'
 
-export const Pagination = (): JSX.Element => {
+export const Pagination = () => {
   const { lang } = useParams()
   const paths =
     diagramPaginationPathsMap[lang as keyof typeof diagramPaginationPathsMap]
