@@ -1,43 +1,47 @@
-import { DocsLayout as FumadocsDocsLayout } from 'fumadocs-ui/layouts/docs'
-import { Folder, Item, Separator } from '@/components/geistdocs/sidebar'
-import { i18n } from '@/lib/geistdocs/i18n'
-import type { ComponentProps } from 'react'
-import type { ReactNode } from 'react'
+import { DocsLayout as FumadocsDocsLayout } from "fumadocs-ui/layouts/docs";
+import type { ComponentProps, CSSProperties, ReactNode } from "react";
+import {
+  Folder,
+  Item,
+  Separator,
+  Sidebar,
+} from "@/components/geistdocs/sidebar";
+import { i18n } from "@/lib/geistdocs/i18n";
 
 type DocsLayoutProps = {
-  children: ReactNode
-  tree: ComponentProps<typeof FumadocsDocsLayout>['tree']
-}
+  tree: ComponentProps<typeof FumadocsDocsLayout>["tree"];
+  children: ReactNode;
+};
 
-export const DocsLayout = ({ children, tree }: DocsLayoutProps) => (
+export const DocsLayout = ({ tree, children }: DocsLayoutProps) => (
   <FumadocsDocsLayout
-    i18n={i18n}
     containerProps={{
-      className:
-        'md:grid md:grid-cols-[286px_1fr_286px] md:pl-0! md:mx-auto! md:w-full md:max-w-(--fd-layout-width)!'
+      style: {
+        "--fd-docs-row-1": "4rem",
+      } as CSSProperties,
     }}
+    i18n={i18n}
     nav={{
-      enabled: false
+      enabled: false,
     }}
     searchToggle={{
-      enabled: false
+      enabled: false,
     }}
     sidebar={{
-      className:
-        'md:static md:sticky md:top-16 md:h-fit md:w-auto! bg-background! md:bg-transparent! border-none transition-none [&>div:last-child]:hidden',
       collapsible: false,
+      component: <Sidebar />,
       components: {
         Folder,
         Item,
-        Separator
-      }
+        Separator,
+      },
     }}
     tabMode="auto"
     themeSwitch={{
-      enabled: false
+      enabled: false,
     }}
     tree={tree}
   >
     {children}
   </FumadocsDocsLayout>
-)
+);

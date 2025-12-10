@@ -1,15 +1,15 @@
-import type { ReactNode } from 'react'
+import type { ReactNode } from "react";
 
 type CenteredSectionProps = {
-  title: string
-  description: string
-  children: ReactNode
-}
+  title: string;
+  description: string;
+  children: ReactNode;
+};
 
 export const CenteredSection = ({
   title,
   description,
-  children
+  children,
 }: CenteredSectionProps) => (
   <div className="grid items-center gap-10 overflow-hidden px-4 py-8 sm:px-12 sm:py-12">
     <div className="mx-auto grid max-w-lg gap-4 text-center">
@@ -23,4 +23,4 @@ export const CenteredSection = ({
 
     {children}
   </div>
-)
+);

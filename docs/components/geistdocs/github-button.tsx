@@ -1,15 +1,13 @@
 import { SiGithub } from "@icons-pack/react-simple-icons";
+import { github } from "@/geistdocs";
 import { Button } from "../ui/button";
 
 export const GitHubButton = () => {
-  const owner = process.env.NEXT_PUBLIC_GEISTDOCS_OWNER;
-  const repo = process.env.NEXT_PUBLIC_GEISTDOCS_REPO;
-
-  if (!(owner && repo)) {
+  if (!(github.owner && github.repo)) {
     return null;
   }
 
-  const url = `https://github.com/${owner}/${repo}`;
+  const url = `https://github.com/${github.owner}/${github.repo}`;
 
   return (
     <Button asChild size="icon-sm" type="button" variant="ghost">

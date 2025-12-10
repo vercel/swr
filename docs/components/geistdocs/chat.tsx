@@ -2,11 +2,14 @@
 
 import type { UIMessage } from "@ai-sdk/react";
 import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
 import { useLiveQuery } from "dexie-react-hooks";
 import { ChevronRightIcon, MessagesSquareIcon, Trash } from "lucide-react";
 import { Portal } from "radix-ui";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { harden } from "rehype-harden";
 import { toast } from "sonner";
+import { defaultRehypePlugins } from "streamdown";
 import type { MyUIMessage } from "@/app/api/chat/types";
 import {
   Conversation,
@@ -110,7 +113,12 @@ export const useChatPersistence = () => {
   };
 };
 
-const ChatInner = ({ suggestions }: ChatProps) => {
+type ChatProps = {
+  basePath: string | undefined;
+  suggestions: string[];
+};
+
+const ChatInner = ({ basePath, suggestions }: ChatProps) => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [localPrompt, setLocalPrompt] = useState("");
   const [providerKey, setProviderKey] = useState(0);
@@ -119,6 +127,9 @@ const ChatInner = ({ suggestions }: ChatProps) => {
     useChatPersistence();
 
   const { messages, sendMessage, status, setMessages } = useChat({
+    transport: new DefaultChatTransport({
+      api: basePath ? `${basePath}/api/chat` : "/api/chat",
+    }),
     onError: (error) => {
       toast.error(error.message, {
         description: error.message,
@@ -245,7 +256,21 @@ const ChatInner = ({ suggestions }: ChatProps) => {
                 .filter((part) => part.type === "text")
                 .map((part, index) => (
                   <MessageContent key={`${message.id}-${part.type}-${index}`}>
-                    <MessageResponse className="text-wrap">
+                    <MessageResponse
+                      className="text-wrap"
+                      rehypePlugins={[
+                        defaultRehypePlugins.raw,
+                        defaultRehypePlugins.katex,
+                        [
+                          harden,
+                          {
+                            defaultOrigin:
+                              process.env
+                                .NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL,
+                          },
+                        ],
+                      ]}
+                    >
                       {part.text}
                     </MessageResponse>
                   </MessageContent>
@@ -311,11 +336,7 @@ const ChatInner = ({ suggestions }: ChatProps) => {
   );
 };
 
-type ChatProps = {
-  suggestions: string[];
-};
-
-export const Chat = ({ suggestions }: ChatProps) => {
+export const Chat = ({ basePath, suggestions }: ChatProps) => {
   const { isOpen, setIsOpen } = useChatContext();
   const isMobile = useIsMobile();
 
@@ -362,7 +383,7 @@ export const Chat = ({ suggestions }: ChatProps) => {
           )}
           data-state={isOpen ? "open" : "closed"}
         >
-          <ChatInner suggestions={suggestions} />
+          <ChatInner basePath={basePath} suggestions={suggestions} />
         </div>
       </Portal.Root>
       <div className="md:hidden">
@@ -372,11 +393,12 @@ export const Chat = ({ suggestions }: ChatProps) => {
         >
           <DrawerTrigger asChild>
             <Button className="shadow-none" size="sm" variant="outline">
+              <MessagesSquareIcon className="size-3.5 text-muted-foreground" />
               Ask AI
             </Button>
           </DrawerTrigger>
           <DrawerContent className="h-[80dvh]">
-            <ChatInner suggestions={suggestions} />
+            <ChatInner basePath={basePath} suggestions={suggestions} />
           </DrawerContent>
         </Drawer>
       </div>

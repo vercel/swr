@@ -1,16 +1,16 @@
-import Image from 'next/image'
-import { cn } from '@/lib/utils'
+import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 type TemplatesProps = {
-  title: string
-  description: string
+  title: string;
+  description: string;
   data: {
-    title: string
-    description: string
-    link: string
-    image: string
-  }[]
-}
+    title: string;
+    description: string;
+    link: string;
+    image: string;
+  }[];
+};
 
 export const Templates = ({ title, description, data }: TemplatesProps) => (
   <div className="grid gap-12 p-8 px-4 py-8 sm:p-12 sm:px-12 sm:py-12">
@@ -23,7 +23,7 @@ export const Templates = ({ title, description, data }: TemplatesProps) => (
       </p>
     </div>
     <div className="grid gap-8 md:grid-cols-3">
-      {data.map(item => (
+      {data.map((item) => (
         <a
           className="group flex-col overflow-hidden rounded-lg border bg-background p-4"
           href={item.link}
@@ -36,8 +36,8 @@ export const Templates = ({ title, description, data }: TemplatesProps) => (
           <Image
             alt={item.title}
             className={cn(
-              '-rotate-3 -mb-12 mt-8 ml-7 aspect-video overflow-hidden rounded-md border object-cover object-top',
-              'group-hover:-rotate-1 transition-transform duration-300 group-hover:scale-105'
+              "-rotate-3 -mb-12 mt-8 ml-7 aspect-video overflow-hidden rounded-md border object-cover object-top",
+              "group-hover:-rotate-1 transition-transform duration-300 group-hover:scale-105"
             )}
             height={336}
             src={item.image}
@@ -47,4 +47,4 @@ export const Templates = ({ title, description, data }: TemplatesProps) => (
       ))}
     </div>
   </div>
-)
+);

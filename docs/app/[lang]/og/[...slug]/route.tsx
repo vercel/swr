@@ -6,10 +6,10 @@ import { getPageImage, source } from "@/lib/geistdocs/source";
 
 export const GET = async (
   _request: NextRequest,
-  { params }: RouteContext<"/og/[...slug]">
+  { params }: RouteContext<"/[lang]/og/[...slug]">
 ) => {
-  const { slug } = await params;
-  const page = source.getPage(slug.slice(0, -1));
+  const { slug, lang } = await params;
+  const page = source.getPage(slug.slice(0, -1), lang);
 
   if (!page) {
     return new Response("Not found", { status: 404 });
@@ -18,15 +18,15 @@ export const GET = async (
   const { title, description } = page.data;
 
   const regularFont = await readFile(
-    join(process.cwd(), "app/og/[...slug]/geist-sans-regular.ttf")
+    join(process.cwd(), "app/[lang]/og/[...slug]/geist-sans-regular.ttf")
   );
 
   const semiboldFont = await readFile(
-    join(process.cwd(), "app/og/[...slug]/geist-sans-semibold.ttf")
+    join(process.cwd(), "app/[lang]/og/[...slug]/geist-sans-semibold.ttf")
   );
 
   const backgroundImage = await readFile(
-    join(process.cwd(), "app/og/[...slug]/background.png")
+    join(process.cwd(), "app/[lang]/og/[...slug]/background.png")
   );
 
   const backgroundImageData = backgroundImage.buffer.slice(
@@ -83,8 +83,13 @@ export const GET = async (
   );
 };
 
-export const generateStaticParams = () =>
-  source.getPages().map((page) => ({
+export const generateStaticParams = async ({
+  params,
+}: RouteContext<"/[lang]/og/[...slug]">) => {
+  const { lang } = await params;
+
+  return source.getPages(lang).map((page) => ({
     lang: page.locale,
     slug: getPageImage(page).segments,
   }));
+};

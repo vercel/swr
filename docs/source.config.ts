@@ -1,54 +1,56 @@
-import { remarkMdxMermaid } from 'fumadocs-core/mdx-plugins'
+import { remarkMdxMermaid } from "fumadocs-core/mdx-plugins";
 import {
   defineConfig,
   defineDocs,
   frontmatterSchema,
-  metaSchema
-} from 'fumadocs-mdx/config'
+  metaSchema,
+} from "fumadocs-mdx/config";
+import lastModified from "fumadocs-mdx/plugins/last-modified";
 
 // You can customise Zod schemas for frontmatter and `meta.json` here
 // see https://fumadocs.dev/docs/mdx/collections
 export const docs = defineDocs({
-  dir: 'content/docs',
+  dir: "content/docs",
   docs: {
     schema: frontmatterSchema,
     postprocess: {
-      includeProcessedMarkdown: true
-    }
+      includeProcessedMarkdown: true,
+    },
   },
   meta: {
-    schema: metaSchema
-  }
-})
+    schema: metaSchema,
+  },
+});
 
 export const blog = defineDocs({
-  dir: 'content/blog',
+  dir: "content/blog",
   docs: {
     schema: frontmatterSchema,
     postprocess: {
-      includeProcessedMarkdown: true
-    }
+      includeProcessedMarkdown: true,
+    },
   },
   meta: {
-    schema: metaSchema
-  }
-})
+    schema: metaSchema,
+  },
+});
 
 export const examples = defineDocs({
-  dir: 'content/examples',
+  dir: "content/examples",
   docs: {
     schema: frontmatterSchema,
     postprocess: {
-      includeProcessedMarkdown: true
-    }
+      includeProcessedMarkdown: true,
+    },
   },
   meta: {
-    schema: metaSchema
-  }
-})
+    schema: metaSchema,
+  },
+});
 
 export default defineConfig({
   mdxOptions: {
-    remarkPlugins: [remarkMdxMermaid]
-  }
-})
+    remarkPlugins: [remarkMdxMermaid],
+  },
+  plugins: [lastModified()],
+});

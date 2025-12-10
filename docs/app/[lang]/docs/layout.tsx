@@ -1,10 +1,10 @@
-import { DocsLayout } from '@/components/geistdocs/docs-layout'
-import { source } from '@/lib/geistdocs/source'
+import { DocsLayout } from "@/components/geistdocs/docs-layout";
+import { source } from "@/lib/geistdocs/source";
 
-const Layout = async (props: LayoutProps<'/[lang]/docs'>) => {
-  const { lang } = await props.params
+const Layout = async ({ children, params }: LayoutProps<"/[lang]/docs">) => {
+  const { lang } = await params;
 
-  return <DocsLayout tree={source.pageTree[lang]} {...props} />
-}
+  return <DocsLayout tree={source.pageTree[lang]}>{children}</DocsLayout>;
+};
 
-export default Layout
+export default Layout;

@@ -14,15 +14,24 @@ import {
 } from "fumadocs-ui/components/dialog/search";
 import { useI18n } from "fumadocs-ui/contexts/i18n";
 import { useSearchContext } from "fumadocs-ui/contexts/search";
-import { SearchIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { Kbd } from "../ui/kbd";
 
-export const SearchDialog = (props: SharedProps) => {
+type SearchButtonProps = {
+  className?: string;
+  onClick?: () => void;
+};
+
+export const SearchDialog = ({
+  basePath,
+  ...props
+}: SharedProps & { basePath: string | undefined }) => {
   const { locale } = useI18n();
   const { search, setSearch, query } = useDocsSearch({
     type: "fetch",
     locale,
+    api: basePath ? `${basePath}/api/search` : "/api/search",
   });
 
   return (
@@ -45,30 +54,25 @@ export const SearchDialog = (props: SharedProps) => {
   );
 };
 
-export const SearchButton = () => {
+export const SearchButton = ({ className, onClick }: SearchButtonProps) => {
   const { setOpenSearch } = useSearchContext();
 
   return (
-    <>
-      <Button
-        className="hidden gap-8 pr-1.5 font-normal text-muted-foreground shadow-none sm:flex"
-        onClick={() => setOpenSearch(true)}
-        size="sm"
-        type="button"
-        variant="outline"
-      >
-        <span>Search...</span>
-        <Kbd className="border bg-background font-medium">⌘K</Kbd>
-      </Button>
-      <Button
-        className="sm:hidden"
-        onClick={() => setOpenSearch(true)}
-        size="icon-sm"
-        type="button"
-        variant="ghost"
-      >
-        <SearchIcon className="size-4" />
-      </Button>
-    </>
+    <Button
+      className={cn(
+        "justify-between gap-8 pr-1.5 font-normal text-muted-foreground shadow-none",
+        className
+      )}
+      onClick={() => {
+        setOpenSearch(true);
+        onClick?.();
+      }}
+      size="sm"
+      type="button"
+      variant="outline"
+    >
+      <span>Search...</span>
+      <Kbd className="border bg-background font-medium">⌘K</Kbd>
+    </Button>
   );
 };

@@ -16,9 +16,10 @@ const COPY_TIMEOUT = 2000;
 
 type InstallerProps = {
   command: string;
+  className?: string;
 };
 
-export const Installer = ({ command }: InstallerProps) => {
+export const Installer = ({ command, className = "w-48" }: InstallerProps) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -41,7 +42,7 @@ export const Installer = ({ command }: InstallerProps) => {
           $
         </InputGroupText>
       </InputGroupAddon>
-      <InputGroupInput readOnly value={command} />
+      <InputGroupInput className={className} readOnly value={command} />
       <InputGroupAddon align="inline-end">
         <InputGroupButton
           aria-label="Copy"

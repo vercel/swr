@@ -1,58 +1,61 @@
-import type { Metadata } from 'next'
-import Link from 'next/link'
-import { Installer } from '@/components/geistdocs/installer'
-import { Button } from '@/components/ui/button'
-import { CenteredSection } from './components/centered-section'
-import { CTA } from './components/cta'
-import { Hero } from './components/hero'
-import { OneTwoSection } from './components/one-two-section'
-import { Templates } from './components/templates'
-import { TextGridSection } from './components/text-grid-section'
+import DynamicLink from "fumadocs-core/dynamic-link";
+import type { Metadata } from "next";
+import { Installer } from "@/components/geistdocs/installer";
+import { Button } from "@/components/ui/button";
+import { CenteredSection } from "./components/centered-section";
+import { CTA } from "./components/cta";
+import { Hero } from "./components/hero";
+import { OneTwoSection } from "./components/one-two-section";
+import { Templates } from "./components/templates";
+import { TextGridSection } from "./components/text-grid-section";
 
-const title = 'Geistdocs'
+const title = "Geistdocs";
 const description =
-  'A Vercel documentation template built with Next.js and Fumadocs. Designed for spinning up documentation sites quickly and consistently.'
+  "A Vercel documentation template built with Next.js and Fumadocs. Designed for spinning up documentation sites quickly and consistently.";
 
 export const metadata: Metadata = {
   title,
-  description
-}
+  description,
+};
 
 const templates = [
   {
-    title: 'Template 1',
-    description: 'Description of template 1',
-    link: 'https://example.com/template-1',
-    image: 'https://placehold.co/600x400.png'
+    title: "Template 1",
+    description: "Description of template 1",
+    link: "https://example.com/template-1",
+    image: "https://placehold.co/600x400.png",
   },
   {
-    title: 'Template 2',
-    description: 'Description of template 2',
-    link: 'https://example.com/template-2',
-    image: 'https://placehold.co/600x400.png'
+    title: "Template 2",
+    description: "Description of template 2",
+    link: "https://example.com/template-2",
+    image: "https://placehold.co/600x400.png",
   },
   {
-    title: 'Template 3',
-    description: 'Description of template 3',
-    link: 'https://example.com/template-3',
-    image: 'https://placehold.co/600x400.png'
-  }
-]
+    title: "Template 3",
+    description: "Description of template 3",
+    link: "https://example.com/template-3",
+    image: "https://placehold.co/600x400.png",
+  },
+];
 
 const textGridSection = [
   {
-    title: 'Text Grid Section',
-    description: 'Description of text grid section'
+    id: "1",
+    title: "Text Grid Section",
+    description: "Description of text grid section",
   },
   {
-    title: 'Text Grid Section',
-    description: 'Description of text grid section'
+    id: "2",
+    title: "Text Grid Section",
+    description: "Description of text grid section",
   },
   {
-    title: 'Text Grid Section',
-    description: 'Description of text grid section'
-  }
-]
+    id: "3",
+    title: "Text Grid Section",
+    description: "Description of text grid section",
+  },
+];
 
 const HomePage = () => (
   <div className="container mx-auto max-w-5xl">
@@ -63,9 +66,11 @@ const HomePage = () => (
     >
       <div className="mx-auto inline-flex w-fit items-center gap-3">
         <Button asChild className="px-4" size="lg">
-          <Link href="/docs/getting-started">Get Started</Link>
+          <DynamicLink href="/[lang]/docs/getting-started">
+            Get Started
+          </DynamicLink>
         </Button>
-        <Installer command="gh repo create mydocs --template vercel/geistdocs --clone" />
+        <Installer command="npx @vercel/geistdocs init" />
       </div>
     </Hero>
     <div className="grid divide-y border-y sm:border-x">
@@ -90,6 +95,6 @@ const HomePage = () => (
       <CTA cta="Get started" href="/docs" title="Start your docs today" />
     </div>
   </div>
-)
+);
 
-export default HomePage
+export default HomePage;

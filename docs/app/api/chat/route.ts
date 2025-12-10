@@ -83,19 +83,12 @@ User question: ${userQuestion}`,
       originalMessages: messages,
       execute: ({ writer }) => {
         const result = streamText({
-          model: "openai/gpt-5",
-          providerOptions: {
-            openai: {
-              reasoningEffort: "minimal",
-              reasoningSummary: "auto",
-              textVerbosity: "medium",
-              serviceTier: "priority",
-            },
-          },
+          model: "openai/gpt-4.1-mini",
           messages: convertToModelMessages(processedMessages),
           stopWhen: stepCountIs(10),
           tools: createTools(writer),
           system: createSystemPrompt(currentRoute),
+          toolChoice: { type: "tool", toolName: "search_docs" },
         });
 
         writer.merge(result.toUIMessageStream());
