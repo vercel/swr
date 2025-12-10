@@ -13,9 +13,9 @@ export const Logo = () => (
 )
 
 export const github = {
-  owner: "vercel",
-  repo: "swr",
-};
+  owner: 'vercel',
+  repo: 'swr'
+}
 
 export const nav = [
   {
@@ -33,39 +33,39 @@ export const nav = [
 ]
 
 export const suggestions = [
-  "What is Vercel?",
-  "What can I deploy with Vercel?",
-  "What is Fluid Compute?",
-  "How much does Vercel cost?",
-];
+  'What is SWR?',
+  'How does SWR work?',
+  'How do I fetch data?',
+  'How do I handle errors?'
+]
 
-export const title = "SWR Documentation";
+export const title = 'SWR Documentation'
 
 export const prompt =
-  "You are a helpful assistant specializing in answering questions about SWR, a library for data fetching in React.";
+  'You are a helpful assistant specializing in answering questions about SWR, a library for data fetching in React.'
 
 export const translations = {
-  'en': {
+  en: {
     displayName: 'English'
   },
-  'fr': {
+  fr: {
     displayName: 'French'
   },
-  'ja': {
+  ja: {
     displayName: 'Japanese'
   },
   ko: {
     displayName: 'Korean'
   },
-  'pt': {
+  pt: {
     displayName: 'Portuguese'
   },
   ru: {
     displayName: 'Russian'
   },
-  'cn': {
+  cn: {
     displayName: 'Chinese'
   }
 }
 
-export const basePath: string | undefined = undefined;
+export const basePath: string | undefined = undefined
