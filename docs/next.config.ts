@@ -38,6 +38,27 @@ const config: NextConfig = {
         source: '/examples',
         destination: '/examples/basic',
         permanent: true
+      },
+
+      {
+        source: '/fr-FR/:path*',
+        destination: '/fr/:path*',
+        permanent: true
+      },
+      {
+        source: '/es-ES/:path*',
+        destination: '/es/:path*',
+        permanent: true
+      },
+      {
+        source: '/pt-BR/:path*',
+        destination: '/pt/:path*',
+        permanent: true
+      },
+      {
+        source: '/zh-CN/:path*',
+        destination: '/zh/:path*',
+        permanent: true
       }
     ]
   },
