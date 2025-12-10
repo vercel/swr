@@ -49,7 +49,11 @@ export default function Features() {
       <p className="text-lg mb-2 text-gray-600 md:text-2xl!">{title}</p>
       <div className="grid grid-cols-2 gap-y-4 gap-x-2 mt-10 mb-8 md:grid-cols-4 lg:gap-x-8 max-[860px]:gap-x-2">
         {FEATURES_LIST.map(({ key, icon }) => (
-          <Feature text={features[key]} icon={icon} key={keyId + key} />
+          <Feature
+            text={features[key as keyof typeof features] as string}
+            icon={icon}
+            key={keyId + key}
+          />
         ))}
       </div>
     </div>
