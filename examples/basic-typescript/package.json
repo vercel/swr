@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
-    "next": "latest",
+    "next": "15.5.7",
     "react": "latest",
     "react-dom": "latest",
     "swr": "latest"

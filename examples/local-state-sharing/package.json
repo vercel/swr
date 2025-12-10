@@ -6,7 +6,7 @@
   "dependencies": {
     "react": "latest",
     "react-dom": "latest",
-    "next": "latest",
+    "next": "15.5.7",
     "swr": "latest"
   },
   "scripts": {
