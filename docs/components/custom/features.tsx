@@ -5,14 +5,16 @@ import type { ReactNode } from 'react'
 import { featuresMap, titleMap } from '../translations/text'
 import { useParams } from 'next/navigation'
 
-import BackendAgnosticIcon from './icons/backend-agnostic'
-import LightweightIcon from './icons/lightweight'
-import PaginationIcon from './icons/pagination'
-import RealtimeIcon from './icons/realtime'
-import RemoteLocalIcon from './icons/remote-local'
-import RenderingStrategiesIcon from './icons/rendering-strategies'
-import SuspenseIcon from './icons/suspense'
-import TypeScriptIcon from './icons/typescript'
+import {
+  BackendAgnosticIcon,
+  LightweightIcon,
+  PaginationIcon,
+  RealtimeIcon,
+  RemoteLocalIcon,
+  RenderingStrategiesIcon,
+  SuspenseIcon,
+  TypeScriptIcon
+} from './icons'
 
 export function Feature({ text, icon }: { text: string; icon: ReactNode }) {
   return (
