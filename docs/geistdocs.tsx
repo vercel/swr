@@ -49,22 +49,22 @@ export const translations = {
     displayName: 'English'
   },
   fr: {
-    displayName: 'French'
+    displayName: 'Français'
   },
   ja: {
-    displayName: 'Japanese'
+    displayName: '日本語'
   },
   ko: {
-    displayName: 'Korean'
+    displayName: '한국어'
   },
   pt: {
-    displayName: 'Portuguese'
+    displayName: 'Português'
   },
   ru: {
-    displayName: 'Russian'
+    displayName: 'Русский'
   },
   cn: {
-    displayName: 'Chinese'
+    displayName: '简体中文'
   }
 }
 
