@@ -1,7 +1,7 @@
 import { DocsLayout } from '@/components/geistdocs/docs-layout'
 import { examplesSource } from '@/lib/geistdocs/source'
 
-const Layout = async (props: LayoutProps<'/[lang]/docs'>) => {
+const Layout = async (props: LayoutProps<'/[lang]/examples'>) => {
   const { lang } = await props.params
 
   return <DocsLayout tree={examplesSource.pageTree[lang]} {...props} />

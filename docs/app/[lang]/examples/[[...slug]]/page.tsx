@@ -1,4 +1,5 @@
 import { createRelativeLink } from 'fumadocs-ui/mdx'
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { AskAI } from '@/components/geistdocs/ask-ai'
 import { CopyPage } from '@/components/geistdocs/copy-page'
@@ -13,27 +14,16 @@ import { Feedback } from '@/components/geistdocs/feedback'
 import { getMDXComponents } from '@/components/geistdocs/mdx-components'
 import { OpenInChat } from '@/components/geistdocs/open-in-chat'
 import { ScrollTop } from '@/components/geistdocs/scroll-top'
-import { TableOfContents } from '@/components/geistdocs/toc'
+import { Separator } from '@/components/ui/separator'
 import {
-  examplesSource,
   getLLMText,
-  getPageImage
+  getPageImage,
+  examplesSource
 } from '@/lib/geistdocs/source'
 
-import { Bleed } from '@/components/custom/bleed'
-import Authors, { Author } from '@/components/custom/authors'
-import Features from '@/components/custom/features'
-import { Welcome } from '@/components/custom/diagrams/welcome'
-import { Pagination } from '@/components/custom/diagrams/pagination'
-import { Infinite } from '@/components/custom/diagrams/infinite'
-import { Cache } from '@/components/custom/diagrams/cache'
-import Link from 'next/link'
-import type { Metadata } from 'next'
-
-const Page = async (props: PageProps<'/[lang]/examples/[[...slug]]'>) => {
-  const params = await props.params
-
-  const page = examplesSource.getPage(params.slug, params.lang)
+const Page = async ({ params }: PageProps<'/[lang]/examples/[[...slug]]'>) => {
+  const { slug, lang } = await params
+  const page = examplesSource.getPage(slug, lang)
 
   if (!page) {
     notFound()
@@ -45,37 +35,30 @@ const Page = async (props: PageProps<'/[lang]/examples/[[...slug]]'>) => {
   return (
     <DocsPage
       full={page.data.full}
-      toc={page.data.toc}
       tableOfContent={{
-        component: (
-          <TableOfContents>
+        style: 'clerk',
+        footer: (
+          <div className="my-3 space-y-3">
+            <Separator />
             <EditSource path={page.path} />
             <ScrollTop />
             <Feedback />
             <CopyPage text={markdown} />
             <AskAI href={page.url} />
             <OpenInChat href={page.url} />
-          </TableOfContents>
+          </div>
         )
       }}
+      toc={page.data.toc}
     >
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
       <DocsBody>
         <MDX
           components={getMDXComponents({
-            a: createRelativeLink(examplesSource, page),
+            a: createRelativeLink(examplesSource, page)
 
             // Add your custom components here
-            Bleed,
-            Authors,
-            Author,
-            Features,
-            Welcome,
-            Pagination,
-            Infinite,
-            Cache,
-            Link
           })}
         />
       </DocsBody>
@@ -85,10 +68,10 @@ const Page = async (props: PageProps<'/[lang]/examples/[[...slug]]'>) => {
 
 export const generateStaticParams = () => examplesSource.generateParams()
 
-export const generateMetadata = async (
-  props: PageProps<'/[lang]/examples/[[...slug]]'>
-) => {
-  const { slug, lang } = await props.params
+export const generateMetadata = async ({
+  params
+}: PageProps<'/[lang]/examples/[[...slug]]'>) => {
+  const { slug, lang } = await params
   const page = examplesSource.getPage(slug, lang)
 
   if (!page) {
