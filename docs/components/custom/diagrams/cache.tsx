@@ -5,7 +5,10 @@ import { useParams } from 'next/navigation'
 
 export const Cache = () => {
   const { lang } = useParams()
-  const paths = diagramCachePathsMap[lang as keyof typeof diagramCachePathsMap]
+  const paths =
+    typeof lang === 'string' && lang in diagramCachePathsMap
+      ? diagramCachePathsMap[lang as keyof typeof diagramCachePathsMap]
+      : diagramCachePathsMap.en
 
   return (
     <svg viewBox="0 0 588 311" fill="none" className="invert-on-dark">

@@ -5,7 +5,10 @@ import { useParams } from 'next/navigation'
 
 export const Welcome = () => {
   const { lang } = useParams()
-  const path = diagramWelcomePathMap[lang as keyof typeof diagramWelcomePathMap]
+  const path =
+    typeof lang === 'string' && lang in diagramWelcomePathMap
+      ? diagramWelcomePathMap[lang as keyof typeof diagramWelcomePathMap]
+      : diagramWelcomePathMap.en
 
   return (
     <svg fill="none" viewBox="0 0 769 193" className="invert-on-dark">

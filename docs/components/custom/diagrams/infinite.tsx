@@ -6,7 +6,9 @@ import { useParams } from 'next/navigation'
 export const Infinite = () => {
   const { lang } = useParams()
   const path =
-    diagramInfinitePathMap[lang as keyof typeof diagramInfinitePathMap]
+    typeof lang === 'string' && lang in diagramInfinitePathMap
+      ? diagramInfinitePathMap[lang as keyof typeof diagramInfinitePathMap]
+      : diagramInfinitePathMap.en
 
   return (
     <svg viewBox="0 0 769 356" fill="none" className="invert-on-dark">

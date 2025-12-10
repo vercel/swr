@@ -6,7 +6,11 @@ import { useParams } from 'next/navigation'
 export const Pagination = () => {
   const { lang } = useParams()
   const paths =
-    diagramPaginationPathsMap[lang as keyof typeof diagramPaginationPathsMap]
+    typeof lang === 'string' && lang in diagramPaginationPathsMap
+      ? diagramPaginationPathsMap[
+          lang as keyof typeof diagramPaginationPathsMap
+        ]
+      : diagramPaginationPathsMap.en
 
   return (
     <svg viewBox="0 0 769 356" fill="none" className="invert-on-dark">
