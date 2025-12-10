@@ -17,6 +17,15 @@ import { ScrollTop } from '@/components/geistdocs/scroll-top'
 import { Separator } from '@/components/ui/separator'
 import { getLLMText, getPageImage, blogSource } from '@/lib/geistdocs/source'
 
+import { Bleed } from '@/components/custom/bleed'
+import Authors, { Author } from '@/components/custom/authors'
+import Features from '@/components/custom/features'
+import { Welcome } from '@/components/custom/diagrams/welcome'
+import { Pagination } from '@/components/custom/diagrams/pagination'
+import { Infinite } from '@/components/custom/diagrams/infinite'
+import { Cache } from '@/components/custom/diagrams/cache'
+import Link from 'next/link'
+
 const Page = async ({ params }: PageProps<'/[lang]/blog/[...slug]'>) => {
   const { slug, lang } = await params
   const page = blogSource.getPage(slug, lang)
@@ -52,9 +61,18 @@ const Page = async ({ params }: PageProps<'/[lang]/blog/[...slug]'>) => {
       <DocsBody>
         <MDX
           components={getMDXComponents({
-            a: createRelativeLink(blogSource, page)
+            a: createRelativeLink(blogSource, page),
 
             // Add your custom components here
+            Bleed,
+            Authors,
+            Author,
+            Features,
+            Welcome,
+            Pagination,
+            Infinite,
+            Cache,
+            Link
           })}
         />
       </DocsBody>

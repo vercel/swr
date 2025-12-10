@@ -1,38 +1,47 @@
-import { createRelativeLink } from "fumadocs-ui/mdx";
-import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { AskAI } from "@/components/geistdocs/ask-ai";
-import { CopyPage } from "@/components/geistdocs/copy-page";
+import { createRelativeLink } from 'fumadocs-ui/mdx'
+import type { Metadata } from 'next'
+import { notFound } from 'next/navigation'
+import { AskAI } from '@/components/geistdocs/ask-ai'
+import { CopyPage } from '@/components/geistdocs/copy-page'
 import {
   DocsBody,
   DocsDescription,
   DocsPage,
-  DocsTitle,
-} from "@/components/geistdocs/docs-page";
-import { EditSource } from "@/components/geistdocs/edit-source";
-import { Feedback } from "@/components/geistdocs/feedback";
-import { getMDXComponents } from "@/components/geistdocs/mdx-components";
-import { OpenInChat } from "@/components/geistdocs/open-in-chat";
-import { ScrollTop } from "@/components/geistdocs/scroll-top";
-import { Separator } from "@/components/ui/separator";
-import { getLLMText, getPageImage, source } from "@/lib/geistdocs/source";
+  DocsTitle
+} from '@/components/geistdocs/docs-page'
+import { EditSource } from '@/components/geistdocs/edit-source'
+import { Feedback } from '@/components/geistdocs/feedback'
+import { getMDXComponents } from '@/components/geistdocs/mdx-components'
+import { OpenInChat } from '@/components/geistdocs/open-in-chat'
+import { ScrollTop } from '@/components/geistdocs/scroll-top'
+import { Separator } from '@/components/ui/separator'
+import { getLLMText, getPageImage, source } from '@/lib/geistdocs/source'
 
-const Page = async ({ params }: PageProps<"/[lang]/docs/[[...slug]]">) => {
-  const { slug, lang } = await params;
-  const page = source.getPage(slug, lang);
+import { Bleed } from '@/components/custom/bleed'
+import Authors, { Author } from '@/components/custom/authors'
+import Features from '@/components/custom/features'
+import { Welcome } from '@/components/custom/diagrams/welcome'
+import { Pagination } from '@/components/custom/diagrams/pagination'
+import { Infinite } from '@/components/custom/diagrams/infinite'
+import { Cache } from '@/components/custom/diagrams/cache'
+import Link from 'next/link'
+
+const Page = async ({ params }: PageProps<'/[lang]/docs/[[...slug]]'>) => {
+  const { slug, lang } = await params
+  const page = source.getPage(slug, lang)
 
   if (!page) {
-    notFound();
+    notFound()
   }
 
-  const markdown = await getLLMText(page);
-  const MDX = page.data.body;
+  const markdown = await getLLMText(page)
+  const MDX = page.data.body
 
   return (
     <DocsPage
       full={page.data.full}
       tableOfContent={{
-        style: "clerk",
+        style: 'clerk',
         footer: (
           <div className="my-3 space-y-3">
             <Separator />
@@ -43,7 +52,7 @@ const Page = async ({ params }: PageProps<"/[lang]/docs/[[...slug]]">) => {
             <AskAI href={page.url} />
             <OpenInChat href={page.url} />
           </div>
-        ),
+        )
       }}
       toc={page.data.toc}
     >
@@ -55,34 +64,43 @@ const Page = async ({ params }: PageProps<"/[lang]/docs/[[...slug]]">) => {
             a: createRelativeLink(source, page),
 
             // Add your custom components here
+            Link,
+            Bleed,
+            Authors,
+            Author,
+            Features,
+            Welcome,
+            Pagination,
+            Infinite,
+            Cache
           })}
         />
       </DocsBody>
     </DocsPage>
-  );
-};
+  )
+}
 
-export const generateStaticParams = () => source.generateParams();
+export const generateStaticParams = () => source.generateParams()
 
 export const generateMetadata = async ({
-  params,
-}: PageProps<"/[lang]/docs/[[...slug]]">) => {
-  const { slug, lang } = await params;
-  const page = source.getPage(slug, lang);
+  params
+}: PageProps<'/[lang]/docs/[[...slug]]'>) => {
+  const { slug, lang } = await params
+  const page = source.getPage(slug, lang)
 
   if (!page) {
-    notFound();
+    notFound()
   }
 
   const metadata: Metadata = {
     title: page.data.title,
     description: page.data.description,
     openGraph: {
-      images: getPageImage(page).url,
-    },
-  };
+      images: getPageImage(page).url
+    }
+  }
 
-  return metadata;
-};
+  return metadata
+}
 
-export default Page;
+export default Page

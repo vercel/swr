@@ -21,6 +21,15 @@ import {
   examplesSource
 } from '@/lib/geistdocs/source'
 
+import { Bleed } from '@/components/custom/bleed'
+import Authors, { Author } from '@/components/custom/authors'
+import Features from '@/components/custom/features'
+import { Welcome } from '@/components/custom/diagrams/welcome'
+import { Pagination } from '@/components/custom/diagrams/pagination'
+import { Infinite } from '@/components/custom/diagrams/infinite'
+import { Cache } from '@/components/custom/diagrams/cache'
+import Link from 'next/link'
+
 const Page = async ({ params }: PageProps<'/[lang]/examples/[[...slug]]'>) => {
   const { slug, lang } = await params
   const page = examplesSource.getPage(slug, lang)
@@ -56,9 +65,18 @@ const Page = async ({ params }: PageProps<'/[lang]/examples/[[...slug]]'>) => {
       <DocsBody>
         <MDX
           components={getMDXComponents({
-            a: createRelativeLink(examplesSource, page)
+            a: createRelativeLink(examplesSource, page),
 
             // Add your custom components here
+            Bleed,
+            Authors,
+            Author,
+            Features,
+            Welcome,
+            Pagination,
+            Infinite,
+            Cache,
+            Link
           })}
         />
       </DocsBody>
