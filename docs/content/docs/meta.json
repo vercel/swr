@@ -1,0 +1,9 @@
+{
+  "title": "Docs",
+  "description": "Documentation for SWR",
+  "root": true,
+  "pages": [
+    "getting-started",
+    "..."
+  ]
+}

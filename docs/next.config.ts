@@ -30,6 +30,11 @@ const config: NextConfig = {
         permanent: true
       },
       {
+        source: '/blog',
+        destination: '/blog/swr-1',
+        permanent: true
+      },
+      {
         source: '/examples',
         destination: '/examples/basic',
         permanent: true
