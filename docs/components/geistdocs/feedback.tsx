@@ -122,7 +122,7 @@ export const Feedback = () => {
                   ))}
                 </div>
                 <Button
-                  disabled={isPending}
+                  disabled={isPending || !emotion || !message}
                   size="sm"
                   type="submit"
                   variant="default"
