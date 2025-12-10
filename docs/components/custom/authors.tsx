@@ -1,14 +1,12 @@
 import type { ReactNode } from 'react'
 
-export default function Authors({
-  date,
-  children,
-  by = 'by'
-}: {
+type AuthorsProps = {
   date: string
   children: ReactNode
   by?: string
-}) {
+}
+
+export default function Authors({ date, children, by = 'by' }: AuthorsProps) {
   return (
     <div className="mt-4 mb-16 text-gray-500 text-sm">
       {date} {by} {children}
@@ -16,7 +14,12 @@ export default function Authors({
   )
 }
 
-export function Author({ name, link }: { name: string; link: string }) {
+type AuthorProps = {
+  name: string
+  link: string
+}
+
+export function Author({ name, link }: AuthorProps) {
   return (
     <span className="after:content-[','] last:after:content-['']">
       <a

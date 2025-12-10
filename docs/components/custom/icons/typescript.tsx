@@ -1,4 +1,4 @@
-export default function TypescriptIcon(): JSX.Element {
+export default function TypescriptIcon() {
   return (
     <svg
       width="24"

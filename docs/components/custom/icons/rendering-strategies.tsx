@@ -1,4 +1,4 @@
-export default function RenderingStrategiesIcon(): JSX.Element {
+export default function RenderingStrategiesIcon() {
   return (
     <svg
       width="24"

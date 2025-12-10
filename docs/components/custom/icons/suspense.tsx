@@ -1,4 +1,4 @@
-export default function SuspenseIcon(): JSX.Element {
+export default function SuspenseIcon() {
   return (
     <svg
       viewBox="0 0 24 24"

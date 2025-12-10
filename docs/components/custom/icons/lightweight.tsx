@@ -1,4 +1,4 @@
-export default function LightweightIcon(): JSX.Element {
+export default function LightweightIcon() {
   return (
     <svg
       viewBox="0 0 24 24"

@@ -1,4 +1,4 @@
-export default function RemoteLocalIcon(): JSX.Element {
+export default function RemoteLocalIcon() {
   return (
     <svg
       width="24"

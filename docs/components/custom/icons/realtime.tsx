@@ -1,4 +1,4 @@
-export default function RealtimeIcon(): JSX.Element {
+export default function RealtimeIcon() {
   return (
     <svg
       width="24"

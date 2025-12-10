@@ -1,4 +1,4 @@
-export default function BackendAgnosticIcon(): JSX.Element {
+export default function BackendAgnosticIcon() {
   return (
     <svg
       viewBox="0 0 24 24"

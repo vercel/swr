@@ -1,4 +1,4 @@
-export default function PaginationIcon(): JSX.Element {
+export default function PaginationIcon() {
   return (
     <svg
       viewBox="0 0 24 24"
