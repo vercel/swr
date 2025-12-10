@@ -22,6 +22,7 @@ export default defineConfig([
     '**/node_modules',
     '**/scripts',
     '**/examples',
+    'docs/**',
     '**/.next',
     '**/next.config.js',
     'eslint.config.mjs',
