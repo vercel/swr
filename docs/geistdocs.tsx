@@ -46,25 +46,32 @@ export const prompt =
 
 export const translations = {
   en: {
-    displayName: 'English'
+    displayName: 'English',
+    slug: 'english'
   },
   fr: {
-    displayName: 'Français'
+    displayName: 'Français',
+    slug: 'french'
   },
   ja: {
-    displayName: '日本語'
+    displayName: '日本語',
+    slug: 'japanese'
   },
   ko: {
-    displayName: '한국어'
+    displayName: '한국어',
+    slug: 'korean'
   },
   pt: {
-    displayName: 'Português'
+    displayName: 'Português',
+    slug: 'portuguese'
   },
   ru: {
-    displayName: 'Русский'
+    displayName: 'Русский',
+    slug: 'russian'
   },
   cn: {
-    displayName: '简体中文'
+    displayName: '简体中文',
+    slug: 'chinese'
   }
 }
 
