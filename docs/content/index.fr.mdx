@@ -7,8 +7,6 @@ title: React Hooks pour la récupération de données
 }
 {<h1 className="text-center text-4xl tracking-tighter font-extrabold md:text-5xl mt-8">SWR</h1>}
 
-<Bleed><Features/></Bleed>
-
 Le nom "SWR" vient de `stale-while-revalidate` (obsolète lors de la réactualisation), une stratégie d'invalidation du cache HTTP popularisée par [HTTP RFC 5861](https://tools.ietf.org/html/rfc5861).
 SWR est une stratégie qui consiste à d'abord renvoyer les données du cache (obsolètes), puis à envoyer la requête fetch (réactualiser), et enfin à revenir avec les données à jour.
 

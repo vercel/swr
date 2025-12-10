@@ -19,7 +19,6 @@ import { getLLMText, getPageImage, blogSource } from '@/lib/geistdocs/source'
 
 import { Bleed } from '@/components/custom/bleed'
 import Authors, { Author } from '@/components/custom/authors'
-import Features from '@/components/custom/features'
 import { Welcome } from '@/components/custom/diagrams/welcome'
 import { Pagination } from '@/components/custom/diagrams/pagination'
 import { Infinite } from '@/components/custom/diagrams/infinite'
@@ -67,7 +66,6 @@ const Page = async ({ params }: PageProps<'/[lang]/blog/[...slug]'>) => {
             Bleed,
             Authors,
             Author,
-            Features,
             Welcome,
             Pagination,
             Infinite,
