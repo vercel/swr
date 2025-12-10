@@ -10,6 +10,7 @@ import { Templates } from './components/templates'
 import { TextGridSection } from './components/text-grid-section'
 import { codeToHtml } from 'shiki'
 import { cn } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
 
 const title = 'SWR'
 const description = 'React Hooks for Data Fetching.'
@@ -63,6 +64,18 @@ const darkModeClassNames = cn(
   'dark:[&_.shiki_span]:[text-decoration:var(--shiki-dark-text-decoration)]!'
 )
 
+const features = [
+  'Fast page navigation',
+  'Polling on interval',
+  'Data dependency',
+  'Revalidation on focus',
+  'Revalidation on network recovery',
+  'Local mutation(Optimistic UI)',
+  'Smart error retry',
+  'Pagination and scroll position recovery',
+  'React Suspense'
+]
+
 const HomePage = async () => {
   const code = await codeToHtml(exampleCode, {
     lang: 'javascript',
@@ -99,9 +112,17 @@ const HomePage = async () => {
           />
         </OneTwoSection>
         <CenteredSection
-          description="The name “SWR” is derived from stale-while-revalidate, a HTTP cache invalidation strategy popularized by HTTP RFC 5861."
+          description="SWR has you covered in all aspects of speed, correctness, and stability to help you build better experiences."
           title="Fetch, request and revalidate"
-        />
+        >
+          <div className="flex flex-wrap gap-2 items-center justify-center">
+            {features.map(feature => (
+              <Badge key={feature} variant="outline" className="text-sm">
+                {feature}
+              </Badge>
+            ))}
+          </div>
+        </CenteredSection>
         <TextGridSection data={textGridSection} />
         <CTA cta="Get started" href="/docs" title="Start building with SWR" />
       </div>
