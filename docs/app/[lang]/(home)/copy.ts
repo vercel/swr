@@ -207,7 +207,7 @@ export const features: Record<Locale, string[]> = {
     'Data dependency',
     'Revalidation on focus',
     'Revalidation on network recovery',
-    'Local mutation(Optimistic UI)',
+    'Local mutation (Optimistic UI)',
     'Smart error retry',
     'Pagination and scroll position recovery',
     'React Suspense'
