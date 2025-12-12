@@ -86,7 +86,12 @@ const mutation = (<Data, Error>() =>
             startTransition(() =>
               setState({ data, isMutating: false, error: undefined })
             )
-            options.onSuccess?.(data as Data, serializedKey, options)
+            // Await onSuccess to ensure async operations complete before returning
+            try {
+              await options.onSuccess?.(data as Data, serializedKey, options)
+            } catch (error) {
+              console.error('[SWR] onSuccess callback error:', error)
+            }
           }
           return data
         } catch (error) {
@@ -96,7 +101,16 @@ const mutation = (<Data, Error>() =>
             startTransition(() =>
               setState({ error: error as Error, isMutating: false })
             )
-            options.onError?.(error as Error, serializedKey, options)
+            // Await onError to ensure async operations complete
+            // Wrap in try-catch to prevent nested error handling
+            try {
+              await options.onError?.(error as Error, serializedKey, options)
+            } catch (nestedError) {
+              // onError callback errors should not interfere with error handling
+              if (typeof console !== 'undefined' && console.error) {
+                console.error('[SWR] onError callback error:', nestedError)
+              }
+            }
             if (options.throwOnError) {
               throw error as Error
             }
