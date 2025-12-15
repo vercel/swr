@@ -1,5 +1,5 @@
-import { act, fireEvent, screen } from '@testing-library/react'
-import { Suspense, useState } from 'react'
+import { fireEvent, screen } from '@testing-library/react'
+import { Suspense, useState, act } from 'react'
 import useSWR from 'swr'
 import { createKey, renderWithConfig, nextTick } from './utils'
 
