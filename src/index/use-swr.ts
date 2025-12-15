@@ -440,9 +440,21 @@ export const useSWRHandler = <Data = any, Error = any>(
 
           // Start the request and save the timestamp.
           // Key must be truthy if entering here.
+
+          // We also need to abort the current fetch as its result must be
+          // discarded anyway.
+          const maybeCurrentFetchController = FETCH[key]?.[2]
+          if (maybeCurrentFetchController) {
+            // Abort the ongoing fetch request if any.
+            maybeCurrentFetchController.abort()
+          }
+
+          const abortController = new AbortController()
+          const signal = abortController.signal
           FETCH[key] = [
-            currentFetcher(fnArg as DefinitelyTruthy<Key>),
-            getTimestamp()
+            currentFetcher(fnArg as DefinitelyTruthy<Key>, { signal }),
+            getTimestamp(),
+            abortController
           ]
         }
 
@@ -452,17 +464,18 @@ export const useSWRHandler = <Data = any, Error = any>(
         newData = await newData
 
         if (shouldStartNewRequest) {
-          // If the request isn't interrupted, clean it up after the
+          // If the request wasn't interrupted, clean it up after the
           // deduplication interval.
           setTimeout(cleanupState, config.dedupingInterval)
         }
 
-        // If there're other ongoing request(s), started after the current one,
+        // If there're other new request(s) started after the current one,
         // we need to ignore the current one to avoid possible race conditions:
         //   req1------------------>res1        (current one)
         //        req2---------------->res2
-        // the request that fired later will always be kept.
-        // The timestamp maybe be `undefined` or a number
+        // Requests fired later will always be kept.
+
+        // The timestamp maybe be `undefined` or a number:
         if (!FETCH[key] || FETCH[key][1] !== startAt) {
           if (shouldStartNewRequest) {
             if (callbackSafeguard()) {
@@ -505,6 +518,7 @@ export const useSWRHandler = <Data = any, Error = any>(
           }
           return false
         }
+
         // Deep compare with the latest state to avoid extra re-renders.
         // For local state, compare and assign.
         const cacheData = getCache().data
