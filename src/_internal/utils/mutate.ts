@@ -102,6 +102,12 @@ export async function internalMutate<Data>(
         ? options.revalidate(get().data, _k)
         : options.revalidate !== false
       if (revalidate) {
+        // Cancel ongoing fetches
+        const maybeCurrentFetchController = FETCH[key]?.[2]
+        if (maybeCurrentFetchController) {
+          maybeCurrentFetchController.abort()
+        }
+
         // Invalidate the key by deleting the concurrent request markers so new
         // requests will not be deduped.
         delete FETCH[key]

@@ -4,12 +4,17 @@ import type * as revalidateEvents from './events'
 export type GlobalState = [
   Record<string, RevalidateCallback[]>, // EVENT_REVALIDATORS
   Record<string, [number, number]>, // MUTATION: [ts, end_ts]
-  Record<string, [any, number]>, // FETCH: [data, ts]
+  Record<string, [any, number, AbortController?]>, // FETCH: [data, ts, abort_controller]
   Record<string, FetcherResponse<any>>, // PRELOAD
   ScopedMutator, // Mutator
   (key: string, value: any, prev: any) => void, // Setter
   (key: string, callback: (current: any, prev: any) => void) => () => void // Subscriber
 ]
+// Extra options passed to the fetcher
+export type FetcherOptions = {
+  /** An AbortSignal to support request cancellation */
+  signal: AbortSignal
+}
 export type FetcherResponse<Data = unknown> = Data | Promise<Data>
 export type BareFetcher<Data = unknown> = (
   ...args: any[]
@@ -18,11 +23,11 @@ export type Fetcher<
   Data = unknown,
   SWRKey extends Key = Key
 > = SWRKey extends () => infer Arg | null | undefined | false
-  ? (arg: Arg) => FetcherResponse<Data>
+  ? (arg: Arg, options: FetcherOptions) => FetcherResponse<Data>
   : SWRKey extends null | undefined | false
   ? never
   : SWRKey extends infer Arg
-  ? (arg: Arg) => FetcherResponse<Data>
+  ? (arg: Arg, options: FetcherOptions) => FetcherResponse<Data>
   : never
 
 export type BlockingData<
