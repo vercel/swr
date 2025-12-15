@@ -1,5 +1,4 @@
-import { act } from '@testing-library/react'
-import { Suspense } from 'react'
+import { Suspense, act } from 'react'
 import useSWR from 'swr'
 import {
   createKey,

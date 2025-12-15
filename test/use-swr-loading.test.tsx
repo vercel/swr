@@ -1,5 +1,5 @@
-import { act, screen, fireEvent } from '@testing-library/react'
-import React, { useEffect } from 'react'
+import { screen, fireEvent } from '@testing-library/react'
+import React, { useEffect, act } from 'react'
 import useSWR from 'swr'
 import {
   createResponse,

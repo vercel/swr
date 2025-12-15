@@ -1,5 +1,5 @@
-import { act, screen, fireEvent } from '@testing-library/react'
-import { useEffect, useState } from 'react'
+import { screen, fireEvent } from '@testing-library/react'
+import { useEffect, useState, act } from 'react'
 import useSWR, { mutate as globalMutate, useSWRConfig } from 'swr'
 import useSWRInfinite from 'swr/infinite'
 import { serialize } from 'swr/_internal'

@@ -1,6 +1,7 @@
 // This test case covers special environments such as React <= 17.
 
-import { act, screen, render, fireEvent } from '@testing-library/react'
+import { screen, render, fireEvent } from '@testing-library/react'
+import { act } from 'react'
 
 // https://github.com/jestjs/jest/issues/11471
 jest.mock('react', () => jest.requireActual('react'))

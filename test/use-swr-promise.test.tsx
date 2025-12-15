@@ -1,7 +1,7 @@
-import { act, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import useSWR, { SWRConfig } from 'swr'
 import { createKey, createResponse, renderWithConfig, sleep } from './utils'
-import { Suspense } from 'react'
+import { Suspense, act } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 
 describe('useSWR - promise', () => {
