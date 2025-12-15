@@ -118,7 +118,6 @@ const resolvedUndef = Promise.resolve(UNDEFINED)
  * @returns SWRResponse object containing data, error, mutate function, and loading states
  *
  * @internal This is the internal implementation. Use `useSWR` instead.
- * @since 1.0.0
  */
 export const useSWRHandler = <Data = any, Error = any>(
   _key: Key,

@@ -8,7 +8,6 @@ import type * as revalidateEvents from './events'
  * Each element serves a specific purpose in the SWR ecosystem.
  *
  * @internal
- * @since 1.0.0
  */
 export type GlobalState = [
   /** Event revalidators: Maps cache keys to arrays of revalidation callbacks */
@@ -31,7 +30,6 @@ export type GlobalState = [
  *
  * @template Data - The type of data returned by the fetcher
  * @public
- * @since 1.0.0
  */
 export type FetcherResponse<Data = unknown> = Data | Promise<Data>
 
@@ -46,7 +44,6 @@ export type FetcherResponse<Data = unknown> = Data | Promise<Data>
  * @param args - Variable arguments passed to the fetcher
  * @returns Data or a Promise that resolves to data
  * @public
- * @since 1.0.0
  */
 export type BareFetcher<Data = unknown> = (
   ...args: any[]
@@ -64,7 +61,6 @@ export type BareFetcher<Data = unknown> = (
  * @template Data - The type of data returned by the fetcher
  * @template SWRKey - The type of the SWR key, used to infer fetcher arguments
  * @public
- * @since 1.0.0
  */
 export type Fetcher<
   Data = unknown,
@@ -95,7 +91,6 @@ export type Fetcher<
  * @template Options - The SWR configuration options
  * @returns `true` if data is guaranteed to be defined, `false` if it can be undefined
  * @internal
- * @since 1.0.0
  */
 export type BlockingData<
   Data = any,
@@ -118,7 +113,6 @@ export type BlockingData<
  * directly by consumers.
  *
  * @internal
- * @since 1.0.0
  */
 export interface InternalConfiguration {
   /** The cache instance used to store SWR data and state */
@@ -139,7 +133,6 @@ export interface InternalConfiguration {
  * @template Fn - The fetcher function type
  *
  * @public
- * @since 1.0.0
  * @see {@link https://swr.vercel.app/docs/options | SWR Options Documentation}
  */
 export interface PublicConfiguration<
@@ -340,7 +333,6 @@ export type FullConfiguration<
  * where the default browser APIs are not available.
  *
  * @public
- * @since 1.0.0
  * @see {@link https://swr.vercel.app/docs/advanced/react-native | React Native Documentation}
  */
 export type ProviderConfiguration = {
@@ -368,7 +360,6 @@ export type ProviderConfiguration = {
  * The overloads ensure proper type inference for data, error, and configuration.
  *
  * @public
- * @since 1.0.0
  *
  * @example Basic usage
  * ```ts
@@ -697,7 +688,6 @@ export interface SWRHook {
  * @template Error - The type of error that can be thrown
  *
  * @public
- * @since 1.0.0
  * @see {@link https://swr.vercel.app/docs/middleware | Middleware Documentation}
  *
  * @example
@@ -723,7 +713,6 @@ export type Middleware = (
  * by additional parameters that affect the request (like query parameters,
  * headers, or request options).
  *
- * @since 1.0.0
  */
 type ArgumentsTuple = readonly [any, ...unknown[]]
 
@@ -740,7 +729,6 @@ type ArgumentsTuple = readonly [any, ...unknown[]]
  * conditional fetching based on application state.
  *
  * @public
- * @since 1.0.0
  *
  * @example
  * ```ts
@@ -773,7 +761,6 @@ export type Arguments =
  * or props.
  *
  * @public
- * @since 1.0.0
  *
  * @example
  * ```ts
@@ -790,7 +777,6 @@ export type Key = Arguments | (() => Arguments)
  * Strict tuple key type that only allows tuples or falsy values.
  *
  * @internal
- * @since 1.0.0
  */
 export type StrictTupleKey = ArgumentsTuple | null | undefined | false
 
@@ -798,7 +784,6 @@ export type StrictTupleKey = ArgumentsTuple | null | undefined | false
  * Strict key type for internal use.
  *
  * @internal
- * @since 1.0.0
  */
 type StrictKey = StrictTupleKey | (() => StrictTupleKey)
 /**
@@ -813,7 +798,6 @@ type StrictKey = StrictTupleKey | (() => StrictTupleKey)
  * @returns New data to set, undefined for no change, or a Promise resolving to either
  *
  * @public
- * @since 1.0.0
  *
  * @example
  * ```ts
@@ -841,7 +825,6 @@ export type MutatorCallback<Data = any> = (
  * @template MutationData - The type of the data returned by the mutator
  *
  * @public
- * @since 1.0.0
  */
 export type MutatorOptions<Data = any, MutationData = Data> = {
   /**
@@ -926,7 +909,6 @@ export type Broadcaster<Data = any, Error = any> = (
  * @template Error - The type of error that can occur
  *
  * @internal
- * @since 1.0.0
  */
 export type State<Data = any, Error = any> = {
   /** The cached data, if available */
@@ -1027,7 +1009,6 @@ type SWRConfigurationWithOptionalFallback<Options> =
  * @template Config - The configuration type used to determine blocking behavior
  *
  * @public
- * @since 1.0.0
  */
 export interface SWRResponse<Data = any, Error = any, Config = any> {
   /**
@@ -1109,7 +1090,6 @@ export type RevalidateCallback = <K extends RevalidateEvent>(
  * @template Data - The type of data stored in the cache
  *
  * @public
- * @since 1.0.0
  * @see {@link https://swr.vercel.app/docs/advanced/cache | Cache Documentation}
  */
 export interface Cache<Data = any> {
