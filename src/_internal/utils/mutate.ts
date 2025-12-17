@@ -19,6 +19,7 @@ import type {
   Arguments,
   Key
 } from '../types'
+import type { SWRInfiniteCacheValue } from '../../infinite/types'
 
 type KeyFilter = (key?: Arguments) => boolean
 type MutateState<Data> = State<Data, any> & {
@@ -60,6 +61,8 @@ export async function internalMutate<Data>(
   const rollbackOnErrorOption = options.rollbackOnError
   let optimisticData = options.optimisticData
 
+  const includeSpecialKeys = options.includeSpecialKeys === true
+
   const rollbackOnError = (error: unknown): boolean => {
     return typeof rollbackOnErrorOption === 'function'
       ? rollbackOnErrorOption(error)
@@ -74,12 +77,23 @@ export async function internalMutate<Data>(
     const matchedKeys: Key[] = []
     const it = cache.keys()
     for (const key of it) {
+      const shouldSkipSpecialKeys =
+        !includeSpecialKeys && /^\$(inf|sub)\$/.test(key)
       if (
         // Skip the special useSWRInfinite and useSWRSubscription keys.
-        !/^\$(inf|sub)\$/.test(key) &&
+        !shouldSkipSpecialKeys &&
         keyFilter((cache.get(key) as { _k: Arguments })._k)
       ) {
         matchedKeys.push(key)
+
+        if (includeSpecialKeys && /^\$inf\$/.test(key)) {
+          const [get, set] = createCacheHelper<any, SWRInfiniteCacheValue>(
+            cache,
+            key
+          )
+          const current = get()
+          set({ ...current, _i: true })
+        }
       }
     }
     return Promise.all(matchedKeys.map(mutateByKey))
