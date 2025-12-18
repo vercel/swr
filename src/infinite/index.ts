@@ -19,7 +19,6 @@ import {
 import type {
   BareFetcher,
   SWRHook,
-  MutatorCallback,
   Middleware,
   GlobalState
 } from '../_internal'
@@ -228,16 +227,9 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
       config
     )
 
-    const mutate = useCallback(
+    const mutate = useCallback<SWRInfiniteKeyedMutator<Data[]>>(
       // eslint-disable-next-line func-names
-      function <T = Data[]>(
-        data?:
-          | undefined
-          | Data[]
-          | Promise<Data[] | undefined>
-          | MutatorCallback<Data[]>,
-        opts?: undefined | boolean | SWRInfiniteMutatorOptions<Data[], T>
-      ) {
+      function (data?: any, opts?: any) {
         // When passing as a boolean, it's explicitly used to disable/enable
         // revalidation.
         const options =
