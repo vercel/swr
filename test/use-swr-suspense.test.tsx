@@ -1,5 +1,5 @@
-import { act, fireEvent, screen } from '@testing-library/react'
-import { Profiler } from 'react'
+import { fireEvent, screen } from '@testing-library/react'
+import { Profiler, act } from 'react'
 import { Suspense, useReducer, useState } from 'react'
 import useSWR, { mutate } from 'swr'
 import {
@@ -89,7 +89,6 @@ describe('useSWR - suspense', () => {
   })
 
   it('should throw errors', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
     jest.spyOn(console, 'error').mockImplementation(() => {})
     const key = createKey()
     function Section() {

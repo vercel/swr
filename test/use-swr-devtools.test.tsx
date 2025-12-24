@@ -12,7 +12,9 @@ describe('useSWR - devtools', () => {
       }
     // @ts-expect-error
     window.__SWR_DEVTOOLS_USE__ = [middleware]
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     ;({ createKey, createResponse, renderWithConfig } = require('./utils'))
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     useSWR = require('swr').default
   })
   it('window.__SWR_DEVTOOLS_USE__ should be set as middleware', async () => {

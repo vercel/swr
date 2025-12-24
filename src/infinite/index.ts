@@ -34,7 +34,7 @@ import type {
   SWRInfiniteKeyedMutator,
   SWRInfiniteMutatorOptions
 } from './types'
-import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js'
+import { useSyncExternalStore } from 'use-sync-external-store/shim'
 import { getFirstPageKey } from './serialize'
 
 const EMPTY_PROMISE = Promise.resolve() as Promise<undefined>
@@ -120,7 +120,6 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
       }
 
       // `initialSize` isn't allowed to change during the lifecycle
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [infiniteKey, cache])
 
     // Needs to check didMountRef during mounting, not in the fetcher

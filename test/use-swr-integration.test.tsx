@@ -1,5 +1,5 @@
-import { act, screen, fireEvent } from '@testing-library/react'
-import React, { useState, useEffect, Profiler } from 'react'
+import { screen, fireEvent } from '@testing-library/react'
+import React, { useState, useEffect, Profiler, act } from 'react'
 import useSWR from 'swr'
 import {
   createResponse,

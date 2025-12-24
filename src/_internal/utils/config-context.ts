@@ -59,6 +59,7 @@ const SWRConfig: FC<
   // Unsubscribe events.
   useIsomorphicLayoutEffect(() => {
     if (cacheContext) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       cacheContext[2] && cacheContext[2]()
       return cacheContext[3]
     }

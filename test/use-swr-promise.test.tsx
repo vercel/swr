@@ -1,7 +1,7 @@
-import { act, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import useSWR, { SWRConfig } from 'swr'
 import { createKey, createResponse, renderWithConfig, sleep } from './utils'
-import { Suspense } from 'react'
+import { Suspense, act } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 
 describe('useSWR - promise', () => {
@@ -113,7 +113,6 @@ describe('useSWR - promise', () => {
   })
 
   it('should handle errors with fallback promises', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
     jest.spyOn(console, 'error').mockImplementation(() => {})
 
     const key = createKey()

@@ -1,5 +1,5 @@
-import { screen, act, fireEvent } from '@testing-library/react'
-import { useState } from 'react'
+import { screen, fireEvent } from '@testing-library/react'
+import { useState, act } from 'react'
 import useSWR from 'swr'
 import useSWRImmutable, { immutable } from 'swr/immutable'
 import {

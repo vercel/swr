@@ -1,5 +1,5 @@
-import { act, screen, fireEvent } from '@testing-library/react'
-import { useEffect, useState } from 'react'
+import { screen, fireEvent } from '@testing-library/react'
+import { useEffect, useState, act } from 'react'
 import useSWR, { mutate as globalMutate, useSWRConfig } from 'swr'
 import useSWRInfinite from 'swr/infinite'
 import { serialize } from 'swr/_internal'
@@ -341,7 +341,6 @@ describe('useSWR - local mutation', () => {
   it('should get bound mutate from useSWR', async () => {
     const key = createKey()
     function Page() {
-      // eslint-disable-next-line no-shadow
       const { data, mutate: boundMutate } = useSWR(key, () => 'fetched')
       return (
         <div onClick={() => boundMutate('mutated', false)}>data: {data}</div>
