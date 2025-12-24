@@ -134,6 +134,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     refreshInterval,
     refreshWhenHidden,
     refreshWhenOffline,
+    refreshWhenUnfocused,
     keepPreviousData,
     strictServerPrefetchWarning
   } = config
@@ -671,7 +672,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         if (
           getConfig().revalidateOnFocus &&
           now > nextFocusRevalidatedAt &&
-          isActive()
+          getConfig().isOnline()
         ) {
           nextFocusRevalidatedAt = now + getConfig().focusThrottleInterval
           softRevalidate()
@@ -743,11 +744,12 @@ export const useSWRHandler = <Data = any, Error = any>(
 
     function execute() {
       // Check if it's OK to execute:
-      // Only revalidate when the page is visible, online, and not errored.
+      // Only revalidate when the page is visible, online, focused, and not errored.
       if (
         !getCache().error &&
         (refreshWhenHidden || getConfig().isVisible()) &&
-        (refreshWhenOffline || getConfig().isOnline())
+        (refreshWhenOffline || getConfig().isOnline()) &&
+        (refreshWhenUnfocused || getConfig().hasFocus())
       ) {
         revalidate(WITH_DEDUPE).then(next)
       } else {
@@ -764,7 +766,13 @@ export const useSWRHandler = <Data = any, Error = any>(
         timer = -1
       }
     }
-  }, [refreshInterval, refreshWhenHidden, refreshWhenOffline, key])
+  }, [
+    refreshInterval,
+    refreshWhenHidden,
+    refreshWhenOffline,
+    refreshWhenUnfocused,
+    key
+  ])
 
   // Display debug info in React DevTools.
   useDebugValue(returnedData)

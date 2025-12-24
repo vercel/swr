@@ -1,6 +1,6 @@
 import type { ProviderConfiguration } from '../types'
 import { isWindowDefined, isDocumentDefined } from './helper'
-import { noop } from './shared'
+import { isUndefined, noop } from './shared'
 
 /**
  * Due to the bug https://bugs.chromium.org/p/chromium/issues/detail?id=678075,
@@ -22,15 +22,15 @@ const [onWindowEvent, offWindowEvent] =
     : [noop, noop]
 
 const isVisible = () => {
+  const visibilityState = isDocumentDefined && document.visibilityState
+  return isUndefined(visibilityState) || visibilityState !== 'hidden'
+}
+
+const hasFocus = () => {
   if (!isDocumentDefined) return true
 
   try {
-    const isDocVisible = document.visibilityState !== 'hidden'
-    
-    const isDocFocused =
-      typeof document.hasFocus === 'function' ? document.hasFocus() : true
-    
-    return isDocVisible && isDocFocused
+    return typeof document.hasFocus === 'function' ? document.hasFocus() : true
   } catch (err) {
     return true
   }
@@ -70,7 +70,8 @@ const initReconnect = (callback: () => void) => {
 
 export const preset = {
   isOnline,
-  isVisible
+  isVisible,
+  hasFocus
 } as const
 
 export const defaultConfigOptions: ProviderConfiguration = {
