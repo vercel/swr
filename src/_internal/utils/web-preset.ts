@@ -26,6 +26,16 @@ const isVisible = () => {
   return isUndefined(visibilityState) || visibilityState !== 'hidden'
 }
 
+const hasFocus = () => {
+  if (!isDocumentDefined) return true
+
+  try {
+    return typeof document.hasFocus === 'function' ? document.hasFocus() : true
+  } catch (err) {
+    return true
+  }
+}
+
 const initFocus = (callback: () => void) => {
   // focus revalidate
   if (isDocumentDefined) {
@@ -60,7 +70,8 @@ const initReconnect = (callback: () => void) => {
 
 export const preset = {
   isOnline,
-  isVisible
+  isVisible,
+  hasFocus
 } as const
 
 export const defaultConfigOptions: ProviderConfiguration = {
