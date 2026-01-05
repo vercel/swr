@@ -189,7 +189,7 @@ describe('useSWR - loading', () => {
     screen.getByText('validating,validating')
     await nextTick()
     screen.getByText('stopped,stopped')
-    expect(fetcher).toBeCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledTimes(1)
   })
 
   it('should sync all validating states if errored', async () => {
