@@ -1816,6 +1816,65 @@ describe('useSWRInfinite', () => {
     screen.getByText('data:apple, banana, pineapple,')
   })
 
+  it('should support the parallelLimit option', async () => {
+    // mock api with delay tracking
+    const pageData = [
+      'apple',
+      'banana',
+      'pineapple',
+      'orange',
+      'grape',
+      'cherry'
+    ]
+    const requestGroups: number[][] = []
+    let currentBatch: number[] = []
+    let batchStartTime = 0
+
+    const key = createKey()
+    function Page() {
+      const { data } = useSWRInfinite(
+        index => [key, index],
+        async ([_, index]) => {
+          const now = Date.now()
+          // Start a new batch if this is the first request or if more than 10ms has passed since the last batch
+          if (currentBatch.length === 0 || now - batchStartTime > 10) {
+            if (currentBatch.length > 0) {
+              requestGroups.push([...currentBatch])
+            }
+            currentBatch = [index]
+            batchStartTime = now
+          } else {
+            currentBatch.push(index)
+          }
+          return createResponse(`${pageData[index]}, `, { delay: 50 })
+        },
+        {
+          initialSize: 6,
+          parallel: true,
+          parallelLimit: 2
+        }
+      )
+
+      return <div>data:{data}</div>
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('data:')
+
+    // Wait for all requests to complete
+    await act(() => sleep(300))
+    screen.getByText('data:apple, banana, pineapple, orange, grape, cherry,')
+
+    // Push the last batch if it's not empty
+    if (currentBatch.length > 0) {
+      requestGroups.push([...currentBatch])
+    }
+
+    // Verify that requests were made in batches of 2
+    expect(requestGroups.length).toBeGreaterThanOrEqual(3) // Should have at least 3 batches for 6 items with limit 2
+    expect(requestGroups.every(batch => batch.length <= 2)).toBeTruthy() // Each batch should have at most 2 items
+  })
+
   it('should make previousPageData null when the parallel option is enabled', async () => {
     // mock api
     const pageData = ['apple', 'banana', 'pineapple']
