@@ -7,6 +7,7 @@ export const immutable: Middleware = useSWRNext => (key, fetcher, config) => {
   config.revalidateOnFocus = false
   config.revalidateIfStale = false
   config.revalidateOnReconnect = false
+  config.refreshInterval = 0 // <--- THE FIX: Explicitly disable polling
   return useSWRNext(key, fetcher, config)
 }
 
