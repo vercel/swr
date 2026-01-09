@@ -1,8 +1,8 @@
-import { act, fireEvent, screen } from '@testing-library/react'
+import { fireEvent, screen } from '@testing-library/react'
 import { sleep, renderWithConfig, createKey } from './utils'
 import useSWRSubscription from 'swr/subscription'
 import useSWR from 'swr'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, act } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 
 describe('useSWRSubscription', () => {
@@ -294,7 +294,6 @@ describe('useSWRSubscription', () => {
   })
 
   it('should require a dispose function', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
     jest.spyOn(console, 'error').mockImplementation(() => {})
 
     const swrKey = createKey()

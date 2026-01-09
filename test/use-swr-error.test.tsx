@@ -1,5 +1,5 @@
-import { act, fireEvent, screen } from '@testing-library/react'
-import { useEffect, useState } from 'react'
+import { fireEvent, screen } from '@testing-library/react'
+import { useEffect, useState, act } from 'react'
 import useSWR from 'swr'
 import {
   sleep,
@@ -589,11 +589,11 @@ describe('useSWR - error', () => {
     }
     renderWithConfig(<App />)
     await act(() => sleep(320))
-    expect(fn).toBeCalledTimes(1)
+    expect(fn).toHaveBeenCalledTimes(1)
     fireEvent.click(screen.getByText('toggle'))
     await act(() => sleep(320))
-    expect(fn).toBeCalledTimes(2)
+    expect(fn).toHaveBeenCalledTimes(2)
     await act(() => sleep(320))
-    expect(fn).toBeCalledTimes(3)
+    expect(fn).toHaveBeenCalledTimes(3)
   })
 })

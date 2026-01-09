@@ -1,6 +1,6 @@
 /// <reference types="react/experimental" />
 import React, { useCallback, useRef, useDebugValue, useMemo } from 'react'
-import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js'
+import { useSyncExternalStore } from 'use-sync-external-store/shim'
 
 import {
   defaultConfig,
@@ -22,7 +22,8 @@ import {
   internalMutate,
   revalidateEvents,
   mergeObjects,
-  isPromiseLike
+  isPromiseLike,
+  noop
 } from '../_internal'
 import type {
   State,
@@ -35,8 +36,7 @@ import type {
   SWRHook,
   RevalidateEvent,
   StateDependencies,
-  GlobalState,
-  ReactUsePromise
+  GlobalState
 } from '../_internal'
 
 const use =
@@ -89,6 +89,36 @@ type DefinitelyTruthy<T> = false extends T
   ? never
   : T
 
+const resolvedUndef = Promise.resolve(UNDEFINED)
+
+/**
+ * The core implementation of the useSWR hook.
+ *
+ * This is the main handler function that implements all SWR functionality including
+ * data fetching, caching, revalidation, error handling, and state management.
+ * It manages the complete lifecycle of SWR requests from initialization through
+ * cleanup.
+ *
+ * Key responsibilities:
+ * - Key serialization and normalization
+ * - Cache state management and synchronization
+ * - Automatic and manual revalidation
+ * - Error handling and retry logic
+ * - Suspense integration
+ * - Loading state management
+ * - Effect cleanup and memory management
+ *
+ * @template Data - The type of data returned by the fetcher
+ * @template Error - The type of error that can be thrown
+ *
+ * @param _key - The SWR key (string, array, object, function, or falsy)
+ * @param fetcher - The fetcher function to retrieve data, or null to disable fetching
+ * @param config - Complete SWR configuration object with both public and internal options
+ *
+ * @returns SWRResponse object containing data, error, mutate function, and loading states
+ *
+ * @internal This is the internal implementation. Use `useSWR` instead.
+ */
 export const useSWRHandler = <Data = any, Error = any>(
   _key: Key,
   fetcher: Fetcher<Data> | null,
@@ -104,7 +134,8 @@ export const useSWRHandler = <Data = any, Error = any>(
     refreshInterval,
     refreshWhenHidden,
     refreshWhenOffline,
-    keepPreviousData
+    keepPreviousData,
+    strictServerPrefetchWarning
   } = config
 
   const [EVENT_REVALIDATORS, MUTATION, FETCH, PRELOAD] = SWRGlobalState.get(
@@ -278,12 +309,41 @@ export const useSWRHandler = <Data = any, Error = any>(
 
   const returnedData = keepPreviousData
     ? isUndefined(cachedData)
-      // checking undefined to avoid null being fallback as well
-      ? isUndefined(laggyDataRef.current)
+      ? // checking undefined to avoid null being fallback as well
+        isUndefined(laggyDataRef.current)
         ? data
         : laggyDataRef.current
       : cachedData
     : data
+
+  const hasKeyButNoData = key && isUndefined(data)
+
+  // Note: the conditionally hook call is fine because the environment
+  // `IS_SERVER` never changes.
+  const isHydration =
+    !IS_SERVER &&
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useSyncExternalStore(
+      () => noop,
+      () => false,
+      () => true
+    )
+
+  // During the initial SSR render, warn if the key has no data pre-fetched via:
+  // - fallback data
+  // - preload calls
+  // - initial data from the cache provider
+  // We only warn once for each key during SSR.
+  if (
+    strictServerPrefetchWarning &&
+    isHydration &&
+    !suspense &&
+    hasKeyButNoData
+  ) {
+    console.warn(
+      `Missing pre-initiated data for serialized key "${key}" during server-side rendering. Data fethcing should be initiated on the server and provided to SWR via fallback data. You can set "strictServerPrefetchWarning: false" to disable this warning.`
+    )
+  }
 
   // - Suspense mode and there's stale data for the initial render.
   // - Not suspense mode and there is no fallback data and `revalidateIfStale` is enabled.
@@ -639,13 +699,17 @@ export const useSWRHandler = <Data = any, Error = any>(
 
     // Trigger a revalidation
     if (shouldDoInitialRevalidation) {
-      if (isUndefined(data) || IS_SERVER) {
-        // Revalidate immediately.
-        softRevalidate()
-      } else {
-        // Delay the revalidate if we have data to return so we won't block
-        // rendering.
-        rAF(softRevalidate)
+      // Performance optimization: if a request is already in progress for this key,
+      // skip the revalidation to avoid redundant work
+      if (!FETCH[key]) {
+        if (isUndefined(data) || IS_SERVER) {
+          // Revalidate immediately.
+          softRevalidate()
+        } else {
+          // Delay the revalidate if we have data to return so we won't block
+          // rendering.
+          rAF(softRevalidate)
+        }
       }
     }
 
@@ -708,34 +772,40 @@ export const useSWRHandler = <Data = any, Error = any>(
   // If there is an `error`, the `error` needs to be thrown to the error boundary.
   // If there is no `error`, the `revalidation` promise needs to be thrown to
   // the suspense boundary.
-  if (suspense && isUndefined(data) && key) {
+  if (suspense) {
     // SWR should throw when trying to use Suspense on the server with React 18,
     // without providing any fallback data. This causes hydration errors. See:
     // https://github.com/vercel/swr/issues/1832
-    if (!IS_REACT_LEGACY && IS_SERVER) {
+    if (!IS_REACT_LEGACY && IS_SERVER && hasKeyButNoData) {
       throw new Error('Fallback data is required when using Suspense in SSR.')
     }
 
     // Always update fetcher and config refs even with the Suspense mode.
-    fetcherRef.current = fetcher
-    configRef.current = config
-    unmountedRef.current = false
-    const req = PRELOAD[key]
-    if (!isUndefined(req)) {
-      const promise = boundMutate(req)
-      use(promise)
+    if (hasKeyButNoData) {
+      fetcherRef.current = fetcher
+      configRef.current = config
+      unmountedRef.current = false
     }
 
-    if (isUndefined(error)) {
-      const promise: ReactUsePromise<boolean> = revalidate(WITH_DEDUPE)
-      if (!isUndefined(returnedData)) {
-        promise.status = 'fulfilled'
-        promise.value = true
-      }
-      use(promise as Promise<boolean>)
-    } else {
+    const req = PRELOAD[key]
+
+    const mutateReq =
+      !isUndefined(req) && hasKeyButNoData ? boundMutate(req) : resolvedUndef
+    use(mutateReq)
+
+    if (!isUndefined(error) && hasKeyButNoData) {
       throw error
     }
+    const revalidation = hasKeyButNoData
+      ? revalidate(WITH_DEDUPE)
+      : resolvedUndef
+    if (!isUndefined(returnedData) && hasKeyButNoData) {
+      // @ts-ignore modify react promise status
+      revalidation.status = 'fulfilled'
+      // @ts-ignore modify react promise value
+      revalidation.value = true
+    }
+    use(revalidation)
   }
 
   const swrResponse: SWRResponse<Data, Error> = {
@@ -771,7 +841,8 @@ export { unstable_serialize } from './serialize'
 /**
  * A hook to fetch data.
  *
- * @link https://swr.vercel.app
+ * @see {@link https://swr.vercel.app}
+ *
  * @example
  * ```jsx
  * import useSWR from 'swr'

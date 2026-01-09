@@ -9,7 +9,8 @@ export { mutate } from '../_internal'
 export { preload } from '../_internal'
 
 // Config
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
+
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface SWRGlobalConfig {
   // suspense: true
 }

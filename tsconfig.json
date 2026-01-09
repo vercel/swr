@@ -19,7 +19,7 @@
     "downlevelIteration": true,
     "incremental": true
   },
-  "include": ["./src/**/*", "env.d.ts"],
+  "include": ["./src/**/*", "env.d.ts", "eslint.config.mjs", "jest.config.js"],
   "exclude": ["./**/dist", "examples"],
   "watchOptions": {
     "watchFile": "useFsEvents",
