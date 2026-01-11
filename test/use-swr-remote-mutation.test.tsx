@@ -850,7 +850,7 @@ describe('useSWR - remote mutation', () => {
 
     fireEvent.click(screen.getByText('trigger'))
     await nextTick()
-    expect(catchError).toBeCalled()
+    expect(catchError).toHaveBeenCalled()
   })
 
   it('should support optimistic updates', async () => {

@@ -4,6 +4,7 @@ import useSWR, { preload, useSWRConfig } from 'swr'
 import {
   createKey,
   createResponse,
+  itShouldSkipForReactCanary,
   renderWithGlobalCache,
   sleep
 } from './utils'
@@ -20,11 +21,11 @@ describe('useSWR - preload', () => {
     }
 
     preload(key, fetcher)
-    expect(fetcher).toBeCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledTimes(1)
 
     renderWithGlobalCache(<Page />)
     await screen.findByText('data:foo')
-    expect(fetcher).toBeCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledTimes(1)
   })
 
   it('should avoid preloading the resource multiple times', async () => {
@@ -39,11 +40,11 @@ describe('useSWR - preload', () => {
     preload(key, fetcher)
     preload(key, fetcher)
     preload(key, fetcher)
-    expect(fetcher).toBeCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledTimes(1)
 
     renderWithGlobalCache(<Page />)
     await screen.findByText('data:foo')
-    expect(fetcher).toBeCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledTimes(1)
   })
 
   it('should be able to prealod resources in effects', async () => {
@@ -68,76 +69,82 @@ describe('useSWR - preload', () => {
     }
 
     renderWithGlobalCache(<Page />)
-    expect(fetcher).toBeCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledTimes(1)
 
     fireEvent.click(screen.getByText('click'))
 
     await screen.findByText('data:foo')
-    expect(fetcher).toBeCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledTimes(1)
   })
 
-  it('preload the fetcher function with the suspense mode', async () => {
-    const key = createKey()
-    const fetcher = jest.fn(() => createResponse('foo'))
-    const onRender = jest.fn()
-    function Page() {
-      const { data } = useSWR(key, fetcher, { suspense: true })
-      return <div>data:{data}</div>
-    }
+  itShouldSkipForReactCanary(
+    'preload the fetcher function with the suspense mode',
+    async () => {
+      const key = createKey()
+      const fetcher = jest.fn(() => createResponse('foo'))
+      const onRender = jest.fn()
+      function Page() {
+        const { data } = useSWR(key, fetcher, { suspense: true })
+        return <div>data:{data}</div>
+      }
 
-    preload(key, fetcher)
-    expect(fetcher).toBeCalledTimes(1)
+      preload(key, fetcher)
+      expect(fetcher).toHaveBeenCalledTimes(1)
 
-    renderWithGlobalCache(
-      <Suspense
-        fallback={
-          <Profiler id={key} onRender={onRender}>
-            loading
-          </Profiler>
-        }
-      >
-        <Page />
-      </Suspense>
-    )
-    await screen.findByText('data:foo')
-    expect(onRender).toBeCalledTimes(1)
-    expect(fetcher).toBeCalledTimes(1)
-  })
-
-  it('avoid suspense waterfall by prefetching the resources', async () => {
-    const key1 = createKey()
-    const key2 = createKey()
-
-    const response1 = createResponse('foo', { delay: 50 })
-    const response2 = createResponse('bar', { delay: 50 })
-
-    const fetcher1 = () => response1
-    const fetcher2 = () => response2
-
-    function Page() {
-      const { data: data1 } = useSWR(key1, fetcher1, { suspense: true })
-      const { data: data2 } = useSWR(key2, fetcher2, { suspense: true })
-
-      return (
-        <div>
-          data:{data1}:{data2}
-        </div>
+      renderWithGlobalCache(
+        <Suspense
+          fallback={
+            <Profiler id={key} onRender={onRender}>
+              loading
+            </Profiler>
+          }
+        >
+          <Page />
+        </Suspense>
       )
+      await screen.findByText('data:foo')
+      expect(onRender).toHaveBeenCalledTimes(1)
+      expect(fetcher).toHaveBeenCalledTimes(1)
     }
+  )
 
-    preload(key1, fetcher1)
-    preload(key2, fetcher2)
+  itShouldSkipForReactCanary(
+    'avoid suspense waterfall by prefetching the resources',
+    async () => {
+      const key1 = createKey()
+      const key2 = createKey()
 
-    renderWithGlobalCache(
-      <Suspense fallback="loading">
-        <Page />
-      </Suspense>
-    )
-    screen.getByText('loading')
-    // Should avoid waterfall(50ms + 50ms)
-    await act(() => sleep(80))
-    screen.getByText('data:foo:bar')
-  })
+      const response1 = createResponse('foo', { delay: 50 })
+      const response2 = createResponse('bar', { delay: 50 })
+
+      const fetcher1 = () => response1
+      const fetcher2 = () => response2
+
+      function Page() {
+        const { data: data1 } = useSWR(key1, fetcher1, { suspense: true })
+        const { data: data2 } = useSWR(key2, fetcher2, { suspense: true })
+
+        return (
+          <div>
+            data:{data1}:{data2}
+          </div>
+        )
+      }
+
+      preload(key1, fetcher1)
+      preload(key2, fetcher2)
+
+      renderWithGlobalCache(
+        <Suspense fallback="loading">
+          <Page />
+        </Suspense>
+      )
+      screen.getByText('loading')
+      // Should avoid waterfall(50ms + 50ms)
+      await act(() => sleep(80))
+      screen.getByText('data:foo:bar')
+    }
+  )
 
   it('reset the preload result when the preload function gets an error', async () => {
     const key = createKey()
@@ -199,18 +206,18 @@ describe('useSWR - preload', () => {
     }
 
     preload(key, fetcher)
-    expect(fetcher).toBeCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledTimes(1)
 
     const { rerender } = renderWithGlobalCache(<Page />)
-    expect(onRender).toBeCalledTimes(1)
+    expect(onRender).toHaveBeenCalledTimes(1)
     // rerender when the preloading is in-flight, and the deduping interval is over
     await act(() => sleep(10))
     rerender(<Page />)
-    expect(onRender).toBeCalledTimes(2)
+    expect(onRender).toHaveBeenCalledTimes(2)
 
     await screen.findByText('data:foo')
-    expect(fetcher).toBeCalledTimes(1)
-    expect(onRender).toBeCalledTimes(3)
+    expect(fetcher).toHaveBeenCalledTimes(1)
+    expect(onRender).toHaveBeenCalledTimes(3)
   })
 
   it('should pass serialize key to fetcher', async () => {

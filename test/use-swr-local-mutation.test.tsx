@@ -681,7 +681,7 @@ describe('useSWR - local mutation', () => {
 
     await act(() => sleep(150))
     // fetcher result should be ignored
-    expect(fetcher).toBeCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledTimes(1)
     await screen.findByText('data: 1')
   })
 
@@ -730,7 +730,7 @@ describe('useSWR - local mutation', () => {
 
     // fetcher result should be ignored
     await act(() => sleep(200))
-    expect(fetcher).toBeCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledTimes(1)
     await screen.findByText('data: 1')
   })
 
@@ -773,7 +773,7 @@ describe('useSWR - local mutation', () => {
 
     // fetcher result should be ignored
     await act(() => sleep(100))
-    expect(fetcher).toBeCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledTimes(1)
     screen.getByText('loading')
 
     // mutate success
@@ -807,17 +807,17 @@ describe('useSWR - local mutation', () => {
     renderWithConfig(<Page />)
     screen.getByText('set ready')
 
-    expect(fetcher).toBeCalledTimes(0)
+    expect(fetcher).toHaveBeenCalledTimes(0)
 
     // it should trigger the fetch
     fireEvent.click(screen.getByText('set ready'))
     await act(() => sleep(10))
-    expect(fetcher).toBeCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledTimes(1)
 
     // it should trigger the fetch again
     fireEvent.click(screen.getByText('mutate'))
     await act(() => sleep(10))
-    expect(fetcher).toBeCalledTimes(2)
+    expect(fetcher).toHaveBeenCalledTimes(2)
   })
 
   it('should reset isValidating after mutate', async () => {
