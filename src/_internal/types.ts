@@ -185,6 +185,11 @@ export interface PublicConfiguration<
    */
   refreshWhenOffline?: boolean
   /**
+   * polling when the window is not focused (if `refreshInterval` is enabled)
+   * @defaultValue true
+   */
+  refreshWhenUnfocused?: boolean
+  /**
    * automatically revalidate when window gets focused
    *
    * When enabled, SWR will automatically revalidate data when the user
@@ -317,6 +322,11 @@ export interface PublicConfiguration<
    * @see {@link https://swr.vercel.app/docs/advanced/react-native#customize-focus-and-reconnect-events}
    */
   isVisible: () => boolean
+  /**
+   * hasFocus is a function that returns a boolean, to determine if the window has focus. Used for controlling polling behavior via refreshWhenUnfocused.
+   * @see {@link https://swr.vercel.app/docs/advanced/react-native#customize-focus-and-reconnect-events}
+   */
+  hasFocus: () => boolean
 }
 
 export type FullConfiguration<
