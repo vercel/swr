@@ -1,6 +1,6 @@
-import { screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { useState, act } from 'react'
-import useSWR from 'swr'
+import useSWR, { SWRConfig } from 'swr'
 import useSWRImmutable, { immutable } from 'swr/immutable'
 import {
   sleep,
@@ -240,5 +240,38 @@ describe('useSWR - immutable', () => {
     expect(fetcher).toHaveBeenCalledTimes(2)
     expect(fetcher).toHaveBeenNthCalledWith(1, key + '0')
     expect(fetcher).toHaveBeenNthCalledWith(2, key + '1')
+  })
+})
+
+describe('issue #4207', () => {
+  it('should ignore global refreshInterval', async () => {
+    let fetchCount = 0
+    const fetcher = () => {
+      fetchCount++
+      return 'data'
+    }
+
+    function Page() {
+      const { data } = useSWRImmutable('key', fetcher)
+      return <div>{data}</div>
+    }
+
+    render(
+      <SWRConfig
+        value={{
+          refreshInterval: 100,
+          dedupingInterval: 0,
+          provider: () => new Map()
+        }}
+      >
+        <Page />
+      </SWRConfig>
+    )
+
+    await screen.findByText('data')
+    expect(fetchCount).toBe(1)
+
+    await new Promise(resolve => setTimeout(resolve, 300))
+    expect(fetchCount).toBe(1)
   })
 })
