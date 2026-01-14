@@ -201,7 +201,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     }
     return true
   }
-
+  const isInitialMount = !initialMountedRef.current
   const getSnapshot = useMemo(() => {
     const cachedData = getCache()
     const initialData = getInitialCache()
@@ -213,12 +213,13 @@ export const useSWRHandler = <Data = any, Error = any>(
       const shouldStartRequest = (() => {
         if (!key) return false
         if (!fetcher) return false
-        // If `revalidateOnMount` is set, we take the value directly.
-        if (!isUndefined(revalidateOnMount)) return revalidateOnMount
         // If it's paused, we skip revalidation.
         if (getConfig().isPaused()) return false
-        if (suspense) return false
+        // If `revalidateOnMount` is set, we take the value directly.
+        if (isInitialMount && !isUndefined(revalidateOnMount))
+          return revalidateOnMount
         const data = !isUndefined(fallback) ? fallback : snapshot.data
+        if (suspense) return isUndefined(data) || revalidateIfStale
         return isUndefined(data) || revalidateIfStale
       })()
 
@@ -291,8 +292,6 @@ export const useSWRHandler = <Data = any, Error = any>(
     getSnapshot[1]
   )
 
-  const isInitialMount = !initialMountedRef.current
-
   const hasRevalidator =
     EVENT_REVALIDATORS[key] && EVENT_REVALIDATORS[key].length > 0
 
@@ -353,13 +352,13 @@ export const useSWRHandler = <Data = any, Error = any>(
   // - `revalidateIfStale` is enabled but `data` is not defined.
   const shouldDoInitialRevalidation = (() => {
     if (!key || !fetcher) return false
+    // If it's paused, we skip revalidation.
+    if (getConfig().isPaused()) return false
     // if a key already has revalidators and also has error, we should not trigger revalidation
     if (hasRevalidator && !isUndefined(error)) return false
     // If `revalidateOnMount` is set, we take the value directly.
     if (isInitialMount && !isUndefined(revalidateOnMount))
       return revalidateOnMount
-    // If it's paused, we skip revalidation.
-    if (getConfig().isPaused()) return false
     // Under suspense mode, it will always fetch on render if there is no
     // stale data so no need to revalidate immediately mount it again.
     // If data exists, only revalidate if `revalidateIfStale` is true.
