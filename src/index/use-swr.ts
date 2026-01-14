@@ -201,24 +201,27 @@ export const useSWRHandler = <Data = any, Error = any>(
     }
     return true
   }
-
+  const isInitialMount = !initialMountedRef.current
   const getSnapshot = useMemo(() => {
-    const shouldStartRequest = (() => {
-      if (!key) return false
-      if (!fetcher) return false
-      // If `revalidateOnMount` is set, we take the value directly.
-      if (!isUndefined(revalidateOnMount)) return revalidateOnMount
-      // If it's paused, we skip revalidation.
-      if (getConfig().isPaused()) return false
-      if (suspense) return false
-      return revalidateIfStale !== false
-    })()
-
-    // Get the cache and merge it with expected states.
+    const cachedData = getCache()
+    const initialData = getInitialCache()
     const getSelectedCache = (state: ReturnType<typeof getCache>) => {
       // We only select the needed fields from the state.
       const snapshot = mergeObjects(state)
       delete snapshot._k
+
+      const shouldStartRequest = (() => {
+        if (!key) return false
+        if (!fetcher) return false
+        // If it's paused, we skip revalidation.
+        if (getConfig().isPaused()) return false
+        // If `revalidateOnMount` is set, we take the value directly.
+        if (isInitialMount && !isUndefined(revalidateOnMount))
+          return revalidateOnMount
+        const data = !isUndefined(fallback) ? fallback : snapshot.data
+        if (suspense) return isUndefined(data) || revalidateIfStale
+        return isUndefined(data) || revalidateIfStale
+      })()
 
       if (!shouldStartRequest) {
         return snapshot
@@ -230,8 +233,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         ...snapshot
       }
     }
-    const cachedData = getCache()
-    const initialData = getInitialCache()
+
     const clientSnapshot = getSelectedCache(cachedData)
     const serverSnapshot =
       cachedData === initialData
@@ -290,8 +292,6 @@ export const useSWRHandler = <Data = any, Error = any>(
     getSnapshot[1]
   )
 
-  const isInitialMount = !initialMountedRef.current
-
   const hasRevalidator =
     EVENT_REVALIDATORS[key] && EVENT_REVALIDATORS[key].length > 0
 
@@ -345,43 +345,34 @@ export const useSWRHandler = <Data = any, Error = any>(
     )
   }
 
+  // Resolve the default validating state:
+  // If it's able to validate, and it should revalidate when mount, this will be true.
   // - Suspense mode and there's stale data for the initial render.
   // - Not suspense mode and there is no fallback data and `revalidateIfStale` is enabled.
   // - `revalidateIfStale` is enabled but `data` is not defined.
   const shouldDoInitialRevalidation = (() => {
+    if (!key || !fetcher) return false
+    // If it's paused, we skip revalidation.
+    if (getConfig().isPaused()) return false
     // if a key already has revalidators and also has error, we should not trigger revalidation
     if (hasRevalidator && !isUndefined(error)) return false
-
     // If `revalidateOnMount` is set, we take the value directly.
     if (isInitialMount && !isUndefined(revalidateOnMount))
       return revalidateOnMount
-
-    // If it's paused, we skip revalidation.
-    if (getConfig().isPaused()) return false
-
     // Under suspense mode, it will always fetch on render if there is no
     // stale data so no need to revalidate immediately mount it again.
     // If data exists, only revalidate if `revalidateIfStale` is true.
     if (suspense) return isUndefined(data) ? false : revalidateIfStale
-
     // If there is no stale data, we need to revalidate when mount;
     // If `revalidateIfStale` is set to true, we will always revalidate.
     return isUndefined(data) || revalidateIfStale
   })()
 
-  // Resolve the default validating state:
-  // If it's able to validate, and it should revalidate when mount, this will be true.
-  const defaultValidatingState = !!(
-    key &&
-    fetcher &&
-    isInitialMount &&
-    shouldDoInitialRevalidation
-  )
   const isValidating = isUndefined(cached.isValidating)
-    ? defaultValidatingState
+    ? shouldDoInitialRevalidation
     : cached.isValidating
   const isLoading = isUndefined(cached.isLoading)
-    ? defaultValidatingState
+    ? shouldDoInitialRevalidation
     : cached.isLoading
 
   // The revalidation function is a carefully crafted wrapper of the original
