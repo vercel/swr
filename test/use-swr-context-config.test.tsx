@@ -1,4 +1,5 @@
-import { act, render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
+import { act } from 'react'
 import useSWR, {
   mutate,
   SWRConfig,

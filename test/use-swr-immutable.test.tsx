@@ -1,5 +1,5 @@
-import { screen, act, fireEvent } from '@testing-library/react'
-import { useState } from 'react'
+import { screen, fireEvent } from '@testing-library/react'
+import { useState, act } from 'react'
 import useSWR from 'swr'
 import useSWRImmutable, { immutable } from 'swr/immutable'
 import {
@@ -237,8 +237,8 @@ describe('useSWR - immutable', () => {
     await sleep(20)
 
     // `fetcher` should only be called twice, with each key.
-    expect(fetcher).toBeCalledTimes(2)
-    expect(fetcher).nthCalledWith(1, key + '0')
-    expect(fetcher).nthCalledWith(2, key + '1')
+    expect(fetcher).toHaveBeenCalledTimes(2)
+    expect(fetcher).toHaveBeenNthCalledWith(1, key + '0')
+    expect(fetcher).toHaveBeenNthCalledWith(2, key + '1')
   })
 })
