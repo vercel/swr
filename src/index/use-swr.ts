@@ -359,6 +359,9 @@ export const useSWRHandler = <Data = any, Error = any>(
     // If it's paused, we skip revalidation.
     if (getConfig().isPaused()) return false
 
+    // If RSC fallback data on initial render, use revalidateOnRSCFallback config
+    if (!isUndefined(fallback) && !isUndefined(data) && !IS_SERVER && isInitialMount) return getConfig().revalidateOnRSCFallback ?? false;
+
     // Under suspense mode, it will always fetch on render if there is no
     // stale data so no need to revalidate immediately mount it again.
     // If data exists, only revalidate if `revalidateIfStale` is true.
