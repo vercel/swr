@@ -1,13 +1,14 @@
-import { screen, act, fireEvent } from '@testing-library/react'
-import { useState } from 'react'
-import useSWR from 'swr'
+import { screen, fireEvent } from '@testing-library/react'
+import { useState, act, Profiler } from 'react'
+import useSWR, { SWRConfig } from 'swr'
 import useSWRImmutable, { immutable } from 'swr/immutable'
 import {
   sleep,
   createKey,
   nextTick as waitForNextTick,
   focusOn,
-  renderWithConfig
+  renderWithConfig,
+  createResponse
 } from './utils'
 
 const focusWindow = () => focusOn(window)
@@ -237,8 +238,94 @@ describe('useSWR - immutable', () => {
     await sleep(20)
 
     // `fetcher` should only be called twice, with each key.
-    expect(fetcher).toBeCalledTimes(2)
-    expect(fetcher).nthCalledWith(1, key + '0')
-    expect(fetcher).nthCalledWith(2, key + '1')
+    expect(fetcher).toHaveBeenCalledTimes(2)
+    expect(fetcher).toHaveBeenNthCalledWith(1, key + '0')
+    expect(fetcher).toHaveBeenNthCalledWith(2, key + '1')
+  })
+
+  it('isLoading and isValidating should be true when switch to new key', async () => {
+    const key = createKey()
+    const onRender = jest.fn()
+    const useData = (id: string) =>
+      useSWRImmutable(
+        key + id,
+        () =>
+          createResponse(id, {
+            delay: 100
+          }),
+        {
+          dedupingInterval: 0
+        }
+      )
+
+    function Data() {
+      const [id, setId] = useState('0')
+      const { data, isLoading, isValidating } = useData(id)
+      return (
+        <div>
+          <button onClick={() => setId(id === '0' ? '1' : '0')}>
+            switch id
+          </button>
+          <p>
+            data: {data}, isLoading: {isLoading ? 'true' : 'false'},
+            isValidating: {isValidating ? 'true' : 'false'}
+          </p>
+        </div>
+      )
+    }
+
+    function Page() {
+      return (
+        <Profiler
+          onRender={(id, phase) => {
+            onRender(id, phase)
+          }}
+          id={key}
+        >
+          <Data />
+        </Profiler>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText(`data: , isLoading: true, isValidating: true`)
+    await screen.findByText(`data: 0, isLoading: false, isValidating: false`)
+    fireEvent.click(screen.getByText('switch id'))
+    await screen.findByText(`data: , isLoading: true, isValidating: true`)
+    await screen.findByText(`data: 1, isLoading: false, isValidating: false`)
+    expect(onRender).toHaveBeenCalledTimes(4)
+  })
+})
+
+describe('issue #4207', () => {
+  it('should ignore global refreshInterval', async () => {
+    let fetchCount = 0
+    const fetcher = () => {
+      fetchCount++
+      return 'data'
+    }
+
+    function Page() {
+      const { data } = useSWRImmutable('key', fetcher)
+      return <div>{data}</div>
+    }
+
+    renderWithConfig(
+      <SWRConfig
+        value={{
+          refreshInterval: 100,
+          dedupingInterval: 0,
+          provider: () => new Map()
+        }}
+      >
+        <Page />
+      </SWRConfig>
+    )
+
+    await screen.findByText('data')
+    expect(fetchCount).toBe(1)
+
+    await new Promise(resolve => setTimeout(resolve, 300))
+    expect(fetchCount).toBe(1)
   })
 })

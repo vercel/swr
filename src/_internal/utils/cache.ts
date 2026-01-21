@@ -108,7 +108,9 @@ export const initCache = <Data = any>(
             )
           )
           unmount = () => {
+            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
             releaseFocus && releaseFocus()
+            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
             releaseReconnect && releaseReconnect()
             // When un-mounting, we need to remove the cache provider from the state
             // storage too because it's a side-effect. Otherwise, when re-mounting we

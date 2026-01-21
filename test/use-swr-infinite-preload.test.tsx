@@ -1,8 +1,14 @@
-import { act, fireEvent, screen } from '@testing-library/react'
-import { Suspense, useEffect, useState, Profiler } from 'react'
+import { fireEvent, screen } from '@testing-library/react'
+import { Suspense, useEffect, useState, Profiler, act } from 'react'
 import { preload } from 'swr'
 import useSWRInfinite from 'swr/infinite'
-import { createKey, createResponse, renderWithConfig, sleep } from './utils'
+import {
+  createKey,
+  createResponse,
+  itShouldSkipForReactCanary,
+  renderWithConfig,
+  sleep
+} from './utils'
 
 describe('useSWRInfinite - preload', () => {
   const getKeyFunction = (key: string) => (index: number) =>
@@ -34,11 +40,11 @@ describe('useSWRInfinite - preload', () => {
     }
 
     preload(getKey(0), fetcher)
-    expect(fetcher).toBeCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledTimes(1)
 
     renderWithConfig(<Page />)
     await screen.findByText('data:foo')
-    expect(fetcher).toBeCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledTimes(1)
   })
 
   it('should avoid preloading the resource multiple times', async () => {
@@ -54,11 +60,11 @@ describe('useSWRInfinite - preload', () => {
     preload(getKey(0), fetcher)
     preload(getKey(0), fetcher)
     preload(getKey(0), fetcher)
-    expect(fetcher).toBeCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledTimes(1)
 
     renderWithConfig(<Page />)
     await screen.findByText('data:foo')
-    expect(fetcher).toBeCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledTimes(1)
   })
 
   it('should be able to prealod resources in effects', async () => {
@@ -84,42 +90,45 @@ describe('useSWRInfinite - preload', () => {
     }
 
     renderWithConfig(<Page />)
-    expect(fetcher).toBeCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledTimes(1)
 
     fireEvent.click(screen.getByText('click'))
 
     await screen.findByText('data:foo')
-    expect(fetcher).toBeCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledTimes(1)
   })
 
-  it('preload the fetcher function with the suspense mode', async () => {
-    const key = createKey()
-    const getKey = getKeyFunction(key)
-    const fetcher = jest.fn(() => createResponse('foo'))
-    const onRender = jest.fn()
-    function Page() {
-      const { data } = useSWRInfinite(getKey, fetcher, { suspense: true })
-      return <div>data:{data}</div>
+  itShouldSkipForReactCanary(
+    'preload the fetcher function with the suspense mode',
+    async () => {
+      const key = createKey()
+      const getKey = getKeyFunction(key)
+      const fetcher = jest.fn(() => createResponse('foo'))
+      const onRender = jest.fn()
+      function Page() {
+        const { data } = useSWRInfinite(getKey, fetcher, { suspense: true })
+        return <div>data:{data}</div>
+      }
+
+      preload(getKey(0), fetcher)
+      expect(fetcher).toHaveBeenCalledTimes(1)
+
+      renderWithConfig(
+        <Suspense
+          fallback={
+            <Profiler id={key} onRender={onRender}>
+              loading
+            </Profiler>
+          }
+        >
+          <Page />
+        </Suspense>
+      )
+      await screen.findByText('data:foo')
+      expect(onRender).toHaveBeenCalledTimes(1)
+      expect(fetcher).toHaveBeenCalledTimes(1)
     }
-
-    preload(getKey(0), fetcher)
-    expect(fetcher).toBeCalledTimes(1)
-
-    renderWithConfig(
-      <Suspense
-        fallback={
-          <Profiler id={key} onRender={onRender}>
-            loading
-          </Profiler>
-        }
-      >
-        <Page />
-      </Suspense>
-    )
-    await screen.findByText('data:foo')
-    expect(onRender).toBeCalledTimes(1)
-    expect(fetcher).toBeCalledTimes(1)
-  })
+  )
 
   it.skip('avoid suspense waterfall by prefetching the resources', async () => {
     const key1 = createKey()
@@ -222,18 +231,18 @@ describe('useSWRInfinite - preload', () => {
     }
 
     preload(getKey(0), fetcher)
-    expect(fetcher).toBeCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledTimes(1)
 
     const { rerender } = renderWithConfig(<Page />)
-    expect(onRender).toBeCalledTimes(1)
+    expect(onRender).toHaveBeenCalledTimes(1)
     // rerender when the preloading is in-flight, and the deduping interval is over
     await act(() => sleep(10))
     rerender(<Page />)
-    expect(onRender).toBeCalledTimes(2)
+    expect(onRender).toHaveBeenCalledTimes(2)
 
     await screen.findByText('data:foo')
-    expect(fetcher).toBeCalledTimes(1)
-    expect(onRender).toBeCalledTimes(3)
+    expect(fetcher).toHaveBeenCalledTimes(1)
+    expect(onRender).toHaveBeenCalledTimes(3)
   })
 
   it('should pass serialize key to fetcher', async () => {

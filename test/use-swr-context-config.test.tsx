@@ -1,4 +1,5 @@
-import { act, render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
+import { act } from 'react'
 import useSWR, {
   mutate,
   SWRConfig,
@@ -62,15 +63,9 @@ describe('useSWRConfig hook maintains stable reference across re-renders', () =>
       return <button onClick={counterAddOne}>{counterButtonText}</button>
     }
     render(<Page />)
-    act(() => {
-      screen.getByText(counterButtonText).click()
-    })
-    act(() => {
-      screen.getByText(counterButtonText).click()
-    })
-    act(() => {
-      screen.getByText(counterButtonText).click()
-    })
+    fireEvent.click(screen.getByText(counterButtonText))
+    fireEvent.click(screen.getByText(counterButtonText))
+    fireEvent.click(screen.getByText(counterButtonText))
     expect(useSWRConfigReferenceChangedTimes).toBe(1)
   })
 })

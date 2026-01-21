@@ -1,6 +1,6 @@
 /// <reference types="react/experimental" />
 import React, { useCallback, useRef, useDebugValue, useMemo } from 'react'
-import { useSyncExternalStore } from 'use-sync-external-store/shim/index.js'
+import { useSyncExternalStore } from 'use-sync-external-store/shim'
 
 import {
   defaultConfig,
@@ -22,7 +22,8 @@ import {
   internalMutate,
   revalidateEvents,
   mergeObjects,
-  isPromiseLike
+  isPromiseLike,
+  noop
 } from '../_internal'
 import type {
   State,
@@ -90,6 +91,34 @@ type DefinitelyTruthy<T> = false extends T
 
 const resolvedUndef = Promise.resolve(UNDEFINED)
 
+/**
+ * The core implementation of the useSWR hook.
+ *
+ * This is the main handler function that implements all SWR functionality including
+ * data fetching, caching, revalidation, error handling, and state management.
+ * It manages the complete lifecycle of SWR requests from initialization through
+ * cleanup.
+ *
+ * Key responsibilities:
+ * - Key serialization and normalization
+ * - Cache state management and synchronization
+ * - Automatic and manual revalidation
+ * - Error handling and retry logic
+ * - Suspense integration
+ * - Loading state management
+ * - Effect cleanup and memory management
+ *
+ * @template Data - The type of data returned by the fetcher
+ * @template Error - The type of error that can be thrown
+ *
+ * @param _key - The SWR key (string, array, object, function, or falsy)
+ * @param fetcher - The fetcher function to retrieve data, or null to disable fetching
+ * @param config - Complete SWR configuration object with both public and internal options
+ *
+ * @returns SWRResponse object containing data, error, mutate function, and loading states
+ *
+ * @internal This is the internal implementation. Use `useSWR` instead.
+ */
 export const useSWRHandler = <Data = any, Error = any>(
   _key: Key,
   fetcher: Fetcher<Data> | null,
@@ -105,7 +134,8 @@ export const useSWRHandler = <Data = any, Error = any>(
     refreshInterval,
     refreshWhenHidden,
     refreshWhenOffline,
-    keepPreviousData
+    keepPreviousData,
+    strictServerPrefetchWarning
   } = config
 
   const [EVENT_REVALIDATORS, MUTATION, FETCH, PRELOAD] = SWRGlobalState.get(
@@ -171,24 +201,27 @@ export const useSWRHandler = <Data = any, Error = any>(
     }
     return true
   }
-
+  const isInitialMount = !initialMountedRef.current
   const getSnapshot = useMemo(() => {
-    const shouldStartRequest = (() => {
-      if (!key) return false
-      if (!fetcher) return false
-      // If `revalidateOnMount` is set, we take the value directly.
-      if (!isUndefined(revalidateOnMount)) return revalidateOnMount
-      // If it's paused, we skip revalidation.
-      if (getConfig().isPaused()) return false
-      if (suspense) return false
-      return revalidateIfStale !== false
-    })()
-
-    // Get the cache and merge it with expected states.
+    const cachedData = getCache()
+    const initialData = getInitialCache()
     const getSelectedCache = (state: ReturnType<typeof getCache>) => {
       // We only select the needed fields from the state.
       const snapshot = mergeObjects(state)
       delete snapshot._k
+
+      const shouldStartRequest = (() => {
+        if (!key) return false
+        if (!fetcher) return false
+        // If it's paused, we skip revalidation.
+        if (getConfig().isPaused()) return false
+        // If `revalidateOnMount` is set, we take the value directly.
+        if (isInitialMount && !isUndefined(revalidateOnMount))
+          return revalidateOnMount
+        const data = !isUndefined(fallback) ? fallback : snapshot.data
+        if (suspense) return isUndefined(data) || revalidateIfStale
+        return isUndefined(data) || revalidateIfStale
+      })()
 
       if (!shouldStartRequest) {
         return snapshot
@@ -200,8 +233,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         ...snapshot
       }
     }
-    const cachedData = getCache()
-    const initialData = getInitialCache()
+
     const clientSnapshot = getSelectedCache(cachedData)
     const serverSnapshot =
       cachedData === initialData
@@ -260,8 +292,6 @@ export const useSWRHandler = <Data = any, Error = any>(
     getSnapshot[1]
   )
 
-  const isInitialMount = !initialMountedRef.current
-
   const hasRevalidator =
     EVENT_REVALIDATORS[key] && EVENT_REVALIDATORS[key].length > 0
 
@@ -286,43 +316,63 @@ export const useSWRHandler = <Data = any, Error = any>(
       : cachedData
     : data
 
+  const hasKeyButNoData = key && isUndefined(data)
+
+  // Note: the conditionally hook call is fine because the environment
+  // `IS_SERVER` never changes.
+  const isHydration =
+    !IS_SERVER &&
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useSyncExternalStore(
+      () => noop,
+      () => false,
+      () => true
+    )
+
+  // During the initial SSR render, warn if the key has no data pre-fetched via:
+  // - fallback data
+  // - preload calls
+  // - initial data from the cache provider
+  // We only warn once for each key during SSR.
+  if (
+    strictServerPrefetchWarning &&
+    isHydration &&
+    !suspense &&
+    hasKeyButNoData
+  ) {
+    console.warn(
+      `Missing pre-initiated data for serialized key "${key}" during server-side rendering. Data fethcing should be initiated on the server and provided to SWR via fallback data. You can set "strictServerPrefetchWarning: false" to disable this warning.`
+    )
+  }
+
+  // Resolve the default validating state:
+  // If it's able to validate, and it should revalidate when mount, this will be true.
   // - Suspense mode and there's stale data for the initial render.
   // - Not suspense mode and there is no fallback data and `revalidateIfStale` is enabled.
   // - `revalidateIfStale` is enabled but `data` is not defined.
   const shouldDoInitialRevalidation = (() => {
+    if (!key || !fetcher) return false
+    // If it's paused, we skip revalidation.
+    if (getConfig().isPaused()) return false
     // if a key already has revalidators and also has error, we should not trigger revalidation
     if (hasRevalidator && !isUndefined(error)) return false
-
     // If `revalidateOnMount` is set, we take the value directly.
     if (isInitialMount && !isUndefined(revalidateOnMount))
       return revalidateOnMount
-
-    // If it's paused, we skip revalidation.
-    if (getConfig().isPaused()) return false
-
     // Under suspense mode, it will always fetch on render if there is no
     // stale data so no need to revalidate immediately mount it again.
     // If data exists, only revalidate if `revalidateIfStale` is true.
     if (suspense) return isUndefined(data) ? false : revalidateIfStale
-
     // If there is no stale data, we need to revalidate when mount;
     // If `revalidateIfStale` is set to true, we will always revalidate.
     return isUndefined(data) || revalidateIfStale
   })()
 
-  // Resolve the default validating state:
-  // If it's able to validate, and it should revalidate when mount, this will be true.
-  const defaultValidatingState = !!(
-    key &&
-    fetcher &&
-    isInitialMount &&
-    shouldDoInitialRevalidation
-  )
   const isValidating = isUndefined(cached.isValidating)
-    ? defaultValidatingState
+    ? shouldDoInitialRevalidation
     : cached.isValidating
   const isLoading = isUndefined(cached.isLoading)
-    ? defaultValidatingState
+    ? shouldDoInitialRevalidation
     : cached.isLoading
 
   // The revalidation function is a carefully crafted wrapper of the original
@@ -714,7 +764,6 @@ export const useSWRHandler = <Data = any, Error = any>(
   // If there is no `error`, the `revalidation` promise needs to be thrown to
   // the suspense boundary.
   if (suspense) {
-    const hasKeyButNoData = key && isUndefined(data)
     // SWR should throw when trying to use Suspense on the server with React 18,
     // without providing any fallback data. This causes hydration errors. See:
     // https://github.com/vercel/swr/issues/1832
@@ -783,7 +832,8 @@ export { unstable_serialize } from './serialize'
 /**
  * A hook to fetch data.
  *
- * @link https://swr.vercel.app
+ * @see {@link https://swr.vercel.app}
+ *
  * @example
  * ```jsx
  * import useSWR from 'swr'
