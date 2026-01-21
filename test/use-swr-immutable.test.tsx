@@ -1,5 +1,5 @@
-import { render, screen, fireEvent } from '@testing-library/react'
-import { useState, act } from 'react'
+import { screen, fireEvent } from '@testing-library/react'
+import { useState, act, Profiler } from 'react'
 import useSWR, { SWRConfig } from 'swr'
 import useSWRImmutable, { immutable } from 'swr/immutable'
 import {
@@ -7,7 +7,8 @@ import {
   createKey,
   nextTick as waitForNextTick,
   focusOn,
-  renderWithConfig
+  renderWithConfig,
+  createResponse
 } from './utils'
 
 const focusWindow = () => focusOn(window)
@@ -241,6 +242,59 @@ describe('useSWR - immutable', () => {
     expect(fetcher).toHaveBeenNthCalledWith(1, key + '0')
     expect(fetcher).toHaveBeenNthCalledWith(2, key + '1')
   })
+
+  it('isLoading and isValidating should be true when switch to new key', async () => {
+    const key = createKey()
+    const onRender = jest.fn()
+    const useData = (id: string) =>
+      useSWRImmutable(
+        key + id,
+        () =>
+          createResponse(id, {
+            delay: 100
+          }),
+        {
+          dedupingInterval: 0
+        }
+      )
+
+    function Data() {
+      const [id, setId] = useState('0')
+      const { data, isLoading, isValidating } = useData(id)
+      return (
+        <div>
+          <button onClick={() => setId(id === '0' ? '1' : '0')}>
+            switch id
+          </button>
+          <p>
+            data: {data}, isLoading: {isLoading ? 'true' : 'false'},
+            isValidating: {isValidating ? 'true' : 'false'}
+          </p>
+        </div>
+      )
+    }
+
+    function Page() {
+      return (
+        <Profiler
+          onRender={(id, phase) => {
+            onRender(id, phase)
+          }}
+          id={key}
+        >
+          <Data />
+        </Profiler>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText(`data: , isLoading: true, isValidating: true`)
+    await screen.findByText(`data: 0, isLoading: false, isValidating: false`)
+    fireEvent.click(screen.getByText('switch id'))
+    await screen.findByText(`data: , isLoading: true, isValidating: true`)
+    await screen.findByText(`data: 1, isLoading: false, isValidating: false`)
+    expect(onRender).toHaveBeenCalledTimes(4)
+  })
 })
 
 describe('issue #4207', () => {
@@ -256,7 +310,7 @@ describe('issue #4207', () => {
       return <div>{data}</div>
     }
 
-    render(
+    renderWithConfig(
       <SWRConfig
         value={{
           refreshInterval: 100,
