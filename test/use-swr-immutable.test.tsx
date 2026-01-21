@@ -1,6 +1,6 @@
 import { screen, fireEvent } from '@testing-library/react'
 import { useState, act, Profiler } from 'react'
-import useSWR from 'swr'
+import useSWR, { SWRConfig } from 'swr'
 import useSWRImmutable, { immutable } from 'swr/immutable'
 import {
   sleep,
