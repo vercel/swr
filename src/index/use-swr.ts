@@ -614,7 +614,7 @@ export const useSWRHandler = <Data = any, Error = any>(
 
   // Similar to the global mutate but bound to the current cache and key.
   // `cache` isn't allowed to change during the lifecycle.
-  const boundMutate: SWRResponse<Data, Error>['mutate'] = useCallback(
+  const boundMutate = useCallback<SWRResponse<Data, Error>['mutate']>(
     // Use callback to make sure `keyRef.current` returns latest result every time
     (...args: any[]) => {
       return internalMutate(cache, keyRef.current, ...args)
