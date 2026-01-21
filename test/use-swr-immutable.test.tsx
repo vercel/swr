@@ -296,3 +296,36 @@ describe('useSWR - immutable', () => {
     expect(onRender).toHaveBeenCalledTimes(4)
   })
 })
+
+describe('issue #4207', () => {
+  it('should ignore global refreshInterval', async () => {
+    let fetchCount = 0
+    const fetcher = () => {
+      fetchCount++
+      return 'data'
+    }
+
+    function Page() {
+      const { data } = useSWRImmutable('key', fetcher)
+      return <div>{data}</div>
+    }
+
+    renderWithConfig(
+      <SWRConfig
+        value={{
+          refreshInterval: 100,
+          dedupingInterval: 0,
+          provider: () => new Map()
+        }}
+      >
+        <Page />
+      </SWRConfig>
+    )
+
+    await screen.findByText('data')
+    expect(fetchCount).toBe(1)
+
+    await new Promise(resolve => setTimeout(resolve, 300))
+    expect(fetchCount).toBe(1)
+  })
+})
