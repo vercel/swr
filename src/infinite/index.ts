@@ -56,7 +56,8 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
       persistSize = false,
       revalidateFirstPage = true,
       revalidateOnMount = false,
-      parallel = false
+      parallel = false,
+      parallelLimit
     } = config
     const [, , , PRELOAD] = SWRGlobalState.get(defaultCache) as GlobalState
 
@@ -214,9 +215,22 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
           }
         }
 
-        // flush all revalidateions in parallel
+        // flush all revalidations in parallel with optional limit
         if (parallel) {
-          await Promise.all(revalidators.map(r => r()))
+          if (
+            parallelLimit &&
+            parallelLimit > 0 &&
+            revalidators.length > parallelLimit
+          ) {
+            // Process in batches with limited concurrency
+            for (let i = 0; i < revalidators.length; i += parallelLimit) {
+              const batch = revalidators.slice(i, i + parallelLimit)
+              await Promise.all(batch.map(r => r()))
+            }
+          } else {
+            // Traditional full parallel execution
+            await Promise.all(revalidators.map(r => r()))
+          }
         }
 
         // once we executed the data fetching based on the context, clear the context
