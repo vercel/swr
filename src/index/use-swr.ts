@@ -89,6 +89,24 @@ type DefinitelyTruthy<T> = false extends T
   ? never
   : T
 
+function triggerRevalidators(
+  key: string,
+  revalidators: ((type: RevalidateEvent, opts?: { retryCount?: number; dedupe?: boolean }) => void)[] | undefined,
+  type: RevalidateEvent,
+  opts?: { retryCount?: number; dedupe?: boolean }
+) {
+  if (!Array.isArray(revalidators)) return
+
+  for (const revalidate of revalidators) {
+    try {
+      revalidate(type, opts)
+    } catch (err) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.error(`SWR: Error triggering revalidator for key "${key}"`, err)
+      }
+    }
+  }
+}
 const resolvedUndef = Promise.resolve(UNDEFINED)
 
 /**
@@ -572,12 +590,12 @@ export const useSWRHandler = <Data = any, Error = any>(
                   currentConfig,
                   _opts => {
                     const revalidators = EVENT_REVALIDATORS[key]
-                    if (revalidators && revalidators[0]) {
-                      revalidators[0](
-                        revalidateEvents.ERROR_REVALIDATE_EVENT,
-                        _opts
-                      )
-                    }
+                    triggerRevalidators(
+                      key,
+                      revalidators,
+                      revalidateEvents.ERROR_REVALIDATE_EVENT,
+                      _opts
+                    )
                   },
                   {
                     retryCount: (opts.retryCount || 0) + 1,
