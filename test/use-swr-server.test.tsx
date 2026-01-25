@@ -112,8 +112,8 @@ describe('useSWR - SSR', () => {
 
         expect(warnings).toMatchInlineSnapshot(`
           [
-            "Missing pre-initiated data for serialized key "ssr:1" during server-side rendering. Data fethcing should be initiated on the server and provided to SWR via fallback data. You can set "strictServerPrefetchWarning: false" to disable this warning.",
-            "Missing pre-initiated data for serialized key "ssr:2" during server-side rendering. Data fethcing should be initiated on the server and provided to SWR via fallback data. You can set "strictServerPrefetchWarning: false" to disable this warning.",
+            "Missing pre-initiated data for serialized key "ssr:1" during server-side rendering. Data fetching should be initiated on the server and provided to SWR via fallback data. You can set "strictServerPrefetchWarning: false" to disable this warning.",
+            "Missing pre-initiated data for serialized key "ssr:2" during server-side rendering. Data fetching should be initiated on the server and provided to SWR via fallback data. You can set "strictServerPrefetchWarning: false" to disable this warning.",
           ]
         `)
 

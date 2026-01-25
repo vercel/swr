@@ -349,7 +349,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     hasKeyButNoData
   ) {
     console.warn(
-      `Missing pre-initiated data for serialized key "${key}" during server-side rendering. Data fethcing should be initiated on the server and provided to SWR via fallback data. You can set "strictServerPrefetchWarning: false" to disable this warning.`
+      `Missing pre-initiated data for serialized key "${key}" during server-side rendering. Data fetching should be initiated on the server and provided to SWR via fallback data. You can set "strictServerPrefetchWarning: false" to disable this warning.`
     )
   }
 
