@@ -90,7 +90,7 @@ type DefinitelyTruthy<T> = false extends T
   : T
 
 const resolvedUndef = Promise.resolve(UNDEFINED)
-
+const sub = () => noop
 /**
  * The core implementation of the useSWR hook.
  *
@@ -317,23 +317,31 @@ export const useSWRHandler = <Data = any, Error = any>(
     : data
 
   const hasKeyButNoData = key && isUndefined(data)
-
+  const hydrationRef = useRef<boolean | null>(null)
   // Note: the conditionally hook call is fine because the environment
   // `IS_SERVER` never changes.
-  const isHydration =
+  // @ts-expect-error -- use hydrationRef directly
+  const _ =
     !IS_SERVER &&
+    // getServerSnapshot is only called during hydration
     // eslint-disable-next-line react-hooks/rules-of-hooks
     useSyncExternalStore(
-      () => noop,
-      () => false,
-      () => true
+      sub,
+      () => {
+        hydrationRef.current = false
+        return hydrationRef
+      },
+      () => {
+        hydrationRef.current = true
+        return hydrationRef
+      }
     )
-
+  const isHydration = hydrationRef.current
   // During the initial SSR render, warn if the key has no data pre-fetched via:
   // - fallback data
   // - preload calls
   // - initial data from the cache provider
-  // We only warn once for each key during SSR.
+  // We only warn once for each key during Hydration.
   if (
     strictServerPrefetchWarning &&
     isHydration &&
@@ -341,7 +349,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     hasKeyButNoData
   ) {
     console.warn(
-      `Missing pre-initiated data for serialized key "${key}" during server-side rendering. Data fethcing should be initiated on the server and provided to SWR via fallback data. You can set "strictServerPrefetchWarning: false" to disable this warning.`
+      `Missing pre-initiated data for serialized key "${key}" during server-side rendering. Data fetching should be initiated on the server and provided to SWR via fallback data. You can set "strictServerPrefetchWarning: false" to disable this warning.`
     )
   }
 
