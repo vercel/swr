@@ -14,6 +14,32 @@ async function withServer(runner: () => Promise<void>) {
 }
 
 describe('useSWR - SSR', () => {
+  describe('preload on server', () => {
+    beforeAll(() => {
+      // @ts-expect-error
+      global.window.Deno = '1'
+    })
+
+    afterAll(() => {
+      // @ts-expect-error
+      delete global.window.Deno
+    })
+
+    it('should be a no-op on the server', async () => {
+      await withServer(async () => {
+        const { preload } = await import('swr')
+
+        const fetcher = jest.fn(() => 'data')
+        const result = preload('test-key', fetcher)
+
+        // preload should return undefined on the server
+        expect(result).toBeUndefined()
+        // fetcher should not be called on the server
+        expect(fetcher).not.toHaveBeenCalled()
+      })
+    })
+  })
+
   describe('IS_SERVER flag', () => {
     beforeAll(() => {
       // Store the original window object
