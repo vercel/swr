@@ -10,6 +10,7 @@ import { cache } from './config'
 import { SWRGlobalState } from './global-state'
 import { isUndefined } from './shared'
 import { INFINITE_PREFIX } from '../constants'
+import { IS_SERVER } from './env'
 // Basically same as Fetcher but without Conditional Fetching
 type PreloadFetcher<
   Data = unknown,
@@ -28,6 +29,11 @@ export const preload = <
   key_: SWRKey,
   fetcher: Fetcher
 ): ReturnType<Fetcher> => {
+  // preload should be a no-op on the server
+  if (IS_SERVER) {
+    return undefined as ReturnType<Fetcher>
+  }
+
   const [key, fnArg] = serialize(key_)
   const [, , , PRELOAD] = SWRGlobalState.get(cache) as GlobalState
 
