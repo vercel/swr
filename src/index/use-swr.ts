@@ -376,11 +376,13 @@ export const useSWRHandler = <Data = any, Error = any>(
     return isUndefined(data) || revalidateIfStale
   })()
 
+  const defaultValidatingState = isInitialMount && shouldDoInitialRevalidation
+
   const isValidating = isUndefined(cached.isValidating)
-    ? shouldDoInitialRevalidation
+    ? defaultValidatingState
     : cached.isValidating
   const isLoading = isUndefined(cached.isLoading)
-    ? shouldDoInitialRevalidation
+    ? defaultValidatingState
     : cached.isLoading
 
   // The revalidation function is a carefully crafted wrapper of the original
