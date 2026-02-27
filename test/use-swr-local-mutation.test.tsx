@@ -791,6 +791,39 @@ describe('useSWR - local mutation', () => {
     screen.getByText('false')
   })
 
+  it('isLoading and isValidating should be false when revalidate is set to false', async () => {
+    const key = createKey()
+    function Page() {
+      const { data, isLoading, isValidating, mutate } = useSWR(
+        key,
+        () => 'data',
+        {
+          fallbackData: 'fallback',
+          revalidateOnMount: false,
+          revalidateOnFocus: false
+        }
+      )
+      return (
+        <div>
+          <p>data: {data}</p>
+          <p>isLoading: {isLoading.toString()}</p>
+          <p>isValidating: {isValidating.toString()}</p>
+          <button onClick={() => mutate('fallback1', { revalidate: false })}>
+            mutate
+          </button>
+        </div>
+      )
+    }
+    renderWithConfig(<Page />)
+    screen.getByText('data: fallback')
+    screen.getByText('isLoading: false')
+    screen.getByText('isValidating: false')
+    fireEvent.click(screen.getByText('mutate'))
+    await screen.findByText('data: fallback1')
+    screen.getByText('isLoading: false')
+    screen.getByText('isValidating: false')
+  })
+
   it('bound mutate should always use the latest key', async () => {
     const key = createKey()
     const fetcher = jest.fn(() => 'data')
