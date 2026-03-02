@@ -235,7 +235,7 @@ describe('useSWR - keep previous data', () => {
     screen.getByText('initial')
   })
 
-  it('should work keepPreviousData without changing th key', async () => {
+  it('should work keepPreviousData without changing the key', async () => {
     const key = createKey()
     let counter = 0
     const fetcher = () => createResponse(++counter, { delay: 50 })
