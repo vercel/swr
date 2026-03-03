@@ -161,7 +161,9 @@ export const useSWRHandler = <Data = any, Error = any>(
   const fetcherRef = useRef(fetcher)
   const configRef = useRef(config)
   const getConfig = () => configRef.current
-  const isActive = () => getConfig().isVisible() && getConfig().isOnline()
+  const isActive = () =>
+    (getConfig().isVisible() || getConfig().hasFocus()) &&
+    getConfig().isOnline()
 
   const [getCache, setCache, subscribeCache, getInitialCache] =
     createCacheHelper<
@@ -672,7 +674,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         if (
           getConfig().revalidateOnFocus &&
           now > nextFocusRevalidatedAt &&
-          getConfig().isOnline()
+          isActive()
         ) {
           nextFocusRevalidatedAt = now + getConfig().focusThrottleInterval
           softRevalidate()

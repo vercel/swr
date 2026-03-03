@@ -60,7 +60,6 @@ export const defaultConfig: FullConfiguration = mergeObjects(
     revalidateOnReconnect: true,
     revalidateIfStale: true,
     shouldRetryOnError: true,
-    refreshWhenUnfocused: true,
 
     // timeouts
     errorRetryInterval: slowConnection ? 10000 : 5000,

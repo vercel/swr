@@ -186,7 +186,7 @@ export interface PublicConfiguration<
   refreshWhenOffline?: boolean
   /**
    * polling when the window is not focused (if `refreshInterval` is enabled)
-   * @defaultValue true
+   * @defaultValue false
    */
   refreshWhenUnfocused?: boolean
   /**
