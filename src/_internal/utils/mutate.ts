@@ -106,10 +106,12 @@ export async function internalMutate<Data>(
         // requests will not be deduped.
         delete FETCH[key]
         delete PRELOAD[key]
-        if (revalidators && revalidators[0]) {
-          return revalidators[0](revalidateEvents.MUTATE_EVENT).then(
-            () => get().data
-          )
+        if (revalidators && revalidators.length) {
+          return Promise.all(
+            revalidators.map(r =>
+              r(revalidateEvents.MUTATE_EVENT, { dedupe: true })
+            )
+          ).then(() => get().data)
         }
       }
       return get().data
