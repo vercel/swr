@@ -219,6 +219,14 @@ export const useSWRHandler = <Data = any, Error = any>(
         if (isInitialMount && !isUndefined(revalidateOnMount))
           return revalidateOnMount
         const data = !isUndefined(fallback) ? fallback : snapshot.data
+        // If revalidateOnRSCFallback is explicitly configured, use it for fallback data
+        if (
+          !isUndefined(fallback) &&
+          !isUndefined(data) &&
+          isInitialMount &&
+          !isUndefined(getConfig().revalidateOnRSCFallback)
+        )
+          return getConfig().revalidateOnRSCFallback
         if (suspense) return isUndefined(data) || revalidateIfStale
         return isUndefined(data) || revalidateIfStale
       })()
