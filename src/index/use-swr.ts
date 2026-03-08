@@ -368,8 +368,15 @@ export const useSWRHandler = <Data = any, Error = any>(
     if (isInitialMount && !isUndefined(revalidateOnMount))
       return revalidateOnMount
 
-    // If RSC fallback data on initial render, use revalidateOnRSCFallback config
-    if (!isUndefined(fallback) && !isUndefined(data) && !IS_SERVER && isInitialMount) return getConfig().revalidateOnRSCFallback ?? false
+    // If revalidateOnRSCFallback is explicitly configured, use it for fallback data
+    if (
+      !isUndefined(fallback) &&
+      !isUndefined(data) &&
+      !IS_SERVER &&
+      isInitialMount &&
+      !isUndefined(getConfig().revalidateOnRSCFallback)
+    )
+      return getConfig().revalidateOnRSCFallback
     // Under suspense mode, it will always fetch on render if there is no
     // stale data so no need to revalidate immediately mount it again.
     // If data exists, only revalidate if `revalidateIfStale` is true.
