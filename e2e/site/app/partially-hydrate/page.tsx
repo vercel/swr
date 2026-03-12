@@ -1,6 +1,7 @@
 'use client'
 import { useDebugHistory } from '~/lib/use-debug-history'
 import useData from './use-data'
+import { use } from 'react'
 
 let resolved = false
 const susp = new Promise(res => {
@@ -13,7 +14,7 @@ const susp = new Promise(res => {
 export default function Page() {
   // We trigger the suspense boundary here!
   if (!resolved) {
-    throw susp
+    use(susp)
   }
 
   const { data } = useData()

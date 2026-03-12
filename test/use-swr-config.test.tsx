@@ -2,7 +2,12 @@ import { screen, fireEvent } from '@testing-library/react'
 import { useEffect, useState, act } from 'react'
 import type { Middleware } from 'swr'
 import useSWR, { SWRConfig, useSWRConfig } from 'swr'
-import { renderWithConfig, createKey, renderWithGlobalCache } from './utils'
+import {
+  renderWithConfig,
+  createKey,
+  renderWithGlobalCache,
+  sleep
+} from './utils'
 
 describe('useSWR - configs', () => {
   it('should read the config fallback from the context', async () => {
@@ -87,6 +92,35 @@ describe('useSWR - configs', () => {
     screen.getByText('data: 1')
     await act(() => mutate())
     screen.getByText('data: 1')
+  })
+
+  it('should skip initial revalidation when isPaused is true and revalidateOnMount is true', async () => {
+    const key = createKey()
+    let value = 0
+    const fetcher = async () => {
+      await sleep(50)
+      return value++
+    }
+    function Page() {
+      const [paused, setPaused] = useState(false)
+      const { data, isLoading, isValidating } = useSWR(key, fetcher, {
+        revalidateOnMount: true,
+        refreshInterval: 1,
+        isPaused() {
+          return true
+        }
+      })
+      return (
+        <div onClick={() => setPaused(!paused)}>
+          {`data: ${data} | isLoading: ${
+            isLoading ? 'yes' : 'no'
+          } | isValidating: ${isValidating ? 'yes' : 'no'}`}
+        </div>
+      )
+    }
+    renderWithConfig(<Page />)
+    // should not revalidate on mount
+    screen.getByText('data: undefined | isLoading: no | isValidating: no')
   })
 
   it('should expose default config as static property on SWRConfig', () => {

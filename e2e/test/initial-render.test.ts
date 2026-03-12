@@ -41,4 +41,24 @@ test.describe('rendering', () => {
       page.getByText('infinite_unstable_serialize: $inf$useSWRInfinite')
     ).toBeVisible()
   })
+
+  test('swr should not cause extra rerenders', async ({ page }) => {
+    const renderLogs: string[] = []
+    await page.exposeFunction('consoleCount', (msg: string) => {
+      renderLogs.push(msg)
+    })
+    await page.addInitScript(() => {
+      const originalConsoleCount = console.count
+      console.count = (label?: string) => {
+        // @ts-ignore
+        window.consoleCount(label)
+        originalConsoleCount.call(console, label)
+      }
+    })
+    await page.goto('./render-count', { waitUntil: 'commit' })
+    // wait a bit to ensure no extra renders happen
+    await page.waitForTimeout(500)
+    const renderCount = renderLogs.filter(log => log === 'render').length
+    expect(renderCount).toBe(1)
+  })
 })

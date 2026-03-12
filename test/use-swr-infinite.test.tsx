@@ -9,7 +9,8 @@ import {
   nextTick,
   renderWithConfig,
   renderWithGlobalCache,
-  executeWithoutBatching
+  executeWithoutBatching,
+  itShouldSkipForReactCanary
 } from './utils'
 
 describe('useSWRInfinite', () => {
@@ -1115,7 +1116,7 @@ describe('useSWRInfinite', () => {
 
     fireEvent.click(screen.getByText('mutate'))
     await screen.findByText('data: foo-1')
-    expect(fetcher).toBeCalledTimes(2)
+    expect(fetcher).toHaveBeenCalledTimes(2)
 
     expect(logger).toEqual([undefined, ['foo-0'], ['foo-1']])
   })
@@ -1159,46 +1160,49 @@ describe('useSWRInfinite', () => {
   })
 
   // https://github.com/vercel/swr/issues/1776
-  it('should update the getKey reference with the suspense mode', async () => {
-    const keyA = 'keyA' + createKey()
-    const keyB = 'keyB' + createKey()
+  itShouldSkipForReactCanary(
+    'should update the getKey reference with the suspense mode',
+    async () => {
+      const keyA = 'keyA' + createKey()
+      const keyB = 'keyB' + createKey()
 
-    const apiData = {
-      [keyA]: ['A1', 'A2', 'A3'],
-      [keyB]: ['B1', 'B2', 'B3']
-    }
+      const apiData = {
+        [keyA]: ['A1', 'A2', 'A3'],
+        [keyB]: ['B1', 'B2', 'B3']
+      }
 
-    function Page() {
-      const [status, setStatus] = useState('a')
-      const { data, setSize } = useSWRInfinite(
-        () => (status === 'a' ? keyA : keyB),
-        key => createResponse(apiData[key]),
-        { suspense: true }
+      function Page() {
+        const [status, setStatus] = useState('a')
+        const { data, setSize } = useSWRInfinite(
+          () => (status === 'a' ? keyA : keyB),
+          key => createResponse(apiData[key]),
+          { suspense: true }
+        )
+        return (
+          <>
+            <div>data: {String(data)}</div>
+            <button
+              onClick={() => {
+                setStatus('b')
+                setSize(1)
+              }}
+            >
+              mutate
+            </button>
+          </>
+        )
+      }
+      renderWithConfig(
+        <Suspense fallback="loading">
+          <Page />
+        </Suspense>
       )
-      return (
-        <>
-          <div>data: {String(data)}</div>
-          <button
-            onClick={() => {
-              setStatus('b')
-              setSize(1)
-            }}
-          >
-            mutate
-          </button>
-        </>
-      )
-    }
-    renderWithConfig(
-      <Suspense fallback="loading">
-        <Page />
-      </Suspense>
-    )
-    await screen.findByText('data: A1,A2,A3')
+      await screen.findByText('data: A1,A2,A3')
 
-    fireEvent.click(screen.getByText('mutate'))
-    await screen.findByText('data: B1,B2,B3')
-  })
+      fireEvent.click(screen.getByText('mutate'))
+      await screen.findByText('data: B1,B2,B3')
+    }
+  )
 
   it('should revalidate the resource with bound mutate when arguments are passed', async () => {
     const key = createKey()
@@ -1268,7 +1272,7 @@ describe('useSWRInfinite', () => {
 
     fireEvent.click(screen.getByText('mutate'))
     await screen.findByText('data: foo-1')
-    expect(fetcher).toBeCalledTimes(2)
+    expect(fetcher).toHaveBeenCalledTimes(2)
 
     expect(logger).toEqual([undefined, ['foo-0'], ['foo-1']])
   })
@@ -1300,7 +1304,7 @@ describe('useSWRInfinite', () => {
     await screen.findByText('data: foo-0')
 
     fireEvent.click(screen.getByText('mutate'))
-    expect(fetcher).toBeCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledTimes(1)
 
     expect(logger).toEqual([undefined, ['foo-0']])
   })
