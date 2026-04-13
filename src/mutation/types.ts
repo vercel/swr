@@ -50,6 +50,67 @@ export type SWRMutationConfiguration<
 
 type RemoveUndefined<T> = T extends undefined ? never : T
 type IsUndefinedIncluded<T> = undefined extends T ? true : false
+
+// Resolves to the extra-argument portion of the trigger parameter list based on
+// ExtraArg. Keeping the conditional inside a tuple type (rather than at the
+// interface level) lets TypeScript treat the resulting trigger as a single
+// callable signature even when ExtraArg is a deferred generic type parameter.
+type TriggerExtraArg<ExtraArg> = [ExtraArg] extends [never]
+  ? [extraArgument?: null | undefined]
+  : IsUndefinedIncluded<ExtraArg> extends true
+  ? [extraArgument?: ExtraArg]
+  : [extraArgument: ExtraArg]
+
+/**
+ * A single callable trigger interface whose argument list is determined by
+ * ExtraArg. Unlike a union of the three legacy Trigger* interfaces, this type
+ * remains callable when ExtraArg is a generic (deferred) type parameter.
+ */
+export interface SWRMutationTrigger<
+  Data = any,
+  Error = any,
+  SWRMutationKey extends Key = Key,
+  ExtraArg = never
+> {
+  <SWRData = Data>(
+    ...args: [
+      ...TriggerExtraArg<ExtraArg>,
+      options?: SWRMutationConfiguration<
+        Data,
+        Error,
+        SWRMutationKey,
+        ExtraArg,
+        SWRData
+      >
+    ]
+  ): Promise<Data>
+  <SWRData = Data>(
+    ...args: [
+      ...TriggerExtraArg<ExtraArg>,
+      options: SWRMutationConfiguration<
+        Data,
+        Error,
+        SWRMutationKey,
+        ExtraArg,
+        SWRData
+      > & { throwOnError: true }
+    ]
+  ): Promise<RemoveUndefined<Data>>
+  <SWRData = Data>(
+    ...args: [
+      ...TriggerExtraArg<ExtraArg>,
+      options: SWRMutationConfiguration<
+        Data,
+        Error,
+        SWRMutationKey,
+        ExtraArg,
+        SWRData
+      > & { throwOnError: false }
+    ]
+  ): Promise<Data | undefined>
+}
+
+/** @deprecated Use {@link SWRMutationTrigger} instead. */
 export interface TriggerWithArgs<
   Data = any,
   Error = any,
@@ -88,6 +149,7 @@ export interface TriggerWithArgs<
   ): Promise<Data | undefined>
 }
 
+/** @deprecated Use {@link SWRMutationTrigger} instead. */
 export interface TriggerWithOptionsArgs<
   Data = any,
   Error = any,
@@ -126,6 +188,7 @@ export interface TriggerWithOptionsArgs<
   ): Promise<Data | undefined>
 }
 
+/** @deprecated Use {@link SWRMutationTrigger} instead. */
 export interface TriggerWithoutArgs<
   Data = any,
   Error = any,
@@ -178,11 +241,7 @@ export interface SWRMutationResponse<
    * Function to trigger the mutation. You can also pass an extra argument to
    * the fetcher, and override the options for the mutation hook.
    */
-  trigger: [ExtraArg] extends [never]
-    ? TriggerWithoutArgs<Data, Error, SWRMutationKey, ExtraArg>
-    : IsUndefinedIncluded<ExtraArg> extends true
-    ? TriggerWithOptionsArgs<Data, Error, SWRMutationKey, ExtraArg>
-    : TriggerWithArgs<Data, Error, SWRMutationKey, ExtraArg>
+  trigger: SWRMutationTrigger<Data, Error, SWRMutationKey, ExtraArg>
   /**
    * Function to reset the mutation state (`data`, `error`, and `isMutating`).
    */
