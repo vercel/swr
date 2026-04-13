@@ -95,4 +95,20 @@ export function useTestSubscription() {
   const { data: data2, error: error2 } = useSWRSubscription('key', sub)
   expectType<string | undefined>(data2)
   expectType<Error | undefined>(error2)
+
+  // Async subscribe should be accepted.
+  useSWRSubscription(
+    'key',
+    async (_key, { next: _ }: SWRSubscriptionOptions<string, Error>) => {
+      return () => {}
+    }
+  )
+
+  const asyncSub: SWRSubscription<string, string, Error> = async (
+    _,
+    { next: __ }
+  ) => {
+    return () => {}
+  }
+  useSWRSubscription('key', asyncSub)
 }
