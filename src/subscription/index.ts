@@ -72,13 +72,30 @@ export const subscription = (<Data = any, Error = any>(useSWRNext: SWRHook) =>
       subscriptions.set(subscriptionKey, refCount + 1)
 
       if (!refCount) {
-        const dispose = subscribe(args, { next })
-        if (typeof dispose !== 'function') {
+        const result = subscribe(args, { next })
+
+        if (result && typeof (result as any).then === 'function') {
+          // Race condition guard: if cleanup runs before the async subscribe
+          // resolves, the flag tells the resolver to dispose immediately.
+          let shouldDisposeOnResolve = false
+          ;(result as Promise<(() => void) | void>).then(dispose => {
+            if (shouldDisposeOnResolve) {
+              if (typeof dispose === 'function') dispose()
+            } else if (typeof dispose === 'function') {
+              disposers.set(subscriptionKey!, dispose)
+            }
+          })
+
+          disposers.set(subscriptionKey, () => {
+            shouldDisposeOnResolve = true
+          })
+        } else if (typeof result === 'function') {
+          disposers.set(subscriptionKey, result)
+        } else if (typeof result !== 'undefined') {
           throw new Error(
             'The `subscribe` function must return a function to unsubscribe.'
           )
         }
-        disposers.set(subscriptionKey, dispose)
       }
 
       return () => {
