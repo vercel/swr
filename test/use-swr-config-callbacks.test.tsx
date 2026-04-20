@@ -1,7 +1,13 @@
 import { screen, fireEvent } from '@testing-library/react'
-import { act } from 'react'
+import { act, Suspense, useState } from 'react'
 import useSWR from 'swr'
-import { sleep, createResponse, renderWithConfig, createKey } from './utils'
+import {
+  sleep,
+  createResponse,
+  renderWithConfig,
+  createKey,
+  itShouldSkipForReactCanary
+} from './utils'
 
 describe('useSWR - config callbacks', () => {
   it('should trigger the onSuccess event with the latest version of the onSuccess callback', async () => {
@@ -38,6 +44,57 @@ describe('useSWR - config callbacks', () => {
     // the onSuccess callback should capture the latest `props.text`
     expect(state).toEqual('b')
   })
+
+  itShouldSkipForReactCanary(
+    'should trigger the onSuccess event with the latest version of the onSuccess callback in suspense mode',
+    async () => {
+      let state = null
+      const key = createKey()
+
+      function Page(props: { text: string }) {
+        const [prefix, setPrefix] = useState('a')
+        const { data } = useSWR(
+          prefix + ':' + key,
+          () => createResponse(prefix),
+          {
+            suspense: true,
+            onSuccess: () => (state = props.text)
+          }
+        )
+
+        return (
+          <div>
+            <button onClick={() => setPrefix('b')}>update</button>
+            <div>
+              hello, {data}:{key}, {props.text}
+            </div>
+          </div>
+        )
+      }
+
+      const { rerender } = renderWithConfig(
+        <Suspense fallback={<div>fallback</div>}>
+          <Page text="a" />
+        </Suspense>
+      )
+
+      screen.getByText('fallback')
+      await screen.findByText(`hello, a:${key}, a`)
+      expect(state).toEqual('a')
+
+      rerender(
+        <Suspense fallback={<div>fallback</div>}>
+          <Page text="b" />
+        </Suspense>
+      )
+      screen.getByText(`hello, a:${key}, b`)
+      expect(state).toEqual('a')
+
+      fireEvent.click(screen.getByText('update'))
+      await screen.findByText(`hello, b:${key}, b`)
+      expect(state).toEqual('b')
+    }
+  )
 
   it('should trigger the onError event with the latest version of the onError callback', async () => {
     let state = null
