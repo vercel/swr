@@ -319,7 +319,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
       },
       // exclude getKey from the dependencies, which isn't allowed to change during the lifecycle
       // eslint-disable-next-line react-hooks/exhaustive-deps
-      [infiniteKey, cache, mutate, resolvePageSize]
+      [infiniteKey, cache, parallel, mutate, resolvePageSize]
     )
 
     // Use getter functions to avoid unnecessary re-renders caused by triggering

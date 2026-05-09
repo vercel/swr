@@ -1850,7 +1850,7 @@ describe('useSWRInfinite', () => {
 
   it('should keep previousPageData null when parallel enabled', async () => {
     const pageData = ['apple', 'banana', 'pineapple']
-    const previousPageDataLogs: any[] = []
+    const previousPageDataLogs = []
     const key = createKey()
     const Page = () => {
       const { data, setSize } = useSWRInfinite(
@@ -1858,7 +1858,7 @@ describe('useSWRInfinite', () => {
           previousPageDataLogs.push(previousPageData)
           return [key, index]
         },
-        ([_, index]) => createResponse(pageData[index], { delay: 10 }),
+        ([_, index]) => createResponse(`${pageData[index]}, `, { delay: 10 }),
         {
           parallel: true
         }
