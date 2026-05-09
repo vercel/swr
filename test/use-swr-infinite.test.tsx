@@ -1820,7 +1820,7 @@ describe('useSWRInfinite', () => {
     // mock api
     const pageData = ['apple', 'banana', 'pineapple']
 
-    const previousPageDataLogs: any[] = []
+    const previousPageDataLogs = []
 
     const key = createKey()
     function Page() {
@@ -1850,7 +1850,7 @@ describe('useSWRInfinite', () => {
 
   it('should keep previousPageData null when parallel enabled', async () => {
     const pageData = ['apple', 'banana', 'pineapple']
-    const previousPageDataLogs = []
+    const previousPageDataLogs: any[] = []
     const key = createKey()
     const Page = () => {
       const { data, setSize } = useSWRInfinite(
