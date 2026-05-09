@@ -107,3 +107,11 @@ export const mockConsoleForHydrationErrors = () => {
     console.error.mockRestore()
   }
 }
+
+export const itShouldSkipForReactCanary = (...args: Parameters<jest.It>) => {
+  if (process.env.TEST_REACT_CANARY === '1') {
+    return it.skip(...args)
+  } else {
+    return it(...args)
+  }
+}

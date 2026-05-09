@@ -1,4 +1,5 @@
-import { act, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
+import { act } from 'react'
 import useSWR from 'swr'
 import {
   nextTick as waitForNextTick,

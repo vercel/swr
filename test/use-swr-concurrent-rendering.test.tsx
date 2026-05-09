@@ -1,4 +1,4 @@
-import { screen, act } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import {
   createKey,
   createResponse,
@@ -6,7 +6,7 @@ import {
   executeWithoutBatching,
   renderWithConfig
 } from './utils'
-import React from 'react'
+import React, { act } from 'react'
 
 import useSWR from 'swr'
 

@@ -1,5 +1,5 @@
-import { act, screen } from '@testing-library/react'
-import { useState, useEffect, useRef } from 'react'
+import { screen } from '@testing-library/react'
+import { useState, useEffect, useRef, act } from 'react'
 import type { Middleware } from 'swr'
 import useSWR, { SWRConfig } from 'swr'
 import { withMiddleware } from 'swr/_internal'
@@ -256,7 +256,7 @@ describe('useSWR - middleware', () => {
     screen.getByText('hello,')
     await nextTick()
 
-    expect(logger).toBeCalledWith(true)
+    expect(logger).toHaveBeenCalledWith(true)
     screen.getByText('hello, world')
   })
 })

@@ -1,5 +1,5 @@
-import { act, fireEvent, screen } from '@testing-library/react'
-import { useState, StrictMode } from 'react'
+import { fireEvent, screen } from '@testing-library/react'
+import { act, useState, StrictMode } from 'react'
 import useSWR, { useSWRConfig, SWRConfig, mutate as globalMutate } from 'swr'
 import {
   sleep,
@@ -170,9 +170,9 @@ describe('useSWR - cache provider', () => {
     // revalidateOnFocus won't work
     screen.getByText('1')
     unmount()
-    expect(focusFn).toBeCalled()
-    expect(unsubscribeFocusFn).toBeCalledTimes(1)
-    expect(unsubscribeReconnectFn).toBeCalledTimes(1)
+    expect(focusFn).toHaveBeenCalled()
+    expect(unsubscribeFocusFn).toHaveBeenCalledTimes(1)
+    expect(unsubscribeReconnectFn).toHaveBeenCalledTimes(1)
   })
 
   it('should work with revalidateOnFocus', async () => {
@@ -336,9 +336,9 @@ describe('useSWR - cache provider', () => {
     }
 
     renderWithConfig(<Page />)
-    expect(createCacheProvider).toBeCalledTimes(1)
+    expect(createCacheProvider).toHaveBeenCalledTimes(1)
     act(() => rerender({}))
-    expect(createCacheProvider).toBeCalledTimes(1)
+    expect(createCacheProvider).toHaveBeenCalledTimes(1)
   })
 })
 

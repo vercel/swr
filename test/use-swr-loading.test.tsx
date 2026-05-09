@@ -1,5 +1,5 @@
-import { act, screen, fireEvent } from '@testing-library/react'
-import React, { useEffect } from 'react'
+import { screen, fireEvent } from '@testing-library/react'
+import React, { useEffect, act } from 'react'
 import useSWR from 'swr'
 import {
   createResponse,
@@ -189,7 +189,7 @@ describe('useSWR - loading', () => {
     screen.getByText('validating,validating')
     await nextTick()
     screen.getByText('stopped,stopped')
-    expect(fetcher).toBeCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledTimes(1)
   })
 
   it('should sync all validating states if errored', async () => {
