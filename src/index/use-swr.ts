@@ -39,39 +39,37 @@ import type {
   GlobalState
 } from '../_internal'
 
-const use =
+const use: <T>(usable: PromiseLike<T> | Promise<T>) => T =
   React.use ||
-  // This extra generic is to avoid TypeScript mixing up the generic and JSX sytax
-  // and emitting an error.
+  // Fallback for React versions without `use()`.
   // We assume that this is only for the `use(thenable)` case, not `use(context)`.
   // https://github.com/facebook/react/blob/aed00dacfb79d17c53218404c52b1c7aa59c4a89/packages/react-server/src/ReactFizzThenable.js#L45
-  (<T, _>(
-    thenable: Promise<T> & {
+  (thenable => {
+    const t = thenable as Promise<any> & {
       status?: 'pending' | 'fulfilled' | 'rejected'
-      value?: T
+      value?: any
       reason?: unknown
     }
-  ): T => {
-    switch (thenable.status) {
+    switch (t.status) {
       case 'pending':
-        throw thenable
+        throw t
       case 'fulfilled':
-        return thenable.value as T
+        return t.value
       case 'rejected':
-        throw thenable.reason
+        throw t.reason
       default:
-        thenable.status = 'pending'
-        thenable.then(
+        t.status = 'pending'
+        t.then(
           v => {
-            thenable.status = 'fulfilled'
-            thenable.value = v
+            t.status = 'fulfilled'
+            t.value = v
           },
           e => {
-            thenable.status = 'rejected'
-            thenable.reason = e
+            t.status = 'rejected'
+            t.reason = e
           }
         )
-        throw thenable
+        throw t
     }
   })
 
@@ -134,6 +132,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     refreshInterval,
     refreshWhenHidden,
     refreshWhenOffline,
+    refreshWhenUnfocused,
     keepPreviousData,
     strictServerPrefetchWarning
   } = config
@@ -160,7 +159,9 @@ export const useSWRHandler = <Data = any, Error = any>(
   const fetcherRef = useRef(fetcher)
   const configRef = useRef(config)
   const getConfig = () => configRef.current
-  const isActive = () => getConfig().isVisible() && getConfig().isOnline()
+  const isActive = () =>
+    (getConfig().isVisible() || getConfig().hasFocus()) &&
+    getConfig().isOnline()
 
   const [getCache, setCache, subscribeCache, getInitialCache] =
     createCacheHelper<
@@ -743,11 +744,12 @@ export const useSWRHandler = <Data = any, Error = any>(
 
     function execute() {
       // Check if it's OK to execute:
-      // Only revalidate when the page is visible, online, and not errored.
+      // Only revalidate when the page is visible, online, focused, and not errored.
       if (
         !getCache().error &&
         (refreshWhenHidden || getConfig().isVisible()) &&
-        (refreshWhenOffline || getConfig().isOnline())
+        (refreshWhenOffline || getConfig().isOnline()) &&
+        (refreshWhenUnfocused || getConfig().hasFocus())
       ) {
         revalidate(WITH_DEDUPE).then(next)
       } else {
@@ -764,7 +766,13 @@ export const useSWRHandler = <Data = any, Error = any>(
         timer = -1
       }
     }
-  }, [refreshInterval, refreshWhenHidden, refreshWhenOffline, key])
+  }, [
+    refreshInterval,
+    refreshWhenHidden,
+    refreshWhenOffline,
+    refreshWhenUnfocused,
+    key
+  ])
 
   // Display debug info in React DevTools.
   useDebugValue(returnedData)
