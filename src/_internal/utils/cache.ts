@@ -56,7 +56,14 @@ export const initCache = <Data = any>(
       subscriptions[key] = subs
 
       subs.push(callback)
-      return () => subs.splice(subs.indexOf(callback), 1)
+      return () => {
+        const index = subs.indexOf(callback)
+        if (index >= 0) {
+          // O(1): swap with the last element and pop
+          subs[index] = subs[subs.length - 1]
+          subs.pop()
+        }
+      }
     }
     const setter = (key: string, value: any, prev: any) => {
       provider.set(key, value)
