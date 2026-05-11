@@ -545,7 +545,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         // Trigger the successful callback if it's the original request.
         if (shouldStartNewRequest) {
           if (callbackSafeguard()) {
-            getConfig().onSuccess(newData, key, config)
+            getConfig().onSuccess?.(newData, key, config)
           }
         }
       } catch (err: any) {
