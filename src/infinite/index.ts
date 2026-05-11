@@ -144,7 +144,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
         >(cache, key)
         const cacheData = getCache().data
 
-        const revalidators = []
+        const revalidators: Array<() => Promise<void>> = []
 
         let previousPageData = null
         for (let i = 0; i < pageSize; ++i) {
@@ -295,7 +295,9 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
         >(cache, infiniteKey)
         let previousPageData = null
         for (let i = 0; i < size; ++i) {
-          const [pageKey] = serialize(getKey(i, previousPageData))
+          const [pageKey] = serialize(
+            getKey(i, parallel ? null : previousPageData)
+          )
           const [getCache] = createCacheHelper<
             Data,
             SWRInfiniteCacheValue<Data, any>
@@ -309,13 +311,15 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
           }
 
           data.push(pageData)
-          previousPageData = pageData
+          if (!parallel) {
+            previousPageData = pageData
+          }
         }
         return mutate(data)
       },
       // exclude getKey from the dependencies, which isn't allowed to change during the lifecycle
       // eslint-disable-next-line react-hooks/exhaustive-deps
-      [infiniteKey, cache, mutate, resolvePageSize]
+      [infiniteKey, cache, parallel, mutate, resolvePageSize]
     )
 
     // Use getter functions to avoid unnecessary re-renders caused by triggering
