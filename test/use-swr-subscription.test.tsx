@@ -293,6 +293,79 @@ describe('useSWRSubscription', () => {
     await screen.findByText(`data: 3`)
   })
 
+  it('should support async subscribe', async () => {
+    const swrKey = createKey()
+    let emitter: ((data: string) => void) | null = null
+    let disposed = false
+
+    async function subscribe(_key, { next }) {
+      await sleep(50)
+      emitter = (data: string) => next(undefined, data)
+      return () => {
+        disposed = true
+        emitter = null
+      }
+    }
+
+    function Page() {
+      const { data } = useSWRSubscription(swrKey, subscribe, {
+        fallbackData: 'fallback'
+      })
+      return <div>{'data:' + data}</div>
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('data:fallback')
+
+    // Wait for async subscribe to resolve.
+    await act(() => sleep(100))
+    act(() => emitter?.('hello'))
+    await act(() => sleep(10))
+    screen.getByText('data:hello')
+
+    expect(disposed).toBe(false)
+  })
+
+  it('should clean up async subscribe on unmount', async () => {
+    const swrKey = createKey()
+    let disposed = false
+
+    async function subscribe(_key, { next }) {
+      await sleep(100)
+      next(undefined, 'connected')
+      return () => {
+        disposed = true
+      }
+    }
+
+    function Page() {
+      const [show, setShow] = useState(true)
+      return (
+        <>
+          {show ? <Child /> : null}
+          <button onClick={() => setShow(false)}>unmount</button>
+        </>
+      )
+    }
+    function Child() {
+      const { data } = useSWRSubscription(swrKey, subscribe, {
+        fallbackData: 'fallback'
+      })
+      return <div>{'data:' + data}</div>
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('data:fallback')
+
+    // Unmount before async subscribe resolves.
+    await act(() => sleep(10))
+    fireEvent.click(screen.getByText('unmount'))
+
+    // After the Promise resolves, the dispose should still be called.
+    await act(() => sleep(200))
+    expect(disposed).toBe(true)
+  })
+
   it('should require a dispose function', async () => {
     jest.spyOn(console, 'error').mockImplementation(() => {})
 
@@ -303,6 +376,7 @@ describe('useSWRSubscription', () => {
     }
 
     function Page() {
+      // @ts-expect-error -- intentionally passing an invalid subscribe function
       useSWRSubscription(swrKey, subscribe)
       return null
     }
