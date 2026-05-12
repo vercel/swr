@@ -89,6 +89,23 @@ type DefinitelyTruthy<T> = false extends T
   ? never
   : T
 
+function triggerRevalidators(
+  revalidators:
+    | ((
+        type: RevalidateEvent,
+        opts?: { retryCount?: number; dedupe?: boolean }
+      ) => void)[]
+    | undefined,
+  type: RevalidateEvent,
+  opts?: { retryCount?: number; dedupe?: boolean }
+) {
+  if (revalidators) {
+    for (const revalidate of revalidators) {
+      revalidate(type, opts)
+    }
+  }
+}
+
 const resolvedUndef = Promise.resolve(UNDEFINED)
 const sub = () => noop
 /**
@@ -581,13 +598,11 @@ export const useSWRHandler = <Data = any, Error = any>(
                   key,
                   currentConfig,
                   _opts => {
-                    const revalidators = EVENT_REVALIDATORS[key]
-                    if (revalidators && revalidators[0]) {
-                      revalidators[0](
-                        revalidateEvents.ERROR_REVALIDATE_EVENT,
-                        _opts
-                      )
-                    }
+                    triggerRevalidators(
+                      EVENT_REVALIDATORS[key],
+                      revalidateEvents.ERROR_REVALIDATE_EVENT,
+                      _opts
+                    )
                   },
                   {
                     retryCount: (opts.retryCount || 0) + 1,
@@ -681,7 +696,7 @@ export const useSWRHandler = <Data = any, Error = any>(
           softRevalidate()
         }
       } else if (type == revalidateEvents.MUTATE_EVENT) {
-        return revalidate()
+        return revalidate(opts)
       } else if (type == revalidateEvents.ERROR_REVALIDATE_EVENT) {
         return revalidate(opts)
       }

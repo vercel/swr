@@ -198,4 +198,144 @@ describe('useSWR - revalidate', () => {
     await act(() => sleep(20))
     screen.getByText('data: 1')
   })
+
+  it('should revalidate when one of multiple hooks with the same key has isPaused returning false', async () => {
+    const key = createKey()
+    let value = 0
+    const fetcher = () => createResponse(value++, { delay: 10 })
+
+    // A component whose isPaused is always true (simulates unfocused screen)
+    function PausedComponent() {
+      const { data } = useSWR(key, fetcher, {
+        isPaused: () => true,
+        dedupingInterval: 0
+      })
+      return <span>paused:{String(data ?? '')}</span>
+    }
+
+    // A component whose isPaused is always false (simulates focused screen)
+    function ActiveComponent() {
+      const { data, mutate } = useSWR(key, fetcher, {
+        isPaused: () => false,
+        dedupingInterval: 0
+      })
+      return <span onClick={() => mutate()}>active:{String(data ?? '')}</span>
+    }
+
+    function Page() {
+      return (
+        <>
+          <PausedComponent />
+          <ActiveComponent />
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+
+    // The active (unpaused) hook should fetch data despite the paused one
+    await screen.findByText('active:0')
+
+    // Trigger a mutate — should revalidate via the active hook
+    fireEvent.click(screen.getByText('active:0'))
+    await act(() => sleep(50))
+    await screen.findByText('active:1')
+  })
+
+  it('should call all revalidators on mutate when multiple hooks share a key', async () => {
+    const key = createKey()
+    let value = 0
+    const fetcher = () => createResponse(value++, { delay: 10 })
+
+    function HookA() {
+      const { data } = useSWR(key, fetcher, { dedupingInterval: 0 })
+      return <span>a:{String(data ?? '')}</span>
+    }
+
+    function HookB() {
+      const { data, mutate } = useSWR(key, fetcher, { dedupingInterval: 0 })
+      return <span onClick={() => mutate()}>b:{String(data ?? '')}</span>
+    }
+
+    function Page() {
+      return (
+        <>
+          <HookA />
+          <HookB />
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+
+    // Both hooks should get initial data
+    await screen.findByText('a:0')
+    await screen.findByText('b:0')
+
+    // Trigger mutate — all revalidators should fire
+    fireEvent.click(screen.getByText('b:0'))
+    await act(() => sleep(50))
+    await screen.findByText('a:1')
+    await screen.findByText('b:1')
+  })
+
+  it('should call all revalidators on error retry when multiple hooks share a key', async () => {
+    const key = createKey()
+    let callCount = 0
+
+    function HookA() {
+      const { data, error } = useSWR(
+        key,
+        () => {
+          callCount++
+          if (callCount <= 2) throw new Error('fail')
+          return createResponse('recovered', { delay: 10 })
+        },
+        {
+          isPaused: () => false,
+          dedupingInterval: 0,
+          errorRetryInterval: 50,
+          errorRetryCount: 3
+        }
+      )
+      return <span>a:{error ? 'error' : String(data ?? '')}</span>
+    }
+
+    function HookB() {
+      const { data, error } = useSWR(
+        key,
+        () => {
+          callCount++
+          if (callCount <= 2) throw new Error('fail')
+          return createResponse('recovered', { delay: 10 })
+        },
+        {
+          isPaused: () => false,
+          dedupingInterval: 0,
+          errorRetryInterval: 50,
+          errorRetryCount: 3
+        }
+      )
+      return <span>b:{error ? 'error' : String(data ?? '')}</span>
+    }
+
+    function Page() {
+      return (
+        <>
+          <HookA />
+          <HookB />
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+
+    // Initially both should error
+    await screen.findByText('a:error')
+
+    // After retry, both should recover
+    await act(() => sleep(200))
+    await screen.findByText('a:recovered')
+    await screen.findByText('b:recovered')
+  })
 })
