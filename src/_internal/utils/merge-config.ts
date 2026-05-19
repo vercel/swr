@@ -6,7 +6,17 @@ export const mergeConfigs = (
   b?: Partial<FullConfiguration>
 ) => {
   // Need to create a new object to avoid mutating the original here.
-  const v: Partial<FullConfiguration> = mergeObjects(a, b)
+  // Skip keys whose value is `undefined` in `b` so that explicitly passing
+  // `undefined` (e.g. `onSuccess: undefined`) behaves like omitting the key
+  // and does not overwrite inherited defaults.
+  const v: Partial<FullConfiguration> = { ...a }
+  if (b) {
+    for (const k in b) {
+      if (b[k as keyof FullConfiguration] !== undefined) {
+        ;(v as any)[k] = b[k as keyof FullConfiguration]
+      }
+    }
+  }
 
   // If two configs are provided, merge their `use` and `fallback` options.
   if (b) {
