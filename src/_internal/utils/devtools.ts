@@ -4,10 +4,10 @@ import { isWindowDefined } from './helper'
 // @ts-expect-error
 const enableDevtools = isWindowDefined && window.__SWR_DEVTOOLS_USE__
 
-export const use = enableDevtools
-  ? // @ts-expect-error
-    window.__SWR_DEVTOOLS_USE__
-  : []
+export const getDevToolsUse = () => {
+  // @ts-expect-error
+  return window.__SWR_DEVTOOLS_USE__ ?? []
+}
 
 export const setupDevTools = () => {
   if (enableDevtools) {
