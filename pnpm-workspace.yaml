@@ -4,3 +4,8 @@ packages:
   - 'immutable'
   - 'infinite'
   - 'mutation'
+allowBuilds:
+  '@swc/core': true
+  sharp: true
+  unrs-resolver: true
+minimumReleaseAge: 2880
