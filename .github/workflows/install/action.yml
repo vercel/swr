@@ -10,10 +10,10 @@ runs:
       shell: bash
       run: pnpm i -g corepack@0.31.0
 
-    - name: Use Node.js lts
+    - name: Use Node.js 24
       uses: actions/setup-node@v6
       with:
-        node-version: 22
+        node-version: 24
         cache: pnpm
         registry-url: 'https://registry.npmjs.org'
 
