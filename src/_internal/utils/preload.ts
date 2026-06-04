@@ -52,7 +52,9 @@ export const middleware: Middleware =
       fetcher_ &&
       ((...args: any[]) => {
         const [key] = serialize(key_)
-        const [, , , PRELOAD] = SWRGlobalState.get(cache) as GlobalState
+        const [, , , PRELOAD] = SWRGlobalState.get(
+          (config as any).cache || cache
+        ) as GlobalState
 
         if (key.startsWith(INFINITE_PREFIX)) {
           // we want the infinite fetcher to be called.

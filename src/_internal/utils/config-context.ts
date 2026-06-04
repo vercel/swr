@@ -11,9 +11,10 @@ import {
 import { cache as defaultCache } from './config'
 import { initCache } from './cache'
 import { mergeConfigs } from './merge-config'
-import { UNDEFINED, mergeObjects, isFunction } from './shared'
+import { UNDEFINED, mergeObjects, isFunction, isUndefined } from './shared'
 import { useIsomorphicLayoutEffect } from './env'
-import type { SWRConfiguration, FullConfiguration } from '../types'
+import { SWRGlobalState } from './global-state'
+import type { SWRConfiguration, FullConfiguration, GlobalState } from '../types'
 
 export const SWRConfigContext = createContext<Partial<FullConfiguration>>({})
 
@@ -54,6 +55,21 @@ const SWRConfig: FC<
   if (cacheContext) {
     ;(extendedConfig as any).cache = cacheContext[0]
     ;(extendedConfig as any).mutate = cacheContext[1]
+  }
+
+  const preload = extendedConfig && extendedConfig.unstable_preload
+  if (preload) {
+    const targetCache = (extendedConfig as any).cache || defaultCache
+    const [, , , PRELOAD] = SWRGlobalState.get(targetCache) as GlobalState
+    for (const { key, data } of preload) {
+      if (
+        key &&
+        isUndefined(targetCache.get(key)?.data) &&
+        isUndefined(PRELOAD[key])
+      ) {
+        PRELOAD[key] = data
+      }
+    }
   }
 
   // Unsubscribe events.

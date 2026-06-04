@@ -34,6 +34,18 @@ export type GlobalState = [
 export type FetcherResponse<Data = unknown> = Data | Promise<Data>
 
 /**
+ * Preloaded data entry produced on the server and consumed by SWRConfig on the
+ * client.
+ *
+ * @experimental
+ * @public
+ */
+export type UnstablePreloadEntry<Data = any> = {
+  key: string
+  data: FetcherResponse<Data>
+}
+
+/**
  * Basic fetcher function that accepts any arguments and returns data or a promise.
  *
  * This is the most permissive fetcher type, allowing any number of arguments
@@ -262,6 +274,11 @@ export interface PublicConfiguration<
    * @see {@link https://swr.vercel.app/docs/with-nextjs#pre-rendering-with-default-data}
    */
   fallback: { [key: string]: any }
+  /**
+   * preloaded server data to be consumed by client hooks
+   * @experimental
+   */
+  unstable_preload?: UnstablePreloadEntry[]
   /**
    * Function to detect whether pause revalidations, will ignore fetched data and errors when it returns true. Returns false by default.
    */

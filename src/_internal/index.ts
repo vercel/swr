@@ -23,6 +23,7 @@ export { useSWRConfig } from './utils/use-swr-config'
 export { preset, defaultConfigOptions } from './utils/web-preset'
 export { withMiddleware } from './utils/with-middleware'
 export { preload } from './utils/preload'
+export { unstable_preload } from './utils/unstable-preload'
 
 export * from './types'
 

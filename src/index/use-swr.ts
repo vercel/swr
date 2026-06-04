@@ -186,6 +186,9 @@ export const useSWRHandler = <Data = any, Error = any>(
       ? UNDEFINED
       : config.fallback[key]
     : fallbackData
+  const configPreload = !key
+    ? UNDEFINED
+    : config.unstable_preload?.find(preload => preload.key === key)?.data
 
   const isEqual = (prev: State<Data, any>, current: State<Data, any>) => {
     for (const _ in stateDependencies) {
@@ -780,10 +783,18 @@ export const useSWRHandler = <Data = any, Error = any>(
   // If there is no `error`, the `revalidation` promise needs to be thrown to
   // the suspense boundary.
   if (suspense) {
+    const req = PRELOAD[key]
+    const preloadedData = isUndefined(req) ? configPreload : req
+
     // SWR should throw when trying to use Suspense on the server with React 18,
     // without providing any fallback data. This causes hydration errors. See:
     // https://github.com/vercel/swr/issues/1832
-    if (!IS_REACT_LEGACY && IS_SERVER && hasKeyButNoData) {
+    if (
+      !IS_REACT_LEGACY &&
+      IS_SERVER &&
+      hasKeyButNoData &&
+      isUndefined(preloadedData)
+    ) {
       throw new Error('Fallback data is required when using Suspense in SSR.')
     }
 
@@ -794,18 +805,24 @@ export const useSWRHandler = <Data = any, Error = any>(
       unmountedRef.current = false
     }
 
-    const req = PRELOAD[key]
-
-    const mutateReq =
-      !isUndefined(req) && hasKeyButNoData ? boundMutate(req) : resolvedUndef
+    const preloadData =
+      !isUndefined(preloadedData) && hasKeyButNoData
+        ? preloadedData && isPromiseLike(preloadedData)
+          ? use(preloadedData)
+          : preloadedData
+        : UNDEFINED
+    const mutateReq = !isUndefined(preloadData)
+      ? boundMutate(preloadData)
+      : resolvedUndef
     use(mutateReq)
 
     if (!isUndefined(error) && hasKeyButNoData) {
       throw error
     }
-    const revalidation = hasKeyButNoData
-      ? revalidate(WITH_DEDUPE)
-      : resolvedUndef
+    const revalidation =
+      hasKeyButNoData && isUndefined(preloadData)
+        ? revalidate(WITH_DEDUPE)
+        : resolvedUndef
     if (!isUndefined(returnedData) && hasKeyButNoData) {
       // @ts-ignore modify react promise status
       revalidation.status = 'fulfilled'

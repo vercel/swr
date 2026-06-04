@@ -45,4 +45,19 @@ test.describe('promise scenarios', () => {
     await expect(page.getByTestId('data-second')).toHaveText('data:value')
     await expect(page.getByTestId('fallback')).toHaveCount(0)
   })
+
+  test('hydrates unstable_preload server data into the client cache', async ({
+    page
+  }) => {
+    await page.goto('./rsc-unstable-preload', {
+      waitUntil: 'commit'
+    })
+
+    await expect(page.getByTestId('data')).toHaveText('data:server data')
+    await expect(page.getByTestId('cache')).toHaveText('cache:server data')
+    await expect(page.getByTestId('client-fetches')).toHaveText(
+      'client fetches:0'
+    )
+    await expect(page.getByTestId('fallback')).toHaveCount(0)
+  })
 })
