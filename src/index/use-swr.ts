@@ -159,6 +159,9 @@ export const useSWRHandler = <Data = any, Error = any>(
   const keyRef = useRef(key)
   const fetcherRef = useRef(fetcher)
   const configRef = useRef(config)
+  // Track the startAt timestamp of the last request for which this hook
+  // already fired onSuccess, so deduped joins don't double-fire it.
+  const lastSuccessStartAtRef = useRef<number | undefined>(UNDEFINED)
   const getConfig = () => configRef.current
   const isActive = () => getConfig().isVisible() && getConfig().isOnline()
 
@@ -542,11 +545,15 @@ export const useSWRHandler = <Data = any, Error = any>(
         // cacheData might be different from newData even when compare fn returns True
         finalState.data = compare(cacheData, newData) ? cacheData : newData
 
-        // Trigger the successful callback if it's the original request.
-        if (shouldStartNewRequest) {
-          if (callbackSafeguard()) {
-            getConfig().onSuccess(newData, key, config)
-          }
+        // Trigger the successful callback. Fire for the hook that originated
+        // the request (shouldStartNewRequest) and also for hooks that joined
+        // an in-flight request from a different hook instance (deduplication
+        // across consumers). Guard with lastSuccessStartAtRef so that a
+        // polling interval that deduplicates its own in-flight request does
+        // not fire onSuccess a second time for the same request.
+        if (callbackSafeguard() && lastSuccessStartAtRef.current !== startAt) {
+          lastSuccessStartAtRef.current = startAt
+          getConfig().onSuccess(newData, key, config)
         }
       } catch (err: any) {
         cleanupState()
@@ -694,23 +701,27 @@ export const useSWRHandler = <Data = any, Error = any>(
     unmountedRef.current = false
     keyRef.current = key
     initialMountedRef.current = true
+    // Reset so a fresh request for this key always fires onSuccess.
+    lastSuccessStartAtRef.current = UNDEFINED
 
     // Keep the original key in the cache.
     setCache({ _k: fnArg })
 
     // Trigger a revalidation
     if (shouldDoInitialRevalidation) {
-      // Performance optimization: if a request is already in progress for this key,
-      // skip the revalidation to avoid redundant work
-      if (!FETCH[key]) {
-        if (isUndefined(data) || IS_SERVER) {
-          // Revalidate immediately.
-          softRevalidate()
-        } else {
-          // Delay the revalidate if we have data to return so we won't block
-          // rendering.
-          rAF(softRevalidate)
-        }
+      if (FETCH[key]) {
+        // A request is already in-flight for this key (started by another hook
+        // instance). Join it so that this hook's onSuccess/onError callbacks
+        // fire when the shared request settles, without issuing a new HTTP
+        // request.
+        softRevalidate()
+      } else if (isUndefined(data) || IS_SERVER) {
+        // Revalidate immediately.
+        softRevalidate()
+      } else {
+        // Delay the revalidate if we have data to return so we won't block
+        // rendering.
+        rAF(softRevalidate)
       }
     }
 
