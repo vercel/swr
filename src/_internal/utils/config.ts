@@ -12,7 +12,7 @@ import { preset } from './web-preset'
 import { slowConnection } from './env'
 import { isUndefined, noop, mergeObjects } from './shared'
 
-import { dequal } from 'dequal/lite'
+import { dequal } from 'dequal'
 
 // error retry
 const onErrorRetry = (
