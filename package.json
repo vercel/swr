@@ -70,7 +70,7 @@
       }
     },
     "./_internal": {
-      "react-server": "./dist/_internal/react-server.mjs",
+      "react-server": "./dist/_internal/index.react-server.mjs",
       "import": {
         "types": "./dist/_internal/index.d.mts",
         "default": "./dist/_internal/index.mjs"
