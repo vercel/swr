@@ -89,7 +89,6 @@ type DefinitelyTruthy<T> = false extends T
   ? never
   : T
 
-const resolvedUndef = Promise.resolve(UNDEFINED)
 const sub = () => noop
 /**
  * The core implementation of the useSWR hook.
@@ -790,23 +789,24 @@ export const useSWRHandler = <Data = any, Error = any>(
 
     const req = PRELOAD[key]
 
-    const mutateReq =
-      !isUndefined(req) && hasKeyButNoData ? boundMutate(req) : resolvedUndef
-    use(mutateReq)
+    if (!isUndefined(req) && hasKeyButNoData) {
+      use(boundMutate(req))
+    }
 
     if (!isUndefined(error) && hasKeyButNoData) {
       throw error
     }
-    const revalidation = hasKeyButNoData
-      ? revalidate(WITH_DEDUPE)
-      : resolvedUndef
-    if (!isUndefined(returnedData) && hasKeyButNoData) {
-      // @ts-ignore modify react promise status
-      revalidation.status = 'fulfilled'
-      // @ts-ignore modify react promise value
-      revalidation.value = true
+
+    if (hasKeyButNoData) {
+      const revalidation = revalidate(WITH_DEDUPE)
+      if (!isUndefined(returnedData)) {
+        // @ts-ignore modify react promise status
+        revalidation.status = 'fulfilled'
+        // @ts-ignore modify react promise value
+        revalidation.value = true
+      }
+      use(revalidation)
     }
-    use(revalidation)
   }
 
   const swrResponse: SWRResponse<Data, Error> = {
