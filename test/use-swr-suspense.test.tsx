@@ -1,4 +1,4 @@
-import { fireEvent, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { Profiler, act } from 'react'
 import { Suspense, useReducer, useState } from 'react'
 import useSWR, { mutate } from 'swr'
@@ -11,6 +11,10 @@ import {
   sleep
 } from './utils'
 import { ErrorBoundary } from 'react-error-boundary'
+
+// Keep React as the shared singleton while isolated module registries import SWR.
+// https://github.com/jestjs/jest/issues/11471
+jest.mock('react', () => jest.requireActual('react'))
 
 describe('useSWR - suspense', () => {
   afterEach(() => {
@@ -365,6 +369,33 @@ describe('useSWR - suspense', () => {
       expect(renderCount).toBe(1) // data
     }
   )
+
+  itShouldSkipForReactCanary('should not suspend for null key', async () => {
+    // Import SWR inside the isolated module registry so earlier tests cannot
+    // hide this regression by letting React tag module-level thenables first.
+    await jest.isolateModulesAsync(async () => {
+      const isolatedUseSWR = (await import('swr')).default
+      const fetcher = jest.fn(() => createResponse('SWR'))
+
+      function Page() {
+        // A null key disables fetching, but the hook still runs in Suspense mode.
+        const { data } = isolatedUseSWR(null, fetcher, { suspense: true })
+        return <div>{data || 'empty'}</div>
+      }
+
+      render(
+        <Suspense fallback={<div>fallback</div>}>
+          <Page />
+        </Suspense>
+      )
+
+      // With no request for a null key, there is nothing for Suspense to show.
+      const fallback = screen.queryByText('fallback')
+      expect(fallback === null).toBe(true)
+      screen.getByText('empty')
+      expect(fetcher).toHaveBeenCalledTimes(0)
+    })
+  })
 
   itShouldSkipForReactCanary(
     'should return `undefined` data for falsy key',
