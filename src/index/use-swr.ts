@@ -89,6 +89,13 @@ type DefinitelyTruthy<T> = false extends T
   ? never
   : T
 
+// React can only unwrap a thenable synchronously when it has React's thenable
+// status fields, so this fulfilled no-op keeps Suspense paths from waiting.
+const resolvedUndef = Promise.resolve(UNDEFINED)
+// @ts-ignore modify react promise status
+resolvedUndef.status = 'fulfilled'
+// @ts-ignore modify react promise value
+resolvedUndef.value = UNDEFINED
 const sub = () => noop
 /**
  * The core implementation of the useSWR hook.
@@ -789,24 +796,23 @@ export const useSWRHandler = <Data = any, Error = any>(
 
     const req = PRELOAD[key]
 
-    if (!isUndefined(req) && hasKeyButNoData) {
-      use(boundMutate(req))
-    }
+    const mutateReq =
+      !isUndefined(req) && hasKeyButNoData ? boundMutate(req) : resolvedUndef
+    use(mutateReq)
 
     if (!isUndefined(error) && hasKeyButNoData) {
       throw error
     }
-
-    if (hasKeyButNoData) {
-      const revalidation = revalidate(WITH_DEDUPE)
-      if (!isUndefined(returnedData)) {
-        // @ts-ignore modify react promise status
-        revalidation.status = 'fulfilled'
-        // @ts-ignore modify react promise value
-        revalidation.value = true
-      }
-      use(revalidation)
+    const revalidation = hasKeyButNoData
+      ? revalidate(WITH_DEDUPE)
+      : resolvedUndef
+    if (!isUndefined(returnedData) && hasKeyButNoData) {
+      // @ts-ignore modify react promise status
+      revalidation.status = 'fulfilled'
+      // @ts-ignore modify react promise value
+      revalidation.value = true
     }
+    use(revalidation)
   }
 
   const swrResponse: SWRResponse<Data, Error> = {
