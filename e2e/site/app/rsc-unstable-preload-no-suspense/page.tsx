@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 async function getServerData() {
   await sleep(150)
-  return 'SWR_RSC_PRELOAD_FLIGHT_MARKER_20260621'
+  return 'SWR_RSC_PRELOAD_NO_SUSPENSE_MARKER_20260621'
 }
 
 export default function Page() {

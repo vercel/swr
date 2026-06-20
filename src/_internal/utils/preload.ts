@@ -11,6 +11,16 @@ import { SWRGlobalState } from './global-state'
 import { isUndefined } from './shared'
 import { INFINITE_PREFIX } from '../constants'
 import { IS_SERVER } from './env'
+
+const resolvePreloadResponse = <Data>(
+  req:
+    | FetcherResponse<Data>
+    | { data: FetcherResponse<Data>; _unstable_preload: true }
+): FetcherResponse<Data> =>
+  req && typeof req == 'object' && (req as any)._unstable_preload
+    ? (req as { data: FetcherResponse<Data> }).data
+    : (req as FetcherResponse<Data>)
+
 // Basically same as Fetcher but without Conditional Fetching
 type PreloadFetcher<
   Data = unknown,
@@ -38,7 +48,9 @@ export const preload = <
   const [, , , PRELOAD] = SWRGlobalState.get(cache) as GlobalState
 
   // Prevent preload to be called multiple times before used.
-  if (PRELOAD[key]) return PRELOAD[key]
+  if (PRELOAD[key]) {
+    return resolvePreloadResponse(PRELOAD[key]) as ReturnType<Fetcher>
+  }
 
   const req = fetcher(fnArg) as ReturnType<Fetcher>
   PRELOAD[key] = req
@@ -52,9 +64,7 @@ export const middleware: Middleware =
       fetcher_ &&
       ((...args: any[]) => {
         const [key] = serialize(key_)
-        const [, , , PRELOAD] = SWRGlobalState.get(
-          (config as any).cache || cache
-        ) as GlobalState
+        const [, , , PRELOAD] = SWRGlobalState.get(cache) as GlobalState
 
         if (key.startsWith(INFINITE_PREFIX)) {
           // we want the infinite fetcher to be called.
@@ -65,7 +75,7 @@ export const middleware: Middleware =
         const req = PRELOAD[key]
         if (isUndefined(req)) return fetcher_(...args)
         delete PRELOAD[key]
-        return req
+        return resolvePreloadResponse(req)
       })
     return useSWRNext(key_, fetcher, config)
   }

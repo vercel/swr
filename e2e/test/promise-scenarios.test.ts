@@ -49,15 +49,83 @@ test.describe('promise scenarios', () => {
   test('hydrates unstable_preload server data into the client cache', async ({
     page
   }) => {
+    let clientFetcherCalls = 0
+    await page.exposeFunction('__SWR_RSC_CLIENT_FETCHER_CALLED__', () => {
+      clientFetcherCalls += 1
+    })
+
     await page.goto('./rsc-unstable-preload', {
       waitUntil: 'commit'
     })
 
-    await expect(page.getByTestId('data')).toHaveText('data:server data')
-    await expect(page.getByTestId('cache')).toHaveText('cache:server data')
+    await expect(page.getByTestId('data')).toHaveText(
+      'data:SWR_RSC_PRELOAD_FLIGHT_MARKER_20260621'
+    )
+    await expect(page.getByTestId('cache')).toHaveText(
+      'cache:SWR_RSC_PRELOAD_FLIGHT_MARKER_20260621'
+    )
     await expect(page.getByTestId('client-fetches')).toHaveText(
       'client fetches:0'
     )
     await expect(page.getByTestId('fallback')).toHaveCount(0)
+    await expect(
+      page.getByText('CLIENT_FETCHER_RESULT_AFTER_TRIGGER')
+    ).toHaveCount(0)
+    expect(clientFetcherCalls).toBe(0)
+
+    await page.getByTestId('revalidate').click()
+
+    await expect.poll(() => clientFetcherCalls).toBe(1)
+    await expect(page.getByTestId('data')).toHaveText(
+      'data:CLIENT_FETCHER_RESULT_AFTER_TRIGGER'
+    )
+    await expect(page.getByTestId('cache')).toHaveText(
+      'cache:CLIENT_FETCHER_RESULT_AFTER_TRIGGER'
+    )
+    await expect(page.getByTestId('client-fetches')).toHaveText(
+      'client fetches:1'
+    )
+  })
+
+  test('uses unstable_preload without suspense and skips the client fetcher', async ({
+    page
+  }) => {
+    let clientFetcherCalls = 0
+    await page.exposeFunction('__SWR_RSC_CLIENT_FETCHER_CALLED__', () => {
+      clientFetcherCalls += 1
+    })
+
+    await page.goto('./rsc-unstable-preload-no-suspense', {
+      waitUntil: 'commit'
+    })
+
+    await expect(page.getByTestId('data')).toHaveText(
+      'data:SWR_RSC_PRELOAD_NO_SUSPENSE_MARKER_20260621'
+    )
+    await expect(page.getByTestId('loading')).toHaveText('loading:false')
+    await expect(page.getByTestId('validating')).toHaveText('validating:false')
+    await expect(page.getByTestId('cache')).toHaveText(
+      'cache:SWR_RSC_PRELOAD_NO_SUSPENSE_MARKER_20260621'
+    )
+    await expect(page.getByTestId('client-fetches')).toHaveText(
+      'client fetches:0'
+    )
+    await expect(
+      page.getByText('CLIENT_FETCHER_RESULT_AFTER_TRIGGER')
+    ).toHaveCount(0)
+    expect(clientFetcherCalls).toBe(0)
+
+    await page.getByTestId('revalidate').click()
+
+    await expect.poll(() => clientFetcherCalls).toBe(1)
+    await expect(page.getByTestId('data')).toHaveText(
+      'data:CLIENT_FETCHER_RESULT_AFTER_TRIGGER'
+    )
+    await expect(page.getByTestId('cache')).toHaveText(
+      'cache:CLIENT_FETCHER_RESULT_AFTER_TRIGGER'
+    )
+    await expect(page.getByTestId('client-fetches')).toHaveText(
+      'client fetches:1'
+    )
   })
 })

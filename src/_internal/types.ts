@@ -17,7 +17,7 @@ export type GlobalState = [
   /** Fetch cache: Maps cache keys to [data, timestamp] tuples */
   Record<string, [any, number]>,
   /** Preload cache: Maps cache keys to fetcher responses */
-  Record<string, FetcherResponse<any>>,
+  Record<string, PreloadResponse<any>>,
   /** Scoped mutator function for cache updates */
   ScopedMutator,
   /** Cache setter function with prev/current value comparison */
@@ -32,6 +32,13 @@ export type GlobalState = [
  * @public
  */
 export type FetcherResponse<Data = unknown> = Data | Promise<Data>
+
+export type PreloadResponse<Data = any> =
+  | FetcherResponse<Data>
+  | {
+      data: FetcherResponse<Data>
+      _unstable_preload: true
+    }
 
 /**
  * Preloaded data entry produced on the server and consumed by SWRConfig on the

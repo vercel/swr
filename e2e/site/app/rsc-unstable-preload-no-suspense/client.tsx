@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useCallback, useState } from 'react'
+import { useCallback, useState } from 'react'
 import useSWR, { SWRConfig, useSWRConfig } from 'swr'
 import type { UnstablePreloadEntry } from 'swr'
 import { key } from './key'
@@ -13,12 +13,14 @@ function ClientData({
   clientFetches: number
 }) {
   const { cache } = useSWRConfig()
-  const { data, mutate } = useSWR(key, fetcher, { suspense: true })
+  const { data, isLoading, isValidating, mutate } = useSWR(key, fetcher)
   const cachedData = cache.get(key)?.data
 
   return (
     <>
       <div data-testid="data">data:{data}</div>
+      <div data-testid="loading">loading:{`${isLoading}`}</div>
+      <div data-testid="validating">validating:{`${isValidating}`}</div>
       <div data-testid="cache">cache:{cachedData}</div>
       <div data-testid="client-fetches">client fetches:{clientFetches}</div>
       <button data-testid="revalidate" onClick={() => void mutate()}>
@@ -46,9 +48,7 @@ export function ClientRoot({
 
   return (
     <SWRConfig value={{ unstable_preload: [preload] }}>
-      <Suspense fallback={<div data-testid="fallback">loading</div>}>
-        <ClientData fetcher={fetcher} clientFetches={clientFetches} />
-      </Suspense>
+      <ClientData fetcher={fetcher} clientFetches={clientFetches} />
     </SWRConfig>
   )
 }

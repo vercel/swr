@@ -189,6 +189,20 @@ export const useSWRHandler = <Data = any, Error = any>(
   const configPreload = !key
     ? UNDEFINED
     : config.unstable_preload?.find(preload => preload.key === key)?.data
+  const req = key ? PRELOAD[key] : UNDEFINED
+  const preloadRecord =
+    req && typeof req == 'object' && (req as any)._unstable_preload
+      ? (req as {
+          data: Data | Promise<Data>
+        })
+      : UNDEFINED
+  const isConfigPreload = isUndefined(req) && !isUndefined(configPreload)
+  const hasRSCPreload = !!preloadRecord || isConfigPreload
+  const preloadedData = preloadRecord
+    ? preloadRecord.data
+    : isConfigPreload
+    ? configPreload
+    : req
 
   const isEqual = (prev: State<Data, any>, current: State<Data, any>) => {
     for (const _ in stateDependencies) {
@@ -227,6 +241,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         // If `revalidateOnMount` is set, we take the value directly.
         if (isInitialMount && !isUndefined(revalidateOnMount))
           return revalidateOnMount
+        if (suspense && hasRSCPreload) return false
         const data = !isUndefined(fallback) ? fallback : snapshot.data
         if (suspense) return isUndefined(data) || revalidateIfStale
         return isUndefined(data) || revalidateIfStale
@@ -306,7 +321,7 @@ export const useSWRHandler = <Data = any, Error = any>(
 
   const cachedData = cached.data
 
-  const data = isUndefined(cachedData)
+  let data = isUndefined(cachedData)
     ? fallback && isPromiseLike(fallback)
       ? use(fallback)
       : fallback
@@ -315,8 +330,14 @@ export const useSWRHandler = <Data = any, Error = any>(
 
   // Use a ref to store previously returned data. Use the initial data as its initial value.
   const laggyDataRef = useRef(data)
+  const rscPreloadConsumedRef = useRef(false)
+  const preloadCacheRef = useRef<{
+    data: Data | undefined
+    _k: Key
+    key: string
+  } | null>(null)
 
-  const returnedData = keepPreviousData
+  let returnedData = keepPreviousData
     ? isUndefined(cachedData)
       ? // checking undefined to avoid null being fallback as well
         isUndefined(laggyDataRef.current)
@@ -376,6 +397,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     // If `revalidateOnMount` is set, we take the value directly.
     if (isInitialMount && !isUndefined(revalidateOnMount))
       return revalidateOnMount
+    if (suspense && hasRSCPreload) return false
     // Under suspense mode, it will always fetch on render if there is no
     // stale data so no need to revalidate immediately mount it again.
     // If data exists, only revalidate if `revalidateIfStale` is true.
@@ -417,6 +439,11 @@ export const useSWRHandler = <Data = any, Error = any>(
       // If there is no ongoing concurrent request, or `dedupe` is not set, a
       // new request should be initiated.
       const shouldStartNewRequest = !FETCH[key] || !opts.dedupe
+      const shouldUseRSCPreload =
+        hasRSCPreload &&
+        !rscPreloadConsumedRef.current &&
+        !isUndefined(preloadedData) &&
+        isUndefined(getCache().data)
 
       /*
          For React 17
@@ -478,10 +505,18 @@ export const useSWRHandler = <Data = any, Error = any>(
 
           // Start the request and save the timestamp.
           // Key must be truthy if entering here.
+          if (shouldUseRSCPreload) {
+            rscPreloadConsumedRef.current = true
+          }
           FETCH[key] = [
-            currentFetcher(fnArg as DefinitelyTruthy<Key>),
+            shouldUseRSCPreload
+              ? preloadedData
+              : currentFetcher(fnArg as DefinitelyTruthy<Key>),
             getTimestamp()
           ]
+          if (shouldUseRSCPreload && PRELOAD[key]) {
+            delete PRELOAD[key]
+          }
         }
 
         // Wait until the ongoing request is done. Deduplication is also
@@ -642,6 +677,19 @@ export const useSWRHandler = <Data = any, Error = any>(
     []
   )
 
+  useIsomorphicLayoutEffect(() => {
+    const preloaded = preloadCacheRef.current
+    if (!preloaded) return
+
+    preloadCacheRef.current = null
+    if (isUndefined(getCache().data)) {
+      setCache({ data: preloaded.data, error: UNDEFINED, _k: preloaded._k })
+    }
+    if (PRELOAD[preloaded.key]) {
+      delete PRELOAD[preloaded.key]
+    }
+  })
+
   // The logic for updating refs.
   useIsomorphicLayoutEffect(() => {
     fetcherRef.current = fetcher
@@ -783,9 +831,6 @@ export const useSWRHandler = <Data = any, Error = any>(
   // If there is no `error`, the `revalidation` promise needs to be thrown to
   // the suspense boundary.
   if (suspense) {
-    const req = PRELOAD[key]
-    const preloadedData = isUndefined(req) ? configPreload : req
-
     // SWR should throw when trying to use Suspense on the server with React 18,
     // without providing any fallback data. This causes hydration errors. See:
     // https://github.com/vercel/swr/issues/1832
@@ -805,16 +850,27 @@ export const useSWRHandler = <Data = any, Error = any>(
       unmountedRef.current = false
     }
 
-    const preloadData =
-      !isUndefined(preloadedData) && hasKeyButNoData
-        ? preloadedData && isPromiseLike(preloadedData)
+    const shouldConsumePreload = !isUndefined(preloadedData) && hasKeyButNoData
+    let preloadData = UNDEFINED as Data | undefined
+
+    if (shouldConsumePreload && (preloadRecord || isConfigPreload)) {
+      preloadData =
+        preloadedData && isPromiseLike(preloadedData)
           ? use(preloadedData)
           : preloadedData
-        : UNDEFINED
-    const mutateReq = !isUndefined(preloadData)
-      ? boundMutate(preloadData)
-      : resolvedUndef
-    use(mutateReq)
+      data = preloadData
+      returnedData = preloadData
+
+      if (!IS_SERVER) {
+        rscPreloadConsumedRef.current = true
+        preloadCacheRef.current = { data: preloadData, _k: fnArg, key }
+      }
+    } else {
+      const mutateReq = shouldConsumePreload
+        ? boundMutate(preloadedData)
+        : resolvedUndef
+      use(mutateReq)
+    }
 
     if (!isUndefined(error) && hasKeyButNoData) {
       throw error

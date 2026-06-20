@@ -67,7 +67,10 @@ const SWRConfig: FC<
         isUndefined(targetCache.get(key)?.data) &&
         isUndefined(PRELOAD[key])
       ) {
-        PRELOAD[key] = data
+        PRELOAD[key] = {
+          data,
+          _unstable_preload: true
+        }
       }
     }
   }
