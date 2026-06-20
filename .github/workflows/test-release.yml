@@ -64,11 +64,9 @@ jobs:
       - name: Install
         uses: ./.github/workflows/install
 
-      # OIDC trusted publishing requires npm >= 11.5.1. Corepack is already
-      # enabled by the install action, so use it to pin npm instead of a
-      # global install.
-      - name: Pin npm via corepack
-        run: corepack prepare npm@11.5.1 --activate
+      # OIDC trusted publishing requires npm >= 11.5.1
+      - name: Install npm 11
+        run: npm install -g npm@11
 
       - name: Determine tag
         id: determine_tag
