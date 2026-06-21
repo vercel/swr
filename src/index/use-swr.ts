@@ -32,7 +32,6 @@ import type {
   SWRResponse,
   RevalidatorOptions,
   FullConfiguration,
-  SWRConfiguration,
   SWRHook,
   RevalidateEvent,
   StateDependencies,
@@ -128,7 +127,7 @@ const sub = () => noop
 export const useSWRHandler = <Data = any, Error = any>(
   _key: Key,
   fetcher: Fetcher<Data> | null,
-  config: FullConfiguration & SWRConfiguration<Data, Error>
+  config: FullConfiguration
 ) => {
   const {
     cache,

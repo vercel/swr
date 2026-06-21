@@ -18,6 +18,7 @@ export interface SWRGlobalConfig {
 // Types
 export type {
   SWRConfiguration,
+  SWRConfigValue,
   Revalidator,
   RevalidatorOptions,
   Key,

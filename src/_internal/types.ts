@@ -280,11 +280,6 @@ export interface PublicConfiguration<
    */
   fallback: { [key: string]: any }
   /**
-   * server-loaded data to be consumed by client hooks and written into cache
-   * @experimental
-   */
-  cacheData?: CacheData
-  /**
    * Function to detect whether pause revalidations, will ignore fetched data and errors when it returns true. Returns false by default.
    */
   isPaused: () => boolean
@@ -345,7 +340,14 @@ export type FullConfiguration<
   Data = any,
   Error = any,
   Fn extends Fetcher = BareFetcher
-> = InternalConfiguration & PublicConfiguration<Data, Error, Fn>
+> = InternalConfiguration &
+  PublicConfiguration<Data, Error, Fn> & {
+    /**
+     * server-loaded data to be consumed by client hooks and written into cache
+     * @experimental
+     */
+    cacheData?: CacheData<Data>
+  }
 
 /**
  * Provider configuration for custom focus and reconnect event handling.
@@ -1001,7 +1003,20 @@ export type SWRConfiguration<
 > = Partial<PublicConfiguration<Data, Error, Fn>> &
   Partial<ProviderConfiguration> & {
     provider?: (cache: Readonly<Cache>) => Cache
+    cacheData?: never
   }
+
+export type SWRConfigValue<
+  Data = any,
+  Error = any,
+  Fn extends BareFetcher<any> = BareFetcher<any>
+> = Omit<SWRConfiguration<Data, Error, Fn>, 'cacheData'> & {
+  /**
+   * server-loaded data to be consumed by client hooks and written into cache
+   * @experimental
+   */
+  cacheData?: CacheData<Data>
+}
 
 export type IsLoadingResponse<
   Data = any,

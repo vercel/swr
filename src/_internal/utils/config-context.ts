@@ -14,22 +14,20 @@ import { mergeConfigs } from './merge-config'
 import { UNDEFINED, mergeObjects, isFunction, isUndefined } from './shared'
 import { useIsomorphicLayoutEffect } from './env'
 import { SWRGlobalState } from './global-state'
-import type { SWRConfiguration, FullConfiguration, GlobalState } from '../types'
+import type { SWRConfigValue, FullConfiguration, GlobalState } from '../types'
 
 export const SWRConfigContext = createContext<Partial<FullConfiguration>>({})
 
 const SWRConfig: FC<
   PropsWithChildren<{
-    value?:
-      | SWRConfiguration
-      | ((parentConfig?: SWRConfiguration) => SWRConfiguration)
+    value?: SWRConfigValue | ((parentConfig?: SWRConfigValue) => SWRConfigValue)
   }>
 > = props => {
   const { value } = props
   const parentConfig = useContext(SWRConfigContext)
   const isFunctionalConfig = isFunction(value)
   const config = useMemo(
-    () => (isFunctionalConfig ? value(parentConfig) : value),
+    () => (isFunctionalConfig ? value(parentConfig as SWRConfigValue) : value),
     [isFunctionalConfig, parentConfig, value]
   )
   // Extend parent context values and middleware.
