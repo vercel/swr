@@ -1,7 +1,7 @@
 import { screen, fireEvent } from '@testing-library/react'
 import { Suspense, useEffect, useState, act } from 'react'
 import type { Middleware } from 'swr'
-import useSWR, { SWRConfig, unstable_preload, useSWRConfig } from 'swr'
+import useSWR, { SWRConfig, useSWRConfig } from 'swr'
 import {
   renderWithConfig,
   createKey,
@@ -130,10 +130,10 @@ describe('useSWR - configs', () => {
   })
 
   itShouldSkipForReactCanary(
-    'should not revalidate on mount when suspense consumes unstable_preload',
+    'should not revalidate on mount when suspense consumes cacheData',
     async () => {
       const key = createKey()
-      const preloaded = unstable_preload(key, () => 'server data')
+      const cacheData = { [key]: 'server data' }
       const clientFetcher = jest.fn(() => createResponse('client data'))
 
       function Page() {
@@ -142,7 +142,7 @@ describe('useSWR - configs', () => {
       }
 
       renderWithGlobalCache(
-        <SWRConfig value={{ unstable_preload: [preloaded] }}>
+        <SWRConfig value={{ cacheData }}>
           <Suspense fallback={<div>loading</div>}>
             <Page />
           </Suspense>
@@ -156,10 +156,10 @@ describe('useSWR - configs', () => {
   )
 
   itShouldSkipForReactCanary(
-    'should not expose the unstable_preload record on later revalidation',
+    'should not expose the cacheData record on later revalidation',
     async () => {
       const key = createKey()
-      const preloaded = unstable_preload(key, () => 'server data')
+      const cacheData = { [key]: 'server data' }
       const clientFetcher = jest.fn(() => createResponse('client data'))
       let revalidate = () => Promise.resolve<string | undefined>(undefined)
 
@@ -172,7 +172,7 @@ describe('useSWR - configs', () => {
       }
 
       renderWithGlobalCache(
-        <SWRConfig value={{ unstable_preload: [preloaded] }}>
+        <SWRConfig value={{ cacheData }}>
           <Suspense fallback={<div>loading</div>}>
             <Page />
           </Suspense>
@@ -188,9 +188,9 @@ describe('useSWR - configs', () => {
     }
   )
 
-  it('should use unstable_preload in default mode without calling the client fetcher', async () => {
+  it('should use cacheData in default mode without calling the client fetcher', async () => {
     const key = createKey()
-    const preloaded = unstable_preload(key, () => createResponse('server data'))
+    const cacheData = { [key]: createResponse('server data') }
     const clientFetcher = jest.fn(() => createResponse('client data'))
 
     function Page() {
@@ -199,7 +199,7 @@ describe('useSWR - configs', () => {
     }
 
     renderWithGlobalCache(
-      <SWRConfig value={{ unstable_preload: [preloaded] }}>
+      <SWRConfig value={{ cacheData }}>
         <Page />
       </SWRConfig>
     )

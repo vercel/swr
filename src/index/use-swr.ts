@@ -186,22 +186,20 @@ export const useSWRHandler = <Data = any, Error = any>(
       ? UNDEFINED
       : config.fallback[key]
     : fallbackData
-  const configPreload = !key
-    ? UNDEFINED
-    : config.unstable_preload?.find(preload => preload.key === key)?.data
+  const configCacheData = !key ? UNDEFINED : config.cacheData?.[key]
   const req = key ? PRELOAD[key] : UNDEFINED
-  const preloadRecord =
-    req && typeof req == 'object' && (req as any)._unstable_preload
+  const cacheDataRecord =
+    req && typeof req == 'object' && (req as any)._cacheData
       ? (req as {
           data: Data | Promise<Data>
         })
       : UNDEFINED
-  const isConfigPreload = isUndefined(req) && !isUndefined(configPreload)
-  const hasRSCPreload = !!preloadRecord || isConfigPreload
-  const preloadedData = preloadRecord
-    ? preloadRecord.data
-    : isConfigPreload
-    ? configPreload
+  const isConfigCacheData = isUndefined(req) && !isUndefined(configCacheData)
+  const hasCacheData = !!cacheDataRecord || isConfigCacheData
+  const preloadedData = cacheDataRecord
+    ? cacheDataRecord.data
+    : isConfigCacheData
+    ? configCacheData
     : req
 
   const isEqual = (prev: State<Data, any>, current: State<Data, any>) => {
@@ -241,7 +239,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         // If `revalidateOnMount` is set, we take the value directly.
         if (isInitialMount && !isUndefined(revalidateOnMount))
           return revalidateOnMount
-        if (suspense && hasRSCPreload) return false
+        if (suspense && hasCacheData) return false
         const data = !isUndefined(fallback) ? fallback : snapshot.data
         if (suspense) return isUndefined(data) || revalidateIfStale
         return isUndefined(data) || revalidateIfStale
@@ -397,7 +395,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     // If `revalidateOnMount` is set, we take the value directly.
     if (isInitialMount && !isUndefined(revalidateOnMount))
       return revalidateOnMount
-    if (suspense && hasRSCPreload) return false
+    if (suspense && hasCacheData) return false
     // Under suspense mode, it will always fetch on render if there is no
     // stale data so no need to revalidate immediately mount it again.
     // If data exists, only revalidate if `revalidateIfStale` is true.
@@ -440,7 +438,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       // new request should be initiated.
       const shouldStartNewRequest = !FETCH[key] || !opts.dedupe
       const shouldUseRSCPreload =
-        hasRSCPreload &&
+        hasCacheData &&
         !rscPreloadConsumedRef.current &&
         !isUndefined(preloadedData) &&
         isUndefined(getCache().data)
@@ -853,7 +851,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     const shouldConsumePreload = !isUndefined(preloadedData) && hasKeyButNoData
     let preloadData = UNDEFINED as Data | undefined
 
-    if (shouldConsumePreload && (preloadRecord || isConfigPreload)) {
+    if (shouldConsumePreload && (cacheDataRecord || isConfigCacheData)) {
       preloadData =
         preloadedData && isPromiseLike(preloadedData)
           ? use(preloadedData)

@@ -1,4 +1,4 @@
-import { unstable_preload } from 'swr'
+import { preload } from 'swr'
 import { sleep } from '~/lib/sleep'
 import { ClientRoot } from './client'
 import { key } from './key'
@@ -11,7 +11,7 @@ async function getServerData() {
 }
 
 export default function Page() {
-  const serverData = unstable_preload(key, getServerData)
+  const cacheData = preload(key, getServerData)
 
-  return <ClientRoot preload={serverData} />
+  return <ClientRoot cacheData={cacheData} />
 }

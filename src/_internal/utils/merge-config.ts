@@ -9,18 +9,18 @@ export const mergeConfigs = (
   const v: Partial<FullConfiguration> = mergeObjects(a, b)
 
   // If two configs are provided, merge their `use`, `fallback`, and
-  // `unstable_preload` options.
+  // `cacheData` options.
   if (b) {
-    const { use: u1, fallback: f1, unstable_preload: p1 } = a
-    const { use: u2, fallback: f2, unstable_preload: p2 } = b
+    const { use: u1, fallback: f1, cacheData: c1 } = a
+    const { use: u2, fallback: f2, cacheData: c2 } = b
     if (u1 && u2) {
       v.use = u1.concat(u2)
     }
     if (f1 && f2) {
       v.fallback = mergeObjects(f1, f2)
     }
-    if (p1 && p2) {
-      v.unstable_preload = p1.concat(p2)
+    if (c1 && c2) {
+      v.cacheData = mergeObjects(c1, c2)
     }
   }
 

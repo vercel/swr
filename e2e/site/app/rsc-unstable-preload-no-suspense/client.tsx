@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from 'react'
 import useSWR, { SWRConfig, useSWRConfig } from 'swr'
-import type { UnstablePreloadEntry } from 'swr'
+import type { CacheData } from 'swr'
 import { key } from './key'
 
 function ClientData({
@@ -30,11 +30,7 @@ function ClientData({
   )
 }
 
-export function ClientRoot({
-  preload
-}: {
-  preload: UnstablePreloadEntry<string>
-}) {
+export function ClientRoot({ cacheData }: { cacheData: CacheData<string> }) {
   const [clientFetches, setClientFetches] = useState(0)
   const fetcher = useCallback(async () => {
     ;(
@@ -47,7 +43,7 @@ export function ClientRoot({
   }, [])
 
   return (
-    <SWRConfig value={{ unstable_preload: [preload] }}>
+    <SWRConfig value={{ cacheData }}>
       <ClientData fetcher={fetcher} clientFetches={clientFetches} />
     </SWRConfig>
   )

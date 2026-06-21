@@ -37,19 +37,17 @@ export type PreloadResponse<Data = any> =
   | FetcherResponse<Data>
   | {
       data: FetcherResponse<Data>
-      _unstable_preload: true
+      _cacheData: true
     }
 
 /**
- * Preloaded data entry produced on the server and consumed by SWRConfig on the
- * client.
+ * Cache data produced on the server and consumed by SWRConfig on the client.
  *
  * @experimental
  * @public
  */
-export type UnstablePreloadEntry<Data = any> = {
-  key: string
-  data: FetcherResponse<Data>
+export type CacheData<Data = any> = {
+  [key: string]: FetcherResponse<Data>
 }
 
 /**
@@ -282,10 +280,10 @@ export interface PublicConfiguration<
    */
   fallback: { [key: string]: any }
   /**
-   * preloaded server data to be consumed by client hooks
+   * server-loaded data to be consumed by client hooks and written into cache
    * @experimental
    */
-  unstable_preload?: UnstablePreloadEntry[]
+  cacheData?: CacheData
   /**
    * Function to detect whether pause revalidations, will ignore fetched data and errors when it returns true. Returns false by default.
    */

@@ -57,19 +57,19 @@ const SWRConfig: FC<
     ;(extendedConfig as any).mutate = cacheContext[1]
   }
 
-  const preload = extendedConfig && extendedConfig.unstable_preload
-  if (preload) {
+  const cacheData = extendedConfig && extendedConfig.cacheData
+  if (cacheData) {
     const targetCache = (extendedConfig as any).cache || defaultCache
     const [, , , PRELOAD] = SWRGlobalState.get(targetCache) as GlobalState
-    for (const { key, data } of preload) {
+    for (const key in cacheData) {
       if (
         key &&
         isUndefined(targetCache.get(key)?.data) &&
         isUndefined(PRELOAD[key])
       ) {
         PRELOAD[key] = {
-          data,
-          _unstable_preload: true
+          data: cacheData[key],
+          _cacheData: true
         }
       }
     }

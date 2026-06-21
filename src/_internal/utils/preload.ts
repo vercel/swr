@@ -13,11 +13,9 @@ import { INFINITE_PREFIX } from '../constants'
 import { IS_SERVER } from './env'
 
 const resolvePreloadResponse = <Data>(
-  req:
-    | FetcherResponse<Data>
-    | { data: FetcherResponse<Data>; _unstable_preload: true }
+  req: FetcherResponse<Data> | { data: FetcherResponse<Data>; _cacheData: true }
 ): FetcherResponse<Data> =>
-  req && typeof req == 'object' && (req as any)._unstable_preload
+  req && typeof req == 'object' && (req as any)._cacheData
     ? (req as { data: FetcherResponse<Data> }).data
     : (req as FetcherResponse<Data>)
 

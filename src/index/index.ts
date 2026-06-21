@@ -7,7 +7,6 @@ export { unstable_serialize } from './serialize'
 export { useSWRConfig } from '../_internal'
 export { mutate } from '../_internal'
 export { preload } from '../_internal'
-export { unstable_preload } from '../_internal'
 
 // Config
 
@@ -35,5 +34,5 @@ export type {
   Arguments,
   State,
   ScopedMutator,
-  UnstablePreloadEntry
+  CacheData
 } from '../_internal'

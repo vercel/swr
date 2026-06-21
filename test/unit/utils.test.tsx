@@ -141,5 +141,12 @@ describe('Utils', () => {
     expect(mergeConfigs({ fallback: a }, { fallback: b })).toEqual({
       fallback: { a: 1, b: 1 }
     })
+
+    // Should merge cache data and let the second config replace duplicate keys.
+    expect(
+      mergeConfigs({ cacheData: { a: 1, b: 1 } }, { cacheData: { a: 2, c: 2 } })
+    ).toEqual({
+      cacheData: { a: 2, b: 1, c: 2 }
+    })
   })
 })

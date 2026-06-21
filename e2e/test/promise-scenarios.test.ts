@@ -46,9 +46,7 @@ test.describe('promise scenarios', () => {
     await expect(page.getByTestId('fallback')).toHaveCount(0)
   })
 
-  test('hydrates unstable_preload server data into the client cache', async ({
-    page
-  }) => {
+  test('hydrates preload cacheData into the client cache', async ({ page }) => {
     let clientFetcherCalls = 0
     await page.exposeFunction('__SWR_RSC_CLIENT_FETCHER_CALLED__', () => {
       clientFetcherCalls += 1
@@ -87,7 +85,7 @@ test.describe('promise scenarios', () => {
     )
   })
 
-  test('uses unstable_preload without suspense and skips the client fetcher', async ({
+  test('uses preload cacheData without suspense and skips the client fetcher', async ({
     page
   }) => {
     let clientFetcherCalls = 0

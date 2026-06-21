@@ -1,11 +1,6 @@
 import { serialize } from './serialize'
 
-import type {
-  BareFetcher,
-  FetcherResponse,
-  Key,
-  UnstablePreloadEntry
-} from '../types'
+import type { BareFetcher, CacheData, FetcherResponse, Key } from '../types'
 
 type PreloadFetcher<
   Data = unknown,
@@ -16,18 +11,17 @@ type PreloadFetcher<
   ? (arg: Arg) => FetcherResponse<Data>
   : never
 
-export const unstable_preload = <
+export const preload = <
   Data = any,
   SWRKey extends Key = Key,
   Fetcher extends BareFetcher = PreloadFetcher<Data, SWRKey>
 >(
   key_: SWRKey,
   fetcher: Fetcher
-): UnstablePreloadEntry<Data> => {
+): CacheData<Data> => {
   const [key, fnArg] = serialize(key_)
 
   return {
-    key,
-    data: fetcher(fnArg) as FetcherResponse<Data>
+    [key]: fetcher(fnArg) as FetcherResponse<Data>
   }
 }
