@@ -1,56 +1,49 @@
 on:
   workflow_dispatch:
-    inputs:
-      releaseType:
-        description: Release stable or beta?
-        required: true
-        type: choice
-        options:
-          - beta
-          - stable
 
-      semverType:
-        description: semver type?
-        type: choice
-        options:
-          - patch
-          - minor
-          - major
+name: Publish
 
-name: Trigger Release
-
-env:
-  SEMVER_TYPE: ${{ github.event.inputs.semverType }}
-  RELEASE_TYPE: ${{ github.event.inputs.releaseType }}
+# OIDC trusted publishing. The trusted publisher on npmjs.org is configured for
+# this workflow filename (trigger-release.yml), so the npm publish must live here.
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
-  start:
+  publish:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v6.0.2
-        with:
-          fetch-depth: 10
-          token: ${{ secrets.RELEASE_BOT_GITHUB_TOKEN }}
+
       - name: Install
         uses: ./.github/workflows/install
-      - name: Test
+
+      # OIDC trusted publishing requires npm >= 11.5.1
+      - name: Install npm 11
+        run: npm install -g npm@11
+
+      - name: Build
         run: |
           pnpm clean
           pnpm build
-          pnpm run-all-checks
-          pnpm test:build
 
-      - name: Configure git
+      # Derive the dist-tag from the version in package.json: a prerelease like
+      # 2.5.0-beta.0 publishes under that identifier, a stable version to latest.
+      - name: Determine tag
+        id: determine_tag
         run: |
-          git config user.name "vercel-release-bot"
-          git config user.email "infra+release@vercel.com"
+          version=$(node -p "require('./package.json').version")
+          echo "tag=$(echo $version | grep -Eo 'alpha|beta|canary|rc')" >> $GITHUB_OUTPUT
 
-      - name: Bump version and tag
+      - name: Publish to versioned tag
+        if: steps.determine_tag.outputs.tag != ''
         run: |
-          node ./scripts/bump-next-version.js
+          echo "Publishing to ${{ steps.determine_tag.outputs.tag }} tag"
+          npm publish --access public --no-git-checks --tag ${{ steps.determine_tag.outputs.tag }}
 
-      - name: Git push
+      - name: Publish to latest
+        if: steps.determine_tag.outputs.tag == ''
         run: |
-          git push origin main
-          git push origin --tags
+          echo "Publishing to latest"
+          npm publish --access public --no-git-checks
