@@ -225,6 +225,14 @@ export const useSWRHandler = <Data = any, Error = any>(
         if (isInitialMount && !isUndefined(revalidateOnMount))
           return revalidateOnMount
         const data = !isUndefined(fallback) ? fallback : snapshot.data
+        // If revalidateOnRSCFallback is explicitly configured, use it for fallback data
+        if (
+          !isUndefined(fallback) &&
+          !isUndefined(data) &&
+          isInitialMount &&
+          !isUndefined(getConfig().revalidateOnRSCFallback)
+        )
+          return getConfig().revalidateOnRSCFallback
         if (suspense) return isUndefined(data) || revalidateIfStale
         return isUndefined(data) || revalidateIfStale
       })()
@@ -373,6 +381,16 @@ export const useSWRHandler = <Data = any, Error = any>(
     // If `revalidateOnMount` is set, we take the value directly.
     if (isInitialMount && !isUndefined(revalidateOnMount))
       return revalidateOnMount
+
+    // If revalidateOnRSCFallback is explicitly configured, use it for fallback data
+    if (
+      !isUndefined(fallback) &&
+      !isUndefined(data) &&
+      !IS_SERVER &&
+      isInitialMount &&
+      !isUndefined(getConfig().revalidateOnRSCFallback)
+    )
+      return getConfig().revalidateOnRSCFallback
     // Under suspense mode, it will always fetch on render if there is no
     // stale data so no need to revalidate immediately mount it again.
     // If data exists, only revalidate if `revalidateIfStale` is true.
