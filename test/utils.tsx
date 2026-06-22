@@ -73,7 +73,12 @@ export const hydrateWithConfig = (
 export const mockVisibilityHidden = () => {
   const mockVisibilityState = jest.spyOn(document, 'visibilityState', 'get')
   mockVisibilityState.mockImplementation(() => 'hidden')
-  return () => mockVisibilityState.mockRestore()
+  const mockHasFocus = jest.spyOn(document, 'hasFocus')
+  mockHasFocus.mockReturnValue(false)
+  return () => {
+    mockVisibilityState.mockRestore()
+    mockHasFocus.mockRestore()
+  }
 }
 
 // Using `act()` will cause React 18 to batch updates.
