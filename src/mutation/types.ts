@@ -29,7 +29,9 @@ export type SWRMutationConfiguration<
   populateCache?:
     | boolean
     | ((result: Data, currentData: SWRData | undefined) => SWRData)
-  optimisticData?: SWRData | ((currentData?: SWRData) => SWRData)
+  optimisticData?:     
+    | Data
+    | ((currentData: Data | undefined, displayedData: Data | undefined) => Data)
   rollbackOnError?: boolean | ((error: unknown) => boolean)
   fetcher?: MutationFetcher<Data, SWRMutationKey, ExtraArg>
   onSuccess?: (
