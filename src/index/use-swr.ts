@@ -96,6 +96,11 @@ const resolvedUndef = Promise.resolve(UNDEFINED)
 resolvedUndef.status = 'fulfilled'
 // @ts-ignore modify react promise value
 resolvedUndef.value = UNDEFINED
+const resolvedFalse = Promise.resolve(false)
+// @ts-ignore modify react promise status
+resolvedFalse.status = 'fulfilled'
+// @ts-ignore modify react promise value
+resolvedFalse.value = false
 const sub = () => noop
 /**
  * The core implementation of the useSWR hook.
@@ -394,7 +399,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   // The revalidation function is a carefully crafted wrapper of the original
   // `fetcher`, to correctly handle the many edge cases.
   const revalidate = useCallback(
-    async (revalidateOpts?: RevalidatorOptions): Promise<boolean> => {
+    (revalidateOpts?: RevalidatorOptions): Promise<boolean> => {
       const currentFetcher = fetcherRef.current
 
       if (
@@ -403,216 +408,220 @@ export const useSWRHandler = <Data = any, Error = any>(
         unmountedRef.current ||
         getConfig().isPaused()
       ) {
-        return false
+        return resolvedFalse
       }
 
-      let newData: Data
-      let startAt: number
-      let loading = true
-      const opts = revalidateOpts || {}
+      const revalidatePromise = (async () => {
+        let newData: Data
+        let startAt: number
+        let loading = true
+        const opts = revalidateOpts || {}
 
-      // If there is no ongoing concurrent request, or `dedupe` is not set, a
-      // new request should be initiated.
-      const shouldStartNewRequest = !FETCH[key] || !opts.dedupe
+        // If there is no ongoing concurrent request, or `dedupe` is not set, a
+        // new request should be initiated.
+        const shouldStartNewRequest = !FETCH[key] || !opts.dedupe
 
-      /*
-         For React 17
-         Do unmount check for calls:
-         If key has changed during the revalidation, or the component has been
-         unmounted, old dispatch and old event callbacks should not take any
-         effect
+        /*
+           For React 17
+           Do unmount check for calls:
+           If key has changed during the revalidation, or the component has been
+           unmounted, old dispatch and old event callbacks should not take any
+           effect
 
-        For React 18
-        only check if key has changed
-        https://github.com/reactwg/react-18/discussions/82
-      */
-      const callbackSafeguard = () => {
-        if (IS_REACT_LEGACY) {
-          return (
-            !unmountedRef.current &&
-            key === keyRef.current &&
-            initialMountedRef.current
-          )
+          For React 18
+          only check if key has changed
+          https://github.com/reactwg/react-18/discussions/82
+        */
+        const callbackSafeguard = () => {
+          if (IS_REACT_LEGACY) {
+            return (
+              !unmountedRef.current &&
+              key === keyRef.current &&
+              initialMountedRef.current
+            )
+          }
+          return key === keyRef.current
         }
-        return key === keyRef.current
-      }
 
-      // The final state object when the request finishes.
-      const finalState: State<Data, Error> = {
-        isValidating: false,
-        isLoading: false
-      }
-      const finishRequestAndUpdateState = () => {
-        setCache(finalState)
-      }
-      const cleanupState = () => {
-        // Check if it's still the same request before deleting it.
-        const requestInfo = FETCH[key]
-        if (requestInfo && requestInfo[1] === startAt) {
-          delete FETCH[key]
+        // The final state object when the request finishes.
+        const finalState: State<Data, Error> = {
+          isValidating: false,
+          isLoading: false
         }
-      }
+        const finishRequestAndUpdateState = () => {
+          setCache(finalState)
+        }
+        const cleanupState = () => {
+          // Check if it's still the same request before deleting it.
+          const requestInfo = FETCH[key]
+          if (requestInfo && requestInfo[1] === startAt) {
+            delete FETCH[key]
+          }
+        }
 
-      // Start fetching. Change the `isValidating` state, update the cache.
-      const initialState: State<Data, Error> = { isValidating: true }
-      // It is in the `isLoading` state, if and only if there is no cached data.
-      // This bypasses fallback data and laggy data.
-      if (isUndefined(getCache().data)) {
-        initialState.isLoading = true
-      }
-      try {
-        if (shouldStartNewRequest) {
-          setCache(initialState)
-          // If no cache is being rendered currently (it shows a blank page),
-          // we trigger the loading slow event.
-          if (config.loadingTimeout && isUndefined(getCache().data)) {
-            setTimeout(() => {
-              if (loading && callbackSafeguard()) {
-                getConfig().onLoadingSlow(key, config)
+        // Start fetching. Change the `isValidating` state, update the cache.
+        const initialState: State<Data, Error> = { isValidating: true }
+        // It is in the `isLoading` state, if and only if there is no cached data.
+        // This bypasses fallback data and laggy data.
+        if (isUndefined(getCache().data)) {
+          initialState.isLoading = true
+        }
+        try {
+          if (shouldStartNewRequest) {
+            setCache(initialState)
+            // If no cache is being rendered currently (it shows a blank page),
+            // we trigger the loading slow event.
+            if (config.loadingTimeout && isUndefined(getCache().data)) {
+              setTimeout(() => {
+                if (loading && callbackSafeguard()) {
+                  getConfig().onLoadingSlow(key, config)
+                }
+              }, config.loadingTimeout)
+            }
+
+            // Start the request and save the timestamp.
+            // Key must be truthy if entering here.
+            FETCH[key] = [
+              currentFetcher(fnArg as DefinitelyTruthy<Key>),
+              getTimestamp()
+            ]
+          }
+
+          // Wait until the ongoing request is done. Deduplication is also
+          // considered here.
+          ;[newData, startAt] = FETCH[key]
+          newData = await newData
+
+          if (shouldStartNewRequest) {
+            // If the request isn't interrupted, clean it up after the
+            // deduplication interval.
+            setTimeout(cleanupState, config.dedupingInterval)
+          }
+
+          // If there're other ongoing request(s), started after the current one,
+          // we need to ignore the current one to avoid possible race conditions:
+          //   req1------------------>res1        (current one)
+          //        req2---------------->res2
+          // the request that fired later will always be kept.
+          // The timestamp maybe be `undefined` or a number
+          if (!FETCH[key] || FETCH[key][1] !== startAt) {
+            if (shouldStartNewRequest) {
+              if (callbackSafeguard()) {
+                getConfig().onDiscarded(key)
               }
-            }, config.loadingTimeout)
+            }
+            return false
           }
 
-          // Start the request and save the timestamp.
-          // Key must be truthy if entering here.
-          FETCH[key] = [
-            currentFetcher(fnArg as DefinitelyTruthy<Key>),
-            getTimestamp()
-          ]
-        }
+          // Clear error.
+          finalState.error = UNDEFINED
 
-        // Wait until the ongoing request is done. Deduplication is also
-        // considered here.
-        ;[newData, startAt] = FETCH[key]
-        newData = await newData
+          // If there're other mutations(s), that overlapped with the current revalidation:
+          // case 1:
+          //   req------------------>res
+          //       mutate------>end
+          // case 2:
+          //         req------------>res
+          //   mutate------>end
+          // case 3:
+          //   req------------------>res
+          //       mutate-------...---------->
+          // we have to ignore the revalidation result (res) because it's no longer fresh.
+          // meanwhile, a new revalidation should be triggered when the mutation ends.
+          const mutationInfo = MUTATION[key]
+          if (
+            !isUndefined(mutationInfo) &&
+            // case 1
+            (startAt <= mutationInfo[0] ||
+              // case 2
+              startAt <= mutationInfo[1] ||
+              // case 3
+              mutationInfo[1] === 0)
+          ) {
+            finishRequestAndUpdateState()
+            if (shouldStartNewRequest) {
+              if (callbackSafeguard()) {
+                getConfig().onDiscarded(key)
+              }
+            }
+            return false
+          }
+          // Deep compare with the latest state to avoid extra re-renders.
+          // For local state, compare and assign.
+          const cacheData = getCache().data
 
-        if (shouldStartNewRequest) {
-          // If the request isn't interrupted, clean it up after the
-          // deduplication interval.
-          setTimeout(cleanupState, config.dedupingInterval)
-        }
+          // Since the compare fn could be custom fn
+          // cacheData might be different from newData even when compare fn returns True
+          finalState.data = compare(cacheData, newData) ? cacheData : newData
 
-        // If there're other ongoing request(s), started after the current one,
-        // we need to ignore the current one to avoid possible race conditions:
-        //   req1------------------>res1        (current one)
-        //        req2---------------->res2
-        // the request that fired later will always be kept.
-        // The timestamp maybe be `undefined` or a number
-        if (!FETCH[key] || FETCH[key][1] !== startAt) {
+          // Trigger the successful callback if it's the original request.
           if (shouldStartNewRequest) {
             if (callbackSafeguard()) {
-              getConfig().onDiscarded(key)
+              getConfig().onSuccess(newData, key, config)
             }
           }
-          return false
-        }
+        } catch (err: any) {
+          cleanupState()
 
-        // Clear error.
-        finalState.error = UNDEFINED
+          const currentConfig = getConfig()
+          const { shouldRetryOnError } = currentConfig
 
-        // If there're other mutations(s), that overlapped with the current revalidation:
-        // case 1:
-        //   req------------------>res
-        //       mutate------>end
-        // case 2:
-        //         req------------>res
-        //   mutate------>end
-        // case 3:
-        //   req------------------>res
-        //       mutate-------...---------->
-        // we have to ignore the revalidation result (res) because it's no longer fresh.
-        // meanwhile, a new revalidation should be triggered when the mutation ends.
-        const mutationInfo = MUTATION[key]
-        if (
-          !isUndefined(mutationInfo) &&
-          // case 1
-          (startAt <= mutationInfo[0] ||
-            // case 2
-            startAt <= mutationInfo[1] ||
-            // case 3
-            mutationInfo[1] === 0)
-        ) {
-          finishRequestAndUpdateState()
-          if (shouldStartNewRequest) {
-            if (callbackSafeguard()) {
-              getConfig().onDiscarded(key)
-            }
-          }
-          return false
-        }
-        // Deep compare with the latest state to avoid extra re-renders.
-        // For local state, compare and assign.
-        const cacheData = getCache().data
+          // Not paused, we continue handling the error. Otherwise, discard it.
+          if (!currentConfig.isPaused()) {
+            // Get a new error, don't use deep comparison for errors.
+            finalState.error = err as Error
 
-        // Since the compare fn could be custom fn
-        // cacheData might be different from newData even when compare fn returns True
-        finalState.data = compare(cacheData, newData) ? cacheData : newData
-
-        // Trigger the successful callback if it's the original request.
-        if (shouldStartNewRequest) {
-          if (callbackSafeguard()) {
-            getConfig().onSuccess(newData, key, config)
-          }
-        }
-      } catch (err: any) {
-        cleanupState()
-
-        const currentConfig = getConfig()
-        const { shouldRetryOnError } = currentConfig
-
-        // Not paused, we continue handling the error. Otherwise, discard it.
-        if (!currentConfig.isPaused()) {
-          // Get a new error, don't use deep comparison for errors.
-          finalState.error = err as Error
-
-          // Error event and retry logic. Only for the actual request, not
-          // deduped ones.
-          if (shouldStartNewRequest && callbackSafeguard()) {
-            currentConfig.onError(err, key, currentConfig)
-            if (
-              shouldRetryOnError === true ||
-              (isFunction(shouldRetryOnError) &&
-                shouldRetryOnError(err as Error))
-            ) {
+            // Error event and retry logic. Only for the actual request, not
+            // deduped ones.
+            if (shouldStartNewRequest && callbackSafeguard()) {
+              currentConfig.onError(err, key, currentConfig)
               if (
-                !getConfig().revalidateOnFocus ||
-                !getConfig().revalidateOnReconnect ||
-                isActive()
+                shouldRetryOnError === true ||
+                (isFunction(shouldRetryOnError) &&
+                  shouldRetryOnError(err as Error))
               ) {
-                // If it's inactive, stop. It will auto-revalidate when
-                // refocusing or reconnecting.
-                // When retrying, deduplication is always enabled.
-                currentConfig.onErrorRetry(
-                  err,
-                  key,
-                  currentConfig,
-                  _opts => {
-                    const revalidators = EVENT_REVALIDATORS[key]
-                    if (revalidators && revalidators[0]) {
-                      revalidators[0](
-                        revalidateEvents.ERROR_REVALIDATE_EVENT,
-                        _opts
-                      )
+                if (
+                  !getConfig().revalidateOnFocus ||
+                  !getConfig().revalidateOnReconnect ||
+                  isActive()
+                ) {
+                  // If it's inactive, stop. It will auto-revalidate when
+                  // refocusing or reconnecting.
+                  // When retrying, deduplication is always enabled.
+                  currentConfig.onErrorRetry(
+                    err,
+                    key,
+                    currentConfig,
+                    _opts => {
+                      const revalidators = EVENT_REVALIDATORS[key]
+                      if (revalidators && revalidators[0]) {
+                        revalidators[0](
+                          revalidateEvents.ERROR_REVALIDATE_EVENT,
+                          _opts
+                        )
+                      }
+                    },
+                    {
+                      retryCount: (opts.retryCount || 0) + 1,
+                      dedupe: true
                     }
-                  },
-                  {
-                    retryCount: (opts.retryCount || 0) + 1,
-                    dedupe: true
-                  }
-                )
+                  )
+                }
               }
             }
           }
         }
-      }
 
-      // Mark loading as stopped.
-      loading = false
+        // Mark loading as stopped.
+        loading = false
 
-      // Update the current hook's state.
-      finishRequestAndUpdateState()
+        // Update the current hook's state.
+        finishRequestAndUpdateState()
 
-      return true
+        return true
+      })()
+
+      return revalidatePromise
     },
     // `setState` is immutable, and `eventsCallback`, `fnArg`, and
     // `keyValidating` are depending on `key`, so we can exclude them from
