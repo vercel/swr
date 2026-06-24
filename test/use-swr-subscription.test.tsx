@@ -1,7 +1,8 @@
 import { fireEvent, screen } from '@testing-library/react'
 import { sleep, renderWithConfig, createKey } from './utils'
 import useSWRSubscription from 'swr/subscription'
-import useSWR from 'swr'
+import useSWR, { SWRConfig } from 'swr'
+import { render } from '@testing-library/react'
 import { useEffect, useState, act } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 
@@ -320,5 +321,148 @@ describe('useSWRSubscription', () => {
     await screen.findByText(
       'The `subscribe` function must return a function to unsubscribe.'
     )
+  })
+
+  // Issue #4261: when the last subscriber for a key unmounts, the disposer
+  // must run exactly once and the key must be torn down so that re-mounting
+  // the same key starts a fresh subscription instead of reusing a stale one.
+  // The leak is asserted through the public contract (subscribe/dispose call
+  // counts) rather than the internal bookkeeping Maps, so the assertions hold
+  // against both the source and the built package.
+  describe('teardown disposes and resubscribes by contract (#4261)', () => {
+    /** Render under an explicit per-test cache so subscriptions stay isolated. */
+    function renderWithExplicitCache(
+      element: React.ReactElement,
+      cache: Map<any, any>
+    ) {
+      return render(
+        <SWRConfig value={{ provider: () => cache }}>{element}</SWRConfig>
+      )
+    }
+
+    /** A subscribe spy whose return value is a per-call dispose spy. */
+    function trackedSubscribe() {
+      const disposers: jest.Mock[] = []
+      const subscribe = jest.fn(
+        (_key: any, { next }: { next: (e: any, d: any) => void }) => {
+          next(null, _key)
+          const dispose = jest.fn()
+          disposers.push(dispose)
+          return dispose
+        }
+      )
+      return { subscribe, disposers }
+    }
+
+    // Duplicate subscribers of the same key share a single subscribe call.
+    it('subscribes once for duplicate subscribers of a key', () => {
+      const cache = new Map()
+      const swrKey = createKey()
+      const { subscribe } = trackedSubscribe()
+      function Page() {
+        useSWRSubscription(swrKey, subscribe)
+        useSWRSubscription(swrKey, subscribe)
+        return null
+      }
+      renderWithExplicitCache(<Page />, cache)
+
+      expect(subscribe).toHaveBeenCalledTimes(1)
+    })
+
+    // Unmounting a non-last subscriber must not dispose the live subscription.
+    it('does not dispose while another subscriber is still mounted', () => {
+      const cache = new Map()
+      const swrKey = createKey()
+      const { subscribe, disposers } = trackedSubscribe()
+      function Page() {
+        useSWRSubscription(swrKey, subscribe)
+        return null
+      }
+      const { unmount: unmountFirst } = renderWithExplicitCache(<Page />, cache)
+      const { unmount: unmountSecond } = renderWithExplicitCache(
+        <Page />,
+        cache
+      )
+
+      expect(subscribe).toHaveBeenCalledTimes(1)
+
+      unmountFirst()
+      expect(disposers[0]).not.toHaveBeenCalled()
+
+      unmountSecond()
+      expect(disposers[0]).toHaveBeenCalledTimes(1)
+    })
+
+    // The last unmount disposes exactly once.
+    it('disposes exactly once on the last unmount', () => {
+      const cache = new Map()
+      const swrKey = createKey()
+      const { subscribe, disposers } = trackedSubscribe()
+      function Page() {
+        useSWRSubscription(swrKey, subscribe)
+        return null
+      }
+      const view = renderWithExplicitCache(<Page />, cache)
+
+      view.unmount()
+
+      expect(disposers).toHaveLength(1)
+      expect(disposers[0]).toHaveBeenCalledTimes(1)
+    })
+
+    // Re-mounting the same key after full teardown must subscribe again with a
+    // fresh disposer, proving the stale entry was dropped (this is the leak).
+    it('runs a fresh subscribe on re-mount after full teardown', () => {
+      const cache = new Map()
+      const swrKey = createKey()
+      const { subscribe, disposers } = trackedSubscribe()
+      function Page() {
+        useSWRSubscription(swrKey, subscribe)
+        return null
+      }
+
+      const { unmount: unmountFirst } = renderWithExplicitCache(<Page />, cache)
+      unmountFirst()
+      expect(subscribe).toHaveBeenCalledTimes(1)
+      expect(disposers[0]).toHaveBeenCalledTimes(1)
+
+      const { unmount: unmountSecond } = renderWithExplicitCache(
+        <Page />,
+        cache
+      )
+      // A stale disposer would be reused; a fresh subscribe proves teardown.
+      expect(subscribe).toHaveBeenCalledTimes(2)
+      expect(disposers).toHaveLength(2)
+      expect(disposers[1]).not.toHaveBeenCalled()
+
+      unmountSecond()
+      expect(disposers[1]).toHaveBeenCalledTimes(1)
+    })
+
+    // Disposal of one key must not touch a different, still-mounted key.
+    it('isolates disposal per key', () => {
+      const cache = new Map()
+      const keyA = createKey()
+      const keyB = createKey()
+      const { subscribe: subscribeA, disposers: disposersA } =
+        trackedSubscribe()
+      const { subscribe: subscribeB, disposers: disposersB } =
+        trackedSubscribe()
+      function PageA() {
+        useSWRSubscription(keyA, subscribeA)
+        return null
+      }
+      function PageB() {
+        useSWRSubscription(keyB, subscribeB)
+        return null
+      }
+      const { unmount: unmountA } = renderWithExplicitCache(<PageA />, cache)
+      renderWithExplicitCache(<PageB />, cache)
+
+      unmountA()
+
+      expect(disposersA[0]).toHaveBeenCalledTimes(1)
+      expect(disposersB[0]).not.toHaveBeenCalled()
+    })
   })
 })
