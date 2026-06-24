@@ -79,6 +79,62 @@ describe('useSWR - suspense', () => {
     }
   )
 
+  itShouldSkipForReactCanary(
+    'should reuse the suspense revalidation promise while pending',
+    async () => {
+      const key = createKey()
+      let resolveRequest!: (value: string) => void
+      const source = new Promise<string>(resolve => {
+        resolveRequest = resolve
+      })
+      const then = jest.fn((onFulfilled?: any, onRejected?: any) =>
+        source.then(onFulfilled, onRejected)
+      )
+      const request = { then } as unknown as Promise<string>
+      const fetcher = jest.fn(() => request)
+      let forceRetry!: () => void
+      let resolvedRenderCount = 0
+
+      function Section() {
+        const { data } = useSWR(key, fetcher, {
+          suspense: true
+        })
+        resolvedRenderCount++
+        return <div>data: {data}</div>
+      }
+
+      function App() {
+        const [, rerender] = useReducer(count => count + 1, 0)
+        forceRetry = rerender
+        return (
+          <Suspense fallback={<div>fallback</div>}>
+            <Section />
+          </Suspense>
+        )
+      }
+
+      renderWithConfig(<App />)
+
+      screen.getByText('fallback')
+      expect(fetcher).toHaveBeenCalledTimes(1)
+      await act(() => sleep(0))
+      expect(then).toHaveBeenCalledTimes(1)
+
+      act(() => forceRetry())
+      screen.getByText('fallback')
+      await act(() => sleep(0))
+      expect(fetcher).toHaveBeenCalledTimes(1)
+      expect(then).toHaveBeenCalledTimes(1)
+
+      await act(async () => {
+        resolveRequest('SWR')
+        await source
+      })
+      await screen.findByText('data: SWR')
+      expect(resolvedRenderCount).toBe(1)
+    }
+  )
+
   itShouldSkipForReactCanary('should work for non-promises', async () => {
     const key = createKey()
     function Section() {

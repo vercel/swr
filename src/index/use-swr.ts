@@ -411,15 +411,23 @@ export const useSWRHandler = <Data = any, Error = any>(
         return resolvedFalse
       }
 
+      const opts = revalidateOpts || {}
+
+      // If there is no ongoing concurrent request, or `dedupe` is not set, a
+      // new request should be initiated.
+      const shouldStartNewRequest = !FETCH[key] || !opts.dedupe
+
+      if (!shouldStartNewRequest) {
+        const cachedRevalidation = FETCH[key][2]
+        if (cachedRevalidation) {
+          return cachedRevalidation
+        }
+      }
+
       const revalidatePromise = (async () => {
         let newData: Data
         let startAt: number
         let loading = true
-        const opts = revalidateOpts || {}
-
-        // If there is no ongoing concurrent request, or `dedupe` is not set, a
-        // new request should be initiated.
-        const shouldStartNewRequest = !FETCH[key] || !opts.dedupe
 
         /*
            For React 17
@@ -620,6 +628,13 @@ export const useSWRHandler = <Data = any, Error = any>(
 
         return true
       })()
+
+      if (opts.dedupe) {
+        const requestInfo = FETCH[key]
+        if (requestInfo && (shouldStartNewRequest || !requestInfo[2])) {
+          requestInfo[2] = revalidatePromise
+        }
+      }
 
       return revalidatePromise
     },

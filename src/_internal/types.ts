@@ -14,8 +14,8 @@ export type GlobalState = [
   Record<string, RevalidateCallback[]>,
   /** Mutation timestamps: Maps cache keys to [start_timestamp, end_timestamp] tuples */
   Record<string, [number, number]>,
-  /** Fetch cache: Maps cache keys to [data, timestamp] tuples */
-  Record<string, [any, number]>,
+  /** Fetch cache: Maps cache keys to [data, timestamp, revalidation promise] tuples */
+  Record<string, [any, number, Promise<boolean>?]>,
   /** Preload cache: Maps cache keys to fetcher responses */
   Record<string, FetcherResponse<any>>,
   /** Scoped mutator function for cache updates */
