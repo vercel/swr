@@ -827,16 +827,15 @@ export const useSWRHandler = <Data = any, Error = any>(
     if (!isUndefined(error) && hasKeyButNoData) {
       throw error
     }
-    const revalidation = hasKeyButNoData
-      ? revalidate(WITH_DEDUPE)
-      : resolvedUndef
-    if (!isUndefined(returnedData) && hasKeyButNoData) {
-      // @ts-ignore modify react promise status
-      revalidation.status = 'fulfilled'
-      // @ts-ignore modify react promise value
-      revalidation.value = true
+    if (hasKeyButNoData) {
+      // A cache miss for the current key must start its request here.
+      // `returnedData` may be previous data, but it doesn't populate this key's cache.
+      const revalidation = revalidate(WITH_DEDUPE)
+      if (isUndefined(returnedData)) {
+        // No current or previous data is available to render, so suspend on the request.
+        use(revalidation)
+      }
     }
-    use(revalidation)
   }
 
   const swrResponse: SWRResponse<Data, Error> = {

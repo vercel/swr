@@ -532,4 +532,46 @@ describe('useSWR - suspense', () => {
       expect(onRender).toHaveBeenCalledTimes(1)
     }
   )
+
+  itShouldSkipForReactCanary(
+    'should not suspend when `keepPreviousData` returns old data during revalidation',
+    async () => {
+      const originKey = createKey()
+      const newKey = createKey()
+      const fetcher = jest.fn((query: string) =>
+        createResponse(query, { delay: 100 })
+      )
+      const Result = ({ query }: { query: string }) => {
+        const { data } = useSWR(query, fetcher, {
+          suspense: true,
+          keepPreviousData: true
+        })
+        return <div>data: {data}</div>
+      }
+      const App = () => {
+        const [query, setQuery] = useState(originKey)
+        return (
+          <>
+            <button onClick={() => setQuery(newKey)}>change</button>
+            <Suspense fallback={<div>loading</div>}>
+              <Result query={query} />
+            </Suspense>
+          </>
+        )
+      }
+
+      renderWithConfig(<App />)
+
+      screen.getByText('loading')
+      await screen.findByText(`data: ${originKey}`)
+      expect(fetcher).toHaveBeenCalledTimes(1)
+
+      fireEvent.click(screen.getByText('change'))
+      expect(screen.queryByText('loading')).not.toBeInTheDocument()
+      screen.getByText(`data: ${originKey}`)
+      expect(fetcher).toHaveBeenCalledTimes(2)
+
+      await screen.findByText(`data: ${newKey}`)
+    }
+  )
 })
