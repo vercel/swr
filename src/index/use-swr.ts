@@ -89,7 +89,13 @@ type DefinitelyTruthy<T> = false extends T
   ? never
   : T
 
+// React can only unwrap a thenable synchronously when it has React's thenable
+// status fields, so this fulfilled no-op keeps Suspense paths from waiting.
 const resolvedUndef = Promise.resolve(UNDEFINED)
+// @ts-ignore modify react promise status
+resolvedUndef.status = 'fulfilled'
+// @ts-ignore modify react promise value
+resolvedUndef.value = UNDEFINED
 const sub = () => noop
 /**
  * The core implementation of the useSWR hook.
