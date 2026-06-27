@@ -86,10 +86,17 @@ export const subscription = (<Data = any, Error = any>(useSWRNext: SWRHook) =>
 
         subscriptions.set(subscriptionKey, count)
 
-        // Dispose if it's the last one.
+        // Dispose if it's the last one, and drop both Map entries so the
+        // ref-count and disposer don't accumulate one stale entry per unique
+        // key over the lifetime of the cache. Long-lived apps with rotating
+        // subscription keys (paginated feeds, live channels, etc.) would
+        // otherwise leak proportional to the total number of keys ever seen,
+        // not the number currently active.
         if (!count) {
           const dispose = disposers.get(subscriptionKey)
           dispose?.()
+          disposers.delete(subscriptionKey)
+          subscriptions.delete(subscriptionKey)
         }
       }
     }, [subscriptionKey])
