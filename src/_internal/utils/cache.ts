@@ -19,7 +19,12 @@ const revalidateAllKeys = (
   type: RevalidateEvent
 ) => {
   for (const key in revalidators) {
-    if (revalidators[key][0]) revalidators[key][0](type)
+    const callbacks = revalidators[key]
+    if (callbacks) {
+      for (const callback of [...callbacks]) {
+        callback(type)
+      }
+    }
   }
 }
 
