@@ -796,23 +796,27 @@ export const useSWRHandler = <Data = any, Error = any>(
 
     const req = PRELOAD[key]
 
-    const mutateReq =
-      !isUndefined(req) && hasKeyButNoData ? boundMutate(req) : resolvedUndef
-    use(mutateReq)
+    if (!isUndefined(req) && hasKeyButNoData) {
+      use(boundMutate(req))
+    } else {
+      use(resolvedUndef)
+    }
 
     if (!isUndefined(error) && hasKeyButNoData) {
       throw error
     }
-    const revalidation = hasKeyButNoData
-      ? revalidate(WITH_DEDUPE)
-      : resolvedUndef
-    if (!isUndefined(returnedData) && hasKeyButNoData) {
-      // @ts-ignore modify react promise status
-      revalidation.status = 'fulfilled'
-      // @ts-ignore modify react promise value
-      revalidation.value = true
+    if (hasKeyButNoData) {
+      const revalidation = revalidate(WITH_DEDUPE)
+      if (!isUndefined(returnedData)) {
+        // @ts-ignore modify react promise status
+        revalidation.status = 'fulfilled'
+        // @ts-ignore modify react promise value
+        revalidation.value = true
+      }
+      use(revalidation)
+    } else {
+      use(resolvedUndef)
     }
-    use(revalidation)
   }
 
   const swrResponse: SWRResponse<Data, Error> = {
