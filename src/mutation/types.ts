@@ -50,6 +50,61 @@ export type SWRMutationConfiguration<
 
 type RemoveUndefined<T> = T extends undefined ? never : T
 type IsUndefinedIncluded<T> = undefined extends T ? true : false
+type TriggerOptions<
+  Data,
+  Error,
+  SWRMutationKey extends Key,
+  ExtraArg,
+  SWRData,
+  ThrowOnError extends boolean
+> = SWRMutationConfiguration<Data, Error, SWRMutationKey, ExtraArg, SWRData> & {
+  throwOnError?: ThrowOnError
+}
+type TriggerArgs<
+  Data,
+  Error,
+  SWRMutationKey extends Key,
+  ExtraArg,
+  SWRData,
+  ThrowOnError extends boolean
+> =
+  | [
+      extraArgument: ExtraArg,
+      options?: TriggerOptions<
+        Data,
+        Error,
+        SWRMutationKey,
+        ExtraArg,
+        SWRData,
+        ThrowOnError
+      >
+    ]
+  | ([ExtraArg] extends [never]
+      ? [
+          extraArgument?: any,
+          options?: TriggerOptions<
+            Data,
+            Error,
+            SWRMutationKey,
+            ExtraArg,
+            SWRData,
+            ThrowOnError
+          >
+        ]
+      : never)
+  | (IsUndefinedIncluded<ExtraArg> extends true
+      ? [
+          extraArgument?: ExtraArg,
+          options?: TriggerOptions<
+            Data,
+            Error,
+            SWRMutationKey,
+            ExtraArg,
+            SWRData,
+            ThrowOnError
+          >
+        ]
+      : never)
 export interface TriggerWithArgs<
   Data = any,
   Error = any,
@@ -164,6 +219,30 @@ export interface TriggerWithoutArgs<
   ): Promise<Data>
 }
 
+export interface Trigger<
+  Data = any,
+  Error = any,
+  SWRMutationKey extends Key = Key,
+  ExtraArg = never
+> {
+  <SWRData = Data>(
+    ...args: TriggerArgs<
+      Data,
+      Error,
+      SWRMutationKey,
+      ExtraArg,
+      SWRData,
+      boolean
+    >
+  ): Promise<Data>
+  <SWRData = Data>(
+    ...args: TriggerArgs<Data, Error, SWRMutationKey, ExtraArg, SWRData, true>
+  ): Promise<RemoveUndefined<Data>>
+  <SWRData = Data>(
+    ...args: TriggerArgs<Data, Error, SWRMutationKey, ExtraArg, SWRData, false>
+  ): Promise<Data | undefined>
+}
+
 export interface SWRMutationResponse<
   Data = any,
   Error = any,
@@ -178,11 +257,7 @@ export interface SWRMutationResponse<
    * Function to trigger the mutation. You can also pass an extra argument to
    * the fetcher, and override the options for the mutation hook.
    */
-  trigger: [ExtraArg] extends [never]
-    ? TriggerWithoutArgs<Data, Error, SWRMutationKey, ExtraArg>
-    : IsUndefinedIncluded<ExtraArg> extends true
-    ? TriggerWithOptionsArgs<Data, Error, SWRMutationKey, ExtraArg>
-    : TriggerWithArgs<Data, Error, SWRMutationKey, ExtraArg>
+  trigger: Trigger<Data, Error, SWRMutationKey, ExtraArg>
   /**
    * Function to reset the mutation state (`data`, `error`, and `isMutating`).
    */
