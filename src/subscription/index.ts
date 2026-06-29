@@ -16,7 +16,10 @@ import {
   withMiddleware,
   serialize,
   useIsomorphicLayoutEffect,
-  createCacheHelper
+  createCacheHelper,
+  isPromiseLike,
+  isFunction,
+  isUndefined
 } from '../_internal'
 
 // [subscription count, disposer]
@@ -72,13 +75,30 @@ export const subscription = (<Data = any, Error = any>(useSWRNext: SWRHook) =>
       subscriptions.set(subscriptionKey, refCount + 1)
 
       if (!refCount) {
-        const dispose = subscribe(args, { next })
-        if (typeof dispose !== 'function') {
+        const result = subscribe(args, { next })
+
+        if (result && isPromiseLike(result)) {
+          // Race condition guard: if cleanup runs before the async subscribe
+          // resolves, the flag tells the resolver to dispose immediately.
+          let shouldDisposeOnResolve = false
+          ;(result as Promise<(() => void) | void>).then(dispose => {
+            if (shouldDisposeOnResolve) {
+              if (isFunction(dispose)) dispose()
+            } else if (isFunction(dispose)) {
+              disposers.set(subscriptionKey!, dispose)
+            }
+          })
+
+          disposers.set(subscriptionKey, () => {
+            shouldDisposeOnResolve = true
+          })
+        } else if (isFunction(result)) {
+          disposers.set(subscriptionKey, result)
+        } else if (!isUndefined(result)) {
           throw new Error(
             'The `subscribe` function must return a function to unsubscribe.'
           )
         }
-        disposers.set(subscriptionKey, dispose)
       }
 
       return () => {
