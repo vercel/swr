@@ -1,10 +1,9 @@
+import { connection } from 'next/server'
 import { preload } from 'swr'
 import type { CacheData } from 'swr'
 import { sleep } from '~/lib/sleep'
 import { ClientRoot } from './client'
 import { key } from './key'
-
-export const dynamic = 'force-dynamic'
 
 async function getServerData() {
   await sleep(150)
@@ -16,6 +15,9 @@ export default async function Page({
 }: {
   searchParams: Promise<{ preload?: string }>
 }) {
+  // Opt into dynamic rendering so each request preloads fresh server data.
+  await connection()
+
   const { preload: shouldPreload } = await searchParams
 
   // Only preload when the search param is present. A request that preloaded
