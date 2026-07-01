@@ -12,13 +12,6 @@ import { isUndefined } from './shared'
 import { INFINITE_PREFIX } from '../constants'
 import { IS_SERVER } from './env'
 
-const resolvePreloadResponse = <Data>(
-  req: FetcherResponse<Data> | { data: FetcherResponse<Data>; _cacheData: true }
-): FetcherResponse<Data> =>
-  req && typeof req == 'object' && (req as any)._cacheData
-    ? (req as { data: FetcherResponse<Data> }).data
-    : (req as FetcherResponse<Data>)
-
 // Basically same as Fetcher but without Conditional Fetching
 type PreloadFetcher<
   Data = unknown,
@@ -47,7 +40,7 @@ export const preload = <
 
   // Prevent preload to be called multiple times before used.
   if (PRELOAD[key]) {
-    return resolvePreloadResponse(PRELOAD[key]) as ReturnType<Fetcher>
+    return PRELOAD[key] as ReturnType<Fetcher>
   }
 
   const req = fetcher(fnArg) as ReturnType<Fetcher>
@@ -73,7 +66,7 @@ export const middleware: Middleware =
         const req = PRELOAD[key]
         if (isUndefined(req)) return fetcher_(...args)
         delete PRELOAD[key]
-        return resolvePreloadResponse(req)
+        return req
       })
     return useSWRNext(key_, fetcher, config)
   }

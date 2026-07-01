@@ -126,4 +126,22 @@ test.describe('promise scenarios', () => {
       'client fetches:1'
     )
   })
+
+  test('does not leak preloaded cacheData across requests', async ({
+    request
+  }) => {
+    const marker = 'SWR_RSC_PRELOAD_CONDITIONAL_MARKER_20260621'
+
+    // A request that preloads on the server renders the server-loaded value.
+    const preloaded = await request.get(
+      './rsc-unstable-preload-conditional?preload=1'
+    )
+    expect(await preloaded.text()).toContain(marker)
+
+    // A later request that does not preload must not reuse the previous
+    // request's server-loaded value. SWR's global state is shared across
+    // requests on the server, so the server output must not contain the marker.
+    const notPreloaded = await request.get('./rsc-unstable-preload-conditional')
+    expect(await notPreloaded.text()).not.toContain(marker)
+  })
 })

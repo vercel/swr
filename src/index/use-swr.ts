@@ -187,19 +187,11 @@ export const useSWRHandler = <Data = any, Error = any>(
     : fallbackData
   const configCacheData = !key ? UNDEFINED : config.cacheData?.[key]
   const req = key ? PRELOAD[key] : UNDEFINED
-  const cacheDataRecord =
-    req && typeof req == 'object' && (req as any)._cacheData
-      ? (req as {
-          data: Data | Promise<Data>
-        })
-      : UNDEFINED
-  const isConfigCacheData = isUndefined(req) && !isUndefined(configCacheData)
-  const hasCacheData = !!cacheDataRecord || isConfigCacheData
-  const preloadedData = cacheDataRecord
-    ? cacheDataRecord.data
-    : isConfigCacheData
-    ? configCacheData
-    : req
+  // `cacheData` is request-scoped data provided by a Server Component through
+  // `SWRConfig`'s context. It's only used when there's no in-flight client
+  // `preload()` response (`req`) for the same key.
+  const hasCacheData = isUndefined(req) && !isUndefined(configCacheData)
+  const preloadedData = hasCacheData ? configCacheData : req
 
   const isEqual = (prev: State<Data, any>, current: State<Data, any>) => {
     for (const _ in stateDependencies) {
@@ -850,7 +842,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     const shouldConsumePreload = !isUndefined(preloadedData) && hasKeyButNoData
     let preloadData = UNDEFINED as Data | undefined
 
-    if (shouldConsumePreload && (cacheDataRecord || isConfigCacheData)) {
+    if (shouldConsumePreload && hasCacheData) {
       preloadData =
         preloadedData && isPromiseLike(preloadedData)
           ? use(preloadedData)
