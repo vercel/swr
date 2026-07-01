@@ -11,6 +11,7 @@ import { SWRGlobalState } from './global-state'
 import { isUndefined } from './shared'
 import { INFINITE_PREFIX } from '../constants'
 import { IS_SERVER } from './env'
+
 // Basically same as Fetcher but without Conditional Fetching
 type PreloadFetcher<
   Data = unknown,
@@ -38,7 +39,9 @@ export const preload = <
   const [, , , PRELOAD] = SWRGlobalState.get(cache) as GlobalState
 
   // Prevent preload to be called multiple times before used.
-  if (PRELOAD[key]) return PRELOAD[key]
+  if (PRELOAD[key]) {
+    return PRELOAD[key] as ReturnType<Fetcher>
+  }
 
   const req = fetcher(fnArg) as ReturnType<Fetcher>
   PRELOAD[key] = req

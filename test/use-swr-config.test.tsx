@@ -1,10 +1,12 @@
 import { screen, fireEvent } from '@testing-library/react'
-import { useEffect, useState, act } from 'react'
+import { Suspense, useEffect, useState, act } from 'react'
 import type { Middleware } from 'swr'
 import useSWR, { SWRConfig, useSWRConfig } from 'swr'
 import {
   renderWithConfig,
   createKey,
+  createResponse,
+  itShouldSkipForReactCanary,
   renderWithGlobalCache,
   sleep
 } from './utils'
@@ -125,6 +127,86 @@ describe('useSWR - configs', () => {
 
   it('should expose default config as static property on SWRConfig', () => {
     expect(SWRConfig.defaultValue).toBeDefined()
+  })
+
+  itShouldSkipForReactCanary(
+    'should not revalidate on mount when suspense consumes cacheData',
+    async () => {
+      const key = createKey()
+      const cacheData = { [key]: 'server data' }
+      const clientFetcher = jest.fn(() => createResponse('client data'))
+
+      function Page() {
+        const { data } = useSWR(key, clientFetcher, { suspense: true })
+        return <div>data:{data}</div>
+      }
+
+      renderWithGlobalCache(
+        <SWRConfig value={{ cacheData }}>
+          <Suspense fallback={<div>loading</div>}>
+            <Page />
+          </Suspense>
+        </SWRConfig>
+      )
+
+      screen.getByText('data:server data')
+      await act(() => sleep(50))
+      expect(clientFetcher).toHaveBeenCalledTimes(0)
+    }
+  )
+
+  itShouldSkipForReactCanary(
+    'should not expose the cacheData record on later revalidation',
+    async () => {
+      const key = createKey()
+      const cacheData = { [key]: 'server data' }
+      const clientFetcher = jest.fn(() => createResponse('client data'))
+      let revalidate = () => Promise.resolve<string | undefined>(undefined)
+
+      function Page() {
+        const { data, mutate } = useSWR(key, clientFetcher, {
+          suspense: true
+        })
+        revalidate = mutate
+        return <div>data:{data}</div>
+      }
+
+      renderWithGlobalCache(
+        <SWRConfig value={{ cacheData }}>
+          <Suspense fallback={<div>loading</div>}>
+            <Page />
+          </Suspense>
+        </SWRConfig>
+      )
+
+      screen.getByText('data:server data')
+      await act(() => sleep(10))
+      await act(() => revalidate())
+
+      await screen.findByText('data:client data')
+      expect(clientFetcher).toHaveBeenCalledTimes(1)
+    }
+  )
+
+  it('should use cacheData in default mode without calling the client fetcher', async () => {
+    const key = createKey()
+    const cacheData = { [key]: createResponse('server data') }
+    const clientFetcher = jest.fn(() => createResponse('client data'))
+
+    function Page() {
+      const { data, isLoading } = useSWR(key, clientFetcher)
+      return <div>data:{`${data}:${isLoading}`}</div>
+    }
+
+    renderWithGlobalCache(
+      <SWRConfig value={{ cacheData }}>
+        <Page />
+      </SWRConfig>
+    )
+
+    screen.getByText('data:undefined:true')
+    await screen.findByText('data:server data:false')
+    expect(clientFetcher).toHaveBeenCalledTimes(0)
   })
 
   it('should expose the default config from useSWRConfig', () => {

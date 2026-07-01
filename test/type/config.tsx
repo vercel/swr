@@ -1,4 +1,4 @@
-import type { Cache, SWRResponse } from 'swr'
+import type { Cache, SWRConfigValue, SWRResponse } from 'swr'
 import useSWR, { useSWRConfig, SWRConfig } from 'swr'
 import { expectType } from './utils'
 import type { FullConfiguration, SWRConfiguration } from 'swr/_internal'
@@ -29,6 +29,7 @@ export function useTestCustomSWRConfig() {
           }
         }}
       />
+      <SWRConfig value={{ cacheData: { '/api': 'cache data' } }} />
 
       <SWRConfig
         // @ts-expect-error
@@ -162,6 +163,32 @@ export function useTestConfigAsSWRConfiguration() {
   const fetcher = (k: string) => Promise.resolve({ value: k })
   const { data } = useSWR('/api', fetcher, {} as SWRConfiguration)
   expectType<Equal<typeof data, { value: string } | undefined>>(true)
+}
+
+export function useTestCacheDataConfig() {
+  const configValue: SWRConfigValue = {
+    cacheData: {
+      '/api': 'cache data'
+    }
+  }
+  expectType<SWRConfigValue>(configValue)
+
+  const fetcher = (k: string) => Promise.resolve({ value: k })
+
+  useSWR('/api', fetcher, {
+    // @ts-expect-error cacheData is only supported in SWRConfig.
+    cacheData: {
+      '/api': 'cache data'
+    }
+  })
+
+  const config: SWRConfiguration = {
+    // @ts-expect-error cacheData is only supported in SWRConfig.
+    cacheData: {
+      '/api': 'cache data'
+    }
+  }
+  expectType<SWRConfiguration>(config)
 }
 
 export function useTestEmptyConfig() {

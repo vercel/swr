@@ -34,6 +34,16 @@ export type GlobalState = [
 export type FetcherResponse<Data = unknown> = Data | Promise<Data>
 
 /**
+ * Cache data produced on the server and consumed by SWRConfig on the client.
+ *
+ * @experimental
+ * @public
+ */
+export type CacheData<Data = any> = {
+  [key: string]: FetcherResponse<Data>
+}
+
+/**
  * Basic fetcher function that accepts any arguments and returns data or a promise.
  *
  * This is the most permissive fetcher type, allowing any number of arguments
@@ -323,7 +333,14 @@ export type FullConfiguration<
   Data = any,
   Error = any,
   Fn extends Fetcher = BareFetcher
-> = InternalConfiguration & PublicConfiguration<Data, Error, Fn>
+> = InternalConfiguration &
+  PublicConfiguration<Data, Error, Fn> & {
+    /**
+     * server-loaded data to be consumed by client hooks and written into cache
+     * @experimental
+     */
+    cacheData?: CacheData<Data>
+  }
 
 /**
  * Provider configuration for custom focus and reconnect event handling.
@@ -979,7 +996,20 @@ export type SWRConfiguration<
 > = Partial<PublicConfiguration<Data, Error, Fn>> &
   Partial<ProviderConfiguration> & {
     provider?: (cache: Readonly<Cache>) => Cache
+    cacheData?: never
   }
+
+export type SWRConfigValue<
+  Data = any,
+  Error = any,
+  Fn extends BareFetcher<any> = BareFetcher<any>
+> = Omit<SWRConfiguration<Data, Error, Fn>, 'cacheData'> & {
+  /**
+   * server-loaded data to be consumed by client hooks and written into cache
+   * @experimental
+   */
+  cacheData?: CacheData<Data>
+}
 
 export type IsLoadingResponse<
   Data = any,
