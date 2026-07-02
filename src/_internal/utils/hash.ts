@@ -64,7 +64,7 @@ export const stableHash = (arg: any): string => {
     }
   } else {
     result = isDate
-      ? arg.toJSON()
+      ? arg.toJSON() || arg.toString()
       : type == 'symbol'
       ? arg.toString()
       : type == 'string'
