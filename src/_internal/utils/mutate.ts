@@ -55,10 +55,8 @@ export async function internalMutate<Data>(
     typeof _opts === 'boolean' ? { revalidate: _opts } : _opts || {}
   )
 
-  let populateCache = options.populateCache
 
   const rollbackOnErrorOption = options.rollbackOnError
-  let optimisticData = options.optimisticData
 
   const rollbackOnError = (error: unknown): boolean => {
     return typeof rollbackOnErrorOption === 'function'
@@ -88,6 +86,11 @@ export async function internalMutate<Data>(
   return mutateByKey(_key)
 
   async function mutateByKey(_k: Key): Promise<Data | undefined> {
+    // These are reassigned per key, so they must be scoped to each call to
+    // avoid one matched key leaking its computed value into the next one.
+    let populateCache = options.populateCache
+    let optimisticData = options.optimisticData
+
     // Serialize key
     const [key] = serialize(_k)
     if (!key) return
