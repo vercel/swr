@@ -30,20 +30,16 @@ describe('useSWR - promise', () => {
 
       const fetchData = createResponse('initial data', { delay: 100 })
 
-      // React 19 drops suspense retries scheduled inside a sync act scope, so
-      // components suspending on mount must be rendered in an awaited act.
-      await act(async () =>
-        renderWithConfig(
-          <SWRConfig
-            value={{
-              fallback: {
-                [key]: fetchData
-              }
-            }}
-          >
-            <Page />
-          </SWRConfig>
-        )
+      renderWithConfig(
+        <SWRConfig
+          value={{
+            fallback: {
+              [key]: fetchData
+            }
+          }}
+        >
+          <Page />
+        </SWRConfig>
       )
 
       await screen.findByText('data:initial data')
@@ -79,7 +75,7 @@ describe('useSWR - promise', () => {
         return <div>data:{data}</div>
       }
 
-      await act(async () => renderWithConfig(<Page />))
+      renderWithConfig(<Page />)
 
       await screen.findByText('data:initial data')
       await act(() => sleep(100)) // wait 100ms until the request inside finishes
@@ -108,20 +104,18 @@ describe('useSWR - promise', () => {
 
       const fetchData = createResponse('initial data', { delay: 100 })
 
-      await act(async () =>
-        renderWithConfig(
-          <SWRConfig
-            value={{
-              fallback: {
-                [key]: fetchData
-              }
-            }}
-          >
-            <Suspense fallback={<div>loading</div>}>
-              <Page />
-            </Suspense>
-          </SWRConfig>
-        )
+      renderWithConfig(
+        <SWRConfig
+          value={{
+            fallback: {
+              [key]: fetchData
+            }
+          }}
+        >
+          <Suspense fallback={<div>loading</div>}>
+            <Page />
+          </Suspense>
+        </SWRConfig>
       )
 
       await screen.findByText('loading')
@@ -149,22 +143,20 @@ describe('useSWR - promise', () => {
         delay: 100
       })
 
-      await act(async () =>
-        renderWithConfig(
-          <ErrorBoundary fallback={<div>error boundary</div>}>
-            <SWRConfig
-              value={{
-                fallback: {
-                  [key]: fetchDataError
-                }
-              }}
-            >
-              <Suspense fallback={<div>loading</div>}>
-                <Page />
-              </Suspense>
-            </SWRConfig>
-          </ErrorBoundary>
-        )
+      renderWithConfig(
+        <ErrorBoundary fallback={<div>error boundary</div>}>
+          <SWRConfig
+            value={{
+              fallback: {
+                [key]: fetchDataError
+              }
+            }}
+          >
+            <Suspense fallback={<div>loading</div>}>
+              <Page />
+            </Suspense>
+          </SWRConfig>
+        </ErrorBoundary>
       )
 
       await screen.findByText('loading')
@@ -187,21 +179,19 @@ describe('useSWR - promise', () => {
         delay: 100
       })
 
-      await act(async () =>
-        renderWithConfig(
-          <SWRConfig
-            value={{
-              fallback: {
-                [key]: fetchDataError
-              }
-            }}
-          >
-            <Suspense fallback={<div>loading</div>}>
-              <Comp />
-              <Comp />
-            </Suspense>
-          </SWRConfig>
-        )
+      renderWithConfig(
+        <SWRConfig
+          value={{
+            fallback: {
+              [key]: fetchDataError
+            }
+          }}
+        >
+          <Suspense fallback={<div>loading</div>}>
+            <Comp />
+            <Comp />
+          </Suspense>
+        </SWRConfig>
       )
 
       await screen.findByText('loading')

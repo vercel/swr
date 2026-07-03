@@ -1192,18 +1192,14 @@ describe('useSWRInfinite', () => {
           </>
         )
       }
-      // React 19 drops suspense retries scheduled inside a sync act scope, so
-      // renders and updates that suspend must happen in an awaited act.
-      await act(async () =>
-        renderWithConfig(
-          <Suspense fallback="loading">
-            <Page />
-          </Suspense>
-        )
+      renderWithConfig(
+        <Suspense fallback="loading">
+          <Page />
+        </Suspense>
       )
       await screen.findByText('data: A1,A2,A3')
 
-      await act(async () => fireEvent.click(screen.getByText('mutate')))
+      fireEvent.click(screen.getByText('mutate'))
       await screen.findByText('data: B1,B2,B3')
     }
   )

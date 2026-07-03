@@ -113,20 +113,16 @@ describe('useSWRInfinite - preload', () => {
       preload(getKey(0), fetcher)
       expect(fetcher).toHaveBeenCalledTimes(1)
 
-      // React 19 drops suspense retries scheduled inside a sync act scope, so
-      // components suspending on mount must be rendered in an awaited act.
-      await act(async () =>
-        renderWithConfig(
-          <Suspense
-            fallback={
-              <Profiler id={key} onRender={onRender}>
-                loading
-              </Profiler>
-            }
-          >
-            <Page />
-          </Suspense>
-        )
+      renderWithConfig(
+        <Suspense
+          fallback={
+            <Profiler id={key} onRender={onRender}>
+              loading
+            </Profiler>
+          }
+        >
+          <Page />
+        </Suspense>
       )
       await screen.findByText('data:foo')
       expect(onRender).toHaveBeenCalledTimes(1)

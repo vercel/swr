@@ -31,14 +31,10 @@ describe('useSWR - suspense', () => {
       return <div>{data}</div>
     }
 
-    // React 19 drops suspense retries scheduled inside a sync act scope, so
-    // components suspending on mount must be rendered in an awaited act.
-    await act(async () =>
-      renderWithConfig(
-        <Suspense fallback={<div>fallback</div>}>
-          <Section />
-        </Suspense>
-      )
+    renderWithConfig(
+      <Suspense fallback={<div>fallback</div>}>
+        <Section />
+      </Suspense>
     )
 
     // hydration
@@ -68,12 +64,10 @@ describe('useSWR - suspense', () => {
         return <div>{v1 + v2}</div>
       }
 
-      await act(async () =>
-        renderWithConfig(
-          <Suspense fallback={<div>fallback</div>}>
-            <Section />
-          </Suspense>
-        )
+      renderWithConfig(
+        <Suspense fallback={<div>fallback</div>}>
+          <Section />
+        </Suspense>
       )
 
       // hydration
@@ -93,12 +87,10 @@ describe('useSWR - suspense', () => {
       })
       return <div>{data}</div>
     }
-    await act(async () =>
-      renderWithConfig(
-        <Suspense fallback={<div>fallback</div>}>
-          <Section />
-        </Suspense>
-      )
+    renderWithConfig(
+      <Suspense fallback={<div>fallback</div>}>
+        <Section />
+      </Suspense>
     )
 
     await screen.findByText('hello')
@@ -119,14 +111,12 @@ describe('useSWR - suspense', () => {
     }
 
     // https://reactjs.org/docs/concurrent-mode-suspense.html#handling-errors
-    await act(async () =>
-      renderWithConfig(
-        <ErrorBoundary fallback={<div>error boundary</div>}>
-          <Suspense fallback={<div>fallback</div>}>
-            <Section />
-          </Suspense>
-        </ErrorBoundary>
-      )
+    renderWithConfig(
+      <ErrorBoundary fallback={<div>error boundary</div>}>
+        <Suspense fallback={<div>fallback</div>}>
+          <Section />
+        </Suspense>
+      </ErrorBoundary>
     )
 
     // hydration
@@ -214,22 +204,20 @@ describe('useSWR - suspense', () => {
       )
     }
 
-    await act(async () =>
-      renderWithConfig(
-        <Suspense
-          fallback={
-            <Profiler id={initialKey} onRender={onRender}>
-              <div>fallback</div>
-            </Profiler>
-          }
-        >
-          <Section />
-        </Suspense>
-      )
+    renderWithConfig(
+      <Suspense
+        fallback={
+          <Profiler id={initialKey} onRender={onRender}>
+            <div>fallback</div>
+          </Profiler>
+        }
+      >
+        <Section />
+      </Suspense>
     )
     await screen.findByText('fallback')
     await screen.findByText(`data: ${initialKey}`)
-    await act(async () => fireEvent.click(screen.getByText('change')))
+    fireEvent.click(screen.getByText('change'))
     await screen.findByText('fallback')
     await screen.findByText(`data: ${updatedKey}`)
     expect(onRender).toHaveBeenCalledTimes(2)
@@ -256,17 +244,15 @@ describe('useSWR - suspense', () => {
         return <div onClick={() => setKey(v => v + 1)}>{`${data},${key}`}</div>
       }
 
-      await act(async () =>
-        renderWithConfig(
-          <Suspense fallback={<div>fallback</div>}>
-            <Section />
-          </Suspense>
-        )
+      renderWithConfig(
+        <Suspense fallback={<div>fallback</div>}>
+          <Section />
+        </Suspense>
       )
 
       await screen.findByText('123,1')
 
-      await act(async () => fireEvent.click(screen.getByText('123,1')))
+      fireEvent.click(screen.getByText('123,1'))
 
       await screen.findByText('123,2')
 
@@ -314,14 +300,14 @@ describe('useSWR - suspense', () => {
         )
       }
 
-      await act(async () => renderWithConfig(<App />))
+      renderWithConfig(<App />)
 
       await screen.findByText(`${baseKey}-123`)
 
       act(() => setData(''))
       await screen.findByText(`${baseKey}-nodata`)
 
-      await act(async () => setData('456'))
+      act(() => setData('456'))
       await screen.findByText(`${baseKey}-456`)
 
       expect(renderedResults).toEqual([
@@ -369,21 +355,17 @@ describe('useSWR - suspense', () => {
         return <div>{data}</div>
       }
 
-      await act(async () =>
-        renderWithConfig(
-          <Suspense fallback={<div>fallback</div>}>
-            <Section />
-          </Suspense>
-        )
+      renderWithConfig(
+        <Suspense fallback={<div>fallback</div>}>
+          <Section />
+        </Suspense>
       )
 
       // hydration
       screen.getByText('fallback')
       await screen.findByText('SWR')
       await act(() => sleep(50)) // wait a moment to observe unnecessary renders
-      // React 19 replays the suspended render once more before committing,
-      // so the component body starts 3 times: suspend + replay + data.
-      expect(startRenderCount).toBe(3)
+      expect(startRenderCount).toBe(2) // fallback + data
       expect(renderCount).toBe(1) // data
     }
   )
@@ -446,7 +428,7 @@ describe('useSWR - suspense', () => {
 
       await screen.findByText('empty')
 
-      await act(async () => fireEvent.click(screen.getByRole('button')))
+      fireEvent.click(screen.getByRole('button'))
 
       screen.getByText('fallback')
 
@@ -485,7 +467,7 @@ describe('useSWR - suspense', () => {
           </>
         )
       }
-      await act(async () => renderWithConfig(<App />))
+      renderWithConfig(<App />)
       await act(() => sleep(200))
       await screen.findByText(`data: ${originKey}`)
       fireEvent.click(screen.getByText('change'))
