@@ -4,16 +4,22 @@ export type SWRSubscriptionOptions<Data = any, Error = any> = {
   next: (err?: Error | null, data?: Data | MutatorCallback<Data>) => void
 }
 
+type SWRSubscribeReturn = (() => void) | void
+type SWRSubscribeFn<Arg, Data, Error> = (
+  key: Arg,
+  { next }: SWRSubscriptionOptions<Data, Error>
+) => SWRSubscribeReturn | Promise<SWRSubscribeReturn>
+
 export type SWRSubscription<
   SWRSubKey extends Key = Key,
   Data = any,
   Error = any
 > = SWRSubKey extends () => infer Arg | null | undefined | false
-  ? (key: Arg, { next }: SWRSubscriptionOptions<Data, Error>) => void
+  ? SWRSubscribeFn<Arg, Data, Error>
   : SWRSubKey extends null | undefined | false
   ? never
   : SWRSubKey extends infer Arg
-  ? (key: Arg, { next }: SWRSubscriptionOptions<Data, Error>) => void
+  ? SWRSubscribeFn<Arg, Data, Error>
   : never
 
 export type SWRSubscriptionResponse<Data = any, Error = any> = {
