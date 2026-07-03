@@ -4,8 +4,12 @@ packages:
   - 'immutable'
   - 'infinite'
   - 'mutation'
+  - 'test/e2e/site'
 allowBuilds:
   '@swc/core': true
   sharp: true
   unrs-resolver: true
 minimumReleaseAge: 2880
+minimumReleaseAgeExclude:
+  - next
+  - '@next/*'

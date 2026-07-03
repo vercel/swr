@@ -96,16 +96,20 @@ describe('useSWR - fetcher', () => {
         )
       }
 
-      renderWithConfig(
-        <Suspense fallback="loading">
-          <Page />
-        </Suspense>
+      // React 19 drops suspense retries scheduled inside a sync act scope, so
+      // renders and updates that suspend must happen in an awaited act.
+      await act(async () =>
+        renderWithConfig(
+          <Suspense fallback="loading">
+            <Page />
+          </Suspense>
+        )
       )
       await screen.findByText('data:foo')
 
       // Change the fetcher and make sure the ref is updated.
       fetcher = () => 'bar'
-      fireEvent.click(screen.getByText('mutate'))
+      await act(async () => fireEvent.click(screen.getByText('mutate')))
 
       // Should fetch with the new fetcher.
       await screen.findByText('data:bar')

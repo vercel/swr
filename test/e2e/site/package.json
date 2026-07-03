@@ -1,0 +1,22 @@
+{
+  "name": "swr-e2e-site",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 4000",
+    "build": "next build",
+    "start": "next start -p 4000"
+  },
+  "dependencies": {
+    "next": "16.3.0-canary.76",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "swr": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.12.4",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "5.9.3"
+  }
+}

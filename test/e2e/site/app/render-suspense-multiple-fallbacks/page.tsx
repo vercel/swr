@@ -7,10 +7,10 @@ import { sleep } from '~/lib/sleep'
 
 async function fetchValue(key: string) {
   if (key === 'render-suspense-multiple-fallbacks-1') {
-    await sleep(50)
+    await sleep(200)
     return 1
   }
-  await sleep(140)
+  await sleep(600)
   return 2
 }
 

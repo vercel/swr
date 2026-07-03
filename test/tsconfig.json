@@ -15,5 +15,5 @@
     }
   },
   "include": [".", "./jest-setup.ts"],
-  "exclude": ["./type"]
+  "exclude": ["./type", "./e2e"]
 }

@@ -15,4 +15,6 @@ coverage
 .rollup.cache
 playwright-report
 test-results
-e2e/site/next-env.d.ts
+test/e2e/site/next-env.d.ts
+test/e2e/site/AGENTS.md
+test/e2e/site/CLAUDE.md

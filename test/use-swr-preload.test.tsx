@@ -91,16 +91,20 @@ describe('useSWR - preload', () => {
       preload(key, fetcher)
       expect(fetcher).toHaveBeenCalledTimes(1)
 
-      renderWithGlobalCache(
-        <Suspense
-          fallback={
-            <Profiler id={key} onRender={onRender}>
-              loading
-            </Profiler>
-          }
-        >
-          <Page />
-        </Suspense>
+      // React 19 drops suspense retries scheduled inside a sync act scope, so
+      // components suspending on mount must be rendered in an awaited act.
+      await act(async () =>
+        renderWithGlobalCache(
+          <Suspense
+            fallback={
+              <Profiler id={key} onRender={onRender}>
+                loading
+              </Profiler>
+            }
+          >
+            <Page />
+          </Suspense>
+        )
       )
       await screen.findByText('data:foo')
       expect(onRender).toHaveBeenCalledTimes(1)
@@ -134,10 +138,12 @@ describe('useSWR - preload', () => {
       preload(key1, fetcher1)
       preload(key2, fetcher2)
 
-      renderWithGlobalCache(
-        <Suspense fallback="loading">
-          <Page />
-        </Suspense>
+      await act(async () =>
+        renderWithGlobalCache(
+          <Suspense fallback="loading">
+            <Page />
+          </Suspense>
+        )
       )
       screen.getByText('loading')
       // Should avoid waterfall(50ms + 50ms)
