@@ -8,8 +8,8 @@ type PreloadFetcher<
 > = SWRKey extends () => infer Arg
   ? (arg: Arg) => FetcherResponse<Data>
   : SWRKey extends infer Arg
-  ? (arg: Arg) => FetcherResponse<Data>
-  : never
+    ? (arg: Arg) => FetcherResponse<Data>
+    : never
 
 export const preload = <
   Data = any,

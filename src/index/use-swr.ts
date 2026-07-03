@@ -79,14 +79,14 @@ const WITH_DEDUPE = { dedupe: true }
 type DefinitelyTruthy<T> = false extends T
   ? never
   : 0 extends T
-  ? never
-  : '' extends T
-  ? never
-  : null extends T
-  ? never
-  : undefined extends T
-  ? never
-  : T
+    ? never
+    : '' extends T
+      ? never
+      : null extends T
+        ? never
+        : undefined extends T
+          ? never
+          : T
 
 // React can only unwrap a thenable synchronously when it has React's thenable
 // status fields, so this fulfilled no-op keeps Suspense paths from waiting.

@@ -75,13 +75,13 @@ export type BareFetcher<Data = unknown> = (
 export type Fetcher<
   Data = unknown,
   SWRKey extends Key = Key
-> = SWRKey extends () => infer Arg | null | undefined | false
+> = SWRKey extends () => (infer Arg) | null | undefined | false
   ? (arg: Arg) => FetcherResponse<Data>
   : SWRKey extends null | undefined | false
-  ? never
-  : SWRKey extends infer Arg
-  ? (arg: Arg) => FetcherResponse<Data>
-  : never
+    ? never
+    : SWRKey extends infer Arg
+      ? (arg: Arg) => FetcherResponse<Data>
+      : never
 
 /**
  * Determines if data should block rendering based on suspense configuration.
@@ -108,12 +108,12 @@ export type BlockingData<
 > = SWRGlobalConfig extends { suspense: true }
   ? true
   : Options extends undefined
-  ? false
-  : Options extends { suspense: true }
-  ? true
-  : Options extends { fallbackData: Data | Promise<Data> }
-  ? true
-  : false
+    ? false
+    : Options extends { suspense: true }
+      ? true
+      : Options extends { fallbackData: Data | Promise<Data> }
+        ? true
+        : false
 
 /**
  * Configuration types that are only used internally, not exposed to the user.
@@ -951,10 +951,10 @@ export type MutatorWrapper<Fn> = Fn extends (
   ? Parameters[3] extends boolean
     ? Result
     : Parameters[3] extends Required<Pick<MutatorOptions, 'populateCache'>>
-    ? Parameters[3]['populateCache'] extends false
-      ? never
+      ? Parameters[3]['populateCache'] extends false
+        ? never
+        : Result
       : Result
-    : Result
   : never
 
 export type Mutator<Data = any> = MutatorWrapper<MutatorFn<Data>>

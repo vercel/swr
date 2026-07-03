@@ -15,7 +15,7 @@ export type SWRInfiniteFetcher<
   Data = any,
   KeyLoader extends SWRInfiniteKeyLoader = SWRInfiniteKeyLoader
 > = KeyLoader extends (...args: any[]) => any
-  ? ReturnType<KeyLoader> extends infer T | null | false | undefined
+  ? ReturnType<KeyLoader> extends (infer T) | null | false | undefined
     ? (args: T) => FetcherResponse<Data>
     : never
   : never
@@ -52,15 +52,19 @@ export type SWRInfiniteKeyedMutator<Data> = <MutationData = Data>(
   opts?: boolean | SWRInfiniteMutatorOptions<Data, MutationData>
 ) => Promise<Data | MutationData | undefined>
 
-export interface SWRInfiniteMutatorOptions<Data = any, MutationData = Data>
-  extends Omit<MutatorOptions<Data, MutationData>, 'revalidate'> {
+export interface SWRInfiniteMutatorOptions<
+  Data = any,
+  MutationData = Data
+> extends Omit<MutatorOptions<Data, MutationData>, 'revalidate'> {
   revalidate?:
     | boolean
     | SWRInfiniteRevalidateFn<Data extends unknown[] ? Data[number] : never>
 }
 
-export interface SWRInfiniteResponse<Data = any, Error = any>
-  extends Omit<SWRResponse<Data[], Error>, 'mutate'> {
+export interface SWRInfiniteResponse<Data = any, Error = any> extends Omit<
+  SWRResponse<Data[], Error>,
+  'mutate'
+> {
   size: number
   setSize: (
     size: number | ((_size: number) => number)
@@ -125,10 +129,9 @@ export interface SWRInfiniteHook {
         >
       | undefined
   ): SWRInfiniteResponse<Data, Error>
-  <Data = any, Error = any>(getKey: SWRInfiniteKeyLoader): SWRInfiniteResponse<
-    Data,
-    Error
-  >
+  <Data = any, Error = any>(
+    getKey: SWRInfiniteKeyLoader
+  ): SWRInfiniteResponse<Data, Error>
   <Data = any, Error = any>(
     getKey: SWRInfiniteKeyLoader,
     fetcher: BareFetcher<Data> | null
@@ -144,8 +147,10 @@ export interface SWRInfiniteHook {
   ): SWRInfiniteResponse<Data, Error>
 }
 
-export interface SWRInfiniteCacheValue<Data = any, Error = any>
-  extends State<Data, Error> {
+export interface SWRInfiniteCacheValue<Data = any, Error = any> extends State<
+  Data,
+  Error
+> {
   // We use cache to pass extra info (context) to fetcher so it can be globally
   // shared. The key of the context data is based on the first-page key.
   _i?: boolean
