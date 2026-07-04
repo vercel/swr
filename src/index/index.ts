@@ -18,6 +18,7 @@ export interface SWRGlobalConfig {
 // Types
 export type {
   SWRConfiguration,
+  SWRConfigValue,
   Revalidator,
   RevalidatorOptions,
   Key,
@@ -33,5 +34,6 @@ export type {
   Middleware,
   Arguments,
   State,
-  ScopedMutator
+  ScopedMutator,
+  CacheData
 } from '../_internal'

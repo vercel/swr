@@ -34,6 +34,16 @@ export type GlobalState = [
 export type FetcherResponse<Data = unknown> = Data | Promise<Data>
 
 /**
+ * Cache data produced on the server and consumed by SWRConfig on the client.
+ *
+ * @experimental
+ * @public
+ */
+export type CacheData<Data = any> = {
+  [key: string]: FetcherResponse<Data>
+}
+
+/**
  * Basic fetcher function that accepts any arguments and returns data or a promise.
  *
  * This is the most permissive fetcher type, allowing any number of arguments
@@ -65,13 +75,13 @@ export type BareFetcher<Data = unknown> = (
 export type Fetcher<
   Data = unknown,
   SWRKey extends Key = Key
-> = SWRKey extends () => infer Arg | null | undefined | false
+> = SWRKey extends () => (infer Arg) | null | undefined | false
   ? (arg: Arg) => FetcherResponse<Data>
   : SWRKey extends null | undefined | false
-  ? never
-  : SWRKey extends infer Arg
-  ? (arg: Arg) => FetcherResponse<Data>
-  : never
+    ? never
+    : SWRKey extends infer Arg
+      ? (arg: Arg) => FetcherResponse<Data>
+      : never
 
 /**
  * Determines if data should block rendering based on suspense configuration.
@@ -98,12 +108,12 @@ export type BlockingData<
 > = SWRGlobalConfig extends { suspense: true }
   ? true
   : Options extends undefined
-  ? false
-  : Options extends { suspense: true }
-  ? true
-  : Options extends { fallbackData: Data | Promise<Data> }
-  ? true
-  : false
+    ? false
+    : Options extends { suspense: true }
+      ? true
+      : Options extends { fallbackData: Data | Promise<Data> }
+        ? true
+        : false
 
 /**
  * Configuration types that are only used internally, not exposed to the user.
@@ -323,7 +333,14 @@ export type FullConfiguration<
   Data = any,
   Error = any,
   Fn extends Fetcher = BareFetcher
-> = InternalConfiguration & PublicConfiguration<Data, Error, Fn>
+> = InternalConfiguration &
+  PublicConfiguration<Data, Error, Fn> & {
+    /**
+     * server-loaded data to be consumed by client hooks and written into cache
+     * @experimental
+     */
+    cacheData?: CacheData<Data>
+  }
 
 /**
  * Provider configuration for custom focus and reconnect event handling.
@@ -934,10 +951,10 @@ export type MutatorWrapper<Fn> = Fn extends (
   ? Parameters[3] extends boolean
     ? Result
     : Parameters[3] extends Required<Pick<MutatorOptions, 'populateCache'>>
-    ? Parameters[3]['populateCache'] extends false
-      ? never
+      ? Parameters[3]['populateCache'] extends false
+        ? never
+        : Result
       : Result
-    : Result
   : never
 
 export type Mutator<Data = any> = MutatorWrapper<MutatorFn<Data>>
@@ -979,7 +996,20 @@ export type SWRConfiguration<
 > = Partial<PublicConfiguration<Data, Error, Fn>> &
   Partial<ProviderConfiguration> & {
     provider?: (cache: Readonly<Cache>) => Cache
+    cacheData?: never
   }
+
+export type SWRConfigValue<
+  Data = any,
+  Error = any,
+  Fn extends BareFetcher<any> = BareFetcher<any>
+> = Omit<SWRConfiguration<Data, Error, Fn>, 'cacheData'> & {
+  /**
+   * server-loaded data to be consumed by client hooks and written into cache
+   * @experimental
+   */
+  cacheData?: CacheData<Data>
+}
 
 export type IsLoadingResponse<
   Data = any,

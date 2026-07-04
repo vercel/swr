@@ -1,5 +1,9 @@
 import React, { useEffect, useLayoutEffect } from 'react'
-import { hasRequestAnimationFrame, isLegacyDeno, isWindowDefined } from './helper'
+import {
+  hasRequestAnimationFrame,
+  isLegacyDeno,
+  isWindowDefined
+} from './helper'
 
 export const IS_REACT_LEGACY = !React.useId
 

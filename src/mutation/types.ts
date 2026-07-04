@@ -10,13 +10,13 @@ export type MutationFetcher<
   Data = unknown,
   SWRKey extends Key = Key,
   ExtraArg = unknown
-> = SWRKey extends () => infer Arg | null | undefined | false
+> = SWRKey extends () => (infer Arg) | null | undefined | false
   ? (key: Arg, options: FetcherOptions<ExtraArg>) => FetcherResponse<Data>
   : SWRKey extends null | undefined | false
-  ? never
-  : SWRKey extends infer Arg
-  ? (key: Arg, options: FetcherOptions<ExtraArg>) => FetcherResponse<Data>
-  : never
+    ? never
+    : SWRKey extends infer Arg
+      ? (key: Arg, options: FetcherOptions<ExtraArg>) => FetcherResponse<Data>
+      : never
 
 export type SWRMutationConfiguration<
   Data,
@@ -181,8 +181,8 @@ export interface SWRMutationResponse<
   trigger: [ExtraArg] extends [never]
     ? TriggerWithoutArgs<Data, Error, SWRMutationKey, ExtraArg>
     : IsUndefinedIncluded<ExtraArg> extends true
-    ? TriggerWithOptionsArgs<Data, Error, SWRMutationKey, ExtraArg>
-    : TriggerWithArgs<Data, Error, SWRMutationKey, ExtraArg>
+      ? TriggerWithOptionsArgs<Data, Error, SWRMutationKey, ExtraArg>
+      : TriggerWithArgs<Data, Error, SWRMutationKey, ExtraArg>
   /**
    * Function to reset the mutation state (`data`, `error`, and `isMutating`).
    */
