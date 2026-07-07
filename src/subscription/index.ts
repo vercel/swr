@@ -90,6 +90,8 @@ export const subscription = (<Data = any, Error = any>(useSWRNext: SWRHook) =>
         if (!count) {
           const dispose = disposers.get(subscriptionKey)
           dispose?.()
+          disposers.delete(subscriptionKey)
+          subscriptions.delete(subscriptionKey)
         }
       }
     }, [subscriptionKey])
