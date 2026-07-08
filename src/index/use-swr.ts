@@ -180,11 +180,9 @@ export const useSWRHandler = <Data = any, Error = any>(
 
   // Resolve the fallback data from either the inline option, or the global provider.
   // If it's a promise, we simply let React suspend and resolve it for us.
-  const fallback = isUndefined(fallbackData)
-    ? isUndefined(config.fallback)
-      ? UNDEFINED
-      : config.fallback[key]
-    : fallbackData
+  const fallbackFromConfig =
+    isUndefined(fallbackData) && !isUndefined(config.fallback)
+  const fallback = fallbackFromConfig ? config.fallback[key] : fallbackData
   const configCacheData = !key ? UNDEFINED : config.cacheData?.[key]
   const req = key ? PRELOAD[key] : UNDEFINED
   // `cacheData` is request-scoped data provided by a Server Component through
@@ -325,13 +323,16 @@ export const useSWRHandler = <Data = any, Error = any>(
     _k: Key
     key: string
   } | null>(null)
+  const hasFallbackData =
+    fallbackFromConfig && isUndefined(cachedData) && !isUndefined(data)
 
   let returnedData = keepPreviousData
     ? isUndefined(cachedData)
-      ? // checking undefined to avoid null being fallback as well
-        isUndefined(laggyDataRef.current)
+      ? hasFallbackData
         ? data
-        : laggyDataRef.current
+        : isUndefined(laggyDataRef.current)
+          ? data
+          : laggyDataRef.current
       : cachedData
     : data
 
@@ -687,6 +688,8 @@ export const useSWRHandler = <Data = any, Error = any>(
     // it'll be the correct reference.
     if (!isUndefined(cachedData)) {
       laggyDataRef.current = cachedData
+    } else if (keepPreviousData && hasFallbackData) {
+      laggyDataRef.current = data
     }
   })
 

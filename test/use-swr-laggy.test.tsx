@@ -96,6 +96,58 @@ describe('useSWR - keep previous data', () => {
     ])
   })
 
+  it('should return fallback data again when switching back to a fallback key', async () => {
+    const key1 = createKey()
+    const key2 = createKey()
+    const fallbackData = 'fallback-data'
+    const fetcher = k => createResponse(`remote:${k}`, { delay: 50 })
+    const swrOptions = { keepPreviousData: true, revalidateIfStale: false }
+    function App() {
+      const [key, setKey] = useState(key1)
+      const { data } = useSWR(key, fetcher, swrOptions)
+      const toggleKey = () => setKey(key === key1 ? key2 : key1)
+      return <button onClick={toggleKey}>data:{data}</button>
+    }
+
+    renderWithConfig(<App />, { fallback: { [key1]: fallbackData } })
+    screen.getByText(`data:${fallbackData}`)
+
+    fireEvent.click(screen.getByText(`data:${fallbackData}`))
+    await act(() => sleep(100))
+    fireEvent.click(screen.getByText(`data:remote:${key2}`))
+    screen.getByText(`data:${fallbackData}`)
+  })
+
+  it('should use keyed fallback as previous data for a later key without fallback', async () => {
+    const key1 = createKey()
+    const key2 = createKey()
+    const key3 = createKey()
+    const fetcher = jest.fn(k => createResponse(`remote:${k}`, { delay: 50 }))
+    const swrOptions = { keepPreviousData: true, revalidateIfStale: false }
+    function App() {
+      const [key, setKey] = useState(key1)
+      const { data } = useSWR(key, fetcher, swrOptions)
+      const advanceKey = () => {
+        setKey(current => (current === key1 ? key2 : key3))
+      }
+      return <button onClick={advanceKey}>data:{data}</button>
+    }
+
+    renderWithConfig(<App />, {
+      fallback: { [key1]: 'fallback-one', [key2]: 'fallback-two' }
+    })
+    screen.getByText('data:fallback-one')
+
+    fireEvent.click(screen.getByText('data:fallback-one'))
+    screen.getByText('data:fallback-two')
+
+    fireEvent.click(screen.getByText('data:fallback-two'))
+    screen.getByText('data:fallback-two')
+    await screen.findByText(`data:remote:${key3}`)
+    expect(fetcher).toHaveBeenCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledWith(key3)
+  })
+
   it('should always return the latest data', async () => {
     const loggedData = []
     const fetcher = k => createResponse(k, { delay: 50 })
