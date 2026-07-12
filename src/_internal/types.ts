@@ -259,9 +259,10 @@ export interface PublicConfiguration<
    */
   strictServerPrefetchWarning?: boolean
   /**
-   * the fetcher function
+   * the fetcher function, or `null` to disable fetching (e.g. to override an
+   * inherited fetcher from `SWRConfig`)
    */
-  fetcher?: Fn
+  fetcher?: Fn | null
   /**
    * array of middleware functions
    * @see {@link https://swr.vercel.app/docs/middleware}

@@ -36,6 +36,28 @@ describe('useSWR - configs', () => {
     await screen.findByText('data: 1')
   })
 
+  it('should not fetch when the inherited fetcher is overridden with null', async () => {
+    const globalFetcher = jest.fn(() => 'global')
+    const key = createKey()
+
+    function Page() {
+      const { data, isLoading } = useSWR(key, null, { fetcher: null })
+      return (
+        <div>
+          data: {data === undefined ? 'undefined' : data},{' '}
+          {isLoading ? 'loading' : 'idle'}
+        </div>
+      )
+    }
+    renderWithConfig(<Page />, { fetcher: globalFetcher, dedupingInterval: 0 })
+
+    screen.getByText('data: undefined, idle')
+    await act(() => sleep(50))
+
+    screen.getByText('data: undefined, idle')
+    expect(globalFetcher).not.toHaveBeenCalled()
+  })
+
   it('should stop revalidations when config.isPaused returns true', async () => {
     const key = createKey()
     let value = 0

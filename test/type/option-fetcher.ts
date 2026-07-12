@@ -516,3 +516,11 @@ export function useReturnReadonlyTuple() {
     }
   )
 }
+
+export function useNullFetcherOverride() {
+  // `fetcher: null` disables fetching, overriding an inherited fetcher
+  // from `SWRConfig` (https://github.com/vercel/swr/issues/2888).
+  useSWR('/api/user', null, { fetcher: null })
+  useSWR<{ id: number }>('/api/', { fetcher: null })
+  useSWRInfinite<number[]>(() => '/api/', { fetcher: null })
+}
