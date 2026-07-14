@@ -710,6 +710,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       opts: {
         retryCount?: number
         dedupe?: boolean
+        revalidate?: boolean
       } = {}
     ) => {
       if (type == revalidateEvents.FOCUS_EVENT) {
@@ -730,6 +731,13 @@ export const useSWRHandler = <Data = any, Error = any>(
         return revalidate()
       } else if (type == revalidateEvents.ERROR_REVALIDATE_EVENT) {
         return revalidate(opts)
+      } else if (type == revalidateEvents.UNLOAD_EVENT) {
+        // The cache has been cleared: drop the previous data kept by
+        // `keepPreviousData` so it can't stay on screen.
+        laggyDataRef.current = UNDEFINED
+        if (opts.revalidate) {
+          return revalidate()
+        }
       }
       return
     }

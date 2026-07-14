@@ -23,7 +23,9 @@ export type GlobalState = [
   /** Cache setter function with prev/current value comparison */
   (key: string, value: any, prev: any) => void,
   /** Cache subscriber function that returns an unsubscribe function */
-  (key: string, callback: (current: any, prev: any) => void) => () => void
+  (key: string, callback: (current: any, prev: any) => void) => () => void,
+  /** Unloader function that clears the cache and notifies subscribers */
+  Unloader
 ]
 /**
  * Response type that can be returned by fetcher functions.
@@ -129,7 +131,35 @@ export interface InternalConfiguration {
   cache: Cache
   /** Scoped mutator function for updating cache entries */
   mutate: ScopedMutator
+  /** Unloader function bound to the cache for clearing all entries */
+  unload: Unloader
 }
+
+/**
+ * Options for the `unload` function.
+ *
+ * @public
+ */
+export interface UnloadOptions {
+  /**
+   * Whether to revalidate the keys of all mounted hooks after clearing the
+   * cache. When disabled, mounted hooks stay in the empty state until the
+   * next revalidation event (focus, reconnect, remount).
+   * @defaultValue true
+   */
+  revalidate?: boolean
+}
+
+/**
+ * Clears every entry in the cache — including the special `useSWRInfinite`
+ * and `useSWRSubscription` keys that key filters can't match — discards all
+ * in-flight requests and mutations, and notifies subscribers so mounted
+ * hooks re-render with the empty cache. Previous data kept on screen by
+ * `keepPreviousData` is dropped as well.
+ *
+ * @public
+ */
+export type Unloader = (options?: UnloadOptions) => void
 
 /**
  * Public configuration options for SWR.
@@ -1099,11 +1129,13 @@ export type RevalidateEvent =
   | typeof revalidateEvents.RECONNECT_EVENT
   | typeof revalidateEvents.MUTATE_EVENT
   | typeof revalidateEvents.ERROR_REVALIDATE_EVENT
+  | typeof revalidateEvents.UNLOAD_EVENT
 type RevalidateCallbackReturnType = {
   [revalidateEvents.FOCUS_EVENT]: void
   [revalidateEvents.RECONNECT_EVENT]: void
   [revalidateEvents.MUTATE_EVENT]: Promise<boolean>
   [revalidateEvents.ERROR_REVALIDATE_EVENT]: void
+  [revalidateEvents.UNLOAD_EVENT]: void
 }
 export type RevalidateCallback = <K extends RevalidateEvent>(
   type: K,

@@ -52,6 +52,7 @@ const SWRConfig: FC<
   if (cacheContext) {
     ;(extendedConfig as any).cache = cacheContext[0]
     ;(extendedConfig as any).mutate = cacheContext[1]
+    ;(extendedConfig as any).unload = cacheContext[4]
   }
 
   // Unsubscribe events.

@@ -4,7 +4,8 @@ import type {
   RevalidatorOptions,
   Revalidator,
   ScopedMutator,
-  Cache
+  Cache,
+  Unloader
 } from '../types'
 
 import { initCache } from './cache'
@@ -42,8 +43,14 @@ const onErrorRetry = (
 const compare = dequal
 
 // Default cache provider
-const [cache, mutate] = initCache(new Map()) as [Cache<any>, ScopedMutator]
-export { cache, mutate, compare }
+const [cache, mutate, , , unload] = initCache(new Map()) as [
+  Cache<any>,
+  ScopedMutator,
+  unknown,
+  unknown,
+  Unloader
+]
+export { cache, mutate, unload, compare }
 
 // Default config
 export const defaultConfig: FullConfiguration = mergeObjects(
@@ -72,6 +79,7 @@ export const defaultConfig: FullConfiguration = mergeObjects(
     isPaused: () => false,
     cache,
     mutate,
+    unload,
     fallback: {}
   },
   // use web preset by default
