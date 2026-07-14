@@ -25,7 +25,9 @@ export type GlobalState = [
   /** Cache subscriber function that returns an unsubscribe function */
   (key: string, callback: (current: any, prev: any) => void) => () => void,
   /** Unloader function that clears the cache and notifies subscribers */
-  Unloader
+  Unloader,
+  /** Unload generation, bumped on every unload to discard in-flight writes */
+  number
 ]
 /**
  * Response type that can be returned by fetcher functions.

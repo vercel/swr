@@ -113,6 +113,70 @@ describe('useSWR - unload', () => {
     expect(provider.size).toBe(0)
   })
 
+  it('should drop the previous data of every hook sharing the key', async () => {
+    const key = createKey()
+    let unload
+
+    function Item({ id }: { id: string }) {
+      const { data } = useSWR(key, () => 'value', {
+        keepPreviousData: true,
+        dedupingInterval: 0
+      })
+      return (
+        <div>
+          {id}:{data}
+        </div>
+      )
+    }
+
+    function Page() {
+      unload = useSWRConfig().unload
+      return (
+        <>
+          <Item id="a" />
+          <Item id="b" />
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />, { provider: () => provider })
+    await screen.findByText('a:value')
+    await screen.findByText('b:value')
+
+    await act(async () => unload({ revalidate: false }))
+
+    // Every hook on the key must reset its own previous data, not only the
+    // first registered one.
+    screen.getByText('a:')
+    screen.getByText('b:')
+  })
+
+  it('should discard in-flight infinite page requests resolving after unload', async () => {
+    const key = createKey()
+    let unload
+
+    function Page() {
+      unload = useSWRConfig().unload
+      const { data } = useSWRInfinite(
+        index => `${key}-${index}`,
+        infiniteKey => createResponse('page-' + infiniteKey, { delay: 50 })
+      )
+      return <div>data:{data ? data.join(',') : ''}</div>
+    }
+
+    renderWithConfig(<Page />, { provider: () => provider })
+    screen.getByText('data:')
+
+    // Unload while the page request is still in flight, then wait for it to
+    // resolve. Neither the page entry nor the `$inf$` meta entry may be
+    // restored by the resolved request.
+    await act(async () => unload({ revalidate: false }))
+    await act(() => sleep(80))
+
+    expect(provider.size).toBe(0)
+    screen.getByText('data:')
+  })
+
   it('should discard in-flight requests resolving after unload', async () => {
     const key = createKey()
     let unload

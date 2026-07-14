@@ -78,10 +78,14 @@ export const initCache = <Data = any>(
     }
 
     const unload: Unloader = unloadOptions => {
-      const [, MUTATION, FETCH, PRELOAD] = SWRGlobalState.get(
-        provider
-      ) as GlobalState
+      const state = SWRGlobalState.get(provider) as GlobalState
+      const [, MUTATION, FETCH, PRELOAD] = state
       const ts = getTimestamp()
+
+      // Bump the unload generation so in-flight writes that bypass the
+      // request markers (e.g. `useSWRInfinite` page responses) know to
+      // discard themselves when they resolve.
+      state[8]++
 
       // Invalidate all in-flight requests and mutations first, so nothing
       // that resolves after this point can write back to the cache: fetches
@@ -111,13 +115,15 @@ export const initCache = <Data = any>(
 
       // The unload event runs last so the fresh requests it may start are
       // not invalidated by the cleanup above. It always fires — even without
-      // revalidation — so hooks can drop the previous data kept by
-      // `keepPreviousData`.
+      // revalidation — and to every hook on the key, so each one can drop
+      // the previous data kept by `keepPreviousData`. Only the first hook
+      // revalidates, consistent with how mutations revalidate a key.
       const revalidate = !unloadOptions || unloadOptions.revalidate !== false
       for (const key in EVENT_REVALIDATORS) {
-        if (EVENT_REVALIDATORS[key][0]) {
-          EVENT_REVALIDATORS[key][0](revalidateEvents.UNLOAD_EVENT, {
-            revalidate
+        const revalidators = EVENT_REVALIDATORS[key]
+        for (let i = 0; i < revalidators.length; i++) {
+          revalidators[i](revalidateEvents.UNLOAD_EVENT, {
+            revalidate: revalidate && !i
           })
         }
       }
@@ -134,7 +140,8 @@ export const initCache = <Data = any>(
           mutate,
           setter,
           subscribe,
-          unload
+          unload,
+          0
         ])
         if (!IS_SERVER) {
           // When listening to the native events for auto revalidations,

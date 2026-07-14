@@ -132,6 +132,11 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
         // get the revalidate context
         const forceRevalidateAll = get()._i
         const shouldRevalidatePage = get()._r
+        // Capture the unload generation so page responses that resolve after
+        // an `unload()` call are not written back to the cleared cache.
+        const state = SWRGlobalState.get(cache) as GlobalState
+        const generation = state[8]
+        const unloaded = () => state[8] !== generation
         set({ _r: UNDEFINED })
 
         // return an array of page data
@@ -198,7 +203,9 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
                 // get the page data from the preload cache
                 pageData = await req
               }
-              setSWRCache({ data: pageData, _k: pageArg })
+              if (!unloaded()) {
+                setSWRCache({ data: pageData, _k: pageArg })
+              }
               data[i] = pageData
             }
             if (parallel) {
@@ -219,8 +226,12 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
           await Promise.all(revalidators.map(r => r()))
         }
 
-        // once we executed the data fetching based on the context, clear the context
-        set({ _i: UNDEFINED })
+        // once we executed the data fetching based on the context, clear the
+        // context. Skipped after an unload so the cleared meta entry isn't
+        // re-created.
+        if (!unloaded()) {
+          set({ _i: UNDEFINED })
+        }
 
         // return the data
         return data
