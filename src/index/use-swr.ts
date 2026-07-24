@@ -32,7 +32,6 @@ import type {
   SWRResponse,
   RevalidatorOptions,
   FullConfiguration,
-  SWRConfiguration,
   SWRHook,
   RevalidateEvent,
   StateDependencies,
@@ -80,16 +79,22 @@ const WITH_DEDUPE = { dedupe: true }
 type DefinitelyTruthy<T> = false extends T
   ? never
   : 0 extends T
-  ? never
-  : '' extends T
-  ? never
-  : null extends T
-  ? never
-  : undefined extends T
-  ? never
-  : T
+    ? never
+    : '' extends T
+      ? never
+      : null extends T
+        ? never
+        : undefined extends T
+          ? never
+          : T
 
+// React can only unwrap a thenable synchronously when it has React's thenable
+// status fields, so this fulfilled no-op keeps Suspense paths from waiting.
 const resolvedUndef = Promise.resolve(UNDEFINED)
+// @ts-ignore modify react promise status
+resolvedUndef.status = 'fulfilled'
+// @ts-ignore modify react promise value
+resolvedUndef.value = UNDEFINED
 const sub = () => noop
 /**
  * The core implementation of the useSWR hook.
@@ -122,7 +127,7 @@ const sub = () => noop
 export const useSWRHandler = <Data = any, Error = any>(
   _key: Key,
   fetcher: Fetcher<Data> | null,
-  config: FullConfiguration & SWRConfiguration<Data, Error>
+  config: FullConfiguration
 ) => {
   const {
     cache,
@@ -180,6 +185,13 @@ export const useSWRHandler = <Data = any, Error = any>(
       ? UNDEFINED
       : config.fallback[key]
     : fallbackData
+  const configCacheData = !key ? UNDEFINED : config.cacheData?.[key]
+  const req = key ? PRELOAD[key] : UNDEFINED
+  // `cacheData` is request-scoped data provided by a Server Component through
+  // `SWRConfig`'s context. It's only used when there's no in-flight client
+  // `preload()` response (`req`) for the same key.
+  const hasCacheData = isUndefined(req) && !isUndefined(configCacheData)
+  const preloadedData = hasCacheData ? configCacheData : req
 
   const isEqual = (prev: State<Data, any>, current: State<Data, any>) => {
     for (const _ in stateDependencies) {
@@ -218,6 +230,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         // If `revalidateOnMount` is set, we take the value directly.
         if (isInitialMount && !isUndefined(revalidateOnMount))
           return revalidateOnMount
+        if (suspense && hasCacheData) return false
         const data = !isUndefined(fallback) ? fallback : snapshot.data
         if (suspense) return isUndefined(data) || revalidateIfStale
         return isUndefined(data) || revalidateIfStale
@@ -297,7 +310,7 @@ export const useSWRHandler = <Data = any, Error = any>(
 
   const cachedData = cached.data
 
-  const data = isUndefined(cachedData)
+  let data = isUndefined(cachedData)
     ? fallback && isPromiseLike(fallback)
       ? use(fallback)
       : fallback
@@ -306,8 +319,14 @@ export const useSWRHandler = <Data = any, Error = any>(
 
   // Use a ref to store previously returned data. Use the initial data as its initial value.
   const laggyDataRef = useRef(data)
+  const rscPreloadConsumedRef = useRef(false)
+  const preloadCacheRef = useRef<{
+    data: Data | undefined
+    _k: Key
+    key: string
+  } | null>(null)
 
-  const returnedData = keepPreviousData
+  let returnedData = keepPreviousData
     ? isUndefined(cachedData)
       ? // checking undefined to avoid null being fallback as well
         isUndefined(laggyDataRef.current)
@@ -367,6 +386,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     // If `revalidateOnMount` is set, we take the value directly.
     if (isInitialMount && !isUndefined(revalidateOnMount))
       return revalidateOnMount
+    if (suspense && hasCacheData) return false
     // Under suspense mode, it will always fetch on render if there is no
     // stale data so no need to revalidate immediately mount it again.
     // If data exists, only revalidate if `revalidateIfStale` is true.
@@ -408,6 +428,11 @@ export const useSWRHandler = <Data = any, Error = any>(
       // If there is no ongoing concurrent request, or `dedupe` is not set, a
       // new request should be initiated.
       const shouldStartNewRequest = !FETCH[key] || !opts.dedupe
+      const shouldUseRSCPreload =
+        hasCacheData &&
+        !rscPreloadConsumedRef.current &&
+        !isUndefined(preloadedData) &&
+        isUndefined(getCache().data)
 
       /*
          For React 17
@@ -469,10 +494,18 @@ export const useSWRHandler = <Data = any, Error = any>(
 
           // Start the request and save the timestamp.
           // Key must be truthy if entering here.
+          if (shouldUseRSCPreload) {
+            rscPreloadConsumedRef.current = true
+          }
           FETCH[key] = [
-            currentFetcher(fnArg as DefinitelyTruthy<Key>),
+            shouldUseRSCPreload
+              ? preloadedData
+              : currentFetcher(fnArg as DefinitelyTruthy<Key>),
             getTimestamp()
           ]
+          if (shouldUseRSCPreload && PRELOAD[key]) {
+            delete PRELOAD[key]
+          }
         }
 
         // Wait until the ongoing request is done. Deduplication is also
@@ -633,6 +666,19 @@ export const useSWRHandler = <Data = any, Error = any>(
     []
   )
 
+  useIsomorphicLayoutEffect(() => {
+    const preloaded = preloadCacheRef.current
+    if (!preloaded) return
+
+    preloadCacheRef.current = null
+    if (isUndefined(getCache().data)) {
+      setCache({ data: preloaded.data, error: UNDEFINED, _k: preloaded._k })
+    }
+    if (PRELOAD[preloaded.key]) {
+      delete PRELOAD[preloaded.key]
+    }
+  })
+
   // The logic for updating refs.
   useIsomorphicLayoutEffect(() => {
     fetcherRef.current = fetcher
@@ -664,6 +710,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       opts: {
         retryCount?: number
         dedupe?: boolean
+        revalidate?: boolean
       } = {}
     ) => {
       if (type == revalidateEvents.FOCUS_EVENT) {
@@ -684,6 +731,13 @@ export const useSWRHandler = <Data = any, Error = any>(
         return revalidate()
       } else if (type == revalidateEvents.ERROR_REVALIDATE_EVENT) {
         return revalidate(opts)
+      } else if (type == revalidateEvents.UNLOAD_EVENT) {
+        // The cache has been cleared: drop the previous data kept by
+        // `keepPreviousData` so it can't stay on screen.
+        laggyDataRef.current = UNDEFINED
+        if (opts.revalidate) {
+          return revalidate()
+        }
       }
       return
     }
@@ -777,7 +831,12 @@ export const useSWRHandler = <Data = any, Error = any>(
     // SWR should throw when trying to use Suspense on the server with React 18,
     // without providing any fallback data. This causes hydration errors. See:
     // https://github.com/vercel/swr/issues/1832
-    if (!IS_REACT_LEGACY && IS_SERVER && hasKeyButNoData) {
+    if (
+      !IS_REACT_LEGACY &&
+      IS_SERVER &&
+      hasKeyButNoData &&
+      isUndefined(preloadedData)
+    ) {
       throw new Error('Fallback data is required when using Suspense in SSR.')
     }
 
@@ -788,18 +847,35 @@ export const useSWRHandler = <Data = any, Error = any>(
       unmountedRef.current = false
     }
 
-    const req = PRELOAD[key]
+    const shouldConsumePreload = !isUndefined(preloadedData) && hasKeyButNoData
+    let preloadData = UNDEFINED as Data | undefined
 
-    const mutateReq =
-      !isUndefined(req) && hasKeyButNoData ? boundMutate(req) : resolvedUndef
-    use(mutateReq)
+    if (shouldConsumePreload && hasCacheData) {
+      preloadData =
+        preloadedData && isPromiseLike(preloadedData)
+          ? use(preloadedData)
+          : preloadedData
+      data = preloadData
+      returnedData = preloadData
+
+      if (!IS_SERVER) {
+        rscPreloadConsumedRef.current = true
+        preloadCacheRef.current = { data: preloadData, _k: fnArg, key }
+      }
+    } else {
+      const mutateReq = shouldConsumePreload
+        ? boundMutate(preloadedData)
+        : resolvedUndef
+      use(mutateReq)
+    }
 
     if (!isUndefined(error) && hasKeyButNoData) {
       throw error
     }
-    const revalidation = hasKeyButNoData
-      ? revalidate(WITH_DEDUPE)
-      : resolvedUndef
+    const revalidation =
+      hasKeyButNoData && isUndefined(preloadData)
+        ? revalidate(WITH_DEDUPE)
+        : resolvedUndef
     if (!isUndefined(returnedData) && hasKeyButNoData) {
       // @ts-ignore modify react promise status
       revalidation.status = 'fulfilled'

@@ -6,6 +6,7 @@ export { SWRConfig } from './use-swr'
 export { unstable_serialize } from './serialize'
 export { useSWRConfig } from '../_internal'
 export { mutate } from '../_internal'
+export { unload } from '../_internal'
 export { preload } from '../_internal'
 
 // Config
@@ -18,6 +19,7 @@ export interface SWRGlobalConfig {
 // Types
 export type {
   SWRConfiguration,
+  SWRConfigValue,
   Revalidator,
   RevalidatorOptions,
   Key,
@@ -33,5 +35,8 @@ export type {
   Middleware,
   Arguments,
   State,
-  ScopedMutator
+  ScopedMutator,
+  Unloader,
+  UnloadOptions,
+  CacheData
 } from '../_internal'

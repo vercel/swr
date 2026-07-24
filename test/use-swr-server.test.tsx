@@ -4,10 +4,13 @@ import { screen, render } from '@testing-library/react'
 import { Suspense } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 
+// Keep React as the shared singleton while isolated module registries import SWR.
 // https://github.com/jestjs/jest/issues/11471
 jest.mock('react', () => jest.requireActual('react'))
 
 async function withServer(runner: () => Promise<void>) {
+  // Import SWR in a fresh module registry so server globals are observed at
+  // import time and module-level promises are not tagged by earlier tests.
   await jest.isolateModulesAsync(async () => {
     await runner()
   })
@@ -86,6 +89,42 @@ describe('useSWR - SSR', () => {
         await screen.findByText(
           'Fallback data is required when using Suspense in SSR.'
         )
+      })
+    })
+
+    it('should not suspend when fallbackData is a fulfilled promise', async () => {
+      await withServer(async () => {
+        // Import SWR inside the isolated module registry so earlier tests cannot
+        // hide this regression by letting React tag module-level thenables first.
+        const useSWR = (await import('swr')).default
+        const fallbackData = Promise.resolve('fallback data')
+        // React can pass already-fulfilled server promises as tagged thenables.
+        // This simulates that shape so the test isolates SWR's Suspense path.
+        // @ts-expect-error modify react promise status
+        fallbackData.status = 'fulfilled'
+        // @ts-expect-error modify react promise value
+        fallbackData.value = 'fallback data'
+
+        const Page = () => {
+          const { data } = useSWR('suspense-fulfilled-fallback', () => 'SWR', {
+            fallbackData,
+            // Avoid stale revalidation so the only suspend candidate is SWR's no-op promise.
+            revalidateIfStale: false,
+            suspense: true
+          })
+          return <div>{data}</div>
+        }
+
+        render(
+          <Suspense fallback={<div>loading</div>}>
+            <Page />
+          </Suspense>
+        )
+
+        // Any fallback render means SWR suspended despite fulfilled fallback data.
+        const loadingFallback = screen.queryByText('loading')
+        expect(loadingFallback === null).toBe(true)
+        screen.getByText('fallback data')
       })
     })
   })
