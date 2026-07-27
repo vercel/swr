@@ -140,6 +140,7 @@
     "@types/node": "^24.12.4",
     "@types/react": "^19.2.7",
     "@types/use-sync-external-store": "^1.5.0",
+    "@typescript/typescript6": "6.0.2",
     "bunchee": "^6.12.2",
     "husky": "9.1.7",
     "jest": "30.2.0",
@@ -153,7 +154,7 @@
     "rimraf": "6.1.2",
     "semver": "^7.5.1",
     "swr": "workspace:*",
-    "typescript": "5.9.3"
+    "typescript": "7.0.2"
   },
   "peerDependencies": {
     "react": "^16.11.0 || ^17.0.0 || ^18.0.0 || ^19.0.0"
