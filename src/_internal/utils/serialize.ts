@@ -22,8 +22,8 @@ export const serialize = (key: Key): [string, Arguments] => {
     typeof key == 'string'
       ? key
       : (Array.isArray(key) ? key.length : key)
-      ? stableHash(key)
-      : ''
+        ? stableHash(key)
+        : ''
 
   return [key, args]
 }
