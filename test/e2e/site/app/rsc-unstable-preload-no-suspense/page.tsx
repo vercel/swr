@@ -10,13 +10,18 @@ async function getServerData() {
   return 'SWR_RSC_PRELOAD_NO_SUSPENSE_MARKER_20260621'
 }
 
-export default async function Page() {
+export default async function Page({
+  searchParams
+}: {
+  searchParams: Promise<{ fetcher?: string }>
+}) {
   // Opt into dynamic rendering so each request preloads fresh server data.
   await connection()
 
   // Runtime resolves the react-server export; this app's type checker still
   // reads the default client preload signature.
   const cacheData = preload(key, getServerData) as unknown as CacheData<string>
+  const { fetcher } = await searchParams
 
-  return <ClientRoot cacheData={cacheData} />
+  return <ClientRoot cacheData={cacheData} withFetcher={fetcher !== 'none'} />
 }

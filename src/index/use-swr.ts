@@ -35,7 +35,8 @@ import type {
   SWRHook,
   RevalidateEvent,
   StateDependencies,
-  GlobalState
+  GlobalState,
+  CacheData
 } from '../_internal'
 
 const use =
@@ -75,6 +76,60 @@ const use =
   })
 
 const WITH_DEDUPE = { dedupe: true }
+
+type ConsumedCacheData = WeakMap<CacheData, Set<string>>
+
+const isCacheDataConsumed = (
+  consumedCacheData: ConsumedCacheData,
+  cacheData: CacheData | undefined,
+  key: string
+) => (cacheData ? consumedCacheData.get(cacheData)?.has(key) === true : false)
+
+const markCacheDataConsumed = (
+  consumedCacheData: ConsumedCacheData,
+  cacheData: CacheData | undefined,
+  key: string
+) => {
+  if (!cacheData) return
+
+  let consumedKeys = consumedCacheData.get(cacheData)
+  if (!consumedKeys) {
+    consumedKeys = new Set()
+    consumedCacheData.set(cacheData, consumedKeys)
+  }
+  consumedKeys.add(key)
+}
+
+const commitCacheData = <Data>({
+  value,
+  getCacheData,
+  canCommit,
+  setCache
+}: {
+  value: CacheData<Data>[string]
+  getCacheData: () => Data | undefined
+  canCommit: () => boolean
+  setCache: (
+    state: { data: Data; error: undefined } | { error: unknown }
+  ) => void
+}) => {
+  const commit = (
+    state: { data: Data; error: undefined } | { error: unknown }
+  ) => {
+    if (canCommit() && isUndefined(getCacheData())) {
+      setCache(state)
+    }
+  }
+
+  Promise.resolve(value).then(
+    data => {
+      commit({ data, error: UNDEFINED })
+    },
+    error => {
+      commit({ error })
+    }
+  )
+}
 
 type DefinitelyTruthy<T> = false extends T
   ? never
@@ -185,7 +240,8 @@ export const useSWRHandler = <Data = any, Error = any>(
       ? UNDEFINED
       : config.fallback[key]
     : fallbackData
-  const configCacheData = !key ? UNDEFINED : config.cacheData?.[key]
+  const serverCacheData = config.cacheData
+  const configCacheData = !key ? UNDEFINED : serverCacheData?.[key]
   const req = key ? PRELOAD[key] : UNDEFINED
   // `cacheData` is request-scoped data provided by a Server Component through
   // `SWRConfig`'s context. It's only used when there's no in-flight client
@@ -319,11 +375,17 @@ export const useSWRHandler = <Data = any, Error = any>(
 
   // Use a ref to store previously returned data. Use the initial data as its initial value.
   const laggyDataRef = useRef(data)
-  const rscPreloadConsumedRef = useRef(false)
+  const consumedCacheDataRef = useRef<ConsumedCacheData | undefined>(UNDEFINED)
+  let consumedCacheData = consumedCacheDataRef.current
+  if (!consumedCacheData) {
+    consumedCacheData = new WeakMap()
+    consumedCacheDataRef.current = consumedCacheData
+  }
   const preloadCacheRef = useRef<{
     data: Data | undefined
     _k: Key
     key: string
+    cacheData?: CacheData
   } | null>(null)
 
   let returnedData = keepPreviousData
@@ -430,7 +492,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       const shouldStartNewRequest = !FETCH[key] || !opts.dedupe
       const shouldUseRSCPreload =
         hasCacheData &&
-        !rscPreloadConsumedRef.current &&
+        !isCacheDataConsumed(consumedCacheData, serverCacheData, key) &&
         !isUndefined(preloadedData) &&
         isUndefined(getCache().data)
 
@@ -495,7 +557,7 @@ export const useSWRHandler = <Data = any, Error = any>(
           // Start the request and save the timestamp.
           // Key must be truthy if entering here.
           if (shouldUseRSCPreload) {
-            rscPreloadConsumedRef.current = true
+            markCacheDataConsumed(consumedCacheData, serverCacheData, key)
           }
           FETCH[key] = [
             shouldUseRSCPreload
@@ -671,6 +733,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     if (!preloaded) return
 
     preloadCacheRef.current = null
+    markCacheDataConsumed(consumedCacheData, preloaded.cacheData, preloaded.key)
     if (isUndefined(getCache().data)) {
       setCache({ data: preloaded.data, error: UNDEFINED, _k: preloaded._k })
     }
@@ -688,6 +751,30 @@ export const useSWRHandler = <Data = any, Error = any>(
     if (!isUndefined(cachedData)) {
       laggyDataRef.current = cachedData
     }
+  })
+
+  useIsomorphicLayoutEffect(() => {
+    if (
+      fetcher ||
+      !hasCacheData ||
+      isUndefined(preloadedData) ||
+      isCacheDataConsumed(consumedCacheData, serverCacheData, key) ||
+      !isUndefined(getCache().data)
+    ) {
+      return
+    }
+
+    markCacheDataConsumed(consumedCacheData, serverCacheData, key)
+    const mutation = MUTATION[key]
+    commitCacheData({
+      value: preloadedData,
+      getCacheData: () => getCache().data,
+      canCommit: () =>
+        !unmountedRef.current &&
+        key === keyRef.current &&
+        MUTATION[key] === mutation,
+      setCache: state => setCache({ ...state, _k: fnArg })
+    })
   })
 
   // After mounted or key changed.
@@ -859,8 +946,12 @@ export const useSWRHandler = <Data = any, Error = any>(
       returnedData = preloadData
 
       if (!IS_SERVER) {
-        rscPreloadConsumedRef.current = true
-        preloadCacheRef.current = { data: preloadData, _k: fnArg, key }
+        preloadCacheRef.current = {
+          data: preloadData,
+          _k: fnArg,
+          key,
+          cacheData: serverCacheData
+        }
       }
     } else {
       const mutateReq = shouldConsumePreload
