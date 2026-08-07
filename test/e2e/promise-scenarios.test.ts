@@ -127,6 +127,33 @@ test.describe('promise scenarios', () => {
     )
   })
 
+  test('hydrates preload cacheData without revalidating a fetcherless hook', async ({
+    page
+  }) => {
+    let clientFetcherCalls = 0
+    await page.exposeFunction('__SWR_RSC_CLIENT_FETCHER_CALLED__', () => {
+      clientFetcherCalls += 1
+    })
+
+    await page.goto('./rsc-unstable-preload-no-suspense?fetcher=none', {
+      waitUntil: 'commit'
+    })
+
+    await expect(page.getByTestId('data')).toHaveText(
+      'data:SWR_RSC_PRELOAD_NO_SUSPENSE_MARKER_20260621'
+    )
+    await expect(page.getByTestId('cache')).toHaveText(
+      'cache:SWR_RSC_PRELOAD_NO_SUSPENSE_MARKER_20260621'
+    )
+    await expect(page.getByTestId('loading')).toHaveText('loading:false')
+    await expect(page.getByTestId('validating')).toHaveText('validating:false')
+    await expect(page.getByTestId('successes')).toHaveText('successes:0')
+    await expect(page.getByTestId('client-fetches')).toHaveText(
+      'client fetches:0'
+    )
+    expect(clientFetcherCalls).toBe(0)
+  })
+
   test('does not leak preloaded cacheData across requests', async ({
     request
   }) => {

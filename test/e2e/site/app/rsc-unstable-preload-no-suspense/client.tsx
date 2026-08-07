@@ -7,10 +7,12 @@ import { key } from './key'
 
 function ClientData({
   fetcher,
-  clientFetches
+  clientFetches,
+  successes
 }: {
-  fetcher: () => Promise<string>
+  fetcher: (() => Promise<string>) | null
   clientFetches: number
+  successes: number
 }) {
   const { cache } = useSWRConfig()
   const { data, isLoading, isValidating, mutate } = useSWR(key, fetcher)
@@ -23,6 +25,7 @@ function ClientData({
       <div data-testid="validating">validating:{`${isValidating}`}</div>
       <div data-testid="cache">cache:{cachedData}</div>
       <div data-testid="client-fetches">client fetches:{clientFetches}</div>
+      <div data-testid="successes">successes:{successes}</div>
       <button data-testid="revalidate" onClick={() => void mutate()}>
         revalidate
       </button>
@@ -30,8 +33,15 @@ function ClientData({
   )
 }
 
-export function ClientRoot({ cacheData }: { cacheData: CacheData<string> }) {
+export function ClientRoot({
+  cacheData,
+  withFetcher = true
+}: {
+  cacheData: CacheData<string>
+  withFetcher?: boolean
+}) {
   const [clientFetches, setClientFetches] = useState(0)
+  const [successes, setSuccesses] = useState(0)
   const fetcher = useCallback(async () => {
     ;(
       window as typeof window & {
@@ -43,8 +53,17 @@ export function ClientRoot({ cacheData }: { cacheData: CacheData<string> }) {
   }, [])
 
   return (
-    <SWRConfig value={{ cacheData }}>
-      <ClientData fetcher={fetcher} clientFetches={clientFetches} />
+    <SWRConfig
+      value={{
+        cacheData,
+        onSuccess: () => setSuccesses(count => count + 1)
+      }}
+    >
+      <ClientData
+        fetcher={withFetcher ? fetcher : null}
+        clientFetches={clientFetches}
+        successes={successes}
+      />
     </SWRConfig>
   )
 }
