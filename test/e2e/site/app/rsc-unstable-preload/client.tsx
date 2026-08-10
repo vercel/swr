@@ -30,6 +30,7 @@ function ClientData({
 
 export function ClientRoot({ cacheData }: { cacheData: CacheData<string> }) {
   const [clientFetches, setClientFetches] = useState(0)
+  const [mounted, setMounted] = useState(true)
   const fetcher = useCallback(async () => {
     ;(
       window as typeof window & {
@@ -42,9 +43,17 @@ export function ClientRoot({ cacheData }: { cacheData: CacheData<string> }) {
 
   return (
     <SWRConfig value={{ cacheData }}>
-      <Suspense fallback={<div data-testid="fallback">loading</div>}>
-        <ClientData fetcher={fetcher} clientFetches={clientFetches} />
-      </Suspense>
+      <button
+        data-testid="toggle-mounted"
+        onClick={() => setMounted(current => !current)}
+      >
+        {mounted ? 'unmount' : 'mount'}
+      </button>
+      {mounted && (
+        <Suspense fallback={<div data-testid="fallback">loading</div>}>
+          <ClientData fetcher={fetcher} clientFetches={clientFetches} />
+        </Suspense>
+      )}
     </SWRConfig>
   )
 }

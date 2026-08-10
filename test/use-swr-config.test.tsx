@@ -11,6 +11,35 @@ import {
   sleep
 } from './utils'
 
+function renderSuspenseCacheData({
+  key,
+  fetcher,
+  revalidateIfStale,
+  revalidateOnMount
+}: {
+  key: string
+  fetcher: () => Promise<string>
+  revalidateIfStale?: boolean
+  revalidateOnMount?: boolean
+}) {
+  function Page() {
+    const { data } = useSWR(key, fetcher, {
+      suspense: true,
+      ...(revalidateIfStale === undefined ? {} : { revalidateIfStale }),
+      ...(revalidateOnMount === undefined ? {} : { revalidateOnMount })
+    })
+    return <div>data:{data}</div>
+  }
+
+  return renderWithGlobalCache(
+    <SWRConfig value={{ cacheData: { [key]: 'server data' } }}>
+      <Suspense fallback={<div>loading</div>}>
+        <Page />
+      </Suspense>
+    </SWRConfig>
+  )
+}
+
 describe('useSWR - configs', () => {
   it('should read the config fallback from the context', async () => {
     let value = 0
@@ -152,6 +181,99 @@ describe('useSWR - configs', () => {
       screen.getByText('data:server data')
       await act(() => sleep(50))
       expect(clientFetcher).toHaveBeenCalledTimes(0)
+    }
+  )
+
+  itShouldSkipForReactCanary(
+    'should revalidate on remount after suspense consumes cacheData',
+    async () => {
+      const key = createKey()
+      const clientFetcher = jest.fn(() => createResponse('client data'))
+
+      const firstRender = renderSuspenseCacheData({
+        key,
+        fetcher: clientFetcher
+      })
+
+      screen.getByText('data:server data')
+      await act(() => sleep(50))
+      expect(clientFetcher).not.toHaveBeenCalled()
+
+      firstRender.unmount()
+      renderSuspenseCacheData({ key, fetcher: clientFetcher })
+
+      await screen.findByText('data:client data')
+      expect(clientFetcher).toHaveBeenCalledTimes(1)
+    }
+  )
+
+  itShouldSkipForReactCanary(
+    'should respect revalidateIfStale after suspense consumes cacheData',
+    async () => {
+      const key = createKey()
+      const clientFetcher = jest.fn(() => createResponse('client data'))
+
+      const firstRender = renderSuspenseCacheData({
+        key,
+        fetcher: clientFetcher,
+        revalidateIfStale: false
+      })
+
+      screen.getByText('data:server data')
+      firstRender.unmount()
+      renderSuspenseCacheData({
+        key,
+        fetcher: clientFetcher,
+        revalidateIfStale: false
+      })
+
+      await act(() => sleep(50))
+      screen.getByText('data:server data')
+      expect(clientFetcher).not.toHaveBeenCalled()
+    }
+  )
+
+  itShouldSkipForReactCanary(
+    'should respect revalidateOnMount false after suspense consumes cacheData',
+    async () => {
+      const key = createKey()
+      const clientFetcher = jest.fn(() => createResponse('client data'))
+
+      const firstRender = renderSuspenseCacheData({
+        key,
+        fetcher: clientFetcher,
+        revalidateOnMount: false
+      })
+
+      screen.getByText('data:server data')
+      firstRender.unmount()
+      renderSuspenseCacheData({
+        key,
+        fetcher: clientFetcher,
+        revalidateOnMount: false
+      })
+
+      await act(() => sleep(50))
+      screen.getByText('data:server data')
+      expect(clientFetcher).not.toHaveBeenCalled()
+    }
+  )
+
+  itShouldSkipForReactCanary(
+    'should respect revalidateOnMount true when suspense consumes cacheData',
+    async () => {
+      const key = createKey()
+      const clientFetcher = jest.fn(() => createResponse('client data'))
+
+      renderSuspenseCacheData({
+        key,
+        fetcher: clientFetcher,
+        revalidateOnMount: true
+      })
+
+      screen.getByText('data:server data')
+      await screen.findByText('data:client data')
+      expect(clientFetcher).toHaveBeenCalledTimes(1)
     }
   )
 
