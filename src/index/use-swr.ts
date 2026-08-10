@@ -286,8 +286,10 @@ export const useSWRHandler = <Data = any, Error = any>(
         // If `revalidateOnMount` is set, we take the value directly.
         if (isInitialMount && !isUndefined(revalidateOnMount))
           return revalidateOnMount
-        if (suspense && hasCacheData) return false
         const data = !isUndefined(fallback) ? fallback : snapshot.data
+        // cacheData is consumed during the initial Suspense render. Once data
+        // is cached, fall through to the normal mount revalidation policy.
+        if (suspense && hasCacheData && isUndefined(data)) return false
         if (suspense) return isUndefined(data) || revalidateIfStale
         return isUndefined(data) || revalidateIfStale
       })()
@@ -448,7 +450,9 @@ export const useSWRHandler = <Data = any, Error = any>(
     // If `revalidateOnMount` is set, we take the value directly.
     if (isInitialMount && !isUndefined(revalidateOnMount))
       return revalidateOnMount
-    if (suspense && hasCacheData) return false
+    // cacheData satisfies the initial Suspense render without a duplicate
+    // request. Cached data on a later mount follows revalidateIfStale.
+    if (suspense && hasCacheData && hasKeyButNoData) return false
     // Under suspense mode, it will always fetch on render if there is no
     // stale data so no need to revalidate immediately mount it again.
     // If data exists, only revalidate if `revalidateIfStale` is true.

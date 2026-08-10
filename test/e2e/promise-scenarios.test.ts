@@ -71,9 +71,18 @@ test.describe('promise scenarios', () => {
     ).toHaveCount(0)
     expect(clientFetcherCalls).toBe(0)
 
-    await page.getByTestId('revalidate').click()
+    await page.getByTestId('toggle-mounted').click()
+    await expect(page.getByTestId('data')).toHaveCount(0)
+    await page.getByTestId('toggle-mounted').click()
 
     await expect.poll(() => clientFetcherCalls).toBe(1)
+    await expect(page.getByTestId('data')).toHaveText(
+      'data:CLIENT_FETCHER_RESULT_AFTER_TRIGGER'
+    )
+
+    await page.getByTestId('revalidate').click()
+
+    await expect.poll(() => clientFetcherCalls).toBe(2)
     await expect(page.getByTestId('data')).toHaveText(
       'data:CLIENT_FETCHER_RESULT_AFTER_TRIGGER'
     )
@@ -81,7 +90,7 @@ test.describe('promise scenarios', () => {
       'cache:CLIENT_FETCHER_RESULT_AFTER_TRIGGER'
     )
     await expect(page.getByTestId('client-fetches')).toHaveText(
-      'client fetches:1'
+      'client fetches:2'
     )
   })
 
