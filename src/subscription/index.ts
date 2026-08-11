@@ -90,6 +90,10 @@ export const subscription = (<Data = any, Error = any>(useSWRNext: SWRHook) =>
         if (!count) {
           const dispose = disposers.get(subscriptionKey)
           dispose?.()
+          // Remove stale entries so the Maps don't grow without bound when
+          // many distinct keys are used over the lifetime of the cache.
+          disposers.delete(subscriptionKey)
+          subscriptions.delete(subscriptionKey)
         }
       }
     }, [subscriptionKey])

@@ -321,4 +321,41 @@ describe('useSWRSubscription', () => {
       'The `subscribe` function must return a function to unsubscribe.'
     )
   })
+
+  it('should call subscribe again when key is re-used after all subscribers have unmounted', async () => {
+    // Regression test for https://github.com/vercel/swr/issues/4261:
+    // After the last subscriber unmounted, stale entries were left in the
+    // internal subscriptions and disposers Maps. A later remount of the same
+    // key read the leftover ref-count of 0 and correctly re-subscribed, but
+    // the Maps grew without bound — one dead entry per distinct key ever used.
+    const swrKey = createKey()
+    let subscribeCallCount = 0
+    let disposeCallCount = 0
+
+    function subscribe(_key, { next }) {
+      subscribeCallCount++
+      next(undefined, 'value-' + subscribeCallCount)
+      return () => {
+        disposeCallCount++
+      }
+    }
+
+    function Page() {
+      const { data } = useSWRSubscription(swrKey, subscribe)
+      return <div>{data}</div>
+    }
+
+    // First mount — subscribe called once.
+    const { unmount } = renderWithConfig(<Page />)
+    await screen.findByText('value-1')
+    expect(subscribeCallCount).toBe(1)
+    unmount()
+    expect(disposeCallCount).toBe(1)
+
+    // Re-mount after full unmount — subscribe must be called again because
+    // the previous dispose cleaned up the Map entries.
+    renderWithConfig(<Page />)
+    await screen.findByText('value-2')
+    expect(subscribeCallCount).toBe(2)
+  })
 })
