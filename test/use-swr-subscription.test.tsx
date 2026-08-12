@@ -321,4 +321,52 @@ describe('useSWRSubscription', () => {
       'The `subscribe` function must return a function to unsubscribe.'
     )
   })
+
+  it('should clean up the subscription state after the last subscriber unmounts', async () => {
+    const swrKey = createKey()
+
+    let subscribeCount = 0
+    let disposeCount = 0
+
+    function subscribe(key, { next }) {
+      ++subscribeCount
+      next(undefined, key)
+      return () => {
+        ++disposeCount
+      }
+    }
+
+    function Sub() {
+      useSWRSubscription(swrKey, subscribe)
+      useSWRSubscription(swrKey, subscribe)
+      useSWRSubscription(swrKey, subscribe)
+      return null
+    }
+
+    function Page() {
+      const [mounted, setMounted] = useState(true)
+      return (
+        <>
+          <button onClick={() => setMounted(v => !v)}>toggle</button>
+          {mounted ? <Sub /> : null}
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await act(() => sleep(10))
+
+    // Multiple hooks with the same key share a single subscription.
+    expect(subscribeCount).toBe(1)
+    expect(disposeCount).toBe(0)
+
+    // Unmounting the last subscriber disposes the subscription.
+    fireEvent.click(screen.getByText('toggle'))
+    expect(disposeCount).toBe(1)
+
+    // The state is fully cleaned up, so remounting starts fresh.
+    fireEvent.click(screen.getByText('toggle'))
+    expect(subscribeCount).toBe(2)
+    expect(disposeCount).toBe(1)
+  })
 })
