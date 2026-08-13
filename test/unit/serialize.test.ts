@@ -14,3 +14,15 @@ describe('SWR - unstable_serialize', () => {
     )
   })
 })
+
+describe('SWR - stableHash', () => {
+  it('should hash an invalid date to a string', async () => {
+    expect(typeof stableHash(new Date('invalid'))).toBe('string')
+  })
+
+  it('should not collide an invalid date with null', async () => {
+    expect(stableHash(['/api', new Date('invalid')])).not.toBe(
+      stableHash(['/api', null])
+    )
+  })
+})
