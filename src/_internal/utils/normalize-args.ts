@@ -7,9 +7,17 @@ export const normalize = <KeyType = Key, Data = any>(
     | [KeyType]
     | [KeyType, Fetcher<Data> | null]
     | [KeyType, SWRConfiguration | undefined]
-    | [KeyType, Fetcher<Data> | null, SWRConfiguration | undefined]
-): [KeyType, Fetcher<Data> | null, Partial<SWRConfiguration<Data>>] => {
-  return isFunction(args[1])
-    ? [args[0], args[1], args[2] || {}]
-    : [args[0], null, (args[1] === null ? args[2] : args[1]) || {}]
+    | [KeyType, Fetcher<Data> | null | undefined, SWRConfiguration | undefined]
+): [
+  KeyType,
+  Fetcher<Data> | null | undefined,
+  Partial<SWRConfiguration<Data>>
+] => {
+  if (isFunction(args[1])) {
+    return [args[0], args[1], args[2] || {}]
+  }
+
+  const fetcher = args[1] === null ? null : undefined
+  const config = args[1] === null || args[1] === undefined ? args[2] : args[1]
+  return [args[0], fetcher, config || {}]
 }
