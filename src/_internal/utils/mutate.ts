@@ -92,12 +92,22 @@ export async function internalMutate<Data>(
     const [key] = serialize(_k)
     if (!key) return
     const [get, set] = createCacheHelper<Data, MutateState<Data>>(cache, key)
-    const [EVENT_REVALIDATORS, MUTATION, FETCH, PRELOAD] = SWRGlobalState.get(
-      cache
-    ) as GlobalState
+    const [
+      EVENT_REVALIDATORS,
+      MUTATION,
+      FETCH,
+      PRELOAD,
+      ,
+      ,
+      ,
+      ,
+      ,
+      INFINITE_REVALIDATORS
+    ] = SWRGlobalState.get(cache) as GlobalState
 
     const startRevalidate = () => {
       const revalidators = EVENT_REVALIDATORS[key]
+      const infiniteRevalidators = INFINITE_REVALIDATORS[key]
       const revalidate = isFunction(options.revalidate)
         ? options.revalidate(get().data, _k)
         : options.revalidate !== false
@@ -106,10 +116,15 @@ export async function internalMutate<Data>(
         // requests will not be deduped.
         delete FETCH[key]
         delete PRELOAD[key]
+        const revalidations = []
         if (revalidators && revalidators[0]) {
-          return revalidators[0](revalidateEvents.MUTATE_EVENT).then(
-            () => get().data
-          )
+          revalidations.push(revalidators[0](revalidateEvents.MUTATE_EVENT))
+        }
+        if (infiniteRevalidators && infiniteRevalidators[0]) {
+          revalidations.push(infiniteRevalidators[0]())
+        }
+        if (revalidations.length) {
+          return Promise.all(revalidations).then(() => get().data)
         }
       }
       return get().data
