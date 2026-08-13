@@ -92,3 +92,67 @@ function runTests(propertyName) {
 
 runTests('window')
 runTests('document')
+
+describe('Web Preset isVisible', () => {
+  const globalSpy = {
+    window: undefined as any,
+    document: undefined as any
+  }
+
+  beforeEach(() => {
+    globalSpy.window = jest.spyOn(global, 'window', 'get')
+    globalSpy.document = jest.spyOn(global, 'document', 'get')
+    jest.resetModules()
+  })
+
+  afterEach(() => {
+    globalSpy.window.mockClear()
+    globalSpy.document.mockClear()
+  })
+
+  it('should return true when visibilityState is visible and window is focused', () => {
+    const target = createEventTarget()
+    ;(target as any).visibilityState = 'visible'
+    globalSpy.window.mockImplementation(() => target)
+    globalSpy.document.mockImplementation(() => target)
+
+    const { preset: p } = require('swr/_internal')
+    expect(p.isVisible()).toBe(true)
+  })
+
+  it('should return false when visibilityState is hidden', () => {
+    const target = createEventTarget()
+    ;(target as any).visibilityState = 'hidden'
+    globalSpy.window.mockImplementation(() => undefined)
+    globalSpy.document.mockImplementation(() => target)
+
+    const { preset: p } = require('swr/_internal')
+    expect(p.isVisible()).toBe(false)
+  })
+
+  it('should return false when window loses focus (Alt-Tab / OS-level window switch)', () => {
+    const target = createEventTarget()
+    ;(target as any).visibilityState = 'visible'
+    globalSpy.window.mockImplementation(() => target)
+    globalSpy.document.mockImplementation(() => target)
+
+    const { preset: p } = require('swr/_internal')
+    expect(p.isVisible()).toBe(true)
+
+    // Simulate Alt-Tab by emitting blur event on window
+    target.emit('blur')
+    expect(p.isVisible()).toBe(false)
+
+    // Simulate returning to the window
+    target.emit('focus')
+    expect(p.isVisible()).toBe(true)
+  })
+
+  it('should return true when document is not defined (server / React Native)', () => {
+    globalSpy.window.mockImplementation(() => undefined)
+    globalSpy.document.mockImplementation(() => undefined)
+
+    const { preset: p } = require('swr/_internal')
+    expect(p.isVisible()).toBe(true)
+  })
+})

@@ -12,6 +12,13 @@ import { isUndefined, noop } from './shared'
 let online = true
 const isOnline = () => online
 
+/**
+ * Track window focus state to handle OS-level window switches (Alt-Tab)
+ * where document.visibilityState may remain 'visible' but the window
+ * has lost focus. This ensures refreshWhenHidden works correctly.
+ */
+let focused = true
+
 // For node and React Native, `add/removeEventListener` doesn't exist on window.
 const [onWindowEvent, offWindowEvent] =
   isWindowDefined && window.addEventListener
@@ -23,7 +30,10 @@ const [onWindowEvent, offWindowEvent] =
 
 const isVisible = () => {
   const visibilityState = isDocumentDefined && document.visibilityState
-  return isUndefined(visibilityState) || visibilityState !== 'hidden'
+  if (!isUndefined(visibilityState) && visibilityState === 'hidden') {
+    return false
+  }
+  return focused
 }
 
 const initFocus = (callback: () => void) => {
@@ -32,11 +42,26 @@ const initFocus = (callback: () => void) => {
     document.addEventListener('visibilitychange', callback)
   }
   onWindowEvent('focus', callback)
+
+  // Track window focus/blur for OS-level window switches (Alt-Tab).
+  // visibilityState may remain 'visible' when alt-tabbing, so we track
+  // window focus state to ensure refreshWhenHidden works correctly.
+  const onFocus = () => {
+    focused = true
+  }
+  const onBlur = () => {
+    focused = false
+  }
+  onWindowEvent('focus', onFocus)
+  onWindowEvent('blur', onBlur)
+
   return () => {
     if (isDocumentDefined) {
       document.removeEventListener('visibilitychange', callback)
     }
     offWindowEvent('focus', callback)
+    offWindowEvent('focus', onFocus)
+    offWindowEvent('blur', onBlur)
   }
 }
 
