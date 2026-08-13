@@ -218,6 +218,46 @@ describe('useSWR - focus', () => {
     await screen.findByText('data: 1')
   })
 
+  it('should revalidate active hooks when another hook with the same key is paused', async () => {
+    let value = 0
+    const key = createKey()
+    const fetcher = () => value++
+
+    function PausedConsumer() {
+      useSWR(key, fetcher, {
+        dedupingInterval: 0,
+        focusThrottleInterval: 0,
+        isPaused: () => true
+      })
+      return null
+    }
+
+    function ActiveConsumer() {
+      const { data } = useSWR(key, fetcher, {
+        dedupingInterval: 0,
+        focusThrottleInterval: 0
+      })
+      return <div>data: {data}</div>
+    }
+
+    function Page() {
+      return (
+        <>
+          <PausedConsumer />
+          <ActiveConsumer />
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data: 0')
+
+    await waitForNextTick()
+    await focusWindow()
+
+    await screen.findByText('data: 1')
+  })
+
   it('should not revalidate on focus when key changes in the same tick', async () => {
     const fetchLogs = []
 
