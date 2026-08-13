@@ -9,7 +9,7 @@ import { serialize } from './serialize'
 import { cache } from './config'
 import { SWRGlobalState } from './global-state'
 import { isUndefined } from './shared'
-import { INFINITE_PREFIX } from '../constants'
+import { INFINITE_PREFIX, PRELOAD_ARG } from '../constants'
 import { IS_SERVER } from './env'
 
 // Basically same as Fetcher but without Conditional Fetching
@@ -44,6 +44,10 @@ export const preload = <
   }
 
   const req = fetcher(fnArg) as ReturnType<Fetcher>
+  // Tag with the original key args so wildcard mutate can match by them.
+  if (req && typeof req === 'object') {
+    ;(req as any)[PRELOAD_ARG] = fnArg
+  }
   PRELOAD[key] = req
   return req
 }
