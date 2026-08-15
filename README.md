@@ -81,6 +81,14 @@ library to handle that part.
 
 <br/>
 
+## Usage Trend
+
+[Usage Trend of swr](https://npm-compare.com/swr#timeRange=THREE_YEARS)
+  
+<a href="https://npm-compare.com/swr#timeRange=THREE_YEARS" target="_blank">
+  <img src="https://npm-compare.com/img/npm-trend/THREE_YEARS/swr.png" width="100%" alt="NPM Usage Trend of swr" />
+</a>
+
 ## Authors
 
 This library is created by the team behind [Next.js](https://nextjs.org), with contributions from our community:
