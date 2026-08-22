@@ -293,7 +293,7 @@ export interface PublicConfiguration<
   /**
    * the fetcher function
    */
-  fetcher?: Fn
+  fetcher?: Fn | null
   /**
    * array of middleware functions
    * @see {@link https://swr.vercel.app/docs/middleware}
