@@ -66,10 +66,10 @@ export const stableHash = (arg: any): string => {
     result = isDate
       ? arg.toJSON()
       : type == 'symbol'
-      ? arg.toString()
-      : type == 'string'
-      ? JSON.stringify(arg)
-      : '' + arg
+        ? arg.toString()
+        : type == 'string'
+          ? JSON.stringify(arg)
+          : '' + arg
   }
 
   return result

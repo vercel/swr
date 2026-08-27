@@ -8,13 +8,13 @@ export type SWRSubscription<
   SWRSubKey extends Key = Key,
   Data = any,
   Error = any
-> = SWRSubKey extends () => infer Arg | null | undefined | false
+> = SWRSubKey extends () => (infer Arg) | null | undefined | false
   ? (key: Arg, { next }: SWRSubscriptionOptions<Data, Error>) => void
   : SWRSubKey extends null | undefined | false
-  ? never
-  : SWRSubKey extends infer Arg
-  ? (key: Arg, { next }: SWRSubscriptionOptions<Data, Error>) => void
-  : never
+    ? never
+    : SWRSubKey extends infer Arg
+      ? (key: Arg, { next }: SWRSubscriptionOptions<Data, Error>) => void
+      : never
 
 export type SWRSubscriptionResponse<Data = any, Error = any> = {
   data?: Data

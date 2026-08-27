@@ -7,11 +7,12 @@ test.describe('suspense with undefined key', () => {
     // Should show content for undefined key (not suspense)
     await expect(page.getByText('empty')).toBeVisible()
 
-    // Click toggle to enable key
-    await page.getByRole('button', { name: 'toggle' }).click()
-
-    // Should show loading fallback when key becomes defined
-    await expect(page.getByText('fallback')).toBeVisible()
+    // Click toggle to enable key. A click that lands before hydration is
+    // dropped, so retry until the suspense fallback appears.
+    await expect(async () => {
+      await page.getByRole('button', { name: 'toggle' }).click()
+      await expect(page.getByText('fallback')).toBeVisible({ timeout: 300 })
+    }).toPass()
 
     // Should eventually show the fetched data
     await expect(page.getByText('SWR')).toBeVisible()

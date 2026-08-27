@@ -28,6 +28,10 @@ jobs:
           pnpm test-typing
   e2e:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [dev, prod]
     container:
       image: mcr.microsoft.com/playwright:v1.57.0-noble
     steps:
@@ -37,15 +41,19 @@ jobs:
       - name: Install
         uses: ./.github/workflows/install
 
-      - name: E2E Tests
+      - name: E2E Tests (${{ matrix.mode }})
+        env:
+          E2E_MODE: ${{ matrix.mode }}
         run: |
           pnpm clean
           pnpm build
-          pnpm build:e2e
+          if [ "${{ matrix.mode }}" = "prod" ]; then
+            pnpm build:e2e
+          fi
           pnpm test:e2e
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v7.0.1
         with:
-          name: playwright-report
-          path: playwright-report
+          name: playwright-report-${{ matrix.mode }}
+          path: test/e2e/playwright-report

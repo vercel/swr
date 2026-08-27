@@ -34,10 +34,11 @@ test.describe('suspense scenarios', () => {
     const fallback = page.getByTestId('fallback')
     await expect(fallback).toBeVisible()
 
-    await page.waitForTimeout(80)
+    // The first resource resolves at ~200ms, the second no earlier than
+    // ~600ms. The fallback must not be released by the first resolution alone.
+    await page.waitForTimeout(300)
     await expect(fallback).toBeVisible()
 
-    await page.waitForTimeout(120)
     await expect(page.getByTestId('data')).toHaveText('3')
   })
 
@@ -205,9 +206,13 @@ test.describe('suspense scenarios', () => {
 
     await expect(page.getByText('empty')).toBeVisible()
 
-    await page.getByRole('button', { name: 'toggle' }).click()
+    // A click that lands before hydration is dropped — retry until the
+    // suspense fallback appears.
+    await expect(async () => {
+      await page.getByRole('button', { name: 'toggle' }).click()
+      await expect(page.getByText('fallback')).toBeVisible({ timeout: 300 })
+    }).toPass()
 
-    await expect(page.getByText('fallback')).toBeVisible()
     await expect(page.getByText('SWR')).toBeVisible()
   })
 })

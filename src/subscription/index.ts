@@ -90,6 +90,11 @@ export const subscription = (<Data = any, Error = any>(useSWRNext: SWRHook) =>
         if (!count) {
           const dispose = disposers.get(subscriptionKey)
           dispose?.()
+
+          // Remove both entries, so the internal states only retain the
+          // subscription keys that currently have active subscribers.
+          subscriptions.delete(subscriptionKey)
+          disposers.delete(subscriptionKey)
         }
       }
     }, [subscriptionKey])

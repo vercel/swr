@@ -4,8 +4,8 @@ import { Suspense, useReducer } from 'react'
 import useSWR from 'swr'
 
 const fetcher = async (key: string) => {
-  // Add a small delay to simulate network request
-  await new Promise(resolve => setTimeout(resolve, 100))
+  // Delay long enough that tests can reliably observe the suspense fallback.
+  await new Promise(resolve => setTimeout(resolve, 500))
   return 'SWR'
 }
 

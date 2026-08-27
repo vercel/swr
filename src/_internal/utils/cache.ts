@@ -3,6 +3,7 @@ import { IS_SERVER } from './env'
 import { UNDEFINED, mergeObjects, noop } from './shared'
 import { internalMutate } from './mutate'
 import { SWRGlobalState } from './global-state'
+import { getTimestamp } from './timestamp'
 import * as revalidateEvents from '../events'
 
 import type {
@@ -11,7 +12,8 @@ import type {
   RevalidateEvent,
   RevalidateCallback,
   ProviderConfiguration,
-  GlobalState
+  GlobalState,
+  Unloader
 } from '../types'
 
 const revalidateAllKeys = (
@@ -27,8 +29,8 @@ export const initCache = <Data = any>(
   provider: Cache<Data>,
   options?: Partial<ProviderConfiguration>
 ):
-  | [Cache<Data>, ScopedMutator, () => void, () => void]
-  | [Cache<Data>, ScopedMutator]
+  | [Cache<Data>, ScopedMutator, () => void, () => void, Unloader]
+  | [Cache<Data>, ScopedMutator, undefined, undefined, Unloader]
   | undefined => {
   // The global state for a specific provider will be used to deduplicate
   // requests and store listeners. As well as a mutate function that is bound to
@@ -75,6 +77,58 @@ export const initCache = <Data = any>(
       }
     }
 
+    const unload: Unloader = unloadOptions => {
+      const state = SWRGlobalState.get(provider) as GlobalState
+      const [, MUTATION, FETCH, PRELOAD] = state
+      const ts = getTimestamp()
+
+      // Bump the unload generation so in-flight writes that bypass the
+      // request markers (e.g. `useSWRInfinite` page responses) know to
+      // discard themselves when they resolve.
+      state[8]++
+
+      // Invalidate all in-flight requests and mutations first, so nothing
+      // that resolves after this point can write back to the cache: fetches
+      // fail the concurrent request marker check, and mutations fail the
+      // timestamp race check. Mutation timestamps are overwritten instead of
+      // deleted because ongoing mutations read them on resolution.
+      for (const key in FETCH) delete FETCH[key]
+      for (const key in PRELOAD) delete PRELOAD[key]
+      for (const key in MUTATION) MUTATION[key] = [ts, ts]
+
+      // Delete all entries — including the special `useSWRInfinite` and
+      // `useSWRSubscription` keys — and notify the subscribers of each key
+      // so mounted hooks re-render with the empty cache. Subscribers receive
+      // the same empty state object that cache reads resolve to for missing
+      // entries.
+      const emptyState = {}
+      for (const key of [...provider.keys()]) {
+        const prev = provider.get(key)
+        provider.delete(key)
+        const subs = subscriptions[key]
+        if (subs) {
+          for (const fn of subs) {
+            fn(emptyState, prev)
+          }
+        }
+      }
+
+      // The unload event runs last so the fresh requests it may start are
+      // not invalidated by the cleanup above. It always fires — even without
+      // revalidation — and to every hook on the key, so each one can drop
+      // the previous data kept by `keepPreviousData`. Only the first hook
+      // revalidates, consistent with how mutations revalidate a key.
+      const revalidate = !unloadOptions || unloadOptions.revalidate !== false
+      for (const key in EVENT_REVALIDATORS) {
+        const revalidators = EVENT_REVALIDATORS[key]
+        for (let i = 0; i < revalidators.length; i++) {
+          revalidators[i](revalidateEvents.UNLOAD_EVENT, {
+            revalidate: revalidate && !i
+          })
+        }
+      }
+    }
+
     const initProvider = () => {
       if (!SWRGlobalState.has(provider)) {
         // Update the state if it's new, or if the provider has been extended.
@@ -85,7 +139,9 @@ export const initCache = <Data = any>(
           Object.create(null),
           mutate,
           setter,
-          subscribe
+          subscribe,
+          unload,
+          0
         ])
         if (!IS_SERVER) {
           // When listening to the native events for auto revalidations,
@@ -135,8 +191,9 @@ export const initCache = <Data = any>(
     // We might want to inject an extra layer on top of `provider` in the future,
     // such as key serialization, auto GC, etc.
     // For now, it's just a `Map` interface without any modifications.
-    return [provider, mutate, initProvider, unmount]
+    return [provider, mutate, initProvider, unmount, unload]
   }
 
-  return [provider, (SWRGlobalState.get(provider) as GlobalState)[4]]
+  const state = SWRGlobalState.get(provider) as GlobalState
+  return [provider, state[4], UNDEFINED, UNDEFINED, state[7]]
 }

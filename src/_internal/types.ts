@@ -23,7 +23,11 @@ export type GlobalState = [
   /** Cache setter function with prev/current value comparison */
   (key: string, value: any, prev: any) => void,
   /** Cache subscriber function that returns an unsubscribe function */
-  (key: string, callback: (current: any, prev: any) => void) => () => void
+  (key: string, callback: (current: any, prev: any) => void) => () => void,
+  /** Unloader function that clears the cache and notifies subscribers */
+  Unloader,
+  /** Unload generation, bumped on every unload to discard in-flight writes */
+  number
 ]
 /**
  * Response type that can be returned by fetcher functions.
@@ -32,6 +36,16 @@ export type GlobalState = [
  * @public
  */
 export type FetcherResponse<Data = unknown> = Data | Promise<Data>
+
+/**
+ * Cache data produced on the server and consumed by SWRConfig on the client.
+ *
+ * @experimental
+ * @public
+ */
+export type CacheData<Data = any> = {
+  [key: string]: FetcherResponse<Data>
+}
 
 /**
  * Basic fetcher function that accepts any arguments and returns data or a promise.
@@ -65,13 +79,13 @@ export type BareFetcher<Data = unknown> = (
 export type Fetcher<
   Data = unknown,
   SWRKey extends Key = Key
-> = SWRKey extends () => infer Arg | null | undefined | false
+> = SWRKey extends () => (infer Arg) | null | undefined | false
   ? (arg: Arg) => FetcherResponse<Data>
   : SWRKey extends null | undefined | false
-  ? never
-  : SWRKey extends infer Arg
-  ? (arg: Arg) => FetcherResponse<Data>
-  : never
+    ? never
+    : SWRKey extends infer Arg
+      ? (arg: Arg) => FetcherResponse<Data>
+      : never
 
 /**
  * Determines if data should block rendering based on suspense configuration.
@@ -98,12 +112,12 @@ export type BlockingData<
 > = SWRGlobalConfig extends { suspense: true }
   ? true
   : Options extends undefined
-  ? false
-  : Options extends { suspense: true }
-  ? true
-  : Options extends { fallbackData: Data | Promise<Data> }
-  ? true
-  : false
+    ? false
+    : Options extends { suspense: true }
+      ? true
+      : Options extends { fallbackData: Data | Promise<Data> }
+        ? true
+        : false
 
 /**
  * Configuration types that are only used internally, not exposed to the user.
@@ -119,7 +133,35 @@ export interface InternalConfiguration {
   cache: Cache
   /** Scoped mutator function for updating cache entries */
   mutate: ScopedMutator
+  /** Unloader function bound to the cache for clearing all entries */
+  unload: Unloader
 }
+
+/**
+ * Options for the `unload` function.
+ *
+ * @public
+ */
+export interface UnloadOptions {
+  /**
+   * Whether to revalidate the keys of all mounted hooks after clearing the
+   * cache. When disabled, mounted hooks stay in the empty state until the
+   * next revalidation event (focus, reconnect, remount).
+   * @defaultValue true
+   */
+  revalidate?: boolean
+}
+
+/**
+ * Clears every entry in the cache — including the special `useSWRInfinite`
+ * and `useSWRSubscription` keys that key filters can't match — discards all
+ * in-flight requests and mutations, and notifies subscribers so mounted
+ * hooks re-render with the empty cache. Previous data kept on screen by
+ * `keepPreviousData` is dropped as well.
+ *
+ * @public
+ */
+export type Unloader = (options?: UnloadOptions) => void
 
 /**
  * Public configuration options for SWR.
@@ -323,7 +365,14 @@ export type FullConfiguration<
   Data = any,
   Error = any,
   Fn extends Fetcher = BareFetcher
-> = InternalConfiguration & PublicConfiguration<Data, Error, Fn>
+> = InternalConfiguration &
+  PublicConfiguration<Data, Error, Fn> & {
+    /**
+     * server-loaded data to be consumed by client hooks and written into cache
+     * @experimental
+     */
+    cacheData?: CacheData<Data>
+  }
 
 /**
  * Provider configuration for custom focus and reconnect event handling.
@@ -934,10 +983,10 @@ export type MutatorWrapper<Fn> = Fn extends (
   ? Parameters[3] extends boolean
     ? Result
     : Parameters[3] extends Required<Pick<MutatorOptions, 'populateCache'>>
-    ? Parameters[3]['populateCache'] extends false
-      ? never
+      ? Parameters[3]['populateCache'] extends false
+        ? never
+        : Result
       : Result
-    : Result
   : never
 
 export type Mutator<Data = any> = MutatorWrapper<MutatorFn<Data>>
@@ -979,7 +1028,20 @@ export type SWRConfiguration<
 > = Partial<PublicConfiguration<Data, Error, Fn>> &
   Partial<ProviderConfiguration> & {
     provider?: (cache: Readonly<Cache>) => Cache
+    cacheData?: never
   }
+
+export type SWRConfigValue<
+  Data = any,
+  Error = any,
+  Fn extends BareFetcher<any> = BareFetcher<any>
+> = Omit<SWRConfiguration<Data, Error, Fn>, 'cacheData'> & {
+  /**
+   * server-loaded data to be consumed by client hooks and written into cache
+   * @experimental
+   */
+  cacheData?: CacheData<Data>
+}
 
 export type IsLoadingResponse<
   Data = any,
@@ -1069,11 +1131,13 @@ export type RevalidateEvent =
   | typeof revalidateEvents.RECONNECT_EVENT
   | typeof revalidateEvents.MUTATE_EVENT
   | typeof revalidateEvents.ERROR_REVALIDATE_EVENT
+  | typeof revalidateEvents.UNLOAD_EVENT
 type RevalidateCallbackReturnType = {
   [revalidateEvents.FOCUS_EVENT]: void
   [revalidateEvents.RECONNECT_EVENT]: void
   [revalidateEvents.MUTATE_EVENT]: Promise<boolean>
   [revalidateEvents.ERROR_REVALIDATE_EVENT]: void
+  [revalidateEvents.UNLOAD_EVENT]: void
 }
 export type RevalidateCallback = <K extends RevalidateEvent>(
   type: K,

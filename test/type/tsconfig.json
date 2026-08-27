@@ -3,7 +3,8 @@
   "compilerOptions": {
     "noEmit": true,
     "strict": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "types": ["node", "jest"]
   },
   "include": ["./**/*.ts", "./**/*.tsx"],
   "exclude": ["./suspense"]
