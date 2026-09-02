@@ -542,7 +542,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       const initialState: State<Data, Error> = { isValidating: true }
       // It is in the `isLoading` state, if and only if there is no cached data.
       // This bypasses fallback data and laggy data.
-      if (isUndefined(getCache().data)) {
+      if (isUndefined(getCache().data) && isUndefined(fallback)) {
         initialState.isLoading = true
       }
       try {
