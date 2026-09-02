@@ -244,3 +244,19 @@ export function useTestProviderConfig() {
     </GlobalSetting>
   )
 }
+
+export function useTestNullFetcher() {
+  // A `null` fetcher disables the request and overrides an inherited global
+  // fetcher, both as the hook argument and inside the options object.
+  const { data: data1 } = useSWR('/api', null)
+  expectType<any>(data1)
+
+  const { data: data2 } = useSWR('/api', { fetcher: null })
+  expectType<any>(data2)
+
+  const { data: data3 } = useSWR('/api', null, { fetcher: null })
+  expectType<any>(data3)
+
+  const configValue: SWRConfigValue = { fetcher: null }
+  expectType<SWRConfigValue>(configValue)
+}
