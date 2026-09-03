@@ -1957,4 +1957,82 @@ describe('useSWR - local mutation', () => {
     await screen.findByText('data2: updated')
     await screen.findByText('data3: <page3>')
   })
+
+  // The default compare must deeply compare Map/Set contents. `dequal/lite`
+  // treats them as empty objects (`{}`), so updates would be considered
+  // equal and no rerender would happen.
+  it('should rerender when mutating with a Map with different contents', async () => {
+    const key = createKey()
+    function Page() {
+      const { data, mutate: boundMutate } = useSWR(
+        key,
+        () => new Map([['count', 0]]),
+        { dedupingInterval: 0 }
+      )
+      return (
+        <button onClick={() => boundMutate(new Map([['count', 1]]), false)}>
+          count: {data ? data.get('count') : 'loading'}
+        </button>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('count: 0')
+
+    fireEvent.click(screen.getByText('count: 0'))
+    // With `dequal/lite`, both Maps are treated as `{}` and this update
+    // would be skipped without a rerender.
+    await screen.findByText('count: 1')
+  })
+
+  it('should rerender when mutating with a Set with different contents', async () => {
+    const key = createKey()
+    function Page() {
+      const { data, mutate: boundMutate } = useSWR(key, () => new Set(['a']), {
+        dedupingInterval: 0
+      })
+      return (
+        <button onClick={() => boundMutate(new Set(['a', 'b']), false)}>
+          items: {data ? Array.from(data).join(',') : 'loading'}
+        </button>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('items: a')
+
+    fireEvent.click(screen.getByText('items: a'))
+    // With `dequal/lite`, both Sets are treated as `{}` and this update
+    // would be skipped without a rerender.
+    await screen.findByText('items: a,b')
+  })
+
+  it('should keep the previous data when mutating with a deeply equal Map', async () => {
+    const key = createKey()
+    const dataRefs: Map<string, number>[] = []
+    function Page() {
+      const { data, mutate: boundMutate } = useSWR(
+        key,
+        () => new Map([['count', 0]]),
+        { dedupingInterval: 0 }
+      )
+      if (data) dataRefs.push(data)
+      return (
+        <button onClick={() => boundMutate(new Map([['count', 0]]), false)}>
+          count: {data ? data.get('count') : 'loading'}
+        </button>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('count: 0')
+
+    fireEvent.click(screen.getByText('count: 0'))
+    await act(() => sleep(20))
+    screen.getByText('count: 0')
+
+    // All rendered data should be the same reference since the new Map is
+    // deeply equal to the old one.
+    expect(dataRefs.every(ref => ref === dataRefs[0])).toBe(true)
+  })
 })
