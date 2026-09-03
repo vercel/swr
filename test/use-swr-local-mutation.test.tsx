@@ -1309,6 +1309,56 @@ describe('useSWR - local mutation', () => {
     expect(renderedData).toEqual([undefined, 0, 'bar', 0, 1])
   })
 
+  it('should rollback optimistic updates when the mutator throws synchronously', async () => {
+    const key = createKey()
+    const renderedData = []
+    let mutate
+
+    function Page() {
+      const { data, mutate: boundMutate } = useSWR(key, () =>
+        createResponse(0, { delay: 20 })
+      )
+      mutate = boundMutate
+      if (
+        !renderedData.length ||
+        renderedData[renderedData.length - 1] !== data
+      ) {
+        renderedData.push(data)
+      }
+      return <div>data: {String(data)}</div>
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data: 0')
+
+    // A synchronously-throwing mutator with optimisticData. revalidate:false so
+    // no re-fetch can mask a missing rollback. The optimistic value must be
+    // rolled back to the committed value (0), same as the async-rejection path.
+    try {
+      await executeWithoutBatching(() =>
+        mutate(
+          () => {
+            throw new Error('sync-baz')
+          },
+          {
+            optimisticData: 'bar',
+            revalidate: false,
+            rollbackOnError: true
+          }
+        )
+      )
+    } catch (e) {
+      expect(e.message).toEqual('sync-baz')
+    }
+
+    await sleep(30)
+    // The optimistic update must be rolled back: the final displayed value is
+    // the committed 0, not the optimistic 'bar'. Before the fix the cache was
+    // left stuck at 'bar' (rendered sequence [undefined, 0, 'bar']).
+    expect(renderedData[renderedData.length - 1]).toEqual(0)
+    expect(renderedData).not.toContain('bar')
+  })
+
   it('should not revert to optimistic data when rolling back', async () => {
     const key = createKey()
     const renderedData = []
