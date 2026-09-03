@@ -390,6 +390,23 @@ export const useSWRHandler = <Data = any, Error = any>(
     cacheData?: CacheData
   } | null>(null)
 
+  // Cache the pending revalidation promise for Suspense. React's `use()` throws
+    // the thenable back to the nearest boundary; it expects the same object at the
+    // same hook index across concurrent re-renders. Re-calling `revalidate()`
+    // returns a new promise each time, triggering an "uncached promise" warning.
+    // Keyed so a key change in the same hook instance starts a fresh fetch. (#4314)
+    const revalidationPromiseRef = useRef<{
+      key: string
+      promise: ReturnType<typeof revalidate>
+    } | null>(null)
+    const getRevalidationPromise = () => {
+      const cached = revalidationPromiseRef.current
+      if (cached && cached.key === key) return cached.promise
+      const promise = revalidate(WITH_DEDUPE)
+      revalidationPromiseRef.current = { key, promise }
+      return promise
+    }
+
   let returnedData = keepPreviousData
     ? isUndefined(cachedData)
       ? // checking undefined to avoid null being fallback as well
@@ -969,13 +986,16 @@ export const useSWRHandler = <Data = any, Error = any>(
     }
     const revalidation =
       hasKeyButNoData && isUndefined(preloadData)
-        ? revalidate(WITH_DEDUPE)
+        ? getRevalidationPromise()
         : resolvedUndef
     if (!isUndefined(returnedData) && hasKeyButNoData) {
       // @ts-ignore modify react promise status
       revalidation.status = 'fulfilled'
       // @ts-ignore modify react promise value
       revalidation.value = true
+      // The cached promise has been consumed; clear it so a future suspense
+      // re-fetch starts a fresh one. (#4314)
+      revalidationPromiseRef.current = null
     }
     use(revalidation)
   }
