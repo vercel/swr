@@ -3,6 +3,13 @@ import useSWRInfinite from 'swr/infinite'
 import { expectType, truthy } from './utils'
 import type { Equal } from '@type-challenges/utils'
 
+export function useNullFetcher() {
+  // null as 2nd positional arg disables fetching (#2888)
+  useSWR('key', null)
+  // null in config.fetcher also disables fetching (#2888)
+  useSWR('key', { fetcher: null })
+}
+
 export function useDataErrorGeneric() {
   useSWR<{ id: number }>('/api/', () => ({ id: 123 }))
   useSWR<string, any>('/api/', (key: string) => key)
