@@ -19,6 +19,7 @@ import type {
   TriggerWithoutArgs,
   TriggerWithOptionsArgs
 } from './types'
+import { useTransition } from './use-transition'
 
 const mutation = (<Data, Error>() =>
   (
@@ -36,12 +37,27 @@ const mutation = (<Data, Error>() =>
     const [stateRef, stateDependencies, setState] = useStateWithDeps<{
       data: Data | undefined
       error: Error | undefined
-      isMutating: boolean
     }>({
       data: UNDEFINED,
-      error: UNDEFINED,
-      isMutating: false
+      error: UNDEFINED
     })
+
+    // https://github.com/vercel/swr/issues/4247
+    //
+    // In short, when `trigger` is called within a transition (e.g. React's <form action /> action prop),
+    // any state update inside the transition (a.k.a. the `trigger` function) will be deferred/delayed until
+    // the transition finishes, which means async function is resolved/rejected.
+    //
+    // However, we don't want `isMutating` update (false -> true -> false) to be deferred/delayed, otherwise
+    // the UI won't be able to reflect the loading state.
+    //
+    // One way to do this is to use `useTransition`. In React 19, `useTransition`'s `isPending` can be used to
+    // track async transition resolved/rejected state. And `isPending` would be an urgent update that won't be
+    // deferred/delayed.
+    //
+    // React 18's `useTransition` doesn't support async function tracking. In React 16 and 17, there is no
+    // `useTransition` at all. A polyfill will be used.
+    const [isMutating, startMutation] = useTransition()
 
     const currentState = stateRef.current
 
@@ -71,21 +87,29 @@ const mutation = (<Data, Error>() =>
 
         ditchMutationsUntilRef.current = mutationStartedAt
 
-        setState({ isMutating: true })
+        const mutatePromise = mutate<Data>(
+          serializedKey,
+          (fetcherRef.current as any)(resolvedKey, { arg }),
+          // We must throw the error here so we can catch and update the states.
+          mergeObjects(options, { throwOnError: true })
+        )
+
+        // startTransition returns void, so we can only use it to track the async function state
+        startMutation(async () => {
+          try {
+            await mutatePromise
+          } catch {
+            // ignore error in transition state tracking
+          }
+        })
 
         try {
-          const data = await mutate<Data>(
-            serializedKey,
-            (fetcherRef.current as any)(resolvedKey, { arg }),
-            // We must throw the error here so we can catch and update the states.
-            mergeObjects(options, { throwOnError: true })
-          )
+          // actually get result from the mutation promise and handle potential error
+          const data = await mutatePromise
 
           // If it's reset after the mutation, we don't broadcast any state change.
           if (ditchMutationsUntilRef.current <= mutationStartedAt) {
-            startTransition(() =>
-              setState({ data, isMutating: false, error: undefined })
-            )
+            startTransition(() => setState({ data, error: undefined }))
             options.onSuccess?.(data as Data, serializedKey, options)
           }
           return data
@@ -93,9 +117,7 @@ const mutation = (<Data, Error>() =>
           // If it's reset after the mutation, we don't broadcast any state change
           // or throw because it's discarded.
           if (ditchMutationsUntilRef.current <= mutationStartedAt) {
-            startTransition(() =>
-              setState({ error: error as Error, isMutating: false })
-            )
+            startTransition(() => setState({ error: error as Error }))
             options.onError?.(error as Error, serializedKey, options)
             if (options.throwOnError) {
               throw error as Error
@@ -109,7 +131,7 @@ const mutation = (<Data, Error>() =>
 
     const reset = useCallback(() => {
       ditchMutationsUntilRef.current = getTimestamp()
-      setState({ data: UNDEFINED, error: UNDEFINED, isMutating: false })
+      setState({ data: UNDEFINED, error: UNDEFINED })
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
@@ -133,10 +155,7 @@ const mutation = (<Data, Error>() =>
         stateDependencies.error = true
         return currentState.error
       },
-      get isMutating() {
-        stateDependencies.isMutating = true
-        return currentState.isMutating
-      }
+      isMutating
     }
   }) as unknown as Middleware
 
