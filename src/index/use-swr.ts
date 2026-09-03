@@ -331,7 +331,9 @@ export const useSWRHandler = <Data = any, Error = any>(
           // with direct mutations to ensure the snapshot is always up-to-date
           // even for the unselected fields, but only trigger re-renders when
           // the selected fields are changed.
-          memorizedSnapshot.data = newSnapshot.data
+          if (!stateDependencies.data) {
+            memorizedSnapshot.data = newSnapshot.data
+          }
           memorizedSnapshot.isLoading = newSnapshot.isLoading
           memorizedSnapshot.isValidating = newSnapshot.isValidating
           memorizedSnapshot.error = newSnapshot.error
