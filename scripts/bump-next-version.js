@@ -1,44 +1,39 @@
-const fs = require('fs')
-const path = require('path')
-const { execSync } = require('child_process')
-const semver = require('semver')
+const fs = require('fs');
+const path = require('path');
+const { execSync } = require('child_process');
+const semver = require('semver');
 
-const packageJsonPath = path.join(__dirname, '../package.json')
-const packageJsonData = fs.readFileSync(packageJsonPath, 'utf8')
-const packageJson = JSON.parse(packageJsonData)
+const packageJsonPath = path.join(__dirname, '../package.json');
+const { version } = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+const { RELEASE_TYPE = 'beta', SEMVER_TYPE, DRY_RUN } = process.env;
 
-let version = packageJson.version
-const releaseType = process.env.RELEASE_TYPE || 'beta'
-const semverType = process.env.SEMVER_TYPE
-
-function bumpVersion(version) {
-  if (process.env.DRY_RUN) {
-    console.log(`npm version ${version}`)
+const bumpVersion = (version) => {
+  const cmd = `npm version ${version}`;
+  if (DRY_RUN) {
+    console.log(cmd);
   } else {
     try {
-      execSync(`npm version ${version}`, { stdio: 'inherit' })
+      execSync(cmd, { stdio: 'inherit' });
     } catch (error) {
-      console.error('Failed to execute npm version:', error)
-      process.exit(1)
+      console.error('Failed to execute npm version:', error);
+      process.exit(1);
     }
   }
-}
+};
 
-if (releaseType === 'beta') {
-  if (semver.prerelease(version)) {
-    version = semver.inc(version, 'prerelease')
+const updateVersion = () => {
+  if (RELEASE_TYPE === 'beta') {
+    return semver.inc(version, semver.prerelease(version) ? 'prerelease' : `pre${SEMVER_TYPE}`, 'beta');
+  } else if (RELEASE_TYPE === 'stable') {
+    if (!SEMVER_TYPE) {
+      console.error('Missing semver type. Expected "patch", "minor", or "major".');
+      process.exit(1);
+    }
+    return semver.inc(version, SEMVER_TYPE);
   } else {
-    version = semver.inc(version, 'pre' + semverType, 'beta')
+    console.error('Invalid release type. Expected "beta" or "stable".');
+    process.exit(1);
   }
-} else if (releaseType === 'stable') {
-  if (!semverType) {
-    console.error('Missing semver type. Expected "patch", "minor" or "major".')
-    process.exit(1)
-  }
-  version = semver.inc(version, semverType)
-} else {
-  console.error('Invalid release type. Expected "beta" or "stable".')
-  process.exit(1)
-}
+};
 
-bumpVersion(version)
+bumpVersion(updateVersion());
