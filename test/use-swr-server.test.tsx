@@ -1,7 +1,7 @@
 // This test case covers special environments such as React <= 17 and SSR.
 
 import { screen, render } from '@testing-library/react'
-import { Suspense } from 'react'
+import React, { Suspense } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 
 // Keep React as the shared singleton while isolated module registries import SWR.
@@ -91,6 +91,47 @@ describe('useSWR - SSR', () => {
         )
       })
     })
+
+    ;(React.use ? it.skip : it)(
+      'should preserve the SSR error when browser is supplied without native React.use',
+      async () => {
+        await withServer(async () => {
+          const consoleError = jest
+            .spyOn(console, 'error')
+            .mockImplementation(() => {})
+          const useSWR = (await import('swr')).default
+          const browser = jest.fn(() => ({}))
+          const fetcher = jest.fn(() => 'data')
+
+          function Page() {
+            useSWR('browser-without-native-use', fetcher, {
+              suspense: true,
+              unstable_browser: browser
+            })
+            return null
+          }
+
+          try {
+            render(
+              <ErrorBoundary
+                fallbackRender={({ error }) => <p>{error.message}</p>}
+              >
+                <Suspense fallback="loading">
+                  <Page />
+                </Suspense>
+              </ErrorBoundary>
+            )
+            await screen.findByText(
+              'Fallback data is required when using Suspense in SSR.'
+            )
+            expect(browser).not.toHaveBeenCalled()
+            expect(fetcher).not.toHaveBeenCalled()
+          } finally {
+            consoleError.mockRestore()
+          }
+        })
+      }
+    )
 
     it('should not suspend when fallbackData is a fulfilled promise', async () => {
       await withServer(async () => {

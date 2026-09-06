@@ -928,6 +928,15 @@ export const useSWRHandler = <Data = any, Error = any>(
       hasKeyButNoData &&
       isUndefined(preloadedData)
     ) {
+      if (React.use && config.unstable_browser) {
+        // The browser API returns an opaque usable, not a thenable. Only the
+        // native React.use implementation can consume it; never use our shim.
+        React.use(
+          config.unstable_browser(
+            'SWR: No server data was provided for this Suspense boundary.'
+          ) as Parameters<typeof React.use>[0]
+        )
+      }
       throw new Error('Fallback data is required when using Suspense in SSR.')
     }
 

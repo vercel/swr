@@ -280,6 +280,13 @@ export interface PublicConfiguration<
    */
   suspense?: boolean
   /**
+   * @experimental Pass React DOM's `browser` API to opt into browser-only
+   * rendering when Suspense has no server data. Requires a supporting React
+   * runtime and a Suspense boundary. Configure this in a Client Component.
+   * @see {@link https://react.dev/reference/react-dom/browser}
+   */
+  unstable_browser?: (reason?: string) => unknown
+  /**
    * initial data to be returned (note: ***This is per-hook***)
    * @see {@link https://swr.vercel.app/docs/with-nextjs}
    */
