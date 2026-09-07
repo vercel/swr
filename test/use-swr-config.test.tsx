@@ -710,4 +710,41 @@ describe('useSWR - configs', () => {
     // mount
     await screen.findByText('data: data')
   })
+
+  it('should read fallback by own property only', async () => {
+    const fetcher = () => createResponse('fetched')
+
+    function Page() {
+      const { data } = useSWR('constructor', fetcher)
+      return <div>data:{typeof data}</div>
+    }
+    renderWithConfig(<Page />, { fallback: {} })
+    screen.getByText('data:undefined')
+    await screen.findByText('data:string')
+  })
+
+  it('should still read an own fallback under a prototype name', () => {
+    function Page() {
+      const { data } = useSWR('toString', () => 'fetched')
+      return <div>data:{data}</div>
+    }
+    renderWithConfig(<Page />, { fallback: { toString: 'own' } })
+    screen.getByText('data:own')
+  })
+
+  it('should read cacheData by own property only', async () => {
+    const fetcher = () => createResponse('fetched')
+
+    function Page() {
+      const { data } = useSWR('valueOf', fetcher)
+      return <div>data:{typeof data}</div>
+    }
+    renderWithGlobalCache(
+      <SWRConfig value={{ cacheData: {} }}>
+        <Page />
+      </SWRConfig>
+    )
+    screen.getByText('data:undefined')
+    await screen.findByText('data:string')
+  })
 })
