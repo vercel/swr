@@ -139,6 +139,7 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^24.12.4",
     "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
     "@types/use-sync-external-store": "^1.5.0",
     "@typescript/typescript6": "6.0.2",
     "bunchee": "^7.0.0",
@@ -157,10 +158,19 @@
     "typescript": "7.0.2"
   },
   "peerDependencies": {
-    "react": "^16.11.0 || ^17.0.0 || ^18.0.0 || ^19.0.0"
+    "react": "^16.11.0 || ^17.0.0 || ^18.0.0 || ^19.0.0",
+    "react-dom": "^16.11.0 || ^17.0.0 || ^18.0.0 || ^19.0.0"
   },
   "dependencies": {
     "dequal": "^2.0.3",
     "use-sync-external-store": "^1.6.0"
+  },
+  "react-native": {
+    "react-dom": false
+  },
+  "peerDependenciesMeta": {
+    "react-dom": {
+      "optional": true
+    }
   }
 }

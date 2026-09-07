@@ -16,8 +16,7 @@ async function fetchInBrowser(key: string) {
 
 function BrowserData() {
   const { data } = useSWR('browser', fetchInBrowser, {
-    suspense: true,
-    unstable_browser: browser
+    suspense: true
   })
   return <div data-testid="browser-data">{data}</div>
 }
@@ -64,7 +63,6 @@ export default function Page() {
       </Suspense>
       <SWRConfig
         value={{
-          unstable_browser: browser,
           cacheData: { preloaded: 'preloaded data' }
         }}
       >

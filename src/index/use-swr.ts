@@ -1,5 +1,6 @@
 /// <reference types="react/experimental" />
 import React, { useCallback, useRef, useDebugValue, useMemo } from 'react'
+import ReactDOM from 'react-dom'
 import { useSyncExternalStore } from 'use-sync-external-store/shim'
 
 import {
@@ -74,6 +75,11 @@ const use =
         throw thenable
     }
   })
+
+// Keep the Canary API optional for older React DOM versions.
+const browser = (
+  ReactDOM as typeof ReactDOM & { browser?: (reason?: string) => unknown }
+).browser
 
 const WITH_DEDUPE = { dedupe: true }
 
@@ -928,11 +934,11 @@ export const useSWRHandler = <Data = any, Error = any>(
       hasKeyButNoData &&
       isUndefined(preloadedData)
     ) {
-      if (React.use && config.unstable_browser) {
+      if (React.use && typeof browser === 'function') {
         // The browser API returns an opaque usable, not a thenable. Only the
         // native React.use implementation can consume it; never use our shim.
         React.use(
-          config.unstable_browser(
+          browser(
             'SWR: No server data was provided for this Suspense boundary.'
           ) as Parameters<typeof React.use>[0]
         )

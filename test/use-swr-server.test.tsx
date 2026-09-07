@@ -99,14 +99,17 @@ describe('useSWR - SSR', () => {
           const consoleError = jest
             .spyOn(console, 'error')
             .mockImplementation(() => {})
-          const useSWR = (await import('swr')).default
           const browser = jest.fn(() => ({}))
+          jest.doMock('react-dom', () => ({
+            ...jest.requireActual('react-dom'),
+            browser
+          }))
+          const useSWR = (await import('swr')).default
           const fetcher = jest.fn(() => 'data')
 
           function Page() {
             useSWR('browser-without-native-use', fetcher, {
-              suspense: true,
-              unstable_browser: browser
+              suspense: true
             })
             return null
           }
@@ -127,6 +130,7 @@ describe('useSWR - SSR', () => {
             expect(browser).not.toHaveBeenCalled()
             expect(fetcher).not.toHaveBeenCalled()
           } finally {
+            jest.dontMock('react-dom')
             consoleError.mockRestore()
           }
         })
