@@ -186,6 +186,41 @@ describe('useSWR - preload', () => {
     await screen.findByText('data:foo')
   })
 
+  it('does not overwrite a newer mutation with older preloaded data', async () => {
+    const key = createKey()
+    const fetcher = jest
+      .fn()
+      .mockImplementationOnce(() => createResponse({ enabled: false }))
+      .mockImplementationOnce(() => createResponse({ enabled: true }))
+    let mutate
+
+    function Page({ show }: { show: boolean }) {
+      mutate = useSWRConfig().mutate
+      const result = show ? <Item /> : null
+      return result
+    }
+
+    function Item() {
+      const { data } = useSWR(key, fetcher)
+      return <div>enabled:{String(data?.enabled)}</div>
+    }
+
+    const { rerender } = renderWithGlobalCache(<Page show={false} />)
+
+    await preload(key, fetcher)
+    await act(() =>
+      mutate(key, current => ({ ...current, enabled: true }), {
+        revalidate: false
+      })
+    )
+
+    rerender(<Page show />)
+    await act(() => sleep(100))
+
+    screen.getByText('enabled:true')
+    expect(fetcher).toHaveBeenCalledTimes(2)
+  })
+
   it('dedupe requests during preloading', async () => {
     const key = createKey()
 
