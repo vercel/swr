@@ -1,6 +1,5 @@
 /// <reference types="react/experimental" />
 import React, { useCallback, useRef, useDebugValue, useMemo } from 'react'
-import ReactDOM from 'react-dom'
 import { useSyncExternalStore } from 'use-sync-external-store/shim'
 
 import {
@@ -76,10 +75,7 @@ const use =
     }
   })
 
-// Keep the Canary API optional for older React DOM versions.
-const browser = (
-  ReactDOM as typeof ReactDOM & { browser?: (reason?: string) => unknown }
-).browser
+const SSR_ERROR = 'No server data was provided for SWR Suspense.'
 
 const WITH_DEDUPE = { dedupe: true }
 
@@ -201,7 +197,8 @@ export const useSWRHandler = <Data = any, Error = any>(
     refreshWhenHidden,
     refreshWhenOffline,
     keepPreviousData,
-    strictServerPrefetchWarning
+    strictServerPrefetchWarning,
+    _suspenseBrowser
   } = config
 
   const [EVENT_REVALIDATORS, MUTATION, FETCH, PRELOAD] = SWRGlobalState.get(
@@ -934,16 +931,14 @@ export const useSWRHandler = <Data = any, Error = any>(
       hasKeyButNoData &&
       isUndefined(preloadedData)
     ) {
-      if (React.use && typeof browser === 'function') {
-        // The browser API returns an opaque usable, not a thenable. Only the
-        // native React.use implementation can consume it; never use our shim.
+      if (_suspenseBrowser) {
+        // The React DOM 19.3 integration supplies an opaque usable. Only the
+        // native React.use implementation can consume it.
         React.use(
-          browser(
-            'SWR: No server data was provided for this Suspense boundary.'
-          ) as Parameters<typeof React.use>[0]
+          _suspenseBrowser(SSR_ERROR) as Parameters<typeof React.use>[0]
         )
       }
-      throw new Error('Fallback data is required when using Suspense in SSR.')
+      throw new Error(SSR_ERROR)
     }
 
     // Always update fetcher and config refs even with the Suspense mode.

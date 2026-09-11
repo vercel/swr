@@ -1,0 +1,6 @@
+{
+  "main": "../../dist/infinite/suspense.js",
+  "module": "../../dist/infinite/suspense.mjs",
+  "types": "../../dist/infinite/suspense.d.ts",
+  "private": true
+}

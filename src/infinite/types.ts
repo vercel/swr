@@ -61,10 +61,11 @@ export interface SWRInfiniteMutatorOptions<
     | SWRInfiniteRevalidateFn<Data extends unknown[] ? Data[number] : never>
 }
 
-export interface SWRInfiniteResponse<Data = any, Error = any> extends Omit<
-  SWRResponse<Data[], Error>,
-  'mutate'
-> {
+export interface SWRInfiniteResponse<
+  Data = any,
+  Error = any,
+  Config = undefined
+> extends Omit<SWRResponse<Data[], Error, Config>, 'mutate'> {
   size: number
   setSize: (
     size: number | ((_size: number) => number)
@@ -72,7 +73,7 @@ export interface SWRInfiniteResponse<Data = any, Error = any> extends Omit<
   mutate: SWRInfiniteKeyedMutator<Data[]>
 }
 
-export interface SWRInfiniteHook {
+export interface SWRInfiniteHook<HookConfig = undefined> {
   <
     Data = any,
     Error = any,
@@ -82,7 +83,7 @@ export interface SWRInfiniteHook {
     ) => StrictTupleKey
   >(
     getKey: KeyLoader
-  ): SWRInfiniteResponse<Data, Error>
+  ): SWRInfiniteResponse<Data, Error, HookConfig>
   <
     Data = any,
     Error = any,
@@ -93,7 +94,7 @@ export interface SWRInfiniteHook {
   >(
     getKey: KeyLoader,
     fetcher: SWRInfiniteFetcher<Data, KeyLoader> | null
-  ): SWRInfiniteResponse<Data, Error>
+  ): SWRInfiniteResponse<Data, Error, HookConfig>
   <
     Data = any,
     Error = any,
@@ -110,7 +111,7 @@ export interface SWRInfiniteHook {
           SWRInfiniteFetcher<Data, KeyLoader>
         >
       | undefined
-  ): SWRInfiniteResponse<Data, Error>
+  ): SWRInfiniteResponse<Data, Error, HookConfig>
   <
     Data = any,
     Error = any,
@@ -128,23 +129,23 @@ export interface SWRInfiniteHook {
           SWRInfiniteFetcher<Data, KeyLoader>
         >
       | undefined
-  ): SWRInfiniteResponse<Data, Error>
+  ): SWRInfiniteResponse<Data, Error, HookConfig>
   <Data = any, Error = any>(
     getKey: SWRInfiniteKeyLoader
-  ): SWRInfiniteResponse<Data, Error>
+  ): SWRInfiniteResponse<Data, Error, HookConfig>
   <Data = any, Error = any>(
     getKey: SWRInfiniteKeyLoader,
     fetcher: BareFetcher<Data> | null
-  ): SWRInfiniteResponse<Data, Error>
+  ): SWRInfiniteResponse<Data, Error, HookConfig>
   <Data = any, Error = any>(
     getKey: SWRInfiniteKeyLoader,
     config: SWRInfiniteConfiguration<Data, Error, BareFetcher<Data>> | undefined
-  ): SWRInfiniteResponse<Data, Error>
+  ): SWRInfiniteResponse<Data, Error, HookConfig>
   <Data = any, Error = any>(
     getKey: SWRInfiniteKeyLoader,
     fetcher: BareFetcher<Data> | null,
     config: SWRInfiniteConfiguration<Data, Error, BareFetcher<Data>> | undefined
-  ): SWRInfiniteResponse<Data, Error>
+  ): SWRInfiniteResponse<Data, Error, HookConfig>
 }
 
 export interface SWRInfiniteCacheValue<Data = any, Error = any> extends State<

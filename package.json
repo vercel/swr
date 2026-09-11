@@ -42,6 +42,26 @@
         "default": "./dist/infinite/index.js"
       }
     },
+    "./infinite/suspense": {
+      "import": {
+        "types": "./dist/infinite/suspense.d.mts",
+        "default": "./dist/infinite/suspense.mjs"
+      },
+      "require": {
+        "types": "./dist/infinite/suspense.d.ts",
+        "default": "./dist/infinite/suspense.js"
+      }
+    },
+    "./suspense": {
+      "import": {
+        "types": "./dist/suspense/index.d.mts",
+        "default": "./dist/suspense/index.mjs"
+      },
+      "require": {
+        "types": "./dist/suspense/index.d.ts",
+        "default": "./dist/suspense/index.js"
+      }
+    },
     "./immutable": {
       "import": {
         "types": "./dist/immutable/index.d.mts",
@@ -87,6 +107,7 @@
   "files": [
     "dist",
     "infinite",
+    "suspense",
     "immutable",
     "subscription",
     "mutation",
@@ -158,15 +179,12 @@
     "typescript": "7.0.2"
   },
   "peerDependencies": {
-    "react": "^16.11.0 || ^17.0.0 || ^18.0.0 || ^19.0.0",
-    "react-dom": "^16.11.0 || ^17.0.0 || ^18.0.0 || ^19.0.0"
+    "react": ">=19.3.0",
+    "react-dom": ">=19.3.0"
   },
   "dependencies": {
     "dequal": "^2.0.3",
     "use-sync-external-store": "^1.6.0"
-  },
-  "react-native": {
-    "react-dom": false
   },
   "peerDependenciesMeta": {
     "react-dom": {

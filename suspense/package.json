@@ -1,0 +1,6 @@
+{
+  "main": "../dist/suspense/index.js",
+  "module": "../dist/suspense/index.mjs",
+  "types": "../dist/suspense/index.d.ts",
+  "private": true
+}

@@ -1,10 +1,9 @@
 'use client'
 
 import { Suspense } from 'react'
-// @ts-ignore React DOM's new Canary API is not in the installed types yet.
-import { browser } from 'react-dom'
-import useSWR, { SWRConfig } from 'swr'
-import useSWRInfinite from 'swr/infinite'
+import { SWRConfig } from 'swr'
+import useSWRSuspense from 'swr/suspense'
+import useSWRInfiniteSuspense from 'swr/infinite/suspense'
 
 async function fetchInBrowser(key: string) {
   if (typeof window === 'undefined') {
@@ -15,22 +14,17 @@ async function fetchInBrowser(key: string) {
 }
 
 function BrowserData() {
-  const { data } = useSWR('browser', fetchInBrowser, {
-    suspense: true
-  })
+  const { data } = useSWRSuspense('browser', fetchInBrowser)
   return <div data-testid="browser-data">{data}</div>
 }
 
 function InfiniteData() {
-  const { data } = useSWRInfinite(() => 'infinite', fetchInBrowser, {
-    suspense: true
-  })
+  const { data } = useSWRInfiniteSuspense(() => 'infinite', fetchInBrowser)
   return <div data-testid="infinite-data">{data?.join(',')}</div>
 }
 
 function ServerData() {
-  const { data } = useSWR('server', fetchInBrowser, {
-    suspense: true,
+  const { data } = useSWRSuspense('server', fetchInBrowser, {
     fallbackData: 'server data',
     revalidateIfStale: false
   })
@@ -38,24 +32,18 @@ function ServerData() {
 }
 
 function DisabledData() {
-  const { data } = useSWR(null, fetchInBrowser, { suspense: true })
+  const { data } = useSWRSuspense(null, fetchInBrowser)
   return <div data-testid="disabled-data">{data ?? 'disabled'}</div>
 }
 
 function PreloadedData() {
-  const { data } = useSWR('preloaded', fetchInBrowser, {
-    suspense: true,
+  const { data } = useSWRSuspense('preloaded', fetchInBrowser, {
     revalidateIfStale: false
   })
   return <div data-testid="preloaded-data">{data}</div>
 }
 
 export default function Page() {
-  // Fail visibly if the test runtime does not actually support the API.
-  if (typeof browser !== 'function') {
-    throw new Error('This test requires React DOM browser support')
-  }
-
   return (
     <>
       <Suspense fallback={<div data-testid="browser-fallback">loading</div>}>

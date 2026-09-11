@@ -135,6 +135,8 @@ export interface InternalConfiguration {
   mutate: ScopedMutator
   /** Unloader function bound to the cache for clearing all entries */
   unload: Unloader
+  /** React DOM 19.3 browser bailout, injected by the Suspense entry point. */
+  _suspenseBrowser?: (reason?: string) => unknown
 }
 
 /**
@@ -275,6 +277,7 @@ export interface PublicConfiguration<
   keepPreviousData?: boolean
   /**
    * @experimental  enable React Suspense mode
+   * @deprecated Import the React 19.3 integration from `swr/suspense` instead.
    * @defaultValue false
    * @see {@link https://swr.vercel.app/docs/suspense}
    */
@@ -439,7 +442,11 @@ export type ProviderConfiguration = {
  * )
  * ```
  */
-export interface SWRHook {
+type WithHookConfig<Options, HookConfig> = HookConfig extends undefined
+  ? Options
+  : Options & HookConfig
+
+export interface SWRHook<HookConfig = undefined> {
   /**
    * Basic usage with just a key. Requires a global fetcher to be configured,
    * or can be used for client-side state management without fetching.
@@ -456,7 +463,7 @@ export interface SWRHook {
    */
   <Data = any, Error = any, SWRKey extends Key = StrictKey>(
     key: SWRKey
-  ): SWRResponse<Data, Error>
+  ): SWRResponse<Data, Error, HookConfig>
 
   /**
    * Most common usage pattern with key and explicit fetcher function.
@@ -472,7 +479,7 @@ export interface SWRHook {
   <Data = any, Error = any, SWRKey extends Key = StrictKey>(
     key: SWRKey,
     fetcher: Fetcher<Data, SWRKey> | null
-  ): SWRResponse<Data, Error>
+  ): SWRResponse<Data, Error, HookConfig>
 
   /**
    * Key with fetcher using relaxed key constraints for dynamic or complex keys.
@@ -489,7 +496,7 @@ export interface SWRHook {
   <Data = any, Error = any, SWRKey extends Key = Key>(
     key: SWRKey,
     fetcher: Fetcher<Data, SWRKey> | null
-  ): SWRResponse<Data, Error>
+  ): SWRResponse<Data, Error, HookConfig>
 
   /**
    * Key-only with advanced configuration options and strict typing.
@@ -514,7 +521,7 @@ export interface SWRHook {
       | undefined
   >(
     key: SWRKey
-  ): SWRResponse<Data, Error, SWROptions>
+  ): SWRResponse<Data, Error, WithHookConfig<SWROptions, HookConfig>>
 
   /**
    * Key with fetcher and advanced configuration options with strict typing.
@@ -540,7 +547,7 @@ export interface SWRHook {
   >(
     key: SWRKey,
     fetcher: Fetcher<Data, SWRKey> | null
-  ): SWRResponse<Data, Error, SWROptions>
+  ): SWRResponse<Data, Error, WithHookConfig<SWROptions, HookConfig>>
 
   /**
    * Key with configuration object but no explicit fetcher. Uses global fetcher
@@ -571,7 +578,7 @@ export interface SWRHook {
   >(
     key: SWRKey,
     config: SWRConfigurationWithOptionalFallback<SWROptions>
-  ): SWRResponse<Data, Error, SWROptions>
+  ): SWRResponse<Data, Error, WithHookConfig<SWROptions, HookConfig>>
 
   /**
    * Complete signature with key, fetcher, and configuration options.
@@ -607,7 +614,7 @@ export interface SWRHook {
     key: SWRKey,
     fetcher: Fetcher<Data, SWRKey> | null,
     config: SWRConfigurationWithOptionalFallback<SWROptions>
-  ): SWRResponse<Data, Error, SWROptions>
+  ): SWRResponse<Data, Error, WithHookConfig<SWROptions, HookConfig>>
 
   /**
    * Simple key-only usage with flexible key types. Most permissive overload
@@ -620,7 +627,7 @@ export interface SWRHook {
    * const { data: settings } = useSWR({ endpoint: '/settings', version: 'v1' })
    * ```
    */
-  <Data = any, Error = any>(key: Key): SWRResponse<Data, Error>
+  <Data = any, Error = any>(key: Key): SWRResponse<Data, Error, HookConfig>
 
   /**
    * Key-only with configuration options using bare fetcher constraints.
@@ -641,7 +648,7 @@ export interface SWRHook {
       | undefined = SWRConfiguration<Data, Error, BareFetcher<Data>> | undefined
   >(
     key: Key
-  ): SWRResponse<Data, Error, SWROptions>
+  ): SWRResponse<Data, Error, WithHookConfig<SWROptions, HookConfig>>
 
   /**
    * Key with bare fetcher function that accepts any arguments.
@@ -663,7 +670,7 @@ export interface SWRHook {
   >(
     key: Key,
     fetcher: BareFetcher<Data> | null
-  ): SWRResponse<Data, Error, SWROptions>
+  ): SWRResponse<Data, Error, WithHookConfig<SWROptions, HookConfig>>
 
   /**
    * Key with configuration using relaxed fetcher typing constraints.
@@ -686,7 +693,7 @@ export interface SWRHook {
   >(
     key: Key,
     config: SWRConfigurationWithOptionalFallback<SWROptions>
-  ): SWRResponse<Data, Error, SWROptions>
+  ): SWRResponse<Data, Error, WithHookConfig<SWROptions, HookConfig>>
 
   /**
    * Complete signature with key, bare fetcher, and configuration.
@@ -715,7 +722,7 @@ export interface SWRHook {
     key: Key,
     fetcher: BareFetcher<Data> | null,
     config: SWRConfigurationWithOptionalFallback<SWROptions>
-  ): SWRResponse<Data, Error, SWROptions>
+  ): SWRResponse<Data, Error, WithHookConfig<SWROptions, HookConfig>>
 }
 
 /**
@@ -1047,10 +1054,10 @@ export type IsLoadingResponse<
   Data = any,
   Options = SWRDefaultOptions<Data>
 > = SWRGlobalConfig extends { suspense: true }
-  ? Options extends { suspense: true }
+  ? false
+  : Options extends { suspense: true }
     ? false
-    : false
-  : boolean
+    : boolean
 
 type SWRDefaultOptions<Data> = SWRConfiguration<Data, Error, Fetcher<Data, Key>>
 type SWRConfigurationWithOptionalFallback<Options> =
