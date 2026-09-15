@@ -191,7 +191,13 @@ export const initCache = <Data = any>(
     // We might want to inject an extra layer on top of `provider` in the future,
     // such as key serialization, auto GC, etc.
     // For now, it's just a `Map` interface without any modifications.
-    return [provider, mutate, initProvider, unmount, unload]
+    // The 4th element defers to a live read of `unmount` instead of freezing
+    // its current value: under StrictMode, the caller's effect can run
+    // cleanup-then-setup again before ever calling this, which re-invokes
+    // `initProvider` and reassigns `unmount` to a new closure over fresh
+    // listeners. A frozen snapshot here would keep pointing at the first,
+    // already-released set, leaking the second set's listeners forever.
+    return [provider, mutate, initProvider, () => unmount(), unload]
   }
 
   const state = SWRGlobalState.get(provider) as GlobalState
