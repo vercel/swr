@@ -27,7 +27,8 @@ export type GlobalState = [
   /** Unloader function that clears the cache and notifies subscribers */
   Unloader,
   /** Unload generation, bumped on every unload to discard in-flight writes */
-  number
+  number,
+  Record<string, (() => Promise<unknown>)[]>
 ]
 /**
  * Response type that can be returned by fetcher functions.

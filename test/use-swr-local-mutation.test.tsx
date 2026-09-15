@@ -1842,6 +1842,243 @@ describe('useSWR - local mutation', () => {
       [key, 'inf', 1]
     ])
   })
+
+  it('should revalidate all useSWRInfinite pages when the first page key matches', async () => {
+    const key = createKey()
+    const fetchCounts = [0, 0]
+    let version = 0
+    let mutate
+
+    function Page() {
+      mutate = useSWRConfig().mutate
+      const { data } = useSWRInfinite(
+        index => `${key}-page-${index}`,
+        pageKey => {
+          const page = Number(pageKey.slice(pageKey.lastIndexOf('-') + 1))
+          fetchCounts[page]++
+          return createResponse(`page-${page}-v${version}`)
+        },
+        { initialSize: 2 }
+      )
+
+      return <div>data:{data?.join(',')}</div>
+    }
+
+    renderWithConfig(<Page />)
+
+    await screen.findByText('data:page-0-v0,page-1-v0')
+    expect(fetchCounts).toEqual([1, 1])
+
+    let results
+    await act(async () => {
+      results = await mutate(() => false)
+    })
+
+    expect(results).toEqual([])
+    expect(fetchCounts).toEqual([1, 1])
+    screen.getByText('data:page-0-v0,page-1-v0')
+
+    let resultsAfterMatch
+    version = 1
+    await act(async () => {
+      resultsAfterMatch = await mutate(k => k === `${key}-page-0`)
+    })
+
+    expect(resultsAfterMatch).toEqual(['page-0-v1'])
+    expect(fetchCounts).toEqual([2, 2])
+    screen.getByText('data:page-0-v1,page-1-v1')
+  })
+
+  it('should revalidate useSWRInfinite with an original array key', async () => {
+    const key = createKey()
+    const fetchCounts = [0, 0]
+    const matchedKeys = []
+    let version = 0
+    let mutate
+
+    function Page() {
+      mutate = useSWRConfig().mutate
+      const { data } = useSWRInfinite(
+        index => [key, index],
+        ([, page]) => {
+          fetchCounts[page]++
+          return createResponse(`page-${page}-v${version}`)
+        },
+        { initialSize: 2 }
+      )
+
+      return <div>data:{data?.join(',')}</div>
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data:page-0-v0,page-1-v0')
+
+    version = 1
+    await act(async () => {
+      await mutate(k => {
+        matchedKeys.push(k)
+        return Array.isArray(k) && k[0] === key && k[1] === 0
+      })
+    })
+
+    expect(matchedKeys).toEqual([
+      [key, 0],
+      [key, 1]
+    ])
+    expect(fetchCounts).toEqual([2, 2])
+    screen.getByText('data:page-0-v1,page-1-v1')
+  })
+
+  it('should not revalidate useSWRInfinite when revalidation is disabled', async () => {
+    const key = createKey()
+    const fetchCounts = [0, 0]
+    let mutate
+
+    function Page() {
+      mutate = useSWRConfig().mutate
+      const { data } = useSWRInfinite(
+        index => `${key}-${index}`,
+        pageKey => {
+          const page = Number(pageKey.slice(pageKey.lastIndexOf('-') + 1))
+          fetchCounts[page]++
+          return createResponse(pageKey)
+        },
+        { initialSize: 2 }
+      )
+
+      return <div>data:{data?.join(',')}</div>
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText(`data:${key}-0,${key}-1`)
+
+    await act(async () => {
+      await mutate(k => k === `${key}-0`, undefined, false)
+    })
+
+    expect(fetchCounts).toEqual([1, 1])
+  })
+
+  it('should preserve useSWRInfinite aggregate data when mutating a page to null', async () => {
+    const key = createKey()
+    const fetchCounts = [0, 0]
+    let version = 0
+    let cache
+    let mutate
+
+    function Page() {
+      const config = useSWRConfig()
+      cache = config.cache
+      mutate = config.mutate
+      const { data } = useSWRInfinite(
+        index => `${key}-${index}`,
+        pageKey => {
+          const page = Number(pageKey.slice(pageKey.lastIndexOf('-') + 1))
+          fetchCounts[page]++
+          return createResponse(`page-${page}-v${version}`)
+        },
+        { initialSize: 2 }
+      )
+
+      return <div>data:{data?.join(',')}</div>
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data:page-0-v0,page-1-v0')
+
+    version = 1
+    await act(async () => {
+      await mutate(k => k === `${key}-0`, null, { revalidate: true })
+    })
+    await screen.findByText('data:page-0-v1,page-1-v1')
+
+    const infiniteKey = [...cache.keys()].find(cacheKey =>
+      cacheKey.startsWith('$inf$')
+    )
+    expect(fetchCounts).toEqual([2, 2])
+    expect(Array.isArray(cache.get(infiniteKey).data)).toBe(true)
+  })
+
+  it('should keep useSWRInfinite revalidation registered for a shared key', async () => {
+    const key = createKey()
+    const fetchCounts = [0, 0]
+    let mutate
+    let hideFirst
+
+    function Infinite() {
+      const { data } = useSWRInfinite(
+        index => `${key}-${index}`,
+        pageKey => {
+          const page = Number(pageKey.slice(pageKey.lastIndexOf('-') + 1))
+          fetchCounts[page]++
+          return createResponse(pageKey)
+        },
+        { initialSize: 2 }
+      )
+
+      return <div>data:{data?.join(',')}</div>
+    }
+
+    function Page() {
+      const [showFirst, setShowFirst] = useState(true)
+      mutate = useSWRConfig().mutate
+      hideFirst = () => setShowFirst(false)
+
+      return (
+        <>
+          {showFirst ? <Infinite /> : null}
+          <Infinite />
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findAllByText(`data:${key}-0,${key}-1`)
+    expect(fetchCounts).toEqual([1, 1])
+
+    await act(async () => {
+      await mutate(k => k === `${key}-0`)
+    })
+    expect(fetchCounts).toEqual([2, 2])
+
+    act(() => hideFirst())
+    await act(async () => {
+      await mutate(k => k === `${key}-0`)
+    })
+    expect(fetchCounts).toEqual([3, 3])
+  })
+
+  it('should not revalidate all useSWRInfinite pages when only a later page matches', async () => {
+    const key = createKey()
+    const fetchCounts = [0, 0]
+    let mutate
+
+    function Page() {
+      mutate = useSWRConfig().mutate
+      const { data } = useSWRInfinite(
+        index => `${key}-${index}`,
+        pageKey => {
+          const page = Number(pageKey.slice(pageKey.lastIndexOf('-') + 1))
+          fetchCounts[page]++
+          return createResponse(pageKey)
+        },
+        { initialSize: 2 }
+      )
+
+      return <div>data:{data?.join(',')}</div>
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText(`data:${key}-0,${key}-1`)
+
+    await act(async () => {
+      await mutate(k => k === `${key}-1`)
+    })
+
+    expect(fetchCounts).toEqual([1, 1])
+    screen.getByText(`data:${key}-0,${key}-1`)
+  })
+
   it('should support revalidate as a function', async () => {
     let value = 0,
       mutate

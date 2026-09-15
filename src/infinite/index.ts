@@ -14,6 +14,7 @@ import {
   withMiddleware,
   INFINITE_PREFIX,
   SWRGlobalState,
+  subscribeCallback,
   cache as defaultCache
 } from '../_internal'
 import type {
@@ -59,6 +60,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
       parallel = false
     } = config
     const [, , , PRELOAD] = SWRGlobalState.get(defaultCache) as GlobalState
+    const INFINITE_REVALIDATORS = (SWRGlobalState.get(cache) as GlobalState)[9]
 
     // The serialized key of the first page. This key will be used to store
     // metadata of this SWR infinite hook.
@@ -239,6 +241,16 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
       },
       config
     )
+
+    useIsomorphicLayoutEffect(() => {
+      const firstPageKey = infiniteKey?.slice(INFINITE_PREFIX.length)
+      if (!firstPageKey) return
+
+      return subscribeCallback(firstPageKey, INFINITE_REVALIDATORS, () => {
+        set({ _i: true, _r: UNDEFINED })
+        return swr.mutate()
+      })
+    }, [infiniteKey, cache])
 
     const mutate = useCallback(
       // eslint-disable-next-line func-names
