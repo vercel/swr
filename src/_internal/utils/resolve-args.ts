@@ -24,6 +24,15 @@ export const withArgs = <SWRType>(hook: any) => {
       next = middleware[i](next)
     }
 
-    return next(key, fn || config.fetcher || null, config)
+    const hasExplicitNullFetcher = args[1] === null || config.fetcher === null
+    if (hasExplicitNullFetcher) {
+      config.fetcher = null
+    }
+
+    return next(
+      key,
+      hasExplicitNullFetcher ? null : fn || config.fetcher || null,
+      config
+    )
   } as unknown as SWRType
 }

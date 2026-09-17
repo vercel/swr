@@ -39,7 +39,7 @@ export interface SWRInfiniteConfiguration<
   persistSize?: boolean
   revalidateFirstPage?: boolean
   parallel?: boolean
-  fetcher?: Fn
+  fetcher?: Fn | null
   compare?: SWRInfiniteCompareFn<Data>
 }
 
