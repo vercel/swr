@@ -751,4 +751,19 @@ describe('useSWR - configs', () => {
     await nextTick()
     expect(globalFetcher).not.toHaveBeenCalled()
   })
+
+  it('should call the local fetcher when the global config fetcher is explicitly null', async () => {
+    const key = createKey()
+    const localFetcher = jest.fn(() => 'local data')
+
+    function Page() {
+      const { data } = useSWR(key, localFetcher)
+      return <div>data:{String(data)}</div>
+    }
+
+    renderWithConfig(<Page />, { fetcher: null as any })
+
+    await screen.findByText('data:local data')
+    expect(localFetcher).toHaveBeenCalled()
+  })
 })
