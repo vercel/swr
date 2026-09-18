@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test('invalidates every cache key associated with a tag', async ({ page }) => {
+test('revalidates every cache key associated with a tag', async ({ page }) => {
   await page.goto('./cache-tags', { waitUntil: 'networkidle' })
 
   await expect(page.getByTestId('projects')).toHaveText('/api/projects:0')

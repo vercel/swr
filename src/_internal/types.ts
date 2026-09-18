@@ -31,7 +31,7 @@ export type GlobalState = [
   /** Associates a cache key with the tags resolved when its request settles */
   (key: string, tags: string[]) => void,
   /** Invalidates every cache key associated with a tag */
-  TagInvalidator
+  TagRevalidator
 ]
 /**
  * Response type that can be returned by fetcher functions.
@@ -139,8 +139,8 @@ export interface InternalConfiguration {
   mutate: ScopedMutator
   /** Unloader function bound to the cache for clearing all entries */
   unload: Unloader
-  /** Tag invalidator function bound to the cache */
-  invalidateTag: TagInvalidator
+  /** Tag revalidator function bound to the cache */
+  revalidateTag: TagRevalidator
 }
 
 /**
@@ -148,7 +148,7 @@ export interface InternalConfiguration {
  *
  * @public
  */
-export type TagInvalidator = (tag: string) => Promise<Array<any | undefined>>
+export type TagRevalidator = (tag: string) => Promise<Array<any | undefined>>
 
 /**
  * Options for the `unload` function.

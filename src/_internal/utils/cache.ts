@@ -14,7 +14,7 @@ import type {
   ProviderConfiguration,
   GlobalState,
   Unloader,
-  TagInvalidator
+  TagRevalidator
 } from '../types'
 
 const revalidateAllKeys = (
@@ -36,9 +36,9 @@ export const initCache = <Data = any>(
       () => void,
       () => void,
       Unloader,
-      TagInvalidator
+      TagRevalidator
     ]
-  | [Cache<Data>, ScopedMutator, undefined, undefined, Unloader, TagInvalidator]
+  | [Cache<Data>, ScopedMutator, undefined, undefined, Unloader, TagRevalidator]
   | undefined => {
   // The global state for a specific provider will be used to deduplicate
   // requests and store listeners. As well as a mutate function that is bound to
@@ -80,7 +80,7 @@ export const initCache = <Data = any>(
         delete keyTags[key]
       }
     }
-    const invalidateTag: TagInvalidator = tag => {
+    const revalidateTag: TagRevalidator = tag => {
       const keys = tagKeys[tag]
       return keys
         ? Promise.all([...keys].map(key => internalMutate(provider, key)))
@@ -184,7 +184,7 @@ export const initCache = <Data = any>(
           unload,
           0,
           registerTags,
-          invalidateTag
+          revalidateTag
         ])
         if (!IS_SERVER) {
           // When listening to the native events for auto revalidations,
@@ -234,7 +234,7 @@ export const initCache = <Data = any>(
     // We might want to inject an extra layer on top of `provider` in the future,
     // such as key serialization, auto GC, etc.
     // For now, it's just a `Map` interface without any modifications.
-    return [provider, mutate, initProvider, unmount, unload, invalidateTag]
+    return [provider, mutate, initProvider, unmount, unload, revalidateTag]
   }
 
   const state = SWRGlobalState.get(provider) as GlobalState

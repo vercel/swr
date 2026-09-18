@@ -1,11 +1,11 @@
 import { act, screen } from '@testing-library/react'
 import useSWR, {
-  invalidateTag as globalInvalidateTag,
+  revalidateTag as globalRevalidateTag,
   SWRConfig,
   unload as globalUnload,
   useSWRConfig
 } from 'swr'
-import type { TagInvalidator, Unloader } from 'swr'
+import type { TagRevalidator, Unloader } from 'swr'
 import { createKey, renderWithConfig, renderWithGlobalCache } from './utils'
 
 describe('useSWR - tags', () => {
@@ -13,7 +13,7 @@ describe('useSWR - tags', () => {
     const projectKey = createKey()
     const favoriteKey = createKey()
     const unrelatedKey = createKey()
-    let invalidateTag!: TagInvalidator
+    let revalidateTag!: TagRevalidator
     let version = 0
     const calls: Record<string, number> = {}
     const fetcher = (key: string) => {
@@ -22,7 +22,7 @@ describe('useSWR - tags', () => {
     }
 
     function Page() {
-      invalidateTag = useSWRConfig().invalidateTag
+      revalidateTag = useSWRConfig().revalidateTag
       const { data: projects } = useSWR(projectKey, fetcher, {
         tags: ['projects'],
         dedupingInterval: 0
@@ -50,7 +50,7 @@ describe('useSWR - tags', () => {
     await screen.findByText(`unrelated:${unrelatedKey}:0`)
 
     version = 1
-    await act(() => invalidateTag('projects'))
+    await act(() => revalidateTag('projects'))
 
     await screen.findByText(`projects:${projectKey}:1`)
     await screen.findByText(`favorites:${favoriteKey}:1`)
@@ -62,7 +62,7 @@ describe('useSWR - tags', () => {
     })
   })
 
-  it('exposes an invalidator for the default cache', async () => {
+  it('exposes a tag revalidator for the default cache', async () => {
     const key = createKey()
     const tag = createKey()
     let fetcherCalls = 0
@@ -77,14 +77,14 @@ describe('useSWR - tags', () => {
 
     renderWithGlobalCache(<Page />)
     await screen.findByText('data:1')
-    await act(() => globalInvalidateTag(tag))
+    await act(() => globalRevalidateTag(tag))
     await screen.findByText('data:2')
     act(() => globalUnload({ revalidate: false }))
   })
 
   it('resolves tag functions when the fetcher settles', async () => {
     const key = createKey()
-    let invalidateTag!: TagInvalidator
+    let revalidateTag!: TagRevalidator
     let currentTag = 'old'
     let fetcherCalls = 0
     let resolve!: (data: string) => void
@@ -93,7 +93,7 @@ describe('useSWR - tags', () => {
     })
 
     function Page() {
-      invalidateTag = useSWRConfig().invalidateTag
+      revalidateTag = useSWRConfig().revalidateTag
       const { data } = useSWR(
         key,
         () => {
@@ -110,22 +110,22 @@ describe('useSWR - tags', () => {
     await act(async () => resolve('initial'))
     await screen.findByText('data:initial')
 
-    await act(() => invalidateTag('old'))
+    await act(() => revalidateTag('old'))
     expect(fetcherCalls).toBe(1)
 
-    await act(() => invalidateTag('new'))
+    await act(() => revalidateTag('new'))
     await screen.findByText('data:updated')
     expect(fetcherCalls).toBe(2)
   })
 
   it("replaces a key's tag associations after a later fetch", async () => {
     const key = createKey()
-    let invalidateTag!: TagInvalidator
+    let revalidateTag!: TagRevalidator
     let currentTag = 'old'
     let fetcherCalls = 0
 
     function Page() {
-      invalidateTag = useSWRConfig().invalidateTag
+      revalidateTag = useSWRConfig().revalidateTag
       const { data } = useSWR(key, () => ++fetcherCalls, {
         tags: () => [currentTag],
         dedupingInterval: 0
@@ -137,24 +137,24 @@ describe('useSWR - tags', () => {
     await screen.findByText('data:1')
 
     currentTag = 'new'
-    await act(() => invalidateTag('old'))
+    await act(() => revalidateTag('old'))
     await screen.findByText('data:2')
 
-    await act(() => invalidateTag('old'))
+    await act(() => revalidateTag('old'))
     expect(fetcherCalls).toBe(2)
 
-    await act(() => invalidateTag('new'))
+    await act(() => revalidateTag('new'))
     await screen.findByText('data:3')
   })
 
   it('associates a key when its fetcher rejects', async () => {
     const key = createKey()
-    let invalidateTag!: TagInvalidator
+    let revalidateTag!: TagRevalidator
     let shouldFail = true
     let fetcherCalls = 0
 
     function Page() {
-      invalidateTag = useSWRConfig().invalidateTag
+      revalidateTag = useSWRConfig().revalidateTag
       const { data, error } = useSWR(
         key,
         () => {
@@ -175,26 +175,26 @@ describe('useSWR - tags', () => {
     await screen.findByText('failed')
 
     shouldFail = false
-    await act(() => invalidateTag('resource'))
+    await act(() => revalidateTag('resource'))
     await screen.findByText('data:recovered')
     expect(fetcherCalls).toBe(2)
   })
 
   it('makes the association available to settlement callbacks', async () => {
     const key = createKey()
-    let invalidateTag!: TagInvalidator
+    let revalidateTag!: TagRevalidator
     let fetcherCalls = 0
     let invalidated = false
 
     function Page() {
-      invalidateTag = useSWRConfig().invalidateTag
+      revalidateTag = useSWRConfig().revalidateTag
       const { data } = useSWR(key, () => ++fetcherCalls, {
         tags: ['resource'],
         dedupingInterval: 0,
         onSuccess: () => {
           if (!invalidated) {
             invalidated = true
-            void invalidateTag('resource')
+            void revalidateTag('resource')
           }
         }
       })
@@ -206,18 +206,18 @@ describe('useSWR - tags', () => {
     expect(fetcherCalls).toBe(2)
   })
 
-  it('scopes tag invalidation to the current cache provider', async () => {
+  it('scopes tag revalidation to the current cache provider', async () => {
     const keyA = createKey()
     const keyB = createKey()
-    let invalidateTagA!: TagInvalidator
-    let invalidateTagB!: TagInvalidator
+    let revalidateTagA!: TagRevalidator
+    let revalidateTagB!: TagRevalidator
     let callsA = 0
     let callsB = 0
 
     function Item({ cache }: { cache: 'a' | 'b' }) {
       const config = useSWRConfig()
-      if (cache === 'a') invalidateTagA = config.invalidateTag
-      else invalidateTagB = config.invalidateTag
+      if (cache === 'a') revalidateTagA = config.revalidateTag
+      else revalidateTagB = config.revalidateTag
       const { data } = useSWR(
         cache === 'a' ? keyA : keyB,
         () => (cache === 'a' ? ++callsA : ++callsB),
@@ -243,23 +243,23 @@ describe('useSWR - tags', () => {
     await screen.findByText('a:1')
     await screen.findByText('b:1')
 
-    await act(() => invalidateTagA('shared'))
+    await act(() => revalidateTagA('shared'))
     await screen.findByText('a:2')
     expect(callsB).toBe(1)
 
-    await act(() => invalidateTagB('shared'))
+    await act(() => revalidateTagB('shared'))
     await screen.findByText('b:2')
   })
 
   it('clears tag associations on unload', async () => {
     const key = createKey()
-    let invalidateTag!: TagInvalidator
+    let revalidateTag!: TagRevalidator
     let unload!: Unloader
     let fetcherCalls = 0
 
     function Page() {
       const config = useSWRConfig()
-      invalidateTag = config.invalidateTag
+      revalidateTag = config.revalidateTag
       unload = config.unload
       const { data } = useSWR(key, () => ++fetcherCalls, {
         tags: ['resource'],
@@ -273,13 +273,13 @@ describe('useSWR - tags', () => {
 
     act(() => unload({ revalidate: false }))
     screen.getByText('data:')
-    await act(() => invalidateTag('resource'))
+    await act(() => revalidateTag('resource'))
     expect(fetcherCalls).toBe(1)
   })
 
   it('does not restore associations when a request settles after unload', async () => {
     const key = createKey()
-    let invalidateTag!: TagInvalidator
+    let revalidateTag!: TagRevalidator
     let unload!: Unloader
     let fetcherCalls = 0
     let resolve!: (data: string) => void
@@ -289,7 +289,7 @@ describe('useSWR - tags', () => {
 
     function Page() {
       const config = useSWRConfig()
-      invalidateTag = config.invalidateTag
+      revalidateTag = config.revalidateTag
       unload = config.unload
       const { data } = useSWR(
         key,
@@ -307,7 +307,7 @@ describe('useSWR - tags', () => {
     act(() => unload({ revalidate: false }))
     await act(async () => resolve('late'))
 
-    await act(() => invalidateTag('resource'))
+    await act(() => revalidateTag('resource'))
     expect(fetcherCalls).toBe(1)
     screen.getByText('data:')
   })

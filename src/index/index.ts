@@ -7,7 +7,7 @@ export { unstable_serialize } from './serialize'
 export { useSWRConfig } from '../_internal'
 export { mutate } from '../_internal'
 export { unload } from '../_internal'
-export { invalidateTag } from '../_internal'
+export { revalidateTag } from '../_internal'
 export { preload } from '../_internal'
 
 // Config
@@ -39,6 +39,6 @@ export type {
   ScopedMutator,
   Unloader,
   UnloadOptions,
-  TagInvalidator,
+  TagRevalidator,
   CacheData
 } from '../_internal'

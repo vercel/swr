@@ -8,7 +8,7 @@ let version = 0
 const fetcher = (key: string) => `${key}:${version}`
 
 export default function CacheTagsPage() {
-  const { invalidateTag } = useSWRConfig()
+  const { revalidateTag } = useSWRConfig()
   const { data: projects } = useSWR('/api/projects', fetcher, {
     tags: [projectsTag],
     dedupingInterval: 0,
@@ -33,7 +33,7 @@ export default function CacheTagsPage() {
       <button
         onClick={() => {
           version++
-          void invalidateTag(projectsTag)
+          void revalidateTag(projectsTag)
         }}
       >
         Invalidate projects

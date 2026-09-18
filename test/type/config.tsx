@@ -1,6 +1,6 @@
-import type { Cache, SWRConfigValue, SWRResponse, TagInvalidator } from 'swr'
+import type { Cache, SWRConfigValue, SWRResponse, TagRevalidator } from 'swr'
 import useSWR, {
-  invalidateTag as globalInvalidateTag,
+  revalidateTag as globalRevalidateTag,
   useSWRConfig,
   SWRConfig
 } from 'swr'
@@ -10,8 +10,8 @@ import type { Equal } from '@type-challenges/utils'
 
 export function useTestCache() {
   expectType<Cache<any>>(useSWRConfig().cache)
-  expectType<TagInvalidator>(useSWRConfig().invalidateTag)
-  expectType<TagInvalidator>(globalInvalidateTag)
+  expectType<TagRevalidator>(useSWRConfig().revalidateTag)
+  expectType<TagRevalidator>(globalRevalidateTag)
 }
 
 export function useTestTags() {

@@ -10,7 +10,7 @@ export {
   cache,
   mutate,
   unload,
-  invalidateTag,
+  revalidateTag,
   compare
 } from './utils/config'
 import { setupDevTools } from './utils/devtools'
