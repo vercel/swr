@@ -498,8 +498,9 @@ export const useSWRHandler = <Data = any, Error = any>(
           tagsRegistered ||
           !requestStarted ||
           globalState[8] !== unloadGeneration
-        )
+        ) {
           return
+        }
         tagsRegistered = true
         try {
           const tags = getConfig().tags
