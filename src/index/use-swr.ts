@@ -198,9 +198,9 @@ export const useSWRHandler = <Data = any, Error = any>(
     strictServerPrefetchWarning
   } = config
 
-  const [EVENT_REVALIDATORS, MUTATION, FETCH, PRELOAD] = SWRGlobalState.get(
-    cache
-  ) as GlobalState
+  const globalState = SWRGlobalState.get(cache) as GlobalState
+  const [EVENT_REVALIDATORS, MUTATION, FETCH, PRELOAD, , , , , , registerTags] =
+    globalState
 
   // `key` is the identifier of the SWR internal state,
   // `fnArg` is the argument/arguments parsed from the key, which will be passed
@@ -489,7 +489,25 @@ export const useSWRHandler = <Data = any, Error = any>(
       let newData: Data
       let startAt: number
       let loading = true
+      let requestStarted = false
+      let tagsRegistered = false
+      const unloadGeneration = globalState[8]
       const opts = revalidateOpts || {}
+      const registerSettledTags = () => {
+        if (
+          tagsRegistered ||
+          !requestStarted ||
+          globalState[8] !== unloadGeneration
+        )
+          return
+        tagsRegistered = true
+        try {
+          const tags = getConfig().tags
+          registerTags(key, isFunction(tags) ? tags() : tags || [])
+        } catch {
+          // A tag resolver should not change the result of the request.
+        }
+      }
 
       // If there is no ongoing concurrent request, or `dedupe` is not set, a
       // new request should be initiated.
@@ -563,6 +581,7 @@ export const useSWRHandler = <Data = any, Error = any>(
           if (shouldUseRSCPreload) {
             markCacheDataConsumed(consumedCacheData, serverCacheData, key)
           }
+          requestStarted = true
           FETCH[key] = [
             shouldUseRSCPreload
               ? preloadedData
@@ -578,6 +597,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         // considered here.
         ;[newData, startAt] = FETCH[key]
         newData = await newData
+        registerSettledTags()
 
         if (shouldStartNewRequest) {
           // If the request isn't interrupted, clean it up after the
@@ -648,6 +668,7 @@ export const useSWRHandler = <Data = any, Error = any>(
           }
         }
       } catch (err: any) {
+        registerSettledTags()
         cleanupState()
 
         const currentConfig = getConfig()

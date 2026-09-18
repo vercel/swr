@@ -5,7 +5,8 @@ import type {
   Revalidator,
   ScopedMutator,
   Cache,
-  Unloader
+  Unloader,
+  TagInvalidator
 } from '../types'
 
 import { initCache } from './cache'
@@ -43,14 +44,15 @@ const onErrorRetry = (
 const compare = dequal
 
 // Default cache provider
-const [cache, mutate, , , unload] = initCache(new Map()) as [
+const [cache, mutate, , , unload, invalidateTag] = initCache(new Map()) as [
   Cache<any>,
   ScopedMutator,
   unknown,
   unknown,
-  Unloader
+  Unloader,
+  TagInvalidator
 ]
-export { cache, mutate, unload, compare }
+export { cache, mutate, unload, invalidateTag, compare }
 
 // Default config
 export const defaultConfig: FullConfiguration = mergeObjects(
@@ -80,6 +82,7 @@ export const defaultConfig: FullConfiguration = mergeObjects(
     cache,
     mutate,
     unload,
+    invalidateTag,
     fallback: {}
   },
   // use web preset by default

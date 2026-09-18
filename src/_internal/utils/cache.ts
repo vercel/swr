@@ -13,7 +13,8 @@ import type {
   RevalidateCallback,
   ProviderConfiguration,
   GlobalState,
-  Unloader
+  Unloader,
+  TagInvalidator
 } from '../types'
 
 const revalidateAllKeys = (
@@ -29,8 +30,15 @@ export const initCache = <Data = any>(
   provider: Cache<Data>,
   options?: Partial<ProviderConfiguration>
 ):
-  | [Cache<Data>, ScopedMutator, () => void, () => void, Unloader]
-  | [Cache<Data>, ScopedMutator, undefined, undefined, Unloader]
+  | [
+      Cache<Data>,
+      ScopedMutator,
+      () => void,
+      () => void,
+      Unloader,
+      TagInvalidator
+    ]
+  | [Cache<Data>, ScopedMutator, undefined, undefined, Unloader, TagInvalidator]
   | undefined => {
   // The global state for a specific provider will be used to deduplicate
   // requests and store listeners. As well as a mutate function that is bound to
@@ -47,6 +55,37 @@ export const initCache = <Data = any>(
 
     const mutate = internalMutate.bind(UNDEFINED, provider) as ScopedMutator
     let unmount = noop
+
+    const tagKeys: Record<string, Set<string>> = Object.create(null)
+    const keyTags: Record<string, Set<string>> = Object.create(null)
+    const registerTags = (key: string, tags: string[]) => {
+      const previousTags = keyTags[key]
+      if (previousTags) {
+        for (const tag of previousTags) {
+          const keys = tagKeys[tag]
+          keys.delete(key)
+          if (!keys.size) delete tagKeys[tag]
+        }
+      }
+
+      const nextTags = new Set(tags)
+      if (nextTags.size) {
+        keyTags[key] = nextTags
+        for (const tag of nextTags) {
+          const keys = tagKeys[tag] || new Set<string>()
+          tagKeys[tag] = keys
+          keys.add(key)
+        }
+      } else {
+        delete keyTags[key]
+      }
+    }
+    const invalidateTag: TagInvalidator = tag => {
+      const keys = tagKeys[tag]
+      return keys
+        ? Promise.all([...keys].map(key => internalMutate(provider, key)))
+        : Promise.resolve([])
+    }
 
     const subscriptions: Record<string, ((current: any, prev: any) => void)[]> =
       Object.create(null)
@@ -95,6 +134,8 @@ export const initCache = <Data = any>(
       for (const key in FETCH) delete FETCH[key]
       for (const key in PRELOAD) delete PRELOAD[key]
       for (const key in MUTATION) MUTATION[key] = [ts, ts]
+      for (const tag in tagKeys) delete tagKeys[tag]
+      for (const key in keyTags) delete keyTags[key]
 
       // Delete all entries — including the special `useSWRInfinite` and
       // `useSWRSubscription` keys — and notify the subscribers of each key
@@ -141,7 +182,9 @@ export const initCache = <Data = any>(
           setter,
           subscribe,
           unload,
-          0
+          0,
+          registerTags,
+          invalidateTag
         ])
         if (!IS_SERVER) {
           // When listening to the native events for auto revalidations,
@@ -191,9 +234,9 @@ export const initCache = <Data = any>(
     // We might want to inject an extra layer on top of `provider` in the future,
     // such as key serialization, auto GC, etc.
     // For now, it's just a `Map` interface without any modifications.
-    return [provider, mutate, initProvider, unmount, unload]
+    return [provider, mutate, initProvider, unmount, unload, invalidateTag]
   }
 
   const state = SWRGlobalState.get(provider) as GlobalState
-  return [provider, state[4], UNDEFINED, UNDEFINED, state[7]]
+  return [provider, state[4], UNDEFINED, UNDEFINED, state[7], state[10]]
 }

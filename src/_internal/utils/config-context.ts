@@ -53,6 +53,7 @@ const SWRConfig: FC<
     ;(extendedConfig as any).cache = cacheContext[0]
     ;(extendedConfig as any).mutate = cacheContext[1]
     ;(extendedConfig as any).unload = cacheContext[4]
+    ;(extendedConfig as any).invalidateTag = cacheContext[5]
   }
 
   // Unsubscribe events.
