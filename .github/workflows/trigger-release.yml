@@ -7,7 +7,7 @@ name: Publish
 # this workflow filename (trigger-release.yml), so the npm publish must live here.
 permissions:
   id-token: write
-  contents: read
+  contents: write
 
 jobs:
   publish:
@@ -34,7 +34,8 @@ jobs:
         id: determine_tag
         run: |
           version=$(node -p "require('./package.json').version")
-          echo "tag=$(echo $version | grep -Eo 'alpha|beta|canary|rc')" >> $GITHUB_OUTPUT
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$(echo "$version" | grep -Eo 'alpha|beta|canary|rc' || true)" >> "$GITHUB_OUTPUT"
 
       - name: Publish to versioned tag
         if: steps.determine_tag.outputs.tag != ''
@@ -47,3 +48,20 @@ jobs:
         run: |
           echo "Publishing to latest"
           npm publish --access public --no-git-checks
+
+      - name: Create GitHub release with categorized notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.determine_tag.outputs.version }}
+          PRERELEASE_TAG: ${{ steps.determine_tag.outputs.tag }}
+        run: |
+          args=(
+            "v${VERSION}"
+            --target "${GITHUB_SHA}"
+            --title "v${VERSION}"
+            --generate-notes
+          )
+          if [[ -n "${PRERELEASE_TAG}" ]]; then
+            args+=(--prerelease)
+          fi
+          gh release create "${args[@]}"

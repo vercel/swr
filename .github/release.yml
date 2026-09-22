@@ -1,0 +1,12 @@
+changelog:
+  categories:
+    - title: Features
+      labels:
+        - feature request
+        - improvement
+    - title: Patches
+      labels:
+        - bug
+    - title: Misc
+      labels:
+        - "*"
