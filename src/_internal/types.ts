@@ -27,7 +27,11 @@ export type GlobalState = [
   /** Unloader function that clears the cache and notifies subscribers */
   Unloader,
   /** Unload generation, bumped on every unload to discard in-flight writes */
-  number
+  number,
+  /** Associates a cache key with the tags resolved when its request settles */
+  (key: string, tags: string[]) => void,
+  /** Invalidates every cache key associated with a tag */
+  TagRevalidator
 ]
 /**
  * Response type that can be returned by fetcher functions.
@@ -135,7 +139,16 @@ export interface InternalConfiguration {
   mutate: ScopedMutator
   /** Unloader function bound to the cache for clearing all entries */
   unload: Unloader
+  /** Tag revalidator function bound to the cache */
+  revalidateTag: TagRevalidator
 }
+
+/**
+ * Revalidates all cache keys associated with a tag.
+ *
+ * @public
+ */
+export type TagRevalidator = (tag: string) => Promise<Array<any | undefined>>
 
 /**
  * Options for the `unload` function.
@@ -182,6 +195,11 @@ export interface PublicConfiguration<
   Error = any,
   Fn extends Fetcher = BareFetcher
 > {
+  /**
+   * Tags to associate with the current key whenever its fetcher settles.
+   * A function is evaluated at settlement time.
+   */
+  tags?: string[] | (() => string[])
   /**
    *  error retry interval in milliseconds
    *  @defaultValue 5000
