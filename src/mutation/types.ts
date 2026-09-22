@@ -29,7 +29,12 @@ export type SWRMutationConfiguration<
   populateCache?:
     | boolean
     | ((result: Data, currentData: SWRData | undefined) => SWRData)
-  optimisticData?: SWRData | ((currentData?: SWRData) => SWRData)
+  // `optimisticData` is forwarded to the core mutate, which invokes it as
+  // `optimisticData(committedData, displayedData)`. Both parameters stay
+  // optional so existing single-parameter callbacks keep type-checking.
+  optimisticData?:
+    | SWRData
+    | ((currentData?: SWRData, displayedData?: SWRData) => SWRData)
   rollbackOnError?: boolean | ((error: unknown) => boolean)
   fetcher?: MutationFetcher<Data, SWRMutationKey, ExtraArg>
   onSuccess?: (
