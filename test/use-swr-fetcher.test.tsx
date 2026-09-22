@@ -134,4 +134,29 @@ describe('useSWR - fetcher', () => {
     rerender(<Page fetcher={false} />)
     screen.getByText('data:')
   })
+
+  it('should allow a null fetcher to override the global fetcher', async () => {
+    const disabledKey = createKey()
+    const enabledKey = createKey()
+    const fetcher = jest.fn(key => key)
+
+    function Page() {
+      const disabled = useSWR(disabledKey, null)
+      const enabled = useSWR(enabledKey)
+
+      return (
+        <>
+          <p>disabled:{disabled.data}</p>
+          <p>enabled:{enabled.data}</p>
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />, { fetcher })
+
+    await screen.findByText(`enabled:${enabledKey}`)
+    screen.getByText('disabled:')
+    expect(fetcher).toHaveBeenCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledWith(enabledKey)
+  })
 })
