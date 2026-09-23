@@ -47,11 +47,20 @@ const mutation = (<Data, Error>() =>
 
     const trigger = useCallback(
       async (arg: any, opts?: SWRMutationConfiguration<Data, Error>) => {
-        const [serializedKey, resolvedKey] = serialize(keyRef.current)
+        //If null is received as the key, ignore it.
+        const keyVal = keyRef.current
+
+        const resolvedKeyForCheck =
+          typeof keyVal === 'function' ? keyVal() : keyVal
+
+        if (!resolvedKeyForCheck) return
+
+        const [serializedKey, resolvedKey] = serialize(keyVal)
 
         if (!fetcherRef.current) {
           throw new Error('Can’t trigger the mutation: missing fetcher.')
         }
+
         if (!serializedKey) {
           throw new Error('Can’t trigger the mutation: missing key.')
         }

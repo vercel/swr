@@ -1110,7 +1110,7 @@ describe('useSWR - remote mutation', () => {
     fireEvent.click(screen.getByText('pending'))
     await waitForNextTick()
 
-    expect(error.message).toBe('Can’t trigger the mutation: missing key.')
+    expect(error).toBeNull()
   })
 
   it('should call `onError` and `onRejected` but do not call `onSuccess` if value an error is cast to false', async () => {
