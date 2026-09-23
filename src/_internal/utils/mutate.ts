@@ -157,6 +157,13 @@ export async function internalMutate<Data>(
         // If it throws an error synchronously, we shouldn't update the cache.
         error = err
         isError = true
+        // Roll back the optimistic update on a synchronous throw, mirroring the
+        // async-rejection path below. Without this the optimistic value is left
+        // in the cache permanently when `revalidate` is false.
+        if (hasOptimisticData && rollbackOnError(error)) {
+          populateCache = true
+          set({ data: committedData, _c: UNDEFINED })
+        }
       }
     }
 
