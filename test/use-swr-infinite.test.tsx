@@ -1848,6 +1848,37 @@ describe('useSWRInfinite', () => {
     expect(previousPageDataLogs.every(d => d === null)).toBeTruthy()
   })
 
+  it('should keep previousPageData null when parallel enabled', async () => {
+    const pageData = ['apple', 'banana', 'pineapple']
+    const previousPageDataLogs = []
+    const key = createKey()
+    const Page = () => {
+      const { data, setSize } = useSWRInfinite(
+        (index, previousPageData) => {
+          previousPageDataLogs.push(previousPageData)
+          return [key, index]
+        },
+        ([_, index]) => createResponse(`${pageData[index]}, `, { delay: 10 }),
+        {
+          parallel: true
+        }
+      )
+      return (
+        <button type="button" onClick={() => setSize(3)}>
+          data:{data}
+        </button>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    const firstPage = await screen.findByRole('button', { name: 'data:apple,' })
+    previousPageDataLogs.length = 0
+
+    fireEvent.click(firstPage)
+    await screen.findByText('data:apple, banana, pineapple,')
+    expect(previousPageDataLogs.every(d => d === null)).toBeTruthy()
+  })
+
   it('should support revalidate as a function', async () => {
     // mock api
     let pageData = ['apple', 'banana', 'pineapple']
