@@ -200,6 +200,32 @@ describe('useSWR - config callbacks', () => {
     expect(discardedEvents).toEqual([key])
   })
 
+  it('should not cause infinite loading when onSuccess is undefined', async () => {
+    const key = createKey()
+    let fetchCount = 0
+    function Page() {
+      const { data, isLoading } = useSWR(
+        key,
+        () => {
+          fetchCount++
+          return createResponse('ok')
+        },
+        {
+          onSuccess: undefined
+        }
+      )
+      return <div>{isLoading ? 'loading' : `data: ${data}`}</div>
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('loading')
+
+    await screen.findByText('data: ok')
+    // Wait a bit to ensure no extra retries are triggered.
+    await act(() => sleep(100))
+    expect(fetchCount).toBe(1)
+  })
+
   it('should not trigger the onSuccess callback when discarded', async () => {
     const key = createKey()
     const discardedEvents = []
