@@ -24,6 +24,20 @@ export const withArgs = <SWRType>(hook: any) => {
       next = middleware[i](next)
     }
 
-    return next(key, fn || config.fetcher || null, config)
+    // A locally-provided positional fetcher (`fn`) always takes precedence.
+    // Only treat the fetcher as explicitly null when there's no local
+    // fetcher and either `null` was passed positionally or the merged
+    // config's fetcher is null.
+    const hasExplicitNullFetcher =
+      !fn && (args[1] === null || config.fetcher === null)
+    if (hasExplicitNullFetcher) {
+      config.fetcher = null
+    }
+
+    return next(
+      key,
+      hasExplicitNullFetcher ? null : fn || config.fetcher || null,
+      config
+    )
   } as unknown as SWRType
 }

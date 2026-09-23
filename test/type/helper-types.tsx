@@ -1,4 +1,5 @@
-import type { BlockingData } from 'swr/_internal'
+import type { BlockingData, SWRConfiguration } from 'swr/_internal'
+import type { SWRInfiniteConfiguration } from 'swr/infinite'
 import { expectType } from './utils'
 
 export function testDataCached() {
@@ -10,4 +11,14 @@ export function testDataCached() {
   expectType<BlockingData<false, { suspense: false; revalidate: boolean }>>(
     false
   )
+}
+
+export function testFetcherConfigurationNull() {
+  const config: SWRConfiguration = {
+    fetcher: null
+  }
+  const infiniteConfig: SWRInfiniteConfiguration = {
+    fetcher: null
+  }
+  return [config, infiniteConfig]
 }

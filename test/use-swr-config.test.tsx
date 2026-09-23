@@ -8,7 +8,8 @@ import {
   createResponse,
   itShouldSkipForReactCanary,
   renderWithGlobalCache,
-  sleep
+  sleep,
+  nextTick
 } from './utils'
 
 function renderSuspenseCacheData({
@@ -709,5 +710,60 @@ describe('useSWR - configs', () => {
     screen.getByText('data:')
     // mount
     await screen.findByText('data: data')
+  })
+
+  it('should not call global fetcher when local fetcher is explicitly passed as null', async () => {
+    const key = createKey()
+    const globalFetcher = jest.fn(() => 'global data')
+
+    function Page() {
+      const { data, isValidating } = useSWR(key, null)
+      return (
+        <div>
+          data:{String(data)}:validating:{String(isValidating)}
+        </div>
+      )
+    }
+
+    renderWithConfig(<Page />, { fetcher: globalFetcher })
+
+    await screen.findByText('data:undefined:validating:false')
+    await nextTick()
+    expect(globalFetcher).not.toHaveBeenCalled()
+  })
+
+  it('should not call global fetcher when config fetcher is explicitly null', async () => {
+    const key = createKey()
+    const globalFetcher = jest.fn(() => 'global data')
+
+    function Page() {
+      const { data, isValidating } = useSWR(key, { fetcher: null })
+      return (
+        <div>
+          data:{String(data)}:validating:{String(isValidating)}
+        </div>
+      )
+    }
+
+    renderWithConfig(<Page />, { fetcher: globalFetcher })
+
+    await screen.findByText('data:undefined:validating:false')
+    await nextTick()
+    expect(globalFetcher).not.toHaveBeenCalled()
+  })
+
+  it('should call the local fetcher when the global config fetcher is explicitly null', async () => {
+    const key = createKey()
+    const localFetcher = jest.fn(() => 'local data')
+
+    function Page() {
+      const { data } = useSWR(key, localFetcher)
+      return <div>data:{String(data)}</div>
+    }
+
+    renderWithConfig(<Page />, { fetcher: null as any })
+
+    await screen.findByText('data:local data')
+    expect(localFetcher).toHaveBeenCalled()
   })
 })
