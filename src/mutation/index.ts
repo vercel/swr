@@ -71,7 +71,13 @@ const mutation = (<Data, Error>() =>
 
         ditchMutationsUntilRef.current = mutationStartedAt
 
-        setState({ isMutating: true })
+        // Schedule the isMutating update outside any React transition context
+        // (e.g. when trigger is called inside a <form action> handler) so it
+        // renders as an urgent update instead of being deferred.
+        let didErrorSync = false
+        queueMicrotask(() => {
+          if (!didErrorSync) setState({ isMutating: true })
+        })
 
         try {
           const data = await mutate<Data>(
@@ -90,6 +96,8 @@ const mutation = (<Data, Error>() =>
           }
           return data
         } catch (error) {
+          didErrorSync = true
+
           // If it's reset after the mutation, we don't broadcast any state change
           // or throw because it's discarded.
           if (ditchMutationsUntilRef.current <= mutationStartedAt) {
