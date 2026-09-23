@@ -329,3 +329,38 @@ describe('issue #4207', () => {
     expect(fetchCount).toBe(1)
   })
 })
+
+describe('issue #4322', () => {
+  it('should honor hook-level refreshInterval', async () => {
+    let fetchCount = 0
+    const key = createKey()
+    const fetcher = () => {
+      fetchCount++
+      return 'data'
+    }
+
+    function Page() {
+      const { data } = useSWRImmutable(key, fetcher, {
+        refreshInterval: 100,
+        dedupingInterval: 0
+      })
+      return <div>{data}</div>
+    }
+
+    renderWithConfig(
+      <SWRConfig
+        value={{
+          provider: () => new Map()
+        }}
+      >
+        <Page />
+      </SWRConfig>
+    )
+
+    await screen.findByText('data')
+    expect(fetchCount).toBe(1)
+
+    await new Promise(resolve => setTimeout(resolve, 250))
+    expect(fetchCount).toBeGreaterThan(1)
+  })
+})
