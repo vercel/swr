@@ -1,6 +1,6 @@
 import type { Cache, State, GlobalState } from '../types'
 import { SWRGlobalState } from './global-state'
-import { isUndefined, mergeObjects } from './shared'
+import { isUndefined, mergeObjects, noop } from './shared'
 
 const EMPTY_CACHE = {}
 const INITIAL_CACHE: Record<string, any> = {}
@@ -19,7 +19,7 @@ export const createCacheHelper = <Data = any, T = State<Data, any>>(
   cache: Cache,
   key: string | undefined
 ) => {
-  const state = SWRGlobalState.get(cache) as GlobalState
+  const state = SWRGlobalState.get(cache) as GlobalState | undefined
   return [
     // Getter
     () => ((!isUndefined(key) && cache.get(key)) || EMPTY_CACHE) as T,
@@ -34,11 +34,16 @@ export const createCacheHelper = <Data = any, T = State<Data, any>>(
           INITIAL_CACHE[key] = prev
         }
 
-        state[5](key, mergeObjects(prev, info), prev || EMPTY_CACHE)
+        // Guard against undefined state - can happen in React Native New
+        // Architecture where SWRGlobalState.get(cache) returns undefined
+        // during initial renders before the provider has initialized.
+        if (state) {
+          state[5](key, mergeObjects(prev, info), prev || EMPTY_CACHE)
+        }
       }
     },
     // Subscriber
-    state[6],
+    state ? state[6] : () => noop,
     // Get server cache snapshot
     () => {
       if (!isUndefined(key)) {
