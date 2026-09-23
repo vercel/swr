@@ -8,6 +8,7 @@ import {
   isPromiseLike
 } from './shared'
 import { SWRGlobalState } from './global-state'
+import { PRELOAD_ARG } from '../constants'
 import { getTimestamp } from './timestamp'
 import * as revalidateEvents from '../events'
 import type {
@@ -72,14 +73,29 @@ export async function internalMutate<Data>(
   if (isFunction(_key)) {
     const keyFilter = _key
     const matchedKeys: Key[] = []
+    // The special useSWRInfinite and useSWRSubscription keys are always skipped.
+    const isReservedKey = /^\$(inf|sub)\$/
     const it = cache.keys()
     for (const key of it) {
       if (
-        // Skip the special useSWRInfinite and useSWRSubscription keys.
-        !/^\$(inf|sub)\$/.test(key) &&
+        !isReservedKey.test(key) &&
         keyFilter((cache.get(key) as { _k: Arguments })._k)
       ) {
         matchedKeys.push(key)
+      }
+    }
+    // Also clear matching preloads that no useSWR mount ever consumed, so they
+    // don't outlive an invalidation.
+    const [, , , PRELOAD] = SWRGlobalState.get(cache) as GlobalState
+    for (const key in PRELOAD) {
+      // Filter by the tagged original args (PRELOAD is keyed by the serialized
+      // string), falling back to the key when nothing was tagged.
+      const preloadArg = (PRELOAD[key] as any)?.[PRELOAD_ARG]
+      if (
+        !isReservedKey.test(key) &&
+        keyFilter(isUndefined(preloadArg) ? key : preloadArg)
+      ) {
+        delete PRELOAD[key]
       }
     }
     return Promise.all(matchedKeys.map(mutateByKey))
