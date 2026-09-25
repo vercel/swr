@@ -217,6 +217,7 @@ export const useSWRHandler = <Data = any, Error = any>(
 
   // Refs to keep the key and config.
   const keyRef = useRef(key)
+  const callbackEpochRef = useRef(0)
   const fetcherRef = useRef(fetcher)
   const configRef = useRef(config)
   const getConfig = () => configRef.current
@@ -492,6 +493,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       let requestStarted = false
       let tagsRegistered = false
       const unloadGeneration = globalState[8]
+      const callbackEpoch = callbackEpochRef.current
       const opts = revalidateOpts || {}
       const registerSettledTags = () => {
         if (
@@ -531,14 +533,12 @@ export const useSWRHandler = <Data = any, Error = any>(
         https://github.com/reactwg/react-18/discussions/82
       */
       const callbackSafeguard = () => {
+        const isSameKey =
+          key === keyRef.current && callbackEpoch === callbackEpochRef.current
         if (IS_REACT_LEGACY) {
-          return (
-            !unmountedRef.current &&
-            key === keyRef.current &&
-            initialMountedRef.current
-          )
+          return !unmountedRef.current && isSameKey && initialMountedRef.current
         }
-        return key === keyRef.current
+        return isSameKey
       }
 
       // The final state object when the request finishes.
@@ -805,8 +805,12 @@ export const useSWRHandler = <Data = any, Error = any>(
 
   // After mounted or key changed.
   useIsomorphicLayoutEffect(() => {
-    // An empty key also invalidates callbacks from the previous request.
-    keyRef.current = key
+    // Committing an empty key invalidates callbacks from prior requests,
+    // including if that key becomes active again.
+    if (keyRef.current !== key) {
+      keyRef.current = key
+      if (!key) callbackEpochRef.current++
+    }
     if (!key) return
 
     const softRevalidate = revalidate.bind(UNDEFINED, WITH_DEDUPE)
