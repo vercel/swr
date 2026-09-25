@@ -39,6 +39,127 @@ describe('useSWR - config callbacks', () => {
     expect(state).toEqual('b')
   })
 
+  it('does not call onSuccess for a request after its key becomes null', async () => {
+    const key = createKey()
+    const cache = new Map()
+    const success = jest.fn()
+    let resolveRequest!: (value: string) => void
+    const request = new Promise<string>(resolve => {
+      resolveRequest = resolve
+    })
+    const fetcher = jest.fn(() => request)
+
+    function Page({ active, label }: { active: boolean; label: string }) {
+      const { data } = useSWR(active ? key : null, fetcher, {
+        onSuccess: () => success(label)
+      })
+      return <div>{data ?? 'empty'}</div>
+    }
+
+    function Subscriber() {
+      const { data } = useSWR(key, fetcher)
+      return <div>subscriber: {data ?? 'empty'}</div>
+    }
+
+    function App({
+      active,
+      label,
+      subscribe
+    }: {
+      active: boolean
+      label: string
+      subscribe: boolean
+    }) {
+      return (
+        <>
+          <Page active={active} label={label} />
+          {subscribe && <Subscriber />}
+        </>
+      )
+    }
+
+    const { rerender } = renderWithConfig(
+      <App active label="original" subscribe={false} />,
+      { provider: () => cache }
+    )
+    expect(fetcher).toHaveBeenCalledTimes(1)
+
+    rerender(<App active={false} label="later" subscribe />)
+    await act(async () => {
+      resolveRequest('old result')
+      await request
+    })
+
+    expect(success).not.toHaveBeenCalled()
+    expect(fetcher).toHaveBeenCalledTimes(1)
+    expect(cache.get(key).data).toBe('old result')
+    screen.getByText('subscriber: old result')
+  })
+
+  it('does not call onError for a request after its key becomes null', async () => {
+    const key = createKey()
+    const cache = new Map()
+    const onError = jest.fn()
+    const failure = new Error('old failure')
+    let rejectRequest!: (reason: Error) => void
+    const request = new Promise<string>((_, reject) => {
+      rejectRequest = reject
+    })
+    const fetcher = jest.fn(() => request)
+
+    function Page({ active }: { active: boolean }) {
+      useSWR(active ? key : null, fetcher, {
+        onError,
+        shouldRetryOnError: false
+      })
+      return null
+    }
+
+    const { rerender } = renderWithConfig(<Page active />, {
+      provider: () => cache
+    })
+    expect(fetcher).toHaveBeenCalledTimes(1)
+
+    rerender(<Page active={false} />)
+    await act(async () => {
+      rejectRequest(failure)
+    })
+
+    expect(onError).not.toHaveBeenCalled()
+    expect(cache.get(key).error).toBe(failure)
+  })
+
+  it('calls onSuccess when a null key becomes active', async () => {
+    const key = createKey()
+    const onSuccess = jest.fn()
+    let resolveRequest!: (value: string) => void
+    const request = new Promise<string>(resolve => {
+      resolveRequest = resolve
+    })
+    const fetcher = jest.fn(() => request)
+
+    function Page({ active }: { active: boolean }) {
+      useSWR(active ? key : null, fetcher, { onSuccess })
+      return null
+    }
+
+    const { rerender } = renderWithConfig(<Page active={false} />)
+    expect(fetcher).not.toHaveBeenCalled()
+
+    rerender(<Page active />)
+    expect(fetcher).toHaveBeenCalledTimes(1)
+    await act(async () => {
+      resolveRequest('new result')
+      await request
+    })
+
+    expect(onSuccess).toHaveBeenCalledWith(
+      'new result',
+      key,
+      expect.any(Object)
+    )
+  })
+
   it('should trigger the onError event with the latest version of the onError callback', async () => {
     let state = null
     let count = 0

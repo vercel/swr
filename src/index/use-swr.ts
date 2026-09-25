@@ -805,6 +805,8 @@ export const useSWRHandler = <Data = any, Error = any>(
 
   // After mounted or key changed.
   useIsomorphicLayoutEffect(() => {
+    // An empty key also invalidates callbacks from the previous request.
+    keyRef.current = key
     if (!key) return
 
     const softRevalidate = revalidate.bind(UNDEFINED, WITH_DEDUPE)
@@ -859,7 +861,6 @@ export const useSWRHandler = <Data = any, Error = any>(
 
     // Mark the component as mounted and update corresponding refs.
     unmountedRef.current = false
-    keyRef.current = key
     initialMountedRef.current = true
 
     // Keep the original key in the cache.
