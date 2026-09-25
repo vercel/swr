@@ -329,3 +329,63 @@ describe('issue #4207', () => {
     expect(fetchCount).toBe(1)
   })
 })
+
+describe('issue #4322', () => {
+  it('should respect a hook-level refreshInterval', async () => {
+    let fetchCount = 0
+    const fetcher = () => {
+      fetchCount++
+      return 'data'
+    }
+
+    function Page() {
+      const { data } = useSWRImmutable('key', fetcher, {
+        refreshInterval: 100,
+        dedupingInterval: 0
+      })
+      return <div>{data}</div>
+    }
+
+    renderWithConfig(<Page />, { provider: () => new Map() })
+
+    await screen.findByText('data')
+    expect(fetchCount).toBe(1)
+
+    await new Promise(resolve => setTimeout(resolve, 350))
+    expect(fetchCount).toBeGreaterThan(1)
+  })
+
+  it('should let a hook-level refreshInterval override a global one', async () => {
+    let fetchCount = 0
+    const fetcher = () => {
+      fetchCount++
+      return 'data'
+    }
+
+    function Page() {
+      const { data } = useSWRImmutable('key', fetcher, {
+        refreshInterval: 100,
+        dedupingInterval: 0
+      })
+      return <div>{data}</div>
+    }
+
+    renderWithConfig(
+      <SWRConfig
+        value={{
+          refreshInterval: 5000,
+          dedupingInterval: 0,
+          provider: () => new Map()
+        }}
+      >
+        <Page />
+      </SWRConfig>
+    )
+
+    await screen.findByText('data')
+    expect(fetchCount).toBe(1)
+
+    await new Promise(resolve => setTimeout(resolve, 350))
+    expect(fetchCount).toBeGreaterThan(1)
+  })
+})
