@@ -293,6 +293,33 @@ describe('useSWRSubscription', () => {
     await screen.findByText(`data: 3`)
   })
 
+  it('should keep updating a shared key after one hook switches keys', async () => {
+    const keyA = createKey()
+    const keyB = createKey()
+    const emitters: Record<string, (data: string) => void> = {}
+
+    function subscribe(key, { next }) {
+      emitters[key] = data => next(null, data)
+      return () => {}
+    }
+
+    function Page() {
+      const [key, setKey] = useState(keyA)
+      // The first hook creates the shared subscription for `keyA`.
+      const { data } = useSWRSubscription(key, subscribe)
+      const { data: shared } = useSWRSubscription(keyA, subscribe)
+      return <button onClick={() => setKey(keyB)}>{`${data}:${shared}`}</button>
+    }
+
+    renderWithConfig(<Page />)
+    await act(async () => emitters[keyA]('a1'))
+    fireEvent.click(screen.getByText('a1:a1'))
+
+    // Updates for `keyA` must not leak into the hook that moved to `keyB`.
+    await act(async () => emitters[keyA]('a2'))
+    screen.getByText('undefined:a2')
+  })
+
   it('should require a dispose function', async () => {
     jest.spyOn(console, 'error').mockImplementation(() => {})
 
