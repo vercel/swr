@@ -218,6 +218,34 @@ describe('useSWR - focus', () => {
     await screen.findByText('data: 1')
   })
 
+  it('should not pass the focus event to setTimeout as the delay', async () => {
+    const setTimeoutSpy = jest.spyOn(global, 'setTimeout')
+    let value = 0
+    const key = createKey()
+    function Page() {
+      const { data } = useSWR(key, () => value++, {
+        dedupingInterval: 0,
+        focusThrottleInterval: 0
+      })
+      return <div>data: {data}</div>
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data: 0')
+    await waitForNextTick()
+
+    setTimeoutSpy.mockClear()
+    await focusWindow()
+    await act(async () => {
+      fireEvent(document, new Event('visibilitychange'))
+    })
+    const delayTypes = setTimeoutSpy.mock.calls.map(([, delay]) => typeof delay)
+    setTimeoutSpy.mockRestore()
+
+    expect(delayTypes).not.toContain('object')
+    await screen.findByText('data: 1')
+  })
+
   it('should not revalidate on focus when key changes in the same tick', async () => {
     const fetchLogs = []
 
