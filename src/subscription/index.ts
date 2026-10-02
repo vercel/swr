@@ -73,12 +73,36 @@ export const subscription = (<Data = any, Error = any>(useSWRNext: SWRHook) =>
 
       if (!refCount) {
         const dispose = subscribe(args, { next })
-        if (typeof dispose !== 'function') {
+        if (dispose && typeof (dispose as any).then === 'function') {
+          let disposed = false
+          disposers.set(subscriptionKey, () => {
+            disposed = true
+          })
+          const promise = dispose as Promise<any>
+          promise
+            .then(cleanup => {
+              if (typeof cleanup === 'function') {
+                if (disposed || !subscriptions.get(subscriptionKey)) {
+                  cleanup()
+                } else {
+                  disposers.set(subscriptionKey, cleanup)
+                }
+              }
+            })
+            .catch(error => {
+              if (!disposed && subscriptions.get(subscriptionKey)) {
+                next(error)
+              }
+            })
+        } else if (typeof dispose === 'function') {
+          disposers.set(subscriptionKey, dispose)
+        } else if (typeof dispose === 'undefined') {
+          // Do not throw error (void return allowed)
+        } else {
           throw new Error(
             'The `subscribe` function must return a function to unsubscribe.'
           )
         }
-        disposers.set(subscriptionKey, dispose)
       }
 
       return () => {
