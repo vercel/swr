@@ -67,38 +67,28 @@ describe('useSWR - reconnect', () => {
     let value = 0
     const fetcher = jest.fn(async () => ++value)
 
-    function Disabled() {
+    function Page() {
       useSWR(key, fetcher, {
         revalidateOnMount: false,
         revalidateOnReconnect: false
       })
-      return null
-    }
-
-    function Enabled({ label }: { label: string }) {
-      const { data } = useSWR(key, fetcher, { dedupingInterval: 0 })
+      const { data: first } = useSWR(key, fetcher, { dedupingInterval: 0 })
+      const { data: second } = useSWR(key, fetcher, { dedupingInterval: 0 })
       return (
         <div>
-          {label}: {data}
+          data: {first}, {second}
         </div>
       )
     }
 
-    renderWithConfig(
-      <>
-        <Disabled />
-        <Enabled label="first" />
-        <Enabled label="second" />
-      </>
-    )
+    renderWithConfig(<Page />)
 
-    await screen.findByText('first: 1')
+    await screen.findByText('data: 1, 1')
     await waitForNextTick()
     fireEvent(window, createEvent('offline', window))
     fireEvent(window, createEvent('online', window))
 
-    await screen.findByText('first: 2')
-    screen.getByText('second: 2')
+    await screen.findByText('data: 2, 2')
     expect(fetcher).toHaveBeenCalledTimes(2)
   })
 
