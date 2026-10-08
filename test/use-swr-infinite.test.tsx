@@ -938,6 +938,36 @@ describe('useSWRInfinite', () => {
     await screen.findByText('size: 3')
   })
 
+  // https://github.com/vercel/swr/issues/3001
+  it('should not refetch a loading page when setSize is called repeatedly', async () => {
+    const key = createKey()
+    const fetcher = jest.fn((k: string) => createResponse(k, { delay: 50 }))
+
+    function Page() {
+      const { data, setSize } = useSWRInfinite(
+        index => key + '-' + index,
+        fetcher,
+        { revalidateFirstPage: false }
+      )
+      return (
+        <div onClick={() => setSize(2)}>data:{data ? data.join(',') : ''}</div>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText(`data:${key}-0`)
+    expect(fetcher).toHaveBeenCalledTimes(1)
+
+    // Load the second page and keep asking for it while it is still loading.
+    for (let i = 0; i < 5; i++) {
+      fireEvent.click(screen.getByText(`data:${key}-0`))
+      await act(() => sleep(5))
+    }
+
+    await screen.findByText(`data:${key}-0,${key}-1`)
+    expect(fetcher.mock.calls.filter(([k]) => k === `${key}-1`)).toHaveLength(1)
+  })
+
   it('setSize should return a promise', async () => {
     let _setSize
     function Comp() {

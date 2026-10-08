@@ -39,6 +39,11 @@ import { getFirstPageKey } from './serialize'
 
 const EMPTY_PROMISE = Promise.resolve() as Promise<undefined>
 
+// In-flight requests for pages that are not cached yet, scoped by cache. Calling
+// `setSize` while a new page is still loading would otherwise start another
+// request for the same page.
+const PENDING_PAGES = new WeakMap<object, Map<string, unknown>>()
+
 export { unstable_serialize } from './serialize'
 
 export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
@@ -194,8 +199,23 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
           ) {
             const revalidate = async () => {
               const hasPreloadedRequest = pageKey in PRELOAD
-              if (!hasPreloadedRequest) {
-                pageData = await fn(pageArg)
+              let pending = PENDING_PAGES.get(cache)
+              if (!pending) PENDING_PAGES.set(cache, (pending = new Map()))
+              if (
+                isUndefined(pageData) &&
+                !forceRevalidateAll &&
+                pending.has(pageKey)
+              ) {
+                // The page is missing and already being fetched, reuse it.
+                pageData = (await pending.get(pageKey)) as Data
+              } else if (!hasPreloadedRequest) {
+                const req = fn(pageArg)
+                pending.set(pageKey, req)
+                try {
+                  pageData = await req
+                } finally {
+                  if (pending.get(pageKey) === req) pending.delete(pageKey)
+                }
               } else {
                 const req = PRELOAD[pageKey]
                 // delete the preload cache key before resolving it
