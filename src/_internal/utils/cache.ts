@@ -22,7 +22,7 @@ const revalidateAllKeys = (
   type: RevalidateEvent
 ) => {
   for (const key in revalidators) {
-    if (revalidators[key][0]) revalidators[key][0](type)
+    for (const revalidate of revalidators[key]) revalidate(type)
   }
 }
 
