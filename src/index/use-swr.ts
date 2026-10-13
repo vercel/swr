@@ -487,7 +487,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       }
 
       let newData: Data
-      let startAt: number
+      let startAt: number | undefined
       let loading = true
       let requestStarted = false
       let tagsRegistered = false
@@ -670,6 +670,26 @@ export const useSWRHandler = <Data = any, Error = any>(
         }
       } catch (err: any) {
         registerSettledTags()
+
+        // Same race as on the success path: if a newer request now owns
+        // `FETCH[key]`, or it was cleared, this rejection is stale. Discard it
+        // instead of writing its error next to fresher data.
+        if (
+          !isUndefined(startAt) &&
+          (!FETCH[key] || FETCH[key][1] !== startAt)
+        ) {
+          if (shouldStartNewRequest && callbackSafeguard()) {
+            getConfig().onDiscarded(key)
+          }
+          loading = false
+          // While a newer request is in flight, leave `isLoading` and
+          // `isValidating` to it.
+          if (!FETCH[key]) {
+            finishRequestAndUpdateState()
+          }
+          return false
+        }
+
         cleanupState()
 
         const currentConfig = getConfig()
