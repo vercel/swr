@@ -1891,4 +1891,105 @@ describe('useSWRInfinite', () => {
 
     await screen.findByText('data:[apple],banana,[pineapple]')
   })
+
+  // https://github.com/vercel/swr/issues/4355
+  it('should not write the pages of a superseded revalidation to the page cache', async () => {
+    const key = createKey()
+    const getKey = (index: number) => `page-${index}-${key}`
+    const resolvers: Array<(value: string) => void> = []
+    const fetcher = jest.fn(
+      () =>
+        new Promise<string>(resolve => {
+          resolvers.push(resolve)
+        })
+    )
+
+    let mutate: () => Promise<any>
+    let cache: ReturnType<typeof useSWRConfig>['cache']
+    function Page() {
+      const swr = useSWRInfinite(getKey, fetcher, {
+        revalidateOnMount: false,
+        revalidateFirstPage: false
+      })
+      mutate = swr.mutate
+      cache = useSWRConfig().cache
+      return <div>data:{swr.data}</div>
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('data:')
+
+    // two revalidations, only the second one owns the request
+    let pending: Promise<any>
+    act(() => {
+      pending = Promise.all([mutate(), mutate()])
+    })
+    expect(fetcher).toHaveBeenCalledTimes(2)
+
+    await act(async () => resolvers[1]('fresh'))
+    await screen.findByText('data:fresh')
+
+    // the superseded request finishes last
+    await act(async () => {
+      resolvers[0]('stale')
+      await pending
+    })
+
+    screen.getByText('data:fresh')
+    expect(cache.get(unstable_serialize(getKey)).data).toEqual(['fresh'])
+    expect(cache.get(getKey(0)).data).toBe('fresh')
+  })
+
+  // https://github.com/vercel/swr/issues/4355
+  it('should stop fetching further pages in a superseded revalidation', async () => {
+    const key = createKey()
+    const getKey = (index: number) => `page-${index}-${key}`
+    const resolvers: Array<(value: string) => void> = []
+    const fetcher = jest.fn(
+      () =>
+        new Promise<string>(resolve => {
+          resolvers.push(resolve)
+        })
+    )
+
+    let mutate: () => Promise<any>
+    let cache: ReturnType<typeof useSWRConfig>['cache']
+    function Page() {
+      const swr = useSWRInfinite(getKey, fetcher, {
+        initialSize: 2,
+        revalidateOnMount: false,
+        revalidateFirstPage: false
+      })
+      mutate = swr.mutate
+      cache = useSWRConfig().cache
+      return <div>data:{swr.data}</div>
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('data:')
+
+    // both requests start by fetching the first page
+    let pending: Promise<any>
+    act(() => {
+      pending = Promise.all([mutate(), mutate()])
+    })
+    expect(fetcher).toHaveBeenCalledTimes(2)
+
+    // the latest request moves on to the second page
+    await act(async () => resolvers[1]('fresh-0,'))
+    expect(fetcher).toHaveBeenCalledTimes(3)
+
+    // the superseded request gets its first page and stops there
+    await act(async () => resolvers[0]('stale-0,'))
+    expect(fetcher).toHaveBeenCalledTimes(3)
+
+    await act(async () => {
+      resolvers[2]('fresh-1')
+      await pending
+    })
+
+    await screen.findByText('data:fresh-0,fresh-1')
+    expect(cache.get(getKey(0)).data).toBe('fresh-0,')
+    expect(cache.get(getKey(1)).data).toBe('fresh-1')
+  })
 })

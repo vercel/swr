@@ -39,6 +39,10 @@ import { getFirstPageKey } from './serialize'
 
 const EMPTY_PROMISE = Promise.resolve() as Promise<undefined>
 
+// Incremented for every request of an infinite key, see `_g` in
+// `SWRInfiniteCacheValue`.
+let requestGeneration = 0
+
 export { unstable_serialize } from './serialize'
 
 export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
@@ -138,7 +142,16 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
         const state = SWRGlobalState.get(cache) as GlobalState
         const unloadGeneration = state[8]
         const unloadedDuringRequest = () => state[8] !== unloadGeneration
-        set({ _r: UNDEFINED })
+        // Mark this request as the latest one for the key. A later request
+        // overwrites the mark, and its result is the one the core keeps. The
+        // superseded request then stops writing its pages to the page cache
+        // and stops fetching further pages.
+        const generation = ++requestGeneration
+        const superseded = () => {
+          const latest = get()._g
+          return !isUndefined(latest) && latest !== generation
+        }
+        set({ _r: UNDEFINED, _g: generation })
 
         // return an array of page data
         const data: Data[] = []
@@ -204,7 +217,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
                 // get the page data from the preload cache
                 pageData = await req
               }
-              if (!unloadedDuringRequest()) {
+              if (!unloadedDuringRequest() && !superseded()) {
                 setSWRCache({ data: pageData, _k: pageArg })
               }
               data[i] = pageData
@@ -213,6 +226,9 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
               revalidators.push(revalidate)
             } else {
               await revalidate()
+              // The result of a superseded request is discarded, so there is
+              // no need to fetch the pages that depend on this one.
+              if (superseded()) break
             }
           } else {
             data[i] = pageData
@@ -229,8 +245,9 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
 
         // once we executed the data fetching based on the context, clear the
         // context. Skipped after an unload so the cleared meta entry isn't
-        // re-created.
-        if (!unloadedDuringRequest()) {
+        // re-created, and for a superseded request so it doesn't clear the
+        // context of the request that replaced it.
+        if (!unloadedDuringRequest() && !superseded()) {
           set({ _i: UNDEFINED })
         }
 
