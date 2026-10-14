@@ -31,6 +31,8 @@ export type {
   Cache,
   BareFetcher,
   Fetcher,
+  FetcherContext,
+  RevalidateTrigger,
   MutatorCallback,
   MutatorOptions,
   Middleware,

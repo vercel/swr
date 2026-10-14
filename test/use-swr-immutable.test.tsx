@@ -239,8 +239,8 @@ describe('useSWR - immutable', () => {
 
     // `fetcher` should only be called twice, with each key.
     expect(fetcher).toHaveBeenCalledTimes(2)
-    expect(fetcher).toHaveBeenNthCalledWith(1, key + '0')
-    expect(fetcher).toHaveBeenNthCalledWith(2, key + '1')
+    expect(fetcher).toHaveBeenNthCalledWith(1, key + '0', expect.anything())
+    expect(fetcher).toHaveBeenNthCalledWith(2, key + '1', expect.anything())
   })
 
   it('isLoading and isValidating should be true when switch to new key', async () => {
