@@ -305,6 +305,7 @@ describe('useSWR - refresh', () => {
     let count = 0
     const key = createKey()
     const compareParams = []
+    const expectedData = (timestamp: number) => ({ timestamp, version: '1.0' })
     const fetcher = jest.fn(() => ({
       timestamp: ++count,
       version: '1.0'
@@ -331,103 +332,24 @@ describe('useSWR - refresh', () => {
     }
     renderWithConfig(<Page />)
     await screen.findByText('1')
-    expect(compareParams).toMatchInlineSnapshot(`
-[
-  [
-    undefined,
-    {
-      "timestamp": 1,
-      "version": "1.0",
-    },
-  ],
-  [
-    undefined,
-    {
-      "timestamp": 1,
-      "version": "1.0",
-    },
-  ],
-  [
-    undefined,
-    {
-      "timestamp": 1,
-      "version": "1.0",
-    },
-  ],
-  [
-    {
-      "timestamp": 1,
-      "version": "1.0",
-    },
-    undefined,
-  ],
-]
-`)
+    expect(compareParams).toEqual([
+      [undefined, expectedData(1)],
+      [undefined, expectedData(1)],
+      [undefined, expectedData(1)],
+      [expectedData(1), undefined]
+    ])
 
     fireEvent.click(screen.getByText('change'))
     await screen.findByText('2')
-    expect(compareParams).toMatchInlineSnapshot(`
-[
-  [
-    undefined,
-    {
-      "timestamp": 1,
-      "version": "1.0",
-    },
-  ],
-  [
-    undefined,
-    {
-      "timestamp": 1,
-      "version": "1.0",
-    },
-  ],
-  [
-    undefined,
-    {
-      "timestamp": 1,
-      "version": "1.0",
-    },
-  ],
-  [
-    {
-      "timestamp": 1,
-      "version": "1.0",
-    },
-    undefined,
-  ],
-  [
-    {
-      "timestamp": 1,
-      "version": "1.0",
-    },
-    {
-      "timestamp": 2,
-      "version": "1.0",
-    },
-  ],
-  [
-    {
-      "timestamp": 1,
-      "version": "1.0",
-    },
-    {
-      "timestamp": 2,
-      "version": "1.0",
-    },
-  ],
-  [
-    {
-      "timestamp": 2,
-      "version": "1.0",
-    },
-    {
-      "timestamp": 1,
-      "version": "1.0",
-    },
-  ],
-]
-`)
+    expect(compareParams).toEqual([
+      [undefined, expectedData(1)],
+      [undefined, expectedData(1)],
+      [undefined, expectedData(1)],
+      [expectedData(1), undefined],
+      [expectedData(1), expectedData(2)],
+      [expectedData(1), expectedData(2)],
+      [expectedData(2), expectedData(1)]
+    ])
   })
 
   it('should not let the previous interval timer to set new timer if key changes too fast', async () => {
