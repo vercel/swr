@@ -862,8 +862,10 @@ export const useSWRHandler = <Data = any, Error = any>(
     keyRef.current = key
     initialMountedRef.current = true
 
-    // Keep the original key in the cache.
-    setCache({ _k: fnArg })
+    // Keep the original key in the cache if missing or different.
+    if (serialize(getCache()._k)[0] !== key) {
+      setCache({ _k: fnArg })
+    }
 
     // Trigger a revalidation
     if (shouldDoInitialRevalidation) {
