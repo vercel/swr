@@ -253,11 +253,14 @@ export const useSWRHandler = <Data = any, Error = any>(
     for (const _ in stateDependencies) {
       const t = _ as keyof StateDependencies
       if (t === 'data') {
-        if (!compare(prev[t], current[t])) {
+        if (prev[t] !== current[t] && !compare(prev[t], current[t])) {
           if (!isUndefined(prev[t])) {
             return false
           }
-          if (!compare(returnedData, current[t])) {
+          if (
+            returnedData !== current[t] &&
+            !compare(returnedData, current[t])
+          ) {
             return false
           }
         }
