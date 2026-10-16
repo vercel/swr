@@ -1,4 +1,5 @@
 import useSWR from 'swr'
+import type { FetcherContext, RevalidateTrigger } from 'swr'
 import useSWRInfinite from 'swr/infinite'
 import { expectType, truthy } from './utils'
 import type { Equal } from '@type-challenges/utils'
@@ -484,6 +485,44 @@ export function useReturnReadonlyTuple() {
         >
       >(true)
       return keys[1]
+    }
+  )
+}
+
+export function useFetcherContext() {
+  useSWR('/api/user', (key, ctx) => {
+    expectType<Equal<'/api/user', typeof key>>(true)
+    expectType<Equal<FetcherContext, typeof ctx>>(true)
+    expectType<Equal<RevalidateTrigger, typeof ctx.trigger>>(true)
+    expectType<Equal<number, typeof ctx.retryCount>>(true)
+    return key
+  })
+
+  useSWR(['/api/user', 1] as const, (key, ctx) => {
+    expectType<Equal<readonly ['/api/user', 1], typeof key>>(true)
+    expectType<Equal<FetcherContext, typeof ctx>>(true)
+    return key
+  })
+
+  useSWR(
+    () => (truthy() ? '/api/user' : null),
+    (key, ctx) => {
+      expectType<Equal<'/api/user', typeof key>>(true)
+      expectType<Equal<FetcherContext, typeof ctx>>(true)
+      return key
+    }
+  )
+
+  // Fetchers that ignore the context still type-check.
+  useSWR('/api/user', (key: string) => key)
+
+  useSWRInfinite(
+    index => `/api/user?page=${index}`,
+    (key, ctx) => {
+      expectType<Equal<string, typeof key>>(true)
+      expectType<Equal<RevalidateTrigger, typeof ctx.trigger>>(true)
+      expectType<Equal<number, typeof ctx.retryCount>>(true)
+      return key
     }
   )
 }

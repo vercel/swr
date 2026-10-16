@@ -68,6 +68,41 @@ export type BareFetcher<Data = unknown> = (
 ) => FetcherResponse<Data>
 
 /**
+ * The reason a revalidation was started.
+ *
+ * - `mount`: initial load, when the hook mounts or the key changes
+ * - `interval`: polling via `refreshInterval`
+ * - `focus`: the window regained focus (`revalidateOnFocus`)
+ * - `reconnect`: the network came back online (`revalidateOnReconnect`)
+ * - `mutate`: `mutate()`, `revalidateTag()` or `unload()` with revalidation
+ * - `retry`: an error retry scheduled by `onErrorRetry`
+ *
+ * @public
+ */
+export type RevalidateTrigger =
+  | 'mount'
+  | 'interval'
+  | 'focus'
+  | 'reconnect'
+  | 'mutate'
+  | 'retry'
+
+/**
+ * Context passed to the fetcher as its second argument.
+ *
+ * When requests are deduplicated, the fetcher only runs for the request that
+ * was actually started, so `trigger` describes why that request started.
+ *
+ * @public
+ */
+export type FetcherContext = Readonly<{
+  /** Why this request was started. */
+  trigger: RevalidateTrigger
+  /** Number of error retries so far, `0` for the first attempt. */
+  retryCount: number
+}>
+
+/**
  * Typed fetcher function that is constrained by the SWR key type.
  *
  * Provides type safety by ensuring the fetcher argument matches the key type.
@@ -75,6 +110,8 @@ export type BareFetcher<Data = unknown> = (
  * - If the key is a function returning a value, the fetcher receives that value
  * - If the key is falsy (null, undefined, false), the fetcher is never called
  * - Otherwise, the fetcher receives the key directly as its argument
+ *
+ * The fetcher also receives a {@link FetcherContext} as its second argument.
  *
  * @template Data - The type of data returned by the fetcher
  * @template SWRKey - The type of the SWR key, used to infer fetcher arguments
@@ -84,11 +121,11 @@ export type Fetcher<
   Data = unknown,
   SWRKey extends Key = Key
 > = SWRKey extends () => (infer Arg) | null | undefined | false
-  ? (arg: Arg) => FetcherResponse<Data>
+  ? (arg: Arg, ctx: FetcherContext) => FetcherResponse<Data>
   : SWRKey extends null | undefined | false
     ? never
     : SWRKey extends infer Arg
-      ? (arg: Arg) => FetcherResponse<Data>
+      ? (arg: Arg, ctx: FetcherContext) => FetcherResponse<Data>
       : never
 
 /**

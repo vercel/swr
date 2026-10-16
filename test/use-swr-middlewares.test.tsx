@@ -242,7 +242,7 @@ describe('useSWR - middleware', () => {
     function Page() {
       const { data } = useSWR(
         [key, { hello: 'world' }],
-        (_, o) => {
+        (_: string, o: { hello: string }) => {
           return o.hello
         },
         {

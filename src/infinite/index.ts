@@ -128,7 +128,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
     // Actual SWR hook to load all pages in one fetcher.
     const swr = useSWRNext(
       infiniteKey,
-      async key => {
+      async (key, ctx) => {
         // get the revalidate context
         const forceRevalidateAll = get()._i
         const shouldRevalidatePage = get()._r
@@ -195,7 +195,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
             const revalidate = async () => {
               const hasPreloadedRequest = pageKey in PRELOAD
               if (!hasPreloadedRequest) {
-                pageData = await fn(pageArg)
+                pageData = await fn(pageArg, ctx)
               } else {
                 const req = PRELOAD[pageKey]
                 // delete the preload cache key before resolving it

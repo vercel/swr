@@ -529,13 +529,19 @@ describe('useSWR - refresh', () => {
     // first refresh
     await act(() => advanceTimers(100))
     expect(fetcherWithToken).toHaveBeenCalledTimes(2)
-    expect(fetcherWithToken).toHaveBeenLastCalledWith(`${key}-0`)
+    expect(fetcherWithToken).toHaveBeenLastCalledWith(
+      `${key}-0`,
+      expect.anything()
+    )
     await act(() => advanceTimers(200))
 
     // second refresh start
     await act(() => advanceTimers(100))
     expect(fetcherWithToken).toHaveBeenCalledTimes(3)
-    expect(fetcherWithToken).toHaveBeenLastCalledWith(`${key}-0`)
+    expect(fetcherWithToken).toHaveBeenLastCalledWith(
+      `${key}-0`,
+      expect.anything()
+    )
     // change the key during revalidation
     // The second refresh will not start a new timer
     fireEvent.click(screen.getByText(`click me ${key}-0`))
@@ -543,13 +549,19 @@ describe('useSWR - refresh', () => {
     // first, refresh with new key 1
     await act(() => advanceTimers(100))
     expect(fetcherWithToken).toHaveBeenCalledTimes(4)
-    expect(fetcherWithToken).toHaveBeenLastCalledWith(`${key}-1`)
+    expect(fetcherWithToken).toHaveBeenLastCalledWith(
+      `${key}-1`,
+      expect.anything()
+    )
     await act(() => advanceTimers(200))
 
     // second refresh with new key 1
     await act(() => advanceTimers(100))
     expect(fetcherWithToken).toHaveBeenCalledTimes(5)
-    expect(fetcherWithToken).toHaveBeenLastCalledWith(`${key}-1`)
+    expect(fetcherWithToken).toHaveBeenLastCalledWith(
+      `${key}-1`,
+      expect.anything()
+    )
   })
 
   it('should not call onSuccess from the previous interval if key has changed', async () => {
@@ -585,7 +597,10 @@ describe('useSWR - refresh', () => {
     // first refresh
     await act(() => advanceTimers(50))
     expect(fetcherWithToken).toHaveBeenCalledTimes(2)
-    expect(fetcherWithToken).toHaveBeenLastCalledWith(`0-${key}`)
+    expect(fetcherWithToken).toHaveBeenLastCalledWith(
+      `0-${key}`,
+      expect.anything()
+    )
     await act(() => advanceTimers(100))
     expect(onSuccess).toHaveBeenCalledTimes(2)
     expect(onSuccess).toHaveLastReturnedWith(`0-${key} 0-${key}`)
@@ -593,7 +608,10 @@ describe('useSWR - refresh', () => {
     // second refresh start
     await act(() => advanceTimers(50))
     expect(fetcherWithToken).toHaveBeenCalledTimes(3)
-    expect(fetcherWithToken).toHaveBeenLastCalledWith(`0-${key}`)
+    expect(fetcherWithToken).toHaveBeenLastCalledWith(
+      `0-${key}`,
+      expect.anything()
+    )
     // change the key during revalidation
     // The second refresh will not start a new timer
     fireEvent.click(screen.getByText(`click me 0-${key}`))
@@ -601,7 +619,10 @@ describe('useSWR - refresh', () => {
     // first, refresh with new key 1
     await act(() => advanceTimers(50))
     expect(fetcherWithToken).toHaveBeenCalledTimes(4)
-    expect(fetcherWithToken).toHaveBeenLastCalledWith(`1-${key}`)
+    expect(fetcherWithToken).toHaveBeenLastCalledWith(
+      `1-${key}`,
+      expect.anything()
+    )
     await act(() => advanceTimers(100))
     expect(onSuccess).toHaveBeenCalledTimes(3)
     expect(onSuccess).toHaveLastReturnedWith(`1-${key} 1-${key}`)
@@ -609,7 +630,10 @@ describe('useSWR - refresh', () => {
     // second refresh with new key 1
     await act(() => advanceTimers(50))
     expect(fetcherWithToken).toHaveBeenCalledTimes(5)
-    expect(fetcherWithToken).toHaveBeenLastCalledWith(`1-${key}`)
+    expect(fetcherWithToken).toHaveBeenLastCalledWith(
+      `1-${key}`,
+      expect.anything()
+    )
   })
 
   it('should allow using function as an interval', async () => {

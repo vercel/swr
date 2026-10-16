@@ -3,6 +3,7 @@ import type {
   SWRResponse,
   Arguments,
   BareFetcher,
+  FetcherContext,
   State,
   StrictTupleKey,
   MutatorOptions,
@@ -16,7 +17,7 @@ export type SWRInfiniteFetcher<
   KeyLoader extends SWRInfiniteKeyLoader = SWRInfiniteKeyLoader
 > = KeyLoader extends (...args: any[]) => any
   ? ReturnType<KeyLoader> extends (infer T) | null | false | undefined
-    ? (args: T) => FetcherResponse<Data>
+    ? (args: T, ctx: FetcherContext) => FetcherResponse<Data>
     : never
   : never
 

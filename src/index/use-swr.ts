@@ -31,6 +31,7 @@ import type {
   Key,
   SWRResponse,
   RevalidatorOptions,
+  RevalidateTrigger,
   FullConfiguration,
   SWRHook,
   RevalidateEvent,
@@ -75,7 +76,19 @@ const use =
     }
   })
 
-const WITH_DEDUPE = { dedupe: true }
+type InternalRevalidatorOptions = RevalidatorOptions & {
+  trigger?: RevalidateTrigger
+}
+
+const MOUNT_WITH_DEDUPE: InternalRevalidatorOptions = {
+  dedupe: true,
+  trigger: 'mount'
+}
+const INTERVAL_WITH_DEDUPE: InternalRevalidatorOptions = {
+  dedupe: true,
+  trigger: 'interval'
+}
+const MUTATE: InternalRevalidatorOptions = { trigger: 'mutate' }
 
 type ConsumedCacheData = WeakMap<CacheData, Set<string>>
 
@@ -474,7 +487,7 @@ export const useSWRHandler = <Data = any, Error = any>(
   // The revalidation function is a carefully crafted wrapper of the original
   // `fetcher`, to correctly handle the many edge cases.
   const revalidate = useCallback(
-    async (revalidateOpts?: RevalidatorOptions): Promise<boolean> => {
+    async (revalidateOpts?: InternalRevalidatorOptions): Promise<boolean> => {
       const currentFetcher = fetcherRef.current
 
       if (
@@ -583,10 +596,15 @@ export const useSWRHandler = <Data = any, Error = any>(
             markCacheDataConsumed(consumedCacheData, serverCacheData, key)
           }
           requestStarted = true
+          // Only the request that is actually started calls the fetcher, so
+          // with deduplication the trigger is the one that started it.
           FETCH[key] = [
             shouldUseRSCPreload
               ? preloadedData
-              : currentFetcher(fnArg as DefinitelyTruthy<Key>),
+              : currentFetcher(fnArg as DefinitelyTruthy<Key>, {
+                  trigger: opts.trigger || 'mount',
+                  retryCount: opts.retryCount || 0
+                }),
             getTimestamp()
           ]
           if (shouldUseRSCPreload && PRELOAD[key]) {
@@ -807,7 +825,8 @@ export const useSWRHandler = <Data = any, Error = any>(
   useIsomorphicLayoutEffect(() => {
     if (!key) return
 
-    const softRevalidate = revalidate.bind(UNDEFINED, WITH_DEDUPE)
+    const softRevalidate = (trigger: RevalidateTrigger) =>
+      revalidate({ dedupe: true, trigger })
 
     let nextFocusRevalidatedAt = 0
 
@@ -834,22 +853,26 @@ export const useSWRHandler = <Data = any, Error = any>(
           isActive()
         ) {
           nextFocusRevalidatedAt = now + getConfig().focusThrottleInterval
-          softRevalidate()
+          softRevalidate('focus')
         }
       } else if (type == revalidateEvents.RECONNECT_EVENT) {
         if (getConfig().revalidateOnReconnect && isActive()) {
-          softRevalidate()
+          softRevalidate('reconnect')
         }
       } else if (type == revalidateEvents.MUTATE_EVENT) {
-        return revalidate()
+        return revalidate(MUTATE)
       } else if (type == revalidateEvents.ERROR_REVALIDATE_EVENT) {
-        return revalidate(opts)
+        return revalidate({
+          retryCount: opts.retryCount,
+          dedupe: opts.dedupe,
+          trigger: 'retry'
+        })
       } else if (type == revalidateEvents.UNLOAD_EVENT) {
         // The cache has been cleared: drop the previous data kept by
         // `keepPreviousData` so it can't stay on screen.
         laggyDataRef.current = UNDEFINED
         if (opts.revalidate) {
-          return revalidate()
+          return revalidate(MUTATE)
         }
       }
       return
@@ -872,11 +895,11 @@ export const useSWRHandler = <Data = any, Error = any>(
       if (!FETCH[key]) {
         if (isUndefined(data) || IS_SERVER) {
           // Revalidate immediately.
-          softRevalidate()
+          softRevalidate('mount')
         } else {
           // Delay the revalidate if we have data to return so we won't block
           // rendering.
-          rAF(softRevalidate)
+          rAF(() => softRevalidate('mount'))
         }
       }
     }
@@ -916,7 +939,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         (refreshWhenHidden || getConfig().isVisible()) &&
         (refreshWhenOffline || getConfig().isOnline())
       ) {
-        revalidate(WITH_DEDUPE).then(next)
+        revalidate(INTERVAL_WITH_DEDUPE).then(next)
       } else {
         // Schedule the next interval to check again.
         next()
@@ -991,7 +1014,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     }
     const revalidation =
       hasKeyButNoData && isUndefined(preloadData)
-        ? revalidate(WITH_DEDUPE)
+        ? revalidate(MOUNT_WITH_DEDUPE)
         : resolvedUndef
     if (!isUndefined(returnedData) && hasKeyButNoData) {
       // @ts-ignore modify react promise status
