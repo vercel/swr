@@ -26,6 +26,17 @@ export function useDataErrorGeneric() {
   )
 }
 
+export function useFetcherArgumentTypeMismatch() {
+  useSWR('test', (key: string) => key)
+  useSWR(['test'], (key: string[]) => key[0])
+
+  // @ts-expect-error The fetcher argument must match the string key.
+  useSWR('test', ([id]: [string]) => id)
+
+  // @ts-expect-error The fetcher argument must match the array key.
+  useSWR(['test'], (id: string) => id)
+}
+
 export function useString() {
   useSWR('/api/user', key => {
     expectType<Equal<'/api/user', typeof key>>(true)

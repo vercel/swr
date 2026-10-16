@@ -92,6 +92,12 @@ export type Fetcher<
       : never
 
 /**
+ * Prevents a type parameter from being inferred from a particular position.
+ * Compatible with TypeScript versions before the built-in NoInfer utility.
+ */
+type SWRNoInfer<T> = [T][T extends any ? 0 : never]
+
+/**
  * Determines if data should block rendering based on suspense configuration.
  *
  * This conditional type is used internally to determine the return type of `data`
@@ -662,28 +668,6 @@ export interface SWRHook {
   ): SWRResponse<Data, Error, SWROptions>
 
   /**
-   * Key with bare fetcher function that accepts any arguments.
-   * Provides less type safety but maximum flexibility for fetcher signatures.
-   *
-   * @example
-   * ```ts
-   * const { data } = useSWR('/api/user',
-   *   (...args) => customFetcher(...args)
-   * )
-   * ```
-   */
-  <
-    Data = any,
-    Error = any,
-    SWROptions extends
-      | SWRConfiguration<Data, Error, BareFetcher<Data>>
-      | undefined = SWRConfiguration<Data, Error, BareFetcher<Data>> | undefined
-  >(
-    key: Key,
-    fetcher: BareFetcher<Data> | null
-  ): SWRResponse<Data, Error, SWROptions>
-
-  /**
    * Key with configuration using relaxed fetcher typing constraints.
    * Useful when working with dynamic or loosely-typed fetcher functions.
    *
@@ -733,6 +717,23 @@ export interface SWRHook {
     key: Key,
     fetcher: BareFetcher<Data> | null,
     config: SWRConfigurationWithOptionalFallback<SWROptions>
+  ): SWRResponse<Data, Error, SWROptions>
+
+  /**
+   * Key with a fetcher whose argument matches the key.
+   */
+  <
+    Data = any,
+    Error = any,
+    SWROptions extends
+      | SWRConfiguration<Data, Error, BareFetcher<Data>>
+      | undefined =
+      | SWRConfiguration<Data, Error, BareFetcher<Data>>
+      | undefined,
+    SWRKey extends Key = Key
+  >(
+    key: SWRKey,
+    fetcher: Fetcher<Data, SWRNoInfer<SWRKey>> | null
   ): SWRResponse<Data, Error, SWROptions>
 }
 
