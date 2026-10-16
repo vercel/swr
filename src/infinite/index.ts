@@ -7,6 +7,7 @@ import useSWR from '../index'
 import {
   isUndefined,
   isFunction,
+  rAF,
   UNDEFINED,
   createCacheHelper,
   useIsomorphicLayoutEffect,
@@ -58,6 +59,7 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
       revalidateOnMount = false,
       parallel = false
     } = config
+    const revalidateOnMountRef = useRef(revalidateOnMount)
     const [, , , PRELOAD] = SWRGlobalState.get(defaultCache) as GlobalState
 
     // The serialized key of the first page. This key will be used to store
@@ -122,13 +124,13 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
       // `initialSize` isn't allowed to change during the lifecycle
     }, [infiniteKey, cache])
 
-    // Needs to check didMountRef during mounting, not in the fetcher
-    const shouldRevalidateOnMount = revalidateOnMount && !didMountRef.current
-
     // Actual SWR hook to load all pages in one fetcher.
     const swr = useSWRNext(
       infiniteKey,
       async key => {
+        // Keep mount revalidation pending across renders until the fetcher runs.
+        const shouldRevalidateOnMount = revalidateOnMountRef.current
+        revalidateOnMountRef.current = false
         // get the revalidate context
         const forceRevalidateAll = get()._i
         const shouldRevalidatePage = get()._r
@@ -239,6 +241,18 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
       },
       config
     )
+
+    useIsomorphicLayoutEffect(() => {
+      if (!revalidateOnMountRef.current) return
+      const [, , FETCH] = SWRGlobalState.get(cache) as GlobalState
+      const reset = () => {
+        revalidateOnMountRef.current = false
+      }
+      // The core hook schedules its mount revalidation before this effect.
+      // Expire the flag even when a shared request skips this hook's fetcher.
+      if (infiniteKey && FETCH[infiniteKey]) reset()
+      else rAF(reset)
+    }, [cache, infiniteKey])
 
     const mutate = useCallback(
       // eslint-disable-next-line func-names

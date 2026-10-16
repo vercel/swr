@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useState, act } from 'react'
+import { Suspense, useEffect, useLayoutEffect, useState, act } from 'react'
 import { fireEvent, screen } from '@testing-library/react'
 import useSWR, { mutate as globalMutate, useSWRConfig, SWRConfig } from 'swr'
 import useSWRInfinite, { unstable_serialize } from 'swr/infinite'
@@ -1243,6 +1243,122 @@ describe('useSWRInfinite', () => {
     fireEvent.click(screen.getByText('mutate'))
     await screen.findByText('data: 2')
   })
+
+  it.each([true, false, undefined])(
+    'should preserve revalidateOnMount=%s through layout effect updates',
+    async revalidateOnMount => {
+      const key = createKey()
+      let counter = 0
+      const fetcher = jest.fn(() => createResponse(++counter))
+
+      function Content({ remounted }: { remounted: boolean }) {
+        const [, setState] = useState(0)
+        useLayoutEffect(() => {
+          setState(1)
+        }, [])
+        const { data, setSize } = useSWRInfinite(
+          index => `${key}-${index}`,
+          fetcher,
+          {
+            revalidateOnMount: remounted ? revalidateOnMount : true,
+            revalidateFirstPage: false,
+            dedupingInterval: 0
+          }
+        )
+        return (
+          <>
+            <div>data:{data?.join(',')}</div>
+            <button onClick={() => setSize(2)}>more</button>
+          </>
+        )
+      }
+
+      function Page() {
+        const [remounted, setRemounted] = useState(false)
+        return (
+          <>
+            <Content key={String(remounted)} remounted={remounted} />
+            <button onClick={() => setRemounted(true)}>remount</button>
+          </>
+        )
+      }
+
+      renderWithConfig(<Page />)
+      await screen.findByText('data:1')
+      fireEvent.click(screen.getByText('remount'))
+
+      const expected = revalidateOnMount ? 2 : 1
+      if (!revalidateOnMount) {
+        await act(() => sleep(50))
+      }
+      await screen.findByText(`data:${expected}`)
+      expect(fetcher).toHaveBeenCalledTimes(expected)
+
+      fireEvent.click(screen.getByText('more'))
+      await screen.findByText(`data:${expected},${expected + 1}`)
+      expect(fetcher).toHaveBeenCalledTimes(expected + 1)
+    }
+  )
+
+  it.each(['key change', 'focus'])(
+    'should not carry a deduped mount revalidation to a later %s',
+    async event => {
+      const key = createKey()
+      const fetcher = jest.fn((pageKey: string) => createResponse(pageKey))
+      const config = {
+        revalidateOnMount: true,
+        revalidateFirstPage: false,
+        dedupingInterval: 0,
+        focusThrottleInterval: 0
+      }
+
+      function Page() {
+        const [firstKey, setFirstKey] = useState('a')
+        const [secondKey, setSecondKey] = useState('a')
+        const first = useSWRInfinite(
+          () => `${key}-${firstKey}`,
+          fetcher,
+          config
+        )
+        const second = useSWRInfinite(
+          () => `${key}-${secondKey}`,
+          fetcher,
+          config
+        )
+        const other = useSWRInfinite(() => `${key}-b`, fetcher, config)
+        return (
+          <>
+            <div>first:{first.data}</div>
+            <div>second:{second.data}</div>
+            <div>other:{other.data}</div>
+            <button
+              onClick={() =>
+                event === 'focus' ? setFirstKey('b') : setSecondKey('b')
+              }
+            >
+              change key
+            </button>
+          </>
+        )
+      }
+
+      renderWithConfig(<Page />)
+      await screen.findByText(`first:${key}-a`)
+      await screen.findByText(`second:${key}-a`)
+      await screen.findByText(`other:${key}-b`)
+      expect(fetcher).toHaveBeenCalledTimes(2)
+
+      fireEvent.click(screen.getByText('change key'))
+      await screen.findByText(
+        `${event === 'focus' ? 'first' : 'second'}:${key}-b`
+      )
+      if (event === 'focus') {
+        fireEvent.focus(window)
+      }
+      await act(() => sleep(50))
+      expect(fetcher).toHaveBeenCalledTimes(2)
+    }
+  )
 
   // https://github.com/vercel/swr/issues/1899
   it('should revalidate the resource with bound mutate when options is of Object type ', async () => {
