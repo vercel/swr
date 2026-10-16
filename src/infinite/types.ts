@@ -159,4 +159,7 @@ export interface SWRInfiniteCacheValue<Data = any, Error = any> extends State<
   _l?: number
   _k?: Arguments
   _r?: boolean | SWRInfiniteRevalidateFn
+  // The generation of the latest request for this key. An older request that
+  // is still in flight uses it to detect that it has been superseded.
+  _g?: number
 }
