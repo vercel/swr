@@ -498,4 +498,31 @@ describe('useSWR - global cache', () => {
     )
     await screen.findByText('value')
   })
+
+  it('should not redundantly write _k to cache or wake subscribers when mounting on existing key', async () => {
+    let writes = 0
+    const cache = new Map([['/test-key', { data: 'initial' }]])
+    const originalSet = cache.set.bind(cache)
+    cache.set = (k, v) => {
+      writes++
+      return originalSet(k, v)
+    }
+
+    function Cell() {
+      useSWR('/test-key', () => 'data', { revalidateOnMount: false })
+      return null
+    }
+
+    renderWithConfig(
+      <>
+        <Cell />
+        <Cell />
+        <Cell />
+      </>,
+      { provider: () => cache }
+    )
+
+    // Should only write _k once on initial mount, not on every subsequent mount of the same key
+    expect(writes).toBe(1)
+  })
 })
