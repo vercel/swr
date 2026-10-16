@@ -231,4 +231,14 @@ describe('useSWR - preload', () => {
     preload(() => key, fetcher)
     expect(calledWith).toBe(key)
   })
+
+  it('should not call the fetcher when the key is falsy', () => {
+    const fetcher = jest.fn(() => createResponse('foo'))
+
+    preload(null, fetcher)
+    preload(() => {
+      throw new Error('not ready')
+    }, fetcher)
+    expect(fetcher).not.toHaveBeenCalled()
+  })
 })

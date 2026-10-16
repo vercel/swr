@@ -36,6 +36,9 @@ export const preload = <
   }
 
   const [key, fnArg] = serialize(key_)
+  // A falsy key means the request is not ready, same as in `useSWR`.
+  if (!key) return undefined as ReturnType<Fetcher>
+
   const [, , , PRELOAD] = SWRGlobalState.get(cache) as GlobalState
 
   // Prevent preload to be called multiple times before used.
