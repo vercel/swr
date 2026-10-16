@@ -311,4 +311,64 @@ describe('useSWR - tags', () => {
     expect(fetcherCalls).toBe(1)
     screen.getByText('data:')
   })
+
+  it.each([
+    ['resolves', (settle: Settle) => settle.resolve('stale')],
+    ['rejects', (settle: Settle) => settle.reject(new Error('stale'))]
+  ])(
+    'keeps the newer request tags when a superseded request %s',
+    async (_, settleOlder) => {
+      const key = createKey()
+      let revalidateTag!: TagRevalidator
+      let revalidate!: () => Promise<any>
+      let currentTag = 'newer'
+      let older!: Settle
+      let fetcherCalls = 0
+
+      function Page() {
+        revalidateTag = useSWRConfig().revalidateTag
+        const { data, mutate } = useSWR(
+          key,
+          () => {
+            fetcherCalls++
+            if (fetcherCalls === 1) {
+              return new Promise<string>((resolve, reject) => {
+                older = { resolve, reject }
+              })
+            }
+            return `data:${fetcherCalls}`
+          },
+          {
+            tags: () => [currentTag],
+            shouldRetryOnError: false,
+            dedupingInterval: 0
+          }
+        )
+        revalidate = mutate
+        return <div>{data}</div>
+      }
+
+      renderWithConfig(<Page />)
+
+      // A newer request settles first and associates the key with `newer`.
+      await act(() => revalidate())
+      await screen.findByText('data:2')
+
+      // The superseded request settles later, while the resolver returns a
+      // different tag. It must not replace the newer request's association.
+      currentTag = 'stale'
+      await act(async () => settleOlder(older))
+
+      await act(() => revalidateTag('stale'))
+      expect(fetcherCalls).toBe(2)
+
+      await act(() => revalidateTag('newer'))
+      await screen.findByText('data:3')
+    }
+  )
 })
+
+type Settle = {
+  resolve: (data: string) => void
+  reject: (error: Error) => void
+}
