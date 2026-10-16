@@ -264,10 +264,48 @@ describe('useSWR - refresh', () => {
     screen.getByText('1')
   })
 
+  it('does not repeat a custom comparison for unchanged shared data', async () => {
+    const key = createKey()
+    let timestamp = 0
+    const fetcher = jest.fn(() => ({ timestamp: ++timestamp, version: '1.0' }))
+    const compare = jest.fn(
+      (a, b) => a === b || (!!a && !!b && a.version === b.version)
+    )
+
+    function Page({ id }: { id: number }) {
+      const { data, mutate } = useSWR(key, fetcher, { compare })
+      return (
+        <button data-testid={`page-${id}`} onClick={() => mutate()}>
+          {data?.timestamp ?? 'loading'}
+        </button>
+      )
+    }
+
+    renderWithConfig(
+      <>
+        <Page id={1} />
+        <Page id={2} />
+        <Page id={3} />
+      </>
+    )
+
+    await screen.findAllByText('1')
+    expect(fetcher).toHaveBeenCalledTimes(1)
+    compare.mockClear()
+
+    fireEvent.click(screen.getByTestId('page-1'))
+    await act(() => advanceTimers(1))
+
+    expect(fetcher).toHaveBeenCalledTimes(2)
+    expect(compare).toHaveBeenCalledTimes(1)
+    expect(screen.getAllByText('1')).toHaveLength(3)
+  })
+
   it('custom compare should only be used for comparing data', async () => {
     let count = 0
     const key = createKey()
     const compareParams = []
+    const expectedData = (timestamp: number) => ({ timestamp, version: '1.0' })
     const fetcher = jest.fn(() => ({
       timestamp: ++count,
       version: '1.0'
@@ -294,211 +332,24 @@ describe('useSWR - refresh', () => {
     }
     renderWithConfig(<Page />)
     await screen.findByText('1')
-    expect(compareParams).toMatchInlineSnapshot(`
-      [
-        [
-          undefined,
-          undefined,
-        ],
-        [
-          undefined,
-          {
-            "timestamp": 1,
-            "version": "1.0",
-          },
-        ],
-        [
-          undefined,
-          {
-            "timestamp": 1,
-            "version": "1.0",
-          },
-        ],
-        [
-          undefined,
-          {
-            "timestamp": 1,
-            "version": "1.0",
-          },
-        ],
-        [
-          {
-            "timestamp": 1,
-            "version": "1.0",
-          },
-          undefined,
-        ],
-        [
-          {
-            "timestamp": 1,
-            "version": "1.0",
-          },
-          {
-            "timestamp": 1,
-            "version": "1.0",
-          },
-        ],
-        [
-          {
-            "timestamp": 1,
-            "version": "1.0",
-          },
-          {
-            "timestamp": 1,
-            "version": "1.0",
-          },
-        ],
-        [
-          {
-            "timestamp": 1,
-            "version": "1.0",
-          },
-          {
-            "timestamp": 1,
-            "version": "1.0",
-          },
-        ],
-      ]
-    `)
+    expect(compareParams).toEqual([
+      [undefined, expectedData(1)],
+      [undefined, expectedData(1)],
+      [undefined, expectedData(1)],
+      [expectedData(1), undefined]
+    ])
 
     fireEvent.click(screen.getByText('change'))
     await screen.findByText('2')
-    expect(compareParams).toMatchInlineSnapshot(`
-      [
-        [
-          undefined,
-          undefined,
-        ],
-        [
-          undefined,
-          {
-            "timestamp": 1,
-            "version": "1.0",
-          },
-        ],
-        [
-          undefined,
-          {
-            "timestamp": 1,
-            "version": "1.0",
-          },
-        ],
-        [
-          undefined,
-          {
-            "timestamp": 1,
-            "version": "1.0",
-          },
-        ],
-        [
-          {
-            "timestamp": 1,
-            "version": "1.0",
-          },
-          undefined,
-        ],
-        [
-          {
-            "timestamp": 1,
-            "version": "1.0",
-          },
-          {
-            "timestamp": 1,
-            "version": "1.0",
-          },
-        ],
-        [
-          {
-            "timestamp": 1,
-            "version": "1.0",
-          },
-          {
-            "timestamp": 1,
-            "version": "1.0",
-          },
-        ],
-        [
-          {
-            "timestamp": 1,
-            "version": "1.0",
-          },
-          {
-            "timestamp": 1,
-            "version": "1.0",
-          },
-        ],
-        [
-          {
-            "timestamp": 1,
-            "version": "1.0",
-          },
-          {
-            "timestamp": 1,
-            "version": "1.0",
-          },
-        ],
-        [
-          {
-            "timestamp": 1,
-            "version": "1.0",
-          },
-          {
-            "timestamp": 2,
-            "version": "1.0",
-          },
-        ],
-        [
-          {
-            "timestamp": 1,
-            "version": "1.0",
-          },
-          {
-            "timestamp": 2,
-            "version": "1.0",
-          },
-        ],
-        [
-          {
-            "timestamp": 2,
-            "version": "1.0",
-          },
-          {
-            "timestamp": 1,
-            "version": "1.0",
-          },
-        ],
-        [
-          {
-            "timestamp": 2,
-            "version": "1.0",
-          },
-          {
-            "timestamp": 2,
-            "version": "1.0",
-          },
-        ],
-        [
-          {
-            "timestamp": 2,
-            "version": "1.0",
-          },
-          {
-            "timestamp": 2,
-            "version": "1.0",
-          },
-        ],
-        [
-          {
-            "timestamp": 2,
-            "version": "1.0",
-          },
-          {
-            "timestamp": 2,
-            "version": "1.0",
-          },
-        ],
-      ]
-    `)
+    expect(compareParams).toEqual([
+      [undefined, expectedData(1)],
+      [undefined, expectedData(1)],
+      [undefined, expectedData(1)],
+      [expectedData(1), undefined],
+      [expectedData(1), expectedData(2)],
+      [expectedData(1), expectedData(2)],
+      [expectedData(2), expectedData(1)]
+    ])
   })
 
   it('should not let the previous interval timer to set new timer if key changes too fast', async () => {
