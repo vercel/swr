@@ -121,6 +121,11 @@ export async function internalMutate<Data>(
       return startRevalidate()
     }
 
+    // A mutation supersedes any response that was preloaded before it started.
+    // Otherwise a later mount can consume that response and overwrite the
+    // newer mutated value.
+    delete PRELOAD[key]
+
     let data: any = _data
     let error: unknown
     let isError = false
