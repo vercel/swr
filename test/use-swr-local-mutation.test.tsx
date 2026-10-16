@@ -1306,7 +1306,58 @@ describe('useSWR - local mutation', () => {
     }
 
     await sleep(30)
-    expect(renderedData).toEqual([undefined, 0, 'bar', 0, 1])
+    expect(renderedData).toEqual([undefined, 0, 'bar', 0])
+  })
+
+  it('should not revalidate when mutation fails', async () => {
+    const key = createKey()
+    const fetcher = jest.fn(() => 'data')
+    let mutate
+
+    function Page() {
+      const response = useSWR(key, fetcher, { dedupingInterval: 0 })
+      mutate = response.mutate
+      return <div>data: {response.data}</div>
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data: data')
+
+    await act(() =>
+      mutate(Promise.reject(new Error('mutation failed')), {
+        throwOnError: false
+      })
+    )
+    await nextTick()
+
+    expect(fetcher).toHaveBeenCalledTimes(1)
+  })
+
+  it('should rollback optimistic data when mutation throws synchronously', async () => {
+    const key = createKey()
+    const fetcher = jest.fn(() => 'data')
+    let mutate
+
+    function Page() {
+      const response = useSWR(key, fetcher, { dedupingInterval: 0 })
+      mutate = response.mutate
+      return <div>data: {response.data}</div>
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data: data')
+
+    await executeWithoutBatching(() =>
+      mutate(
+        () => {
+          throw new Error('mutation failed')
+        },
+        { optimisticData: 'optimistic', throwOnError: false }
+      )
+    )
+
+    await screen.findByText('data: data')
+    expect(fetcher).toHaveBeenCalledTimes(1)
   })
 
   it('should not revert to optimistic data when rolling back', async () => {
@@ -1514,7 +1565,7 @@ describe('useSWR - local mutation', () => {
     }
 
     await sleep(30)
-    expect(renderedData).toEqual([undefined, 0, 'bar-1', 1])
+    expect(renderedData).toEqual([undefined, 0, 'bar-1'])
 
     let rollbackErrorMessage
     try {
@@ -1532,7 +1583,7 @@ describe('useSWR - local mutation', () => {
     }
 
     await sleep(30)
-    expect(renderedData).toEqual([undefined, 0, 'bar-1', 1, 'bar-2', 2])
+    expect(renderedData).toEqual([undefined, 0, 'bar-1', 'bar-2'])
     expect(rollbackErrorMessage).toEqual('baz-2')
   })
 

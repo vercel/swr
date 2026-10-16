@@ -175,14 +175,16 @@ export async function internalMutate<Data>(
       if (beforeMutationTs !== MUTATION[key][0]) {
         if (isError) throw error
         return data
-      } else if (isError && hasOptimisticData && rollbackOnError(error)) {
-        // Rollback. Always populate the cache in this case but without
-        // transforming the data.
-        populateCache = true
-
-        // Reset data to be the latest committed data, and clear the `_c` value.
-        set({ data: committedData, _c: UNDEFINED })
       }
+    }
+
+    if (isError && hasOptimisticData && rollbackOnError(error)) {
+      // Rollback. Always populate the cache in this case but without
+      // transforming the data.
+      populateCache = true
+
+      // Reset data to be the latest committed data, and clear the `_c` value.
+      set({ data: committedData, _c: UNDEFINED })
     }
 
     // If we should write back the cache after request.
@@ -202,8 +204,9 @@ export async function internalMutate<Data>(
     // Reset the timestamp to mark the mutation has ended.
     MUTATION[key][1] = getTimestamp()
 
-    // Update existing SWR Hooks' internal states:
-    Promise.resolve(startRevalidate()).then(() => {
+    // Update existing SWR Hooks' internal states. Only revalidate after a
+    // successful mutation.
+    Promise.resolve(isError ? undefined : startRevalidate()).then(() => {
       // The mutation and revalidation are ended, we can clear it since the data is
       // not an optimistic value anymore.
       set({ _c: UNDEFINED })
