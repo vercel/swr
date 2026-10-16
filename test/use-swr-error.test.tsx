@@ -596,4 +596,98 @@ describe('useSWR - error', () => {
     await act(() => sleep(320))
     expect(fn).toHaveBeenCalledTimes(3)
   })
+
+  // https://github.com/vercel/swr/issues/4354
+  it('should discard a rejection from a request superseded by a newer one', async () => {
+    const key = createKey()
+    let rejectOlder: (error: Error) => void
+    let resolveNewer: (data: string) => void
+    const fetcher = jest
+      .fn()
+      .mockImplementationOnce(
+        () => new Promise<string>((_, reject) => (rejectOlder = reject))
+      )
+      .mockImplementationOnce(
+        () => new Promise<string>(resolve => (resolveNewer = resolve))
+      )
+    const onError = jest.fn()
+    const onErrorRetry = jest.fn()
+    const onDiscarded = jest.fn()
+    let revalidate: () => Promise<any>
+
+    function Page() {
+      const { data, error, isValidating, mutate } = useSWR(key, fetcher, {
+        dedupingInterval: 0,
+        onError,
+        onErrorRetry,
+        onDiscarded
+      })
+      revalidate = mutate
+      return (
+        <div>
+          data:{data},error:{error?.message},validating:{String(isValidating)}
+        </div>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data:,error:,validating:true')
+
+    // Start a newer request while the first one is still in flight.
+    act(() => {
+      revalidate()
+    })
+    expect(fetcher).toHaveBeenCalledTimes(2)
+
+    // The older request fails while the newer one is still running: the
+    // newer request keeps its validating state.
+    await act(async () => rejectOlder(new Error('stale')))
+    screen.getByText('data:,error:,validating:true')
+
+    await act(async () => resolveNewer('fresh'))
+    screen.getByText('data:fresh,error:,validating:false')
+
+    expect(onError).not.toHaveBeenCalled()
+    expect(onErrorRetry).not.toHaveBeenCalled()
+    expect(onDiscarded).toHaveBeenCalledWith(key)
+  })
+
+  // https://github.com/vercel/swr/issues/4354
+  it('should discard a rejection that arrives after a newer request succeeded', async () => {
+    const key = createKey()
+    let rejectOlder: (error: Error) => void
+    const fetcher = jest
+      .fn()
+      .mockImplementationOnce(
+        () => new Promise<string>((_, reject) => (rejectOlder = reject))
+      )
+      .mockImplementationOnce(() => createResponse('fresh', { delay: 10 }))
+    const onError = jest.fn()
+    let revalidate: () => Promise<any>
+
+    function Page() {
+      const { data, error, mutate } = useSWR(key, fetcher, {
+        dedupingInterval: 0,
+        onError
+      })
+      revalidate = mutate
+      return (
+        <div>
+          data:{data},error:{error?.message}
+        </div>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('data:,error:')
+
+    act(() => {
+      revalidate()
+    })
+    await screen.findByText('data:fresh,error:')
+
+    await act(async () => rejectOlder(new Error('stale')))
+    screen.getByText('data:fresh,error:')
+    expect(onError).not.toHaveBeenCalled()
+  })
 })
