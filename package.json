@@ -97,8 +97,6 @@
   "license": "MIT",
   "scripts": {
     "prepare": "husky install",
-    "csb:install": "corepack enable && corepack pnpm i",
-    "csb:build": "pnpm build",
     "clean": "rimraf ./dist test/e2e/playwright-report test/e2e/test-results test/e2e/site/.next",
     "watch": "bunchee -w",
     "build": "bunchee",
