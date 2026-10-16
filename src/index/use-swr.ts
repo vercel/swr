@@ -77,6 +77,11 @@ const use =
 
 const WITH_DEDUPE = { dedupe: true }
 
+// `fallback` and `cacheData` inherit from `Object.prototype`, so a key such as
+// `constructor` or `toString` must only count when it is an own property.
+const getOwnValue = (map: Record<string, any> | undefined, key: string) =>
+  map && OBJECT.prototype.hasOwnProperty.call(map, key) ? map[key] : UNDEFINED
+
 type ConsumedCacheData = WeakMap<CacheData, Set<string>>
 
 const isCacheDataConsumed = (
@@ -238,10 +243,10 @@ export const useSWRHandler = <Data = any, Error = any>(
   const fallback = isUndefined(fallbackData)
     ? isUndefined(config.fallback)
       ? UNDEFINED
-      : config.fallback[key]
+      : getOwnValue(config.fallback, key)
     : fallbackData
   const serverCacheData = config.cacheData
-  const configCacheData = !key ? UNDEFINED : serverCacheData?.[key]
+  const configCacheData = !key ? UNDEFINED : getOwnValue(serverCacheData, key)
   const req = key ? PRELOAD[key] : UNDEFINED
   // `cacheData` is request-scoped data provided by a Server Component through
   // `SWRConfig`'s context. It's only used when there's no in-flight client
