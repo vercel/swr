@@ -476,4 +476,48 @@ describe('useSWR - suspense', () => {
       expect(onRender).toHaveBeenCalledTimes(1)
     }
   )
+
+  itShouldSkipForReactCanary(
+    'should not pass an uncached promise to use() with sibling suspense components',
+    async () => {
+      // Regression test for #4314: two sibling useSWR hooks under one Suspense
+      // boundary. The pending revalidation promise passed to use() must be
+      // stable across concurrent re-renders, or React logs an "uncached
+      // promise" warning.
+      const spy = jest.spyOn(console, 'error').mockImplementation(() => {})
+      const keyA = createKey()
+      const keyB = createKey()
+
+      function A() {
+        const { data } = useSWR(keyA, () => createResponse('A'), {
+          suspense: true
+        })
+        return <div>{data}</div>
+      }
+      function B() {
+        const { data } = useSWR(keyB, () => createResponse('B'), {
+          suspense: true
+        })
+        return <div>{data}</div>
+      }
+
+      renderWithConfig(
+        <Suspense fallback={<div>fallback</div>}>
+          <A />
+          <B />
+        </Suspense>
+      )
+
+      screen.getByText('fallback')
+      await screen.findByText('A')
+      await screen.findByText('B')
+
+      expect(
+        spy.mock.calls.filter(([message]) =>
+          String(message).includes('uncached promise')
+        )
+      ).toHaveLength(0)
+      spy.mockRestore()
+    }
+  )
 })
