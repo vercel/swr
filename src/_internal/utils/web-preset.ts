@@ -28,15 +28,18 @@ const isVisible = () => {
 
 const initFocus = (callback: () => void) => {
   // focus revalidate
-  if (isDocumentDefined) {
-    document.addEventListener('visibilitychange', callback)
+  const onFocus = () => {
+    callback()
   }
-  onWindowEvent('focus', callback)
+  if (isDocumentDefined) {
+    document.addEventListener('visibilitychange', onFocus)
+  }
+  onWindowEvent('focus', onFocus)
   return () => {
     if (isDocumentDefined) {
-      document.removeEventListener('visibilitychange', callback)
+      document.removeEventListener('visibilitychange', onFocus)
     }
-    offWindowEvent('focus', callback)
+    offWindowEvent('focus', onFocus)
   }
 }
 
