@@ -200,7 +200,8 @@ export const initCache = <Data = any>(
                 UNDEFINED,
                 EVENT_REVALIDATORS,
                 revalidateEvents.FOCUS_EVENT
-              )
+              ),
+              0
             )
           )
           const releaseReconnect = opts.initReconnect(
@@ -210,7 +211,8 @@ export const initCache = <Data = any>(
                 UNDEFINED,
                 EVENT_REVALIDATORS,
                 revalidateEvents.RECONNECT_EVENT
-              )
+              ),
+              0
             )
           )
           unmount = () => {
