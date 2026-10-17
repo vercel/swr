@@ -4,11 +4,13 @@ import { withMiddleware } from '../_internal'
 
 export const immutable: Middleware = useSWRNext => (key, fetcher, config) => {
   // Always override all revalidate options.
-  config.revalidateOnFocus = false
-  config.revalidateIfStale = false
-  config.revalidateOnReconnect = false
-  config.refreshInterval = 0
-  return useSWRNext(key, fetcher, config)
+  return useSWRNext(key, fetcher, {
+    ...config,
+    revalidateOnFocus: false,
+    revalidateIfStale: false,
+    revalidateOnReconnect: false,
+    refreshInterval: 0
+  })
 }
 
 const useSWRImmutable = withMiddleware(useSWR, immutable)
