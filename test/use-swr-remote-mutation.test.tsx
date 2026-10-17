@@ -225,6 +225,37 @@ describe('useSWR - remote mutation', () => {
     await screen.findByText('state:data')
   })
 
+  it('should return `isMutating` state correctly when triggered inside a React transition', async () => {
+    const key = createKey()
+
+    function Page() {
+      const { data, trigger, isMutating } = useSWRMutation(key, async () => {
+        await sleep(10)
+        return 'data'
+      })
+      return (
+        <button
+          onClick={() => {
+            React.startTransition(() => {
+              trigger()
+            })
+          }}
+        >
+          state:{(isMutating ? 'pending' : data) || ''}
+        </button>
+      )
+    }
+
+    render(<Page />)
+
+    // mount
+    await screen.findByText('state:')
+    fireEvent.click(screen.getByText('state:'))
+
+    await screen.findByText('state:pending')
+    await screen.findByText('state:data')
+  })
+
   it('should send `onError` and `onSuccess` events', async () => {
     const key = createKey()
     const onSuccess = jest.fn()
