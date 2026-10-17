@@ -7,10 +7,11 @@ export const immutable: Middleware = useSWRNext => (key, fetcher, config) => {
   config.revalidateOnFocus = false
   config.revalidateIfStale = false
   config.revalidateOnReconnect = false
-  config.refreshInterval = 0
   return useSWRNext(key, fetcher, config)
 }
 
-const useSWRImmutable = withMiddleware(useSWR, immutable)
+const useSWRImmutable = withMiddleware(useSWR, immutable, {
+  refreshInterval: 0
+})
 
 export default useSWRImmutable

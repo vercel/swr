@@ -295,6 +295,29 @@ describe('useSWR - immutable', () => {
     await screen.findByText(`data: 1, isLoading: false, isValidating: false`)
     expect(onRender).toHaveBeenCalledTimes(4)
   })
+
+  it('should let a hook-level refreshInterval override a global one', async () => {
+    const key = createKey()
+    let fetchCount = 0
+    const fetcher = () => `data-${++fetchCount}`
+
+    function Page() {
+      const { data } = useSWRImmutable(key, fetcher, {
+        refreshInterval: 50,
+        dedupingInterval: 0
+      })
+      return <div>{data}</div>
+    }
+
+    renderWithConfig(<Page />, {
+      refreshInterval: 5000,
+      dedupingInterval: 0
+    })
+
+    await screen.findByText('data-1')
+    await act(() => sleep(180))
+    expect(fetchCount).toBeGreaterThan(1)
+  })
 })
 
 describe('issue #4207', () => {

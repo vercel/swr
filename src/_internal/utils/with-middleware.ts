@@ -11,7 +11,8 @@ import type {
 // Create a custom hook with a middleware
 export const withMiddleware = (
   useSWR: SWRHook,
-  middleware: Middleware
+  middleware: Middleware,
+  defaultConfig?: SWRConfiguration
 ): SWRHook => {
   return <Data = any, Error = any>(
     ...args:
@@ -22,6 +23,10 @@ export const withMiddleware = (
   ) => {
     const [key, fn, config] = normalize(args)
     const uses = (config.use || []).concat(middleware)
-    return useSWR<Data, Error>(key, fn, { ...config, use: uses })
+    return useSWR<Data, Error>(key, fn, {
+      ...defaultConfig,
+      ...config,
+      use: uses
+    })
   }
 }
