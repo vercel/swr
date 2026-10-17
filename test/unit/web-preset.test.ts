@@ -92,3 +92,58 @@ function runTests(propertyName) {
 
 runTests('window')
 runTests('document')
+
+describe('Web Preset visibility', () => {
+  let documentSpy
+
+  beforeEach(() => {
+    documentSpy = jest.spyOn(global, 'document', 'get')
+    jest.resetModules()
+  })
+
+  afterEach(() => {
+    documentSpy.mockRestore()
+  })
+
+  const loadIsVisible = (documentMock: Partial<Document> | undefined) => {
+    documentSpy.mockImplementation(() => documentMock)
+
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    return require('swr/_internal').preset.isVisible
+  }
+
+  it('should be visible when document visibility is visible and focused', () => {
+    const isVisible = loadIsVisible({
+      visibilityState: 'visible',
+      hasFocus: () => true
+    })
+
+    expect(isVisible()).toBe(true)
+  })
+
+  it('should not be visible when document visibility is hidden', () => {
+    const isVisible = loadIsVisible({
+      visibilityState: 'hidden',
+      hasFocus: () => true
+    })
+
+    expect(isVisible()).toBe(false)
+  })
+
+  it('should not be visible when document visibility is visible but unfocused', () => {
+    const isVisible = loadIsVisible({
+      visibilityState: 'visible',
+      hasFocus: () => false
+    })
+
+    expect(isVisible()).toBe(false)
+  })
+
+  it('should be visible when focus detection is unavailable', () => {
+    const isVisible = loadIsVisible({
+      visibilityState: 'visible'
+    })
+
+    expect(isVisible()).toBe(true)
+  })
+})
