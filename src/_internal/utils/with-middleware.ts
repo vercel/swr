@@ -22,6 +22,12 @@ export const withMiddleware = (
   ) => {
     const [key, fn, config] = normalize(args)
     const uses = (config.use || []).concat(middleware)
-    return useSWR<Data, Error>(key, fn, { ...config, use: uses })
+    // Keep `undefined` distinct from an explicit `null` when forwarding the
+    // normalized arguments. The public overload doesn't expose this internal
+    // form, so narrow it back to the declared fetcher type here.
+    return useSWR<Data, Error>(key, fn as Fetcher<Data> | null, {
+      ...config,
+      use: uses
+    })
   }
 }
