@@ -200,6 +200,50 @@ describe('useSWR - config callbacks', () => {
     expect(discardedEvents).toEqual([key])
   })
 
+  it('should trigger onSuccess for all hooks sharing the same key even when request is deduplicated', async () => {
+    // https://github.com/vercel/swr/issues/1580
+    // When two components share the same key and the second one deduplicates the
+    // in-flight request started by the first, the second component's onSuccess
+    // should still be called once the shared request resolves.
+    const key = createKey()
+    const successCalls: string[] = []
+
+    function ComponentA() {
+      useSWR(key, () => createResponse('data', { delay: 50 }), {
+        onSuccess: data => {
+          successCalls.push('A:' + data)
+        }
+      })
+      return <div>A</div>
+    }
+
+    function ComponentB() {
+      useSWR(key, () => createResponse('data', { delay: 50 }), {
+        onSuccess: data => {
+          successCalls.push('B:' + data)
+        }
+      })
+      return <div>B</div>
+    }
+
+    function Page() {
+      return (
+        <>
+          <ComponentA />
+          <ComponentB />
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await act(() => sleep(100))
+
+    // Both hooks share the same key — the request is deduplicated.
+    // Both onSuccess callbacks should still be called.
+    expect(successCalls).toContain('A:data')
+    expect(successCalls).toContain('B:data')
+  })
+
   it('should not trigger the onSuccess callback when discarded', async () => {
     const key = createKey()
     const discardedEvents = []
