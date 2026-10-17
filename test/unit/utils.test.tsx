@@ -149,4 +149,21 @@ describe('Utils', () => {
       cacheData: { a: 2, b: 1, c: 2 }
     })
   })
+
+  it('should not overwrite inherited config with undefined values', async () => {
+    const onSuccess = () => {}
+    const onError = () => {}
+
+    // Explicit `undefined` in the user config should not overwrite the
+    // inherited callback (otherwise the call site would throw when invoking
+    // it, see https://github.com/vercel/swr/issues/4218).
+    const merged: any = mergeConfigs(
+      { onSuccess, onError, revalidateOnFocus: true } as any,
+      { onSuccess: undefined, revalidateOnFocus: false } as any
+    )
+    expect(merged.onSuccess).toBe(onSuccess)
+    expect(merged.onError).toBe(onError)
+    // But non-undefined values should still override.
+    expect(merged.revalidateOnFocus).toBe(false)
+  })
 })
