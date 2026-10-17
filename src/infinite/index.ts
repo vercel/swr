@@ -48,7 +48,12 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
     config: Omit<typeof SWRConfig.defaultValue, 'fetcher'> &
       Omit<SWRInfiniteConfiguration<Data, Error>, 'fetcher'>
   ) => {
-    const didMountRef = useRef<boolean>(false)
+    // Track previous (infiniteKey, cache) pair to distinguish React StrictMode
+    // re-runs (same deps fired again) from genuine key/cache changes.
+    const prevSyncRef = useRef<{ key: string | null; cache: object | null }>({
+      key: null,
+      cache: null
+    })
     const {
       cache,
       initialSize = 1,
@@ -108,12 +113,18 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
 
     // When the page key changes, we reset the page size if it's not persisted
     useIsomorphicLayoutEffect(() => {
-      if (!didMountRef.current) {
-        didMountRef.current = true
+      const prev = prevSyncRef.current
+      const isFirstRun = prev.cache === null
+      const keyChanged =
+        !isFirstRun &&
+        (prev.key !== (infiniteKey ?? null) || prev.cache !== cache)
+      prevSyncRef.current = { key: infiniteKey ?? null, cache }
+
+      if (isFirstRun) {
         return
       }
 
-      if (infiniteKey) {
+      if (keyChanged && infiniteKey) {
         // If the key has been changed, we keep the current page size if persistSize is enabled
         // Otherwise, we reset the page size to cached pageSize
         set({ _l: persistSize ? lastPageSizeRef.current : resolvePageSize() })
@@ -122,8 +133,9 @@ export const infinite = (<Data, Error>(useSWRNext: SWRHook) =>
       // `initialSize` isn't allowed to change during the lifecycle
     }, [infiniteKey, cache])
 
-    // Needs to check didMountRef during mounting, not in the fetcher
-    const shouldRevalidateOnMount = revalidateOnMount && !didMountRef.current
+    // Needs to check mount state during mounting, not in the fetcher
+    const shouldRevalidateOnMount =
+      revalidateOnMount && prevSyncRef.current.cache === null
 
     // Actual SWR hook to load all pages in one fetcher.
     const swr = useSWRNext(
