@@ -232,4 +232,30 @@ describe('useSWR - config callbacks', () => {
     expect(discardedEvents).toEqual([key])
     expect(successEvents).toEqual([])
   })
+
+  it('should not throw or loop infinitely when callbacks are explicitly undefined', async () => {
+    let count = 0
+    const key = createKey()
+    function Page() {
+      const { data } = useSWR(
+        key,
+        () => {
+          count++
+          return createResponse('data')
+        },
+        {
+          onSuccess: undefined,
+          onError: undefined,
+          onLoadingSlow: undefined,
+          onDiscarded: undefined
+        }
+      )
+      return <div>hello, {data}</div>
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('hello, data')
+    await act(() => sleep(50))
+    expect(count).toEqual(1)
+  })
 })
