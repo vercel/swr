@@ -369,4 +369,183 @@ describe('useSWRSubscription', () => {
     expect(subscribeCount).toBe(2)
     expect(disposeCount).toBe(1)
   })
+
+  it('should support async subscribe function with cleanup function called on unmount', async () => {
+    const swrKey = createKey()
+    let cleanupCalled = false
+
+    async function subscribe(key, { next }) {
+      await sleep(10)
+      next(null, 'data-' + key)
+      return () => {
+        cleanupCalled = true
+      }
+    }
+
+    function Sub() {
+      const { data } = useSWRSubscription(swrKey, subscribe)
+      return <div>{data}</div>
+    }
+
+    function Page() {
+      const [mounted, setMounted] = useState(true)
+      return (
+        <>
+          <button onClick={() => setMounted(v => !v)}>toggle</button>
+          {mounted ? <Sub /> : null}
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await act(() => sleep(20))
+    screen.getByText('data-' + swrKey)
+    expect(cleanupCalled).toBe(false)
+
+    fireEvent.click(screen.getByText('toggle'))
+    expect(cleanupCalled).toBe(true)
+  })
+
+  it('should call cleanup upon resolution if unmount happens before async subscribe resolves', async () => {
+    const swrKey = createKey()
+    let cleanupCalled = false
+    let resolveSubscribe: (cleanup: () => void) => void
+
+    function subscribe() {
+      return new Promise<() => void>(resolve => {
+        resolveSubscribe = resolve
+      })
+    }
+
+    function Sub() {
+      const { data } = useSWRSubscription(swrKey, subscribe)
+      return <div>{data}</div>
+    }
+
+    function Page() {
+      const [mounted, setMounted] = useState(true)
+      return (
+        <>
+          <button onClick={() => setMounted(v => !v)}>toggle</button>
+          {mounted ? <Sub /> : null}
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await act(() => sleep(10))
+
+    // Unmount before subscribe resolves
+    fireEvent.click(screen.getByText('toggle'))
+    expect(cleanupCalled).toBe(false)
+
+    // Now resolve the promise
+    await act(async () => {
+      resolveSubscribe(() => {
+        cleanupCalled = true
+      })
+      await sleep(10)
+    })
+
+    // Cleanup should have been called immediately to prevent connection leaks
+    expect(cleanupCalled).toBe(true)
+  })
+
+  it('should support async subscribe function returning void without throwing on unmount', async () => {
+    const swrKey = createKey()
+
+    async function subscribe(key, { next }) {
+      await sleep(10)
+      next(null, 'ready-' + key)
+    }
+
+    function Sub() {
+      const { data } = useSWRSubscription(swrKey, subscribe)
+      return <div>{data}</div>
+    }
+
+    function Page() {
+      const [mounted, setMounted] = useState(true)
+      return (
+        <>
+          <button onClick={() => setMounted(v => !v)}>toggle</button>
+          {mounted ? <Sub /> : null}
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await act(() => sleep(20))
+    screen.getByText('ready-' + swrKey)
+
+    // Unmounting should not throw
+    expect(() => {
+      fireEvent.click(screen.getByText('toggle'))
+    }).not.toThrow()
+  })
+
+  it('should forward error rejection to next for async subscribe function', async () => {
+    const swrKey = createKey()
+    const errorObj = new Error('async-subscribe-failure')
+
+    async function subscribe() {
+      await sleep(10)
+      throw errorObj
+    }
+
+    function Page() {
+      const { error } = useSWRSubscription(swrKey, subscribe)
+      return <div>error:{error ? error.message : ''}</div>
+    }
+
+    renderWithConfig(<Page />)
+    screen.getByText('error:')
+    await act(() => sleep(30))
+    screen.getByText('error:async-subscribe-failure')
+  })
+
+  it('should deduplicate multiple subscribers with async subscribe function', async () => {
+    const swrKey = createKey()
+    let subscribeCount = 0
+    let cleanupCount = 0
+
+    async function subscribe(key, { next }) {
+      ++subscribeCount
+      await sleep(10)
+      next(null, 'shared-' + key)
+      return () => {
+        ++cleanupCount
+      }
+    }
+
+    function Sub() {
+      const { data } = useSWRSubscription(swrKey, subscribe)
+      return <div>{data}</div>
+    }
+
+    function Page() {
+      const [mounted, setMounted] = useState(true)
+      return (
+        <>
+          <button onClick={() => setMounted(v => !v)}>toggle</button>
+          {mounted ? (
+            <>
+              <Sub />
+              <Sub />
+              <Sub />
+            </>
+          ) : null}
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await act(() => sleep(30))
+    expect(screen.getAllByText('shared-' + swrKey)).toHaveLength(3)
+    expect(subscribeCount).toBe(1)
+    expect(cleanupCount).toBe(0)
+
+    fireEvent.click(screen.getByText('toggle'))
+    expect(cleanupCount).toBe(1)
+  })
 })
