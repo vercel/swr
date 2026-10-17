@@ -1,7 +1,7 @@
 import { mergeConfigs } from './merge-config'
 import { normalize } from './normalize-args'
 import { useSWRConfig } from './use-swr-config'
-import { BUILT_IN_MIDDLEWARE } from './middleware-preset'
+import { getBuiltinMiddleware } from './middleware-preset'
 
 // It's tricky to pass generic types as parameters, so we just directly override
 // the types here.
@@ -19,7 +19,7 @@ export const withArgs = <SWRType>(hook: any) => {
     // Apply middleware
     let next = hook
     const { use } = config
-    const middleware = (use || []).concat(BUILT_IN_MIDDLEWARE)
+    const middleware = (use || []).concat(getBuiltinMiddleware())
     for (let i = middleware.length; i--; ) {
       next = middleware[i](next)
     }
