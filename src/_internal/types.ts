@@ -329,14 +329,14 @@ export interface PublicConfiguration<
   /**
    * callback function when a request takes too long to load (see `loadingTimeout`)
    */
-  onLoadingSlow: (
+  onLoadingSlow?: (
     key: string,
     config: Readonly<PublicConfiguration<Data, Error, Fn>>
   ) => void
   /**
    * callback function when a request finishes successfully
    */
-  onSuccess: (
+  onSuccess?: (
     data: Data,
     key: string,
     config: Readonly<PublicConfiguration<Data, Error, Fn>>
@@ -344,7 +344,7 @@ export interface PublicConfiguration<
   /**
    * callback function when a request returns an error
    */
-  onError: (
+  onError?: (
     err: Error,
     key: string,
     config: Readonly<PublicConfiguration<Data, Error, Fn>>
@@ -352,7 +352,7 @@ export interface PublicConfiguration<
   /**
    * handler for error retry
    */
-  onErrorRetry: (
+  onErrorRetry?: (
     err: Error,
     key: string,
     config: Readonly<PublicConfiguration<Data, Error, Fn>>,
@@ -362,7 +362,7 @@ export interface PublicConfiguration<
   /**
    * callback function when a request is ignored due to race conditions
    */
-  onDiscarded: (key: string) => void
+  onDiscarded?: (key: string) => void
   /**
    * Comparison function used to detect when returned data has changed, to avoid spurious rerenders. By default, [dequal](https://github.com/lukeed/dequal) is used.
    */

@@ -572,7 +572,7 @@ export const useSWRHandler = <Data = any, Error = any>(
           if (config.loadingTimeout && isUndefined(getCache().data)) {
             setTimeout(() => {
               if (loading && callbackSafeguard()) {
-                getConfig().onLoadingSlow(key, config)
+                getConfig().onLoadingSlow?.(key, config)
               }
             }, config.loadingTimeout)
           }
@@ -615,7 +615,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         if (!FETCH[key] || FETCH[key][1] !== startAt) {
           if (shouldStartNewRequest) {
             if (callbackSafeguard()) {
-              getConfig().onDiscarded(key)
+              getConfig().onDiscarded?.(key)
             }
           }
           return false
@@ -649,7 +649,7 @@ export const useSWRHandler = <Data = any, Error = any>(
           finishRequestAndUpdateState()
           if (shouldStartNewRequest) {
             if (callbackSafeguard()) {
-              getConfig().onDiscarded(key)
+              getConfig().onDiscarded?.(key)
             }
           }
           return false
@@ -665,7 +665,7 @@ export const useSWRHandler = <Data = any, Error = any>(
         // Trigger the successful callback if it's the original request.
         if (shouldStartNewRequest) {
           if (callbackSafeguard()) {
-            getConfig().onSuccess(newData, key, config)
+            getConfig().onSuccess?.(newData, key, config)
           }
         }
       } catch (err: any) {
@@ -683,7 +683,7 @@ export const useSWRHandler = <Data = any, Error = any>(
           // Error event and retry logic. Only for the actual request, not
           // deduped ones.
           if (shouldStartNewRequest && callbackSafeguard()) {
-            currentConfig.onError(err, key, currentConfig)
+            currentConfig.onError?.(err, key, currentConfig)
             if (
               shouldRetryOnError === true ||
               (isFunction(shouldRetryOnError) &&
@@ -697,7 +697,7 @@ export const useSWRHandler = <Data = any, Error = any>(
                 // If it's inactive, stop. It will auto-revalidate when
                 // refocusing or reconnecting.
                 // When retrying, deduplication is always enabled.
-                currentConfig.onErrorRetry(
+                currentConfig.onErrorRetry?.(
                   err,
                   key,
                   currentConfig,
