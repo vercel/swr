@@ -1,6 +1,6 @@
 import { fireEvent, screen } from '@testing-library/react'
 import { Suspense, useEffect, useState, Profiler, act } from 'react'
-import useSWR, { preload, useSWRConfig } from 'swr'
+import useSWR, { preload, mutate as globalMutate, useSWRConfig } from 'swr'
 import {
   createKey,
   createResponse,
@@ -230,5 +230,109 @@ describe('useSWR - preload', () => {
 
     preload(() => key, fetcher)
     expect(calledWith).toBe(key)
+  })
+
+  it('wildcard mutate clears an unconsumed preload entry', async () => {
+    const key = createKey()
+    const preloadFetcher = jest.fn(() => createResponse('preloaded'))
+    const newFetcher = jest.fn(() => createResponse('fresh'))
+
+    function Page() {
+      const { data } = useSWR(key, newFetcher)
+      return <div>data:{data}</div>
+    }
+
+    // Preloaded but never consumed by a useSWR mount, so it lives only in PRELOAD.
+    preload(key, preloadFetcher)
+    expect(preloadFetcher).toHaveBeenCalledTimes(1)
+
+    // Wildcard mutate should clear the unconsumed preload entry.
+    await globalMutate(() => true, undefined, { revalidate: false })
+
+    renderWithGlobalCache(<Page />)
+    // The value must come from newFetcher, not the stale preloaded promise.
+    await screen.findByText('data:fresh')
+    expect(newFetcher).toHaveBeenCalledTimes(1)
+  })
+
+  it('wildcard mutate clears only matching preload entries', async () => {
+    const key1 = createKey()
+    const key2 = createKey()
+    const newFetcher1 = jest.fn(() => createResponse('fresh1'))
+    const newFetcher2 = jest.fn(() => createResponse('fresh2'))
+
+    preload(key1, () => createResponse('preloaded1'))
+    preload(key2, () => createResponse('preloaded2'))
+
+    // Only clear key1's preload entry.
+    await globalMutate(k => k === key1, undefined, { revalidate: false })
+
+    function Page1() {
+      const { data } = useSWR(key1, newFetcher1)
+      return <div>one:{data}</div>
+    }
+    function Page2() {
+      const { data } = useSWR(key2, newFetcher2)
+      return <div>two:{data}</div>
+    }
+
+    renderWithGlobalCache(
+      <>
+        <Page1 />
+        <Page2 />
+      </>
+    )
+
+    // key1: preload cleared -> newFetcher1 runs.
+    await screen.findByText('one:fresh1')
+    // key2: preload intact -> its preloaded value is used, newFetcher2 never runs.
+    await screen.findByText('two:preloaded2')
+    expect(newFetcher1).toHaveBeenCalledTimes(1)
+    expect(newFetcher2).not.toHaveBeenCalled()
+  })
+
+  it('wildcard mutate clears an unconsumed preload with an array key', async () => {
+    const key = createKey()
+    const arrayKey = [key, 1]
+    const preloadFetcher = jest.fn(() => createResponse('preloaded'))
+    const newFetcher = jest.fn(() => createResponse('fresh'))
+
+    function Page() {
+      const { data } = useSWR(arrayKey, newFetcher)
+      return <div>data:{data}</div>
+    }
+
+    preload(arrayKey, preloadFetcher)
+    expect(preloadFetcher).toHaveBeenCalledTimes(1)
+
+    // A structural filter must match the array key by its original args, not
+    // the serialized string that PRELOAD is keyed by.
+    await globalMutate(k => Array.isArray(k) && k[0] === key, undefined, {
+      revalidate: false
+    })
+
+    renderWithGlobalCache(<Page />)
+    await screen.findByText('data:fresh')
+    expect(newFetcher).toHaveBeenCalledTimes(1)
+  })
+
+  it('wildcard mutate still revalidates a consumed preload as before', async () => {
+    const key = createKey()
+    let count = 0
+    const fetcher = jest.fn(() => createResponse(`v${++count}`))
+
+    function Page() {
+      const { data } = useSWR(key, fetcher, { dedupingInterval: 0 })
+      return <div>data:{data}</div>
+    }
+
+    preload(key, fetcher) // count -> 1
+    renderWithGlobalCache(<Page />) // consumes preload, deletes PRELOAD[key]
+    await screen.findByText('data:v1')
+
+    // Wildcard mutate with revalidation refetches normally.
+    await act(() => globalMutate(() => true))
+    await screen.findByText('data:v2')
+    expect(fetcher).toHaveBeenCalledTimes(2)
   })
 })
