@@ -702,6 +702,11 @@ export const useSWRHandler = <Data = any, Error = any>(
                   key,
                   currentConfig,
                   _opts => {
+                    // Skip the retry if the error has been resolved since it
+                    // was scheduled, e.g. by a newer successful request.
+                    // `loading` is still true if the retry is triggered
+                    // synchronously, before the error is written to the cache.
+                    if (!loading && isUndefined(getCache().error)) return
                     const revalidators = EVENT_REVALIDATORS[key]
                     if (revalidators && revalidators[0]) {
                       revalidators[0](

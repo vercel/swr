@@ -397,6 +397,51 @@ describe('useSWR - error', () => {
     screen.getByText('error: 0')
   })
 
+  it('should not retry after the error has been resolved by a newer request', async () => {
+    const key = createKey()
+    let count = 0
+    let mutate
+    function Page() {
+      const {
+        data,
+        error,
+        mutate: _mutate
+      } = useSWR(
+        key,
+        async () => {
+          const current = ++count
+          await sleep(10)
+          // The first and third requests fail, the second one succeeds.
+          if (current !== 2) throw new Error('error: ' + current)
+          return 'data'
+        },
+        {
+          onErrorRetry: (_, __, ___, revalidate, revalidateOpts) => {
+            setTimeout(() => revalidate(revalidateOpts), 100)
+          },
+          dedupingInterval: 0
+        }
+      )
+      mutate = _mutate
+      if (error) return <div>{error.message}</div>
+      return <div>hello, {data}</div>
+    }
+
+    renderWithConfig(<Page />)
+
+    // mount
+    await screen.findByText('error: 1')
+
+    // Manually revalidate before the scheduled retry fires.
+    await act(() => mutate())
+    screen.getByText('hello, data')
+
+    // The pending retry should not fire since the error has been resolved.
+    await act(() => sleep(200))
+    expect(count).toBe(2)
+    screen.getByText('hello, data')
+  })
+
   it('should not clear error during revalidating until fetcher is finished successfully', async () => {
     const errors = []
     const key = createKey()
