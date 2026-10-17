@@ -200,6 +200,67 @@ describe('useSWR - config callbacks', () => {
     expect(discardedEvents).toEqual([key])
   })
 
+  it('should not cause infinite requests when onSuccess is explicitly undefined', async () => {
+    let count = 0
+    const key = createKey()
+    function Page() {
+      const { data } = useSWR(key, () => createResponse(count++), {
+        onSuccess: undefined,
+        errorRetryInterval: 50,
+        dedupingInterval: 0
+      })
+      return <div>data: {data}</div>
+    }
+    renderWithConfig(<Page />)
+    await screen.findByText('data: 0')
+
+    // Wait longer than the retry interval. If onSuccess: undefined caused a
+    // TypeError that triggered error-retry cycles, count would exceed 1.
+    await act(() => sleep(200))
+    expect(count).toBe(1)
+  })
+
+  it('should not cause infinite requests when onError is explicitly undefined', async () => {
+    let count = 0
+    const key = createKey()
+    function Page() {
+      const { data } = useSWR(key, () => createResponse(count++), {
+        onError: undefined,
+        errorRetryInterval: 50,
+        dedupingInterval: 0
+      })
+      return <div>data: {data}</div>
+    }
+    renderWithConfig(<Page />)
+    await screen.findByText('data: 0')
+
+    await act(() => sleep(200))
+    expect(count).toBe(1)
+  })
+
+  it('should handle a custom hook passing optional onSuccess that is undefined', async () => {
+    let count = 0
+    const key = createKey()
+
+    function useMyFetch({ onSuccess }: { onSuccess?: (data: any) => void }) {
+      return useSWR(key, () => createResponse(count++), {
+        onSuccess,
+        errorRetryInterval: 50,
+        dedupingInterval: 0
+      })
+    }
+
+    function Page() {
+      const { data } = useMyFetch({})
+      return <div>data: {data}</div>
+    }
+    renderWithConfig(<Page />)
+    await screen.findByText('data: 0')
+
+    await act(() => sleep(200))
+    expect(count).toBe(1)
+  })
+
   it('should not trigger the onSuccess callback when discarded', async () => {
     const key = createKey()
     const discardedEvents = []
