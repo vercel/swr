@@ -58,6 +58,29 @@ function runTests(propertyName) {
       expect(fn).toHaveBeenCalledTimes(1)
     })
 
+    it(`should not forward event objects to the callback`, async () => {
+      const target = createEventTarget()
+      if (propertyName === 'window') {
+        globalSpy.window.mockImplementation(() => target)
+        globalSpy.document.mockImplementation(() => undefined)
+      } else if (propertyName === 'document') {
+        globalSpy.window.mockImplementation(() => undefined)
+        globalSpy.document.mockImplementation(() => target)
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      initFocus = require('swr/_internal').defaultConfigOptions.initFocus
+
+      const fn = jest.fn()
+      const release = initFocus(fn) as () => void
+
+      target.emit(eventName, { type: eventName })
+      expect(fn).toHaveBeenCalledTimes(1)
+      expect(fn).toHaveBeenCalledWith()
+
+      release()
+    })
+
     it(`should not trigger listener when ${propertyName} is falsy`, async () => {
       if (propertyName === 'window') {
         // window exists but without event APIs
