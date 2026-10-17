@@ -3,9 +3,11 @@ import { Suspense, useState, act } from 'react'
 import useSWR from 'swr'
 import {
   createKey,
+  createResponse,
   renderWithConfig,
   nextTick,
-  itShouldSkipForReactCanary
+  itShouldSkipForReactCanary,
+  sleep
 } from './utils'
 
 describe('useSWR - fetcher', () => {
@@ -133,5 +135,52 @@ describe('useSWR - fetcher', () => {
 
     rerender(<Page fetcher={false} />)
     screen.getByText('data:')
+  })
+
+  it('should not fetch with a null fetcher even when a global fetcher is configured', async () => {
+    const key = createKey()
+    const fetcher = jest.fn(() => createResponse('data'))
+
+    function Page() {
+      const { data, isValidating } = useSWR(key, null)
+      return <div>data:{String(data)} validating:{String(isValidating)}</div>
+    }
+
+    renderWithConfig(<Page />, { fetcher })
+
+    screen.getByText('data:undefined validating:false')
+    await act(() => sleep(50))
+    expect(fetcher).not.toHaveBeenCalled()
+  })
+
+  it('should not fetch with `fetcher: null` in the config even when a global fetcher is configured', async () => {
+    const key = createKey()
+    const fetcher = jest.fn(() => createResponse('data'))
+
+    function Page() {
+      const { data } = useSWR(key, { fetcher: null })
+      return <div>data:{String(data)}</div>
+    }
+
+    renderWithConfig(<Page />, { fetcher })
+
+    screen.getByText('data:undefined')
+    await act(() => sleep(50))
+    expect(fetcher).not.toHaveBeenCalled()
+  })
+
+  it('should still use the global fetcher when the hook fetcher is not specified', async () => {
+    const key = createKey()
+    const fetcher = jest.fn(() => createResponse('data'))
+
+    function Page() {
+      const { data } = useSWR<string>(key)
+      return <div>data:{String(data)}</div>
+    }
+
+    renderWithConfig(<Page />, { fetcher })
+
+    await screen.findByText('data:data')
+    expect(fetcher).toHaveBeenCalledTimes(1)
   })
 })
