@@ -241,6 +241,60 @@ describe('useSWR - unload', () => {
     screen.getByText('data:')
   })
 
+  it('should keep mounted keys matchable by key filters after unload', async () => {
+    const key = createKey()
+    let version = 0
+    let unload, mutate
+
+    function Page() {
+      ;({ unload, mutate } = useSWRConfig())
+      const { data } = useSWR(key, () => 'v' + version, {
+        dedupingInterval: 0
+      })
+      return <div>data:{data}</div>
+    }
+
+    renderWithConfig(<Page />, { provider: () => provider })
+    await screen.findByText('data:v0')
+
+    version = 1
+    await act(async () => unload())
+    await screen.findByText('data:v1')
+
+    await act(async () =>
+      mutate(k => k === key, 'mutated', { revalidate: false })
+    )
+    screen.getByText('data:mutated')
+  })
+
+  it('should keep keys matchable by key filters when revalidated after unload without revalidation', async () => {
+    const key = createKey()
+    let unload, mutate, boundMutate
+
+    function Page() {
+      ;({ unload, mutate } = useSWRConfig())
+      const { data, mutate: _mutate } = useSWR(key, () => 'value', {
+        dedupingInterval: 0
+      })
+      boundMutate = _mutate
+      return <div>data:{data}</div>
+    }
+
+    renderWithConfig(<Page />, { provider: () => provider })
+    await screen.findByText('data:value')
+
+    await act(async () => unload({ revalidate: false }))
+    screen.getByText('data:')
+
+    await act(async () => boundMutate())
+    await screen.findByText('data:value')
+
+    await act(async () =>
+      mutate(k => k === key, 'mutated', { revalidate: false })
+    )
+    screen.getByText('data:mutated')
+  })
+
   it('should clear the default cache with the global unload', async () => {
     const key = createKey()
     let version = 0
