@@ -558,11 +558,18 @@ export const useSWRHandler = <Data = any, Error = any>(
       }
 
       // Start fetching. Change the `isValidating` state, update the cache.
-      const initialState: State<Data, Error> = { isValidating: true }
+      const initialState: State<Data, Error> & { _k?: Key } = {
+        isValidating: true
+      }
       // It is in the `isLoading` state, if and only if there is no cached data.
       // This bypasses fallback data and laggy data.
       if (isUndefined(getCache().data)) {
         initialState.isLoading = true
+      }
+      // Restore the original key if the cache entry was removed, e.g. by
+      // `unload()`, so key filters of the global `mutate` can match it.
+      if (isUndefined(getCache()._k)) {
+        initialState._k = fnArg
       }
       try {
         if (shouldStartNewRequest) {
