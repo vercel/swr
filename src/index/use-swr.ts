@@ -669,6 +669,9 @@ export const useSWRHandler = <Data = any, Error = any>(
           }
         }
       } catch (err: any) {
+        // Unload invalidates rejected requests as well as successful responses.
+        if (globalState[8] !== unloadGeneration) return false
+
         registerSettledTags()
         cleanupState()
 
