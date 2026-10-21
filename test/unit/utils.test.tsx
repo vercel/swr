@@ -88,6 +88,8 @@ describe('Utils', () => {
     expect(hash([{ x: 1 }])).toEqual('@#x:1,,')
     expect(hash([{ '': 1 }])).toEqual('@#:1,,')
     expect(hash([{ x: { y: 2 } }])).toEqual('@#x:#y:2,,,')
+    expect(hash([{ a: 1, b: 2 }])).not.toEqual(hash([{ 'b:2,a': 1 }]))
+    expect(hash([{ 'a:1': 2 }])).not.toEqual(hash([{ a: 1, '1': 2 }]))
     expect(hash([[]])).toEqual('@@,')
     expect(hash([[[]]])).not.toMatch(hash([[], []]))
 

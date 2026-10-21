@@ -57,7 +57,11 @@ export const stableHash = (arg: any): string => {
       const keys = OBJECT.keys(arg).sort()
       while (!isUndefined((index = keys.pop() as string))) {
         if (!isUndefined(arg[index])) {
-          result += index + ':' + stableHash(arg[index]) + ','
+          result +=
+            index.replace(/[\\:,]/g, '\\$&') +
+            ':' +
+            stableHash(arg[index]) +
+            ','
         }
       }
       table.set(arg, result)

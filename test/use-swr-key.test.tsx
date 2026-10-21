@@ -224,4 +224,25 @@ describe('useSWR - key', () => {
     // Only 1 request since the keys are the same.
     expect(fetcher).toHaveBeenCalledTimes(1)
   })
+
+  it('should not collide object keys that contain delimiters', async () => {
+    const firstFetcher = jest.fn(() => 'first')
+    const secondFetcher = jest.fn(() => 'second')
+    function Page() {
+      const { data: v1 } = useSWR({ a: 1, b: 2 }, firstFetcher)
+      const { data: v2 } = useSWR({ 'b:2,a': 1 }, secondFetcher)
+
+      return (
+        <div>
+          {v1},{v2}
+        </div>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await screen.findByText('first,second')
+
+    expect(firstFetcher).toHaveBeenCalledTimes(1)
+    expect(secondFetcher).toHaveBeenCalledTimes(1)
+  })
 })

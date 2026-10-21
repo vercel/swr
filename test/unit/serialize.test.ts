@@ -13,4 +13,10 @@ describe('SWR - unstable_serialize', () => {
       stableHash([1, { foo: 2, bar: 1 }, ['a', 'b', 'c']])
     )
   })
+
+  it('should distinguish object keys with delimiters', () => {
+    expect(unstable_serialize({ a: 1, b: 2 })).not.toBe(
+      unstable_serialize({ 'b:2,a': 1 })
+    )
+  })
 })
