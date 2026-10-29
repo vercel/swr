@@ -75,7 +75,7 @@ const mutation = (<Data, Error>() =>
 
         try {
           const data = await mutate<Data>(
-            serializedKey,
+            resolvedKey,
             (fetcherRef.current as any)(resolvedKey, { arg }),
             // We must throw the error here so we can catch and update the states.
             mergeObjects(options, { throwOnError: true })

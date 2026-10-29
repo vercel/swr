@@ -1,7 +1,7 @@
 import { defaultConfigOptions } from './web-preset'
 import { IS_SERVER } from './env'
 import { UNDEFINED, mergeObjects, noop } from './shared'
-import { internalMutate } from './mutate'
+import { internalMutate, internalMutateByKey } from './mutate'
 import { SWRGlobalState } from './global-state'
 import { getTimestamp } from './timestamp'
 import * as revalidateEvents from '../events'
@@ -83,7 +83,7 @@ export const initCache = <Data = any>(
     const revalidateTag: TagRevalidator = tag => {
       const keys = tagKeys[tag]
       return keys
-        ? Promise.all([...keys].map(key => internalMutate(provider, key)))
+        ? Promise.all([...keys].map(key => internalMutateByKey(provider, key)))
         : Promise.resolve([])
     }
 

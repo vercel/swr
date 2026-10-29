@@ -17,12 +17,15 @@ export const serialize = (key: Key): [string, Arguments] => {
   // array of values.
   const args = key
 
-  // If key is not falsy, or not an empty array, hash it.
+  // Reserve separate namespaces for hashes and strings that use the prefix.
+  // Ordinary string keys stay unchanged, including the empty key.
   key =
     typeof key == 'string'
-      ? key
+      ? key.startsWith('$swr$')
+        ? '$swr$s$' + key
+        : key
       : (Array.isArray(key) ? key.length : key)
-        ? stableHash(key)
+        ? '$swr$h$' + stableHash(key)
         : ''
 
   return [key, args]

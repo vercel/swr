@@ -21,6 +21,10 @@ import type {
 } from '../types'
 
 type KeyFilter = (key?: Arguments) => boolean
+type MutateArgs<Data> = [
+  data?: Data | Promise<Data | undefined> | MutatorCallback<Data>,
+  opts?: boolean | MutatorOptions<Data>
+]
 type MutateState<Data> = State<Data, any> & {
   // The previously committed data.
   _c?: Data
@@ -39,12 +43,23 @@ export async function internalMutate<Data>(
   _opts?: boolean | MutatorOptions<Data>
 ): Promise<Data | undefined>
 export async function internalMutate<Data>(
-  ...args: [
-    cache: Cache,
-    _key: KeyFilter | Arguments,
-    _data?: Data | Promise<Data | undefined> | MutatorCallback<Data>,
-    _opts?: boolean | MutatorOptions<Data>
-  ]
+  ...args: [cache: Cache, key: KeyFilter | Arguments, ...MutateArgs<Data>]
+): Promise<any> {
+  return mutate(false, ...args)
+}
+
+// Internal callers already have a serialized cache key. Do not escape it again.
+export function internalMutateByKey<Data>(
+  cache: Cache,
+  key: string,
+  ...args: MutateArgs<Data>
+): Promise<Data | undefined> {
+  return mutate(true, cache, key, ...args)
+}
+
+async function mutate<Data>(
+  serialized: boolean,
+  ...args: [cache: Cache, key: KeyFilter | Arguments, ...MutateArgs<Data>]
 ): Promise<any> {
   const [cache, _key, _data, _opts] = args
 
@@ -71,7 +86,7 @@ export async function internalMutate<Data>(
   // filtered keys.
   if (isFunction(_key)) {
     const keyFilter = _key
-    const matchedKeys: Key[] = []
+    const matchedKeys: string[] = []
     const it = cache.keys()
     for (const key of it) {
       if (
@@ -82,14 +97,16 @@ export async function internalMutate<Data>(
         matchedKeys.push(key)
       }
     }
-    return Promise.all(matchedKeys.map(mutateByKey))
+    return Promise.all(matchedKeys.map(key => mutateByKey(key)))
   }
 
-  return mutateByKey(_key)
+  return mutateByKey(serialized ? (_key as string) : serialize(_key)[0], _key)
 
-  async function mutateByKey(_k: Key): Promise<Data | undefined> {
-    // Serialize key
-    const [key] = serialize(_k)
+  async function mutateByKey(
+    key: string,
+    _k: Key = key
+  ): Promise<Data | undefined> {
+    // Cache keys matched by a filter are already serialized.
     if (!key) return
     const [get, set] = createCacheHelper<Data, MutateState<Data>>(cache, key)
     const [EVENT_REVALIDATORS, MUTATION, FETCH, PRELOAD] = SWRGlobalState.get(

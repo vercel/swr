@@ -19,7 +19,7 @@ import {
   withArgs,
   subscribeCallback,
   getTimestamp,
-  internalMutate,
+  internalMutateByKey,
   revalidateEvents,
   mergeObjects,
   isPromiseLike,
@@ -746,9 +746,9 @@ export const useSWRHandler = <Data = any, Error = any>(
   // Similar to the global mutate but bound to the current cache and key.
   // `cache` isn't allowed to change during the lifecycle.
   const boundMutate: SWRResponse<Data, Error>['mutate'] = useCallback(
-    // Use callback to make sure `keyRef.current` returns latest result every time
+    // Use the latest serialized key without serializing it again.
     (...args: any[]) => {
-      return internalMutate(cache, keyRef.current, ...args)
+      return internalMutateByKey(cache, keyRef.current, ...args)
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
