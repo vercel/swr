@@ -317,21 +317,21 @@ describe('useSWR - local mutation', () => {
   it('should return results of the mutation', async () => {
     const key = createKey()
     // returns the data if the promise resolved
-    expect(globalMutate(key, Promise.resolve('data'))).resolves.toBe('data')
+    await expect(globalMutate(key, Promise.resolve('data'))).resolves.toBe('data')
 
     // throw the error if the promise rejected
-    expect(
+    await expect(
       globalMutate(key, Promise.reject(new Error('error')))
     ).rejects.toBeInstanceOf(Error)
   })
 
   it('globalMutate should return undefined if the key is serialized to "" ', async () => {
     // returns the data if the promise resolved
-    expect(globalMutate(null, Promise.resolve('data'))).resolves.toBe(undefined)
+    await expect(globalMutate(null, Promise.resolve('data'))).resolves.toBe(undefined)
 
     // throw the error if the promise rejected
     const e = new Error('error')
-    expect(
+    await expect(
       globalMutate(() => {
         throw e
       }, Promise.resolve('data'))
@@ -387,7 +387,9 @@ describe('useSWR - local mutation', () => {
 
   it('should ignore in flight mutations when calling another async mutate', async () => {
     let value = 'off',
-      mutate
+      mutate,
+      togglingOn,
+      togglingOff
     const key = createKey()
     function Page() {
       mutate = useSWRConfig().mutate
@@ -406,18 +408,16 @@ describe('useSWR - local mutation', () => {
     // Validate local state is now "on"
     await screen.findByText('on')
 
-    // Simulate toggling "on"
+    // Simulate toggling "on" (left in flight on purpose)
     await act(async () => {
-      expect(
-        mutate(
-          key,
-          () => {
-            value = 'on'
-            return createResponse('on', { delay: 100 })
-          },
-          false
-        )
-      ).resolves.toBe('on')
+      togglingOn = mutate(
+        key,
+        () => {
+          value = 'on'
+          return createResponse('on', { delay: 100 })
+        },
+        false
+      )
     })
 
     act(() => {
@@ -427,18 +427,16 @@ describe('useSWR - local mutation', () => {
     // Validate local state is now "off"
     await screen.findByText('off')
 
-    // Simulate toggling "off"
+    // Simulate toggling "off" while "on" is still in flight
     await act(async () => {
-      expect(
-        mutate(
-          key,
-          () => {
-            value = 'off'
-            return createResponse('off', { delay: 100 })
-          },
-          false
-        )
-      ).resolves.toBe('off')
+      togglingOff = mutate(
+        key,
+        () => {
+          value = 'off'
+          return createResponse('off', { delay: 100 })
+        },
+        false
+      )
     })
 
     // Wait for toggling "on" promise to resolve, but the "on" mutation is canceled
@@ -448,6 +446,10 @@ describe('useSWR - local mutation', () => {
     // Wait for toggling "off" promise to resolve
     await act(() => sleep(100))
     screen.getByText('off')
+
+    // Both mutations still resolve with their own data; the stale one just doesn't win the cache
+    await expect(togglingOn).resolves.toBe('on')
+    await expect(togglingOff).resolves.toBe('off')
   })
 
   it('null is stringified when found inside an array', async () => {
@@ -500,7 +502,7 @@ describe('useSWR - local mutation', () => {
       return promise
     })
     expect(promise).toBeInstanceOf(Promise) // mutate returns a promise
-    expect(promise).resolves.toBe(1) // the return value should be the new cache
+    await expect(promise).resolves.toBe(1) // the return value should be the new cache
     screen.getByText('data: 1')
   })
 
@@ -1295,15 +1297,13 @@ describe('useSWR - local mutation', () => {
     renderWithConfig(<Page />)
     await screen.findByText('data: 0')
 
-    try {
-      await executeWithoutBatching(() =>
+    await expect(
+      executeWithoutBatching(() =>
         mutate(createResponse(new Error('baz'), { delay: 20 }), {
           optimisticData: 'bar'
         })
       )
-    } catch (e) {
-      expect(e.message).toEqual('baz')
-    }
+    ).rejects.toThrow('baz')
 
     await sleep(30)
     expect(renderedData).toEqual([undefined, 0, 'bar', 0, 1])
@@ -1502,23 +1502,21 @@ describe('useSWR - local mutation', () => {
     renderWithConfig(<Page />)
     await screen.findByText('data: 0')
 
-    try {
-      await executeWithoutBatching(() =>
+    await expect(
+      executeWithoutBatching(() =>
         mutate(createResponse(new Error('baz-1'), { delay: 20 }), {
           optimisticData: 'bar-1',
           rollbackOnError: false
         })
       )
-    } catch (e) {
-      expect(e.message).toEqual('baz-1')
-    }
+    ).rejects.toThrow('baz-1')
 
     await sleep(30)
     expect(renderedData).toEqual([undefined, 0, 'bar-1', 1])
 
     let rollbackErrorMessage
-    try {
-      await executeWithoutBatching(() =>
+    await expect(
+      executeWithoutBatching(() =>
         mutate(createResponse(new Error('baz-2'), { delay: 20 }), {
           optimisticData: 'bar-2',
           rollbackOnError: error => {
@@ -1527,9 +1525,7 @@ describe('useSWR - local mutation', () => {
           }
         })
       )
-    } catch (e) {
-      expect(e.message).toEqual('baz-2')
-    }
+    ).rejects.toThrow('baz-2')
 
     await sleep(30)
     expect(renderedData).toEqual([undefined, 0, 'bar-1', 1, 'bar-2', 2])
