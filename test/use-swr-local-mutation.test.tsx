@@ -387,7 +387,9 @@ describe('useSWR - local mutation', () => {
 
   it('should ignore in flight mutations when calling another async mutate', async () => {
     let value = 'off',
-      mutate
+      mutate,
+      togglingOn,
+      togglingOff
     const key = createKey()
     function Page() {
       mutate = useSWRConfig().mutate
@@ -406,18 +408,16 @@ describe('useSWR - local mutation', () => {
     // Validate local state is now "on"
     await screen.findByText('on')
 
-    // Simulate toggling "on"
+    // Simulate toggling "on" (left in flight on purpose)
     await act(async () => {
-      await expect(
-        mutate(
-          key,
-          () => {
-            value = 'on'
-            return createResponse('on', { delay: 100 })
-          },
-          false
-        )
-      ).resolves.toBe('on')
+      togglingOn = mutate(
+        key,
+        () => {
+          value = 'on'
+          return createResponse('on', { delay: 100 })
+        },
+        false
+      )
     })
 
     act(() => {
@@ -427,18 +427,16 @@ describe('useSWR - local mutation', () => {
     // Validate local state is now "off"
     await screen.findByText('off')
 
-    // Simulate toggling "off"
+    // Simulate toggling "off" while "on" is still in flight
     await act(async () => {
-      await expect(
-        mutate(
-          key,
-          () => {
-            value = 'off'
-            return createResponse('off', { delay: 100 })
-          },
-          false
-        )
-      ).resolves.toBe('off')
+      togglingOff = mutate(
+        key,
+        () => {
+          value = 'off'
+          return createResponse('off', { delay: 100 })
+        },
+        false
+      )
     })
 
     // Wait for toggling "on" promise to resolve, but the "on" mutation is canceled
@@ -448,6 +446,10 @@ describe('useSWR - local mutation', () => {
     // Wait for toggling "off" promise to resolve
     await act(() => sleep(100))
     screen.getByText('off')
+
+    // Both mutations still resolve with their own data; the stale one just doesn't win the cache
+    await expect(togglingOn).resolves.toBe('on')
+    await expect(togglingOff).resolves.toBe('off')
   })
 
   it('null is stringified when found inside an array', async () => {
