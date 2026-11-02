@@ -3,7 +3,7 @@ import { SWRGlobalState } from './global-state'
 import { isUndefined, mergeObjects } from './shared'
 
 const EMPTY_CACHE = {}
-const INITIAL_CACHE: Record<string, any> = {}
+const INITIAL_CACHE = new Map<string, any>()
 
 const STR_UNDEFINED = 'undefined'
 
@@ -30,8 +30,8 @@ export const createCacheHelper = <Data = any, T = State<Data, any>>(
 
         // Before writing to the store, we keep the value in the initial cache
         // if it's not there yet.
-        if (!(key in INITIAL_CACHE)) {
-          INITIAL_CACHE[key] = prev
+        if (!INITIAL_CACHE.has(key)) {
+          INITIAL_CACHE.set(key, prev)
         }
 
         state[5](key, mergeObjects(prev, info), prev || EMPTY_CACHE)
@@ -43,7 +43,7 @@ export const createCacheHelper = <Data = any, T = State<Data, any>>(
     () => {
       if (!isUndefined(key)) {
         // If the cache was updated on the client, we return the stored initial value.
-        if (key in INITIAL_CACHE) return INITIAL_CACHE[key]
+        if (INITIAL_CACHE.has(key)) return INITIAL_CACHE.get(key)
       }
 
       // If we haven't done any client-side updates, we return the current value.
