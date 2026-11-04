@@ -249,6 +249,8 @@ export const useSWRHandler = <Data = any, Error = any>(
   const hasCacheData = isUndefined(req) && !isUndefined(configCacheData)
   const preloadedData = hasCacheData ? configCacheData : req
 
+  let returnedData: Data | undefined = fallback
+
   const isEqual = (prev: State<Data, any>, current: State<Data, any>) => {
     for (const _ in stateDependencies) {
       const t = _ as keyof StateDependencies
@@ -390,7 +392,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     cacheData?: CacheData
   } | null>(null)
 
-  let returnedData = keepPreviousData
+  returnedData = keepPreviousData
     ? isUndefined(cachedData)
       ? // checking undefined to avoid null being fallback as well
         isUndefined(laggyDataRef.current)
