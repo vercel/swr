@@ -498,4 +498,34 @@ describe('useSWR - global cache', () => {
     )
     await screen.findByText('value')
   })
+
+  it('should not throw ReferenceError when cache is cleared and getSnapshot runs isEqual before returnedData is initialized', async () => {
+    const key = createKey()
+    let setParentState: any
+    let cacheRef: any
+
+    function Child() {
+      const { data } = useSWR(key, () => 'loaded data')
+      return <div>{data}</div>
+    }
+
+    function Parent() {
+      const [, setTick] = useState(0)
+      setParentState = setTick
+      const { cache } = useSWRConfig()
+      cacheRef = cache
+      return <Child />
+    }
+
+    renderWithGlobalCache(<Parent />)
+    await screen.findByText('loaded data')
+
+    // Clear the data from cache so newSnapshot.data is undefined
+    cacheRef.set(key, {})
+
+    // Trigger parent re-render so Child re-renders and useSyncExternalStore calls getSnapshot[0]
+    await act(async () => {
+      setParentState(1)
+    })
+  })
 })
