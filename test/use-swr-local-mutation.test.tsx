@@ -1,5 +1,5 @@
 import { screen, fireEvent } from '@testing-library/react'
-import { useEffect, useState, act } from 'react'
+import { Suspense, useEffect, useState, act } from 'react'
 import useSWR, { mutate as globalMutate, useSWRConfig } from 'swr'
 import useSWRInfinite from 'swr/infinite'
 import { serialize } from 'swr/_internal'
@@ -1956,5 +1956,197 @@ describe('useSWR - local mutation', () => {
     await screen.findByText('data1: page1')
     await screen.findByText('data2: updated')
     await screen.findByText('data3: <page3>')
+  })
+
+  describe('with an empty cache inside the deduping interval', () => {
+    // Longer than any test, so the request marker can't expire on a slow machine.
+    const dedupingInterval = 60000
+    const clear = { revalidate: false }
+
+    function setup(fetcher: () => any) {
+      const key = createKey()
+      let mutate
+      function Item({ name }: { name: string }) {
+        const { data, error } = useSWR(key, fetcher, {
+          dedupingInterval,
+          shouldRetryOnError: false
+        })
+        return (
+          <div>
+            {name} data:{data} error:{error?.message}
+          </div>
+        )
+      }
+      function Page() {
+        mutate = useSWRConfig().mutate
+        const [items, setItems] = useState(1)
+        return (
+          <>
+            <button onClick={() => setItems(0)}>unmount</button>
+            <button onClick={() => setItems(2)}>mount</button>
+            {items > 0 && <Item name="first" />}
+            {items > 1 && <Item name="second" />}
+          </>
+        )
+      }
+      renderWithConfig(<Page />)
+      return {
+        key,
+        mutate: (...args) => mutate(...args),
+        unmount: () => fireEvent.click(screen.getByText('unmount')),
+        mount: () => fireEvent.click(screen.getByText('mount'))
+      }
+    }
+
+    it('should start a new request after clearing the cache with a key filter', async () => {
+      const fetcher = jest
+        .fn()
+        .mockResolvedValueOnce('old')
+        .mockResolvedValueOnce('new')
+      const { mutate, unmount, mount } = setup(fetcher)
+      await screen.findByText('first data:old error:')
+
+      unmount()
+      await act(() => mutate(() => true, undefined, clear))
+      mount()
+
+      // Both hooks share the one new request.
+      await screen.findByText('first data:new error:')
+      screen.getByText('second data:new error:')
+      expect(fetcher).toHaveBeenCalledTimes(2)
+    })
+
+    it('should start a new request after clearing a single key', async () => {
+      const fetcher = jest
+        .fn()
+        .mockResolvedValueOnce('old')
+        .mockResolvedValueOnce('new')
+      const { key, mutate, unmount, mount } = setup(fetcher)
+      await screen.findByText('first data:old error:')
+
+      unmount()
+      await act(() => mutate(key, undefined, clear))
+      mount()
+
+      await screen.findByText('first data:new error:')
+      expect(fetcher).toHaveBeenCalledTimes(2)
+    })
+
+    it('should discard a request still in flight when the cache was cleared', async () => {
+      let resolveOld
+      const fetcher = jest
+        .fn()
+        .mockImplementationOnce(
+          () => new Promise(resolve => (resolveOld = resolve))
+        )
+        .mockResolvedValueOnce('new')
+      const { mutate, unmount, mount } = setup(fetcher)
+
+      unmount()
+      await act(() => mutate(() => true, undefined, clear))
+      mount()
+      await screen.findByText('first data:new error:')
+
+      await act(async () => resolveOld('old'))
+      screen.getByText('first data:new error:')
+      expect(fetcher).toHaveBeenCalledTimes(2)
+    })
+
+    it('should suspend on a new request in suspense mode', async () => {
+      const key = createKey()
+      const fetcher = jest
+        .fn()
+        .mockResolvedValueOnce('old')
+        .mockResolvedValueOnce('new')
+      let mutate, setMounted
+      function Item() {
+        const { data } = useSWR(key, fetcher, {
+          dedupingInterval,
+          suspense: true
+        })
+        return <div>data:{data}</div>
+      }
+      function Page() {
+        mutate = useSWRConfig().mutate
+        const [mounted, setMountedState] = useState(true)
+        setMounted = setMountedState
+        return <Suspense fallback="loading">{mounted && <Item />}</Suspense>
+      }
+      await act(async () => {
+        renderWithConfig(<Page />)
+      })
+      await screen.findByText('data:old')
+
+      await act(async () => setMounted(false))
+      await act(() => mutate(() => true, undefined, clear))
+      await act(async () => setMounted(true))
+
+      await screen.findByText('data:new')
+      expect(fetcher).toHaveBeenCalledTimes(2)
+    })
+
+    it('should report the error of the new request', async () => {
+      const fetcher = jest
+        .fn()
+        .mockResolvedValueOnce('old')
+        .mockRejectedValueOnce(new Error('failed'))
+      const { mutate, unmount, mount } = setup(fetcher)
+      await screen.findByText('first data:old error:')
+
+      unmount()
+      await act(() => mutate(() => true, undefined, clear))
+      mount()
+
+      await screen.findByText('first data: error:failed')
+      expect(fetcher).toHaveBeenCalledTimes(2)
+    })
+
+    it('should keep deduping when no mutation emptied the cache', async () => {
+      const fetcher = jest.fn().mockResolvedValue('old')
+      const { key, mutate, unmount, mount } = setup(fetcher)
+      await screen.findByText('first data:old error:')
+
+      unmount()
+      mount()
+      await screen.findByText('first data:old error:')
+      expect(fetcher).toHaveBeenCalledTimes(1)
+
+      unmount()
+      await act(() => mutate(key, 'local', clear))
+      mount()
+      await screen.findByText('first data:local error:')
+      // A mount with data revalidates on the next animation frame.
+      await act(() => sleep(50))
+      screen.getByText('first data:local error:')
+      expect(fetcher).toHaveBeenCalledTimes(1)
+    })
+
+    it('should not start a request that an ongoing mutation would discard', async () => {
+      let resolveMutation
+      const fetcher = jest.fn().mockResolvedValue('old')
+      const { key, mutate, unmount, mount } = setup(fetcher)
+      await screen.findByText('first data:old error:')
+
+      unmount()
+      await act(() => mutate(key, undefined, clear))
+      let mutation
+      act(() => {
+        mutation = mutate(
+          key,
+          new Promise(resolve => (resolveMutation = resolve)),
+          clear
+        )
+      })
+      mount()
+      await nextTick()
+      expect(fetcher).toHaveBeenCalledTimes(1)
+
+      await act(async () => {
+        resolveMutation('mutated')
+        await mutation
+      })
+      await screen.findByText('first data:mutated error:')
+      expect(fetcher).toHaveBeenCalledTimes(1)
+    })
   })
 })
