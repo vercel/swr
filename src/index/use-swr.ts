@@ -471,6 +471,22 @@ export const useSWRHandler = <Data = any, Error = any>(
     ? defaultValidatingState
     : cached.isLoading
 
+  // Whether a new request can wait for the one already recorded for this key.
+  // A request that started before the last finished mutation is discarded when
+  // it settles (see the `MUTATION` check in `revalidate`). If that mutation left
+  // the cache empty, e.g. `mutate(() => true, undefined, { revalidate: false })`,
+  // waiting for it would leave the key without data.
+  const canDedupe = () => {
+    const request = FETCH[key]
+    if (!request) return false
+    const mutationInfo = MUTATION[key]
+    return !(
+      mutationInfo &&
+      request[1] <= mutationInfo[1] &&
+      isUndefined(getCache().data)
+    )
+  }
+
   // The revalidation function is a carefully crafted wrapper of the original
   // `fetcher`, to correctly handle the many edge cases.
   const revalidate = useCallback(
@@ -512,7 +528,7 @@ export const useSWRHandler = <Data = any, Error = any>(
 
       // If there is no ongoing concurrent request, or `dedupe` is not set, a
       // new request should be initiated.
-      const shouldStartNewRequest = !FETCH[key] || !opts.dedupe
+      const shouldStartNewRequest = !opts.dedupe || !canDedupe()
       const shouldUseRSCPreload =
         hasCacheData &&
         !isCacheDataConsumed(consumedCacheData, serverCacheData, key) &&
@@ -869,7 +885,7 @@ export const useSWRHandler = <Data = any, Error = any>(
     if (shouldDoInitialRevalidation) {
       // Performance optimization: if a request is already in progress for this key,
       // skip the revalidation to avoid redundant work
-      if (!FETCH[key]) {
+      if (!canDedupe()) {
         if (isUndefined(data) || IS_SERVER) {
           // Revalidate immediately.
           softRevalidate()
