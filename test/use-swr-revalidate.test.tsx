@@ -124,6 +124,99 @@ describe('useSWR - revalidate', () => {
     screen.getByText('false')
   })
 
+  it.each([false, true])(
+    'should discard stale errors when a newer revalidation is pending: %s',
+    async newerPending => {
+      const key = createKey()
+      const requests: {
+        resolve: (data: string) => void
+        reject: (error: Error) => void
+      }[] = []
+      const onError = jest.fn()
+      const onErrorRetry = jest.fn()
+      const onDiscarded = jest.fn()
+      const fetcher = () =>
+        new Promise<string>((resolve, reject) => {
+          requests.push({ resolve, reject })
+        })
+
+      function Page() {
+        const { data, error, isLoading, isValidating, mutate } = useSWR(
+          key,
+          fetcher,
+          {
+            dedupingInterval: 0,
+            loadingTimeout: 0,
+            onError,
+            onErrorRetry,
+            onDiscarded
+          }
+        )
+        return (
+          <button onClick={() => mutate()}>
+            {JSON.stringify({
+              data,
+              error: error?.message,
+              isLoading,
+              isValidating
+            })}
+          </button>
+        )
+      }
+
+      renderWithConfig(<Page />)
+      fireEvent.click(screen.getByRole('button'))
+      expect(requests).toHaveLength(2)
+
+      if (!newerPending) {
+        await act(async () => requests[1].resolve('new response'))
+      }
+      await act(async () => requests[0].reject(new Error('stale error')))
+      const state = JSON.parse(screen.getByRole('button').textContent!)
+
+      if (newerPending) {
+        await act(async () => requests[1].resolve('new response'))
+      }
+
+      expect(state).toEqual(
+        newerPending
+          ? { isLoading: true, isValidating: true }
+          : { data: 'new response', isLoading: false, isValidating: false }
+      )
+      expect(onError).not.toHaveBeenCalled()
+      expect(onErrorRetry).not.toHaveBeenCalled()
+      expect(onDiscarded).toHaveBeenCalledTimes(1)
+      expect(onDiscarded).toHaveBeenCalledWith(key)
+    }
+  )
+
+  it.each([false, true])(
+    'should handle current revalidation errors (synchronous: %s)',
+    async synchronous => {
+      const key = createKey()
+      const failure = new Error('current error')
+      const onError = jest.fn()
+      const onErrorRetry = jest.fn()
+      function Page() {
+        const { error } = useSWR(
+          key,
+          () => {
+            if (synchronous) throw failure
+            return Promise.reject(failure)
+          },
+          { onError, onErrorRetry, loadingTimeout: 0 }
+        )
+        return <div>{error?.message}</div>
+      }
+
+      renderWithConfig(<Page />)
+      await screen.findByText('current error')
+      expect(onError).toHaveBeenCalledTimes(1)
+      expect(onError).toHaveBeenCalledWith(failure, key, expect.any(Object))
+      expect(onErrorRetry).toHaveBeenCalledTimes(1)
+    }
+  )
+
   it('should respect sequences of revalidation calls although in dedupingInterval', async () => {
     let count = 0
     const key = createKey()
