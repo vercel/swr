@@ -487,7 +487,7 @@ export const useSWRHandler = <Data = any, Error = any>(
       }
 
       let newData: Data
-      let startAt: number
+      let startAt: number | undefined
       let loading = true
       let requestStarted = false
       let tagsRegistered = false
@@ -670,6 +670,17 @@ export const useSWRHandler = <Data = any, Error = any>(
         }
       } catch (err: any) {
         registerSettledTags()
+        // A synchronous fetcher can throw before its request is stored in FETCH.
+        if (
+          !isUndefined(startAt) &&
+          (!FETCH[key] || FETCH[key][1] !== startAt)
+        ) {
+          loading = false
+          if (shouldStartNewRequest && callbackSafeguard()) {
+            getConfig().onDiscarded(key)
+          }
+          return false
+        }
         cleanupState()
 
         const currentConfig = getConfig()
