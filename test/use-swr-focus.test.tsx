@@ -62,6 +62,41 @@ describe('useSWR - focus', () => {
     screen.getByText('data: 0')
   })
 
+  it('revalidates an enabled hook when the first hook for a key disables focus revalidation', async () => {
+    const key = createKey()
+    let value = 0
+    const fetcher = jest.fn(async () => ++value)
+
+    function Page() {
+      useSWR(key, fetcher, {
+        revalidateOnMount: false,
+        revalidateOnFocus: false
+      })
+      const { data: first } = useSWR(key, fetcher, {
+        dedupingInterval: 0,
+        focusThrottleInterval: 0
+      })
+      const { data: second } = useSWR(key, fetcher, {
+        dedupingInterval: 0,
+        focusThrottleInterval: 0
+      })
+      return (
+        <div>
+          data: {first}, {second}
+        </div>
+      )
+    }
+
+    renderWithConfig(<Page />)
+
+    await screen.findByText('data: 1, 1')
+    await waitForNextTick()
+    await focusWindow()
+
+    await screen.findByText('data: 2, 2')
+    expect(fetcher).toHaveBeenCalledTimes(2)
+  })
+
   it('revalidateOnFocus should be stateful', async () => {
     let value = 0
 

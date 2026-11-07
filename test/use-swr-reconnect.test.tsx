@@ -62,6 +62,36 @@ describe('useSWR - reconnect', () => {
     screen.getByText('data: 0')
   })
 
+  it('revalidates an enabled hook when the first hook for a key disables reconnect revalidation', async () => {
+    const key = createKey()
+    let value = 0
+    const fetcher = jest.fn(async () => ++value)
+
+    function Page() {
+      useSWR(key, fetcher, {
+        revalidateOnMount: false,
+        revalidateOnReconnect: false
+      })
+      const { data: first } = useSWR(key, fetcher, { dedupingInterval: 0 })
+      const { data: second } = useSWR(key, fetcher, { dedupingInterval: 0 })
+      return (
+        <div>
+          data: {first}, {second}
+        </div>
+      )
+    }
+
+    renderWithConfig(<Page />)
+
+    await screen.findByText('data: 1, 1')
+    await waitForNextTick()
+    fireEvent(window, createEvent('offline', window))
+    fireEvent(window, createEvent('online', window))
+
+    await screen.findByText('data: 2, 2')
+    expect(fetcher).toHaveBeenCalledTimes(2)
+  })
+
   it("shouldn't revalidate on reconnect when isOnline is returning false", async () => {
     let value = 0
 
