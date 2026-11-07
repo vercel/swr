@@ -430,7 +430,7 @@ describe('useSWR - error', () => {
     expect(errors).toEqual([null, 'error', 'error'])
   })
 
-  it('should reset isValidating when an error occured synchronously', async () => {
+  it('should reset isValidating when an error occurred synchronously', async () => {
     const key = createKey()
     function Page() {
       const { error, isValidating } = useSWR(key, () => {
@@ -449,7 +449,7 @@ describe('useSWR - error', () => {
     screen.getByText('error!,false')
   })
 
-  it('should reset isValidating when an error occured asynchronously', async () => {
+  it('should reset isValidating when an error occurred asynchronously', async () => {
     const key = createKey()
     function Page() {
       const { error, isValidating } = useSWR(key, () =>
