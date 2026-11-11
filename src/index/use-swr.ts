@@ -980,13 +980,18 @@ export const useSWRHandler = <Data = any, Error = any>(
         }
       }
     } else {
-      const mutateReq = shouldConsumePreload
-        ? boundMutate(preloadedData)
-        : resolvedUndef
-      use(mutateReq)
+      // `revalidate()` below consumes the preload and registers it in `FETCH`.
+      // It's a no-op without a fetcher or when paused, so use `mutate()` then.
+      const canRevalidate = fetcher && !config.isPaused()
+      use(
+        shouldConsumePreload && !canRevalidate
+          ? boundMutate(preloadedData)
+          : resolvedUndef
+      )
     }
 
-    if (!isUndefined(error) && hasKeyButNoData) {
+    // A preloaded request replaces the cached error (retry with `preload()`).
+    if (!isUndefined(error) && hasKeyButNoData && !shouldConsumePreload) {
       throw error
     }
     const revalidation =
