@@ -1,5 +1,6 @@
 import { fireEvent, screen } from '@testing-library/react'
 import { Suspense, useEffect, useState, Profiler, act } from 'react'
+import { ErrorBoundary } from 'react-error-boundary'
 import useSWR, { preload, useSWRConfig } from 'swr'
 import {
   createKey,
@@ -177,6 +178,48 @@ describe('useSWR - preload', () => {
       )
       await screen.findByText('data:foo')
       expect(fetcher).toHaveBeenCalledTimes(1)
+    }
+  )
+
+  itShouldSkipForReactCanary(
+    'should replace the cached error with the preloaded data when retrying in the suspense mode',
+    async () => {
+      jest.spyOn(console, 'error').mockImplementation(() => {})
+
+      const key = createKey()
+      let count = 0
+      const fetcher = jest.fn(
+        (): Promise<string> =>
+          createResponse<any>(++count === 1 ? new Error('err') : 'foo')
+      )
+      function Page() {
+        const { data } = useSWR(key, fetcher, { suspense: true })
+        return <div>data:{data}</div>
+      }
+
+      renderWithGlobalCache(
+        <ErrorBoundary
+          fallbackRender={({ resetErrorBoundary }) => (
+            <button
+              onClick={() => {
+                preload(key, fetcher)
+                resetErrorBoundary()
+              }}
+            >
+              retry
+            </button>
+          )}
+        >
+          <Suspense fallback={<div>loading</div>}>
+            <Page />
+          </Suspense>
+        </ErrorBoundary>
+      )
+      fireEvent.click(await screen.findByText('retry'))
+      await screen.findByText('data:foo')
+      // The revalidation on mount is delayed by a frame.
+      await act(() => sleep(50))
+      expect(fetcher).toHaveBeenCalledTimes(2)
     }
   )
 
