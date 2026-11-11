@@ -134,6 +134,53 @@ describe('useSWR - preload', () => {
   )
 
   itShouldSkipForReactCanary(
+    'should consume the preloaded data in the suspense mode without a fetcher',
+    async () => {
+      const key = createKey()
+      const fetcher = jest.fn(() => createResponse('foo'))
+      function Page() {
+        const { data } = useSWR(key, null, { suspense: true })
+        return <div>data:{data}</div>
+      }
+
+      preload(key, fetcher)
+
+      renderWithGlobalCache(
+        <Suspense fallback={<div>loading</div>}>
+          <Page />
+        </Suspense>
+      )
+      await screen.findByText('data:foo')
+      expect(fetcher).toHaveBeenCalledTimes(1)
+    }
+  )
+
+  itShouldSkipForReactCanary(
+    'should consume the preloaded data in the suspense mode when paused',
+    async () => {
+      const key = createKey()
+      const fetcher = jest.fn(() => createResponse('foo'))
+      function Page() {
+        const { data } = useSWR(key, fetcher, {
+          suspense: true,
+          isPaused: () => true
+        })
+        return <div>data:{data}</div>
+      }
+
+      preload(key, fetcher)
+
+      renderWithGlobalCache(
+        <Suspense fallback={<div>loading</div>}>
+          <Page />
+        </Suspense>
+      )
+      await screen.findByText('data:foo')
+      expect(fetcher).toHaveBeenCalledTimes(1)
+    }
+  )
+
+  itShouldSkipForReactCanary(
     'avoid suspense waterfall by prefetching the resources',
     async () => {
       const key1 = createKey()
