@@ -109,6 +109,31 @@ describe('useSWR - preload', () => {
   )
 
   itShouldSkipForReactCanary(
+    'should not revalidate on mount after consuming the preloaded data in the suspense mode',
+    async () => {
+      const key = createKey()
+      const fetcher = jest.fn(() => createResponse('foo'))
+      function Page() {
+        const { data } = useSWR(key, fetcher, { suspense: true })
+        return <div>data:{data}</div>
+      }
+
+      preload(key, fetcher)
+      expect(fetcher).toHaveBeenCalledTimes(1)
+
+      renderWithGlobalCache(
+        <Suspense fallback={<div>loading</div>}>
+          <Page />
+        </Suspense>
+      )
+      await screen.findByText('data:foo')
+      // The revalidation on mount is delayed by a frame.
+      await act(() => sleep(50))
+      expect(fetcher).toHaveBeenCalledTimes(1)
+    }
+  )
+
+  itShouldSkipForReactCanary(
     'avoid suspense waterfall by prefetching the resources',
     async () => {
       const key1 = createKey()
