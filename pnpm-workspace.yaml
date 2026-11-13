@@ -1,6 +1,6 @@
 packages:
   - '_internal'
-  - 'core'
+  - 'subscription'
   - 'immutable'
   - 'infinite'
   - 'mutation'
