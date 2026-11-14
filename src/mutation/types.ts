@@ -166,7 +166,7 @@ export interface TriggerWithoutArgs<
       ExtraArg,
       SWRData
     > & { throwOnError: false }
-  ): Promise<Data>
+  ): Promise<Data | undefined>
 }
 
 export interface SWRMutationResponse<

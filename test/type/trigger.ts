@@ -59,6 +59,23 @@ export function useTriggerWithParameter() {
   )
 }
 
+export function useTriggerWithoutArgs() {
+  const { trigger } = useSWRMutation('/api/user', () => 'foo')
+
+  const resDefault = trigger()
+  expectType<Equal<typeof resDefault, Promise<string>>>(true)
+
+  const resThrowTrue = trigger(null, {
+    throwOnError: true
+  })
+  expectType<Equal<typeof resThrowTrue, Promise<string>>>(true)
+
+  const resThrowFalse = trigger(null, {
+    throwOnError: false
+  })
+  expectType<Equal<typeof resThrowFalse, Promise<string | undefined>>>(true)
+}
+
 export function useOnErrorThrowFalse() {
   const { trigger } = useSWRMutation<string, any, string, number>(
     '/api/user',
