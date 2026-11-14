@@ -24,14 +24,14 @@ export const useStateWithDeps = <S = Record<string, any>>(
   const unmountedRef = useRef(false)
   const stateRef = useRef<S>(initialState)
 
-  // If a state property (data, error, or isValidating) is accessed by the render
+  // If a state property (data, error, or isMutating) is accessed by the render
   // function, we mark the property as a dependency so if it is updated again
   // in the future, we trigger a rerender.
   // This is also known as dependency-tracking.
   const stateDependenciesRef = useRef<Record<keyof S, boolean>>({
     data: false,
     error: false,
-    isValidating: false
+    isMutating: false
   } as Record<keyof S, boolean>)
 
   /**
@@ -40,13 +40,13 @@ export const useStateWithDeps = <S = Record<string, any>>(
    * @example
    * ```js
    * setState({
-   *   isValidating: false
+   *   isMutating: false
    *   data: newData // set data to newData
    *   error: undefined // set error to undefined
    * })
    *
    * setState({
-   *   isValidating: false
+   *   isMutating: false
    *   data: undefined // set data to undefined
    *   error: err // set error to err
    * })
