@@ -369,4 +369,96 @@ describe('useSWRSubscription', () => {
     expect(subscribeCount).toBe(2)
     expect(disposeCount).toBe(1)
   })
+  it.each(['data', 'error', 'updater'] as const)(
+    'should ignore a late %s update from a disposed subscription after remount',
+    async kind => {
+      const key = createKey()
+      const callbacks: Array<(error: Error | null, data?: any) => void> = []
+      const dispose = jest.fn()
+      const staleUpdater = jest.fn(() => 'stale')
+      function subscribe(_, { next }) {
+        callbacks.push(next)
+        return dispose
+      }
+      function Sub() {
+        const { data, error } = useSWRSubscription(key, subscribe)
+        return <div>{error ? error.message : data || 'empty'}</div>
+      }
+      function Page() {
+        const [mounted, setMounted] = useState(true)
+        return (
+          <>
+            <button onClick={() => setMounted(v => !v)}>toggle</button>
+            {mounted ? <Sub /> : null}
+          </>
+        )
+      }
+      renderWithConfig(<Page />)
+      await act(async () => callbacks[0](null, 'first'))
+      screen.getByText('first')
+      fireEvent.click(screen.getByText('toggle'))
+      expect(dispose).toHaveBeenCalledTimes(1)
+      fireEvent.click(screen.getByText('toggle'))
+      expect(callbacks).toHaveLength(2)
+      await act(async () => callbacks[1](null, 'current'))
+      screen.getByText('current')
+      await act(async () => {
+        if (kind === 'error') callbacks[0](new Error('stale error'))
+        else callbacks[0](null, kind === 'updater' ? staleUpdater : 'stale')
+      })
+      screen.getByText('current')
+      expect(staleUpdater).not.toHaveBeenCalled()
+    }
+  )
+
+  it('should ignore updates emitted synchronously by the disposer', async () => {
+    const key = createKey()
+    const cache = new Map()
+    function subscribe(_, { next }) {
+      next(null, 'active')
+      return () => next(new Error('disposed'))
+    }
+    function Sub() {
+      const { data, error } = useSWRSubscription(key, subscribe)
+      return <div>{error ? error.message : data}</div>
+    }
+    const { unmount } = renderWithConfig(<Sub />, { provider: () => cache })
+    await screen.findByText('active')
+    unmount()
+    expect(cache.get('$sub$' + key).error).toBeUndefined()
+  })
+
+  it('should keep the shared subscription active after its first subscriber unmounts', async () => {
+    const key = createKey()
+    let emit: (error: Error | null, data: string) => void
+    const dispose = jest.fn()
+    const subscribe = jest.fn((_, { next }) => {
+      emit = next
+      return dispose
+    })
+    function Sub({ name }: { name: string }) {
+      const { data } = useSWRSubscription(key, subscribe)
+      return (
+        <div>
+          {name}:{data}
+        </div>
+      )
+    }
+    function Page() {
+      const [first, setFirst] = useState(true)
+      return (
+        <>
+          <button onClick={() => setFirst(false)}>remove first</button>
+          {first ? <Sub name="first" /> : null}
+          <Sub name="second" />
+        </>
+      )
+    }
+    renderWithConfig(<Page />)
+    expect(subscribe).toHaveBeenCalledTimes(1)
+    fireEvent.click(screen.getByText('remove first'))
+    expect(dispose).not.toHaveBeenCalled()
+    await act(async () => emit(null, 'still active'))
+    screen.getByText('second:still active')
+  })
 })
