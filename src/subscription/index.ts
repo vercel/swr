@@ -56,10 +56,13 @@ export const subscription = (<Data = any, Error = any>(useSWRNext: SWRHook) =>
       const [, set] = createCacheHelper<Data>(cache, subscriptionKey)
       const refCount = subscriptions.get(subscriptionKey) || 0
 
+      let active = true
       const next: SWRSubscriptionOptions<Data, Error>['next'] = (
         error,
         data
       ) => {
+        if (!active) return
+
         if (error !== null && typeof error !== 'undefined') {
           set({ error })
         } else {
@@ -72,13 +75,16 @@ export const subscription = (<Data = any, Error = any>(useSWRNext: SWRHook) =>
       subscriptions.set(subscriptionKey, refCount + 1)
 
       if (!refCount) {
-        const dispose = subscribe(args, { next })
+        const dispose: unknown = subscribe(args, { next })
         if (typeof dispose !== 'function') {
           throw new Error(
             'The `subscribe` function must return a function to unsubscribe.'
           )
         }
-        disposers.set(subscriptionKey, dispose)
+        disposers.set(subscriptionKey, () => {
+          active = false
+          dispose()
+        })
       }
 
       return () => {
