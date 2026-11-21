@@ -39,7 +39,7 @@ export const preload = <
   const [, , , PRELOAD] = SWRGlobalState.get(cache) as GlobalState
 
   // Prevent preload to be called multiple times before used.
-  if (PRELOAD[key]) {
+  if (!isUndefined(PRELOAD[key])) {
     return PRELOAD[key] as ReturnType<Fetcher>
   }
 

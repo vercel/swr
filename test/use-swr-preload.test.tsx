@@ -10,6 +10,27 @@ import {
 } from './utils'
 
 describe('useSWR - preload', () => {
+  it.each([0, false, '', null, NaN])(
+    'should deduplicate synchronous preload results of %p',
+    async value => {
+      const key = createKey()
+      const fetcher = jest.fn(() => value)
+
+      function Page() {
+        const { data } = useSWR(key, fetcher)
+        return <div>data:{String(data)}</div>
+      }
+
+      expect(preload(key, fetcher)).toBe(value)
+      expect(preload(key, fetcher)).toBe(value)
+      expect(fetcher).toHaveBeenCalledTimes(1)
+
+      renderWithGlobalCache(<Page />)
+      await screen.findByText(`data:${String(value)}`)
+      expect(fetcher).toHaveBeenCalledTimes(1)
+    }
+  )
+
   it('preload the fetcher function', async () => {
     const key = createKey()
 
