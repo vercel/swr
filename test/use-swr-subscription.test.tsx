@@ -369,4 +369,109 @@ describe('useSWRSubscription', () => {
     expect(subscribeCount).toBe(2)
     expect(disposeCount).toBe(1)
   })
+
+  it('should clean up the subscription state when `subscribe` throws', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => {})
+
+    const swrKey = createKey()
+
+    let subscribeCount = 0
+    let shouldThrow = true
+
+    function subscribe(key, { next }) {
+      ++subscribeCount
+      if (shouldThrow) {
+        throw new Error('subscribe failed')
+      }
+      next(undefined, key)
+      return () => {}
+    }
+
+    function Sub() {
+      const { data } = useSWRSubscription(swrKey, subscribe)
+      return <div>{'data:' + data}</div>
+    }
+
+    function Page() {
+      const [mounted, setMounted] = useState(true)
+      return (
+        <>
+          <button onClick={() => setMounted(v => !v)}>toggle</button>
+          {mounted ? (
+            <ErrorBoundary fallbackRender={() => <div>error</div>}>
+              <Sub />
+            </ErrorBoundary>
+          ) : null}
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await act(() => sleep(10))
+
+    // The first mount fails inside `subscribe`.
+    expect(subscribeCount).toBe(1)
+    await screen.findByText('error')
+
+    // Unmount the failed subscription and remount it with a working
+    // `subscribe`: the internal state must have been cleaned up, so the
+    // remount starts a new subscription instead of reusing the failed one.
+    fireEvent.click(screen.getByText('toggle'))
+    shouldThrow = false
+    fireEvent.click(screen.getByText('toggle'))
+    await act(() => sleep(10))
+
+    expect(subscribeCount).toBe(2)
+    await screen.findByText(`data:${swrKey}`)
+  })
+
+  it('should clean up the subscription state when `subscribe` does not return a dispose function', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => {})
+
+    const swrKey = createKey()
+
+    let subscribeCount = 0
+    let returnDispose = false
+
+    function subscribe(key, { next }) {
+      ++subscribeCount
+      next(undefined, key)
+      return returnDispose ? () => {} : 'no-dispose'
+    }
+
+    function Sub() {
+      const { data } = useSWRSubscription(swrKey, subscribe)
+      return <div>{'data:' + data}</div>
+    }
+
+    function Page() {
+      const [mounted, setMounted] = useState(true)
+      return (
+        <>
+          <button onClick={() => setMounted(v => !v)}>toggle</button>
+          {mounted ? (
+            <ErrorBoundary fallbackRender={() => <div>error</div>}>
+              <Sub />
+            </ErrorBoundary>
+          ) : null}
+        </>
+      )
+    }
+
+    renderWithConfig(<Page />)
+    await act(() => sleep(10))
+
+    // The first mount fails because `subscribe` returned no dispose function.
+    expect(subscribeCount).toBe(1)
+    await screen.findByText('error')
+
+    // Remounting with a valid `subscribe` must start a new subscription.
+    fireEvent.click(screen.getByText('toggle'))
+    returnDispose = true
+    fireEvent.click(screen.getByText('toggle'))
+    await act(() => sleep(10))
+
+    expect(subscribeCount).toBe(2)
+    await screen.findByText(`data:${swrKey}`)
+  })
 })
