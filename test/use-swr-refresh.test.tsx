@@ -1,7 +1,12 @@
 import { fireEvent, screen } from '@testing-library/react'
 import React, { useState, act } from 'react'
 import useSWR, { SWRConfig, useSWRConfig } from 'swr'
-import { createKey, renderWithConfig, sleep } from './utils'
+import {
+  createKey,
+  mockVisibilityHidden,
+  renderWithConfig,
+  sleep
+} from './utils'
 
 // This has to be an async function to wait for a microtask to flush updates
 const advanceTimers = async (ms: number) => jest.advanceTimersByTime(ms) as any
@@ -735,5 +740,116 @@ describe('useSWR - refresh', () => {
 
     await act(() => advanceTimers(9999)) // no update
     screen.getByText('count: 1')
+  })
+
+  it('should resume polling after the error is cleared by error retry', async () => {
+    let attempts = 0
+    const key = createKey()
+    const fetcher = jest.fn(async () => {
+      attempts++
+      if (attempts <= 2) throw new Error('error')
+      return 'data'
+    })
+    function Page() {
+      const { data, error } = useSWR(key, fetcher, {
+        refreshInterval: 100,
+        dedupingInterval: 0,
+        errorRetryInterval: 100
+      })
+      return <div>{error ? 'error' : (data ?? 'loading')}</div>
+    }
+
+    renderWithConfig(<Page />)
+
+    // The server is down for the first two requests and recovers afterwards.
+    // Error retry clears the error; the screen alone can't tell whether polling survived.
+    for (let i = 0; i < 20; i++) await act(() => advanceTimers(100))
+    screen.getByText('data')
+
+    // Polling must still be alive after recovery (#830).
+    const callsAfterRecovery = fetcher.mock.calls.length
+    for (let i = 0; i < 3; i++) await act(() => advanceTimers(100))
+    expect(fetcher.mock.calls.length).toBeGreaterThan(callsAfterRecovery)
+  })
+
+  it('should not poll while the cache has an error and error retry is disabled', async () => {
+    const key = createKey()
+    const fetcher = jest.fn(async () => {
+      throw new Error('error')
+    })
+    function Page() {
+      const { error } = useSWR(key, fetcher, {
+        refreshInterval: 100,
+        dedupingInterval: 0,
+        shouldRetryOnError: false
+      })
+      return <div>{error ? 'error' : 'loading'}</div>
+    }
+
+    renderWithConfig(<Page />)
+
+    await act(() => advanceTimers(10))
+    screen.getByText('error')
+    expect(fetcher).toHaveBeenCalledTimes(1)
+
+    // the polling timer keeps ticking, but no request is made while errored
+    for (let i = 0; i < 5; i++) await act(() => advanceTimers(100))
+    expect(fetcher).toHaveBeenCalledTimes(1)
+  })
+
+  it('should not poll while the page is hidden', async () => {
+    const key = createKey()
+    const fetcher = jest.fn(async () => 'data')
+    function Page() {
+      const { data } = useSWR(key, fetcher, {
+        refreshInterval: 100,
+        dedupingInterval: 0
+      })
+      return <div>{data ?? 'loading'}</div>
+    }
+
+    renderWithConfig(<Page />)
+
+    await act(() => advanceTimers(10))
+    screen.getByText('data')
+    expect(fetcher).toHaveBeenCalledTimes(1)
+
+    const restoreVisibility = mockVisibilityHidden()
+    try {
+      for (let i = 0; i < 5; i++) await act(() => advanceTimers(100))
+      expect(fetcher).toHaveBeenCalledTimes(1)
+    } finally {
+      restoreVisibility()
+    }
+  })
+
+  it('should not poll while offline', async () => {
+    const key = createKey()
+    const fetcher = jest.fn(async () => 'data')
+    function Page() {
+      const { data } = useSWR(key, fetcher, {
+        refreshInterval: 100,
+        dedupingInterval: 0
+      })
+      return <div>{data ?? 'loading'}</div>
+    }
+
+    renderWithConfig(<Page />)
+
+    await act(() => advanceTimers(10))
+    screen.getByText('data')
+    expect(fetcher).toHaveBeenCalledTimes(1)
+
+    await act(async () => {
+      window.dispatchEvent(new Event('offline'))
+    })
+    try {
+      for (let i = 0; i < 5; i++) await act(() => advanceTimers(100))
+      expect(fetcher).toHaveBeenCalledTimes(1)
+    } finally {
+      await act(async () => {
+        window.dispatchEvent(new Event('online'))
+      })
+    }
   })
 })
