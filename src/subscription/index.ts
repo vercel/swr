@@ -72,8 +72,19 @@ export const subscription = (<Data = any, Error = any>(useSWRNext: SWRHook) =>
       subscriptions.set(subscriptionKey, refCount + 1)
 
       if (!refCount) {
-        const dispose = subscribe(args, { next })
+        let dispose: ReturnType<typeof subscribe>
+        try {
+          dispose = subscribe(args, { next })
+        } catch (error) {
+          // The subscription failed to start, so React will not register a
+          // cleanup for this effect and the ref count incremented above
+          // would leak, leaving the key marked as subscribed forever and
+          // preventing any later mount from subscribing again.
+          subscriptions.delete(subscriptionKey)
+          throw error
+        }
         if (typeof dispose !== 'function') {
+          subscriptions.delete(subscriptionKey)
           throw new Error(
             'The `subscribe` function must return a function to unsubscribe.'
           )
