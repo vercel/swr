@@ -1,4 +1,10 @@
-import type { Key, Fetcher, Middleware, SWRConfiguration } from '../index'
+import type {
+  Key,
+  Fetcher,
+  Middleware,
+  SWRConfiguration,
+  SWRHook
+} from '../index'
 import useSWR from '../index'
 import { normalize } from '../_internal'
 
@@ -25,7 +31,7 @@ export const immutable: Middleware = useSWRNext => (key, fetcher, config) => {
   return useSWRNext(key, fetcher, config)
 }
 
-const useSWRImmutable = <Data = any, Error = any>(
+const useSWRImmutable: SWRHook = <Data = any, Error = any>(
   ...args:
     | [Key]
     | [Key, Fetcher<Data> | null]
