@@ -1,4 +1,5 @@
 import useSWR from 'swr'
+import useSWRImmutable from 'swr/immutable'
 import useSWRInfinite from 'swr/infinite'
 import { expectType, truthy } from './utils'
 import type { Equal } from '@type-challenges/utils'
@@ -24,6 +25,14 @@ export function useDataErrorGeneric() {
     },
     key => key
   )
+}
+
+export function useImmutableKeyGeneric() {
+  type ImmutableKey = readonly ['/api/user', number]
+  useSWRImmutable<string, Error, ImmutableKey>(['/api/user', 123], key => {
+    expectType<Equal<ImmutableKey, typeof key>>(true)
+    return key[0]
+  })
 }
 
 export function useString() {
